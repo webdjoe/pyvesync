@@ -14,7 +14,7 @@ except(IOError, ImportError):
 
 setup(
     name='pyvesync',
-    version='0.1.0',
+    version='0.1.1',
     description='pyvesync is a library to manage Etekcity Switches',
     long_description=long_description,
     url='https://github.com/markperdue/pyvesync',
