@@ -8,6 +8,7 @@ logger = logging.getLogger(__name__)
 
 API_BASE_URL = 'https://smartapi.vesync.com'
 API_RATE_LIMIT = 30
+API_TIMEOUT = 5
 
 
 class VeSync(object):
@@ -23,94 +24,144 @@ class VeSync(object):
         self.last_update_ts = None
         self.in_process = False
 
+    def calculate_watts(self, kwh, minutes):
+        """Return current watt usage of a device"""
+
+        try:
+            watts = (kwh * 60 * 1000) / minutes
+        except ZeroDivisionError:
+            return None
+        except Exception as e:
+            logger.error('Unable to calculate watts')
+            return None
+        else:
+            return watts
+
     def call_api(self, api, method, json=None, headers=None):
         response = None
 
         try:
-            logger.info("[%s] calling '%s' api" % (method, api))
+            logger.debug("[%s] calling '%s' api" % (method, api))
             if method == 'get':
-                r = requests.get(API_BASE_URL + api, json=json, headers=headers)
+                r = requests.get(API_BASE_URL + api, json=json, headers=headers, timeout=API_TIMEOUT)
             elif method == 'post':
-                r = requests.post(API_BASE_URL + api, json=json, headers=headers)
+                r = requests.post(API_BASE_URL + api, json=json, headers=headers, timeout=API_TIMEOUT)
             elif method == 'put':
-                r = requests.put(API_BASE_URL + api, json=json, headers=headers)
-        except Exception:
-            logger.info("error")
-            pass
+                r = requests.put(API_BASE_URL + api, json=json, headers=headers, timeout=API_TIMEOUT)
+        except requests.exceptions.RequestException as e:
+            logger.error(e)
+        except Exception as e:
+            logger.error(e)
         else:
             if r.status_code == 200:
                 response = r.json()
         finally:
             return response
 
-    def login(self):
-        try:
-            jd = {'account': self.username, 'password': hashlib.md5(self.password.encode('utf-8')).hexdigest()}
-        except ValueError:
-            logger.info("error getting username and password")
-            return False
-        else:
-            try:
-                response = self.call_api('/vold/user/login', 'post', json=jd)
-            except Exception as e:
-                logger.info("error logging in %s" % (e))
-                pass
-            else:
-                if response is not None and 'tk' in response and 'accountID' in response:
-                    self.tk = response['tk']
-                    self.account_id = response['accountID']
-                    self.enabled = True
+    def get_active_time(self, cid):
+        """Return active time of a device in minutes"""
 
-                    return True
+        response = self.call_api('/v1/device/' + cid + '/detail', 'get', headers=self.get_headers())
 
-            return False
+        if response is not None and response:
+            if 'activeTime' in response and response['activeTime'] is not None:
+                if response['activeTime'] >= 0:
+                    return response['activeTime']
+
+        return 0
 
     def get_devices(self):
+        """Return list of VeSync devices"""
+
         device_list = []
 
         if self.enabled:
             self.in_process = True
 
-            try:
-                response = self.call_api('/vold/user/devices', 'get', headers=self.get_headers())
-            except Exception as e:
-                logger.info("received exception %s" % (e))
-                pass
-            else:
+            response = self.call_api('/vold/user/devices', 'get', headers=self.get_headers())
+
+            if response is not None and response:
                 for device in response:
                     if 'deviceType' in device and 'switch' in device['deviceType']:
                         device_list.append(VeSyncSwitch(device, self))
-            finally:
-                self.in_process = False
+
+            self.in_process = False
 
         return device_list
 
     def get_headers(self):
         return {'tk': self.tk, 'accountID': self.account_id}
 
-    def turn_on(self, cid):
-        try:
-            response = self.call_api('/v1/wifi-switch-1.3/' + cid + '/status/on', 'put', headers=self.get_headers())
-        except Exception as e:
-            logger.info("error - %s" % (e))
-            pass
-        else:
-            return True
+    def get_kwh_today(self, cid):
+        """Return total kWh for current date of a device"""
+
+        response = self.call_api('/v1/device/' + cid + '/energy/week', 'get', headers=self.get_headers())
+
+        if response is not None and response:
+            if 'energyConsumptionOfToday' in response and response['energyConsumptionOfToday']:
+                return response['energyConsumptionOfToday']
         
-        return False
+        return None
+
+    def get_power(self, cid):
+        """Return current power in watts of a device"""
+
+        response = self.call_api('/v1/device/' + cid + '/detail', 'get', headers=self.get_headers())
+
+        if response is not None and response:
+            if 'energy' in response and response['energy']:
+                if 'activeTime' in response and response['activeTime'] is not None:
+                    watts = self.calculate_watts(response['energy'], response['activeTime'])
+
+                    if watts is not None and watts > 0:
+                        return watts
+        
+        return 0
+
+    def login(self):
+        """Return True if log in request succeeds"""
+
+        try:
+            jd = {'account': self.username, 'password': hashlib.md5(self.password.encode('utf-8')).hexdigest()}
+        except ValueError:
+            logger.error("Unable to read username and password")
+
+            return False
+        else:
+            response = self.call_api('/vold/user/login', 'post', json=jd)
+
+            if response is not None and response and 'tk' in response and 'accountID' in response:
+                self.tk = response['tk']
+                self.account_id = response['accountID']
+                self.enabled = True
+
+                return True
+
+            return False
 
     def turn_off(self, cid):
-        try:
-            response = self.call_api('/v1/wifi-switch-1.3/' + cid + '/status/off', 'put', headers=self.get_headers())
-        except Exception as e:
-            logger.info("error - %s" % (e))
-            pass
-        else:
+        """Return True if device has beeeen turned off"""
+
+        response = self.call_api('/v1/wifi-switch-1.3/' + cid + '/status/off', 'put', headers=self.get_headers())
+
+        if response is not None and response:
             return True
+        else:
+            return False
+
+    def turn_on(self, cid):
+        """Return True if device has beeeen turned on"""
         
-        return False
+        response = self.call_api('/v1/wifi-switch-1.3/' + cid + '/status/on', 'put', headers=self.get_headers())
+
+        if response is not None and response:
+            return True
+        else:
+            return False
 
     def update(self):
+        """Fetch updated information about devices"""
+
         if self.last_update_ts == None or (time.time() - self.last_update_ts) > self.update_interval:
             
             if not self.in_process:
@@ -136,15 +187,6 @@ class VeSync(object):
                             self.devices.append(new_device)  
 
                     self.last_update_ts = time.time()
-
-    def get_current(self, cid):
-        return None
-
-    def get_power(self, cid):
-        return None
-
-    def get_voltage(self, cid):
-        return None
 
 
 class VeSyncSwitch(object):
@@ -203,26 +245,14 @@ class VeSyncSwitch(object):
         except ValueError:
             logger.error("Unable to set switch value for model")
 
-    def turn_on(self):
-        if self.manager.turn_on(self.cid):
-            self.device_status = "on"
-        else:
-            self.device_status = "off"
+    def get_active_time(self):
+        return self.manager.get_active_time(self.cid)
 
-    def turn_off(self):
-        if self.manager.turn_off(self.cid):
-            self.device_status = "off"
-        else:
-            self.device_status = "off"
-
-    def get_current(self):
-        return self.manager.get_current(self.cid)
+    def get_kwh_today(self):
+        return self.manager.get_kwh_today(self.cid)
 
     def get_power(self):
         return self.manager.get_power(self.cid)
-
-    def get_voltage(self):
-        return self.manager.get_voltage(self.cid)
 
     def set_config(self, switch):
         self.device_name = switch.device_name
@@ -232,6 +262,14 @@ class VeSyncSwitch(object):
         self.connection_status = switch.connection_status
         self.device_type = switch.device_type
         self.model = switch.model
+
+    def turn_off(self):
+        if self.manager.turn_off(self.cid):
+            self.device_status = "off"
+
+    def turn_on(self):
+        if self.manager.turn_on(self.cid):
+            self.device_status = "on"
 
     def update(self):
         self.manager.update()
