@@ -64,6 +64,19 @@ Device API
 
 `VeSyncSwitch.update()` - Fetch updated information about device
 
+Added API Functions
+-------------------
+
+`VeSyncSwitch.get_voltage()` - Gets current voltage reading
+
+`VesyncSwitch.get_weekly_energy_total()` - Gets total energy reading for the past week
+
+`VesyncSwitch.get_monthly_energy_total()` - Gets total energy reading for the past month
+
+`VesyncSwitch.get_yearly_energy_total()` - Gets total energy reading for the past year
+
+`VesyncSwitch.get_week_daily_energy()` - Gets the list for daily energy usage over the week
+
 
 Notes
 -----
