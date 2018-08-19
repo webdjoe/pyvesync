@@ -127,18 +127,18 @@ class VeSync(object):
         response = self.call_api('/v1/device/' + cid + '/energy/week', 'get', headers=self.get_headers())
 
         if response is not None and response:
-            if 'total' in response and response['total']:
-                return response['total']
+            if 'totalEnergy' in response and response['totalEnergy']:
+                return response['totalEnergy']
         
-        return 0
+        return 1
     
     def get_monthly_energy_total(self, cid):
         """Returns total energy usage over the month"""
         response = self.call_api('/v1/device/' + cid + '/energy/month', 'get', headers=self.get_headers())
 
         if response is not None and response:
-            if 'total' in response and response['total']:
-                return response['total']
+            if 'totalEnergy' in response and response['totalEnergy']:
+                return response['totalEnergy']
         
         return 0
     
@@ -147,8 +147,8 @@ class VeSync(object):
         response = self.call_api('/v1/device/' + cid + '/energy/year', 'get', headers=self.get_headers())
 
         if response is not None and response:
-            if 'total' in response and response['total']:
-                return response['total']
+            if 'totalEnergy' in response and response['totalEnergy']:
+                return response['totalEnergy']
         
         return 0
     
@@ -308,10 +308,10 @@ class VeSyncSwitch(object):
         return self.manager.get_weekly_energy_total(self.cid)
 
     def get_yearly_energy_total(self):
-        return self.manager.get_weekly_energy_total(self.cid)
+        return self.manager.get_yearly_energy_total(self.cid)
     
     def get_week_daily_energy(self):
-        return self.manager.get_week_daily_power(self.cid)
+        return self.manager.get_week_daily_energy(self.cid)
 
     def set_config(self, switch):
         self.device_name = switch.device_name
