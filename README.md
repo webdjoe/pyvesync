@@ -54,7 +54,7 @@ Device API
 
 `VeSyncSwitch.get_active_time()` - Return active time of a device in minutes
 
-`VeSyncSwitch.get_kwh_today()` - Return total kWh for current date of a device
+`VeSyncSwitch.get_kwh_today()` - Return total kWh for current date of a device, resets at 12:01AM
 
 `VeSyncSwitch.get_power()` - Return current power in watts of a device
 
@@ -63,6 +63,19 @@ Device API
 `VeSyncSwitch.turn_off()` - Turn off a device
 
 `VeSyncSwitch.update()` - Fetch updated information about device
+
+Added API Functions
+-------------------
+
+`VeSyncSwitch.get_voltage()` - Gets current voltage reading
+
+`VesyncSwitch.get_weekly_energy_total()` - Gets total energy reading for the past week, starts 12:01AM Sunday morning
+
+`VesyncSwitch.get_monthly_energy_total()` - Gets total energy reading for the past month
+
+`VesyncSwitch.get_yearly_energy_total()` - Gets total energy reading for the past year
+
+`VesyncSwitch.get_week_daily_energy()` - Gets the list for daily energy usage over the week
 
 
 Notes

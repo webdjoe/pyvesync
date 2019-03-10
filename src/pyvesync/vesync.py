@@ -24,18 +24,12 @@ class VeSync(object):
         self.last_update_ts = None
         self.in_process = False
 
-    def calculate_watts(self, kwh, minutes):
-        """Return current watt usage of a device"""
-
-        try:
-            watts = (kwh * 60 * 1000) / minutes
-        except ZeroDivisionError:
-            return None
-        except Exception as e:
-            logger.error('Unable to calculate watts')
-            return None
-        else:
-            return watts
+    def calculate_hex(self, hex_string):
+        """Convert Hex Strings to Values"""
+        """ CREDIT FOR CONVERSION TO ITSNOTLUPUS/vesync_wsproxy  """
+        hex_conv = hex_string.split(':')
+        converted_hex = (int(hex_conv[0],16) + int(hex_conv[1],16))/8192  
+        return converted_hex
 
     def call_api(self, api, method, json=None, headers=None):
         response = None
@@ -109,14 +103,64 @@ class VeSync(object):
         response = self.call_api('/v1/device/' + cid + '/detail', 'get', headers=self.get_headers())
 
         if response is not None and response:
-            if 'energy' in response and response['energy']:
-                if 'activeTime' in response and response['activeTime'] is not None:
-                    watts = self.calculate_watts(response['energy'], response['activeTime'])
-
-                    if watts is not None and watts > 0:
-                        return watts
+            if 'power' in response and response['power']:
+                watts = self.calculate_hex(response['power'])
+                if watts is not None and watts > 0:
+                    return watts
         
         return 0
+    
+    def get_voltage(self, cid):
+        """ Return Current Voltage """
+
+        response = self.call_api('/v1/device/' + cid + '/detail', 'get', headers=self.get_headers())
+
+        if response is not None and response:
+            if 'voltage' in response and response['voltage']:
+                voltage = self.calculate_hex(response['voltage'])
+                if voltage is not None and voltage > 0:
+                    return voltage
+        return 0
+
+    def get_weekly_energy_total(self, cid):
+        """Returns the total weekly energy usage  """
+        response = self.call_api('/v1/device/' + cid + '/energy/week', 'get', headers=self.get_headers())
+
+        if response is not None and response:
+            if 'totalEnergy' in response and response['totalEnergy']:
+                return response['totalEnergy']
+        
+        return 1
+    
+    def get_monthly_energy_total(self, cid):
+        """Returns total energy usage over the month"""
+        response = self.call_api('/v1/device/' + cid + '/energy/month', 'get', headers=self.get_headers())
+
+        if response is not None and response:
+            if 'totalEnergy' in response and response['totalEnergy']:
+                return response['totalEnergy']
+        
+        return 0
+    
+    def get_yearly_energy_total(self, cid):
+        """Returns total energy usage over the year"""
+        response = self.call_api('/v1/device/' + cid + '/energy/year', 'get', headers=self.get_headers())
+
+        if response is not None and response:
+            if 'totalEnergy' in response and response['totalEnergy']:
+                return response['totalEnergy']
+        
+        return 0
+    
+    def get_week_daily_energy(self, cid):
+        """Returns daily energy usage over the week"""
+        response = self.call_api('/v1/device/' + cid + '/energy/week', 'get', headers=self.get_headers())
+        if response is not None and response:
+            if 'data' in response and response['data']:
+                return response['data']
+
+        return 0
+
 
     def login(self):
         """Return True if log in request succeeds"""
@@ -253,6 +297,21 @@ class VeSyncSwitch(object):
 
     def get_power(self):
         return self.manager.get_power(self.cid)
+    
+    def get_voltage(self):
+        return self.manager.get_voltage(self.cid)
+
+    def get_monthly_energy_total(self):
+        return self.manager.get_monthly_energy_total(self.cid)
+
+    def get_weekly_energy_total(self):
+        return self.manager.get_weekly_energy_total(self.cid)
+
+    def get_yearly_energy_total(self):
+        return self.manager.get_yearly_energy_total(self.cid)
+    
+    def get_week_daily_energy(self):
+        return self.manager.get_week_daily_energy(self.cid)
 
     def set_config(self, switch):
         self.device_name = switch.device_name
