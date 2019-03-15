@@ -466,3 +466,25 @@ class VeSyncSwitch15A(VeSyncSwitch):
             return True
         else:
             return False
+
+    def turn_on_nightlight(self):
+        body = self.get_body()
+        body['mode'] = 'auto'
+
+        response = self.manager.call_api('/15a/v1/device/nightlightstatus', 'put', headers=self.get_headers(), json=body)
+
+        if response is not None and response:
+            return True
+        else:
+            return False
+
+    def turn_off_nightlight(self):
+        body = self.get_body()
+        body['mode'] = 'manual'
+
+        response = self.manager.call_api('/15a/v1/device/nightlightstatus', 'put', headers=self.get_headers(), json=body)
+
+        if response is not None and response:
+            return True
+        else:
+            return False

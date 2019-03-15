@@ -76,6 +76,20 @@ Device API
 `VesyncSwitch.yearly_energy_total()` - Return total energy reading for the past year
 
 
+Model ESW15-USA 15A/1800W API
+---------------------------------
+The rectangular smart switch model supports some additional functionality on top of the regular api call
+
+`VeSyncSwitch.turn_on_nightlight()` - Turn on the nightlight
+
+`VeSyncSwitch.turn_off_nightlight()` - Turn off the nightlight
+
+Other Models
+------------
+
+Coming soon
+
+
 Notes
 -----
 
