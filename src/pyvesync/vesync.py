@@ -1,3 +1,4 @@
+from abc import ABCMeta, abstractmethod, abstractproperty
 import hashlib
 import logging
 import time
@@ -52,18 +53,6 @@ class VeSync(object):
         finally:
             return response
 
-    def get_active_time(self, cid):
-        """Return active time of a device in minutes"""
-
-        response = self.call_api('/v1/device/' + cid + '/detail', 'get', headers=self.get_headers())
-
-        if response is not None and response:
-            if 'activeTime' in response and response['activeTime'] is not None:
-                if response['activeTime'] >= 0:
-                    return response['activeTime']
-
-        return 0
-
     def get_devices(self):
         """Return list of VeSync devices"""
 
@@ -72,95 +61,29 @@ class VeSync(object):
         if self.enabled:
             self.in_process = True
 
-            response = self.call_api('/vold/user/devices', 'get', headers=self.get_headers())
+            body = {}
+            body['accountID'] = self.account_id
+            body['token'] = self.tk
+
+            response = self.call_api('/platform/v1/app/devices', 'post', headers=self.get_headers(), json=body)
 
             if response is not None and response:
-                for device in response:
-                    if 'deviceType' in device and 'switch' in device['deviceType']:
-                        device_list.append(VeSyncSwitch(device, self))
+                if 'devices' in response and response['devices']:
+                    for device in response['devices']:
+                        if 'deviceType' in device:
+                            if device['deviceType'] == 'ESW15-USA':
+                                device_list.append(VeSyncSwitch15A(device, self))
+                            elif device['deviceType'] == 'wifi-switch-1.3':
+                                device_list.append(VeSyncSwitch7A(device, self))
+                        else:
+                            logger.debug('no devices found')
 
             self.in_process = False
 
         return device_list
 
     def get_headers(self):
-        return {'tk': self.tk, 'accountID': self.account_id}
-
-    def get_kwh_today(self, cid):
-        """Return total kWh for current date of a device"""
-
-        response = self.call_api('/v1/device/' + cid + '/energy/week', 'get', headers=self.get_headers())
-
-        if response is not None and response:
-            if 'energyConsumptionOfToday' in response and response['energyConsumptionOfToday']:
-                return response['energyConsumptionOfToday']
-        
-        return None
-
-    def get_power(self, cid):
-        """Return current power in watts of a device"""
-
-        response = self.call_api('/v1/device/' + cid + '/detail', 'get', headers=self.get_headers())
-
-        if response is not None and response:
-            if 'power' in response and response['power']:
-                watts = self.calculate_hex(response['power'])
-                if watts is not None and watts > 0:
-                    return watts
-        
-        return 0
-    
-    def get_voltage(self, cid):
-        """ Return Current Voltage """
-
-        response = self.call_api('/v1/device/' + cid + '/detail', 'get', headers=self.get_headers())
-
-        if response is not None and response:
-            if 'voltage' in response and response['voltage']:
-                voltage = self.calculate_hex(response['voltage'])
-                if voltage is not None and voltage > 0:
-                    return voltage
-        return 0
-
-    def get_weekly_energy_total(self, cid):
-        """Returns the total weekly energy usage  """
-        response = self.call_api('/v1/device/' + cid + '/energy/week', 'get', headers=self.get_headers())
-
-        if response is not None and response:
-            if 'totalEnergy' in response and response['totalEnergy']:
-                return response['totalEnergy']
-        
-        return 1
-    
-    def get_monthly_energy_total(self, cid):
-        """Returns total energy usage over the month"""
-        response = self.call_api('/v1/device/' + cid + '/energy/month', 'get', headers=self.get_headers())
-
-        if response is not None and response:
-            if 'totalEnergy' in response and response['totalEnergy']:
-                return response['totalEnergy']
-        
-        return 0
-    
-    def get_yearly_energy_total(self, cid):
-        """Returns total energy usage over the year"""
-        response = self.call_api('/v1/device/' + cid + '/energy/year', 'get', headers=self.get_headers())
-
-        if response is not None and response:
-            if 'totalEnergy' in response and response['totalEnergy']:
-                return response['totalEnergy']
-        
-        return 0
-    
-    def get_week_daily_energy(self, cid):
-        """Returns daily energy usage over the week"""
-        response = self.call_api('/v1/device/' + cid + '/energy/week', 'get', headers=self.get_headers())
-        if response is not None and response:
-            if 'data' in response and response['data']:
-                return response['data']
-
-        return 0
-
+        return {'Content-Type': 'application/json'}
 
     def login(self):
         """Return True if log in request succeeds"""
@@ -181,26 +104,6 @@ class VeSync(object):
 
                 return True
 
-            return False
-
-    def turn_off(self, cid):
-        """Return True if device has beeeen turned off"""
-
-        response = self.call_api('/v1/wifi-switch-1.3/' + cid + '/status/off', 'put', headers=self.get_headers())
-
-        if response is not None and response:
-            return True
-        else:
-            return False
-
-    def turn_on(self, cid):
-        """Return True if device has beeeen turned on"""
-        
-        response = self.call_api('/v1/wifi-switch-1.3/' + cid + '/status/on', 'put', headers=self.get_headers())
-
-        if response is not None and response:
-            return True
-        else:
             return False
 
     def update(self):
@@ -233,7 +136,9 @@ class VeSync(object):
                     self.last_update_ts = time.time()
 
 
-class VeSyncSwitch(object):
+class VeSyncSwitchABC(object):
+    __metaclass__ = ABCMeta
+
     def __init__(self, details, manager):
         self.manager = manager
 
@@ -241,10 +146,15 @@ class VeSyncSwitch(object):
         self.device_image = None
         self.cid = None
         self.device_status = None
-        self.connection_type = None
         self.connection_status = None
+        self.connection_type = None
         self.device_type = None
-        self.model = None
+        self.type = None
+        self.uuid = None
+        self.config_module = None
+        self.current_firm_version = None
+        self.mode = None
+        self.speed = None
 
         self.configure(details)
 
@@ -270,65 +180,284 @@ class VeSyncSwitch(object):
             logger.error("cannot set device_status")
 
         try:
-            self.connection_type = details['connectionType']
-        except ValueError:
-            logger.error("cannot set connection_type")
-
-        try:
             self.connection_status = details['connectionStatus']
         except ValueError:
             logger.error("cannot set connection_status")
 
         try:
-            self.device_type = details['deviceType']
+            self.connection_type = details['connectionType']
         except ValueError:
-            logger.error("Unable to set value for device type")
+            logger.error("cannot set connection_type")
 
         try:
-            self.model = details['model']
+            self.device_type = details['deviceType']
         except ValueError:
-            logger.error("Unable to set switch value for model")
+            logger.error("cannot set device type")
+
+        try:
+            self.type = details['type']
+        except ValueError:
+            logger.error("cannot set type")
+
+        try:
+            self.uuid = details['uuid']
+        except ValueError:
+            logger.error("cannot set uuid")
+
+        try:
+            self.config_module = details['configModule']
+        except ValueError:
+            logger.error("cannot set config module")
+
+        try:
+            self.current_firm_version = details['currentFirmVersion']
+        except ValueError:
+            logger.error("cannot set current firm version")
+
+        try:
+            self.mode = details['mode']
+        except ValueError:
+            logger.error("cannot set mode")
+
+        try:
+            self.speed = details['speed']
+        except ValueError:
+            logger.error("cannot set speed")
+    
+    @abstractmethod
+    def turn_on(self):
+        pass
+
+    @abstractmethod
+    def turn_off(self):
+        pass
+
+    @abstractmethod
+    def get_active_time(self):
+        pass
+
+    @abstractmethod
+    def get_kwh_today(self):
+        pass
+
+    @abstractmethod
+    def get_power(self):
+        pass
+
+    @abstractmethod
+    def get_voltage(self):
+        pass
+
+    @abstractmethod
+    def get_monthly_energy_total(self):
+        pass
+
+    @abstractmethod
+    def get_weekly_energy_total(self):
+        pass
+
+    @abstractmethod
+    def get_yearly_energy_total(self):
+        pass
+
+    @abstractmethod
+    def get_week_daily_energy(self):
+        pass
+
+    @abstractmethod
+    def update(self):
+        pass
+
+
+class VeSyncSwitch7A(VeSyncSwitchABC):
+    def __init__(self, details, manager):
+        super(VeSyncSwitch7A, self).__init__(details, manager)
+
+    def get_headers(self):
+        return {'tk': self.manager.tk, 'accountID': self.manager.account_id}
+    
+    def turn_on(self):
+        """Return True if device has beeeen turned on"""
+        
+        response = self.manager.call_api('/v1/wifi-switch-1.3/' + self.cid + '/status/on', 'put', headers=self.get_headers())
+
+        if response is not None and response:
+            return True
+        else:
+            return False
+    
+    def turn_off(self):
+        """Return True if device has beeeen turned on"""
+        
+        response = self.manager.call_api('/v1/wifi-switch-1.3/' + self.cid + '/status/off', 'put', headers=self.get_headers())
+
+        if response is not None and response:
+            return True
+        else:
+            return False
 
     def get_active_time(self):
-        return self.manager.get_active_time(self.cid)
+        """Return active time of a device in minutes"""
+
+        response = self.manager.call_api('/v1/device/' + self.cid + '/detail', 'get', headers=self.get_headers())
+
+        if response is not None and response:
+            if 'activeTime' in response and response['activeTime'] is not None:
+                if response['activeTime'] >= 0:
+                    return response['activeTime']
+
+        return 0
 
     def get_kwh_today(self):
-        return self.manager.get_kwh_today(self.cid)
+        """Return total kWh for current date of a device"""
+
+        response = self.manager.call_api('/v1/device/' + self.cid + '/energy/week', 'get', headers=self.get_headers())
+
+        if response is not None and response:
+            if 'energyConsumptionOfToday' in response and response['energyConsumptionOfToday']:
+                return response['energyConsumptionOfToday']
+        
+        return None
 
     def get_power(self):
-        return self.manager.get_power(self.cid)
+        """Return current power in watts of a device"""
+
+        response = self.manager.call_api('/v1/device/' + self.cid + '/detail', 'get', headers=self.get_headers())
+
+        if response is not None and response:
+            if 'power' in response and response['power']:
+                watts = self.manager.calculate_hex(response['power'])
+                if watts is not None and watts > 0:
+                    return watts
+        
+        return 0
     
     def get_voltage(self):
-        return self.manager.get_voltage(self.cid)
+        """ Return Current Voltage """
 
-    def get_monthly_energy_total(self):
-        return self.manager.get_monthly_energy_total(self.cid)
+        response = self.manager.call_api('/v1/device/' + self.cid + '/detail', 'get', headers=self.get_headers())
+
+        if response is not None and response:
+            if 'voltage' in response and response['voltage']:
+                voltage = self.manager.calculate_hex(response['voltage'])
+                if voltage is not None and voltage > 0:
+                    return voltage
+        return 0
 
     def get_weekly_energy_total(self):
-        return self.manager.get_weekly_energy_total(self.cid)
+        """Returns the total weekly energy usage  """
+        response = self.manager.call_api('/v1/device/' + self.cid + '/energy/week', 'get', headers=self.get_headers())
 
+        if response is not None and response:
+            if 'totalEnergy' in response and response['totalEnergy']:
+                return response['totalEnergy']
+        
+        return 1
+    
+    def get_monthly_energy_total(self):
+        """Returns total energy usage over the month"""
+        response = self.manager.call_api('/v1/device/' + self.cid + '/energy/month', 'get', headers=self.get_headers())
+
+        if response is not None and response:
+            if 'totalEnergy' in response and response['totalEnergy']:
+                return response['totalEnergy']
+        
+        return 0
+    
     def get_yearly_energy_total(self):
-        return self.manager.get_yearly_energy_total(self.cid)
+        """Returns total energy usage over the year"""
+        response = self.manager.call_api('/v1/device/' + self.cid + '/energy/year', 'get', headers=self.get_headers())
+
+        if response is not None and response:
+            if 'totalEnergy' in response and response['totalEnergy']:
+                return response['totalEnergy']
+        
+        return 0
     
     def get_week_daily_energy(self):
-        return self.manager.get_week_daily_energy(self.cid)
+        """Returns daily energy usage over the week"""
+        response = self.manager.call_api('/v1/device/' + self.cid + '/energy/week', 'get', headers=self.get_headers())
+        if response is not None and response:
+            if 'data' in response and response['data']:
+                return response['data']
 
-    def set_config(self, switch):
-        self.device_name = switch.device_name
-        self.device_image = switch.device_image
-        self.device_status = switch.device_status
-        self.connection_type = switch.connection_type
-        self.connection_status = switch.connection_status
-        self.device_type = switch.device_type
-        self.model = switch.model
+        return 0
 
-    def turn_off(self):
-        if self.manager.turn_off(self.cid):
-            self.device_status = "off"
 
+class VeSyncSwitch15A(VeSyncSwitchABC):
+    def __init__(self, details, manager):
+        super(VeSyncSwitch15A, self).__init__(details, manager)
+        self.mobile_id = '1234567890123456'
+
+    def get_body(self):
+        body = {}
+        body['accountID'] = self.manager.account_id
+        body['token'] = self.manager.tk
+        body['uuid'] = self.uuid
+
+        return body
+
+    def get_headers(self):
+        return {'Content-Type': 'application/json'}
+    
     def turn_on(self):
-        if self.manager.turn_on(self.cid):
-            self.device_status = "on"
+        """Return True if device has beeeen turned on"""
 
-    def update(self):
-        self.manager.update()
+        body = self.get_body()
+        body['status'] = 'on'
+
+        response = self.manager.call_api('/15a/v1/device/devicestatus', 'put', headers=self.get_headers(), json=body)
+
+        if response is not None and response:
+            return True
+        else:
+            return False
+    
+    def turn_off(self):
+        """Return True if device has beeeen turned on"""
+
+        body = self.get_body()
+        body['status'] = 'off'
+        
+        response = self.manager.call_api('/15a/v1/device/devicestatus', 'put', headers=self.get_headers(), json=body)
+
+        if response is not None and response:
+            return True
+        else:
+            return False
+
+    def get_active_time(self):
+        """Return active time of a device in minutes"""
+
+        body = self.get_body()
+        body['mobileID'] = self.mobile_id
+
+        response = self.manager.call_api('/15a/v1/device/devicedetail', 'post', headers=self.get_headers(), json=body)
+
+        if response is not None and response:
+            if 'activeTime' in response and response['activeTime'] is not None:
+                if response['activeTime'] >= 0:
+                    return response['activeTime']
+
+        return 0
+
+    def get_kwh_today(self):
+        print('todo')
+
+    def get_power(self):
+        print('todo')
+    
+    def get_voltage(self):
+        print('todo')
+
+    def get_monthly_energy_total(self):
+        print('todo')
+
+    def get_weekly_energy_total(self):
+        print('todo')
+
+    def get_yearly_energy_total(self):
+        print('todo')
+    
+    def get_week_daily_energy(self):
+        print('todo')
