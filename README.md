@@ -28,14 +28,17 @@ manager.login()
 manager.update()
 
 # Get electricity metrics of devices
-for switch in manager.devices:
-    print("Switch %s is currently using %s watts" % (switch.device_name, switch.get_power()))
-    print("It has used %skWh of electricity today" % (switch.get_kwh_today()))
+for s in manager.devices:
+    print("switch %s is currently %s" % (s.device_name, s.device_status))
+    print("  active time: %s, energy: %s, power: %s, voltage: %s" % (s.active_time(), s.energy_data(), s.power(), s.voltage()))
+    print("  weekly energy: %s, monthly energy: %s, yearly energy: %s" % (s.weekly_energy_total(), s.monthly_energy_total(), s.yearly_energy_total()))
 
 # Turn on the first device
 my_switch = manager.devices[0]
 print("Turning on switch '%s'" % (my_switch.device_name))
 my_switch.turn_on()
+print("Turning off switch '%s'" % (my_switch.device_name))
+my_switch.turn_off()
 ```
 
 
@@ -52,33 +55,40 @@ Manager API
 Device API
 ----------
 
-`VeSyncSwitch.get_active_time()` - Return active time of a device in minutes
+`VeSyncSwitch.turn_on()` - Turn on the device
 
-`VeSyncSwitch.get_kwh_today()` - Return total kWh for current date of a device, resets at 12:01AM
-
-`VeSyncSwitch.get_power()` - Return current power in watts of a device
-
-`VeSyncSwitch.turn_on()` - Turn on a device
-
-`VeSyncSwitch.turn_off()` - Turn off a device
+`VeSyncSwitch.turn_off()` - Turn off the device
 
 `VeSyncSwitch.update()` - Fetch updated information about device
 
-Added API Functions
--------------------
+`VeSyncSwitch.active_time()` - Return active time of the device in minutes
 
-`VeSyncSwitch.get_voltage()` - Gets current voltage reading
+`VeSyncSwitch.energy_data()` - Return current energy usage
 
-`VesyncSwitch.get_weekly_energy_total()` - Gets total energy reading for the past week, starts 12:01AM Sunday morning
+`VeSyncSwitch.power()` - Return current power in watts of the device
 
-`VesyncSwitch.get_monthly_energy_total()` - Gets total energy reading for the past month
+`VeSyncSwitch.voltage()` - Return current voltage reading
 
-`VesyncSwitch.get_yearly_energy_total()` - Gets total energy reading for the past year
+`VesyncSwitch.weekly_energy_total()` - Return total energy reading for the past week, starts 12:01AM Sunday morning
 
-`VesyncSwitch.get_week_daily_energy()` - Gets the list for daily energy usage over the week
+`VesyncSwitch.monthly_energy_total()` - Return total energy reading for the past month
+
+`VesyncSwitch.yearly_energy_total()` - Return total energy reading for the past year
 
 
 Notes
 -----
 
-VeSync switches controlled through the Etekcity api do not always respond to the initial request for turn_on() and turn_off(). Retrying once or twice as needed often works.
+More detailed data is available within the `VesyncSwitch` by inspecting the `VesyncSwitch.energy` dictionary.
+
+The `VesyncSwitch.energy` object includes 3 nested dictionaries `week`, `month`, and `year` that contain detailed weekly, monthly and yearly data
+
+```
+VesyncSwitch.energy['week']['energy_consumption_of_today']
+VesyncSwitch.energy['week']['cost_per_kwh']
+VesyncSwitch.energy['week']['max_energy']
+VesyncSwitch.energy['week']['total_energy']
+VesyncSwitch.energy['week']['data'] which itself is a list of values
+```
+
+The VeSync api is hit or miss with this data so access is currently limited to direct lookup calls
