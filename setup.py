@@ -33,5 +33,5 @@ setup(
     packages=find_packages('src'),
     package_dir={'': "src"},
     zip_safe=False,
-    install_requires=['requests>=2.6.0'],
+    install_requires=['requests>=2.20.0'],
 )
