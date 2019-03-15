@@ -114,6 +114,8 @@ class VeSync(object):
             if not self.in_process:
                 updated_device_list = self.get_devices()
 
+                [device.update() for device in updated_device_list]
+
                 if updated_device_list is not None and updated_device_list:
                     for new_device in updated_device_list:
                         
@@ -136,7 +138,7 @@ class VeSync(object):
                     self.last_update_ts = time.time()
 
 
-class VeSyncSwitchABC(object):
+class VeSyncSwitch(object):
     __metaclass__ = ABCMeta
 
     def __init__(self, details, manager):
@@ -227,6 +229,23 @@ class VeSyncSwitchABC(object):
         except ValueError:
             logger.error("cannot set speed")
 
+    def set_config(self, device):
+        self.device_name = device.device_name
+        self.device_image = device.device_image
+        self.device_status = device.device_status
+        self.connection_status = device.connection_status
+        self.connection_type = device.connection_type
+        self.device_type = device.device_type
+        self.type = device.type
+        self.uuid = device.uuid
+        self.config_module = device.config_module
+        self.current_firm_version = device.current_firm_version
+        self.mode = device.mode
+        self.speed = device.speed
+
+        self.details = device.details
+        self.energy = device.energy
+
     @abstractmethod
     def update(self):
         raise NotImplementedError
@@ -243,47 +262,47 @@ class VeSyncSwitchABC(object):
 
     @abstractmethod
     def active_time(self):
-        """Returns active time of a device in minutes"""
+        """Return active time of a device in minutes"""
         # return self.details['active_time']
         return self.details.get('active_time')
 
     @abstractmethod
     def energy_data(self):
-        """Returns energy"""
+        """Return energy"""
         return self.details.get('energy')
 
     # @abstractmethod
     # def kwh_today(self):
-    #     """Returns total kWh for current date"""
+    #     """Return total kWh for current date"""
     #     pass
 
     @abstractmethod
     def power(self):
-        """Returns current power in watts"""
+        """Return current power in watts"""
         return self.details.get('power')
 
     @abstractmethod
     def voltage(self):
-        """Returns current voltage"""
+        """Return current voltage"""
         return self.details.get('voltage')
 
     @abstractmethod
     def monthly_energy_total(self):
-        """Returns total energy usage over the month"""
+        """Return total energy usage over the month"""
         return self.energy.get('month', {}).get('total_energy')
 
     @abstractmethod
     def weekly_energy_total(self):
-        """Returns total energy usage over the week"""
+        """Return total energy usage over the week"""
         return self.energy.get('week', {}).get('total_energy')
 
     @abstractmethod
     def yearly_energy_total(self):
-        """Returns total energy usage over the year"""
+        """Return total energy usage over the year"""
         return self.energy.get('year', {}).get('total_energy')
 
 
-class VeSyncSwitch7A(VeSyncSwitchABC):
+class VeSyncSwitch7A(VeSyncSwitch):
     def __init__(self, details, manager):
         super(VeSyncSwitch7A, self).__init__(details, manager)
 
@@ -351,7 +370,7 @@ class VeSyncSwitch7A(VeSyncSwitchABC):
             return False
 
 
-class VeSyncSwitch15A(VeSyncSwitchABC):
+class VeSyncSwitch15A(VeSyncSwitch):
     def __init__(self, details, manager):
         super(VeSyncSwitch15A, self).__init__(details, manager)
         self.mobile_id = '1234567890123456'
