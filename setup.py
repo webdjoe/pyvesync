@@ -1,22 +1,17 @@
 from setuptools import setup, find_packages
-from codecs import open
 from os import path
 
 
-here = path.abspath(path.dirname(__file__))
-
-try:
-    import pypandoc
-    long_description = pypandoc.convert(path.join(here, 'README.md'), 'rst')
-except(IOError, ImportError):
-    with open(path.join(here, 'README.md'), encoding='utf-8') as f:
-        long_description = f.read()\
+this_directory = path.abspath(path.dirname(__file__))
+with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
+    long_description = f.read()
 
 setup(
     name='pyvesync',
-    version='0.1.1',
+    version='1.0.0',
     description='pyvesync is a library to manage Etekcity Switches',
     long_description=long_description,
+    long_description_content_type='text/markdown',
     url='https://github.com/markperdue/pyvesync',
     author='Mark Perdue',
     author_email='markaperdue@gmail.com',
