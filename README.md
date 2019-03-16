@@ -14,6 +14,13 @@ Install the latest version from pip:
 pip install pyvesync
 ```
 
+Supported Devices
+-----------------
+
+1. Etekcity Voltson Smart WiFi Outlet (7A model ESW01-USA)
+2. Etekcity Voltson Smart WiFi Outlet (15A model ESW15-USA)
+3. Etekcity Voltson Smart WiFi Outlet (10A model ESW01-EU)
+4. Etekcity Smart WiFi Light Switch (model ESWL01)
 
 Usage
 -----
