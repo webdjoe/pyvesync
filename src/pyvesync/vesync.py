@@ -325,21 +325,21 @@ class VeSyncSwitch7A(VeSyncSwitch):
         else:
             logger.error('Unable to get {0} details'.format(self.device_name))
 
-    def get_energy_details(self):
-
+    def get_weekly_energy(self):
         response, _ = self.manager.call_api('/v1/device/' + self.cid + '/energy/week', 'get', headers=self.get_headers())
         if response and 'energyConsumptionOfToday' in response:
             self.energy['week'] = self.manager.get_energy_dict_from_api(response)
         else:
             logger.error('Unable to get {0} weekly data'.format(self.device_name))
-            return #Should exit if it is unable to get weekly data
 
+    def get_monthly_energy(self):
         response, _ = self.manager.call_api('/v1/device/' + self.cid + '/energy/month', 'get', headers=self.get_headers())
         if response and 'energyConsumptionOfToday' response:
             self.energy['month'] = self.manager.get_energy_dict_from_api(response)
         else:
             logger.error('Unable to get {0} monthly data'.format(self.device_name))
 
+    def get_yearly_energy(self):
         response, _ = self.manager.call_api('/v1/device/' + self.cid + '/energy/year', 'get', headers=self.get_headers())
         if response and 'energyConsumptionOfToday' in response:
             self.energy['year'] = self.manager.get_energy_dict_from_api(response)
@@ -603,6 +603,7 @@ class VeSyncSwitchEU10A(VeSyncSwitch):
             self.energy['week'] = self.manager.get_energy_dict_from_api(response)
         else:
             logger.error('Unable to get {0} weekly data'.formtat(self.device_name))
+            return
 
         response, _ = self.manager.call_api('/10a/v1/device/energymonth', 'post', headers=self.get_headers(), json=body)
         if response and 'energyConsumptionOfToday' in response:
