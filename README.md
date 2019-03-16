@@ -39,7 +39,7 @@ manager.update()
 # Get electricity metrics of devices
 for s in manager.devices:
     print("switch %s is currently %s" % (s.device_name, s.device_status))
-    print("  active time: %s, energy: %s, power: %s, voltage: %s" % (s.active_time(), s.energy_data(), s.power(), s.voltage()))
+    print("  active time: %s, energy: %s, power: %s, voltage: %s" % (s.active_time(), s.energy_today(), s.power(), s.voltage()))
     print("  weekly energy: %s, monthly energy: %s, yearly energy: %s" % (s.weekly_energy_total(), s.monthly_energy_total(), s.yearly_energy_total()))
 
 # Turn on the first device
@@ -72,7 +72,7 @@ Device API
 
 `VeSyncSwitch.active_time()` - Return active time of the device in minutes
 
-`VeSyncSwitch.energy_data()` - Return current energy usage
+`VeSyncSwitch.energy_today()` - Return current energy usage
 
 `VeSyncSwitch.power()` - Return current power in watts of the device
 

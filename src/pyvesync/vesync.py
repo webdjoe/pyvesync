@@ -25,13 +25,6 @@ class VeSync(object):
         self.last_update_ts = None
         self.in_process = False
 
-    def calculate_hex(self, hex_string):
-        """Convert Hex Strings to Values"""
-        """ CREDIT FOR CONVERSION TO ITSNOTLUPUS/vesync_wsproxy  """
-        hex_conv = hex_string.split(':')
-        converted_hex = (int(hex_conv[0],16) + int(hex_conv[1],16))/8192  
-        return converted_hex
-
     def call_api(self, api, method, json=None, headers=None):
         response = None
 
@@ -274,18 +267,12 @@ class VeSyncSwitch(object):
     @abstractmethod
     def active_time(self):
         """Return active time of a device in minutes"""
-        # return self.details['active_time']
         return self.details.get('active_time')
 
     @abstractmethod
-    def energy_data(self):
+    def energy_today(self):
         """Return energy"""
         return self.details.get('energy')
-
-    # @abstractmethod
-    # def kwh_today(self):
-    #     """Return total kWh for current date"""
-    #     pass
 
     @abstractmethod
     def power(self):
@@ -350,6 +337,7 @@ class VeSyncSwitch7A(VeSyncSwitch):
         response = self.manager.call_api('/v1/wifi-switch-1.3/' + self.cid + '/status/on', 'put', headers=self.get_headers())
 
         if response is not None and response:
+            self.device_status = 'on'
             return True
         else:
             return False
@@ -358,9 +346,23 @@ class VeSyncSwitch7A(VeSyncSwitch):
         response = self.manager.call_api('/v1/wifi-switch-1.3/' + self.cid + '/status/off', 'put', headers=self.get_headers())
 
         if response is not None and response:
+            self.device_status = 'off'
             return True
         else:
             return False
+
+    def power(self):
+        return round(float(self.calculate_hex(self.details.get('power'))), 2)
+
+    def voltage(self):
+        return round(float(self.calculate_hex(self.details.get('voltage'))), 2)
+
+    def calculate_hex(self, hex_string):
+        """Credit for conversion to itsnotlupus/vesync_wsproxy"""
+        hex_conv = hex_string.split(':')
+        converted_hex = (int(hex_conv[0],16) + int(hex_conv[1],16))/8192
+
+        return converted_hex
 
 
 class VeSyncSwitch15A(VeSyncSwitch):
@@ -424,6 +426,7 @@ class VeSyncSwitch15A(VeSyncSwitch):
         response = self.manager.call_api('/15a/v1/device/devicestatus', 'put', headers=self.get_headers(), json=body)
 
         if response is not None and response:
+            self.device_status = 'on'
             return True
         else:
             return False
@@ -435,6 +438,7 @@ class VeSyncSwitch15A(VeSyncSwitch):
         response = self.manager.call_api('/15a/v1/device/devicestatus', 'put', headers=self.get_headers(), json=body)
 
         if response is not None and response:
+            self.device_status = 'off'
             return True
         else:
             return False
@@ -521,6 +525,7 @@ class VeSyncSwitchInWall(VeSyncSwitch):
         response = self.manager.call_api('/inwallswitch/v1/device/devicestatus', 'put', headers=self.get_headers(), json=body)
 
         if response is not None and response:
+            self.device_status = 'on'
             return True
         else:
             return False
@@ -532,6 +537,7 @@ class VeSyncSwitchInWall(VeSyncSwitch):
         response = self.manager.call_api('/inwallswitch/v1/device/devicestatus', 'put', headers=self.get_headers(), json=body)
 
         if response is not None and response:
+            self.device_status = 'off'
             return True
         else:
             return False
@@ -598,6 +604,7 @@ class VeSyncSwitchEU10A(VeSyncSwitch):
         response = self.manager.call_api('/10a/v1/device/devicestatus', 'put', headers=self.get_headers(), json=body)
 
         if response is not None and response:
+            self.device_status = 'on'
             return True
         else:
             return False
@@ -609,6 +616,7 @@ class VeSyncSwitchEU10A(VeSyncSwitch):
         response = self.manager.call_api('/10a/v1/device/devicestatus', 'put', headers=self.get_headers(), json=body)
 
         if response is not None and response:
+            self.device_status = 'off'
             return True
         else:
             return False
