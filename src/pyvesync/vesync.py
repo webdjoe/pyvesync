@@ -359,10 +359,16 @@ class VeSyncSwitch7A(VeSyncSwitch):
             return False
 
     def power(self):
-        return round(float(self.calculate_hex(self.details.get('power'))), 2)
+        if self.details.get('power'):
+            return round(float(self.calculate_hex(self.details.get('power'))), 2)
+        else:
+            return None
 
     def voltage(self):
-        return round(float(self.calculate_hex(self.details.get('voltage'))), 2)
+        if self.details.get('voltage'):
+            return round(float(self.calculate_hex(self.details.get('voltage'))), 2)
+        else:
+            return None
 
     def calculate_hex(self, hex_string):
         """Credit for conversion to itsnotlupus/vesync_wsproxy"""
