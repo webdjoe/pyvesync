@@ -313,6 +313,7 @@ class VeSyncSwitch7A(VeSyncSwitch):
         response, _ = self.manager.call_api('/v1/device/' + self.cid + '/detail', 'get', headers=self.get_headers())
 
         if response is not None and response:
+            self.device_status = response['deviceStatus']
             self.details['active_time'] = response['activeTime']
             self.details['energy'] = response['energy']
             self.details['power'] = response['power']
@@ -390,6 +391,7 @@ class VeSyncSwitch15A(VeSyncSwitch):
         response, _ = self.manager.call_api('/15a/v1/device/devicedetail', 'post', headers=self.get_headers(), json=body)
 
         if response is not None and response:
+            self.device_status = response['deviceStatus']
             self.details['active_time'] = response['activeTime']
             self.details['energy'] = response['energy']
             self.details['night_light_status'] = response['nightLightStatus']
@@ -491,6 +493,7 @@ class VeSyncSwitchInWall(VeSyncSwitch):
         response, _ = self.manager.call_api('/inwallswitch/v1/device/devicedetail', 'post', headers=self.get_headers(), json=body)
 
         if response is not None and response:
+            self.device_status = response['deviceStatus']
             self.details['active_time'] = response['activeTime']
             self.details['device_status'] = response['deviceStatus']
             self.details['connection_status'] = response['connectionStatus']
@@ -568,6 +571,7 @@ class VeSyncSwitchEU10A(VeSyncSwitch):
         response, _ = self.manager.call_api('/10a/v1/device/devicedetail', 'post', headers=self.get_headers(), json=body)
 
         if response is not None and response:
+            self.device_status = response['deviceStatus']
             self.details['active_time'] = response['activeTime']
             self.details['energy'] = response['energy']
             self.details['night_light_status'] = response['nightLightStatus']
