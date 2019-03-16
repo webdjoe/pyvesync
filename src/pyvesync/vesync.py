@@ -66,10 +66,14 @@ class VeSync(object):
                 if 'devices' in response and response['devices']:
                     for device in response['devices']:
                         if 'deviceType' in device:
-                            if device['deviceType'] == 'ESW15-USA':
-                                device_list.append(VeSyncSwitch15A(device, self))
-                            elif device['deviceType'] == 'wifi-switch-1.3':
+                            if device['deviceType'] == 'wifi-switch-1.3':
                                 device_list.append(VeSyncSwitch7A(device, self))
+                            elif device['deviceType'] == 'ESW15-USA':
+                                device_list.append(VeSyncSwitch15A(device, self))
+                            elif device['deviceType'] == 'ESWL01':
+                                device_list.append(VeSyncSwitchInWall(device, self))
+                            elif device['deviceType'] == 'ESW01-EU':
+                                device_list.append(VeSyncSwitchEU10A(device, self))
                         else:
                             logger.debug('no devices found')
 
@@ -500,28 +504,8 @@ class VeSyncSwitchInWall(VeSyncSwitch):
             self.details['power'] = response['power']
             self.details['voltage'] = response['voltage']
 
-    def get_energy_details(self):
-        body = self.get_body()
-        body['token'] = self.manager.tk
-        body['accountID'] = self.manager.account_id
-        body['timeZone'] = 'America/New_York'
-        body['uuid'] = self.uuid
-
-        response, _ = self.manager.call_api('/inwallswitch/v1/device/energyweek', 'post', headers=self.get_headers(), json=body)
-        if response is not None and response:
-            self.energy['week'] = self.manager.get_energy_dict_from_api(response)
-
-        response, _ = self.manager.call_api('/inwallswitch/v1/device/energymonth', 'post', headers=self.get_headers(), json=body)
-        if response is not None and response:
-            self.energy['month'] = self.manager.get_energy_dict_from_api(response)
-
-        response, _ = self.manager.call_api('/inwallswitch/v1/device/energyyear', 'post', headers=self.get_headers(), json=body)
-        if response is not None and response:
-            self.energy['year'] = self.manager.get_energy_dict_from_api(response)
-
     def update(self):
         self.get_details()
-        self.get_energy_details()
     
     def turn_on(self):
         body = self.get_body()
