@@ -14,6 +14,7 @@ Install the latest version from pip:
 pip install pyvesync
 ```
 
+
 Supported Devices
 -----------------
 
@@ -21,6 +22,7 @@ Supported Devices
 2. Etekcity Voltson Smart WiFi Outlet (15A model ESW15-USA)
 3. Etekcity Voltson Smart WiFi Outlet (10A model ESW01-EU)
 4. Etekcity Smart WiFi Light Switch (model ESWL01)
+
 
 Usage
 -----
@@ -90,11 +92,6 @@ The rectangular smart switch model supports some additional functionality on top
 `VeSyncSwitch.turn_on_nightlight()` - Turn on the nightlight
 
 `VeSyncSwitch.turn_off_nightlight()` - Turn off the nightlight
-
-Other Models
-------------
-
-Coming soon
 
 
 Notes
