@@ -348,12 +348,16 @@ class VeSyncSwitch7A(VeSyncSwitch):
 
     def update(self):
         self.get_details()
+<<<<<<< HEAD
 
     def update_energy(self):
         self.get_weekly_energy()
         if self.energy['weekly']: #only update monthly & yearly if weekly succeeds
             self.get_monthly_energy()
             self.get_yearly_energy()
+=======
+        self.get_energy_details()
+>>>>>>> fea42ea6200ce241200ed34da7e41985cb721620
 
 
     def turn_on(self):
@@ -430,6 +434,10 @@ class VeSyncSwitch15A(VeSyncSwitch):
     def get_weekly_energy(self):
         body = self.get_body()
         body['timeZone'] = 'America/New_York'
+<<<<<<< HEAD
+=======
+
+>>>>>>> fea42ea6200ce241200ed34da7e41985cb721620
         response, _ = self.manager.call_api('/15a/v1/device/energyweek', 'post', headers=self.get_headers(), json=body)
         if response and 'energyConsumptionOfToday' in response:
             self.energy['week'] = self.manager.get_energy_dict_from_api(response)
@@ -458,12 +466,16 @@ class VeSyncSwitch15A(VeSyncSwitch):
 
     def update(self):
         self.get_details()
+<<<<<<< HEAD
 
     def update_energy(self):
         self.get_weekly_energy()
         if 'weekly' in self.energy:
             self.get_monthly_energy()
             self.get_yearly_energy()
+=======
+        self.get_energy_details()
+>>>>>>> fea42ea6200ce241200ed34da7e41985cb721620
 
     def turn_on(self):
         body = self.get_body()
@@ -616,20 +628,27 @@ class VeSyncSwitchEU10A(VeSyncSwitch):
             self.energy['week'] = self.manager.get_energy_dict_from_api(response)
         else:
             logger.error('Unable to get {0} weekly data'.formtat(self.device_name))
+<<<<<<< HEAD
 
     def get_monthly_energy(self):
         body = self.get_body()
         body['timeZone'] = 'America/New_York'
+=======
+            return
+>>>>>>> fea42ea6200ce241200ed34da7e41985cb721620
 
         response, _ = self.manager.call_api('/10a/v1/device/energymonth', 'post', headers=self.get_headers(), json=body)
         if response and 'energyConsumptionOfToday' in response:
             self.energy['month'] = self.manager.get_energy_dict_from_api(response)
         else:
             logger.error('Unable to get {0} monthly data'.formtat(self.device_name))
+<<<<<<< HEAD
 
     def get_yearly_energy(self):
         body = self.get_body()
         body['timeZone'] = 'America/New_York'
+=======
+>>>>>>> fea42ea6200ce241200ed34da7e41985cb721620
 
         response, _ = self.manager.call_api('/10a/v1/device/energyyear', 'post', headers=self.get_headers(), json=body)
         if response and 'energyConsumptionOfToday' in response:
@@ -639,12 +658,16 @@ class VeSyncSwitchEU10A(VeSyncSwitch):
 
     def update(self):
         self.get_details()
+<<<<<<< HEAD
 
     def update_energy(self):
         self.get_weekly_energy()
         if 'weekly' in self.energy:
             self.get_monthly_energy()
             self.get_yearly_energy()
+=======
+        self.get_energy_details()
+>>>>>>> fea42ea6200ce241200ed34da7e41985cb721620
 
     def turn_on(self):
         body = self.get_body()
