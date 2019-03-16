@@ -334,7 +334,7 @@ class VeSyncSwitch7A(VeSyncSwitch):
 
     def get_monthly_energy(self):
         response, _ = self.manager.call_api('/v1/device/' + self.cid + '/energy/month', 'get', headers=self.get_headers())
-        if response and 'energyConsumptionOfToday' response:
+        if response and 'energyConsumptionOfToday' in response:
             self.energy['month'] = self.manager.get_energy_dict_from_api(response)
         else:
             logger.error('Unable to get {0} monthly data'.format(self.device_name))
