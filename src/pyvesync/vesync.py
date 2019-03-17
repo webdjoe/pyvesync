@@ -34,9 +34,15 @@ class VeSync(object):
         self.in_process = False
 
     if isinstance(time_zone, str) and len(time_zone) > 2:
+        i = 0
         for a in time_zone:
-            if (a.isSpace()) == True
-                self.time_zone = DEFAULT_TZ
+            if (a.isSpace()) == True:
+                i += 1
+        if i == 0:
+            self.time_zone = time_zone
+        else:
+            self.time_zone = DEFAULT_TZ
+
     else:
         self.time_zone = DEFAULT_TZ
 
