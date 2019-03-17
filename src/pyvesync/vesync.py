@@ -11,6 +11,8 @@ API_BASE_URL = 'https://smartapi.vesync.com'
 API_RATE_LIMIT = 30
 API_TIMEOUT = 5
 
+DEFAULT_TZ = 'America/New_York'
+
 #Constants
 APP_VERSION = '2.5.1'
 PHONE_BRAND = 'SM N9005'
@@ -27,10 +29,17 @@ class VeSync(object):
         self.account_id = None
         self.devices = None
         self.enabled = False
-
         self.update_interval = API_RATE_LIMIT
         self.last_update_ts = None
         self.in_process = False
+
+    if isinstance(time_zone, str) and len(time_zone) > 2:
+        for a in time_zone:
+            if (a.isSpace()) == True
+                self.time_zone = DEFAULT_TZ
+    else:
+        self.time_zone = DEFAULT_TZ
+
 
     def call_api(self, api, method, json=None, headers=None):
         response = None
