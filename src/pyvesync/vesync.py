@@ -35,18 +35,7 @@ class VeSync(object):
         self.in_process = False
 
     #I'm working on a regular expression test that's more robust but it's not ready yet
-    if isinstance(time_zone, str) and len(time_zone) > 2:
-        i = 0
-        for a in time_zone:
-            if a.isSpace():
-                i += 1
-        if i == 0:
-            self.time_zone = time_zone
-        else:
-            self.time_zone = DEFAULT_TZ
-
-    else:
-        self.time_zone = DEFAULT_TZ
+        self.time_zone = time_zone
 
     def call_api(self, api, method, json=None, headers=None):
         response = None
@@ -114,7 +103,7 @@ class VeSync(object):
 
     def get_energy_dict_from_api(self, response):
         data = {}
-        data['energy_consumption_of_today'] = response['energyConsumptionOfToday']
+        data['energy_cons_of_today'] = response['energyConsumptionOfToday']
         data['cost_per_kwh'] = response['costPerKWH']
         data['max_energy'] = response['maxEnergy']
         data['total_energy'] = response['totalEnergy']
@@ -221,7 +210,7 @@ class VeSync(object):
 
                     self.last_update_ts = time.time()
 
-    def check_response(resp, call):
+    def check_response(self, resp, call):
         stand_resp = ['get_devices', 'login', '15a_detail', '15a_toggle',
                       '15a_energy', 'walls_detail', 'walls_toggle',
                       '10a_detail', '10a_toggle', '10a_energy', '15a_ntlight'
@@ -408,7 +397,7 @@ class VeSyncSwitch7A(VeSyncSwitch):
     def get_details(self):
         response, _ = self.manager.call_api('/v1/device/' + self.cid + '/detail', 'get', headers=self.manager.get_headers())
 
-        if response is not None and self.manager.check_response(response, '7a_details'):
+        if response is not None and self.manager.check_response(response, '7a_detail'):
             self.device_status = response['deviceStatus']
             self.details['active_time'] = response['activeTime']
             self.details['energy'] = response['energy']
@@ -444,13 +433,13 @@ class VeSyncSwitch7A(VeSyncSwitch):
 
     def update_energy(self):
         self.get_weekly_energy()
-        if self.energy['weekly']:
+        if self.energy['week']:
             self.get_monthly_energy()
             self.get_yearly_energy()
 
 
     def turn_on(self):
-        _, status_code = self.manager.call_api('/v1/wifi-switch-1.3/' + self.cid + '/status/on', 'put', headers=self.get_headers())
+        _, status_code = self.manager.call_api('/v1/wifi-switch-1.3/' + self.cid + '/status/on', 'put', headers=self.manager.get_headers())
 
         if status_code is not None and status_code == 200:
             self.device_status = 'on'
@@ -459,7 +448,7 @@ class VeSyncSwitch7A(VeSyncSwitch):
             return False
 
     def turn_off(self):
-        _, status_code = self.manager.call_api('/v1/wifi-switch-1.3/' + self.cid + '/status/off', 'put', headers=self.get_headers())
+        _, status_code = self.manager.call_api('/v1/wifi-switch-1.3/' + self.cid + '/status/off', 'put', headers=self.manager.get_headers())
 
         if status_code is not None and status_code == 200:
             self.device_status = 'off'
@@ -552,7 +541,7 @@ class VeSyncSwitch15A(VeSyncSwitch):
 
     def update_energy(self):
         self.get_weekly_energy()
-        if 'weekly' in self.energy:
+        if 'week' in self.energy:
             self.get_monthly_energy()
             self.get_yearly_energy()
 
@@ -620,6 +609,13 @@ class VeSyncSwitchInWall(VeSyncSwitch):
 
     def update(self):
         self.get_details()
+
+    def update_energy(self):
+        #Build empty energy dictionary for light switch
+        timekeys = ['week', 'month', 'year']
+        keys = ['energy_cons_of_today', 'cost_per_kwh', 'max_energy',
+                'total_energy', 'currency', 'data']
+        self.energy = {key: {k: None for k in keys} for key in timekeys}
 
     def turn_on(self):
         body = self.manager.get_body('devicestatus')
@@ -715,7 +711,7 @@ class VeSyncSwitchEU10A(VeSyncSwitch):
 
     def update_energy(self):
         self.get_weekly_energy()
-        if 'weekly' in self.energy:
+        if 'week' in self.energy:
             self.get_monthly_energy()
             self.get_yearly_energy()
 
