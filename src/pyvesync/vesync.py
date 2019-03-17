@@ -33,6 +33,7 @@ class VeSync(object):
         self.last_update_ts = None
         self.in_process = False
 
+    #I'm working on a regular expression test that's more robust but it's not ready yet
     if isinstance(time_zone, str) and len(time_zone) > 2:
         i = 0
         for a in time_zone:
