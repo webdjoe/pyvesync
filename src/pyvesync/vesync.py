@@ -20,6 +20,7 @@ PHONE_OS = 'Android'
 MOBILE_ID = '1234567890123456'
 USER_TYPE = '1'
 
+
 class VeSync(object):
     def __init__(self, username, password, time_zone):
         self.username = username
@@ -37,7 +38,7 @@ class VeSync(object):
     if isinstance(time_zone, str) and len(time_zone) > 2:
         i = 0
         for a in time_zone:
-            if (a.isSpace()) == True:
+            if a.isSpace():
                 i += 1
         if i == 0:
             self.time_zone = time_zone
@@ -47,7 +48,6 @@ class VeSync(object):
     else:
         self.time_zone = DEFAULT_TZ
 
-
     def call_api(self, api, method, json=None, headers=None):
         response = None
         status_code = None
@@ -55,11 +55,17 @@ class VeSync(object):
         try:
             logger.debug("[%s] calling '%s' api" % (method, api))
             if method == 'get':
-                r = requests.get(API_BASE_URL + api, json=json, headers=headers, timeout=API_TIMEOUT)
+                r = requests.get(API_BASE_URL + api, json=json,
+                                 headers=headers, timeout=API_TIMEOUT
+                                 )
             elif method == 'post':
-                r = requests.post(API_BASE_URL + api, json=json, headers=headers, timeout=API_TIMEOUT)
+                r = requests.post(API_BASE_URL + api, json=json,
+                                  headers=headers, timeout=API_TIMEOUT
+                                  )
             elif method == 'put':
-                r = requests.put(API_BASE_URL + api, json=json, headers=headers, timeout=API_TIMEOUT)
+                r = requests.put(API_BASE_URL + api, json=json,
+                                 headers=headers, timeout=API_TIMEOUT
+                                 )
         except requests.exceptions.RequestException as e:
             logger.error(e)
         except Exception as e:
@@ -82,7 +88,10 @@ class VeSync(object):
             body = self.get_body('devicelist')
             body['method'] = 'devices'
 
-            response, _ = self.call_api('/cloud/v1/deviceManaged/devices', 'post', headers=self.get_headers(), json=body)
+            response, _ = self.call_api('/cloud/v1/deviceManaged/devices',
+                                        'post', headers=self.get_headers(),
+                                        json=body
+                                        )
 
             if response and self.check_response(response, 'get_devices'):
                 if response['result']:
@@ -149,9 +158,9 @@ class VeSync(object):
             devlist = dict(**bodybase, **bodyauth, **bodydetails)
             devlist['method'] = 'devices'
             devlist['pageNo'] = '1'
-            devlist['pageSize'] ='50'
+            devlist['pageSize'] = '50'
             return devlist
-        elif type_ ==  'devicedetail':
+        elif type_ == 'devicedetail':
             devdetail = dict(**bodybase, **bodyauth, **bodydetails)
             return devdetail
         elif type_ == 'devicestatus':
@@ -184,7 +193,7 @@ class VeSync(object):
     def update(self):
         """Fetch updated information about devices"""
 
-        if self.last_update_ts == None or (time.time() - self.last_update_ts) > self.update_interval:
+        if self.last_update_ts is None or (time.time() - self.last_update_ts) > self.update_interval:
 
             if not self.in_process:
                 updated_device_list = self.get_devices()
@@ -213,12 +222,12 @@ class VeSync(object):
                     self.last_update_ts = time.time()
 
     def check_response(resp, call):
-        stand_resp = ['get_devices', 'login', '15a_detail', '15a_toggle', 
-                     '15a_energy', 'walls_detail', 'walls_toggle', 
-                     '10a_detail', '10a_toggle', '10a_energy', '15a_ntlight'
-                     ]
+        stand_resp = ['get_devices', 'login', '15a_detail', '15a_toggle',
+                      '15a_energy', 'walls_detail', 'walls_toggle',
+                      '10a_detail', '10a_toggle', '10a_energy', '15a_ntlight'
+                      ]
         if call in stand_resp:
-            if resp['code'] == 0
+            if resp['code'] == 0:
                 return True
             else:
                 return False
@@ -232,8 +241,6 @@ class VeSync(object):
                 return True
             else:
                 return False
-        
-
 
 
 class VeSyncSwitch(object):
@@ -437,7 +444,7 @@ class VeSyncSwitch7A(VeSyncSwitch):
 
     def update_energy(self):
         self.get_weekly_energy()
-        if self.energy['weekly']: #only update monthly & yearly if weekly succeeds
+        if self.energy['weekly']:
             self.get_monthly_energy()
             self.get_yearly_energy()
 
