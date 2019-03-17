@@ -430,13 +430,11 @@ class VeSyncSwitch7A(VeSyncSwitch):
     def update(self):
         self.get_details()
 
-
     def update_energy(self):
         self.get_weekly_energy()
         if self.energy['week']:
             self.get_monthly_energy()
             self.get_yearly_energy()
-
 
     def turn_on(self):
         _, status_code = self.manager.call_api('/v1/wifi-switch-1.3/' + self.cid + '/status/on', 'put', headers=self.manager.get_headers())
@@ -471,7 +469,7 @@ class VeSyncSwitch7A(VeSyncSwitch):
     def calculate_hex(self, hex_string):
         """Credit for conversion to itsnotlupus/vesync_wsproxy"""
         hex_conv = hex_string.split(':')
-        converted_hex = (int(hex_conv[0],16) + int(hex_conv[1],16))/8192
+        converted_hex = (int(hex_conv[0], 16) + int(hex_conv[1], 16))/8192
 
         return converted_hex
 
@@ -535,7 +533,6 @@ class VeSyncSwitch15A(VeSyncSwitch):
         else:
             logger.error('Unable to get {0} yearly data'.format(self.device_name))
 
-
     def update(self):
         self.get_details()
 
@@ -544,7 +541,6 @@ class VeSyncSwitch15A(VeSyncSwitch):
         if 'week' in self.energy:
             self.get_monthly_energy()
             self.get_yearly_energy()
-
 
     def turn_on(self):
         body = self.get_body('status')
@@ -688,7 +684,6 @@ class VeSyncSwitchEU10A(VeSyncSwitch):
     def get_monthly_energy(self):
         body = self.get_body('detail')
         body['method'] = 'energymonth'
-
 
         response, _ = self.manager.call_api('/10a/v1/device/energymonth', 'post', headers=self.manager.get_headers(), json=body)
         if self.manager.check_response(repsonse, '10a_energy'):
