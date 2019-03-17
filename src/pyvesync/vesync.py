@@ -124,7 +124,7 @@ class VeSync(object):
         header['tz'] = self.time_zone
         return header
 
-    def get_body(self, type):
+    def get_body(self, type_):
         bodybase = {}
         bodybase['timeZone'] = self.time_zone
         bodybase['acceptLanguage'] = 'en'
@@ -139,22 +139,22 @@ class VeSync(object):
         bodydetails['phoneOS'] = PHONE_OS
         bodydetails['traceId'] = str(int(time.time()))
 
-        if type == 'login':
+        if type_ == 'login':
             login = dict(**bodybase, **bodydetails)
             login['devToken'] = ''
             login['userType'] = USER_TYPE
             login['method'] = 'login'
             return login
-        elif type == 'devicelist':
+        elif type_ == 'devicelist':
             devlist = dict(**bodybase, **bodyauth, **bodydetails)
             devlist['method'] = 'devices'
             devlist['pageNo'] = '1'
             devlist['pageSize'] ='50'
             return devlist
-        elif type ==  'devicedetail':
+        elif type_ ==  'devicedetail':
             devdetail = dict(**bodybase, **bodyauth, **bodydetails)
             return devdetail
-        elif type == 'devicestatus':
+        elif type_ == 'devicestatus':
             devstatus = dict(**bodybase, **bodyauth)
             return devstatus
 
@@ -468,10 +468,10 @@ class VeSyncSwitch15A(VeSyncSwitch):
     def __init__(self, details, manager):
         super(VeSyncSwitch15A, self).__init__(details, manager)
 
-    def get_body(self, type):
-        if type == 'details':
+    def get_body(self, type_):
+        if type_ == 'details':
             body = self.manager.get_body('devicedetail')
-        if type == 'status':
+        if type_ == 'status':
             body = self.manager.get_body('devicestatus')
         body['uuid'] = self.uuid
         return body
@@ -629,10 +629,10 @@ class VeSyncSwitchEU10A(VeSyncSwitch):
     def __init__(self, details, manager):
         super(VeSyncSwitchEU10A, self).__init__(details, manager)
 
-    def get_body(self, type):
-        if type == 'detail':
+    def get_body(self, type_):
+        if type_ == 'detail':
             body = self.manager.get_body('devicestatus')
-        elif type == 'status':
+        elif type_ == 'status':
             body = self.manager.get_body('status')
         body['uuid'] = self.uuid
         return body
