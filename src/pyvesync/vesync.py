@@ -3,7 +3,7 @@ import hashlib
 import logging
 import time
 import requests
-
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +13,6 @@ API_TIMEOUT = 5
 
 DEFAULT_TZ = 'America/New_York'
 
-#Constants
 APP_VERSION = '2.5.1'
 PHONE_BRAND = 'SM N9005'
 PHONE_OS = 'Android'
@@ -25,7 +24,6 @@ class VeSync(object):
     def __init__(self, username, password, time_zone):
         self.username = username
         self.password = password
-        self.time_zone = time_zone
         self.tk = None
         self.account_id = None
         self.devices = None
@@ -34,8 +32,16 @@ class VeSync(object):
         self.last_update_ts = None
         self.in_process = False
 
-    #I'm working on a regular expression test that's more robust but it's not ready yet
-        self.time_zone = time_zone
+        if isinstance(time_zone, str):
+            reg_test = r"[^a-zA-Z/_]"
+            if bool(re.search(reg_test, time_zone)):
+                self.time_zone = DEFAULT_TZ
+                logger.error("Time zone contains invalid characters" + time_zone)
+            else:
+                self.time_zone = time_zone
+        else:
+            self.time_zone = DEFAULT_TZ
+            logger.error("Time zone is not a string - " + time_zone)
 
     def call_api(self, api, method, json=None, headers=None):
         response = None
@@ -686,7 +692,7 @@ class VeSyncSwitchEU10A(VeSyncSwitch):
         body['method'] = 'energymonth'
 
         response, _ = self.manager.call_api('/10a/v1/device/energymonth', 'post', headers=self.manager.get_headers(), json=body)
-        if self.manager.check_response(repsonse, '10a_energy'):
+        if self.manager.check_response(response, '10a_energy'):
             self.energy['month'] = self.manager.get_energy_dict_from_api(response)
         else:
             logger.error('Unable to get {0} monthly data'.format(self.device_name))
