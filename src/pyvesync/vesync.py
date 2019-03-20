@@ -695,7 +695,7 @@ class VeSyncSwitchInWall(VeSyncSwitch):
     def update_energy(self):
         #Build empty energy dictionary for light switch
         timekeys = ['week', 'month', 'year']
-        keys = ['energy_cons_of_today', 'cost_per_kwh', 'max_energy',
+        keys = ['energy_consumption_of_today', 'cost_per_kwh', 'max_energy',
                 'total_energy', 'currency', 'data']
         self.energy = {key: {k: None for k in keys} for key in timekeys}
 
@@ -758,8 +758,8 @@ class VeSyncSwitchEU10A(VeSyncSwitch):
             self.details['night_light_status'] = r['nightLightStatus']
             self.details['night_light_brightness'] = r['nightLightBrightness']
             self.details['night_light_automode'] = r['nightLightAutomode']
-            self.details['power'] = response['power']
-            self.details['voltage'] = response['voltage']
+            self.details['power'] = r['power']
+            self.details['voltage'] = r['voltage']
         else:
             logger.error('Unable to get {0} details'.format(self.device_name))
 
