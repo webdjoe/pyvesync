@@ -36,8 +36,10 @@ manager = VeSync("USERNAME", "PASSWORD")
 manager.login()
 manager.update()
 
+
 # Get electricity metrics of devices
 for s in manager.devices:
+    s.update_energy() # Get energy history for each device
     print("switch %s is currently %s" % (s.device_name, s.device_status))
     print("  active time: %s, energy: %s, power: %s, voltage: %s" % (s.active_time(), s.energy_today(), s.power(), s.voltage()))
     print("  weekly energy: %s, monthly energy: %s, yearly energy: %s" % (s.weekly_energy_total(), s.monthly_energy_total(), s.yearly_energy_total()))
@@ -78,6 +80,8 @@ Device API
 
 `VeSyncSwitch.voltage()` - Return current voltage reading
 
+`VeSyncSwitch.energy_update()` - Get switch energy history
+
 `VesyncSwitch.weekly_energy_total()` - Return total energy reading for the past week, starts 12:01AM Sunday morning
 
 `VesyncSwitch.monthly_energy_total()` - Return total energy reading for the past month
@@ -102,7 +106,7 @@ More detailed data is available within the `VesyncSwitch` by inspecting the `Ves
 The `VesyncSwitch.energy` object includes 3 nested dictionaries `week`, `month`, and `year` that contain detailed weekly, monthly and yearly data
 
 ```
-VesyncSwitch.energy['week']['energy_consumption_of_today']
+VesyncSwitch.energy['week']['energy_cons_of_today']
 VesyncSwitch.energy['week']['cost_per_kwh']
 VesyncSwitch.energy['week']['max_energy']
 VesyncSwitch.energy['week']['total_energy']
