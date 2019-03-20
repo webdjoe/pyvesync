@@ -36,7 +36,7 @@ class VeSync(object):
             reg_test = r"[^a-zA-Z/_]"
             if bool(re.search(reg_test, time_zone)):
                 self.time_zone = DEFAULT_TZ
-                logger.error("Time zone contains invalid characters" + time_zone)
+                logger.error("Invalid characters in time zone - " + time_zone)
             else:
                 self.time_zone = time_zone
         else:
@@ -93,13 +93,17 @@ class VeSync(object):
                     for device in response['result']['list']:
                         if 'deviceType' in device:
                             if device['deviceType'] == 'wifi-switch-1.3':
-                                device_list.append(VeSyncSwitch7A(device, self))
+                                device_list.append(VeSyncSwitch7A(device,
+                                                   self))
                             elif device['deviceType'] == 'ESW15-USA':
-                                device_list.append(VeSyncSwitch15A(device, self))
+                                device_list.append(VeSyncSwitch15A(device,
+                                                   self))
                             elif device['deviceType'] == 'ESWL01':
-                                device_list.append(VeSyncSwitchInWall(device, self))
+                                device_list.append(VeSyncSwitchInWall(device,
+                                                   self))
                             elif device['deviceType'] == 'ESW01-EU':
-                                device_list.append(VeSyncSwitchEU10A(device, self))
+                                device_list.append(VeSyncSwitchEU10A(device,
+                                                   self))
                         else:
                             logger.debug('no devices found')
 
@@ -107,14 +111,14 @@ class VeSync(object):
 
         return device_list
 
-    def get_energy_dict_from_api(self, response):
+    def build_energy_dict(self, r):
         data = {}
-        data['energy_cons_of_today'] = response['energyConsumptionOfToday']
-        data['cost_per_kwh'] = response['costPerKWH']
-        data['max_energy'] = response['maxEnergy']
-        data['total_energy'] = response['totalEnergy']
-        data['currency'] = response['currency'] if 'currency' in response else ''
-        data['data'] = response['data']
+        data['energy_consumption_of_today'] = r['energyConsumptionOfToday']
+        data['cost_per_kwh'] = r['costPerKWH']
+        data['max_energy'] = r['maxEnergy']
+        data['total_energy'] = r['totalEnergy']
+        data['currency'] = r['currency'] if 'currency' in r else ''
+        data['data'] = r['data']
 
         return data
 
@@ -166,7 +170,8 @@ class VeSync(object):
         """Return True if log in request succeeds"""
 
         try:
-            jd = {'email': self.username, 'password': hashlib.md5(self.password.encode('utf-8')).hexdigest()}
+            hash_pass = hashlib.md5(self.password.encode('utf-8')).hexdigest()
+            jd = {'email': self.username, 'password': hash_pass}
             body = self.get_body('login')
             body.update(jd)
         except ValueError:
@@ -174,7 +179,8 @@ class VeSync(object):
 
             return False
         else:
-            response, _ = self.call_api('/cloud/v1/user/login', 'post', json=body)
+            response, _ = self.call_api('/cloud/v1/user/login',
+                                        'post', json=body)
 
             if response and self.check_response(response, 'login'):
                 self.tk = response['result']['token']
@@ -188,7 +194,8 @@ class VeSync(object):
     def update(self):
         """Fetch updated information about devices"""
 
-        if self.last_update_ts is None or (time.time() - self.last_update_ts) > self.update_interval:
+        if self.last_update_ts is None or (
+                time.time() - self.last_update_ts) > self.update_interval:
 
             if not self.in_process:
                 updated_device_list = self.get_devices()
@@ -198,7 +205,7 @@ class VeSync(object):
                 if updated_device_list is not None and updated_device_list:
                     for new_device in updated_device_list:
 
-                        if self.devices is not None and self.devices:  # Check if device is already known
+                        if self.devices is not None and self.devices:
                             was_found = False
 
                             for device in self.devices:
@@ -400,10 +407,31 @@ class VeSyncSwitch7A(VeSyncSwitch):
     def __init__(self, details, manager):
         super(VeSyncSwitch7A, self).__init__(details, manager)
 
-    def get_details(self):
-        response, _ = self.manager.call_api('/v1/device/' + self.cid + '/detail', 'get', headers=self.manager.get_headers())
+    def url_build(self, cid, call_):
+        if cid is not None and call_ is not None:
+            base_url = '/v1/device/' + cid
+            if call_ == 'detail':
+                api_url = base_url + '/detail'
+            elif call_ == 'on':
+                api_url = base_url + '/status/on'
+            elif call_ == 'off':
+                api_url = base_url + '/status/off'
+            elif call_ == 'week':
+                api_url = base_url + '/energy/week'
+            elif call_ == 'month':
+                api_url = base_url + '/energy/month'
+            elif call_ == 'year':
+                api_url = base_url + '/energy/year'
+            return api_url
 
-        if response is not None and self.manager.check_response(response, '7a_detail'):
+    def get_details(self):
+        response, _ = self.manager.call_api(
+                self.url_build(self.cid, 'detail'), 'get',
+                headers=self.manager.get_headers())
+
+        if (response is not None and
+                self.manager.check_response(response, '7a_detail')):
+
             self.device_status = response['deviceStatus']
             self.details['active_time'] = response['activeTime']
             self.details['energy'] = response['energy']
@@ -413,25 +441,40 @@ class VeSyncSwitch7A(VeSyncSwitch):
             logger.error('Unable to get {0} details'.format(self.device_name))
 
     def get_weekly_energy(self):
-        response, _ = self.manager.call_api('/v1/device/' + self.cid + '/energy/week', 'get', headers=self.manager.get_headers())
-        if response and self.manager.check_response(response, '7a_energy'):
-            self.energy['week'] = self.manager.get_energy_dict_from_api(response)
+        response, _ = self.manager.call_api(
+            self.url_build(self.cid, 'week'), 'get',
+            headers=self.manager.get_headers())
+
+        if (response is not None and
+                self.manager.check_response(response, '7a_energy')):
+            self.energy['week'] = self.manager.build_energy_dict(response)
         else:
-            logger.error('Unable to get {0} weekly data'.format(self.device_name))
+            logger.error(
+                'Unable to get {0} weekly data'.format(self.device_name))
 
     def get_monthly_energy(self):
-        response, _ = self.manager.call_api('/v1/device/' + self.cid + '/energy/month', 'get', headers=self.manager.get_headers())
-        if response and self.manager.check_response(response, '7a_energy'):
-            self.energy['month'] = self.manager.get_energy_dict_from_api(response)
+        response, _ = self.manager.call_api(
+            self.url_build(self.cid, 'month'), 'get',
+            headers=self.manager.get_headers())
+
+        if (response is not None and
+                self.manager.check_response(response, '7a_energy')):
+            self.energy['month'] = self.manager.build_energy_dict(response)
         else:
-            logger.error('Unable to get {0} monthly data'.format(self.device_name))
+            logger.error(
+                'Unable to get {0} monthly data'.format(self.device_name))
 
     def get_yearly_energy(self):
-        response, _ = self.manager.call_api('/v1/device/' + self.cid + '/energy/year', 'get', headers=self.manager.get_headers())
-        if response and self.manager.check_response(response, '7a_energy'):
-            self.energy['year'] = self.manager.get_energy_dict_from_api(response)
+        response, _ = self.manager.call_api(
+            self.url_build(self.cid, 'year'), 'get',
+            headers=self.manager.get_headers())
+
+        if (response is not None and
+                self.manager.check_response(response, '7a_energy')):
+            self.energy['year'] = self.manager.build_energy_dict(response)
         else:
-            logger.error('Unable to get {0} yearly data'.format(self.device_name))
+            logger.error(
+                'Unable to get {0} yearly data'.format(self.device_name))
 
     def update(self):
         self.get_details()
@@ -443,7 +486,9 @@ class VeSyncSwitch7A(VeSyncSwitch):
             self.get_yearly_energy()
 
     def turn_on(self):
-        _, status_code = self.manager.call_api('/v1/wifi-switch-1.3/' + self.cid + '/status/on', 'put', headers=self.manager.get_headers())
+        _, status_code = self.manager.call_api(
+            self.url_build(self.cid, 'on'), 'put',
+            headers=self.manager.get_headers())
 
         if status_code is not None and status_code == 200:
             self.device_status = 'on'
@@ -452,7 +497,9 @@ class VeSyncSwitch7A(VeSyncSwitch):
             return False
 
     def turn_off(self):
-        _, status_code = self.manager.call_api('/v1/wifi-switch-1.3/' + self.cid + '/status/off', 'put', headers=self.manager.get_headers())
+        _, status_code = self.manager.call_api(
+            self.url_build(self.cid, 'off'), 'put',
+            headers=self.manager.get_headers())
 
         if status_code is not None and status_code == 200:
             self.device_status = 'off'
@@ -462,13 +509,15 @@ class VeSyncSwitch7A(VeSyncSwitch):
 
     def power(self):
         if self.details.get('power'):
-            return round(float(self.calculate_hex(self.details.get('power'))), 2)
+            power = self.calculate_hex(self.details.get('power'))
+            return round(float(power), 2)
         else:
             return None
 
     def voltage(self):
         if self.details.get('voltage'):
-            return round(float(self.calculate_hex(self.details.get('voltage'))), 2)
+            volt = self.calculate_hex(self.details.get('voltage'))
+            return round(float(volt, 2))
         else:
             return None
 
@@ -496,17 +545,26 @@ class VeSyncSwitch15A(VeSyncSwitch):
         body = self.get_body('details')
         body['method'] = 'devicedetail'
         body['mobileId'] = str(MOBILE_ID)
-        response, _ = self.manager.call_api('/15a/v1/device/devicedetail', 'post', headers=self.manager.get_headers(), json=body)
-        attr_list = ('deviceStatus', 'activeTime', 'energy', 'power', 'voltage', 'nightLightStatus', 'nightLightAutomode', 'nightLightBrightness')
-        if self.manager.check_response(response, '15a_detail') and all(k in response for k in attr_list):
-            self.device_status = response['deviceStatus']
-            self.details['active_time'] = response['activeTime']
-            self.details['energy'] = response['energy']
-            self.details['night_light_status'] = response['nightLightStatus']
-            self.details['night_light_brightness'] = response['nightLightBrightness']
-            self.details['night_light_automode'] = response['nightLightAutomode']
-            self.details['power'] = response['power']
-            self.details['voltage'] = response['voltage']
+        r, _ = self.manager.call_api(
+            '/15a/v1/device/devicedetail', 'post',
+            headers=self.manager.get_headers(), json=body)
+
+        attr_list = ('deviceStatus', 'activeTime',
+                     'energy', 'power', 'voltage',
+                     'nightLightStatus', 'nightLightAutomode',
+                     'nightLightBrightness'
+                     )
+        if (self.manager.check_response(r, '15a_detail') and
+                all(k in r for k in attr_list)):
+
+            self.device_status = r['deviceStatus']
+            self.details['active_time'] = r['activeTime']
+            self.details['energy'] = r['energy']
+            self.details['night_light_status'] = r['nightLightStatus']
+            self.details['night_light_brightness'] = r['nightLightBrightness']
+            self.details['night_light_automode'] = r['nightLightAutomode']
+            self.details['power'] = r['power']
+            self.details['voltage'] = r['voltage']
         else:
             logger.error('Unable to get {0} details'.format(self.device_name))
 
@@ -514,30 +572,42 @@ class VeSyncSwitch15A(VeSyncSwitch):
         body = self.get_body('details')
         body['method'] = 'energyweek'
 
-        response, _ = self.manager.call_api('/15a/v1/device/energyweek', 'post', headers=self.manager.get_headers(), json=body)
+        response, _ = self.manager.call_api(
+            '/15a/v1/device/energyweek', 'post',
+            headers=self.manager.get_headers(), json=body)
+
         if self.manager.check_response(response, '15a_energy'):
-            self.energy['week'] = self.manager.get_energy_dict_from_api(response)
+            self.energy['week'] = self.manager.build_energy_dict(response)
         else:
-            logger.error('Unable to get {0} weekly data'.format(self.device_name))
+            logger.error('Unable to get {0} weekly data'
+                         .format(self.device_name))
             return
 
     def get_monthly_energy(self):
         body = self.get_body('details')
         body['method'] = 'energymonth'
-        response, _ = self.manager.call_api('/15a/v1/device/energymonth', 'post', headers=self.manager.get_headers(), json=body)
+        response, _ = self.manager.call_api(
+            '/15a/v1/device/energymonth', 'post',
+            headers=self.manager.get_headers(), json=body)
+
         if self.manager.check_response(response, '15a_energy'):
-            self.energy['month'] = self.manager.get_energy_dict_from_api(response)
+            self.energy['month'] = self.manager.build_energy_dict(response)
         else:
-            logger.error('Unable to get {0} monthly data'.format(self.device_name))
+            logger.error('Unable to get {0} monthly data'
+                         .format(self.device_name))
 
     def get_yearly_energy(self):
         body = self.get_body('details')
         body['method'] = 'energyyear'
-        response, _ = self.manager.call_api('/15a/v1/device/energyyear', 'post', headers=self.manager.get_headers(), json=body)
+        response, _ = self.manager.call_api(
+            '/15a/v1/device/energyyear', 'post',
+            headers=self.manager.get_headers(), json=body)
+
         if self.manager.check_response(response, '15a_energy'):
-            self.energy['year'] = self.manager.get_energy_dict_from_api(response)
+            self.energy['year'] = self.manager.build_energy_dict(response)
         else:
-            logger.error('Unable to get {0} yearly data'.format(self.device_name))
+            logger.error('Unable to get {0} yearly data'
+                         .format(self.device_name))
 
     def update(self):
         self.get_details()
@@ -552,7 +622,9 @@ class VeSyncSwitch15A(VeSyncSwitch):
         body = self.get_body('status')
         body['status'] = 'on'
 
-        response, _ = self.manager.call_api('/15a/v1/device/devicestatus', 'put', headers=self.manager.get_headers(), json=body)
+        response, _ = self.manager.call_api(
+            '/15a/v1/device/devicestatus', 'put',
+            headers=self.manager.get_headers(), json=body)
 
         if self.manager.check_response(response, '15a_toggle'):
             self.device_status = 'on'
@@ -564,7 +636,9 @@ class VeSyncSwitch15A(VeSyncSwitch):
         body = self.get_body('status')
         body['status'] = 'off'
 
-        response, _ = self.manager.call_api('/15a/v1/device/devicestatus', 'put', headers=self.manager.get_headers(), json=body)
+        response, _ = self.manager.call_api(
+            '/15a/v1/device/devicestatus', 'put',
+            headers=self.manager.get_headers(), json=body)
 
         if self.manager.check_response(response, '15a_toggle'):
             self.device_status = 'off'
@@ -576,7 +650,9 @@ class VeSyncSwitch15A(VeSyncSwitch):
         body = self.get_body('status')
         body['mode'] = 'auto'
 
-        response, _ = self.manager.call_api('/15a/v1/device/nightlightstatus', 'put', headers=self.manager.get_headers(), json=body)
+        response, _ = self.manager.call_api(
+            '/15a/v1/device/nightlightstatus', 'put',
+            headers=self.manager.get_headers(), json=body)
 
         return self.manager.check_response(response, '15a_ntlight')
 
@@ -584,7 +660,9 @@ class VeSyncSwitch15A(VeSyncSwitch):
         body = self.get_body('status')
         body['mode'] = 'manual'
 
-        response, _ = self.manager.call_api('/15a/v1/device/nightlightstatus', 'put', headers=self.manager.get_headers(), json=body)
+        response, _ = self.manager.call_api(
+            '/15a/v1/device/nightlightstatus', 'put',
+            headers=self.manager.get_headers(), json=body)
 
         return self.manager.check_response(response, '15a_ntlight')
 
@@ -598,7 +676,9 @@ class VeSyncSwitchInWall(VeSyncSwitch):
         body['uuid'] = self.uuid
         body['mobileID'] = MOBILE_ID
 
-        response, _ = self.manager.call_api('/inwallswitch/v1/device/devicedetail', 'post', headers=self.manager.get_headers(), json=body)
+        response, _ = self.manager.call_api(
+            '/inwallswitch/v1/device/devicedetail', 'post',
+            headers=self.manager.get_headers(), json=body)
 
         if self.manager.check_response(response, 'walls_detail'):
             self.device_status = response['deviceStatus']
@@ -624,7 +704,9 @@ class VeSyncSwitchInWall(VeSyncSwitch):
         body['status'] = 'on'
         body['uuid'] = self.uuid
 
-        response, _ = self.manager.call_api('/inwallswitch/v1/device/devicestatus', 'put', headers=self.manager.get_headers(), json=body)
+        response, _ = self.manager.call_api(
+            '/inwallswitch/v1/device/devicestatus', 'put',
+            headers=self.manager.get_headers(), json=body)
 
         if self.manager.check_response(response, 'walls_toggle'):
             self.device_status = 'on'
@@ -637,7 +719,9 @@ class VeSyncSwitchInWall(VeSyncSwitch):
         body['status'] = 'off'
         body['uuid'] = self.uuid
 
-        response, _ = self.manager.call_api('/inwallswitch/v1/device/devicestatus', 'put', headers=self.manager.get_headers(), json=body)
+        response, _ = self.manager.call_api(
+            '/inwallswitch/v1/device/devicestatus', 'put',
+            headers=self.manager.get_headers(), json=body)
 
         if self.manager.check_response(response, 'walls_toggle'):
             self.device_status = 'off'
@@ -663,15 +747,17 @@ class VeSyncSwitchEU10A(VeSyncSwitch):
         body['mobileID'] = str(MOBILE_ID)
         body['method'] = 'devicedetail'
 
-        response, _ = self.manager.call_api('/10a/v1/device/devicedetail', 'post', headers=self.manager.get_headers(), json=body)
+        r, _ = self.manager.call_api(
+            '/10a/v1/device/devicedetail', 'post',
+            headers=self.manager.get_headers(), json=body)
 
-        if self.manager.check_response(response, '10a_detail'):
-            self.device_status = response['deviceStatus']
-            self.details['active_time'] = response['activeTime']
-            self.details['energy'] = response['energy']
-            self.details['night_light_status'] = response['nightLightStatus']
-            self.details['night_light_brightness'] = response['nightLightBrightness']
-            self.details['night_light_automode'] = response['nightLightAutomode']
+        if self.manager.check_response(r, '10a_detail'):
+            self.device_status = r['deviceStatus']
+            self.details['active_time'] = r['activeTime']
+            self.details['energy'] = r['energy']
+            self.details['night_light_status'] = r['nightLightStatus']
+            self.details['night_light_brightness'] = r['nightLightBrightness']
+            self.details['night_light_automode'] = r['nightLightAutomode']
             self.details['power'] = response['power']
             self.details['voltage'] = response['voltage']
         else:
@@ -681,31 +767,43 @@ class VeSyncSwitchEU10A(VeSyncSwitch):
         body = self.get_body('detail')
         body['method'] = 'energyweek'
 
-        response, _ = self.manager.call_api('/10a/v1/device/energyweek', 'post', headers=self.manager.get_headers(), json=body)
+        response, _ = self.manager.call_api(
+            '/10a/v1/device/energyweek', 'post',
+            headers=self.manager.get_headers(), json=body)
+
         if self.manager.check_response(response, '10a_energy'):
-            self.energy['week'] = self.manager.get_energy_dict_from_api(response)
+            self.energy['week'] = self.manager.build_energy_dict(response)
         else:
-            logger.error('Unable to get {0} weekly data'.format(self.device_name))
+            logger.error('Unable to get {0} weekly data'
+                         .format(self.device_name))
 
     def get_monthly_energy(self):
         body = self.get_body('detail')
         body['method'] = 'energymonth'
 
-        response, _ = self.manager.call_api('/10a/v1/device/energymonth', 'post', headers=self.manager.get_headers(), json=body)
+        response, _ = self.manager.call_api(
+            '/10a/v1/device/energymonth', 'post',
+            headers=self.manager.get_headers(), json=body)
+
         if self.manager.check_response(response, '10a_energy'):
-            self.energy['month'] = self.manager.get_energy_dict_from_api(response)
+            self.energy['month'] = self.manager.build_energy_dict(response)
         else:
-            logger.error('Unable to get {0} monthly data'.format(self.device_name))
+            logger.error('Unable to get {0} monthly data'
+                         .format(self.device_name))
 
     def get_yearly_energy(self):
         body = self.get_body('detail')
         body['method'] = 'energyyear'
 
-        response, _ = self.manager.call_api('/10a/v1/device/energyyear', 'post', headers=self.manager.get_headers(), json=body)
+        response, _ = self.manager.call_api(
+            '/10a/v1/device/energyyear', 'post',
+            headers=self.manager.get_headers(), json=body)
+
         if self.manager.check_response(response, '10a_energy'):
-            self.energy['year'] = self.manager.get_energy_dict_from_api(response)
+            self.energy['year'] = self.manager.build_energy_dict(response)
         else:
-            logger.error('Unable to get {0} yearly data'.format(self.device_name))
+            logger.error('Unable to get {0} yearly data'
+                         .format(self.device_name))
 
     def update(self):
         self.get_details()
@@ -720,7 +818,9 @@ class VeSyncSwitchEU10A(VeSyncSwitch):
         body = self.get_body('status')
         body['status'] = 'on'
 
-        response, _ = self.manager.call_api('/10a/v1/device/devicestatus', 'put', headers=self.manager.get_headers(), json=body)
+        response, _ = self.manager.call_api(
+            '/10a/v1/device/devicestatus', 'put',
+            headers=self.manager.get_headers(), json=body)
 
         if self.manager.check_response(response, '10a_toggle'):
             self.device_status = 'on'
@@ -732,7 +832,9 @@ class VeSyncSwitchEU10A(VeSyncSwitch):
         body = self.get_body('status')
         body['status'] = 'off'
 
-        response, _ = self.manager.call_api('/10a/v1/device/devicestatus', 'put', headers=self.manager.get_headers(), json=body)
+        response, _ = self.manager.call_api(
+            '/10a/v1/device/devicestatus', 'put',
+            headers=self.manager.get_headers(), json=body)
 
         if self.manager.check_response(response, '10a_toggle'):
             self.device_status = 'off'
