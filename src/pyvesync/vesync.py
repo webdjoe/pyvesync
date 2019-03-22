@@ -517,7 +517,7 @@ class VeSyncSwitch7A(VeSyncSwitch):
     def voltage(self):
         if self.details.get('voltage'):
             volt = self.calculate_hex(self.details.get('voltage'))
-            return round(float(volt, 2))
+            return round(float(volt), 2)
         else:
             return None
 
