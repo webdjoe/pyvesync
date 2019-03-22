@@ -106,7 +106,7 @@ More detailed data is available within the `VesyncSwitch` by inspecting the `Ves
 The `VesyncSwitch.energy` object includes 3 nested dictionaries `week`, `month`, and `year` that contain detailed weekly, monthly and yearly data
 
 ```
-VesyncSwitch.energy['week']['energy_cons_of_today']
+VesyncSwitch.energy['week']['energy_consumption_of_today']
 VesyncSwitch.energy['week']['cost_per_kwh']
 VesyncSwitch.energy['week']['max_energy']
 VesyncSwitch.energy['week']['total_energy']
