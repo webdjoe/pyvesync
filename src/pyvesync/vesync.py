@@ -21,7 +21,7 @@ USER_TYPE = '1'
 
 
 class VeSync(object):
-    def __init__(self, username, password, time_zone=None):
+    def __init__(self, username, password, time_zone=DEFAULT_TZ):
         self.username = username
         self.password = password
         self.tk = None
