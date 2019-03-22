@@ -21,7 +21,7 @@ USER_TYPE = '1'
 
 
 class VeSync(object):
-    def __init__(self, username, password, time_zone):
+    def __init__(self, username, password, time_zone=DEFAULT_TZ):
         self.username = username
         self.password = password
         self.tk = None
@@ -36,12 +36,15 @@ class VeSync(object):
             reg_test = r"[^a-zA-Z/_]"
             if bool(re.search(reg_test, time_zone)):
                 self.time_zone = DEFAULT_TZ
-                logger.error("Invalid characters in time zone - " + time_zone)
+                logger.debug("Invalid characters in time zone - " + time_zone)
             else:
                 self.time_zone = time_zone
         else:
             self.time_zone = DEFAULT_TZ
-            logger.error("Time zone is not a string - " + time_zone)
+            logger.debug("Time zone is not a string")
+
+    def hash_password(self, password):
+        return hashlib.md5(password.encode('utf-8')).hexdigest()
 
     def call_api(self, api, method, json=None, headers=None):
         response = None
@@ -170,7 +173,7 @@ class VeSync(object):
         """Return True if log in request succeeds"""
 
         try:
-            hash_pass = hashlib.md5(self.password.encode('utf-8')).hexdigest()
+            hash_pass = self.hash_password(self.password)
             jd = {'email': self.username, 'password': hash_pass}
             body = self.get_body('login')
             body.update(jd)

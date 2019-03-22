@@ -3,3 +3,4 @@ build/*
 dist/*
 src/pyvesync.egg-info/*
 *.vscode
+**/*.pyc
