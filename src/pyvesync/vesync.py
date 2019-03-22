@@ -78,7 +78,7 @@ class VeSync(object):
     def get_devices(self):
         """Return list of VeSync devices"""
 
-        device_list = []
+        devs = []
 
         if self.enabled:
             self.in_process = True
@@ -86,33 +86,28 @@ class VeSync(object):
             body = self.get_body('devicelist')
             body['method'] = 'devices'
 
-            response, _ = self.call_api('/cloud/v1/deviceManaged/devices',
-                                        'post', headers=self.get_headers(),
-                                        json=body
-                                        )
+            response, _ = self.call_api(
+                '/cloud/v1/deviceManaged/devices', 'post',
+                headers=self.get_headers(), json=body)
 
             if response and self.check_response(response, 'get_devices'):
                 if response['result']:
                     for device in response['result']['list']:
                         if 'deviceType' in device:
                             if device['deviceType'] == 'wifi-switch-1.3':
-                                device_list.append(VeSyncSwitch7A(device,
-                                                   self))
+                                devs.append(VeSyncSwitch7A(device, self))
                             elif device['deviceType'] == 'ESW15-USA':
-                                device_list.append(VeSyncSwitch15A(device,
-                                                   self))
+                                devs.append(VeSyncSwitch15A(device, self))
                             elif device['deviceType'] == 'ESWL01':
-                                device_list.append(VeSyncSwitchInWall(device,
-                                                   self))
+                                devs.append(VeSyncSwitchInWall(device, self))
                             elif device['deviceType'] == 'ESW01-EU':
-                                device_list.append(VeSyncSwitchEU10A(device,
-                                                   self))
+                                devs.append(VeSyncSwitchEU10A(device, self))
                         else:
                             logger.debug('no devices found')
 
             self.in_process = False
 
-        return device_list
+        return devs
 
     def build_energy_dict(self, r):
         data = {}
@@ -122,7 +117,6 @@ class VeSync(object):
         data['total_energy'] = r['totalEnergy']
         data['currency'] = r['currency'] if 'currency' in r else ''
         data['data'] = r['data']
-
         return data
 
     def get_headers(self):
@@ -182,8 +176,8 @@ class VeSync(object):
 
             return False
         else:
-            response, _ = self.call_api('/cloud/v1/user/login',
-                                        'post', json=body)
+            response, _ = self.call_api(
+                '/cloud/v1/user/login', 'post', json=body)
 
             if response and self.check_response(response, 'login'):
                 self.tk = response['result']['token']
@@ -511,24 +505,17 @@ class VeSyncSwitch7A(VeSyncSwitch):
             return False
 
     def power(self):
-        if self.details.get('power'):
-            power = self.calculate_hex(self.details.get('power'))
-            return round(float(power), 2)
-        else:
-            return None
+        data = self.details.get('power', '0:0')
+        return round(float(self.calculate_hex(data)), 2)
 
     def voltage(self):
-        if self.details.get('voltage'):
-            volt = self.calculate_hex(self.details.get('voltage'))
-            return round(float(volt), 2)
-        else:
-            return None
+        data = self.details.get('voltage', '0:0')
+        return round(float(self.calculate_hex(data)), 2)
 
     def calculate_hex(self, hex_string):
         """Credit for conversion to itsnotlupus/vesync_wsproxy"""
         hex_conv = hex_string.split(':')
         converted_hex = (int(hex_conv[0], 16) + int(hex_conv[1], 16))/8192
-
         return converted_hex
 
 
@@ -558,7 +545,7 @@ class VeSyncSwitch15A(VeSyncSwitch):
                      'nightLightBrightness'
                      )
         if (self.manager.check_response(r, '15a_detail') and
-                all(k in r for k in attr_list)):
+            all(k in r for k in attr_list)):
 
             self.device_status = r['deviceStatus']
             self.details['active_time'] = r['activeTime']
@@ -656,7 +643,6 @@ class VeSyncSwitch15A(VeSyncSwitch):
         response, _ = self.manager.call_api(
             '/15a/v1/device/nightlightstatus', 'put',
             headers=self.manager.get_headers(), json=body)
-
         return self.manager.check_response(response, '15a_ntlight')
 
     def turn_off_nightlight(self):
@@ -666,7 +652,6 @@ class VeSyncSwitch15A(VeSyncSwitch):
         response, _ = self.manager.call_api(
             '/15a/v1/device/nightlightstatus', 'put',
             headers=self.manager.get_headers(), json=body)
-
         return self.manager.check_response(response, '15a_ntlight')
 
 
