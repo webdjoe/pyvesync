@@ -21,7 +21,7 @@ USER_TYPE = '1'
 
 
 class VeSync(object):
-    def __init__(self, username, password, time_zone=DEFAULT_TZ):
+    def __init__(self, username, password, time_zone=DEFAULT_TZ):        
         self.username = username
         self.password = password
         self.tk = None
@@ -32,7 +32,7 @@ class VeSync(object):
         self.last_update_ts = None
         self.in_process = False
 
-        if isinstance(time_zone, str):
+        if isinstance(time_zone, str) and len(time_zone) > 0:
             reg_test = r"[^a-zA-Z/_]"
             if bool(re.search(reg_test, time_zone)):
                 self.time_zone = DEFAULT_TZ
@@ -102,8 +102,12 @@ class VeSync(object):
                                 devs.append(VeSyncSwitchInWall(device, self))
                             elif device['deviceType'] == 'ESW01-EU':
                                 devs.append(VeSyncSwitchEU10A(device, self))
+                            else:
+                                logger.debug('Unknown device found - ' + device['deviceType'])
                         else:
                             logger.debug('no devices found')
+            else:
+                logger.error('Error retrieving device list')
 
             self.in_process = False
 
@@ -165,17 +169,14 @@ class VeSync(object):
 
     def login(self):
         """Return True if log in request succeeds"""
+        user_check = isinstance(self.username, str) and len(self.username) > 0
+        pass_check = isinstance(self.password, str) and len(self.password) > 0
 
-        try:
+        if user_check and pass_check:
             hash_pass = self.hash_password(self.password)
             jd = {'email': self.username, 'password': hash_pass}
             body = self.get_body('login')
             body.update(jd)
-        except ValueError:
-            logger.error("Unable to read username and password")
-
-            return False
-        else:
             response, _ = self.call_api(
                 '/cloud/v1/user/login', 'post', json=body)
 
@@ -185,8 +186,17 @@ class VeSync(object):
                 self.enabled = True
 
                 return True
+            else:
+                logger.error('Error logging in with username and password')
+                return False
 
+        else:
+            if user_check == False:
+                logger.error('Username invalid')
+            if pass_check == False:
+                logger.error('Password invalid')
             return False
+        
 
     def update(self):
         """Fetch updated information about devices"""
@@ -221,15 +231,18 @@ class VeSync(object):
                     self.last_update_ts = time.time()
 
     def check_response(self, resp, call):
-        stand_resp = ['get_devices', 'login', '15a_detail', '15a_toggle',
+        stand_resp = ['get_devices', '15a_detail', '15a_toggle',
                       '15a_energy', 'walls_detail', 'walls_toggle',
                       '10a_detail', '10a_toggle', '10a_energy', '15a_ntlight'
                       ]
-        if call in stand_resp:
+        if call in stand_resp and isinstance(resp, dict):
             if resp['code'] == 0:
                 return True
             else:
                 return False
+        elif call == 'login':
+            if resp['code'] == 0 and 'result' in resp:
+                return True
         elif call == '7a_detail':
             if 'deviceStatus' in resp:
                 return True
@@ -240,6 +253,8 @@ class VeSync(object):
                 return True
             else:
                 return False
+        else:
+            return False
 
 
 class VeSyncSwitch(object):
