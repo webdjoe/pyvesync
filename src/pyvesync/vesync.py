@@ -91,7 +91,7 @@ class VeSync(object):
                 headers=self.get_headers(), json=body)
 
             if response and self.check_response(response, 'get_devices'):
-                if response['result']:
+                if response['result']['list']:
                     for device in response['result']['list']:
                         if 'deviceType' in device:
                             if device['deviceType'] == 'wifi-switch-1.3':
@@ -105,7 +105,9 @@ class VeSync(object):
                             else:
                                 logger.debug('Unknown device found - ' + device['deviceType'])
                         else:
-                            logger.debug('no devices found')
+                            logger.debug('deviceType key not found')
+                else:
+                    logger.error('Device list in response not found')
             else:
                 logger.error('Error retrieving device list')
 
@@ -285,67 +287,67 @@ class VeSyncSwitch(object):
     def configure(self, details):
         try:
             self.device_name = details['deviceName']
-        except ValueError:
+        except (ValueError, KeyError):
             logger.error("cannot set device_name")
 
         try:
             self.device_image = details['deviceImg']
-        except ValueError:
+        except (ValueError, KeyError):
             logger.error("cannot set device_image")
 
         try:
             self.cid = details['cid']
-        except ValueError:
+        except (ValueError, KeyError):
             logger.error("cannot set cid")
 
         try:
             self.device_status = details['deviceStatus']
-        except ValueError:
+        except (ValueError, KeyError):
             logger.error("cannot set device_status")
 
         try:
             self.connection_status = details['connectionStatus']
-        except ValueError:
+        except (ValueError, KeyError):
             logger.error("cannot set connection_status")
 
         try:
             self.connection_type = details['connectionType']
-        except ValueError:
+        except (ValueError, KeyError):
             logger.error("cannot set connection_type")
 
         try:
             self.device_type = details['deviceType']
-        except ValueError:
+        except (ValueError, KeyError):
             logger.error("cannot set device type")
 
         try:
             self.type = details['type']
-        except ValueError:
+        except (ValueError, KeyError):
             logger.error("cannot set type")
 
         try:
             self.uuid = details['uuid']
-        except ValueError:
+        except (ValueError, KeyError):
             logger.error("cannot set uuid")
 
         try:
             self.config_module = details['configModule']
-        except ValueError:
+        except (ValueError, KeyError):
             logger.error("cannot set config module")
 
         try:
             self.current_firm_version = details['currentFirmVersion']
-        except ValueError:
+        except (ValueError, KeyError):
             logger.error("cannot set current firm version")
 
         try:
             self.mode = details['mode']
-        except ValueError:
+        except (ValueError, KeyError):
             logger.error("cannot set mode")
 
         try:
             self.speed = details['speed']
-        except ValueError:
+        except (ValueError, KeyError):
             logger.error("cannot set speed")
 
     def set_config(self, device):
