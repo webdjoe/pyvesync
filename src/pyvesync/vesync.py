@@ -21,7 +21,7 @@ USER_TYPE = '1'
 
 
 class VeSync(object):
-    def __init__(self, username, password, time_zone=DEFAULT_TZ):        
+    def __init__(self, username, password, time_zone=DEFAULT_TZ):
         self.username = username
         self.password = password
         self.tk = None
@@ -91,7 +91,7 @@ class VeSync(object):
                 headers=self.get_headers(), json=body)
 
             if response and self.check_response(response, 'get_devices'):
-                if response['result']['list']:
+                if 'result' in response and 'list' in response['result']:
                     for device in response['result']['list']:
                         if 'deviceType' in device:
                             if device['deviceType'] == 'wifi-switch-1.3':
@@ -103,9 +103,10 @@ class VeSync(object):
                             elif device['deviceType'] == 'ESW01-EU':
                                 devs.append(VeSyncSwitchEU10A(device, self))
                             else:
-                                logger.debug('Unknown device found - ' + device['deviceType'])
+                                logger.warning(
+                                    'Unknown device- ' + device['deviceType'])
                         else:
-                            logger.debug('deviceType key not found')
+                            logger.error('deviceType key not found')
                 else:
                     logger.error('Device list in response not found')
             else:
@@ -193,12 +194,11 @@ class VeSync(object):
                 return False
 
         else:
-            if user_check == False:
+            if user_check is False:
                 logger.error('Username invalid')
-            if pass_check == False:
+            if pass_check is False:
                 logger.error('Password invalid')
             return False
-        
 
     def update(self):
         """Fetch updated information about devices"""
@@ -238,7 +238,7 @@ class VeSync(object):
                       '10a_detail', '10a_toggle', '10a_energy', '15a_ntlight'
                       ]
         if call in stand_resp and isinstance(resp, dict):
-            if resp['code'] == 0:
+            if 'code' in resp and resp['code'] == 0:
                 return True
             else:
                 return False
@@ -369,6 +369,7 @@ class VeSyncSwitch(object):
 
     @abstractmethod
     def update(self):
+        '''Gets Device Energy and Status'''
         raise NotImplementedError
 
     @abstractmethod
@@ -394,12 +395,12 @@ class VeSyncSwitch(object):
     @abstractmethod
     def power(self):
         """Return current power in watts"""
-        return self.details.get('power')
+        return float(self.details.get('power'))
 
     @abstractmethod
     def voltage(self):
         """Return current voltage"""
-        return self.details.get('voltage')
+        return float(self.details.get('voltage'))
 
     @abstractmethod
     def monthly_energy_total(self):
@@ -445,12 +446,23 @@ class VeSyncSwitch7A(VeSyncSwitch):
 
         if (response is not None and
                 self.manager.check_response(response, '7a_detail')):
-
             self.device_status = response['deviceStatus']
-            self.details['active_time'] = response['activeTime']
-            self.details['energy'] = response['energy']
-            self.details['power'] = response['power']
-            self.details['voltage'] = response['voltage']
+            try:
+                self.details['active_time'] = response['activeTime']
+            except KeyError:
+                logger.error('Error {0} active time'.format(self.device_name))
+            try:
+                self.details['energy'] = response['energy']
+            except KeyError:
+                logger.error('Error {0} energy'.format(self.device_name))
+            try:
+                self.details['power'] = response['power']
+            except KeyError:
+                logger.error('Error {0} power'.format(self.device_name))
+            try:
+                self.details['voltage'] = response['voltage']
+            except KeyError:
+                logger.error('Error {0} voltage'.format(self.device_name))
         else:
             logger.error('Unable to get {0} details'.format(self.device_name))
 
@@ -495,7 +507,7 @@ class VeSyncSwitch7A(VeSyncSwitch):
 
     def update_energy(self):
         self.get_weekly_energy()
-        if self.energy['week']:
+        if 'week' in self.energy:
             self.get_monthly_energy()
             self.get_yearly_energy()
 
@@ -562,7 +574,7 @@ class VeSyncSwitch15A(VeSyncSwitch):
                      'nightLightBrightness'
                      )
         if (self.manager.check_response(r, '15a_detail') and
-            all(k in r for k in attr_list)):
+                all(k in r for k in attr_list)):
 
             self.device_status = r['deviceStatus']
             self.details['active_time'] = r['activeTime']

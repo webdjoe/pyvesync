@@ -1,4 +1,5 @@
 import pytest
+from unittest import mock
 from unittest.mock import Mock, patch, mock_open, call
 import unittest
 import pyvesync
@@ -9,7 +10,6 @@ from pyvesync.vesync import (VeSync,
                              VeSyncSwitchEU10A,
                              VeSyncSwitchInWall)
 import os
-import responses
 import requests
 
 
@@ -27,15 +27,17 @@ class TestDeviceList(object):
         yield
         self.mock_api_call.stop()
 
-    def test_get_devices(self, mocker, api_mock):
-        mocker.patch.object(pyvesync.vesync, 'VeSyncSwitch7A', 
-                            autospec=True)
-        mocker.patch.object(pyvesync.vesync, 'VeSyncSwitch15A',
-                            autospec=True)
-        mocker.patch.object(pyvesync.vesync, 'VeSyncSwitchInWall',
-                            autospec=True)
-        mocker.patch.object(pyvesync.vesync, 'VeSyncSwitchEU10A',
-                            autospec=True)
+    def test_get_devices(self, caplog, mocker, api_mock):
+        '''Test get_devices for all switches with an unknown switch'''
+        vesync_7a = mocker.patch.object(
+            pyvesync.vesync, 'VeSyncSwitch7A', autospec=True)
+        vesync_15a = mocker.patch.object(
+            pyvesync.vesync, 'VeSyncSwitch15A', autospec=True)
+        vesync_wallswitch = mocker.patch.object(
+            pyvesync.vesync, 'VeSyncSwitchInWall', autospec=True)
+        vesync_10a = mocker.patch.object(
+            pyvesync.vesync, 'VeSyncSwitchEU10A', autospec=True)
+
         devs = []
         dev1 = {'deviceType': 'wifi-switch-1.3', 'type': 'wifi-switch',
                 'cid': 'cid1'}
@@ -47,24 +49,65 @@ class TestDeviceList(object):
                 'cid': 'cid4'}
         dev5 = {'deviceType': 'unknown'}
         devs.extend([dev1, dev2, dev3, dev4, dev5])
-        device_list = ({'code': 0, 'result': {'list': devs }}, 200)
-        
+        device_list = ({'code': 0, 'result': {'list': devs}}, 200)
+
         self.mock_api.return_value = device_list
-        
         devs = self.vesync_obj.get_devices()
-        
         assert len(devs) == 4
         for device in devs:
             assert isinstance(device, VeSyncSwitch)
-        pyvesync.vesync.VeSyncSwitch7A.assert_called_with(dev1, self.vesync_obj)
-        pyvesync.vesync.VeSyncSwitch15A.assert_called_with(dev2, self.vesync_obj)
-        pyvesync.vesync.VeSyncSwitchInWall.assert_called_with(dev3, self.vesync_obj)
-        pyvesync.vesync.VeSyncSwitchEU10A.assert_called_with(dev4, self.vesync_obj)
+        vesync_7a.assert_called_with(dev1, self.vesync_obj)
+        vesync_15a.assert_called_with(dev2, self.vesync_obj)
+        vesync_wallswitch.assert_called_with(dev3, self.vesync_obj)
+        vesync_10a.assert_called_with(dev4, self.vesync_obj)
 
-    def test_get_devices_error(self, api_mock):
-        device_list = ({'code':2, 'result':{'list':
-                        {'deviceType': 'wifi-switch-1.3', 'type': 'wifi-switch',
-                        'cid': 'cid1'}}}, 200)
+        assert 'Unknown device' in caplog.text
+
+    def test_get_devices_code_error(self, caplog, api_mock):
+        '''Test if code in response is greater than 0'''
+        device_list = ({'code': 2455645641,
+                        'result': {
+                            'list': [{
+                                'deviceType': 'wifi-switch-1.3',
+                                'type': 'wifi-switch',
+                                'cid': 'cid1'}]
+                        }
+                        }, 200)
         self.mock_api.return_value = device_list
         devs = self.vesync_obj.get_devices()
         assert len(devs) == 0
+        assert len(caplog.records) == 1
+        assert 'Error retrieving device list' in caplog.text
+
+    def test_get_devices_resp_changes(self, caplog, api_mock):
+        """Test if structure of device list response has changed"""
+        device_list = ({'code': 0,
+                        'NOTresult': {
+                            'NOTlist': [{
+                                'deviceType': 'wifi-switch-1.3',
+                                'type': 'wifi-switch',
+                                'cid': 'cid1'
+                            }]
+                        }
+                        }, 200)
+        self.mock_api.return_value = device_list
+        devs = self.vesync_obj.get_devices()
+        assert len(devs) == 0
+        assert len(caplog.records) == 1
+        assert 'Device list in response not found' in caplog.text
+
+    def test_get_devices_deviceType_error(self, caplog, api_mock):
+        """Test result and list keys exist but deviceType not in list"""
+        device_list = ({'code': 0,
+                        'result': {
+                            'list': [{
+                                'type': 'wifi-switch',
+                                'cid': 'cid1'
+                            }]
+                        }
+                        }, 200)
+        self.mock_api.return_value = device_list
+        devs = self.vesync_obj.get_devices()
+        assert len(devs) == 0
+        assert len(caplog.records) == 1
+        assert 'deviceType key not found' in caplog.text

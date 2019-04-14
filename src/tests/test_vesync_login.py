@@ -21,6 +21,7 @@ login_test_vals = [
     ('sam@mail.com', '', '', 'empty pass')
 ]
 
+
 @pytest.mark.parametrize(
     'email, password, timezone, testid', login_test_vals
 )
@@ -29,6 +30,8 @@ def test_login_vals(email, password, timezone, testid):
     v_inst = VeSync(email, password, timezone)
     assert isinstance(v_inst, VeSync)
     assert v_inst.username == email
+    assert v_inst.password == password
+
     if testid == 'full correct':
         assert v_inst.time_zone == timezone
     elif testid in ('invalid tz', 'none tz', 'non tz pass', 'empty tz'):
@@ -43,6 +46,7 @@ login_bad_call = [
     (None, 'pass', 'none email'),
 ]
 
+
 class TestLogin(object):
 
     @pytest.fixture()
@@ -54,18 +58,18 @@ class TestLogin(object):
         self.mock_api.return_value.status_code = 200
         yield
         self.mock_api_call.stop()
-    
+
     @pytest.mark.parametrize(
         'email, password, testid', login_bad_call)
     def test_bad_login(self, api_mock, email, password, testid):
-        
+
         full_return = {'code': 455}
         self.mock_api.return_value.json.return_value = full_return
         vesync_obj = VeSync(email, password)
-        assert vesync_obj.login() == False
+        assert vesync_obj.login() is False
         if testid == 'correct':
             hash_pass = vesync_obj.hash_password('pass')
-            body = {'email':vesync_obj.username, 'password': hash_pass}
+            body = {'email': vesync_obj.username, 'password': hash_pass}
             jd = vesync_obj.get_body('login')
             jd.update(body)
             self.mock_api.assert_called_with(
@@ -76,11 +80,12 @@ class TestLogin(object):
             assert not self.mock_api.called
 
     def test_good_login(self, api_mock):
-        full_return = {'code': 0, 
-            'result':{'accountID': 'sam_actid', 'token':'sam_token'}}
+        full_return = {'code': 0,
+                       'result': {'accountID': 'sam_actid',
+                                  'token': 'sam_token'}}
         self.mock_api.return_value.json.return_value = full_return
         vesync_obj = VeSync('sam@mail.com', 'pass')
-        assert vesync_obj.login() == True
+        assert vesync_obj.login() is True
         hash_pass = vesync_obj.hash_password('pass')
         body = {'email': vesync_obj.username, 'password': hash_pass}
         jd = vesync_obj.get_body('login')
@@ -92,7 +97,8 @@ class TestLogin(object):
         assert vesync_obj.tk == 'sam_token'
         assert vesync_obj.account_id == 'sam_actid'
 
-#can also patch call_api, I think patching requests is better to 
+
+#can also patch call_api, I think patching requests is better to
 #show call_api is functioning properly
 @pytest.mark.parametrize(
     'email, password, testid', login_bad_call)
@@ -102,7 +108,7 @@ def test_login(email, password, testid):
         mock_api.return_value = ({'code': 455, 'msg': 'sdasd'}, 200)
         vesync_obj = VeSync(email, password)
         vesync_login = vesync_obj.login()
-        assert vesync_login == False
+        assert vesync_login is False
         if testid == 'correct':
             hash_pass = vesync_obj.hash_password(password)
             body = {'email': vesync_obj.username, 'password': hash_pass}
