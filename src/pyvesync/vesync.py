@@ -100,8 +100,9 @@ class VeSync(object):
                                 devs.append(VeSyncSwitch15A(device, self))
                             elif device['deviceType'] == 'ESWL01':
                                 devs.append(VeSyncSwitchInWall(device, self))
-                            elif device['deviceType'] == 'ESW01-EU':
-                                devs.append(VeSyncSwitchEU10A(device, self))
+                            elif device['deviceType'] == 'ESW01-EU' or \
+                                    device['deviceType'] == 'ESW03-USA':
+                                devs.append(VeSyncSwitch10A(device, self))
                         else:
                             logger.debug('no devices found')
 
@@ -524,7 +525,7 @@ class VeSyncSwitch15A(VeSyncSwitch):
         super(VeSyncSwitch15A, self).__init__(details, manager)
 
     def get_body(self, type_):
-        if type_ == 'details':
+        if type_ == 'detail':
             body = self.manager.get_body('devicedetail')
         if type_ == 'status':
             body = self.manager.get_body('devicestatus')
@@ -532,7 +533,7 @@ class VeSyncSwitch15A(VeSyncSwitch):
         return body
 
     def get_details(self):
-        body = self.get_body('details')
+        body = self.get_body('detail')
         body['method'] = 'devicedetail'
         body['mobileId'] = str(MOBILE_ID)
         r, _ = self.manager.call_api(
@@ -559,7 +560,7 @@ class VeSyncSwitch15A(VeSyncSwitch):
             logger.error('Unable to get {0} details'.format(self.device_name))
 
     def get_weekly_energy(self):
-        body = self.get_body('details')
+        body = self.get_body('detail')
         body['method'] = 'energyweek'
 
         response, _ = self.manager.call_api(
@@ -574,7 +575,7 @@ class VeSyncSwitch15A(VeSyncSwitch):
             return
 
     def get_monthly_energy(self):
-        body = self.get_body('details')
+        body = self.get_body('detail')
         body['method'] = 'energymonth'
         response, _ = self.manager.call_api(
             '/15a/v1/device/energymonth', 'post',
@@ -587,7 +588,7 @@ class VeSyncSwitch15A(VeSyncSwitch):
                          .format(self.device_name))
 
     def get_yearly_energy(self):
-        body = self.get_body('details')
+        body = self.get_body('detail')
         body['method'] = 'energyyear'
         response, _ = self.manager.call_api(
             '/15a/v1/device/energyyear', 'post',
@@ -718,15 +719,15 @@ class VeSyncSwitchInWall(VeSyncSwitch):
             return False
 
 
-class VeSyncSwitchEU10A(VeSyncSwitch):
+class VeSyncSwitch10A(VeSyncSwitch):
     def __init__(self, details, manager):
-        super(VeSyncSwitchEU10A, self).__init__(details, manager)
+        super(VeSyncSwitch10A, self).__init__(details, manager)
 
     def get_body(self, type_):
         if type_ == 'detail':
-            body = self.manager.get_body('devicestatus')
+            body = self.manager.get_body('devicedetail')
         elif type_ == 'status':
-            body = self.manager.get_body('status')
+            body = self.manager.get_body('devicestatus')
         body['uuid'] = self.uuid
         return body
 
