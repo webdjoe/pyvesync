@@ -115,3 +115,4 @@ class VeSyncSwitchHA(SwitchDevice):
     def update(self):
         """Handle data changes for node values."""
         self.smartplug.update()
+        self.smartplug.update_energy()
