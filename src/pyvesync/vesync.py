@@ -101,7 +101,7 @@ class VeSync(object):
                             elif device['deviceType'] == 'ESWL01':
                                 devs.append(VeSyncSwitchInWall(device, self))
                             elif device['deviceType'] == 'ESW01-EU' or \
-                                    device['deviceType'] == 'ESW01-USA':
+                                    device['deviceType'] == 'ESW03-USA':
                                 devs.append(VeSyncSwitch10A(device, self))
                             else:
                                 logger.warning(
@@ -243,15 +243,15 @@ class VeSync(object):
                 return True
             else:
                 return False
-        elif call == 'login':
+        elif call == 'login' and isinstance(resp, dict):
             if resp['code'] == 0 and 'result' in resp:
                 return True
-        elif call == '7a_detail':
+        elif call == '7a_detail' and isinstance(resp, dict):
             if 'deviceStatus' in resp:
                 return True
             else:
                 return False
-        elif call == '7a_energy':
+        elif call == '7a_energy' and isinstance(resp, dict):
             if 'energyConsumptionOfToday' in resp:
                 return True
             else:
@@ -425,13 +425,13 @@ class VeSyncSwitch7A(VeSyncSwitch):
 
     def url_build(self, cid, call_):
         if cid is not None and call_ is not None:
-            base_url = '/v1/device/' + cid
+            base_url = '/v1/wifi/' + cid
             if call_ == 'detail':
                 api_url = base_url + '/detail'
             elif call_ == 'on':
-                api_url = base_url + '/status/on'
+                api_url = '/v1/wifi-switch-1.3/' + cid + '/status/on'
             elif call_ == 'off':
-                api_url = base_url + '/status/off'
+                api_url = '/v1/wifi-switch-1.3/' + cid + '/status/off'
             elif call_ == 'week':
                 api_url = base_url + '/energy/week'
             elif call_ == 'month':
@@ -442,8 +442,8 @@ class VeSyncSwitch7A(VeSyncSwitch):
 
     def get_details(self):
         response, _ = self.manager.call_api(
-                self.url_build(self.cid, 'detail'), 'get',
-                headers=self.manager.get_headers())
+            self.url_build(self.cid, 'detail'), 'get',
+            headers=self.manager.get_headers())
 
         if (response is not None and
                 self.manager.check_response(response, '7a_detail')):
