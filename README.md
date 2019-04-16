@@ -123,6 +123,8 @@ This library is integrated with Home Assistant and documentation can be found at
 1. Add a `custom_components` directory to your Home Assistant configuration directory
 2. Add a `vesync` directory as a directory within `custom_components`
 3. Add `switch.py` to the `vesync` directory so the following structure is in place `<config dir>/custom_components/vesync/switch.py`
-4. Restart Home Assistant
+4. Add `__init__.py` to the `vesync` directory so the following structure is in place `<config dir>/custom_components/vesync/__init__.py`
+5. Add `manifest.json` to the `vesync` directory so the following structure is in place `<config dir>/custom_components/vesync/manifest.json`
+6. Restart Home Assistant
 
 The version of the library defined in `switch.py` should now get loaded within Home Assistant
