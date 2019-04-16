@@ -395,18 +395,12 @@ class VeSyncSwitch(object):
     @abstractmethod
     def power(self):
         """Return current power in watts"""
-        try:
-            return float(self.details.get('power'))
-        except (TypeError, ValueError):
-            return 0
+        return float(self.details.get('power', 0))
 
     @abstractmethod
     def voltage(self):
         """Return current voltage"""
-        try:
-            return float(self.details.get('voltage'))
-        except (TypeError, ValueError):
-            return 0
+        return float(self.details.get('voltage', 0))
 
     @abstractmethod
     def monthly_energy_total(self):
