@@ -464,7 +464,7 @@ class VeSyncSwitch7A(VeSyncSwitch):
             except KeyError:
                 logger.error('Error {0} voltage'.format(self.device_name))
         else:
-            logger.error('Unable to get {0} details'.format(self.device_name))
+            logger.debug('Unable to get {0} details'.format(self.device_name))
 
     def get_weekly_energy(self):
         response, _ = self.manager.call_api(
@@ -585,7 +585,7 @@ class VeSyncSwitch15A(VeSyncSwitch):
             self.details['power'] = r['power']
             self.details['voltage'] = r['voltage']
         else:
-            logger.error('Unable to get {0} details'.format(self.device_name))
+            logger.debug('Unable to get {0} details'.format(self.device_name))
 
     def get_weekly_energy(self):
         body = self.get_body('detail')
@@ -704,7 +704,7 @@ class VeSyncSwitchInWall(VeSyncSwitch):
             self.details['power'] = response['power']
             self.details['voltage'] = response['voltage']
         else:
-            logger.error('Unable to get {0} details'.format(self.device_name))
+            logger.debug('Unable to get {0} details'.format(self.device_name))
 
     def update(self):
         self.get_details()
@@ -778,7 +778,7 @@ class VeSyncSwitch10A(VeSyncSwitch):
             self.details['power'] = r['power']
             self.details['voltage'] = r['voltage']
         else:
-            logger.error('Unable to get {0} details'.format(self.device_name))
+            logger.debug('Unable to get {0} details'.format(self.device_name))
 
     def get_weekly_energy(self):
         body = self.get_body('detail')
