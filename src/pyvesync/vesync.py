@@ -32,7 +32,7 @@ class VeSync(object):
         self.last_update_ts = None
         self.in_process = False
 
-        if isinstance(time_zone, str):
+        if isinstance(time_zone, str) and len(time_zone) > 0:
             reg_test = r"[^a-zA-Z/_]"
             if bool(re.search(reg_test, time_zone)):
                 self.time_zone = DEFAULT_TZ
@@ -91,7 +91,7 @@ class VeSync(object):
                 headers=self.get_headers(), json=body)
 
             if response and self.check_response(response, 'get_devices'):
-                if response['result']:
+                if 'result' in response and 'list' in response['result']:
                     for device in response['result']['list']:
                         if 'deviceType' in device:
                             if device['deviceType'] == 'wifi-switch-1.3':
@@ -100,10 +100,18 @@ class VeSync(object):
                                 devs.append(VeSyncSwitch15A(device, self))
                             elif device['deviceType'] == 'ESWL01':
                                 devs.append(VeSyncSwitchInWall(device, self))
-                            elif device['deviceType'] == 'ESW01-EU':
-                                devs.append(VeSyncSwitchEU10A(device, self))
+                            elif device['deviceType'] == 'ESW01-EU' or \
+                                    device['deviceType'] == 'ESW03-USA':
+                                devs.append(VeSyncSwitch10A(device, self))
+                            else:
+                                logger.warning(
+                                    'Unknown device- ' + device['deviceType'])
                         else:
-                            logger.debug('no devices found')
+                            logger.error('deviceType key not found')
+                else:
+                    logger.error('Device list in response not found')
+            else:
+                logger.error('Error retrieving device list')
 
             self.in_process = False
 
@@ -165,17 +173,14 @@ class VeSync(object):
 
     def login(self):
         """Return True if log in request succeeds"""
+        user_check = isinstance(self.username, str) and len(self.username) > 0
+        pass_check = isinstance(self.password, str) and len(self.password) > 0
 
-        try:
+        if user_check and pass_check:
             hash_pass = self.hash_password(self.password)
             jd = {'email': self.username, 'password': hash_pass}
             body = self.get_body('login')
             body.update(jd)
-        except ValueError:
-            logger.error("Unable to read username and password")
-
-            return False
-        else:
             response, _ = self.call_api(
                 '/cloud/v1/user/login', 'post', json=body)
 
@@ -185,7 +190,15 @@ class VeSync(object):
                 self.enabled = True
 
                 return True
+            else:
+                logger.error('Error logging in with username and password')
+                return False
 
+        else:
+            if user_check is False:
+                logger.error('Username invalid')
+            if pass_check is False:
+                logger.error('Password invalid')
             return False
 
     def update(self):
@@ -221,25 +234,29 @@ class VeSync(object):
                     self.last_update_ts = time.time()
 
     def check_response(self, resp, call):
-        stand_resp = ['get_devices', 'login', '15a_detail', '15a_toggle',
+        stand_resp = ['get_devices', '15a_detail', '15a_toggle',
                       '15a_energy', 'walls_detail', 'walls_toggle',
                       '10a_detail', '10a_toggle', '10a_energy', '15a_ntlight'
                       ]
-        if call in stand_resp:
-            if resp['code'] == 0:
+        if isinstance(resp, dict):
+            if call in stand_resp:
+                if 'code' in resp and resp['code'] == 0:
+                    return True
+                else:
+                    return False
+            elif call == 'login' and 'code' in resp:
+                if resp['code'] == 0 and 'result' in resp:
+                    return True
+                else:
+                    return False
+            elif call == '7a_detail' and 'deviceStatus' in resp:
+                return True
+            elif call == '7a_energy' and 'energyConsumptionOfToday' in resp:
                 return True
             else:
                 return False
-        elif call == '7a_detail':
-            if 'deviceStatus' in resp:
-                return True
-            else:
-                return False
-        elif call == '7a_energy':
-            if 'energyConsumptionOfToday' in resp:
-                return True
-            else:
-                return False
+        else:
+            return False
 
 
 class VeSyncSwitch(object):
@@ -270,67 +287,67 @@ class VeSyncSwitch(object):
     def configure(self, details):
         try:
             self.device_name = details['deviceName']
-        except ValueError:
+        except (ValueError, KeyError):
             logger.error("cannot set device_name")
 
         try:
             self.device_image = details['deviceImg']
-        except ValueError:
+        except (ValueError, KeyError):
             logger.error("cannot set device_image")
 
         try:
             self.cid = details['cid']
-        except ValueError:
+        except (ValueError, KeyError):
             logger.error("cannot set cid")
 
         try:
             self.device_status = details['deviceStatus']
-        except ValueError:
+        except (ValueError, KeyError):
             logger.error("cannot set device_status")
 
         try:
             self.connection_status = details['connectionStatus']
-        except ValueError:
+        except (ValueError, KeyError):
             logger.error("cannot set connection_status")
 
         try:
             self.connection_type = details['connectionType']
-        except ValueError:
+        except (ValueError, KeyError):
             logger.error("cannot set connection_type")
 
         try:
             self.device_type = details['deviceType']
-        except ValueError:
+        except (ValueError, KeyError):
             logger.error("cannot set device type")
 
         try:
             self.type = details['type']
-        except ValueError:
+        except (ValueError, KeyError):
             logger.error("cannot set type")
 
         try:
             self.uuid = details['uuid']
-        except ValueError:
+        except (ValueError, KeyError):
             logger.error("cannot set uuid")
 
         try:
             self.config_module = details['configModule']
-        except ValueError:
+        except (ValueError, KeyError):
             logger.error("cannot set config module")
 
         try:
             self.current_firm_version = details['currentFirmVersion']
-        except ValueError:
+        except (ValueError, KeyError):
             logger.error("cannot set current firm version")
 
         try:
             self.mode = details['mode']
-        except ValueError:
+        except (ValueError, KeyError):
             logger.error("cannot set mode")
 
         try:
             self.speed = details['speed']
-        except ValueError:
+        except (ValueError, KeyError):
             logger.error("cannot set speed")
 
     def set_config(self, device):
@@ -352,6 +369,7 @@ class VeSyncSwitch(object):
 
     @abstractmethod
     def update(self):
+        """Gets Device Energy and Status"""
         raise NotImplementedError
 
     @abstractmethod
@@ -377,12 +395,12 @@ class VeSyncSwitch(object):
     @abstractmethod
     def power(self):
         """Return current power in watts"""
-        return self.details.get('power')
+        return float(self.details.get('power', 0))
 
     @abstractmethod
     def voltage(self):
         """Return current voltage"""
-        return self.details.get('voltage')
+        return float(self.details.get('voltage', 0))
 
     @abstractmethod
     def monthly_energy_total(self):
@@ -428,12 +446,23 @@ class VeSyncSwitch7A(VeSyncSwitch):
 
         if (response is not None and
                 self.manager.check_response(response, '7a_detail')):
-
             self.device_status = response['deviceStatus']
-            self.details['active_time'] = response['activeTime']
-            self.details['energy'] = response['energy']
-            self.details['power'] = response['power']
-            self.details['voltage'] = response['voltage']
+            try:
+                self.details['active_time'] = response['activeTime']
+            except KeyError:
+                logger.error('Error {0} active time'.format(self.device_name))
+            try:
+                self.details['energy'] = response['energy']
+            except KeyError:
+                logger.error('Error {0} energy'.format(self.device_name))
+            try:
+                self.details['power'] = response['power']
+            except KeyError:
+                logger.error('Error {0} power'.format(self.device_name))
+            try:
+                self.details['voltage'] = response['voltage']
+            except KeyError:
+                logger.error('Error {0} voltage'.format(self.device_name))
         else:
             logger.error('Unable to get {0} details'.format(self.device_name))
 
@@ -478,7 +507,7 @@ class VeSyncSwitch7A(VeSyncSwitch):
 
     def update_energy(self):
         self.get_weekly_energy()
-        if self.energy['week']:
+        if 'week' in self.energy:
             self.get_monthly_energy()
             self.get_yearly_energy()
 
@@ -524,7 +553,7 @@ class VeSyncSwitch15A(VeSyncSwitch):
         super(VeSyncSwitch15A, self).__init__(details, manager)
 
     def get_body(self, type_):
-        if type_ == 'details':
+        if type_ == 'detail':
             body = self.manager.get_body('devicedetail')
         if type_ == 'status':
             body = self.manager.get_body('devicestatus')
@@ -532,7 +561,7 @@ class VeSyncSwitch15A(VeSyncSwitch):
         return body
 
     def get_details(self):
-        body = self.get_body('details')
+        body = self.get_body('detail')
         body['method'] = 'devicedetail'
         body['mobileId'] = str(MOBILE_ID)
         r, _ = self.manager.call_api(
@@ -545,7 +574,7 @@ class VeSyncSwitch15A(VeSyncSwitch):
                      'nightLightBrightness'
                      )
         if (self.manager.check_response(r, '15a_detail') and
-            all(k in r for k in attr_list)):
+                all(k in r for k in attr_list)):
 
             self.device_status = r['deviceStatus']
             self.details['active_time'] = r['activeTime']
@@ -559,7 +588,7 @@ class VeSyncSwitch15A(VeSyncSwitch):
             logger.error('Unable to get {0} details'.format(self.device_name))
 
     def get_weekly_energy(self):
-        body = self.get_body('details')
+        body = self.get_body('detail')
         body['method'] = 'energyweek'
 
         response, _ = self.manager.call_api(
@@ -574,7 +603,7 @@ class VeSyncSwitch15A(VeSyncSwitch):
             return
 
     def get_monthly_energy(self):
-        body = self.get_body('details')
+        body = self.get_body('detail')
         body['method'] = 'energymonth'
         response, _ = self.manager.call_api(
             '/15a/v1/device/energymonth', 'post',
@@ -587,7 +616,7 @@ class VeSyncSwitch15A(VeSyncSwitch):
                          .format(self.device_name))
 
     def get_yearly_energy(self):
-        body = self.get_body('details')
+        body = self.get_body('detail')
         body['method'] = 'energyyear'
         response, _ = self.manager.call_api(
             '/15a/v1/device/energyyear', 'post',
@@ -681,7 +710,7 @@ class VeSyncSwitchInWall(VeSyncSwitch):
         self.get_details()
 
     def update_energy(self):
-        #Build empty energy dictionary for light switch
+        """Build empty energy dictionary for light switch"""
         timekeys = ['week', 'month', 'year']
         keys = ['energy_consumption_of_today', 'cost_per_kwh', 'max_energy',
                 'total_energy', 'currency', 'data']
@@ -718,15 +747,15 @@ class VeSyncSwitchInWall(VeSyncSwitch):
             return False
 
 
-class VeSyncSwitchEU10A(VeSyncSwitch):
+class VeSyncSwitch10A(VeSyncSwitch):
     def __init__(self, details, manager):
-        super(VeSyncSwitchEU10A, self).__init__(details, manager)
+        super(VeSyncSwitch10A, self).__init__(details, manager)
 
     def get_body(self, type_):
         if type_ == 'detail':
-            body = self.manager.get_body('devicestatus')
+            body = self.manager.get_body('devicedetail')
         elif type_ == 'status':
-            body = self.manager.get_body('status')
+            body = self.manager.get_body('devicestatus')
         body['uuid'] = self.uuid
         return body
 

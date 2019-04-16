@@ -4,3 +4,7 @@ dist/*
 src/pyvesync.egg-info/*
 *.vscode
 **/*.pyc
+.coverage
+htmlcov
+.pytest_cache
+*__pycache__
