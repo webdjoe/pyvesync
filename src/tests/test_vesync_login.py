@@ -11,6 +11,7 @@ from pyvesync.vesync import (VeSync,
 import os
 import responses
 import requests
+import logging
 
 login_test_vals = [
     ('sam@mail.com', 'pass', 'America/New_York', 'full corret'),
@@ -50,12 +51,13 @@ login_bad_call = [
 class TestLogin(object):
 
     @pytest.fixture()
-    def api_mock(self):
+    def api_mock(self, caplog):
         self.mock_api_call = patch('pyvesync.vesync.requests.post')
         self.mock_api = self.mock_api_call.start()
         self.mock_api.create_autospec()
         self.mock_api.return_value.ok = True
         self.mock_api.return_value.status_code = 200
+        caplog.set_level(logging.DEBUG)
         yield
         self.mock_api_call.stop()
 

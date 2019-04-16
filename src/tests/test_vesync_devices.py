@@ -11,11 +11,12 @@ from pyvesync.vesync import (VeSync,
                              VeSyncSwitchInWall)
 import os
 import requests
+import logging
 
 
 class TestDeviceList(object):
     @pytest.fixture()
-    def api_mock(self):
+    def api_mock(self, caplog):
         self.mock_api_call = patch('pyvesync.vesync.VeSync.call_api')
         self.mock_api = self.mock_api_call.start()
         self.mock_api.create_autospec()
@@ -24,6 +25,7 @@ class TestDeviceList(object):
         self.vesync_obj.enabled = True
         self.vesync_obj.tk = 'sample_tk'
         self.vesync_obj.account_id = 'sample_id'
+        caplog.set_level(logging.DEBUG)
         yield
         self.mock_api_call.stop()
 
@@ -36,7 +38,7 @@ class TestDeviceList(object):
         vesync_wallswitch = mocker.patch.object(
             pyvesync.vesync, 'VeSyncSwitchInWall', autospec=True)
         vesync_10a = mocker.patch.object(
-            pyvesync.vesync, 'VeSyncSwitchEU10A', autospec=True)
+            pyvesync.vesync, 'VeSyncSwitch10A', autospec=True)
 
         devs = []
         dev1 = {'deviceType': 'wifi-switch-1.3', 'type': 'wifi-switch',

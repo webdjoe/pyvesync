@@ -3,6 +3,7 @@ from unittest import mock
 from unittest.mock import Mock, patch, mock_open, call
 import unittest
 import pyvesync
+import logging
 from pyvesync.vesync import (VeSync,
                              VeSyncSwitch,
                              VeSyncSwitch15A,
@@ -71,7 +72,7 @@ ENERGY_HISTORY = {
 
 class TestVesync7ASwitch(object):
     @pytest.fixture()
-    def api_mock(self):
+    def api_mock(self, caplog):
         self.mock_api_call = patch('pyvesync.vesync.VeSync.call_api')
         self.mock_api = self.mock_api_call.start()
         self.mock_api.create_autospect()
@@ -81,6 +82,7 @@ class TestVesync7ASwitch(object):
         self.vesync_obj.login = True
         self.vesync_obj.tk = 'sample_tk'
         self.vesync_obj.account_id = 'sample_actid'
+        caplog.set_level(logging.DEBUG)
         yield
         self.mock_api_call.stop()
 
