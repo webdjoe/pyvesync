@@ -238,21 +238,20 @@ class VeSync(object):
                       '15a_energy', 'walls_detail', 'walls_toggle',
                       '10a_detail', '10a_toggle', '10a_energy', '15a_ntlight'
                       ]
-        if call in stand_resp and isinstance(resp, dict):
-            if 'code' in resp and resp['code'] == 0:
+        if isinstance(resp, dict):
+            if call in stand_resp:
+                if 'code' in resp and resp['code'] == 0:
+                    return True
+                else:
+                    return False
+            elif call == 'login' and 'code' in resp:
+                if resp['code'] == 0 and 'result' in resp:
+                    return True
+                else:
+                    return False
+            elif call == '7a_detail' and 'deviceStatus' in resp:
                 return True
-            else:
-                return False
-        elif call == 'login' and isinstance(resp, dict):
-            if resp['code'] == 0 and 'result' in resp:
-                return True
-        elif call == '7a_detail' and isinstance(resp, dict):
-            if 'deviceStatus' in resp:
-                return True
-            else:
-                return False
-        elif call == '7a_energy' and isinstance(resp, dict):
-            if 'energyConsumptionOfToday' in resp:
+            elif call == '7a_energy' and 'energyConsumptionOfToday' in resp:
                 return True
             else:
                 return False
