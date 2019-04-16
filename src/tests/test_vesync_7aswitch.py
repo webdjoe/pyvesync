@@ -7,7 +7,7 @@ from pyvesync.vesync import (VeSync,
                              VeSyncSwitch,
                              VeSyncSwitch15A,
                              VeSyncSwitch7A,
-                             VeSyncSwitchEU10A,
+                             VeSyncSwitch10A,
                              VeSyncSwitchInWall)
 import os
 import requests
@@ -163,7 +163,7 @@ class TestVesync7ASwitch(object):
         vswitch7a = VeSyncSwitch7A(DEV_LIST_DETAIL, self.vesync_obj)
         assert not vswitch7a.turn_on()
         assert not vswitch7a.turn_off()
-    
+
     def test_7a_weekly(self, api_mock):
         self.mock_api.return_value = (ENERGY_HISTORY, 200)
         vswitch7a = VeSyncSwitch7A(DEV_LIST_DETAIL, self.vesync_obj)
@@ -176,7 +176,7 @@ class TestVesync7ASwitch(object):
         assert energy_dict['cost_per_kwh'] == 1
         assert energy_dict['max_energy'] == 1
         assert energy_dict['total_energy'] == 1
-        assert energy_dict['data'] == [1,1]
+        assert energy_dict['data'] == [1, 1]
 
     def test_7a_monthly(self, api_mock):
         self.mock_api.return_value = (ENERGY_HISTORY, 200)

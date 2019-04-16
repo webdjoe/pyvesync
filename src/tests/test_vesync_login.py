@@ -6,7 +6,7 @@ from pyvesync.vesync import (VeSync,
                              VeSyncSwitch,
                              VeSyncSwitch15A,
                              VeSyncSwitch7A,
-                             VeSyncSwitchEU10A,
+                             VeSyncSwitch10A,
                              VeSyncSwitchInWall)
 import os
 import responses
