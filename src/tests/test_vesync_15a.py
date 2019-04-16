@@ -11,6 +11,7 @@ from pyvesync.vesync import (VeSync,
                              VeSyncSwitchInWall)
 import os
 import requests
+import logging
 
 DEV_LIST_DETAIL = {
     "deviceName": "Device Name",
@@ -69,7 +70,7 @@ ENERGY_HISTORY = {
 
 class TestVesync15ASwitch(object):
     @pytest.fixture()
-    def api_mock(self):
+    def api_mock(self, caplog):
         self.mock_api_call = patch('pyvesync.vesync.VeSync.call_api')
         self.mock_api = self.mock_api_call.start()
         self.mock_api.create_autospect()
@@ -79,6 +80,7 @@ class TestVesync15ASwitch(object):
         self.vesync_obj.login = True
         self.vesync_obj.tk = 'sample_tk'
         self.vesync_obj.account_id = 'sample_actid'
+        caplog.set_level(logging.DEBUG)
         yield
         self.mock_api_call.stop()
 
@@ -178,7 +180,7 @@ class TestVesync15ASwitch(object):
         self.mock_api.return_value = (ENERGY_HISTORY, 200)
         vswitch15a = VeSyncSwitch15A(DEV_LIST_DETAIL, self.vesync_obj)
         vswitch15a.get_weekly_energy()
-        body = vswitch15a.get_body('details')
+        body = vswitch15a.get_body('detail')
         body['method'] = 'energyweek'
         self.mock_api.assert_called_with(
             '/15a/v1/device/energyweek', 'post',
@@ -194,7 +196,7 @@ class TestVesync15ASwitch(object):
         self.mock_api.return_value = (ENERGY_HISTORY, 200)
         vswitch15a = VeSyncSwitch15A(DEV_LIST_DETAIL, self.vesync_obj)
         vswitch15a.get_monthly_energy()
-        body = vswitch15a.get_body('details')
+        body = vswitch15a.get_body('detail')
         body['method'] = 'energymonth'
         self.mock_api.assert_called_with(
             '/15a/v1/device/energymonth', 'post',
@@ -210,7 +212,7 @@ class TestVesync15ASwitch(object):
         self.mock_api.return_value = (ENERGY_HISTORY, 200)
         vswitch15a = VeSyncSwitch15A(DEV_LIST_DETAIL, self.vesync_obj)
         vswitch15a.get_yearly_energy()
-        body = vswitch15a.get_body('details')
+        body = vswitch15a.get_body('detail')
         body['method'] = 'energyyear'
         self.mock_api.assert_called_with(
             '/15a/v1/device/energyyear', 'post',

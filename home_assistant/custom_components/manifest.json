@@ -1,0 +1,8 @@
+{
+  "domain": "vesync",
+  "name": "VeSync",
+  "documentation": "https://www.home-assistant.io/components/vesync",
+  "dependencies": [],
+  "codeowners": ["@markperdue", "@webdjoe"],
+  "requirements": ["pyvesync==1.0.5"]
+}
