@@ -410,9 +410,9 @@ class VeSyncSwitch7A(VeSyncSwitch):
             if call_ == 'detail':
                 api_url = base_url + '/detail'
             elif call_ == 'on':
-                api_url = base_url + '/status/on'
+                api_url = '/v1/wifi-switch-1.3/' + cid + '/status/on'
             elif call_ == 'off':
-                api_url = base_url + '/status/off'
+                api_url = '/v1/wifi-switch-1.3/' + cid + '/status/off'
             elif call_ == 'week':
                 api_url = base_url + '/energy/week'
             elif call_ == 'month':
@@ -423,8 +423,8 @@ class VeSyncSwitch7A(VeSyncSwitch):
 
     def get_details(self):
         response, _ = self.manager.call_api(
-                self.url_build(self.cid, 'detail'), 'get',
-                headers=self.manager.get_headers())
+            self.url_build(self.cid, 'detail'), 'get',
+            headers=self.manager.get_headers())
 
         if (response is not None and
                 self.manager.check_response(response, '7a_detail')):
