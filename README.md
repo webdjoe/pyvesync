@@ -114,3 +114,15 @@ VesyncSwitch.energy['week']['data'] which itself is a list of values
 ```
 
 The VeSync api is hit or miss with this data so access is currently limited to direct lookup calls
+
+Integration with Home Assistant
+-------------------------------
+
+This library is integrated with Home Assistant and documentation can be found at https://www.home-assistant.io/components/vesync/. The library version included with Home Assistant may lag behind development within this repository so those wanting to use the latest version can do the following to integrate with HA
+
+1. Add a `custom_components` directory to your Home Assistant configuration directory
+2. Add a `vesync` directory as a directory within `custom_components`
+3. Add `switch.py` to the `vesync` directory so the following structure is in place `<config dir>/custom_components/vesync/switch.py`
+4. Restart Home Assistant
+
+The version of the library defined in `switch.py` should now get loaded within Home Assistant
