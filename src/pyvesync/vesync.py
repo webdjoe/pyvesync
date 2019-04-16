@@ -369,7 +369,7 @@ class VeSyncSwitch(object):
 
     @abstractmethod
     def update(self):
-        '''Gets Device Energy and Status'''
+        """Gets Device Energy and Status"""
         raise NotImplementedError
 
     @abstractmethod
@@ -395,12 +395,18 @@ class VeSyncSwitch(object):
     @abstractmethod
     def power(self):
         """Return current power in watts"""
-        return float(self.details.get('power'))
+        try:
+            return float(self.details.get('power'))
+        except (TypeError, ValueError):
+            return 0
 
     @abstractmethod
     def voltage(self):
         """Return current voltage"""
-        return float(self.details.get('voltage'))
+        try:
+            return float(self.details.get('voltage'))
+        except (TypeError, ValueError):
+            return 0
 
     @abstractmethod
     def monthly_energy_total(self):
@@ -424,7 +430,7 @@ class VeSyncSwitch7A(VeSyncSwitch):
 
     def url_build(self, cid, call_):
         if cid is not None and call_ is not None:
-            base_url = '/v1/wifi/' + cid
+            base_url = '/v1/device/' + cid
             if call_ == 'detail':
                 api_url = base_url + '/detail'
             elif call_ == 'on':
@@ -710,7 +716,7 @@ class VeSyncSwitchInWall(VeSyncSwitch):
         self.get_details()
 
     def update_energy(self):
-        '''Build empty energy dictionary for light switch'''
+        """Build empty energy dictionary for light switch"""
         timekeys = ['week', 'month', 'year']
         keys = ['energy_consumption_of_today', 'cost_per_kwh', 'max_energy',
                 'total_energy', 'currency', 'data']
