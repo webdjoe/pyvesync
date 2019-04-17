@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 API_BASE_URL = 'https://smartapi.vesync.com'
 API_RATE_LIMIT = 30
 API_TIMEOUT = 5
+ENERGY_POLL_INT = 21600  # 6 hours
 
 DEFAULT_TZ = 'America/New_York'
 
@@ -210,28 +211,38 @@ class VeSync(object):
             if not self.in_process:
                 updated_device_list = self.get_devices()
 
-                [device.update() for device in updated_device_list]
-
                 if updated_device_list is not None and updated_device_list:
-                    for new_device in updated_device_list:
-
-                        if self.devices is not None and self.devices:
+                    if self.devices is None:
+                        self.devices = updated_device_list
+                    else:
+                        # Add any new devices not in original list but found in the update
+                        for new_device in updated_device_list:
                             was_found = False
 
                             for device in self.devices:
-                                if device.cid == new_device.cid:
-                                    device.set_config(new_device)
-
+                                if new_device.cid == device.cid:
                                     was_found = True
                                     break
 
                             if not was_found:
                                 self.devices.append(new_device)
-                        else:
-                            self.devices = []
-                            self.devices.append(new_device)
 
-                    self.last_update_ts = time.time()
+                        # Remove any old devices in the original list but not found in the update
+                        for device in self.devices:
+                            should_remove = True
+
+                            for new_device in updated_device_list:
+                                if device.cid == new_device.cid:
+                                    should_remove = False
+                                    break
+
+                            if should_remove:
+                                self.devices.remove(device)
+
+                    # Call update on each device in the list
+                    [device.update() for device in self.devices]
+
+                self.last_update_ts = time.time()
 
     def check_response(self, resp, call):
         stand_resp = ['get_devices', '15a_detail', '15a_toggle',
@@ -281,6 +292,7 @@ class VeSyncSwitch(object):
 
         self.details = {}
         self.energy = {}
+        self.energy_updated_ts = None
 
         self.configure(details)
 
@@ -349,23 +361,6 @@ class VeSyncSwitch(object):
             self.speed = details['speed']
         except (ValueError, KeyError):
             logger.error("cannot set speed")
-
-    def set_config(self, device):
-        self.device_name = device.device_name
-        self.device_image = device.device_image
-        self.device_status = device.device_status
-        self.connection_status = device.connection_status
-        self.connection_type = device.connection_type
-        self.device_type = device.device_type
-        self.type = device.type
-        self.uuid = device.uuid
-        self.config_module = device.config_module
-        self.current_firm_version = device.current_firm_version
-        self.mode = device.mode
-        self.speed = device.speed
-
-        self.details = device.details
-        self.energy = device.energy
 
     @abstractmethod
     def update(self):
@@ -505,6 +500,10 @@ class VeSyncSwitch7A(VeSyncSwitch):
     def update(self):
         self.get_details()
 
+        if self.energy_updated_ts is None or (time.time() - self.energy_updated_ts) > ENERGY_POLL_INT:
+            self.update_energy()
+            self.energy_updated_ts = time.time()
+
     def update_energy(self):
         self.get_weekly_energy()
         if 'week' in self.energy:
@@ -631,6 +630,10 @@ class VeSyncSwitch15A(VeSyncSwitch):
     def update(self):
         self.get_details()
 
+        if self.energy_updated_ts is None or (time.time() - self.energy_updated_ts) > ENERGY_POLL_INT:
+            self.update_energy()
+            self.energy_updated_ts = time.time()
+
     def update_energy(self):
         self.get_weekly_energy()
         if 'week' in self.energy:
@@ -708,6 +711,10 @@ class VeSyncSwitchInWall(VeSyncSwitch):
 
     def update(self):
         self.get_details()
+
+        if self.energy_updated_ts is None or (time.time() - self.energy_updated_ts) > ENERGY_POLL_INT:
+            self.update_energy()
+            self.energy_updated_ts = time.time()
 
     def update_energy(self):
         """Build empty energy dictionary for light switch"""
@@ -824,6 +831,10 @@ class VeSyncSwitch10A(VeSyncSwitch):
 
     def update(self):
         self.get_details()
+
+        if self.energy_updated_ts is None or (time.time() - self.energy_updated_ts) > ENERGY_POLL_INT:
+            self.update_energy()
+            self.energy_updated_ts = time.time()
 
     def update_energy(self):
         self.get_weekly_energy()
