@@ -500,7 +500,9 @@ class VeSyncSwitch7A(VeSyncSwitch):
     def update(self):
         self.get_details()
 
-        if self.energy_updated_ts is None or (time.time() - self.energy_updated_ts) > ENERGY_POLL_INT:
+        if self.energy_updated_ts is None or (
+            time.time() - self.energy_updated_ts) > ENERGY_POLL_INT:
+
             self.update_energy()
             self.energy_updated_ts = time.time()
 
@@ -630,7 +632,9 @@ class VeSyncSwitch15A(VeSyncSwitch):
     def update(self):
         self.get_details()
 
-        if self.energy_updated_ts is None or (time.time() - self.energy_updated_ts) > ENERGY_POLL_INT:
+        if self.energy_updated_ts is None or (
+            time.time() - self.energy_updated_ts) > ENERGY_POLL_INT:
+
             self.update_energy()
             self.energy_updated_ts = time.time()
 
@@ -712,7 +716,9 @@ class VeSyncSwitchInWall(VeSyncSwitch):
     def update(self):
         self.get_details()
 
-        if self.energy_updated_ts is None or (time.time() - self.energy_updated_ts) > ENERGY_POLL_INT:
+        if self.energy_updated_ts is None or (
+            time.time() - self.energy_updated_ts) > ENERGY_POLL_INT:
+
             self.update_energy()
             self.energy_updated_ts = time.time()
 
@@ -832,7 +838,9 @@ class VeSyncSwitch10A(VeSyncSwitch):
     def update(self):
         self.get_details()
 
-        if self.energy_updated_ts is None or (time.time() - self.energy_updated_ts) > ENERGY_POLL_INT:
+        if self.energy_updated_ts is None or (
+            time.time() - self.energy_updated_ts) > ENERGY_POLL_INT:
+
             self.update_energy()
             self.energy_updated_ts = time.time()
 
