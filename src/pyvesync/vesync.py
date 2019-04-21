@@ -72,10 +72,12 @@ class VeSync(object):
             if r.status_code == 200:
                 status_code = 200
                 response = r.json()
+            else:
+                logger.error('Error with ' + api)
         finally:
             return (response, status_code)
 
-    def get_devices(self):
+    def get_devices(self) -> list:
         """Return list of VeSync devices"""
 
         devs = []
