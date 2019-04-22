@@ -1,8 +1,8 @@
 from abc import ABCMeta, abstractmethod
 import logging
 
-from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 import pyvesync.helpers as helpers
+from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 
 logger = logging.getLogger(__name__)
 

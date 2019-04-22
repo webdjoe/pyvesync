@@ -2,9 +2,9 @@ import logging
 import time
 import re
 
+import pyvesync.helpers as helpers
 from pyvesync.vesyncoutlet import (VeSyncOutlet7A, VeSyncOutlet10A,
                                    VeSyncOutlet15A)
-import pyvesync.helpers as helpers
 
 logger = logging.getLogger(__name__)
 
