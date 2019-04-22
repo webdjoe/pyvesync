@@ -188,67 +188,76 @@ class VeSyncOutlet10A(VeSyncOutlet):
         return body
 
     def get_details(self):
-        body = self.get_body('detail')
-        body['mobileID'] = str(self.manager.MOBILE_ID)
-        body['method'] = 'devicedetail'
+        body = helpers.req_body(self.manager, 'devicedetail')
+        body['uuid'] = self.uuid
 
         r, _ = helpers.call_api(
-            '/10a/v1/device/devicedetail', 'post',
-            headers=helpers.req_headers(self.manager), json=body)
+            '/10a/v1/device/devicedetail',
+            'post',
+            headers=helpers.req_headers(self.manager),
+            json=body
+        )
 
         if helpers.check_response(r, '10a_detail'):
             self.device_status = r['deviceStatus']
-            self.details['active_time'] = r['activeTime']
-            self.details['energy'] = r['energy']
-            self.details['night_light_status'] = r['nightLightStatus']
-            self.details['night_light_brightness'] = r['nightLightBrightness']
-            self.details['night_light_automode'] = r['nightLightAutomode']
-            self.details['power'] = r['power']
-            self.details['voltage'] = r['voltage']
+            self.connection_status = r.get('connectionStatus')
+            self.details = helpers.build_details_dict()
         else:
             logger.debug('Unable to get {0} details'.format(self.device_name))
 
     def get_weekly_energy(self):
-        body = self.get_body('detail')
-        body['method'] = 'energyweek'
+        body = helpers.req_body(self.manager, 'energy_week')
+        body['uuid'] = self.uuid
 
         response, _ = helpers.call_api(
-            '/10a/v1/device/energyweek', 'post',
-            headers=helpers.req_headers(self.manager), json=body)
+            '/10a/v1/device/energyweek',
+            'post',
+            headers=helpers.req_headers(self.manager),
+            json=body
+        )
 
         if helpers.check_response(response, '10a_energy'):
             self.energy['week'] = helpers.build_energy_dict(response)
         else:
-            logger.error('Unable to get {0} weekly data'
-                         .format(self.device_name))
+            logger.error(
+                'Unable to get {0} weekly data'.format(self.device_name)
+            )
 
     def get_monthly_energy(self):
-        body = self.get_body('detail')
-        body['method'] = 'energymonth'
+        body = helpers.req_body(self.manager, 'energy_month')
+        body['uuid'] = self.uuid
 
         response, _ = helpers.call_api(
-            '/10a/v1/device/energymonth', 'post',
-            headers=helpers.req_headers(self.manager), json=body)
+            '/10a/v1/device/energymonth',
+            'post',
+            headers=helpers.req_headers(self.manager),
+            json=body
+        )
 
         if helpers.check_response(response, '10a_energy'):
             self.energy['month'] = helpers.build_energy_dict(response)
         else:
-            logger.error('Unable to get {0} monthly data'
-                         .format(self.device_name))
+            logger.error(
+                'Unable to get {0} monthly data'.format(self.device_name)
+            )
 
     def get_yearly_energy(self):
-        body = self.get_body('detail')
-        body['method'] = 'energyyear'
+        body = helpers.req_body(self.manager, 'energy_year')
+        body['uuid'] = self.uuid
 
         response, _ = helpers.call_api(
-            '/10a/v1/device/energyyear', 'post',
-            headers=helpers.req_headers(self.manager), json=body)
+            '/10a/v1/device/energyyear',
+            'post',
+            headers=helpers.req_headers(self.manager),
+            json=body
+        )
 
         if helpers.check_response(response, '10a_energy'):
             self.energy['year'] = helpers.build_energy_dict(response)
         else:
-            logger.error('Unable to get {0} yearly data'
-                         .format(self.device_name))
+            logger.error(
+                'Unable to get {0} yearly data'.format(self.device_name)
+            )
 
     def update(self):
         self.get_details()
@@ -260,12 +269,16 @@ class VeSyncOutlet10A(VeSyncOutlet):
             self.get_yearly_energy()
 
     def turn_on(self):
-        body = self.get_body('status')
+        body = helpers.req_body(self.manager, 'devicestatus')
+        body['uuid'] = self.uuid
         body['status'] = 'on'
 
         response, _ = helpers.call_api(
-            '/10a/v1/device/devicestatus', 'put',
-            headers=helpers.req_headers(self.manager), json=body)
+            '/10a/v1/device/devicestatus',
+            'put',
+            headers=helpers.req_headers(self.manager),
+            json=body
+        )
 
         if helpers.check_response(response, '10a_toggle'):
             self.device_status = 'on'
@@ -274,12 +287,16 @@ class VeSyncOutlet10A(VeSyncOutlet):
             return False
 
     def turn_off(self):
-        body = self.get_body('status')
+        body = helpers.req_body(self.manager, 'devicestatus')
+        body['uuid'] = self.uuid
         body['status'] = 'off'
 
         response, _ = helpers.call_api(
-            '/10a/v1/device/devicestatus', 'put',
-            headers=helpers.req_headers(self.manager), json=body)
+            '/10a/v1/device/devicestatus',
+            'put',
+            headers=helpers.req_headers(self.manager),
+            json=body
+        )
 
         if helpers.check_response(response, '10a_toggle'):
             self.device_status = 'off'
@@ -313,15 +330,7 @@ class VeSyncOutlet15A(VeSyncOutlet):
 
             self.device_status = r.get('deviceStatus')
             self.connection_status = r.get('connectionStatus')
-            self.details = {
-                'active_time': r.get('activeTime'),
-                'energy': r.get('energy'),
-                'night_light_status': r.get('nightLightStatus'),
-                'night_light_brightness': r.get('nightLightBrightness'),
-                'night_light_automode': r.get('nightLightAutomode'),
-                'power': r.get('power'),
-                'voltage': r.get('voltage')
-            }
+            self.details = helpers.build_details_dict()
         else:
             logger.debug('Unable to get {0} details'.format(self.device_name))
 

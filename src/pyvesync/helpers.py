@@ -191,6 +191,18 @@ def check_response(resp, call: str) -> bool:
         return False
 
 
+def build_details_dict(r):
+    return {
+        'active_time': r.get('activeTime'),
+        'energy': r.get('energy'),
+        'night_light_status': r.get('nightLightStatus'),
+        'night_light_brightness': r.get('nightLightBrightness'),
+        'night_light_automode': r.get('nightLightAutomode'),
+        'power': r.get('power'),
+        'voltage': r.get('voltage')
+    }
+
+
 def build_energy_dict(r):
     return {
         'energy_consumption_of_today': r.get('energyConsumptionOfToday'),
