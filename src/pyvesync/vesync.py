@@ -2,9 +2,11 @@ import logging
 import time
 import re
 
-import pyvesync.helpers as helpers
-from pyvesync.vesyncoutlet import (VeSyncOutlet7A, VeSyncOutlet10A,
-                                   VeSyncOutlet15A)
+from .helpers import Helpers as helpers
+from .vesyncoutlet import (VeSyncOutlet7A, VeSyncOutlet10A,
+                           VeSyncOutlet15A)
+from .vesyncswitch import VeSyncSwitch
+from .vesyncfan import VeSyncAir131
 
 logger = logging.getLogger(__name__)
 
@@ -21,9 +23,12 @@ class VSFactory(object):
             return VeSyncOutlet10A(config, manager)
         elif device_type == 'ESW15-USA':
             return VeSyncOutlet15A(config, manager)
+        elif device_type in ['ESWL01', 'ESWL03']:
+            return VeSyncSwitch(config, manager)
+        elif device_type == 'LV-PUR131S':
+            return VeSyncAir131(config, manager)
         else:
             logger.debug('Unknown device found - ' + device_type)
-            return VeSyncOutlet15A(config, manager)
 
 
 class VeSync(object):
@@ -56,17 +61,26 @@ class VeSync(object):
         outlets = []
         switches = []
         fans = []
+        bulbs = []
+
+        outlet_types = ['wifi-switch-1.3', 'ESW03-USA', 
+                        'ESW10-EU', 'ESW15-USA']
+        switch_types = ['ESWL01', 'ESWL03']
+        fans_types = ['LV-PUR131S']
+        #bulb_types = ['ESL100']
 
         for dev in devices:
             devType = dev['deviceType']
 
             if 'type' in dev:
-                if dev['type'] == 'wifi-switch':
+                if devType in outlet_types:
                     outlets.append(VSFactory.getDevice(devType, dev, self))
-                elif dev['type'] == 'wifi-air':
+                elif devType in fan_types:
                     fans.append(VSFactory.getDevice(devType, dev, self))
-                elif dev['type'] == 'wifi-outlet':
+                elif devType in switch_types:
                     switches.append(VSFactory.getDevice(devType, dev, self))
+                #elif devType in bulb_types:
+                #    bulbs.append(VSFactory.getDevice(devType, dev, self))
                 else:
                     logger.debug('Unknown device ' + devType)
             else:

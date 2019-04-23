@@ -1,8 +1,8 @@
 from abc import ABCMeta, abstractmethod
 import logging
 
-import pyvesync.helpers as helpers
-from pyvesync.vesyncbasedevice import VeSyncBaseDevice
+from .helpers import Helpers as helpers
+from .vesyncbasedevice import VeSyncBaseDevice
 
 logger = logging.getLogger(__name__)
 
@@ -19,52 +19,76 @@ class VeSyncOutlet(VeSyncBaseDevice):
     @abstractmethod
     def update(self):
         """Gets Device Energy and Status"""
-        raise NotImplementedError
+
+    @abstractmethod
+    def update_energy(self):
+        """Builds weekly, monthly and yearly dictionaries"""
 
     @abstractmethod
     def turn_on(self):
         """Return True if device has beeeen turned on"""
-        raise NotImplementedError
 
     @abstractmethod
     def turn_off(self):
         """Return True if device has beeeen turned off"""
-        raise NotImplementedError
 
     @abstractmethod
+    def get_details(self):
+        """Build details dictionary"""
+    
+    @abstractmethod
+    def get_weekly_energy(self):
+        """Build weekly energy history dictionary"""
+    
+    @abstractmethod
+    def get_monthly_energy(self):
+        """Build Monthly Energy History Dictionary"""
+
+    @abstractmethod
+    def get_yearly_energy(self):
+        """Build Yearly Energy Dictionary"""
+
     def active_time(self):
         """Return active time of a device in minutes"""
+        if 'active_time' not in self.details:
+            self.get_details()
         return self.details.get('active_time')
 
-    @abstractmethod
     def energy_today(self):
         """Return energy"""
+        if 'energy' not in self.details:
+            self.get_details()
         return self.details.get('energy')
 
-    @abstractmethod
     def power(self):
         """Return current power in watts"""
+        if 'power' not in self.details:
+            self.get_details()
         return float(self.details.get('power', 0))
 
-    @abstractmethod
     def voltage(self):
         """Return current voltage"""
+        if 'voltage' not in self.details:
+            self.get_details()
         return float(self.details.get('voltage', 0))
 
-    @abstractmethod
     def monthly_energy_total(self):
         """Return total energy usage over the month"""
-        return self.energy.get('month', {}).get('total_energy')
+        if 'month' not in self.energy:
+            self.get_monthly_energy()
+        return self.energy.get('month', {}).get('total_energy', 0)
 
-    @abstractmethod
     def weekly_energy_total(self):
         """Return total energy usage over the week"""
-        return self.energy.get('week', {}).get('total_energy')
+        if 'week' not in self.energy:
+            self.get_weekly_energy()
+        return self.energy.get('week', {}).get('total_energy', 0)
 
-    @abstractmethod
     def yearly_energy_total(self):
         """Return total energy usage over the year"""
-        return self.energy.get('year', {}).get('total_energy')
+        if 'year' not in self.energy:
+            self.get_yearly_energy()
+        return self.energy.get('year', {}).get('total_energy', 0)
 
 
 class VeSyncOutlet7A(VeSyncOutlet):
@@ -82,8 +106,12 @@ class VeSyncOutlet7A(VeSyncOutlet):
             self.device_status = r.get('deviceStatus')
             self.details['active_time'] = r.get('activeTime')
             self.details['energy'] = r.get('energy')
-            self.details['power'] = r.get('power')
-            self.details['voltage'] = r.get('voltage')
+            power = r.get('power', '0:0')
+            power = round(float(helpers.calculate_hex(power)), 2)
+            self.details['power'] = power
+            voltage = r.get('voltage')
+            voltage = round(float(helpers.calculate_hex(voltage)), 2)
+            self.details['voltage'] = voltage
         else:
             logger.debug('Unable to get {0} details'.format(self.device_name))
 
@@ -163,16 +191,6 @@ class VeSyncOutlet7A(VeSyncOutlet):
         else:
             return False
 
-    def power(self):
-        data = self.details.get('power', '0:0')
-
-        return round(float(helpers.calculate_hex(data)), 2)
-
-    def voltage(self):
-        data = self.details.get('voltage', '0:0')
-
-        return round(float(helpers.calculate_hex(data)), 2)
-
 
 class VeSyncOutlet10A(VeSyncOutlet):
     def __init__(self, details, manager):
@@ -180,9 +198,9 @@ class VeSyncOutlet10A(VeSyncOutlet):
 
     def get_body(self, type_):
         if type_ == 'detail':
-            body = helpers.req_body('devicedetail')
+            body = helpers.req_body(self.manager, 'devicedetail')
         elif type_ == 'status':
-            body = helpers.req_body('devicestatus')
+            body = helpers.req_body(self.manager, 'devicestatus')
         body['uuid'] = self.uuid
 
         return body
@@ -201,7 +219,7 @@ class VeSyncOutlet10A(VeSyncOutlet):
         if helpers.check_response(r, '10a_detail'):
             self.device_status = r['deviceStatus']
             self.connection_status = r.get('connectionStatus')
-            self.details = helpers.build_details_dict()
+            self.details = helpers.build_details_dict(r)
         else:
             logger.debug('Unable to get {0} details'.format(self.device_name))
 
@@ -330,7 +348,7 @@ class VeSyncOutlet15A(VeSyncOutlet):
 
             self.device_status = r.get('deviceStatus')
             self.connection_status = r.get('connectionStatus')
-            self.details = helpers.build_details_dict()
+            self.details = helpers.build_details_dict(r)
         else:
             logger.debug('Unable to get {0} details'.format(self.device_name))
 
