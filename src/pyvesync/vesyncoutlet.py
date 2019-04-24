@@ -1,28 +1,34 @@
 from abc import ABCMeta, abstractmethod
 import logging
+import time
 
 from .helpers import Helpers as helpers
 from .vesyncbasedevice import VeSyncBaseDevice
 
 logger = logging.getLogger(__name__)
 
+ENERGY_UPDATE_INT = 3600
+
 
 class VeSyncOutlet(VeSyncBaseDevice):
     __metaclass__ = ABCMeta
 
     def __init__(self, details, manager):
-        super().__init__(details, manager)
+        super(VeSyncOutlet, self).__init__(details, manager)
 
         self.details = {}
         self.energy = {}
-    
-    @abstractmethod
-    def update(self):
-        """Gets Device Energy and Status"""
+        self.update_energy_ts = None
 
-    @abstractmethod
-    def update_energy(self):
-        """Builds weekly, monthly and yearly dictionaries"""
+    def update_time_check(self) -> bool:
+        if self.update_energy_ts is None:
+            return True
+        else:
+            if (time.time() - self.update_energy_ts) \
+                    > self.energy_update_int:
+                return True
+            else:
+                return False
 
     @abstractmethod
     def turn_on(self):
@@ -35,11 +41,11 @@ class VeSyncOutlet(VeSyncBaseDevice):
     @abstractmethod
     def get_details(self):
         """Build details dictionary"""
-    
+
     @abstractmethod
     def get_weekly_energy(self):
         """Build weekly energy history dictionary"""
-    
+
     @abstractmethod
     def get_monthly_energy(self):
         """Build Monthly Energy History Dictionary"""
@@ -48,46 +54,44 @@ class VeSyncOutlet(VeSyncBaseDevice):
     def get_yearly_energy(self):
         """Build Yearly Energy Dictionary"""
 
-    def active_time(self):
+    def update(self):
+        """Gets Device Energy and Status"""
+        self.get_details()
+
+    def update_energy(self):
+        """Builds weekly, monthly and yearly dictionaries"""
+        if self.update_time_check():
+            self.get_weekly_energy()
+            if 'week' in self.energy:
+                self.get_monthly_energy()
+                self.get_yearly_energy()
+
+    def active_time(self) -> int:
         """Return active time of a device in minutes"""
-        if 'active_time' not in self.details:
-            self.get_details()
         return self.details.get('active_time')
 
-    def energy_today(self):
+    def energy_today(self) -> float:
         """Return energy"""
-        if 'energy' not in self.details:
-            self.get_details()
         return self.details.get('energy')
 
-    def power(self):
+    def power(self) -> float:
         """Return current power in watts"""
-        if 'power' not in self.details:
-            self.get_details()
         return float(self.details.get('power', 0))
 
-    def voltage(self):
+    def voltage(self) -> float:
         """Return current voltage"""
-        if 'voltage' not in self.details:
-            self.get_details()
         return float(self.details.get('voltage', 0))
 
-    def monthly_energy_total(self):
+    def monthly_energy_total(self) -> float:
         """Return total energy usage over the month"""
-        if 'month' not in self.energy:
-            self.get_monthly_energy()
         return self.energy.get('month', {}).get('total_energy', 0)
 
-    def weekly_energy_total(self):
+    def weekly_energy_total(self) -> float:
         """Return total energy usage over the week"""
-        if 'week' not in self.energy:
-            self.get_weekly_energy()
         return self.energy.get('week', {}).get('total_energy', 0)
 
-    def yearly_energy_total(self):
+    def yearly_energy_total(self) -> float:
         """Return total energy usage over the year"""
-        if 'year' not in self.energy:
-            self.get_yearly_energy()
         return self.energy.get('year', {}).get('total_energy', 0)
 
 
@@ -154,15 +158,6 @@ class VeSyncOutlet7A(VeSyncOutlet):
             logger.error(
                 'Unable to get {0} yearly data'.format(self.device_name))
 
-    def update(self):
-        self.get_details()
-
-    def update_energy(self):
-        self.get_weekly_energy()
-        if 'week' in self.energy:
-            self.get_monthly_energy()
-            self.get_yearly_energy()
-
     def turn_on(self):
         _, status_code = helpers.call_api(
             '/v1/wifi-switch-1.3/' + self.cid + '/status/on',
@@ -195,15 +190,6 @@ class VeSyncOutlet7A(VeSyncOutlet):
 class VeSyncOutlet10A(VeSyncOutlet):
     def __init__(self, details, manager):
         super(VeSyncOutlet10A, self).__init__(details, manager)
-
-    def get_body(self, type_):
-        if type_ == 'detail':
-            body = helpers.req_body(self.manager, 'devicedetail')
-        elif type_ == 'status':
-            body = helpers.req_body(self.manager, 'devicestatus')
-        body['uuid'] = self.uuid
-
-        return body
 
     def get_details(self):
         body = helpers.req_body(self.manager, 'devicedetail')
@@ -276,15 +262,6 @@ class VeSyncOutlet10A(VeSyncOutlet):
             logger.error(
                 'Unable to get {0} yearly data'.format(self.device_name)
             )
-
-    def update(self):
-        self.get_details()
-
-    def update_energy(self):
-        self.get_weekly_energy()
-        if 'week' in self.energy:
-            self.get_monthly_energy()
-            self.get_yearly_energy()
 
     def turn_on(self):
         body = helpers.req_body(self.manager, 'devicestatus')
@@ -406,15 +383,6 @@ class VeSyncOutlet15A(VeSyncOutlet):
                 'Unable to get {0} yearly data'.format(self.device_name)
             )
 
-    def update(self):
-        self.get_details()
-
-    def update_energy(self):
-        self.get_weekly_energy()
-        if 'week' in self.energy:
-            self.get_monthly_energy()
-            self.get_yearly_energy()
-
     def turn_on(self):
         body = helpers.req_body(self.manager, 'devicestatus')
         body['uuid'] = self.uuid
@@ -452,6 +420,7 @@ class VeSyncOutlet15A(VeSyncOutlet):
             return False
 
     def turn_on_nightlight(self):
+        """Turn on nightlight"""
         body = helpers.req_body(self.manager, 'devicestatus')
         body['uuid'] = self.uuid
         body['mode'] = 'auto'
@@ -466,6 +435,7 @@ class VeSyncOutlet15A(VeSyncOutlet):
         return helpers.check_response(response, '15a_ntlight')
 
     def turn_off_nightlight(self):
+        """Turn Off Nightlight"""
         body = helpers.req_body(self.manager, 'devicestatus')
         body['uuid'] = self.uuid
         body['mode'] = 'manual'

@@ -19,7 +19,7 @@ USER_TYPE = '1'
 
 
 class Helpers:
-    
+
     @staticmethod
     def req_headers(manager):
         headers = {
@@ -131,7 +131,7 @@ class Helpers:
         return hashlib.md5(string.encode('utf-8')).hexdigest()
 
     @staticmethod
-    def call_api(api: str, method: str, 
+    def call_api(api: str, method: str,
                  json: dict = None, headers: dict = None):
         response = None
         status_code = None

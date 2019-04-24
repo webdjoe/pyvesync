@@ -1,6 +1,3 @@
-from abc import ABC, ABCMeta
-
-
 class VeSyncDeviceException(Exception):
     """Gets errors reported by devices"""
     pass
@@ -26,6 +23,7 @@ class VeSyncBaseDevice(object):
         self.speed = None
         self.extension = None
         self.current_firm_version = None
+        self.energy_update_int = manager.energy_update_interval
 
         self.configure(details)
 
@@ -46,9 +44,9 @@ class VeSyncBaseDevice(object):
         self.extension = details.get('extension', None)
         self.current_firm_version = details.get('currentFirmVersion', None)
 
-        if self.device_type is not None:
-            return True
-
     def is_on(self) -> str:
         """Returns whether device is on"""
-        return self.device_status
+        if self.device_status == 'on':
+            return True
+
+        return False

@@ -5,7 +5,7 @@ from .helpers import Helpers as helpers
 class VeSyncAir131(VeSyncBaseDevice):
 
     def __init__(self, details, manager):
-        super().__init__(details, manager)
+        super(VeSyncAir131, self).__init__(details, manager)
         self.filter_life = {}
         self.details = {}
         self.air_quality = None
@@ -70,7 +70,7 @@ class VeSyncAir131(VeSyncBaseDevice):
     def manual_mode(self):
         """Set mode to manual"""
         return self.mode_toggle('manual')
-    
+
     def sleep_mode(self):
         """Set sleep mode to on"""
 
@@ -81,7 +81,7 @@ class VeSyncAir131(VeSyncBaseDevice):
         body['uuid'] = self.uuid
         head = helpers.req_headers(self.manager)
         if self.details.get('mode') != 'manual':
-            self.mode_manual()
+            self.mode_toggle('manual')
         else:
             if speed is not None:
                 level = int(self.details.get('level'))
@@ -103,7 +103,7 @@ class VeSyncAir131(VeSyncBaseDevice):
                 return True
             else:
                 return False
-    
+
     def mode_toggle(self, mode: str) -> bool:
         """Set mode to manual, auto or sleep"""
         head = helpers.req_headers(self.manager)

@@ -13,6 +13,8 @@ logger = logging.getLogger(__name__)
 API_RATE_LIMIT = 30
 DEFAULT_TZ = 'America/New_York'
 
+DEFAULT_ENER_UP_INT = 3600
+
 
 class VSFactory(object):
     @staticmethod
@@ -45,6 +47,7 @@ class VeSync(object):
         self.update_interval = API_RATE_LIMIT
         self.last_update_ts = None
         self.in_process = False
+        self._energy_update_interval = DEFAULT_ENER_UP_INT
 
         if isinstance(time_zone, str) and len(time_zone) > 0:
             reg_test = r"[^a-zA-Z/_]"
@@ -57,16 +60,27 @@ class VeSync(object):
             self.time_zone = DEFAULT_TZ
             logger.debug("Time zone is not a string")
 
+    @property
+    def energy_update_interval(self):
+        """Return energy update interval"""
+        return self._energy_update_interval
+
+    @energy_update_interval.setter
+    def energy_update_interval(self, new_energy_update):
+        """"Set energy update interval in seconds"""
+        if new_energy_update > 0:
+            self._energy_update_interval = new_energy_update
+
     def process_devices(self, devices):
         outlets = []
         switches = []
         fans = []
-        bulbs = []
+        #bulbs = []
 
-        outlet_types = ['wifi-switch-1.3', 'ESW03-USA', 
+        outlet_types = ['wifi-switch-1.3', 'ESW03-USA',
                         'ESW10-EU', 'ESW15-USA']
         switch_types = ['ESWL01', 'ESWL03']
-        fans_types = ['LV-PUR131S']
+        fan_types = ['LV-PUR131S']
         #bulb_types = ['ESL100']
 
         for dev in devices:
@@ -146,17 +160,24 @@ class VeSync(object):
 
         return False
 
+    def device_time_check(self) -> bool:
+        if self.last_update_ts is None or (
+                time.time() - self.last_update_ts) > self.update_interval:
+            return True
+        else:
+            return False
+
     def update(self):
         """Fetch updated information about devices"""
 
-        if self.last_update_ts is None or (
-                time.time() - self.last_update_ts) > self.update_interval:
+        if self.device_time_check():
 
             if not self.in_process:
                 outlets, switches, fans = self.get_devices()
 
                 self.outlets = helpers.resolve_updates(self.outlets, outlets)
-                # self.switches = helpers.resolve_updates(self.switches, switches)
-                # self.fans = helpers.resolve_updates(self.fans, fans)
+                self.switches = helpers.resolve_updates(
+                    self.switches, switches)
+                self.fans = helpers.resolve_updates(self.fans, fans)
 
                 self.last_update_ts = time.time()
