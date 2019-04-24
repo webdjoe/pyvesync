@@ -29,6 +29,14 @@ class VeSyncAir131(VeSyncBaseDevice):
             self.details['mode'] = r.get('mode', 'unknown')
             self.details['level'] = r.get('level', None)
 
+    def get_fan_level(self):
+        """Get current fan level (1-3)"""
+        return self.details.get('level', 0)
+    
+    def get_filter_life(self):
+        """Get percentage of filter life remaining"""
+        return self.details['filter_life'].get('percentage', 0)
+
     def turn_on(self):
         """Turn Air Purifier on"""
         if self.device_status != 'on':
@@ -73,6 +81,7 @@ class VeSyncAir131(VeSyncBaseDevice):
 
     def sleep_mode(self):
         """Set sleep mode to on"""
+        return self.mode_toggle('sleep')
 
     def fan_speed(self, speed: int =None) -> bool:
         """Adjust Fan Speed by Specifying 1,2,3 as argument or cycle

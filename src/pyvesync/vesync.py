@@ -5,7 +5,7 @@ import re
 from .helpers import Helpers as helpers
 from .vesyncoutlet import (VeSyncOutlet7A, VeSyncOutlet10A,
                            VeSyncOutlet15A)
-from .vesyncswitch import VeSyncSwitch
+from .vesyncswitch import VeSyncWallSwitch
 from .vesyncfan import VeSyncAir131
 
 logger = logging.getLogger(__name__)
@@ -26,7 +26,7 @@ class VSFactory(object):
         elif device_type == 'ESW15-USA':
             return VeSyncOutlet15A(config, manager)
         elif device_type in ['ESWL01', 'ESWL03']:
-            return VeSyncSwitch(config, manager)
+            return VeSyncWallSwitch(config, manager)
         elif device_type == 'LV-PUR131S':
             return VeSyncAir131(config, manager)
         else:
