@@ -2,8 +2,8 @@ from abc import ABCMeta, abstractmethod
 import logging
 import time
 
-from .helpers import Helpers as helpers
-from .vesyncbasedevice import VeSyncBaseDevice
+from pyvesync.helpers import Helpers as helpers
+from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 
 logger = logging.getLogger(__name__)
 
@@ -73,30 +73,37 @@ class VeSyncOutlet(VeSyncBaseDevice):
                 self.get_monthly_energy()
                 self.get_yearly_energy()
 
+    @property
     def active_time(self) -> int:
         """Return active time of a device in minutes"""
         return self.details.get('active_time')
 
+    @property
     def energy_today(self) -> float:
         """Return energy"""
         return self.details.get('energy')
 
+    @property
     def power(self) -> float:
         """Return current power in watts"""
         return float(self.details.get('power', 0))
 
+    @property
     def voltage(self) -> float:
         """Return current voltage"""
         return float(self.details.get('voltage', 0))
 
+    @property
     def monthly_energy_total(self) -> float:
         """Return total energy usage over the month"""
         return self.energy.get('month', {}).get('total_energy', 0)
 
+    @property
     def weekly_energy_total(self) -> float:
         """Return total energy usage over the week"""
         return self.energy.get('week', {}).get('total_energy', 0)
 
+    @property
     def yearly_energy_total(self) -> float:
         """Return total energy usage over the year"""
         return self.energy.get('year', {}).get('total_energy', 0)

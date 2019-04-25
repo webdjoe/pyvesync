@@ -2,11 +2,11 @@ import logging
 import time
 import re
 
-from .helpers import Helpers as helpers
-from .vesyncoutlet import (VeSyncOutlet7A, VeSyncOutlet10A,
+from pyvesync.helpers import Helpers as helpers
+from pyvesync.vesyncoutlet import (VeSyncOutlet7A, VeSyncOutlet10A,
                            VeSyncOutlet15A)
-from .vesyncswitch import VeSyncWallSwitch
-from .vesyncfan import VeSyncAir131
+from pyvesync.vesyncswitch import VeSyncWallSwitch
+from pyvesync.vesyncfan import VeSyncAir131
 
 logger = logging.getLogger(__name__)
 
