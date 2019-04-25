@@ -1,7 +1,7 @@
 pyvesync [![build status](https://img.shields.io/pypi/v/pyvesync.svg)](https://pypi.python.org/pypi/pyvesync)
 ========
 
-
+  
 pyvesync is a library to manage Etekcity Switches.
 
 
@@ -34,26 +34,42 @@ To start with the module:
 ```python
 from pyvesync.vesync import VeSync
 
-manager = VeSync("USERNAME", "PASSWORD")
+manager = VeSync("USERNAME", "PASSWORD", "TIME ZONE"=DEFAULT_TZ)
 manager.login()
 manager.update()
 
+```
+
+The "TIME ZONE" argument is optional but the specified time zone must match time zone in the tz database (IANNA Time Zone Database), see this link for reference:
+[tz database](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)
+The time zone determines how the energy history is generated for the smart outlets, i.e. for the week starts at 12:01AM Sunday morning at the specified time zone.  If no time zone or an invalid time zone is entered the default is America/New_York
+
+```python
 #Devices are respectively located in their own lists that can be iterated over
 manager.outlets = [VeSyncOutletObjects]
 manager.switches = [VeSyncSwitchObjects]
 manager.fans = [VeSyncFanObjects]
+```
 
-#If device objects are going to be continuously polled, a custom energy update interval
-#can be set - The default is 6 hours
-manager.energy_update_interval(time)  # time in seconds
+If outlets are going to be continuously polled, a custom energy update interval can be set - The default is 6 hours (21600 seconds)
+```python
+manager.energy_update_interval = time # time in seconds
 
+#The interval check for energy updates can also be disabled (enabled by default)
+
+manager.energy_update_check = False
+```
+  
+```python
 # Get electricity metrics of outlets
-for s in manager.outlets:
-    s.update_energy() # Get energy history for each device
-    print("switch %s is currently %s" % (s.device_name, s.device_status))
-    print("  active time: %s, energy: %s, power: %s, voltage: %s" % (s.active_time(), s.energy_today(), s.power(), s.voltage()))
-    print("  weekly energy: %s, monthly energy: %s, yearly energy: %s" % (s.weekly_energy_total(), s.monthly_energy_total(), s.yearly_energy_total()))
 
+for s in manager.outlets:
+
+s.update_energy() # Get energy history for each device
+
+print("switch %s is currently %s" % (s.device_name, s.device_status))
+print(" active time: %s, energy: %s, power: %s, voltage: %s" % (s.active_time(), s.energy_today(), s.power(), s.voltage()))
+print(" weekly energy: %s, monthly energy: %s, yearly energy: %s" % (s.weekly_energy_total(), s.monthly_energy_total(), s.yearly_energy_total()))
 
 # Turn on the first switch
 my_switch = manager.switches[0]
@@ -61,8 +77,8 @@ print("Turning on switch '%s'" % (my_switch.device_name))
 my_switch.turn_on()
 print("Turning off switch '%s'" % (my_switch.device_name))
 my_switch.turn_off()
-```
 
+```
 
 Manager API
 -----------
@@ -94,7 +110,7 @@ Outlet Specific Energy API
 
 `VeSyncOutlet.voltage()` - Return current voltage reading
 
-`VeSyncOutlet.energy_update()` - Get switch energy history
+`VeSyncOutlet.energy_update()` - Get outlet energy history - Builds week, month and year nested energy dictionary
 
 `VesyncOutlet.weekly_energy_total()` - Return total energy reading for the past week, starts 12:01AM Sunday morning
 
@@ -114,17 +130,19 @@ The rectangular smart switch model supports some additional functionality on top
 
 Air Purifier LV-PUR131S Functions
 ---------------------------------
-`VeSyncFan.get_fan_level()`  -  Get the level of the fan (1-3)
 
-`VeSyncFan.get_filter_life()`  -  Get the percentage of filter life remaining
+`VeSyncFan.get_fan_level()` - Get the level of the fan (1-3) or 0 for off
 
-`VeSyncFan.auto_mode()`  -  Change mode to auto
+`VeSyncFan.get_filter_life()` - Get the percentage of filter life remaining
 
-`VeSyncFan.manual_mode()`  -  Change fan mode to manual with fan level 1
+`VeSyncFan.auto_mode()` - Change mode to auto
 
-`VeSyncFan.sleep_mode()`  -  Change fan mode to sleep
+`VeSyncFan.manual_mode()` - Change fan mode to manual with fan level 1
 
-`VeSyncFan.fan_speed(speed)`  -  Change fan speed with level 1, 2 or 3
+`VeSyncFan.sleep_mode()` - Change fan mode to sleep  
+
+`VeSyncFan.fan_speed(speed)` - Change fan speed with level 1, 2 or 3
+
 
 Notes
 -----
@@ -133,9 +151,9 @@ More detailed data is available within the `VesyncOutlet` by inspecting the `Ves
 
 The `VesyncOutlet.energy` object includes 3 nested dictionaries `week`, `month`, and `year` that contain detailed weekly, monthly and yearly data
 
-```
+```python
 VesyncOutlet.energy['week']['energy_consumption_of_today']
-VesyncOutlet.energy['week']['cost_per_kwh']
+VesyncOutlet.energy['week']['cost_per_kwh'] 
 VesyncOutlet.energy['week']['max_energy']
 VesyncOutlet.energy['week']['total_energy']
 VesyncOutlet.energy['week']['data'] which itself is a list of values

@@ -131,3 +131,7 @@ class VeSyncAir131(VeSyncBaseDevice):
                 return True
 
         return False
+
+    def update(self):
+        """Run function to get device details"""
+        self.get_details()

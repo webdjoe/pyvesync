@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 API_RATE_LIMIT = 30
 DEFAULT_TZ = 'America/New_York'
 
-DEFAULT_ENER_UP_INT = 3600
+DEFAULT_ENER_UP_INT = 21600
 
 
 class VSFactory(object):
@@ -48,6 +48,7 @@ class VeSync(object):
         self.last_update_ts = None
         self.in_process = False
         self._energy_update_interval = DEFAULT_ENER_UP_INT
+        self._energy_check = True
 
         if isinstance(time_zone, str) and len(time_zone) > 0:
             reg_test = r"[^a-zA-Z/_]"
@@ -70,6 +71,17 @@ class VeSync(object):
         """"Set energy update interval in seconds"""
         if new_energy_update > 0:
             self._energy_update_interval = new_energy_update
+    
+    @property
+    def energy_update_check(self):
+        """Return true or false to enable/disable 
+            check for energy update interval"""
+        return self._energy_check
+    
+    @energy_update_check.setter
+    def energy_update_check(self, check: bool):
+        """Enable/Disable energy update interval check"""
+        self._energy_check = check
 
     def process_devices(self, devices):
         outlets = []
