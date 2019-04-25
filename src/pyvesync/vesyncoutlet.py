@@ -20,6 +20,7 @@ class VeSyncOutlet(VeSyncBaseDevice):
         self.energy = {}
         self.update_energy_ts = None
 
+    @property
     def update_time_check(self) -> bool:
         if self.update_energy_ts is None:
             return True
@@ -60,7 +61,13 @@ class VeSyncOutlet(VeSyncBaseDevice):
 
     def update_energy(self):
         """Builds weekly, monthly and yearly dictionaries"""
-        if self.update_time_check():
+        if self.manager.energy_update_check:
+            if self.update_time_check:
+                self.get_weekly_energy()
+                if 'week' in self.energy:
+                    self.get_monthly_energy()
+                    self.get_yearly_energy()
+        else:
             self.get_weekly_energy()
             if 'week' in self.energy:
                 self.get_monthly_energy()
