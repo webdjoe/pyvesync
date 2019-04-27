@@ -73,12 +73,12 @@ class VeSyncOutlet(VeSyncBaseDevice):
     @property
     def active_time(self) -> int:
         """Return active time of a device in minutes"""
-        return self.details.get('active_time')
+        return self.details.get('active_time', 0)
 
     @property
     def energy_today(self) -> float:
         """Return energy"""
-        return self.details.get('energy')
+        return self.details.get('energy', 0)
 
     @property
     def power(self) -> float:
@@ -107,8 +107,8 @@ class VeSyncOutlet(VeSyncBaseDevice):
 
     def display(self):
         super(VeSyncOutlet, self).display()
-        print("\tActive Time: {} minutes, Energy: {}, "
-              "Power: {}, Voltage {}".format(
+        print("\tActive Time: {} minutes, Energy: {}kWh, "
+              "Power: {} watts, Voltage {}".format(
                   self.active_time, self.energy_today,
                   self.power, self.voltage))
         print("\tEnergy - Week: {}kWh, Month: {}kWh, Year: {}kWh".format(
