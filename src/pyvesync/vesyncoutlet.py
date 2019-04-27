@@ -62,23 +62,13 @@ class VeSyncOutlet(VeSyncBaseDevice):
 
     def update_energy(self):
         """Builds weekly, monthly and yearly dictionaries"""
-        logger.info('%s - update_energy - interval: %s' % (
-            self.device_name, self._energy_update_interval)
-        )
-
         if self.update_time_check:
-            logger.info('%s - update_energy - updating' % (self.device_name))
             self.get_weekly_energy()
             if 'week' in self.energy:
                 self.get_monthly_energy()
                 self.get_yearly_energy()
 
             self.update_energy_ts = time.time()
-            logger.info('%s - update_energy - %s' % (
-                self.device_name, time.time() - self.update_energy_ts)
-            )
-        else:
-            logger.info('%s - update_energy - skipping' % (self.device_name))
 
     @property
     def active_time(self) -> int:
