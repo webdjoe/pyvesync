@@ -19,6 +19,7 @@ class VeSyncOutlet(VeSyncBaseDevice):
         self.details = {}
         self.energy = {}
         self.update_energy_ts = None
+        self._energy_update_interval = ENERGY_UPDATE_INT
 
     @property
     def update_time_check(self) -> bool:
@@ -26,7 +27,7 @@ class VeSyncOutlet(VeSyncBaseDevice):
             return True
         else:
             if (time.time() - self.update_energy_ts) \
-                    > self.energy_update_int:
+                    > self._energy_update_interval:
                 return True
             else:
                 return False
@@ -61,17 +62,23 @@ class VeSyncOutlet(VeSyncBaseDevice):
 
     def update_energy(self):
         """Builds weekly, monthly and yearly dictionaries"""
-        if self.manager.energy_update_check:
-            if self.update_time_check:
-                self.get_weekly_energy()
-                if 'week' in self.energy:
-                    self.get_monthly_energy()
-                    self.get_yearly_energy()
-        else:
+        logger.info('%s - update_energy - interval: %s' % (
+            self.device_name, self._energy_update_interval)
+        )
+
+        if self.update_time_check:
+            logger.info('%s - update_energy - updating' % (self.device_name))
             self.get_weekly_energy()
             if 'week' in self.energy:
                 self.get_monthly_energy()
                 self.get_yearly_energy()
+
+            self.update_energy_ts = time.time()
+            logger.info('%s - update_energy - %s' % (
+                self.device_name, time.time() - self.update_energy_ts)
+            )
+        else:
+            logger.info('%s - update_energy - skipping' % (self.device_name))
 
     @property
     def active_time(self) -> int:
@@ -107,6 +114,13 @@ class VeSyncOutlet(VeSyncBaseDevice):
     def yearly_energy_total(self) -> float:
         """Return total energy usage over the year"""
         return self.energy.get('year', {}).get('total_energy', 0)
+
+    def display(self):
+        super(VeSyncOutlet, self).display()
+        print("\tActive Time: {} minutes, Energy: {}, "
+              "Power: {}, Voltage {}".format(
+                  self.active_time, self.energy_today,
+                  self.power, self.voltage))
 
 
 class VeSyncOutlet7A(VeSyncOutlet):

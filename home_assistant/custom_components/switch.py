@@ -1,52 +1,42 @@
 """Support for Etekcity VeSync switches."""
 import logging
-import voluptuous as vol
-from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
-from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, CONF_TIME_ZONE)
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.switch import (SwitchDevice)
 
+from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_TIME_ZONE): cv.string,
-})
+ENERGY_UPDATE_INT = 21600
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the VeSync switch platform."""
-    from pyvesync.vesync import VeSync
+    if discovery_info is None:
+        return
 
     switches = []
 
-    manager = VeSync(config.get(CONF_USERNAME), config.get(CONF_PASSWORD))
+    manager = hass.data[DOMAIN]['manager']
 
-    if not manager.login():
-        _LOGGER.error("Unable to login to VeSync")
-        return
-
-    manager.update()
-
-    if manager.devices is not None and manager.devices:
-        if len(manager.devices) == 1:
+    if manager.outlets is not None and manager.outlets:
+        if len(manager.outlets) == 1:
             count_string = 'switch'
         else:
             count_string = 'switches'
 
         _LOGGER.info("Discovered %d VeSync %s",
-                     len(manager.devices), count_string)
+                     len(manager.outlets), count_string)
 
-        if len(manager.devices) > 1:
-            for switch in manager.devices:
+        if len(manager.outlets) > 1:
+            for switch in manager.outlets:
+                switch._energy_update_interval = ENERGY_UPDATE_INT
                 switches.append(VeSyncSwitchHA(switch))
                 _LOGGER.info("Added a VeSync switch named '%s'",
-                            switch.device_name)
+                             switch.device_name)
         else:
-            switches.append(VeSyncSwitchHA(manager.devices))
+            switches.append(VeSyncSwitchHA(manager.outlets))
     else:
-        _LOGGER.info("No VeSync devices found")
+        _LOGGER.info("No VeSync switches found")
 
     add_entities(switches)
 
@@ -111,3 +101,4 @@ class VeSyncSwitchHA(SwitchDevice):
     def update(self):
         """Handle data changes for node values."""
         self.smartplug.update()
+        self.smartplug.update_energy()
