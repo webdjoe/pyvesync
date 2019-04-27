@@ -1,5 +1,5 @@
-from .vesyncbasedevice import VeSyncBaseDevice
-from .helpers import Helpers as helpers
+from pyvesync.vesyncbasedevice import VeSyncBaseDevice
+from pyvesync.helpers import Helpers as helpers
 
 
 class VeSyncAir131(VeSyncBaseDevice):
@@ -11,6 +11,8 @@ class VeSyncAir131(VeSyncBaseDevice):
         self.air_quality = None
         self.screen_status = None
         self.level = None
+
+        self.details = {}
 
     def get_details(self):
         """Build details dictionary"""
@@ -29,11 +31,13 @@ class VeSyncAir131(VeSyncBaseDevice):
             self.details['mode'] = r.get('mode', 'unknown')
             self.details['level'] = r.get('level', None)
 
-    def get_fan_level(self):
+    @property
+    def fan_level(self):
         """Get current fan level (1-3)"""
         return self.details.get('level', 0)
-    
-    def get_filter_life(self):
+
+    @property
+    def filter_life(self):
         """Get percentage of filter life remaining"""
         return self.details['filter_life'].get('percentage', 0)
 

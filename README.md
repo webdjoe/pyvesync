@@ -68,8 +68,8 @@ for s in manager.outlets:
 s.update_energy() # Get energy history for each device
 
 print("switch %s is currently %s" % (s.device_name, s.device_status))
-print(" active time: %s, energy: %s, power: %s, voltage: %s" % (s.active_time(), s.energy_today(), s.power(), s.voltage()))
-print(" weekly energy: %s, monthly energy: %s, yearly energy: %s" % (s.weekly_energy_total(), s.monthly_energy_total(), s.yearly_energy_total()))
+print(" active time: %s, energy: %s, power: %s, voltage: %s" % (s.active_time, s.energy_today, s.power, s.voltage))
+print(" weekly energy: %s, monthly energy: %s, yearly energy: %s" % (s.weekly_energy_total, s.monthly_energy_total, s.yearly_energy_total))
 
 # Turn on the first switch
 my_switch = manager.switches[0]
@@ -99,24 +99,24 @@ Device API
 
 `VeSyncDevice.update()` - Fetch updated information about device
 
-`VeSyncDevice.active_time()` - Return active time of the device in minutes
+`VeSyncDevice.active_time` - Return active time of the device in minutes
 
 Outlet Specific Energy API
 --------------------------
 
-`VeSyncOutlet.energy_today()` - Return current energy usage
+`VeSyncOutlet.update_energy()` - Get outlet energy history - Builds week, month and year nested energy dictionary
 
-`VeSyncOutlet.power()` - Return current power in watts of the device
+`VeSyncOutlet.energy_today` - Return current energy usage
 
-`VeSyncOutlet.voltage()` - Return current voltage reading
+`VeSyncOutlet.power` - Return current power in watts of the device
 
-`VeSyncOutlet.energy_update()` - Get outlet energy history - Builds week, month and year nested energy dictionary
+`VeSyncOutlet.voltage` - Return current voltage reading
 
-`VesyncOutlet.weekly_energy_total()` - Return total energy reading for the past week, starts 12:01AM Sunday morning
+`VesyncOutlet.weekly_energy_total` - Return total energy reading for the past week, starts 12:01AM Sunday morning
 
-`VesyncOutlet.monthly_energy_total()` - Return total energy reading for the past month
+`VesyncOutlet.monthly_energy_total` - Return total energy reading for the past month
 
-`VesyncOutlet.yearly_energy_total()` - Return total energy reading for the past year
+`VesyncOutlet.yearly_energy_total` - Return total energy reading for the past year
 
 
 Model ESW15-USA 15A/1800W API
@@ -131,9 +131,9 @@ The rectangular smart switch model supports some additional functionality on top
 Air Purifier LV-PUR131S Functions
 ---------------------------------
 
-`VeSyncFan.get_fan_level()` - Get the level of the fan (1-3) or 0 for off
+`VeSyncFan.fan_level` - Return the level of the fan (1-3) or 0 for off
 
-`VeSyncFan.get_filter_life()` - Get the percentage of filter life remaining
+`VeSyncFan.filter_life` - Return the percentage of filter life remaining
 
 `VeSyncFan.auto_mode()` - Change mode to auto
 
@@ -156,7 +156,7 @@ VesyncOutlet.energy['week']['energy_consumption_of_today']
 VesyncOutlet.energy['week']['cost_per_kwh'] 
 VesyncOutlet.energy['week']['max_energy']
 VesyncOutlet.energy['week']['total_energy']
-VesyncOutlet.energy['week']['data'] which itself is a list of values
+VesyncOutlet.energy['week']['data'] #which itself is a list of values
 ```
 
 The VeSync api is hit or miss with this data so access is currently limited to direct lookup calls
