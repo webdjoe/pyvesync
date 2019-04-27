@@ -1,5 +1,5 @@
-from .vesyncbasedevice import VeSyncBaseDevice
-from .helpers import Helpers as helpers
+from pyvesync.vesyncbasedevice import VeSyncBaseDevice
+from pyvesync.helpers import Helpers as helpers
 
 
 class VeSyncAir131(VeSyncBaseDevice):
@@ -11,6 +11,8 @@ class VeSyncAir131(VeSyncBaseDevice):
         self.air_quality = None
         self.screen_status = None
         self.level = None
+
+        self.details = {}
 
     def get_details(self):
         """Build details dictionary"""
@@ -28,6 +30,16 @@ class VeSyncAir131(VeSyncBaseDevice):
             self.details['screeen_status'] = r.get('screenStatus', 'unknown')
             self.details['mode'] = r.get('mode', 'unknown')
             self.details['level'] = r.get('level', None)
+
+    @property
+    def fan_level(self):
+        """Get current fan level (1-3)"""
+        return self.details.get('level', 0)
+
+    @property
+    def filter_life(self):
+        """Get percentage of filter life remaining"""
+        return self.details['filter_life'].get('percentage', 0)
 
     def turn_on(self):
         """Turn Air Purifier on"""
@@ -73,6 +85,7 @@ class VeSyncAir131(VeSyncBaseDevice):
 
     def sleep_mode(self):
         """Set sleep mode to on"""
+        return self.mode_toggle('sleep')
 
     def fan_speed(self, speed: int =None) -> bool:
         """Adjust Fan Speed by Specifying 1,2,3 as argument or cycle
@@ -122,3 +135,7 @@ class VeSyncAir131(VeSyncBaseDevice):
                 return True
 
         return False
+
+    def update(self):
+        """Run function to get device details"""
+        self.get_details()

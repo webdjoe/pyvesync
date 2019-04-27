@@ -1,5 +1,5 @@
-from .vesyncbasedevice import VeSyncBaseDevice
-from .helpers import Helpers as helpers
+from pyvesync.vesyncbasedevice import VeSyncBaseDevice
+from pyvesync.helpers import Helpers as helpers
 from abc import ABCMeta, abstractmethod
 
 
@@ -28,13 +28,18 @@ class VeSyncSwitch(VeSyncBaseDevice):
     def turn_off(self):
         """Turn switch off"""
 
+    @property
+    def active_time(self):
+        """Get active time of switch"""
+        return self.details.get('active_time', 0)
+
     def update(self):
         self.get_details()
 
 
 class VeSyncWallSwitch(VeSyncSwitch):
     def __init__(self, details, manager):
-        super().__init__(details, manager)
+        super(VeSyncWallSwitch, self).__init__(details, manager)
 
     def get_details(self):
         body = helpers.req_body(self.manager, 'devicedetail')
@@ -47,6 +52,7 @@ class VeSyncWallSwitch(VeSyncSwitch):
             self.device_status = r['deviceStatus']
             self.details['active_time'] = r['activeTime']
             self.details['connection_status'] = r['connectionStatus']
+            self.connection_status = r['connectionStatus']
 
     def turn_off(self):
         body = helpers.req_body(self.manager, 'devicestatus')

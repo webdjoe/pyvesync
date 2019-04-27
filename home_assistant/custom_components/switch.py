@@ -38,10 +38,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.info("Discovered %d VeSync %s",
                      len(manager.devices), count_string)
 
-        for switch in manager.devices:
-            switches.append(VeSyncSwitchHA(switch))
-            _LOGGER.info("Added a VeSync switch named '%s'",
-                         switch.device_name)
+        if len(manager.devices) > 1:
+            for switch in manager.devices:
+                switches.append(VeSyncSwitchHA(switch))
+                _LOGGER.info("Added a VeSync switch named '%s'",
+                            switch.device_name)
+        else:
+            switches.append(VeSyncSwitchHA(manager.devices))
     else:
         _LOGGER.info("No VeSync devices found")
 
@@ -69,23 +72,23 @@ class VeSyncSwitchHA(SwitchDevice):
     def device_state_attributes(self):
         """Return the state attributes of the device."""
         attr = {}
-        attr['active_time'] = self.smartplug.active_time()
-        attr['voltage'] = self.smartplug.voltage()
-        attr['active_time'] = self.smartplug.active_time()
-        attr['weekly_energy_total'] = self.smartplug.weekly_energy_total()
-        attr['monthly_energy_total'] = self.smartplug.monthly_energy_total()
-        attr['yearly_energy_total'] = self.smartplug.yearly_energy_total()
+        attr['active_time'] = self.smartplug.active_time
+        attr['voltage'] = self.smartplug.voltage
+        attr['active_time'] = self.smartplug.active_time
+        attr['weekly_energy_total'] = self.smartplug.weekly_energy_total
+        attr['monthly_energy_total'] = self.smartplug.monthly_energy_total
+        attr['yearly_energy_total'] = self.smartplug.yearly_energy_total
         return attr
 
     @property
     def current_power_w(self):
         """Return the current power usage in W."""
-        return self.smartplug.power()
+        return self.smartplug.power
 
     @property
     def today_energy_kwh(self):
         """Return the today total energy usage in kWh."""
-        return self.smartplug.energy_today()
+        return self.smartplug.energy_today
 
     @property
     def available(self) -> bool:
