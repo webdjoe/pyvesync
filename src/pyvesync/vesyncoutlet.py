@@ -111,6 +111,9 @@ class VeSyncOutlet(VeSyncBaseDevice):
               "Power: {}, Voltage {}".format(
                   self.active_time, self.energy_today,
                   self.power, self.voltage))
+        print("\tEnergy - Week: {}kWh, Month: {}kWh, Year: {}kWh".format(
+                  self.weekly_energy_total, self.monthly_energy_total,
+                  self.yearly_energy_total))
 
 
 class VeSyncOutlet7A(VeSyncOutlet):
