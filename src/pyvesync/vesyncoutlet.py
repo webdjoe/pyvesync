@@ -7,8 +7,6 @@ from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 
 logger = logging.getLogger(__name__)
 
-ENERGY_UPDATE_INT = 3600
-
 
 class VeSyncOutlet(VeSyncBaseDevice):
     __metaclass__ = ABCMeta
@@ -19,7 +17,8 @@ class VeSyncOutlet(VeSyncBaseDevice):
         self.details = {}
         self.energy = {}
         self.update_energy_ts = None
-        self._energy_update_interval = ENERGY_UPDATE_INT
+        self._energy_update_interval = manager.energy_update_interval
+        self._energy_update_check = manager.energy_update_check
 
     @property
     def update_time_check(self) -> bool:
@@ -62,7 +61,8 @@ class VeSyncOutlet(VeSyncBaseDevice):
 
     def update_energy(self):
         """Builds weekly, monthly and yearly dictionaries"""
-        if self.update_time_check:
+        if (self._energy_update_check and self.update_time_check) or \
+                not self._energy_update_check:
             self.get_weekly_energy()
             if 'week' in self.energy:
                 self.get_monthly_energy()

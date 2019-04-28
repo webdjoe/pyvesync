@@ -62,7 +62,7 @@ class VeSync(object):
             logger.debug("Time zone is not a string")
 
     @property
-    def energy_update_interval(self):
+    def energy_update_interval(self) -> int:
         """Return energy update interval"""
         return self._energy_update_interval
 
@@ -73,7 +73,7 @@ class VeSync(object):
             self._energy_update_interval = new_energy_update
 
     @property
-    def energy_update_check(self):
+    def energy_update_check(self) -> bool:
         """Return true or false to enable/disable
             check for energy update interval"""
         return self._energy_check
@@ -83,7 +83,7 @@ class VeSync(object):
         """Enable/Disable energy update interval check"""
         self._energy_check = check
 
-    def process_devices(self, devices):
+    def process_devices(self, devices) -> tuple:
         outlets = []
         switches = []
         fans = []
@@ -142,7 +142,7 @@ class VeSync(object):
 
         return (outlets, switches, fans)
 
-    def login(self):
+    def login(self) -> bool:
         """Return True if log in request succeeds"""
         user_check = isinstance(self.username, str) and len(self.username) > 0
         pass_check = isinstance(self.password, str) and len(self.password) > 0

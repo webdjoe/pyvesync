@@ -23,7 +23,6 @@ class VeSyncBaseDevice(object):
         self.speed = None
         self.extension = None
         self.current_firm_version = None
-        self.energy_update_int = manager.energy_update_interval
 
         self.configure(details)
 
