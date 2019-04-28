@@ -62,12 +62,12 @@ If outlets are going to be continuously polled, a custom energy update interval 
 manager.energy_update_interval = time # time in seconds
 ```
  
+ ## Example Usage
+ ### Get electricity metrics of outlets
 ```python
-# Get electricity metrics of outlets
-
 for s in manager.outlets:
-
-s.update_energy(check_bypass=False) # Get energy history for each device
+  s.update_energy(check_bypass=False) # Get energy history for each device
+```
 
 ## API Details
 ### Manager API
