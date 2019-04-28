@@ -102,7 +102,7 @@ Device API
 Outlet Specific Energy API
 --------------------------
 
-`VeSyncOutlet.update_energy()` - Get outlet energy history - Builds week, month and year nested energy dictionary. Set `bypass_check=True` to disable the library from checking the update interval
+`VeSyncOutlet.update_energy(bypass_check=False)` - Get outlet energy history - Builds week, month and year nested energy dictionary. Set `bypass_check=True` to disable the library from checking the update interval
 
 `VeSyncOutlet.energy_today` - Return current energy usage
 
