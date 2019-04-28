@@ -4,7 +4,7 @@ import re
 
 from pyvesync.helpers import Helpers as helpers
 from pyvesync.vesyncoutlet import (VeSyncOutlet7A, VeSyncOutlet10A,
-                           VeSyncOutlet15A)
+                                   VeSyncOutlet15A)
 from pyvesync.vesyncswitch import VeSyncWallSwitch
 from pyvesync.vesyncfan import VeSyncAir131
 
@@ -62,7 +62,7 @@ class VeSync(object):
             logger.debug("Time zone is not a string")
 
     @property
-    def energy_update_interval(self):
+    def energy_update_interval(self) -> int:
         """Return energy update interval"""
         return self._energy_update_interval
 
@@ -71,29 +71,18 @@ class VeSync(object):
         """"Set energy update interval in seconds"""
         if new_energy_update > 0:
             self._energy_update_interval = new_energy_update
-    
-    @property
-    def energy_update_check(self):
-        """Return true or false to enable/disable 
-            check for energy update interval"""
-        return self._energy_check
-    
-    @energy_update_check.setter
-    def energy_update_check(self, check: bool):
-        """Enable/Disable energy update interval check"""
-        self._energy_check = check
 
-    def process_devices(self, devices):
+    def process_devices(self, devices) -> tuple:
         outlets = []
         switches = []
         fans = []
-        #bulbs = []
+        # bulbs = []
 
         outlet_types = ['wifi-switch-1.3', 'ESW03-USA',
                         'ESW10-EU', 'ESW15-USA']
         switch_types = ['ESWL01', 'ESWL03']
         fan_types = ['LV-PUR131S']
-        #bulb_types = ['ESL100']
+        # bulb_types = ['ESL100']
 
         for dev in devices:
             devType = dev['deviceType']
@@ -105,7 +94,7 @@ class VeSync(object):
                     fans.append(VSFactory.getDevice(devType, dev, self))
                 elif devType in switch_types:
                     switches.append(VSFactory.getDevice(devType, dev, self))
-                #elif devType in bulb_types:
+                # elif devType in bulb_types:
                 #    bulbs.append(VSFactory.getDevice(devType, dev, self))
                 else:
                     logger.debug('Unknown device ' + devType)
@@ -142,7 +131,7 @@ class VeSync(object):
 
         return (outlets, switches, fans)
 
-    def login(self):
+    def login(self) -> bool:
         """Return True if log in request succeeds"""
         user_check = isinstance(self.username, str) and len(self.username) > 0
         pass_check = isinstance(self.password, str) and len(self.password) > 0
@@ -193,3 +182,8 @@ class VeSync(object):
                 self.fans = helpers.resolve_updates(self.fans, fans)
 
                 self.last_update_ts = time.time()
+
+    def update_energy(self, bypass_check=False):
+        """Fetch updated energy information about devices"""
+        for outlet in self.outlets:
+            outlet.update_energy(bypass_check)

@@ -87,7 +87,7 @@ class VeSyncAir131(VeSyncBaseDevice):
         """Set sleep mode to on"""
         return self.mode_toggle('sleep')
 
-    def fan_speed(self, speed: int =None) -> bool:
+    def fan_speed(self, speed: int = None) -> bool:
         """Adjust Fan Speed by Specifying 1,2,3 as argument or cycle
             through speeds increasing by one"""
         body = helpers.req_body(self.manager, 'devicestatus')

@@ -7,8 +7,6 @@ from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 
 logger = logging.getLogger(__name__)
 
-ENERGY_UPDATE_INT = 3600
-
 
 class VeSyncOutlet(VeSyncBaseDevice):
     __metaclass__ = ABCMeta
@@ -19,6 +17,7 @@ class VeSyncOutlet(VeSyncBaseDevice):
         self.details = {}
         self.energy = {}
         self.update_energy_ts = None
+        self._energy_update_interval = manager.energy_update_interval
 
     @property
     def update_time_check(self) -> bool:
@@ -26,7 +25,7 @@ class VeSyncOutlet(VeSyncBaseDevice):
             return True
         else:
             if (time.time() - self.update_energy_ts) \
-                    > self.energy_update_int:
+                    > self._energy_update_interval:
                 return True
             else:
                 return False
@@ -59,29 +58,25 @@ class VeSyncOutlet(VeSyncBaseDevice):
         """Gets Device Energy and Status"""
         self.get_details()
 
-    def update_energy(self):
+    def update_energy(self, bypass_check: bool = False):
         """Builds weekly, monthly and yearly dictionaries"""
-        if self.manager.energy_update_check:
-            if self.update_time_check:
-                self.get_weekly_energy()
-                if 'week' in self.energy:
-                    self.get_monthly_energy()
-                    self.get_yearly_energy()
-        else:
+        if bypass_check or (not bypass_check and self.update_time_check):
             self.get_weekly_energy()
             if 'week' in self.energy:
                 self.get_monthly_energy()
                 self.get_yearly_energy()
+            if not bypass_check:
+                self.update_energy_ts = time.time()
 
     @property
     def active_time(self) -> int:
         """Return active time of a device in minutes"""
-        return self.details.get('active_time')
+        return self.details.get('active_time', 0)
 
     @property
     def energy_today(self) -> float:
         """Return energy"""
-        return self.details.get('energy')
+        return self.details.get('energy', 0)
 
     @property
     def power(self) -> float:
@@ -107,6 +102,16 @@ class VeSyncOutlet(VeSyncBaseDevice):
     def yearly_energy_total(self) -> float:
         """Return total energy usage over the year"""
         return self.energy.get('year', {}).get('total_energy', 0)
+
+    def display(self):
+        super(VeSyncOutlet, self).display()
+        print("\tActive Time: {} minutes, Energy: {}kWh, "
+              "Power: {} watts, Voltage {}".format(
+                  self.active_time, self.energy_today,
+                  self.power, self.voltage))
+        print("\tEnergy - Week: {}kWh, Month: {}kWh, Year: {}kWh".format(
+                  self.weekly_energy_total, self.monthly_energy_total,
+                  self.yearly_energy_total))
 
 
 class VeSyncOutlet7A(VeSyncOutlet):

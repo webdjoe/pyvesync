@@ -23,7 +23,6 @@ class VeSyncBaseDevice(object):
         self.speed = None
         self.extension = None
         self.current_firm_version = None
-        self.energy_update_int = manager.energy_update_interval
 
         self.configure(details)
 
@@ -50,3 +49,10 @@ class VeSyncBaseDevice(object):
             return True
 
         return False
+
+    def display(self):
+        print("Device Name: {}, Model: {}, Status: {}, Online: {}".format(
+            self.device_name, self.device_type,
+            self.device_status, self.connection_status))
+        print("\tType: {}, CID: {}, UUID: {}".format(
+            self.type, self.cid, self.uuid))
