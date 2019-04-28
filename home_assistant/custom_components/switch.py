@@ -1,6 +1,6 @@
 """Support for Etekcity VeSync switches."""
 import logging
-from homeassistant.components.switch import (SwitchDevice)
+from homeassistant.components.switch import SwitchDevice
 
 from . import DOMAIN
 
