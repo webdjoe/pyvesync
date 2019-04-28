@@ -54,10 +54,6 @@ manager.fans = [VeSyncFanObjects]
 If outlets are going to be continuously polled, a custom energy update interval can be set - The default is 6 hours (21600 seconds)
 ```python
 manager.energy_update_interval = time # time in seconds
-
-#The interval check for energy updates can also be disabled (enabled by default)
-
-manager.energy_update_check = False
 ```
   
 ```python
@@ -65,7 +61,7 @@ manager.energy_update_check = False
 
 for s in manager.outlets:
 
-s.update_energy() # Get energy history for each device
+s.update_energy(check_bypass=False) # Get energy history for each device
 
 print("switch %s is currently %s" % (s.device_name, s.device_status))
 print(" active time: %s, energy: %s, power: %s, voltage: %s" % (s.active_time, s.energy_today, s.power, s.voltage))
@@ -89,6 +85,8 @@ Manager API
 
 `VeSync.update()` - Fetch updated information about devices
 
+`VeSync.update_energy(bypass_check=False)` - Get energy history for all outlets - Builds week, month and year nested energy dictionary.  Set `bypass_check=True` to disable the library from checking the update interval
+
 
 Device API
 ----------
@@ -104,7 +102,7 @@ Device API
 Outlet Specific Energy API
 --------------------------
 
-`VeSyncOutlet.update_energy()` - Get outlet energy history - Builds week, month and year nested energy dictionary
+`VeSyncOutlet.update_energy()` - Get outlet energy history - Builds week, month and year nested energy dictionary. Set `bypass_check=True` to disable the library from checking the update interval
 
 `VeSyncOutlet.energy_today` - Return current energy usage
 

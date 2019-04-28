@@ -18,7 +18,6 @@ class VeSyncOutlet(VeSyncBaseDevice):
         self.energy = {}
         self.update_energy_ts = None
         self._energy_update_interval = manager.energy_update_interval
-        self._energy_update_check = manager.energy_update_check
 
     @property
     def update_time_check(self) -> bool:
@@ -59,10 +58,9 @@ class VeSyncOutlet(VeSyncBaseDevice):
         """Gets Device Energy and Status"""
         self.get_details()
 
-    def update_energy(self):
+    def update_energy(self, check_bypass: bool = False):
         """Builds weekly, monthly and yearly dictionaries"""
-        if (self._energy_update_check and self.update_time_check) or \
-                not self._energy_update_check:
+        if check_bypass or (not check_bypass and self.update_time_check):
             self.get_weekly_energy()
             if 'week' in self.energy:
                 self.get_monthly_energy()

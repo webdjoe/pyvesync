@@ -72,17 +72,6 @@ class VeSync(object):
         if new_energy_update > 0:
             self._energy_update_interval = new_energy_update
 
-    @property
-    def energy_update_check(self) -> bool:
-        """Return true or false to enable/disable
-            check for energy update interval"""
-        return self._energy_check
-
-    @energy_update_check.setter
-    def energy_update_check(self, check: bool):
-        """Enable/Disable energy update interval check"""
-        self._energy_check = check
-
     def process_devices(self, devices) -> tuple:
         outlets = []
         switches = []
@@ -194,7 +183,7 @@ class VeSync(object):
 
                 self.last_update_ts = time.time()
 
-    def update_energy(self):
+    def update_energy(self, bypass_check=False):
         """Fetch updated energy information about devices"""
         for outlet in self.outlets:
-            outlet.update_energy()
+            outlet.update_energy(bypass_check)
