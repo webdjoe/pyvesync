@@ -1,17 +1,9 @@
-import pytest
-from unittest.mock import Mock, patch, mock_open, call
-import unittest
-import pyvesync
-from pyvesync.vesync import (VeSync,
-                             VeSyncSwitch,
-                             VeSyncSwitch15A,
-                             VeSyncSwitch7A,
-                             VeSyncSwitch10A,
-                             VeSyncSwitchInWall)
-import os
-import responses
-import requests
 import logging
+import pytest
+from unittest.mock import patch
+import pyvesync
+from pyvesync.vesync import VeSync
+from pyvesync.helpers import Helpers
 
 login_test_vals = [
     ('sam@mail.com', 'pass', 'America/New_York', 'full corret'),
@@ -70,7 +62,7 @@ class TestLogin(object):
         vesync_obj = VeSync(email, password)
         assert vesync_obj.login() is False
         if testid == 'correct':
-            hash_pass = vesync_obj.hash_password('pass')
+            hash_pass = Helpers.hash_password('pass')
             body = {'email': vesync_obj.username, 'password': hash_pass}
             jd = vesync_obj.get_body('login')
             jd.update(body)
@@ -88,7 +80,7 @@ class TestLogin(object):
         self.mock_api.return_value.json.return_value = full_return
         vesync_obj = VeSync('sam@mail.com', 'pass')
         assert vesync_obj.login() is True
-        hash_pass = vesync_obj.hash_password('pass')
+        hash_pass = Helpers.hash_password('pass')
         body = {'email': vesync_obj.username, 'password': hash_pass}
         jd = vesync_obj.get_body('login')
         jd.update(body)
@@ -100,8 +92,8 @@ class TestLogin(object):
         assert vesync_obj.account_id == 'sam_actid'
 
 
-#can also patch call_api, I think patching requests is better to
-#show call_api is functioning properly
+# can also patch call_api, I think patching requests is better to
+# show call_api is functioning properly
 @pytest.mark.parametrize(
     'email, password, testid', login_bad_call)
 def test_login(email, password, testid):
@@ -112,7 +104,7 @@ def test_login(email, password, testid):
         vesync_login = vesync_obj.login()
         assert vesync_login is False
         if testid == 'correct':
-            hash_pass = vesync_obj.hash_password(password)
+            hash_pass = Helpers.hash_password(password)
             body = {'email': vesync_obj.username, 'password': hash_pass}
             jd = vesync_obj.get_body('login')
             jd.update(body)

@@ -1,17 +1,9 @@
 import pytest
-from unittest import mock
-from unittest.mock import Mock, patch, mock_open, call
-import unittest
-import pyvesync
-from pyvesync.vesync import (VeSync,
-                             VeSyncSwitch,
-                             VeSyncSwitch15A,
-                             VeSyncSwitch7A,
-                             VeSyncSwitch10A,
-                             VeSyncSwitchInWall)
-import os
-import requests
+from unittest.mock import patch
 import logging
+import pyvesync
+from pyvesync import VeSync
+from pyvesync.vesyncoutlet import VeSyncOutlet
 
 
 class TestDeviceList(object):
@@ -32,13 +24,13 @@ class TestDeviceList(object):
     def test_get_devices(self, caplog, mocker, api_mock):
         '''Test get_devices for all switches with an unknown switch'''
         vesync_7a = mocker.patch.object(
-            pyvesync.vesync, 'VeSyncSwitch7A', autospec=True)
+            pyvesync.vesync, 'VeSyncOutlet7A', autospec=True)
         vesync_15a = mocker.patch.object(
-            pyvesync.vesync, 'VeSyncSwitch15A', autospec=True)
+            pyvesync.vesync, 'VeSyncOutlet15A', autospec=True)
         vesync_wallswitch = mocker.patch.object(
             pyvesync.vesync, 'VeSyncSwitchInWall', autospec=True)
         vesync_10a = mocker.patch.object(
-            pyvesync.vesync, 'VeSyncSwitch10A', autospec=True)
+            pyvesync.vesync, 'VeSyncOutlet10A', autospec=True)
 
         devs = []
         dev1 = {'deviceType': 'wifi-switch-1.3', 'type': 'wifi-switch',
@@ -57,7 +49,7 @@ class TestDeviceList(object):
         devs = self.vesync_obj.get_devices()
         assert len(devs) == 4
         for device in devs:
-            assert isinstance(device, VeSyncSwitch)
+            assert isinstance(device, VeSyncOutlet)
         vesync_7a.assert_called_with(dev1, self.vesync_obj)
         vesync_15a.assert_called_with(dev2, self.vesync_obj)
         vesync_wallswitch.assert_called_with(dev3, self.vesync_obj)
