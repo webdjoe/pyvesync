@@ -105,7 +105,7 @@ class VeSync(object):
         return (outlets, switches, fans)
 
     def get_devices(self) -> tuple:
-        """Return list of VeSync devices"""
+        """Return tuple listing outlets, switches, and fans of devices"""
         outlets = []
         switches = []
         fans = []
