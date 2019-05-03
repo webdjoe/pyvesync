@@ -1,3 +1,7 @@
+import logging
+logger = logging.getLogger(__name__)
+
+
 class VeSyncDeviceException(Exception):
     """Gets errors reported by devices"""
     pass
@@ -42,6 +46,9 @@ class VeSyncBaseDevice(object):
         self.speed = details.get('speed', None)
         self.extension = details.get('extension', None)
         self.current_firm_version = details.get('currentFirmVersion', None)
+
+        if self.cid is None:
+            logger.error('Error getting cid for ' + self.__class__.__name__)
 
     def is_on(self) -> str:
         """Returns whether device is on"""

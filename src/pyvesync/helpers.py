@@ -66,7 +66,7 @@ class Helpers:
             }
             body['email'] = manager.username
             body['password'] = cls.hash_password(manager.password)
-            body['token'] = ''
+            body['devToken'] = ''
             body['userType'] = USER_TYPE
             body['method'] = 'login'
         elif type_ == 'devicedetail':
@@ -186,7 +186,7 @@ class Helpers:
                     return True
                 else:
                     return False
-            elif call == '7a_detail' and 'deviceStatus' in resp:
+            elif call == '7a_detail' and 'power' in resp:
                 return True
             elif call == '7a_energy' and 'energyConsumptionOfToday' in resp:
                 return True
@@ -219,11 +219,17 @@ class Helpers:
         }
 
     @staticmethod
-    def resolve_updates(orig_list, updated_list):
+    def test_cid(test_obj, test_list):
+        for obj in test_list:
+            if obj.cid == test_obj.cid:
+                return True
+
+    @classmethod
+    def resolve_updates(cls, orig_list, updated_list):
         """Merges changes from one list of devices against another"""
 
-        if updated_list is not None and updated_list:
-            if orig_list is None:
+        if isinstance(updated_list, list) and len(updated_list) > 0:
+            if isinstance(orig_list, list) and len(orig_list) == 0:
                 orig_list = updated_list
             else:
                 # Add new devices not in list but found in the update
@@ -239,16 +245,7 @@ class Helpers:
                         orig_list.append(new_device)
 
                 # Remove old devices in the list not found in the update
-                for device in orig_list:
-                    should_remove = True
-
-                    for new_device in updated_list:
-                        if device.cid == new_device.cid:
-                            should_remove = False
-                            break
-
-                    if should_remove:
-                        orig_list.remove(device)
+                orig_list[:] = [dev for dev in orig_list if cls.test_cid(dev, updated_list)]
 
             # Call update on each device in the list
             [device.update() for device in orig_list]

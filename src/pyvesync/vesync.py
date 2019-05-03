@@ -21,7 +21,7 @@ class VSFactory(object):
     def getDevice(device_type, config, manager):
         if device_type == 'wifi-switch-1.3':
             return VeSyncOutlet7A(config, manager)
-        elif device_type in ['ESW03-USA', 'ESW10-EU']:
+        elif device_type in ['ESW03-USA', 'ESW01-EU']:
             return VeSyncOutlet10A(config, manager)
         elif device_type == 'ESW15-USA':
             return VeSyncOutlet15A(config, manager)
@@ -40,9 +40,9 @@ class VeSync(object):
         self.token = None
         self.account_id = None
         self.devices = None
-        self.outlets = None
-        self.switches = None
-        self.fans = None
+        self.outlets = []
+        self.switches = []
+        self.fans = []
         self.enabled = False
         self.update_interval = API_RATE_LIMIT
         self.last_update_ts = None
@@ -73,21 +73,22 @@ class VeSync(object):
             self._energy_update_interval = new_energy_update
 
     def process_devices(self, devices) -> tuple:
+        """Call VSFactory to instantiate device classes"""
         outlets = []
         switches = []
         fans = []
         # bulbs = []
 
         outlet_types = ['wifi-switch-1.3', 'ESW03-USA',
-                        'ESW10-EU', 'ESW15-USA']
+                        'ESW01-EU', 'ESW15-USA']
         switch_types = ['ESWL01', 'ESWL03']
         fan_types = ['LV-PUR131S']
         # bulb_types = ['ESL100']
 
         for dev in devices:
-            devType = dev['deviceType']
-
-            if 'type' in dev:
+            if 'deviceType' in dev:
+            
+                devType = dev['deviceType']
                 if devType in outlet_types:
                     outlets.append(VSFactory.getDevice(devType, dev, self))
                 elif devType in fan_types:
@@ -99,13 +100,15 @@ class VeSync(object):
                 else:
                     logger.debug('Unknown device ' + devType)
             else:
-                logger.debbug('type key not found')
+                logger.debug('devType key not found')
 
         return (outlets, switches, fans)
 
-    def get_devices(self) -> list:
-        """Return list of VeSync devices"""
-
+    def get_devices(self) -> tuple:
+        """Return tuple listing outlets, switches, and fans of devices"""
+        outlets = []
+        switches = []
+        fans = []
         if not self.enabled:
             return None
 
