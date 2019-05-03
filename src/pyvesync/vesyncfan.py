@@ -6,13 +6,12 @@ class VeSyncAir131(VeSyncBaseDevice):
 
     def __init__(self, details, manager):
         super(VeSyncAir131, self).__init__(details, manager)
-        self.filter_life = {}
+
         self.details = {}
         self.air_quality = None
         self.screen_status = None
         self.level = None
-
-        self.details = {}
+        # self.filter_life = dict()
 
     def get_details(self):
         """Build details dictionary"""

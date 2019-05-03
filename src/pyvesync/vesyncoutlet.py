@@ -132,7 +132,7 @@ class VeSyncOutlet7A(VeSyncOutlet):
             power = r.get('power', '0:0')
             power = round(float(helpers.calculate_hex(power)), 2)
             self.details['power'] = power
-            voltage = r.get('voltage')
+            voltage = r.get('voltage', '0:0')
             voltage = round(float(helpers.calculate_hex(voltage)), 2)
             self.details['voltage'] = voltage
         else:
