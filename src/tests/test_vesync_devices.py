@@ -1,9 +1,8 @@
 
 import pytest
-from unittest.mock import patch, Mock, MagicMock
+from unittest.mock import patch, MagicMock
 import logging
 import pyvesync
-from pyvesync import VeSync
 from . import call_json as json_vals
 
 BAD_DEV_LIST = {
@@ -37,7 +36,6 @@ class TestDeviceList(object):
 
     def test_device_api(self, caplog, api_mock):
         """Tests to ensure call_api is being called correctly"""
-        body = json_vals.get_devices_body()
         head = json_vals.DEFAULT_HEADER
         self.mock_api.return_value = ({'V': 2}, 200)
         out, sw, fan, bulb = self.vesync_obj.get_devices()
@@ -48,7 +46,6 @@ class TestDeviceList(object):
         assert call_p1[1] == 'post'
         assert call_p2['headers'] == head
         assert self.vesync_obj.enabled
-
 
     @patch('pyvesync.vesync.VeSyncOutlet7A')
     @patch('pyvesync.vesync.VeSyncOutlet15A')
@@ -86,7 +83,6 @@ class TestDeviceList(object):
 
     def test_getdevs_code(self, caplog, api_mock):
         """Test get_devices with code > 0 returned"""
-
         device_list = ({'code': 1, 'msg': 'gibberish'}, 200)
 
         self.mock_api.return_value = device_list
