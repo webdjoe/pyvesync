@@ -1,7 +1,15 @@
 import time
-from pyvesync.helpers import (API_BASE_URL, API_RATE_LIMIT, API_TIMEOUT,
-                              DEFAULT_TZ, APP_VERSION, PHONE_BRAND, PHONE_OS,
-                              MOBILE_ID, USER_TYPE)
+import pyvesync.helpers as helpers
+
+API_BASE_URL = helpers.API_BASE_URL
+API_RATE_LIMIT = helpers.API_RATE_LIMIT
+API_TIMEOUT = helpers.API_TIMEOUT
+DEFAULT_TZ = helpers.DEFAULT_TZ
+APP_VERSION = helpers.APP_VERSION
+PHONE_BRAND = helpers.PHONE_BRAND
+PHONE_OS = helpers.PHONE_OS
+MOBILE_ID = helpers.MOBILE_ID
+USER_TYPE = helpers.USER_TYPE
 
 SAMPLE_ACTID = 'sample_id'
 SAMPLE_TOKEN = 'sample_tk'
@@ -102,6 +110,7 @@ def login_call_body(email, password):
         "userType": "1"
     }
     return json
+
 
 LIST_CONF_7A = {
     "deviceType": "wifi-switch-1.3",
@@ -216,6 +225,7 @@ def get_devices_body():
     body['method'] = 'devices'
     return (body, 200)
 
+
 DEVLIST_ALL = ({'code': 0, 'result': {'list': FULL_DEV_LIST}}, 200)
 
 DEVLIST_7A = ({'code': 0, 'result': {'list': [LIST_CONF_7A]}}, 200)
@@ -235,6 +245,7 @@ def get_details_body():
     body = DEFAULT_BODY
     body['method'] = 'deviceDetail'
     return (body, 200)
+
 
 DETAILS_15A = ({
     "code": 0,

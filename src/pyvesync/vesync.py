@@ -250,7 +250,7 @@ class VeSync(object):
                 self.bulbs.append(bulbs)
 
                 devices = [self.outlets, self.bulbs, self.switches, self.fans]
-                
+
                 [device.update() for device in chain(*devices)]
 
                 self.last_update_ts = time.time()

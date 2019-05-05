@@ -132,4 +132,3 @@ class TestVesyncAirPurifier(object):
         f = fan.sleep_mode()
         assert fan.mode == 'sleep'
         assert f
-

@@ -203,7 +203,7 @@ class Helpers:
                     logger.error('Error getting details')
                     return False
             elif call == '7a_detail':
-                keys = ['deviceStatus', 'activeTime', 
+                keys = ['deviceStatus', 'activeTime',
                         'energy', 'power', 'voltage']
                 if all(x in resp for x in keys):
                     return True
@@ -237,7 +237,8 @@ class Helpers:
     @staticmethod
     def build_energy_dict(r):
         return {
-            'energy_consumption_of_today': r.get('energyConsumptionOfToday', 0),
+            'energy_consumption_of_today': r.get(
+                'energyConsumptionOfToday', 0),
             'cost_per_kwh': r.get('costPerKWH', 0),
             'max_energy': r.get('maxEnergy', 0),
             'total_energy': r.get('totalEnergy', 0),
