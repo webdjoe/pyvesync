@@ -8,10 +8,6 @@ class VeSyncAir131(VeSyncBaseDevice):
         super(VeSyncAir131, self).__init__(details, manager)
 
         self.details = {}
-        self.air_quality = None
-        self.screen_status = None
-        self.level = None
-        # self.filter_life = dict()
 
     def get_details(self):
         """Build details dictionary"""
@@ -26,9 +22,15 @@ class VeSyncAir131(VeSyncBaseDevice):
             self.connection_status = r.get('connectionStatus', 'unknown')
             self.details['active_time'] = r.get('activeTime', 0)
             self.details['filter_life'] = r.get('filterLife', {})
-            self.details['screeen_status'] = r.get('screenStatus', 'unknown')
-            self.details['mode'] = r.get('mode', 'unknown')
-            self.details['level'] = r.get('level', None)
+            self.details['screen_status'] = r.get('screenStatus', 'unknown')
+            self.mode = r.get('mode', self.mode)
+            self.details['level'] = r.get('level', 0)
+            self.details['air_quality'] = r.get('airQuality', 'unknown')
+
+    @property
+    def active_time(self):
+        """Return total time active"""
+        return self.details.get('active_time', 0)
 
     @property
     def fan_level(self):
@@ -38,7 +40,20 @@ class VeSyncAir131(VeSyncBaseDevice):
     @property
     def filter_life(self):
         """Get percentage of filter life remaining"""
-        return self.details['filter_life'].get('percentage', 0)
+        try:
+            return self.details['filter_life'].get('percent', 0)
+        except KeyError:
+            return 0
+
+    @property
+    def air_quality(self):
+        """Get Air Quality"""
+        return self.details.get('air_quality', 'unknown')
+
+    @property
+    def screen_status(self):
+        """Return Screen status (on/off)"""
+        return self.details.get('screen_status', 'unknown')
 
     def turn_on(self):
         """Turn Air Purifier on"""
@@ -86,17 +101,17 @@ class VeSyncAir131(VeSyncBaseDevice):
         """Set sleep mode to on"""
         return self.mode_toggle('sleep')
 
-    def fan_speed(self, speed: int = None) -> bool:
+    def change_fan_speed(self, speed: int = None) -> bool:
         """Adjust Fan Speed by Specifying 1,2,3 as argument or cycle
             through speeds increasing by one"""
         body = helpers.req_body(self.manager, 'devicestatus')
         body['uuid'] = self.uuid
         head = helpers.req_headers(self.manager)
-        if self.details.get('mode') != 'manual':
+        if self.mode != 'manual':
             self.mode_toggle('manual')
         else:
+            level = self.details.get('level', int(0))
             if speed is not None:
-                level = int(self.details.get('level'))
                 if speed == level:
                     return False
                 elif speed in [1, 2, 3]:
@@ -121,8 +136,7 @@ class VeSyncAir131(VeSyncBaseDevice):
         head = helpers.req_headers(self.manager)
         body = helpers.req_body(self.manager, 'devicestatus')
         body['uuid'] = self.uuid
-        if mode != body['mode'] and mode in ['sleep', 'auto', 'manual']:
-            body['mode'] = mode
+        if mode != self.mode and mode in ['sleep', 'auto', 'manual']:
             if mode == 'manual':
                 body['level'] = 1
 
@@ -130,7 +144,7 @@ class VeSyncAir131(VeSyncBaseDevice):
                                     'put', json=body, headers=head)
 
             if r is not None and helpers.check_response(r, 'airpur_status'):
-                self.details['mode'] = mode
+                self.mode = mode
                 return True
 
         return False
@@ -138,3 +152,14 @@ class VeSyncAir131(VeSyncBaseDevice):
     def update(self):
         """Run function to get device details"""
         self.get_details()
+
+    def display(self):
+        super(VeSyncAir131, self).display()
+        disp1 = [("Active Time : ", self.active_time, ' minutes'),
+                 ("Fan Level: ", self.fan_level, ""),
+                 ("Air Quality: ", self.air_quality, ""),
+                 ("Mode: ", self.mode, ""),
+                 ("Screen Status: ", self.screen_status, ""),
+                 ("Filter List: ", self.filter_life, " percent")]
+        for line in disp1:
+            print("{:.<15} {} {}".format(line[0], line[1], line[2]))

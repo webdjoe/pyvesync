@@ -1,6 +1,8 @@
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 from pyvesync.helpers import Helpers as helpers
 from abc import ABCMeta, abstractmethod
+import logging
+logger = logging.getLogger(__name__)
 
 
 class VeSyncSwitch(VeSyncBaseDevice):
@@ -23,7 +25,7 @@ class VeSyncSwitch(VeSyncBaseDevice):
     @abstractmethod
     def turn_on(self):
         """Turn Switch On"""
-    
+
     @abstractmethod
     def turn_off(self):
         """Turn switch off"""
@@ -49,10 +51,10 @@ class VeSyncWallSwitch(VeSyncSwitch):
                                 'post', headers=head, json=body)
 
         if r is not None and helpers.check_response(r, 'walls_detail'):
-            self.device_status = r['deviceStatus']
-            self.details['active_time'] = r['activeTime']
-            self.details['connection_status'] = r['connectionStatus']
-            self.connection_status = r['connectionStatus']
+            self.device_status = r.get('deviceStatus', self.device_status)
+            self.details['active_time'] = r.get('activeTime', 0)
+            self.connection_status = r.get('connectionStatus',
+                                           self.connection_status)
 
     def turn_off(self):
         body = helpers.req_body(self.manager, 'devicestatus')
@@ -60,8 +62,8 @@ class VeSyncWallSwitch(VeSyncSwitch):
         body['uuid'] = self.uuid
         head = helpers.req_headers(self.manager)
 
-        r, _ = helpers.call_api('/inwallswitch/v1/device/devicedetail',
-                                'post', headers=head, json=body)
+        r, _ = helpers.call_api('/inwallswitch/v1/device/devicestatus',
+                                'put', headers=head, json=body)
 
         if r is not None and helpers.check_response(r, 'walls_toggle'):
             self.device_status = 'off'
@@ -75,8 +77,8 @@ class VeSyncWallSwitch(VeSyncSwitch):
         body['uuid'] = self.uuid
         head = helpers.req_headers(self.manager)
 
-        r, _ = helpers.call_api('/inwallswitch/v1/device/devicedetail',
-                                'post', headers=head, json=body)
+        r, _ = helpers.call_api('/inwallswitch/v1/device/devicestatus',
+                                'put', headers=head, json=body)
 
         if r is not None and helpers.check_response(r, 'walls_toggle'):
             self.device_status = 'on'
