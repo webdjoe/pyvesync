@@ -45,6 +45,7 @@ class VeSyncWallSwitch(VeSyncSwitch):
 
     def get_details(self):
         body = helpers.req_body(self.manager, 'devicedetail')
+        body['uuid'] = self.uuid
         head = helpers.req_headers(self.manager)
 
         r, _ = helpers.call_api('/inwallswitch/v1/device/devicedetail',

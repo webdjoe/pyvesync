@@ -12,6 +12,7 @@ class VeSyncAir131(VeSyncBaseDevice):
     def get_details(self):
         """Build details dictionary"""
         body = helpers.req_body(self.manager, 'devicedetail')
+        body['uuid'] = self.uuid
         head = helpers.req_headers(self.manager)
 
         r, _ = helpers.call_api('/131airPurifier/v1/device/deviceDetail',
