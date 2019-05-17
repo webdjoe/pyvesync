@@ -14,7 +14,7 @@ class VeSyncAir131(VeSyncBaseDevice):
         body = helpers.req_body(self.manager, 'devicedetail')
         head = helpers.req_headers(self.manager)
 
-        r, _ = helpers.call_api('/131airpurifier/v1/device/deviceDetail',
+        r, _ = helpers.call_api('/131airPurifier/v1/device/deviceDetail',
                                 method='post', headers=head, json=body)
 
         if r is not None and helpers.check_response(r, 'airpur_detail'):
