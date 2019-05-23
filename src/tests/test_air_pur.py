@@ -68,7 +68,7 @@ class TestVesyncAirPurifier(object):
         self.mock_api.return_value = BAD_LIST
         fan = VeSyncAir131(DEV_LIST_DETAIL, self.vesync_obj)
         fan.get_details()
-        assert len(caplog.records) == 1
+        assert len(caplog.records) == 2
         assert 'details' in caplog.text
 
     def test_airpur_onoff(self, caplog, api_mock):
