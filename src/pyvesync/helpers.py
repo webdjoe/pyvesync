@@ -209,6 +209,7 @@ class Helpers:
                     return True
                 else:
                     logger.error('Keys missing from get_details for 7A')
+                    return False
             elif call == '7a_energy':
                 keys = ['energyConsumptionOfToday', 'maxEnergy', 'totalEnergy']
                 if all(x in resp for x in keys):
@@ -217,8 +218,8 @@ class Helpers:
                     logger.error('Keys missing from 7a outlet')
                     return False
             else:
+                logger.error('Unkown call')
                 return False
-            logger.error('Unkown call')
         else:
             return False
 

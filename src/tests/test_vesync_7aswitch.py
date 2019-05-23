@@ -66,7 +66,7 @@ class TestVesync7ASwitch(object):
         self.mock_api.return_value = (bad_7a_details, 200)
         vswitch7a = VeSyncOutlet7A(DEV_LIST_DETAIL, self.vesync_obj)
         vswitch7a.get_details()
-        assert len(caplog.records) == 3
+        assert len(caplog.records) == 2
         assert 'details' in caplog.text
 
     def test_7a_no_details(self, caplog, api_mock):
@@ -76,7 +76,7 @@ class TestVesync7ASwitch(object):
         self.mock_api.return_value = (bad_7a_details, 200)
         vswitch7a = VeSyncOutlet7A(DEV_LIST_DETAIL, self.vesync_obj)
         vswitch7a.get_details()
-        assert len(caplog.records) == 3
+        assert len(caplog.records) == 2
 
     def test_7a_onoff(self, caplog, api_mock):
         self.mock_api.return_value = ("response", 200)

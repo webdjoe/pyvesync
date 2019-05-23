@@ -1,5 +1,8 @@
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 from pyvesync.helpers import Helpers as helpers
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class VeSyncAir131(VeSyncBaseDevice):
@@ -15,8 +18,12 @@ class VeSyncAir131(VeSyncBaseDevice):
         body['uuid'] = self.uuid
         head = helpers.req_headers(self.manager)
 
-        r, _ = helpers.call_api('/131airPurifier/v1/device/deviceDetail',
-                                method='post', headers=head, json=body)
+        r, _ = helpers.call_api(
+            '/131airPurifier/v1/device/deviceDetail',
+            method='post',
+            headers=head,
+            json=body
+        )
 
         if r is not None and helpers.check_response(r, 'airpur_detail'):
             self.device_status = r.get('deviceStatus', 'unknown')
@@ -27,6 +34,8 @@ class VeSyncAir131(VeSyncBaseDevice):
             self.mode = r.get('mode', self.mode)
             self.details['level'] = r.get('level', 0)
             self.details['air_quality'] = r.get('airQuality', 'unknown')
+        else:
+            logger.error('Error getting {} details'.format(self.device_name))
 
     @property
     def active_time(self):
@@ -64,13 +73,18 @@ class VeSyncAir131(VeSyncBaseDevice):
             body['status'] = 'on'
             head = helpers.req_headers(self.manager)
 
-            r, _ = helpers.call_api('/131airPurifier/v1/device/deviceStatus',
-                                    'put', json=body, headers=head)
+            r, _ = helpers.call_api(
+                '/131airPurifier/v1/device/deviceStatus',
+                'put',
+                json=body,
+                headers=head
+            )
 
             if r is not None and helpers.check_response(r, 'airpur_status'):
                 self.device_status = 'on'
                 return True
             else:
+                logger.error('Error turning {} on'.format(self.device_name))
                 return False
 
     def turn_off(self):
@@ -81,13 +95,18 @@ class VeSyncAir131(VeSyncBaseDevice):
             body['status'] = 'off'
             head = helpers.req_headers(self.manager)
 
-            r, _ = helpers.call_api('/131airPurifier/v1/device/deviceStatus',
-                                    'put', json=body, headers=head)
+            r, _ = helpers.call_api(
+                '/131airPurifier/v1/device/deviceStatus',
+                'put',
+                json=body,
+                headers=head
+            )
 
             if r is not None and helpers.check_response(r, 'airpur_status'):
                 self.device_status = 'off'
                 return True
             else:
+                logger.error('Error turning {} off'.format(self.device_name))
                 return False
 
     def auto_mode(self):
@@ -123,13 +142,19 @@ class VeSyncAir131(VeSyncBaseDevice):
                 else:
                     body['level'] = int(level + 1)
 
-            r, _ = helpers.call_api('/131airPurifier/v1/device/updateSpeed',
-                                    'put', json=body, headers=head)
+            r, _ = helpers.call_api(
+                '/131airPurifier/v1/device/updateSpeed',
+                'put',
+                json=body,
+                headers=head
+            )
 
             if r is not None and helpers.check_response(r, 'airpur_status'):
                 self.details['level'] = body['level']
                 return True
             else:
+                logger.error(
+                    'Error changing {} speed'.format(self.device_name))
                 return False
 
     def mode_toggle(self, mode: str) -> bool:
@@ -141,8 +166,12 @@ class VeSyncAir131(VeSyncBaseDevice):
             if mode == 'manual':
                 body['level'] = 1
 
-            r, _ = helpers.call_api('/131airPurifier/v1/device/updateMode',
-                                    'put', json=body, headers=head)
+            r, _ = helpers.call_api(
+                '/131airPurifier/v1/device/updateMode',
+                'put',
+                json=body,
+                headers=head
+            )
 
             if r is not None and helpers.check_response(r, 'airpur_status'):
                 self.mode = mode

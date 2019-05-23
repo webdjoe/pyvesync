@@ -74,7 +74,7 @@ class VeSync(object):
             self._energy_update_interval = new_energy_update
 
     @staticmethod
-    def device_search(device, new_list):
+    def remove_dev_test(device, new_list):
         """Tests if device should be removed - False = Remove"""
         if isinstance(new_list, list) and device.cid:
             for item in new_list:
@@ -92,7 +92,7 @@ class VeSync(object):
             else:
                 return True
 
-    def new_devices(self, new_dev):
+    def add_dev_test(self, new_dev):
         """Tests if new device should be added - True = Add"""
         if 'cid' in new_dev:
             devices = [self.outlets, self.bulbs, self.switches, self.fans]
@@ -128,25 +128,25 @@ class VeSync(object):
         elif len(devices) == 0:
             logger.error('No devices found in api return')
         else:
-            self.outlets[:] = [x for x in self.outlets if self.device_search(
+            self.outlets[:] = [x for x in self.outlets if self.remove_dev_test(
                 x, devices)]
             for dev in self.outlets:
                 logger.debug('Outlets updated - ' + dev)
 
-            self.fans[:] = [x for x in self.fans if self.device_search(
+            self.fans[:] = [x for x in self.fans if self.remove_dev_test(
                 x, devices)]
             for dev in self.fans:
                 logger.debug('Fans Updated - ' + dev)
-            self.switches[:] = [x for x in self.switches if self.device_search(
-                x, devices)]
+            self.switches[:] = [x for x in self.switches if
+                                self.remove_dev_test(x, devices)]
             for dev in self.switches:
                 logger.debug('Switches Updated - ' + dev)
-            self.bulbs[:] = [x for x in self.switches if self.device_search(
+            self.bulbs[:] = [x for x in self.switches if self.remove_dev_test(
                 x, devices)]
             for dev in self.bulbs:
                 logger.debug('Bulbs - ' + dev)
 
-            devices[:] = [x for x in devices if self.new_devices(x)]
+            devices[:] = [x for x in devices if self.add_dev_test(x)]
 
         for dev in devices:
             detail_keys = ['deviceType', 'deviceName', 'deviceStatus']
