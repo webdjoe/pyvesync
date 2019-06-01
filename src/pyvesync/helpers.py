@@ -200,7 +200,7 @@ class Helpers:
                 if resp['code'] == 0 and 'result' in resp:
                     return True
                 else:
-                    logger.error('Error getting details')
+                    logger.error('Error in login response')
                     return False
             elif call == '7a_detail':
                 keys = ['deviceStatus', 'activeTime',

@@ -63,8 +63,9 @@ class VeSyncBaseDevice(object):
             ('Online: ', self.connection_status),
             ('Type: ', self.type),
             ('CID: ', self.cid),
-            ('UUID: ', self.uuid)
         ]
+        if self.uuid is not None:
+            disp.append(('UUID: ', self.uuid))
         disp1 = collections.OrderedDict(disp)
         for k, v in disp1.items():
             print("{:.<15} {:<15}".format(k, v))

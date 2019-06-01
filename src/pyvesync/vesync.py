@@ -244,10 +244,10 @@ class VeSync(object):
             if not self.in_process:
                 outlets, switches, fans, bulbs = self.get_devices()
 
-                self.outlets.append(outlets)
-                self.switches.append(switches)
-                self.fans.append(fans)
-                self.bulbs.append(bulbs)
+                self.outlets.extend(outlets)
+                self.switches.extend(switches)
+                self.fans.extend(fans)
+                self.bulbs.extend(bulbs)
 
                 devices = [self.outlets, self.bulbs, self.switches, self.fans]
 
