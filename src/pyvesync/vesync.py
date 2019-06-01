@@ -126,7 +126,7 @@ class VeSync(object):
         if not num_devices and len(devices) > 0:
             logger.debug('New device list initialized')
         elif len(devices) == 0:
-            logger.error('No devices found in api return')
+            logger.warning('No devices found in api return')
         else:
             self.outlets[:] = [x for x in self.outlets if self.remove_dev_test(
                 x, devices)]
@@ -161,7 +161,7 @@ class VeSync(object):
                 # elif devType in bulb_types:
                 #    bulbs.append(VSFactory.getDevice(devType, dev, self))
                 else:
-                    logger.error('Unknown device ' + devType)
+                    logger.warning('Unknown device ' + devType)
             else:
                 logger.error('Details keys not found {}'.format(dev))
 
@@ -193,7 +193,7 @@ class VeSync(object):
             else:
                 logger.error('Device list in response not found')
         else:
-            logger.error('Error retrieving device list')
+            logger.warning('Error retrieving device list')
 
         self.in_process = False
 

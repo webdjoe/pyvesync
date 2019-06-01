@@ -61,7 +61,7 @@ class VeSyncWallSwitch(VeSyncSwitch):
             self.connection_status = r.get('connectionStatus',
                                            self.connection_status)
         else:
-            logger.error('Error getting {} details'.format(self.device_name))
+            logger.debug('Error getting {} details'.format(self.device_name))
 
     def turn_off(self):
         body = helpers.req_body(self.manager, 'devicestatus')
@@ -80,7 +80,7 @@ class VeSyncWallSwitch(VeSyncSwitch):
             self.device_status = 'off'
             return True
         else:
-            logger.error('Error turning {} off'.format(self.device_name))
+            logger.warning('Error turning {} off'.format(self.device_name))
             return False
 
     def turn_on(self):
@@ -100,5 +100,5 @@ class VeSyncWallSwitch(VeSyncSwitch):
             self.device_status = 'on'
             return True
         else:
-            logger.error('Error turning {} on'.format(self.device_name))
+            logger.warning('Error turning {} on'.format(self.device_name))
             return False

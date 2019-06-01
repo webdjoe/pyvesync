@@ -184,7 +184,7 @@ class Helpers:
                     if all(x in resp for x in keys):
                         return True
                     else:
-                        logger.error(
+                        logger.warning(
                             'Keys missing from getting device details')
                         return False
                 else:
@@ -193,7 +193,7 @@ class Helpers:
                 if 'code' in resp and resp['code'] == 0:
                     return True
                 else:
-                    logger.error('Error getting details')
+                    logger.warning('Error getting details')
                     return False
 
             elif call == 'login' and 'code' in resp:
@@ -208,14 +208,14 @@ class Helpers:
                 if all(x in resp for x in keys):
                     return True
                 else:
-                    logger.error('Keys missing from get_details for 7A')
+                    logger.warning('Keys missing from get_details for 7A')
                     return False
             elif call == '7a_energy':
                 keys = ['energyConsumptionOfToday', 'maxEnergy', 'totalEnergy']
                 if all(x in resp for x in keys):
                     return True
                 else:
-                    logger.error('Keys missing from 7a outlet')
+                    logger.warning('Keys missing from getting energy in 7A')
                     return False
             else:
                 logger.error('Unkown call')

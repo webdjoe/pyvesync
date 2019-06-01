@@ -138,7 +138,7 @@ class VeSyncOutlet7A(VeSyncOutlet):
             voltage = round(float(helpers.calculate_hex(voltage)), 2)
             self.details['voltage'] = voltage
         else:
-            logger.warning('Unable to get {0} details'.format(
+            logger.debug('Unable to get {0} details'.format(
                 self.device_name))
 
     def get_weekly_energy(self):
@@ -151,7 +151,7 @@ class VeSyncOutlet7A(VeSyncOutlet):
         if r is not None and helpers.check_response(r, '7a_energy'):
             self.energy['week'] = helpers.build_energy_dict(r)
         else:
-            logger.error(
+            logger.debug(
                 'Unable to get {0} weekly data'.format(self.device_name))
 
     def get_monthly_energy(self):
@@ -164,7 +164,7 @@ class VeSyncOutlet7A(VeSyncOutlet):
         if r is not None and helpers.check_response(r, '7a_energy'):
             self.energy['month'] = helpers.build_energy_dict(r)
         else:
-            logger.error(
+            logger.warning(
                 'Unable to get {0} monthly data'.format(self.device_name))
 
     def get_yearly_energy(self):
@@ -177,7 +177,7 @@ class VeSyncOutlet7A(VeSyncOutlet):
         if r is not None and helpers.check_response(r, '7a_energy'):
             self.energy['year'] = helpers.build_energy_dict(r)
         else:
-            logger.error(
+            logger.debug(
                 'Unable to get {0} yearly data'.format(self.device_name))
 
     def turn_on(self):
@@ -192,6 +192,7 @@ class VeSyncOutlet7A(VeSyncOutlet):
 
             return True
         else:
+            logger.warning('Error turning {} on'.format(self.device_name))
             return False
 
     def turn_off(self):
@@ -206,6 +207,7 @@ class VeSyncOutlet7A(VeSyncOutlet):
 
             return True
         else:
+            logger.warning('Error turning {} off'.format(self.device_name))
             return False
 
 
@@ -302,6 +304,7 @@ class VeSyncOutlet10A(VeSyncOutlet):
             self.device_status = 'on'
             return True
         else:
+            logger.warning('Error turning {} on'.format(self.device_name))
             return False
 
     def turn_off(self):
@@ -320,6 +323,7 @@ class VeSyncOutlet10A(VeSyncOutlet):
             self.device_status = 'off'
             return True
         else:
+            logger.warning('Error turning {} off'.format(self.device_name))
             return False
 
 
@@ -385,7 +389,7 @@ class VeSyncOutlet15A(VeSyncOutlet):
         if helpers.check_response(response, '15a_energy'):
             self.energy['month'] = helpers.build_energy_dict(response)
         else:
-            logger.error(
+            logger.debug(
                 'Unable to get {0} monthly data'.format(self.device_name)
             )
 
@@ -403,7 +407,7 @@ class VeSyncOutlet15A(VeSyncOutlet):
         if helpers.check_response(response, '15a_energy'):
             self.energy['year'] = helpers.build_energy_dict(response)
         else:
-            logger.error(
+            logger.debug(
                 'Unable to get {0} yearly data'.format(self.device_name)
             )
 
@@ -423,7 +427,7 @@ class VeSyncOutlet15A(VeSyncOutlet):
             self.device_status = 'on'
             return True
         else:
-            logger.error('Error turning {} on'.format(self.device_name))
+            logger.warning('Error turning {} on'.format(self.device_name))
             return False
 
     def turn_off(self):
@@ -442,7 +446,7 @@ class VeSyncOutlet15A(VeSyncOutlet):
             self.device_status = 'off'
             return True
         else:
-            logger.error('Error turning {} off'.format(self.device_name))
+            logger.warning('Error turning {} off'.format(self.device_name))
             return False
 
     def turn_on_nightlight(self):

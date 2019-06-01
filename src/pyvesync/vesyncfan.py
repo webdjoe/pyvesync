@@ -35,7 +35,7 @@ class VeSyncAir131(VeSyncBaseDevice):
             self.details['level'] = r.get('level', 0)
             self.details['air_quality'] = r.get('airQuality', 'unknown')
         else:
-            logger.error('Error getting {} details'.format(self.device_name))
+            logger.debug('Error getting {} details'.format(self.device_name))
 
     @property
     def active_time(self):
@@ -84,7 +84,7 @@ class VeSyncAir131(VeSyncBaseDevice):
                 self.device_status = 'on'
                 return True
             else:
-                logger.error('Error turning {} on'.format(self.device_name))
+                logger.warning('Error turning {} on'.format(self.device_name))
                 return False
 
     def turn_off(self):
@@ -106,7 +106,7 @@ class VeSyncAir131(VeSyncBaseDevice):
                 self.device_status = 'off'
                 return True
             else:
-                logger.error('Error turning {} off'.format(self.device_name))
+                logger.warning('Error turning {} off'.format(self.device_name))
                 return False
 
     def auto_mode(self):
@@ -153,7 +153,7 @@ class VeSyncAir131(VeSyncBaseDevice):
                 self.details['level'] = body['level']
                 return True
             else:
-                logger.error(
+                logger.warning(
                     'Error changing {} speed'.format(self.device_name))
                 return False
 
