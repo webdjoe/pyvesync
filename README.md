@@ -78,6 +78,8 @@ for s in manager.outlets:
 
 `VeSync.update()` - Fetch updated information about devices
 
+`VeSync.update_all_devices()` - Fetch details for all devices (run `VeSyncDevice.update()`)
+
 `VeSync.update_energy(bypass_check=False)` - Get energy history for all outlets - Builds week, month and year nested energy dictionary.  Set `bypass_check=True` to disable the library from checking the update interval
 
 ### Device API
@@ -119,13 +121,17 @@ The rectangular smart switch model supports some additional functionality on top
 
 `VeSyncFan.filter_life` - Return the percentage of filter life remaining
 
+`VeSyncFan.air_quality` - Return air quality reading
+
 `VeSyncFan.auto_mode()` - Change mode to auto
 
 `VeSyncFan.manual_mode()` - Change fan mode to manual with fan level 1
 
 `VeSyncFan.sleep_mode()` - Change fan mode to sleep  
 
-`VeSyncFan.fan_speed(speed)` - Change fan speed with level 1, 2 or 3
+`VeSyncFan.change_fan_speed(speed)` - Change fan speed with level 1, 2 or 3
+
+`VeSyncFan.screen_status` - Get Status of screen on/off
 
 ## Notes
 

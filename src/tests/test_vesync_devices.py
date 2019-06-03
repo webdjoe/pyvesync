@@ -1,19 +1,21 @@
+
 import pytest
-from unittest.mock import patch, Mock
+from unittest.mock import patch, MagicMock
 import logging
 import pyvesync
-from pyvesync import VeSync
-from pyvesync.vesyncoutlet import VeSyncOutlet, VeSyncOutlet7A, VeSyncOutlet10A, VeSyncOutlet15A
-from pyvesync.vesyncswitch import VeSyncSwitch
-from pyvesync.vesyncfan import VeSyncAir131
-from pyvesync.vesyncbasedevice import VeSyncBaseDevice
-import os, sys, inspect
+from . import call_json as json_vals
 
-# Hackish but it works
-cmd_folder = os.path.realpath(os.path.abspath(os.path.split(inspect.getfile(inspect.currentframe()))[0]))
-if cmd_folder not in sys.path:
-    sys.path.insert(0, cmd_folder)
-import call_json as json_vals
+BAD_DEV_LIST = {
+    "result": {
+        "total": 5,
+        "pageNo": 1,
+        "pageSize": 50,
+        "list": [{
+            "NoConfigKeys": None
+        }]
+    },
+    "code": 0
+}
 
 
 class TestDeviceList(object):
@@ -32,6 +34,19 @@ class TestDeviceList(object):
         yield
         self.mock_api_call.stop()
 
+    def test_device_api(self, caplog, api_mock):
+        """Tests to ensure call_api is being called correctly"""
+        head = json_vals.DEFAULT_HEADER
+        self.mock_api.return_value = ({'V': 2}, 200)
+        out, sw, fan, bulb = self.vesync_obj.get_devices()
+        call_list = self.mock_api.call_args_list
+        call_p1 = call_list[0][0]
+        call_p2 = call_list[0][1]
+        assert call_p1[0] == '/cloud/v1/deviceManaged/devices'
+        assert call_p1[1] == 'post'
+        assert call_p2['headers'] == head
+        assert self.vesync_obj.enabled
+
     @patch('pyvesync.vesync.VeSyncOutlet7A')
     @patch('pyvesync.vesync.VeSyncOutlet15A')
     @patch('pyvesync.vesync.VeSyncOutlet10A')
@@ -43,18 +58,8 @@ class TestDeviceList(object):
             to build list with device objects from details
                 Test for all 6 known devices -
                 4 outlets, 1 switch, 1 fan"""
-        devlist_obj = json_vals.DeviceList()
-        details_7a = devlist_obj.details_7a
-        details_15a = devlist_obj.details_15a
-        details_wallsw = devlist_obj.details_wallsw
-        details_10eu = devlist_obj.details_10aeu
-        details_10us = devlist_obj.details_10aus
-        details_air = devlist_obj.details_air
 
-        devlist = [details_7a, details_10us, details_10eu,
-                   details_15a, details_air, details_wallsw]
-
-        device_list = ({'code': 0, 'result': {'list': devlist}}, 200)
+        device_list = json_vals.DEVLIST_ALL
 
         self.mock_api.return_value = device_list
 
@@ -66,24 +71,24 @@ class TestDeviceList(object):
         assert ws_patch.called
         assert air_patch.called
 
-        assert len(proc_dev) == 3
+        assert len(proc_dev) == 4
         outlets = proc_dev[0]
         switches = proc_dev[1]
         fans = proc_dev[2]
+        bulbs = proc_dev[3]
         assert len(outlets) == 4
         assert len(switches) == 1
         assert len(fans) == 1
+        assert len(bulbs) == 0
 
     def test_getdevs_code(self, caplog, api_mock):
         """Test get_devices with code > 0 returned"""
-
         device_list = ({'code': 1, 'msg': 'gibberish'}, 200)
 
         self.mock_api.return_value = device_list
         dev_list = self.vesync_obj.get_devices()
 
-        assert len(dev_list) == 3
-        assert len(caplog.records) == 1
+        assert len(dev_list) == 4
         assert 'Error retrieving device list' in caplog.text
 
     def test_get_devices_resp_changes(self, caplog, api_mock):
@@ -99,9 +104,15 @@ class TestDeviceList(object):
                         }, 200)
         self.mock_api.return_value = device_list
         devs = self.vesync_obj.get_devices()
-        assert len(devs) == 3
+        assert len(devs) == 4
         assert len(caplog.records) == 1
         assert 'Device list in response not found' in caplog.text
+
+    def test_7a_bad_conf(self, caplog, api_mock):
+        self.mock_api.return_value = (BAD_DEV_LIST, 200)
+        devs = self.vesync_obj.get_devices()
+        assert len(devs) == 4
+        assert len(caplog.records) == 2
 
     def test_get_devices_deviceType_error(self, caplog, api_mock):
         """Test result and list keys exist but deviceType not in list"""
@@ -115,33 +126,76 @@ class TestDeviceList(object):
                         }, 200)
         self.mock_api.return_value = device_list
         devs = self.vesync_obj.get_devices()
-        assert len(devs) == 3
-        assert len(caplog.records) == 1
-        assert 'devType key not found' in caplog.text
+        assert len(devs) == 4
+        assert len(caplog.records) == 2
+        assert 'Details keys not found' in caplog.text
 
     @patch('pyvesync.vesync.VeSyncOutlet7A', autospec=True)
     @patch('pyvesync.vesync.VeSyncOutlet15A', autospec=True)
     @patch('pyvesync.vesync.VeSyncOutlet10A', autospec=True)
-    def test_resolve_updates(self, out10a_patch, out15a_patch, out7a_patch, caplog, api_mock):
-        """Test resolve updates function"""
-
+    @patch('pyvesync.vesync.VeSyncWallSwitch', autospec=True)
+    @patch('pyvesync.vesync.VeSyncAir131', autospec=True)
+    def test_resolve_updates(self, air_patch, ws_patch, out10a_patch,
+                             out15a_patch, out7a_patch, caplog, api_mock):
+        """Test process_devices() with all devices -
+            Creates vesync object with all devices and returns
+            device list with new set of all devices"""
         outlet_10a = out10a_patch.return_value
-        outlet_10a.cid = '10A-CID'
+        outlet_10a.cid = '10A-CID1'
+        outlet_10a.device_type = 'ESW10-EU'
+        outlet_10a.device_name = '10A Removed'
         outlet_15a = out15a_patch.return_value
-        outlet_15a.cid = '15A-CID'
+        outlet_15a.cid = '15A-CID1'
+        outlet_15a.device_type = 'ESW15-USA'
+        outlet_15a.device_name = '15A Removed'
         outlet_7a = out7a_patch.return_value
-        outlet_7a.cid = '7A-CID'
-        outlets = [outlet_10a, outlet_15a, outlet_7a]
+        outlet_7a.cid = '7A-CID1'
+        outlet_7a.device_type = 'wifi-switch-1.3'
+        outlet_7a.device_name = '7A Removed'
+        switch = ws_patch.return_value
+        switch.cid = 'WS-CID2'
+        switch.device_name = 'Switch Removed'
+        switch.device_type = 'ESWL01'
+        air = air_patch.return_value
+        air.cid = 'AirCID2'
+        air.device_type = 'LV-PUR131S'
+        air.device_name = 'fan Removed'
 
-        resolve = pyvesync.helpers.Helpers.resolve_updates
-        self.vesync_obj.outlets = []
+        out10a_attr = MagicMock()
+        out10a_attr.device_type = 'ESW01-EU'
+        out10a_attr.device_name = '10A Added'
+        out10a_patch.return_value = out10a_attr
+        out15a_attr = MagicMock()
+        out15a_attr.device_type = 'ESW15A-USA'
+        out15a_attr.device_name = '15A Added'
+        out15a_patch.return_value = out15a_attr
+        out7a_attr = MagicMock()
+        out7a_attr.device_type = 'wifi-switch-1.3'
+        out7a_attr.device_name = '7A Added'
+        out7a_patch.return_value = out7a_attr
+        air_attr = MagicMock()
+        air_attr.device_type = 'LV-PUR131S'
+        air_attr.device_name = 'Air Added'
+        air_patch.return_value = air_attr
+        ws_attr = MagicMock()
+        ws_attr.device_name = 'Switch Added'
+        ws_attr.device_type = 'ESWL01'
+        ws_patch.return_value = ws_attr
 
-        self.vesync_obj.outlets = resolve(self.vesync_obj.outlets, outlets)
+        json_ret = json_vals.FULL_DEV_LIST
 
-        assert self.vesync_obj.outlets == outlets
+        self.vesync_obj.outlets = [outlet_10a, outlet_15a, outlet_7a]
+        self.vesync_obj.switches = [switch]
+        self.vesync_obj.fans = [air]
 
-        outlets = [outlet_10a]
+        outlets, switches, fans, bulbs = self.vesync_obj.process_devices(
+            json_ret)
 
-        self.vesync_obj.outlets = resolve(self.vesync_obj.outlets, outlets)
+        assert len(self.vesync_obj.outlets) == 0
+        assert len(self.vesync_obj.switches) == 0
+        assert len(self.vesync_obj.fans) == 0
 
-        assert self.vesync_obj.outlets == outlets
+        assert len(outlets) == 4
+        assert len(switches) == 1
+        assert len(fans) == 1
+        assert len(bulbs) == 0

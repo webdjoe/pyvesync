@@ -169,28 +169,56 @@ class Helpers:
     @staticmethod
     def check_response(resp: dict, call: str) -> bool:
         common_resp = [
-            'get_devices', '15a_detail', '15a_toggle',
+            'get_devices', '15a_toggle',
             '15a_energy', 'walls_detail', 'walls_toggle',
-            '10a_detail', '10a_toggle', '10a_energy', '15a_ntlight',
+            '10a_toggle', '10a_energy', '15a_ntlight',
             'airpur_detail', 'airpur_status'
         ]
 
+        det_resp = ['15a_detail', '10a_detail']
+
         if isinstance(resp, dict):
-            if call in common_resp:
+            if call in det_resp:
+                if 'code' in resp and resp['code'] == 0:
+                    keys = ['deviceStatus', 'power', 'voltage', 'activeTime']
+                    if all(x in resp for x in keys):
+                        return True
+                    else:
+                        logger.warning(
+                            'Keys missing from getting device details')
+                        return False
+                else:
+                    return False
+            elif call in common_resp:
                 if 'code' in resp and resp['code'] == 0:
                     return True
                 else:
+                    logger.warning('Error getting details')
                     return False
+
             elif call == 'login' and 'code' in resp:
                 if resp['code'] == 0 and 'result' in resp:
                     return True
                 else:
+                    logger.error('Error in login response')
                     return False
-            elif call == '7a_detail' and 'power' in resp:
-                return True
-            elif call == '7a_energy' and 'energyConsumptionOfToday' in resp:
-                return True
+            elif call == '7a_detail':
+                keys = ['deviceStatus', 'activeTime',
+                        'energy', 'power', 'voltage']
+                if all(x in resp for x in keys):
+                    return True
+                else:
+                    logger.warning('Keys missing from get_details for 7A')
+                    return False
+            elif call == '7a_energy':
+                keys = ['energyConsumptionOfToday', 'maxEnergy', 'totalEnergy']
+                if all(x in resp for x in keys):
+                    return True
+                else:
+                    logger.warning('Keys missing from getting energy in 7A')
+                    return False
             else:
+                logger.error('Unkown call')
                 return False
         else:
             return False
@@ -210,44 +238,11 @@ class Helpers:
     @staticmethod
     def build_energy_dict(r):
         return {
-            'energy_consumption_of_today': r.get('energyConsumptionOfToday'),
-            'cost_per_kwh': r.get('costPerKWH'),
-            'max_energy': r.get('maxEnergy'),
-            'total_energy': r.get('totalEnergy'),
-            'currency': r.get('currency'),
-            'data': r.get('data')
+            'energy_consumption_of_today': r.get(
+                'energyConsumptionOfToday', 0),
+            'cost_per_kwh': r.get('costPerKWH', 0),
+            'max_energy': r.get('maxEnergy', 0),
+            'total_energy': r.get('totalEnergy', 0),
+            'currency': r.get('currency', 0),
+            'data': r.get('data', 0)
         }
-
-    @staticmethod
-    def test_cid(test_obj, test_list):
-        for obj in test_list:
-            if obj.cid == test_obj.cid:
-                return True
-
-    @classmethod
-    def resolve_updates(cls, orig_list, updated_list):
-        """Merges changes from one list of devices against another"""
-
-        if isinstance(updated_list, list) and len(updated_list) > 0:
-            if isinstance(orig_list, list) and len(orig_list) == 0:
-                orig_list = updated_list
-            else:
-                # Add new devices not in list but found in the update
-                for new_device in updated_list:
-                    was_found = False
-
-                    for device in orig_list:
-                        if new_device.cid == device.cid:
-                            was_found = True
-                            break
-
-                    if not was_found:
-                        orig_list.append(new_device)
-
-                # Remove old devices in the list not found in the update
-                orig_list[:] = [dev for dev in orig_list if cls.test_cid(dev, updated_list)]
-
-            # Call update on each device in the list
-            [device.update() for device in orig_list]
-
-        return orig_list

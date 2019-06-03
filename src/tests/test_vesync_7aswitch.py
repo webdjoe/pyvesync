@@ -4,62 +4,15 @@ import logging
 from pyvesync import VeSync, VeSyncOutlet7A
 import pyvesync
 from pyvesync.helpers import Helpers as helpers
+from . import call_json
 
-DEV_LIST_DETAIL = {
-    "deviceType": "wifi-switch-1.3",
-    "extension": None,
-    "macID": None,
-    "type": "wifi-switch",
-    "deviceName": "Device Name",
-    "deviceImg": "dev_img_url",
-    "connectionType": "wifi",
-    "uuid": None,
-    "speed": None,
-    "deviceStatus": "on",
-    "mode": None,
-    "configModule": "7AOutlet",
-    "currentFirmVersion": "1.95",
-    "connectionStatus": "online",
-    "cid": "7a-cid"
-}
+DEV_LIST_DETAIL = call_json.LIST_CONF_7A
 
-CORRECT_7A_LIST = {
-    "traceId": "1552110321929",
-    "msg": None,
-    "result": {
-        "total": 5,
-        "pageNo": 1,
-        "pageSize": 50,
-        "list": [DEV_LIST_DETAIL]
-    },
-    "code": 0
-}
+CORRECT_7A_LIST = call_json.DEVLIST_7A
 
-BAD_7A_LIST = {
-    "result": {
-        "total": 5,
-        "pageNo": 1,
-        "pageSize": 50,
-        "list": [{
-            "deviceType": "wifi-switch-1.3",
-            "NoConfigKeys": None
-        }
-        ]
-    },
-    "code": 0
-}
+CORRECT_7A_DETAILS = call_json.DETAILS_7A
 
-ENERGY_HISTORY = {
-    "code": 0,
-    "energyConsumptionOfToday": 1,
-    "costPerKWH": 1,
-    "maxEnergy": 1,
-    "totalEnergy": 1,
-    "data": [
-        1,
-        1,
-    ]
-}
+ENERGY_HISTORY = call_json.ENERGY_HISTORY
 
 
 class TestVesync7ASwitch(object):
@@ -79,32 +32,19 @@ class TestVesync7ASwitch(object):
         self.mock_api_call.stop()
 
     def test_7aswitch_conf(self, api_mock):
-        self.mock_api.return_value = (CORRECT_7A_LIST, 200)
+        self.mock_api.return_value = CORRECT_7A_LIST
         devs = self.vesync_obj.get_devices()
-        assert len(devs) == 3
+        assert len(devs) == 4
         vswitch7a = devs[0][0]
         assert isinstance(vswitch7a, VeSyncOutlet7A)
-        assert vswitch7a.device_name == "Device Name"
+        assert vswitch7a.device_name == "Name 7A Outlet"
         assert vswitch7a.device_type == "wifi-switch-1.3"
-        assert vswitch7a.cid == "7a-cid"
+        assert vswitch7a.cid == "7A-CID"
         assert vswitch7a.is_on
 
-    def test_7a_bad_conf(self, caplog, api_mock):
-        self.mock_api.return_value = (BAD_7A_LIST, 200)
-        devs = self.vesync_obj.get_devices()
-        assert len(devs) == 3
-        assert len(caplog.records) == 1
-
     def test_7a_details(self, api_mock):
-        correct_7a_details = {
-            "deviceStatus": "on",
-            "deviceImg": "",
-            "activeTime": 1,
-            "energy": 1,
-            "power": "1000:1000",
-            "voltage": "1000:1000"
-        }
-        self.mock_api.return_value = (correct_7a_details, 200)
+
+        self.mock_api.return_value = CORRECT_7A_DETAILS
         vswitch7a = VeSyncOutlet7A(DEV_LIST_DETAIL, self.vesync_obj)
         vswitch7a.get_details()
         dev_details = vswitch7a.details
@@ -126,7 +66,7 @@ class TestVesync7ASwitch(object):
         self.mock_api.return_value = (bad_7a_details, 200)
         vswitch7a = VeSyncOutlet7A(DEV_LIST_DETAIL, self.vesync_obj)
         vswitch7a.get_details()
-        assert len(caplog.records) == 1
+        assert len(caplog.records) == 2
         assert 'details' in caplog.text
 
     def test_7a_no_details(self, caplog, api_mock):
@@ -136,7 +76,7 @@ class TestVesync7ASwitch(object):
         self.mock_api.return_value = (bad_7a_details, 200)
         vswitch7a = VeSyncOutlet7A(DEV_LIST_DETAIL, self.vesync_obj)
         vswitch7a.get_details()
-        assert len(caplog.records) == 1
+        assert len(caplog.records) == 2
 
     def test_7a_onoff(self, caplog, api_mock):
         self.mock_api.return_value = ("response", 200)
@@ -160,7 +100,7 @@ class TestVesync7ASwitch(object):
         assert not vswitch7a.turn_off()
 
     def test_7a_weekly(self, api_mock):
-        self.mock_api.return_value = (ENERGY_HISTORY, 200)
+        self.mock_api.return_value = ENERGY_HISTORY
         vswitch7a = VeSyncOutlet7A(DEV_LIST_DETAIL, self.vesync_obj)
         vswitch7a.get_weekly_energy()
         self.mock_api.assert_called_with(
@@ -175,7 +115,7 @@ class TestVesync7ASwitch(object):
         assert energy_dict['data'] == [1, 1]
 
     def test_7a_monthly(self, api_mock):
-        self.mock_api.return_value = (ENERGY_HISTORY, 200)
+        self.mock_api.return_value = ENERGY_HISTORY
         vswitch7a = VeSyncOutlet7A(DEV_LIST_DETAIL, self.vesync_obj)
         vswitch7a.get_monthly_energy()
         self.mock_api.assert_called_with(
@@ -190,7 +130,7 @@ class TestVesync7ASwitch(object):
         assert energy_dict['data'] == [1, 1]
 
     def test_7a_yearly(self, api_mock):
-        self.mock_api.return_value = (ENERGY_HISTORY, 200)
+        self.mock_api.return_value = ENERGY_HISTORY
         vswitch7a = VeSyncOutlet7A(DEV_LIST_DETAIL, self.vesync_obj)
         vswitch7a.get_yearly_energy()
         self.mock_api.assert_called_with(
@@ -209,13 +149,13 @@ class TestVesync7ASwitch(object):
         self.mock_api.return_value = (bad_history, 200)
         vswitch7a = VeSyncOutlet7A(DEV_LIST_DETAIL, self.vesync_obj)
         vswitch7a.update_energy()
-        assert len(caplog.records) == 1
+        assert len(caplog.records) == 2
         assert 'weekly' in caplog.text
         caplog.clear()
         vswitch7a.get_monthly_energy()
-        assert len(caplog.records) == 1
+        assert len(caplog.records) == 2
         assert 'monthly' in caplog.text
         caplog.clear()
         vswitch7a.get_yearly_energy()
-        assert len(caplog.records) == 1
+        assert len(caplog.records) == 2
         assert 'yearly' in caplog.text

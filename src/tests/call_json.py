@@ -1,365 +1,345 @@
 import time
-from pyvesync.helpers import (API_BASE_URL, API_RATE_LIMIT, API_TIMEOUT,
-                              DEFAULT_TZ, APP_VERSION, PHONE_BRAND,
-                              PHONE_OS, MOBILE_ID, USER_TYPE)
+import pyvesync.helpers as helpers
 
-SAMPLE_ACTID = '1234567'
-SAMPLE_TOKEN = 'sample-token'
-TRACE_ID = '1234567890123'
+API_BASE_URL = helpers.API_BASE_URL
+API_RATE_LIMIT = helpers.API_RATE_LIMIT
+API_TIMEOUT = helpers.API_TIMEOUT
+DEFAULT_TZ = helpers.DEFAULT_TZ
+APP_VERSION = helpers.APP_VERSION
+PHONE_BRAND = helpers.PHONE_BRAND
+PHONE_OS = helpers.PHONE_OS
+MOBILE_ID = helpers.MOBILE_ID
+USER_TYPE = helpers.USER_TYPE
 
-
+SAMPLE_ACTID = 'sample_id'
+SAMPLE_TOKEN = 'sample_tk'
+TRACE_ID = int(time.time())
 """
-Standard.default_header = standard header for most calls
-Login.call_body = body of login call
-Login.return_body = return of login call
+DEFAULT_BODY = Standard body for new device calls
+DEFAULT_HEADER = standard header for most calls
+ENERGY_HISTORY = standard outlet energy history response
 -------------------------------------------------------
-DeviceList.call_body = body of call to get device list
-DeviceList.call_header = header of call to get device list
-DeviceList.details_10eu = device list entry for 10A Europe outlet
-DeviceList.details_10us = devlice list entry for 10A US outlet
-DeviceList.details_7a = device list entry for 7A outlet
-DeviceList.details_air = device list entry for air purifier
-DeviceList.details_wallsw = device list entry for wall switch
-DeviceList.all_dev_list = list of all device entries
-DeviceList.outlet10aeu_list = device list return for only 10A eu outlet
-DeviceList.outlet10aus_list = device list return for only 10A us outlet
-DeviceList.outlet7a_list = device list return for only 7A outlet
-DeviceList.outlet15a_list = device list return for only 15A outlet
-DeviceList.wallswitch_list = device list return for only wall switch
-DeviceList.airpur_list = device list return for just air purifier
+login_call_body(email, pass) = body of login call
+LOGIN_RET_BODY = return of login call
+-------------------------------------------------------
+get_devices_body() = body of call to get device list
+LIST_CONF_10AEU = device list entry for 10A Europe outlet
+LIST_CONF_10AUS = devlice list entry for 10A US outlet
+LIST_CONF_7A = device list entry for 7A outlet
+LIST_CONF_AIR = device list entry for air purifier
+LIST_CONF_15A = device list entry for 15A outlet
+LIST_CONF_WS = device list entry for wall switch
+DEVLIST_ALL = Return tuple for all devices
+DEVLIST_10AEU = device list return for only 10A eu outlet
+DEVLIST_10AUS = device list return for only 10A us outlet
+DEVLIST_7A = device list return for only 7A outlet
+DEVLIST_15A = device list return for only 15A outlet
+DEVLIST_WS = device list return for only wall switch
+DEVLIST_AIR = device list return for just air purifier
 ---------------------------------------------------------
-Details.outlet10a_return = Return for 10A outlet device details
-Details.outlet15a_return = Return for 15A outlet device details
-Details.outlet7a_return = Return for 7A outlet device details
-Details.wallswitch_return = Return for wall switch device details
-Details.airpur_return = Return for Air Purifier device details
+DETAILS_10A = Return for 10A outlet device details
+DETAILS_15A = Return for 15A outlet device details
+DETAILS_7A = Return for 7A outlet device details
+DETAILS_WS = Return for wall switch device details
+DETAILS_AIR = Return for Air Purifier device details
 
 """
 
+DEFAULT_HEADER = {
+    'accept-language': 'en',
+    'accountId': SAMPLE_ACTID,
+    'appVersion': APP_VERSION,
+    'content-type': 'application/json',
+    'tk': SAMPLE_TOKEN,
+    'tz': DEFAULT_TZ
+}
 
-class Standard:
+DEFAULT_BODY = {
+    "acceptLanguage": "en",
+    "accountID": SAMPLE_ACTID,
+    "appVersion": APP_VERSION,
+    "pageNo": 1,
+    "pageSize": 50,
+    "phoneBrand": PHONE_BRAND,
+    "phoneOS": PHONE_OS,
+    "timeZone": DEFAULT_TZ,
+    "token": SAMPLE_TOKEN,
+    "traceId": TRACE_ID
+}
 
-    @property
-    @staticmethod
-    def default_header():
-        header = {
-            'accept-language': 'en',
-            'accountId': SAMPLE_ACTID,
-            'appVersion': APP_VERSION,
-            'content-type': 'application/json',
-            'tk': SAMPLE_TOKEN,
-            'tz': DEFAULT_TZ
-        }
-        return header
+ENERGY_HISTORY = ({
+    "code": 0,
+    "energyConsumptionOfToday": 1,
+    "costPerKWH": 1,
+    "maxEnergy": 1,
+    "totalEnergy": 1,
+    "data": [
+        1,
+        1,
+    ]
+}, 200)
 
-    @property
-    @staticmethod
-    def default_body():
-        json = {
-            "acceptLanguage": "en",
-            "accountID": SAMPLE_ACTID,
-            "appVersion": APP_VERSION,
-            "pageNo": 1,
-            "pageSize": 50,
-            "phoneBrand": PHONE_BRAND,
-            "phoneOS": PHONE_OS,
-            "timeZone": DEFAULT_TZ,
-            "token": SAMPLE_TOKEN,
-            "traceId": TRACE_ID
-        }
-        return json
-
-
-class Login:
-    def __init__(self):
-        self.api_url = '/cloud/v1/user/login'
-
-    @staticmethod
-    def call_body(email, password):
-        json = {
-            "acceptLanguage": "en",
-            "appVersion": APP_VERSION,
-            "devToken": "",
-            "email": email,
-            "method": "login",
-            "password": password,
-            "phoneBrand": PHONE_BRAND,
-            "phoneOS": PHONE_OS,
-            "timeZone": DEFAULT_TZ,
-            "traceId": TRACE_ID,
-            "userType": "1"
-        }
-        return json
-
-    @property
-    @staticmethod
-    def return_body():
-        json = {
-            "traceId": TRACE_ID,
-            "msg": "",
-            "result": {
-                "accountID": SAMPLE_ACTID,
-                "avatarIcon": "",
-                "acceptLanguage": "en",
-                "gdprStatus": True,
-                "nickName": "nick",
-                "userType": "1",
-                "token": SAMPLE_TOKEN
-            },
-            "code": 0
-        }
-        return json
+LOGIN_RET_BODY = ({
+    "traceId": TRACE_ID,
+    "msg": "",
+    "result": {
+        "accountID": SAMPLE_ACTID,
+        "avatarIcon": "",
+        "acceptLanguage": "en",
+        "gdprStatus": True,
+        "nickName": "nick",
+        "userType": "1",
+        "token": SAMPLE_TOKEN
+    },
+    "code": 0
+}, 200)
 
 
-class DeviceList:
-
-    @property
-    def details_7a(self):
-        return {
-                "deviceType": "wifi-switch-1.3",
-                "extension": None,
-                "macID": None,
-                "type": "wifi-switch",
-                "deviceName": "Name 7A Outlet",
-                "connectionType": "wifi",
-                "uuid": None,
-                "speed": None,
-                "deviceStatus": "on",
-                "mode": None,
-                "configModule": "7AOutlet",
-                "currentFirmVersion": "1.95",
-                "connectionStatus": "online",
-                "cid": "7A-CID"
-                }
-
-    @property
-    def details_15a(self):
-        return {
-                "deviceType": "ESW15-USA",
-                "extension": None,
-                "macID": None,
-                "type": "wifi-switch",
-                "deviceName": "Dryer",
-                "connectionType": "wifi",
-                "uuid": "UUID",
-                "speed": None,
-                "deviceStatus": "on",
-                "mode": None,
-                "configModule": "15AOutletNightlight",
-                "currentFirmVersion": None,
-                "connectionStatus": "online",
-                "cid": "15A-CID"
-                 }
-
-    @property
-    def details_wallsw(self):
-        return {
-                "deviceType": "ESWL01",
-                "extension": None,
-                "macID": None,
-                "type": "Switches",
-                "deviceName": "Name Wall Switch",
-                "connectionType": "wifi",
-                "uuid": "UUID",
-                "speed": None,
-                "deviceStatus": "off",
-                "mode": None,
-                "configModule": "InwallswitchUS",
-                "currentFirmVersion": None,
-                "connectionStatus": "online",
-                "cid": "WALLSWITCH-CID"
-                }
-
-    @property
-    def details_10aeu(self):
-        return {
-                "deviceType": "ESW01-EU",
-                "extension": None,
-                "macID": None,
-                "type": "wifi-switch",
-                "deviceName": "Name 10A EU Outlet",
-                "connectionType": "wifi",
-                "uuid": "UUID",
-                "speed": None,
-                "deviceStatus": "off",
-                "mode": None,
-                "configModule": "10AOutletEU",
-                "currentFirmVersion": None,
-                "connectionStatus": "offline",
-                "cid": "10AEU-CID"
-                }
-
-    @property
-    def details_10aus(self):
-        return {
-                "deviceType": "ESW03-USA",
-                "extension": None,
-                "macID": None,
-                "type": "wifi-switch",
-                "deviceName": "Name 10A US Outlet",
-                "connectionType": "wifi",
-                "uuid": "UUID",
-                "speed": None,
-                "deviceStatus": "off",
-                "mode": None,
-                "configModule": "10AOutletUSA",
-                "currentFirmVersion": None,
-                "connectionStatus": "offline",
-                "cid": "10AUS-CID"
-                }
-
-    @property
-    def details_air(self):
-        return {
-                        "deviceName": "Name Air Purifier",
-                        "cid": "AIRPUR-CID",
-                        "deviceStatus": "on",
-                        "connectionStatus": "online",
-                        "connectionType": "wifi",
-                        "deviceType": "LV-PUR131S",
-                        "type": "wifi-air",
-                        "uuid": "UUID",
-                        "configModule": "AirPurifier131",
-                        "macID": None,
-                        "mode": "manual",
-                        "speed": "low",
-                        "extension": None,
-                        "currentFirmVersion": None
-        }
-
-    @property
-    def full_list(self):
-        return [self.details_7a, self.details_10aeu,
-                self.details_10aus, self.details_15a,
-                self.details_air, self.details_wallsw]
-
-    @property
-    def call_header(self):
-        return Standard.default_header
-
-    @property
-    def call_body(self):
-        body = dict(Standard.default_body)
-        body['method'] = 'devices'
-        return body
-
-    @property
-    def all_dev_list(self):
-        return ({'code': 0, 'result': {'list': self.full_list}}, 200)
-
-    @property
-    def outlet7a_list(self):
-        return ({'code': 0, 'result': {'list': [self.details_7a]}}, 200)
-
-    @property
-    def outlet15a_list(self):
-        return ({'code': 0, 'result': {'list': self.details_15a}}, 200)
-
-    @property
-    def outlet10aus_list(self):
-        return ({'code': 0, 'result': {'list': self.details_10aus}}, 200)
-
-    @property
-    def outlet10aeu_list(self):
-        return ({'code': 0, 'result': {'list': self.details_10aeu}}, 200)
-
-    @property
-    def wallswitch_list(self):
-        return ({'code': 0, 'result': {'list': self.details_wallsw}}, 200)
-
-    @property
-    def airpur_list(self):
-        return ({'code': 0, 'result': {'list': self.details_air}}, 200)
+def login_call_body(email, password):
+    json = {
+        "acceptLanguage": "en",
+        "appVersion": APP_VERSION,
+        "devToken": "",
+        "email": email,
+        "method": "login",
+        "password": password,
+        "phoneBrand": PHONE_BRAND,
+        "phoneOS": PHONE_OS,
+        "timeZone": DEFAULT_TZ,
+        "traceId": TRACE_ID,
+        "userType": "1"
+    }
+    return json
 
 
-class Details:
+LIST_CONF_7A = {
+    "deviceType": "wifi-switch-1.3",
+    "extension": None,
+    "macID": None,
+    "type": "wifi-switch",
+    "deviceName": "Name 7A Outlet",
+    "connectionType": "wifi",
+    "uuid": None,
+    "speed": None,
+    "deviceStatus": "on",
+    "mode": None,
+    "configModule": "7AOutlet",
+    "currentFirmVersion": "1.95",
+    "connectionStatus": "online",
+    "cid": "7A-CID"
+}
 
-    @property
-    @staticmethod
-    def outlet15A_details():
-        return {
-            "code": 0,
-            "msg": None,
-            "deviceStatus": "on",
-            "connectionStatus": "online",
-            "activeTime": 28,
-            "energy": 0.0,
-            "nightLightStatus": "on",
-            "nightLightBrightness": 50,
-            "nightLightAutomode": "manual",
-            "power": "0.0",
-            "voltage": "118.64"
-        }
+LIST_CONF_15A = {
+    "deviceType": "ESW15-USA",
+    "extension": None,
+    "macID": None,
+    "type": "wifi-switch",
+    "deviceName": "Name 15A Outlet",
+    "connectionType": "wifi",
+    "uuid": "UUID",
+    "speed": None,
+    "deviceStatus": "on",
+    "mode": None,
+    "configModule": "15AOutletNightlight",
+    "currentFirmVersion": None,
+    "connectionStatus": "online",
+    "cid": "15A-CID"
+}
 
-    @property
-    @staticmethod
-    def outlet7a_details():
-        return {
-            "deviceStatus": "off",
-            "deviceImg": "",
-            "activeTime": 0,
-            "energy": 0,
-            "power": "0:0",
-            "voltage": "0:0"
-        }
+LIST_CONF_WS = {
+    "deviceType": "ESWL01",
+    "extension": None,
+    "macID": None,
+    "type": "Switches",
+    "deviceName": "Name Wall Switch",
+    "connectionType": "wifi",
+    "uuid": "UUID",
+    "speed": None,
+    "deviceStatus": "on",
+    "mode": None,
+    "configModule": "InwallswitchUS",
+    "currentFirmVersion": None,
+    "connectionStatus": "online",
+    "cid": "WS-CID"
+}
 
-    @property
-    @staticmethod
-    def outlet10a_return():
-        return {
-            "code": 0,
-            "msg": None,
-            "deviceStatus": "on",
-            "connectionStatus": "online",
-            "activeTime": 0,
-            "energy": 0.0,
-            "nightLightStatus": None,
-            "nightLightBrightness": None,
-            "nightLightAutomode": None,
-            "power": "0",
-            "voltage": "0"
-        }
+LIST_CONF_10AEU = {
+    "deviceType": "ESW01-EU",
+    "extension": None,
+    "macID": None,
+    "type": "wifi-switch",
+    "deviceName": "Name 10A Outlet",
+    "connectionType": "wifi",
+    "uuid": "UUID",
+    "speed": None,
+    "deviceStatus": "on",
+    "mode": None,
+    "configModule": "10AOutletEU",
+    "currentFirmVersion": None,
+    "connectionStatus": "online",
+    "cid": "10A-CID"
+}
 
-    @property
-    @staticmethod
-    def wallswitch_return():
-        return {
-            "code": 0,
-            "msg": None,
-            "deviceStatus": "on",
-            "connectionStatus": "online",
-            "activeTime": 28,
-            "power": "None",
-            "voltage": "None"
-        }
+LIST_CONF_10AUS = {
+    "deviceType": "ESW03-USA",
+    "extension": None,
+    "macID": None,
+    "type": "wifi-switch",
+    "deviceName": "Name 10A Outlet",
+    "connectionType": "wifi",
+    "uuid": "UUID",
+    "speed": None,
+    "deviceStatus": "on",
+    "mode": None,
+    "configModule": "10AOutletUSA",
+    "currentFirmVersion": None,
+    "connectionStatus": "online",
+    "cid": "10A-CID"
+}
+
+LIST_CONF_AIR = {
+    "deviceName": "Name Air Purifier",
+    "cid": "AIRPUR-CID",
+    "deviceStatus": "on",
+    "connectionStatus": "online",
+    "connectionType": "wifi",
+    "deviceType": "LV-PUR131S",
+    "type": "wifi-air",
+    "uuid": "UUID",
+    "configModule": "AirPurifier131",
+    "macID": None,
+    "mode": "manual",
+    "speed": "low",
+    "extension": None,
+    "currentFirmVersion": None
+}
+
+FULL_DEV_LIST = [
+    LIST_CONF_10AEU, LIST_CONF_10AUS, LIST_CONF_15A, LIST_CONF_7A,
+    LIST_CONF_AIR, LIST_CONF_WS
+]
 
 
-class status:
+def get_devices_body():
+    body = DEFAULT_BODY
+    body['method'] = 'devices'
+    return (body, 200)
 
-    status_body = {
-                   "accountID": SAMPLE_ACTID,
-                   "token": SAMPLE_TOKEN,
-                   "uuid": "UUID",
-                   "timeZone": DEFAULT_TZ
-                   }
 
-    @property
-    @classmethod
-    def off_body(cls):
-        body = cls.status_body
-        body['status'] = 'off'
-        return body
+DEVLIST_ALL = ({'code': 0, 'result': {'list': FULL_DEV_LIST}}, 200)
 
-    @property
-    @classmethod
-    def on_body(cls):
-        body = cls.status_body
-        body['status'] = 'on'
-        return body
+DEVLIST_7A = ({'code': 0, 'result': {'list': [LIST_CONF_7A]}}, 200)
 
-    @property
-    @staticmethod
-    def call_body():
-        body = dict(Standard.default_body)
-        body['method'] = 'deviceDetail'
-        return body
+DEVLIST_15A = ({'code': 0, 'result': {'list': [LIST_CONF_15A]}}, 200)
+
+DEVLIST_10AEU = ({'code': 0, 'result': {'list': [LIST_CONF_10AEU]}}, 200)
+
+DEVLIST_10AUS = ({'code': 0, 'result': {'list': [LIST_CONF_10AUS]}}, 200)
+
+DEVLIST_WS = ({'code': 0, 'result': {'list': [LIST_CONF_WS]}}, 200)
+
+DEVLIST_AIR = ({'code': 0, 'result': {'list': [LIST_CONF_AIR]}}, 200)
+
+
+def get_details_body():
+    body = DEFAULT_BODY
+    body['method'] = 'deviceDetail'
+    return (body, 200)
+
+
+DETAILS_15A = ({
+    "code": 0,
+    "msg": None,
+    "deviceStatus": "on",
+    "connectionStatus": "online",
+    "activeTime": 1,
+    "energy": 1,
+    "nightLightStatus": "on",
+    "nightLightBrightness": 50,
+    "nightLightAutomode": "manual",
+    "power": "1",
+    "voltage": "1"
+}, 200)
+
+DETAILS_7A = ({
+    "deviceStatus": "on",
+    "deviceImg": "",
+    "activeTime": 1,
+    "energy": 1,
+    "power": "1000:1000",
+    "voltage": "1000:1000"
+}, 200)
+
+DETAILS_WS = ({
+    "code": 0,
+    "msg": None,
+    "deviceStatus": "on",
+    "connectionStatus": "online",
+    "activeTime": 1,
+    "power": "None",
+    "voltage": "None"
+}, 200)
+
+DETAILS_10A = ({
+    "code": 0,
+    "msg": None,
+    "deviceStatus": "on",
+    "connectionStatus": "online",
+    "activeTime": 1,
+    "energy": 1,
+    "nightLightStatus": None,
+    "nightLightBrightness": None,
+    "nightLightAutomode": None,
+    "power": "1",
+    "voltage": "1"
+}, 200)
+
+DETAILS_AIR = ({
+    "code": 0,
+    "msg": None,
+    "deviceStatus": "on",
+    "connectionStatus": "online",
+    "activeTime": 1,
+    "deviceImg": None,
+    "deviceName": "XXXXXXX",
+    "filterLife": {
+        "change": False,
+        "useHour": None,
+        "percent": 100
+    },
+    "airQuality": "excellent",
+    "screenStatus": "on",
+    "mode": "manual",
+    "level": 1,
+    "schedule": None,
+    "timer": None,
+    "scheduleCount": 0
+}, 200)
+
+DETAILS_BADCODE = ({
+    "code": 1,
+    "deviceImg": "",
+    "activeTime": 1,
+    "energy": 1,
+    "power": "1",
+    "voltage": "1"
+}, 200)
+
+STATUS_BODY = {
+    "accountID": SAMPLE_ACTID,
+    "token": SAMPLE_TOKEN,
+    "uuid": "UUID",
+    "timeZone": DEFAULT_TZ
+}
+
+
+def off_body():
+    body = STATUS_BODY
+    body['status'] = 'off'
+    return (body, 200)
+
+
+def on_body(cls):
+    body = STATUS_BODY
+    body['status'] = 'on'
+    return (body, 200)
