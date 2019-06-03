@@ -124,38 +124,52 @@ class VeSyncAir131(VeSyncBaseDevice):
     def change_fan_speed(self, speed: int = None) -> bool:
         """Adjust Fan Speed by Specifying 1,2,3 as argument or cycle
             through speeds increasing by one"""
+        if self.mode != 'manual':
+            logger.debug(
+                '{} not in manual mode, cannot change speed'.format(
+                    self.device_name))
+            return False
+
+        try:
+            level = self.details['level']
+        except KeyError:
+            logger.debug(
+                'Cannot change fan speed, no level set for {}'.format(
+                    self.device_name))
+            return False
+
         body = helpers.req_body(self.manager, 'devicestatus')
         body['uuid'] = self.uuid
         head = helpers.req_headers(self.manager)
-        if self.mode != 'manual':
-            self.mode_toggle('manual')
-        else:
-            level = self.details.get('level', int(0))
-            if speed is not None:
-                if speed == level:
-                    return False
-                elif speed in [1, 2, 3]:
-                    body['level'] = speed
-            else:
-                if (level + 1) > 3:
-                    body['level'] = 1
-                else:
-                    body['level'] = int(level + 1)
-
-            r, _ = helpers.call_api(
-                '/131airPurifier/v1/device/updateSpeed',
-                'put',
-                json=body,
-                headers=head
-            )
-
-            if r is not None and helpers.check_response(r, 'airpur_status'):
-                self.details['level'] = body['level']
+        if speed is not None:
+            if speed == level:
                 return True
+            elif speed in [1, 2, 3]:
+                body['level'] = speed
             else:
-                logger.warning(
-                    'Error changing {} speed'.format(self.device_name))
+                logger.debug(
+                    'Invalid fan speed for {}'.format(self.device_name))
                 return False
+        else:
+            if (level + 1) > 3:
+                body['level'] = 1
+            else:
+                body['level'] = int(level + 1)
+
+        r, _ = helpers.call_api(
+            '/131airPurifier/v1/device/updateSpeed',
+            'put',
+            json=body,
+            headers=head
+        )
+
+        if r is not None and helpers.check_response(r, 'airpur_status'):
+            self.details['level'] = body['level']
+            return True
+        else:
+            logger.warning(
+                'Error changing {} speed'.format(self.device_name))
+            return False
 
     def mode_toggle(self, mode: str) -> bool:
         """Set mode to manual, auto or sleep"""
