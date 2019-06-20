@@ -55,11 +55,13 @@ class VeSyncFanHA(FanEntity):
     @property
     def speed(self):
         """Return the current speed."""
-        current_level = self.smartfan.fan_level
-        if current_level is not None:
-            return FAN_SPEEDS[current_level]
-        else:
-            return None
+        if self.smartfan.mode == "auto":
+            return "auto"
+        if self.smartfan.mode == "manual":
+            current_level = self.smartfan.fan_level
+            if current_level is not None:
+                return FAN_SPEEDS[current_level]
+        return None
 
     @property
     def speed_list(self):

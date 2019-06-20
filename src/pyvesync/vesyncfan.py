@@ -177,6 +177,7 @@ class VeSyncAir131(VeSyncBaseDevice):
         body = helpers.req_body(self.manager, 'devicestatus')
         body['uuid'] = self.uuid
         if mode != self.mode and mode in ['sleep', 'auto', 'manual']:
+            body["mode"] = mode
             if mode == 'manual':
                 body['level'] = 1
 
