@@ -78,6 +78,17 @@ class VeSyncFanHA(FanEntity):
         """Return the name of the fan."""
         return self.smartfan.device_name
 
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the fan."""
+        attr = {}
+        attr['mode'] = self.smartfan.mode
+        attr['active_time'] = self.smartfan.active_time
+        attr['filter_life'] = self.smartfan.filter_life
+        attr['air_quality'] = self.smartfan.air_quality
+        attr['screen_status'] = self.smartfan.screen_status
+        return attr
+
     def set_speed(self, speed):
         if speed is None or speed == "auto":
             self.smartfan.auto_mode()
