@@ -39,5 +39,6 @@ def setup(hass, config):
     }
 
     discovery.load_platform(hass, 'switch', DOMAIN, {}, config)
+    discovery.load_platform(hass, 'fan', DOMAIN, {}, config)
 
     return True
