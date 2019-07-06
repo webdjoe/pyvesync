@@ -4,7 +4,7 @@ import re
 from itertools import chain
 from pyvesync.helpers import Helpers as helpers
 from pyvesync.vesyncoutlet import (VeSyncOutlet7A, VeSyncOutlet10A,
-                                   VeSyncOutlet15A)
+                                   VeSyncOutlet15A, VeSyncOutdoorPlug)
 from pyvesync.vesyncswitch import VeSyncWallSwitch
 from pyvesync.vesyncfan import VeSyncAir131
 
@@ -17,6 +17,7 @@ DEFAULT_ENER_UP_INT = 21600
 
 
 class VSFactory(object):
+
     @staticmethod
     def getDevice(device_type, config, manager):
         if device_type == 'wifi-switch-1.3':
@@ -29,6 +30,8 @@ class VSFactory(object):
             return VeSyncWallSwitch(config, manager)
         elif device_type == 'LV-PUR131S':
             return VeSyncAir131(config, manager)
+        elif device_type == 'ESO15-TB':
+            return VeSyncOutdoorPlug(config, manager)
         else:
             logger.debug('Unknown device found - ' + device_type)
 
@@ -64,18 +67,18 @@ class VeSync(object):
 
     @property
     def energy_update_interval(self) -> int:
-        """Return energy update interval"""
+        """Return energy update interval."""
         return self._energy_update_interval
 
     @energy_update_interval.setter
     def energy_update_interval(self, new_energy_update):
-        """"Set energy update interval in seconds"""
+        """"Set energy update interval in seconds."""
         if new_energy_update > 0:
             self._energy_update_interval = new_energy_update
 
     @staticmethod
     def remove_dev_test(device, new_list):
-        """Tests if device should be removed - False = Remove"""
+        """Tests if device should be removed - False = Remove."""
         if isinstance(new_list, list) and device.cid:
             for item in new_list:
                 device_found = False
@@ -98,7 +101,8 @@ class VeSync(object):
             devices = [self.outlets, self.bulbs, self.switches, self.fans]
             was_found = False
             for dev in chain(*devices):
-                if dev.cid == new_dev['cid']:
+                if dev.cid == new_dev['cid'] and\
+                        new_dev.get('subDeviceNo', 0) == dev.sub_device_no:
                     was_found = True
                     break
             if not was_found:
@@ -114,11 +118,12 @@ class VeSync(object):
         fans = []
         bulbs = []
 
-        outlet_types = ['wifi-switch-1.3', 'ESW03-USA',
-                        'ESW01-EU', 'ESW15-USA']
+        outlet_types = [
+            'wifi-switch-1.3', 'ESW03-USA', 'ESW01-EU', 'ESW15-USA', 'ESO15-TB'
+        ]
         switch_types = ['ESWL01', 'ESWL03']
         fan_types = ['LV-PUR131S']
-        # bulb_types = ['ESL100']
+        bulb_types = ['ESL100']
 
         num_devices = len(self.outlets) + len(self.switches) + len(self.fans) \
             + len(self.bulbs)
@@ -137,10 +142,12 @@ class VeSync(object):
                 x, devices)]
             for dev in self.fans:
                 logger.debug('Fans Updated - ' + dev)
+
             self.switches[:] = [x for x in self.switches if
                                 self.remove_dev_test(x, devices)]
             for dev in self.switches:
                 logger.debug('Switches Updated - ' + dev)
+
             self.bulbs[:] = [x for x in self.switches if self.remove_dev_test(
                 x, devices)]
             for dev in self.bulbs:
@@ -158,8 +165,8 @@ class VeSync(object):
                     fans.append(VSFactory.getDevice(devType, dev, self))
                 elif devType in switch_types:
                     switches.append(VSFactory.getDevice(devType, dev, self))
-                # elif devType in bulb_types:
-                #    bulbs.append(VSFactory.getDevice(devType, dev, self))
+                elif devType in bulb_types:
+                    bulbs.append(VSFactory.getDevice(devType, dev, self))
                 else:
                     logger.warning('Unknown device ' + devType)
             else:

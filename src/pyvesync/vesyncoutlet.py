@@ -1,6 +1,7 @@
-from abc import ABCMeta, abstractmethod
 import logging
 import time
+from abc import ABCMeta, abstractmethod
+
 from pyvesync.helpers import Helpers as helpers
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 
@@ -478,3 +479,118 @@ class VeSyncOutlet15A(VeSyncOutlet):
         )
 
         return helpers.check_response(response, '15a_ntlight')
+
+
+class VeSyncOutdoorPlug(VeSyncOutlet):
+    """Class to hold VeSync outdoor outlets."""
+    def __init__(self, details, manager):
+        super(VeSyncOutdoorPlug, self).__init__(details, manager)
+
+    def get_details(self):
+        body = helpers.req_body(self.manager, 'devicedetail')
+        body['uuid'] = self.uuid
+        r, _ = helpers.call_api(
+            '/outdoorsocket15a/v1/device/devicedetail',
+            'post',
+            headers=helpers.req_headers(self.manager),
+            json=body)
+
+        if helpers.check_response(r, 'outdoor_detail'):
+            self.details = helpers.build_details_dict(r)
+            self.connection_status = r.get('connectionStatus')
+            logger.debug(self.sub_device_no)
+            dev_no = self.sub_device_no
+            sub_device_list = r.get('subDevices')
+            if sub_device_list and dev_no <= len(sub_device_list):
+                self.device_status = sub_device_list[(dev_no + -1)].get(
+                    'subDeviceStatus')
+        else:
+            logger.debug('Unable to get {} details'.format(self.device_name))
+
+    def get_weekly_energy(self):
+        body = helpers.req_body(self.manager, 'energy_week')
+        body['uuid'] = self.uuid
+
+        response, _ = helpers.call_api(
+            '/outdoorsocket15a/v1/device/energyweek',
+            'post',
+            headers=helpers.req_headers(self.manager),
+            json=body
+            )
+
+        if helpers.check_response(response, 'outdoor_energy'):
+            self.energy['week'] = helpers.build_energy_dict(response)
+        else:
+            logger.debug(
+                'Unable to get {} weekly data'.format(self.device_name)
+            )
+
+    def get_monthly_energy(self):
+        body = helpers.req_body(self.manager, 'energy_week')
+        body['uuid'] = self.uuid
+
+        response, _ = helpers.call_api(
+            '/outdoorsocket15a/v1/device/energymonth',
+            'post',
+            headers=helpers.req_headers(self.manager),
+            json=body
+            )
+
+        if helpers.check_response(response, 'outdoor_energy'):
+            self.energy['month'] = helpers.build_energy_dict(response)
+        else:
+            logger.debug(
+                'Unable to get {} monthly data'.format(self.device_name)
+            )
+
+    def get_yearly_energy(self):
+        body = helpers.req_body(self.manager, 'energy_year')
+        body['uuid'] = self.uuid
+
+        response, _ = helpers.call_api(
+            '/outdoorsocket15a/v1/device/energyyear',
+            'post',
+            headers=helpers.req_headers(self.manager),
+            json=body
+            )
+
+        if helpers.check_response(response, '10a_energy'):
+            self.energy['year'] = helpers.build_energy_dict(response)
+        else:
+            logger.debug(
+                'Unable to get {0} yearly data'.format(self.device_name)
+            )
+
+    def toggle(self, status):
+        """Toggle power for outdoor outlet"""
+        body = helpers.req_body(self.manager, 'devicestatus')
+        body['uuid'] = self.uuid
+        body['status'] = status
+        body['switchNo'] = self.sub_device_no
+
+        response, _ = helpers.call_api(
+            '/outdoorsocket15a/v1/device/devicestatus',
+            'put',
+            headers=helpers.req_headers(self.manager),
+            json=body
+        )
+
+        if helpers.check_response(response, 'outdoor_toggle'):
+            self.device_status = status
+            return True
+        else:
+            logger.warning(
+                'Error turning {} {}'.format(self.device_name, status))
+            return False
+
+    def turn_on(self):
+        if self.toggle('on'):
+            return True
+        else:
+            return False
+
+    def turn_off(self):
+        if self.toggle('off'):
+            return True
+        else:
+            return False

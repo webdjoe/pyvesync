@@ -28,24 +28,33 @@ class VeSyncBaseDevice(object):
             self.speed = details.get('speed', None)
             self.extension = details.get('extension', None)
             self.current_firm_version = details.get('currentFirmVersion', None)
+            self.sub_device_no = details.get('subDeviceNo', None)
 
         else:
             logger.error('No cid found for ' + self.__class__.__name__)
 
     def __eq__(self, other):
-        return other.cid == self.cid
+        if other.cid == self.cid and other.sub_device_no == self.sub_device_no:
+            return True
+        else:
+            return False
 
     def __hash__(self):
-        return hash(self.cid)
+        if isinstance(self.sub_device_no, int) and self.sub_device_no > 0:
+            return hash(self.cid + str(self.sub_device_no))
+        else:
+            return hash(self.cid)
 
     def __str__(self):
-        return "Device Name: {}, Device Type: {}, Status: {}".format(
-            self.device_name, self.device_type, self.device_status)
+        return "Device Name: {}, Device Type: {},\
+            SubDevice No.: {} Status: {}".format(
+            self.device_name, self.device_type, self.sub_device_no,
+            self.device_status)
 
     def __repr__(self):
-        return "DevClass: {}, Name:{}, DevStatus: {}, CID: {}" \
+        return "DevClass: {}, Name:{}, Device No: {}, DevStatus: {}, CID: {}"\
             .format(self.__class__.__name__, self.device_name,
-                    self.device_status, self.cid)
+                    self.sub_device_no, self.device_status, self.cid)
 
     @property
     def is_on(self) -> bool:
@@ -59,6 +68,7 @@ class VeSyncBaseDevice(object):
         disp = [
             ('Device Name:', self.device_name),
             ('Model: ', self.device_type),
+            ('Subdevice No: ', self.sub_device_no)
             ('Status: ', self.device_status),
             ('Online: ', self.connection_status),
             ('Type: ', self.type),
@@ -68,4 +78,4 @@ class VeSyncBaseDevice(object):
             disp.append(('UUID: ', self.uuid))
         disp1 = collections.OrderedDict(disp)
         for k, v in disp1.items():
-            print("{:.<15} {:<15}".format(k, v))
+            print("{:.<17} {:<17}".format(k, v))

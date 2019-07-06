@@ -172,10 +172,11 @@ class Helpers:
             'get_devices', '15a_toggle',
             '15a_energy', 'walls_detail', 'walls_toggle',
             '10a_toggle', '10a_energy', '15a_ntlight',
-            'airpur_detail', 'airpur_status'
+            'airpur_detail', 'airpur_status', 'outdoor_toggle',
+            'outdoor_energy'
         ]
 
-        det_resp = ['15a_detail', '10a_detail']
+        det_resp = ['15a_detail', '10a_detail', 'outdoor_detail']
 
         if isinstance(resp, dict):
             if call in det_resp:
