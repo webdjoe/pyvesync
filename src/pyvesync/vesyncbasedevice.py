@@ -68,7 +68,7 @@ class VeSyncBaseDevice(object):
         disp = [
             ('Device Name:', self.device_name),
             ('Model: ', self.device_type),
-            ('Subdevice No: ', self.sub_device_no)
+            ('Subdevice No: ', self.sub_device_no),
             ('Status: ', self.device_status),
             ('Online: ', self.connection_status),
             ('Type: ', self.type),
@@ -78,4 +78,4 @@ class VeSyncBaseDevice(object):
             disp.append(('UUID: ', self.uuid))
         disp1 = collections.OrderedDict(disp)
         for k, v in disp1.items():
-            print("{:.<17} {:<17}".format(k, v))
+            print("{:.<15} {:<15}".format(k, v))

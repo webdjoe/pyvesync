@@ -7,6 +7,7 @@ from pyvesync.vesyncoutlet import (VeSyncOutlet7A, VeSyncOutlet10A,
                                    VeSyncOutlet15A, VeSyncOutdoorPlug)
 from pyvesync.vesyncswitch import VeSyncWallSwitch
 from pyvesync.vesyncfan import VeSyncAir131
+from pyvesync.vesyncbulb import VeSyncBulbESL100
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +33,8 @@ class VSFactory(object):
             return VeSyncAir131(config, manager)
         elif device_type == 'ESO15-TB':
             return VeSyncOutdoorPlug(config, manager)
+        elif device_type == 'ESL100':
+            return VeSyncBulbESL100(config, manager)
         else:
             logger.debug('Unknown device found - ' + device_type)
 
@@ -136,22 +139,22 @@ class VeSync(object):
             self.outlets[:] = [x for x in self.outlets if self.remove_dev_test(
                 x, devices)]
             for dev in self.outlets:
-                logger.debug('Outlets updated - ' + dev)
+                logger.debug('Outlets updated - ' + str(dev))
 
             self.fans[:] = [x for x in self.fans if self.remove_dev_test(
                 x, devices)]
             for dev in self.fans:
-                logger.debug('Fans Updated - ' + dev)
+                logger.debug('Fans Updated - ' + str(dev))
 
             self.switches[:] = [x for x in self.switches if
                                 self.remove_dev_test(x, devices)]
             for dev in self.switches:
-                logger.debug('Switches Updated - ' + dev)
+                logger.debug('Switches Updated - ' + str(dev))
 
-            self.bulbs[:] = [x for x in self.switches if self.remove_dev_test(
+            self.bulbs[:] = [x for x in self.bulbs if self.remove_dev_test(
                 x, devices)]
             for dev in self.bulbs:
-                logger.debug('Bulbs - ' + dev)
+                logger.debug('Bulbs - ' + str(dev))
 
             devices[:] = [x for x in devices if self.add_dev_test(x)]
 
@@ -170,7 +173,7 @@ class VeSync(object):
                 else:
                     logger.warning('Unknown device ' + devType)
             else:
-                logger.error('Details keys not found {}'.format(dev))
+                logger.error('Details keys not found {}'.format(str(dev)))
 
         return outlets, switches, fans, bulbs
 

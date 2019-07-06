@@ -2,6 +2,7 @@ from .vesync import VeSync
 from .vesyncoutlet import VeSyncOutlet10A, VeSyncOutlet15A, VeSyncOutlet7A
 from .vesyncswitch import VeSyncWallSwitch
 from .vesyncfan import VeSyncAir131
+from .vesyncbulb import VeSyncBulbESL100
 
 import logging
 

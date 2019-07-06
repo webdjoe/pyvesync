@@ -55,7 +55,6 @@ class TestVesync10ASwitch(object):
         outlet = VeSyncOutlet10A(DEV_LIST_DETAIL_US, self.vesync_obj)
         outlet.get_details()
         dev_details = outlet.details
-        outlet.display()
         assert outlet.device_status == 'on'
         assert type(dev_details) == dict
         assert dev_details['active_time'] == 1

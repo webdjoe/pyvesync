@@ -173,7 +173,7 @@ class Helpers:
             '15a_energy', 'walls_detail', 'walls_toggle',
             '10a_toggle', '10a_energy', '15a_ntlight',
             'airpur_detail', 'airpur_status', 'outdoor_toggle',
-            'outdoor_energy'
+            'outdoor_energy', 'bulb_detail', 'bulb_toggle'
         ]
 
         det_resp = ['15a_detail', '10a_detail', 'outdoor_detail']
