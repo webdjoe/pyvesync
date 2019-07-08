@@ -1,10 +1,8 @@
 import logging
-from unittest.mock import patch, Mock
+from unittest.mock import patch
 
 import pytest
-import pyvesync
 from pyvesync import VeSync, VeSyncBulbESL100
-from pyvesync.helpers import Helpers as helpers
 
 from . import call_json
 
@@ -13,6 +11,7 @@ DEV_LIST = call_json.DEVLIST_ESL100
 DEV_LIST_DETAIL = call_json.LIST_CONF_ESL100
 
 DEVICE_DETAILS = call_json.DETAILS_ESL100
+
 
 class TestVeSyncBulbESL100:
     @pytest.fixture()
