@@ -97,7 +97,6 @@ class VeSyncBulbESL100(VeSyncBulb):
             )
         if helpers.check_response(r, 'bulb_detail'):
             self.brightness = r.get('brightNess')
-            self.device_status = r.get('deviceStatus')
             self.connection_status = r.get('connectionStatus')
             self.device_status = r.get('deviceStatus')
         else:
