@@ -8,3 +8,5 @@ src/pyvesync.egg-info/*
 htmlcov
 .pytest_cache
 *__pycache__
+cov_html/*
+cov_html

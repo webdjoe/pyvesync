@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 # Possible features - dimmable, color_temp, rgb_shift
 feature_dict = {
-    'ESWL100': ['dimmable']
+    'ESL100': ['dimmable']
 }
 
 
@@ -18,6 +18,7 @@ class VeSyncBulb(VeSyncBaseDevice):
 
     def __init__(self, details, manager):
         super(VeSyncBulb, self).__init__(details, manager)
+        self.brightness = None
 
     @property
     def dimmable_feature(self):
@@ -73,9 +74,10 @@ class VeSyncBulb(VeSyncBaseDevice):
 
     def display(self):
         super(VeSyncBulb, self).display()
-        disp1 = [("Brightness: ", self.brightness, "%")]
-        for line in disp1:
-            print("{:.<15} {} {}".format(line[0], line[1], line[2]))
+        if self.connection_status == 'online':
+            disp1 = [("Brightness: ", self.brightness, "%")]
+            for line in disp1:
+                print("{:.<17} {} {}".format(line[0], line[1], line[2]))
 
 
 class VeSyncBulbESL100(VeSyncBulb):
@@ -97,6 +99,7 @@ class VeSyncBulbESL100(VeSyncBulb):
             self.brightness = r.get('brightNess')
             self.device_status = r.get('deviceStatus')
             self.connection_status = r.get('connectionStatus')
+            self.device_status = r.get('deviceStatus')
         else:
             logger.debug('Error getting {} details'.format(self.device_name))
 
@@ -138,3 +141,6 @@ class VeSyncBulbESL100(VeSyncBulb):
                     'Error setting brightness for {}'.format(
                         self.device_name))
                 return False
+        else:
+            logger.warning('Invalid brightness')
+            return False

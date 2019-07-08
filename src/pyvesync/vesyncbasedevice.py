@@ -16,7 +16,6 @@ class VeSyncBaseDevice(object):
             self.device_name = details.get('deviceName', None)
             self.device_image = details.get('deviceImg', None)
             self.cid = details.get('cid', None)
-            self.device_status = details.get('deviceStatus', None)
             self.connection_status = details.get('connectionStatus', None)
             self.connection_type = details.get('connectionType', None)
             self.device_type = details.get('deviceType', None)
@@ -28,7 +27,11 @@ class VeSyncBaseDevice(object):
             self.speed = details.get('speed', None)
             self.extension = details.get('extension', None)
             self.current_firm_version = details.get('currentFirmVersion', None)
-            self.sub_device_no = details.get('subDeviceNo', None)
+            self.sub_device_no = details.get('subDeviceNo', 0)
+            if self.connection_status is not 'online':
+                self.device_status = 'off'
+            else:
+                self.device_status = details.get('deviceStatus', None)
 
         else:
             logger.error('No cid found for ' + self.__class__.__name__)
@@ -68,7 +71,7 @@ class VeSyncBaseDevice(object):
         disp = [
             ('Device Name:', self.device_name),
             ('Model: ', self.device_type),
-            ('Subdevice No: ', self.sub_device_no),
+            ('Subdevice No: ', str(self.sub_device_no)),
             ('Status: ', self.device_status),
             ('Online: ', self.connection_status),
             ('Type: ', self.type),

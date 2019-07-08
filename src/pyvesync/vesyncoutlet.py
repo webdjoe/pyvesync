@@ -526,7 +526,7 @@ class VeSyncOutdoorPlug(VeSyncOutlet):
             )
 
     def get_monthly_energy(self):
-        body = helpers.req_body(self.manager, 'energy_week')
+        body = helpers.req_body(self.manager, 'energy_month')
         body['uuid'] = self.uuid
 
         response, _ = helpers.call_api(

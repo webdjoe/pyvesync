@@ -90,7 +90,7 @@ class VeSync(object):
                         device_found = True
                         break
                 else:
-                    logger.error('No cid found in - ' + item)
+                    logger.error('No cid found in - ' + str(item))
             if not device_found:
                 logger.debug("Device removed - {} - {}".format(
                     device.device_name, device.device_type))
@@ -104,7 +104,7 @@ class VeSync(object):
             devices = [self.outlets, self.bulbs, self.switches, self.fans]
             was_found = False
             for dev in chain(*devices):
-                if dev.cid == new_dev['cid'] and\
+                if dev.cid == new_dev.get('cid') and\
                         new_dev.get('subDeviceNo', 0) == dev.sub_device_no:
                     was_found = True
                     break
