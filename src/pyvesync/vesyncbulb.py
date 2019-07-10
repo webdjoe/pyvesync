@@ -18,7 +18,12 @@ class VeSyncBulb(VeSyncBaseDevice):
 
     def __init__(self, details, manager):
         super(VeSyncBulb, self).__init__(details, manager)
-        self.brightness = None
+        self._brightness = None
+
+    @property
+    def brightness(self):
+        """Return brightness of vesync bulb."""
+        return self._brightness
 
     @property
     def dimmable_feature(self):
@@ -96,7 +101,7 @@ class VeSyncBulbESL100(VeSyncBulb):
             json=body
             )
         if helpers.check_response(r, 'bulb_detail'):
-            self.brightness = r.get('brightNess')
+            self._brightness = r.get('brightNess')
             self.connection_status = r.get('connectionStatus')
             self.device_status = r.get('deviceStatus')
         else:
@@ -121,25 +126,28 @@ class VeSyncBulbESL100(VeSyncBulb):
 
     def set_brightness(self, brightness: int):
         """Set brightness of vesync bulb"""
-        if brightness > 0 and brightness <= 100:
-            body = helpers.req_body(self.manager, 'devicestatus')
-            body['uuid'] = self.uuid
-            body['status'] = 'on'
-            body['brightNess'] = str(brightness)
-            r, _ = helpers.call_api(
-                '/SmartBulb/v1/device/updateBrightness',
-                'put',
-                headers=helpers.req_headers(self.manager),
-                json=body)
+        if self.dimmable_feature:
+            if brightness > 0 and brightness <= 100:
+                body = helpers.req_body(self.manager, 'devicestatus')
+                body['uuid'] = self.uuid
+                body['status'] = 'on'
+                body['brightNess'] = str(brightness)
+                r, _ = helpers.call_api(
+                    '/SmartBulb/v1/device/updateBrightness',
+                    'put',
+                    headers=helpers.req_headers(self.manager),
+                    json=body)
 
-            if helpers.check_response(r, 'bulb_toggle'):
-                self.brightness = brightness
-                return True
+                if helpers.check_response(r, 'bulb_toggle'):
+                    self.brightness = brightness
+                    return True
+                else:
+                    logger.warning(
+                        'Error setting brightness for {}'.format(
+                            self.device_name))
+                    return False
             else:
-                logger.warning(
-                    'Error setting brightness for {}'.format(
-                        self.device_name))
+                logger.warning('Invalid brightness')
                 return False
         else:
-            logger.warning('Invalid brightness')
-            return False
+            logger.debug('{} is not dimmable - ', self.device_name)
