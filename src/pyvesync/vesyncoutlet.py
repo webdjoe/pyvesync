@@ -498,7 +498,7 @@ class VeSyncOutdoorPlug(VeSyncOutlet):
         if helpers.check_response(r, 'outdoor_detail'):
             self.details = helpers.build_details_dict(r)
             self.connection_status = r.get('connectionStatus')
- 
+
             dev_no = self.sub_device_no
             sub_device_list = r.get('subDevices')
             if sub_device_list and dev_no <= len(sub_device_list):
