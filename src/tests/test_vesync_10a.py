@@ -64,7 +64,7 @@ class TestVesync10ASwitch(object):
         assert outlet.power == 1
         assert outlet.voltage == 1
 
-    def test_15a_details_fail(self, caplog, api_mock):
+    def test_10a_details_fail(self, caplog, api_mock):
         """Test 10A get_details with Code>0"""
         self.mock_api.return_value = BAD_10A_LIST
         out = VeSyncOutlet10A(DEV_LIST_DETAIL_EU, self.vesync_obj)

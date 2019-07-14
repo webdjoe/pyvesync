@@ -23,7 +23,8 @@ class VeSyncBulb(VeSyncBaseDevice):
     @property
     def brightness(self):
         """Return brightness of vesync bulb."""
-        return self._brightness
+        if self.dimmable_feature:
+            return self._brightness
 
     @property
     def dimmable_feature(self):
@@ -80,7 +81,8 @@ class VeSyncBulb(VeSyncBaseDevice):
     def display(self):
         super(VeSyncBulb, self).display()
         if self.connection_status == 'online':
-            disp1 = [("Brightness: ", self.brightness, "%")]
+            if self.dimmable_feature:
+                disp1 = [("Brightness: ", self.brightness, "%")]
             for line in disp1:
                 print("{:.<17} {} {}".format(line[0], line[1], line[2]))
 
@@ -101,9 +103,10 @@ class VeSyncBulbESL100(VeSyncBulb):
             json=body
             )
         if helpers.check_response(r, 'bulb_detail'):
-            self._brightness = r.get('brightNess')
             self.connection_status = r.get('connectionStatus')
             self.device_status = r.get('deviceStatus')
+            if self.dimmable_feature:
+                self._brightness = int(r.get('brightNess'))
         else:
             logger.debug('Error getting {} details'.format(self.device_name))
 
@@ -139,7 +142,7 @@ class VeSyncBulbESL100(VeSyncBulb):
                     json=body)
 
                 if helpers.check_response(r, 'bulb_toggle'):
-                    self.brightness = brightness
+                    self._brightness = brightness
                     return True
                 else:
                     logger.warning(
