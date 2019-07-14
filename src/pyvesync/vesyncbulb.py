@@ -145,7 +145,7 @@ class VeSyncBulbESL100(VeSyncBulb):
                     self._brightness = brightness
                     return True
                 else:
-                    logger.warning(
+                    logger.debug(
                         'Error setting brightness for {}'.format(
                             self.device_name))
                     return False
