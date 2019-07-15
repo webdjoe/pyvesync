@@ -54,6 +54,10 @@ class VeSyncOutlet(VeSyncBaseDevice):
     def get_yearly_energy(self):
         """Build Yearly Energy Dictionary"""
 
+    @abstractmethod
+    def get_config(self):
+        """Get configuration and firmware details"""
+
     def update(self):
         """Gets Device Energy and Status"""
         self.get_details()
@@ -211,6 +215,16 @@ class VeSyncOutlet7A(VeSyncOutlet):
             logger.warning('Error turning {} off'.format(self.device_name))
             return False
 
+    def get_config(self):
+        r, _ = helpers.call_api(
+            '/v1/device/' + self.cid + '/configurations',
+            'get',
+            headers=helpers.req_headers(self.manager)
+        )
+
+        if 'currentFirmVersion' in r:
+            self.config = helpers.build_config_dict(r)
+
 
 class VeSyncOutlet10A(VeSyncOutlet):
     def __init__(self, details, manager):
@@ -234,6 +248,21 @@ class VeSyncOutlet10A(VeSyncOutlet):
             self.details = helpers.build_details_dict(r)
         else:
             logger.debug('Unable to get {0} details'.format(self.device_name))
+
+    def get_config(self):
+        body = helpers.req_body(self.manager, 'devicedetail')
+        body['method'] = 'configurations'
+        body['uuid'] = self.uuid
+
+        r, _ = helpers.call_api(
+            '/10a/v1/device/configurations',
+            'post',
+            headers=helpers.req_headers(self.manager),
+            json=body
+        )
+
+        if helpers.check_response(r, 'config'):
+            self.config = helpers.build_config_dict(r)
 
     def get_weekly_energy(self):
         body = helpers.req_body(self.manager, 'energy_week')
@@ -357,6 +386,21 @@ class VeSyncOutlet15A(VeSyncOutlet):
             logger.debug(
                 'Unable to get {0} details'.format(self.device_name)
             )
+
+    def get_config(self):
+        body = helpers.req_body(self.manager, 'devicedetail')
+        body['method'] = 'configurations'
+        body['uuid'] = self.uuid
+
+        r, _ = helpers.call_api(
+            '/15a/v1/device/configurations',
+            'post',
+            headers=helpers.req_headers(self.manager),
+            json=body
+        )
+
+        if helpers.check_response(r, 'config'):
+            self.config = helpers.build_config_dict(r)
 
     def get_weekly_energy(self):
         body = helpers.req_body(self.manager, 'energy_week')
@@ -506,6 +550,21 @@ class VeSyncOutdoorPlug(VeSyncOutlet):
                     'subDeviceStatus')
         else:
             logger.debug('Unable to get {} details'.format(self.device_name))
+
+    def get_config(self):
+        body = helpers.req_body(self.manager, 'devicedetail')
+        body['method'] = 'configurations'
+        body['uuid'] = self.uuid
+
+        r, _ = helpers.call_api(
+            '/outdoorsocket15a/v1/device/configurations',
+            'post',
+            headers=helpers.req_headers(self.manager),
+            json=body
+        )
+
+        if helpers.check_response(r, 'config'):
+            self.config = helpers.build_config_dict(r)
 
     def get_weekly_energy(self):
         body = helpers.req_body(self.manager, 'energy_week')

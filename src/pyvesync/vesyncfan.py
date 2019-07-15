@@ -37,6 +37,20 @@ class VeSyncAir131(VeSyncBaseDevice):
         else:
             logger.debug('Error getting {} details'.format(self.device_name))
 
+    def get_config(self):
+        body = helpers.req_body(self.manager, 'devicedetail')
+        body['method'] = 'configurations'
+        body['uuid'] = self.uuid
+
+        r, _ = helpers.call_api(
+            '/131airpurifier/v1/device/configurations',
+            'post',
+            headers=helpers.req_headers(self.manager),
+            json=body)
+
+        if helpers.check_response(r, 'config'):
+            self.config = helpers.build_config_dict(r)
+
     @property
     def active_time(self):
         """Return total time active"""

@@ -28,6 +28,7 @@ class VeSyncBaseDevice(object):
             self.extension = details.get('extension', None)
             self.current_firm_version = details.get('currentFirmVersion', None)
             self.sub_device_no = details.get('subDeviceNo', 0)
+            self.config = {}
             if self.connection_status is not 'online':
                 self.device_status = 'off'
             else:
@@ -64,8 +65,21 @@ class VeSyncBaseDevice(object):
         """Returns whether device is on"""
         if self.device_status == 'on':
             return True
-
         return False
+
+    @property
+    def firmware_update(self) -> bool:
+        """Return True if firmware update available"""
+        cfv = self.config.get('current_firmware_version')
+        lfv = self.config.get('latest_firmware_version')
+        if cfv is not None and lfv is not None:
+            if cfv != lfv:
+                return True
+            else:
+                return False
+        else:
+            logger.warning(
+                'Call device.get_config() to get firmware versions')
 
     def display(self):
         disp = [

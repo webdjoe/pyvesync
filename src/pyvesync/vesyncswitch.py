@@ -32,6 +32,10 @@ class VeSyncSwitch(VeSyncBaseDevice):
     def turn_off(self):
         """Turn switch off"""
 
+    @abstractmethod
+    def get_config(self):
+        """Get configuration and firmware deatils"""
+
     @property
     def active_time(self):
         """Get active time of switch"""
@@ -64,6 +68,20 @@ class VeSyncWallSwitch(VeSyncSwitch):
                                            self.connection_status)
         else:
             logger.debug('Error getting {} details'.format(self.device_name))
+
+    def get_config(self):
+        body = helpers.req_body(self.manager, 'devicedetail')
+        body['method'] = 'configurations'
+        body['uuid'] = self.uuid
+
+        r, _ = helpers.call_api(
+            '/inwallswitch/v1/device/configurations',
+            'post',
+            headers=helpers.req_headers(self.manager),
+            json=body)
+
+        if helpers.check_response(r, 'config'):
+            self.config = helpers.build_config_dict(r)
 
     def turn_off(self):
         body = helpers.req_body(self.manager, 'devicestatus')

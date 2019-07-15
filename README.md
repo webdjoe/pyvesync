@@ -95,6 +95,10 @@ for s in manager.outlets:
 
 `VeSyncDevice.active_time` - Return active time of the device in minutes
 
+`VeSyncDevice.get_config()` - Retrieve Configuration data such as firmware version for device and store in the `VeSyncDevice.config` dictionary
+
+`VeSyncDevice.firmware_update` - Return true if Firmware has update available. `VeSyncDevice.get_config()` must be called first
+
 ### Outlet Specific Energy API
 
 `VeSyncOutlet.update_energy(bypass_check=False)` - Get outlet energy history - Builds week, month and year nested energy dictionary. Set `bypass_check=True` to disable the library from checking the update interval
