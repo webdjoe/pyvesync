@@ -51,7 +51,6 @@ class TestVesync15ASwitch(object):
         vswitch15a = VeSyncOutlet15A(DEV_LIST_DETAIL, self.vesync_obj)
         vswitch15a.get_details()
         dev_details = vswitch15a.details
-        vswitch15a.display()
         assert vswitch15a.device_status == 'on'
         assert type(dev_details) == dict
         assert dev_details['active_time'] == 1

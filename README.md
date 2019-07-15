@@ -16,8 +16,10 @@ pip install pyvesync
 2. Etekcity Voltson Smart WiFi Outlet (10A model ESW01-EU)
 3. Etekcity Voltson Smart Wifi Outlet (10A model ESW03-USA)
 4. Etekcity Voltson Smart WiFi Outlet (15A model ESW15-USA)
-5. Etekcity Smart WiFi Light Switch (model ESWL01)
-6. Levoit Smart Wifi Air Purifier (LV-PUR131S)
+5. Etekcity Two Plug Outdoor Outlet (ESO15-TB) (Each plug is a separate object, energy readings are for both plugs combined)
+6. Etekcity Smart WiFi Light Switch (model ESWL01)
+7. Levoit Smart Wifi Air Purifier (LV-PUR131S)
+8. Etekcity Soft White Dimmable Smart Bulb (ESL100)
 
 ## Usage
 
@@ -55,6 +57,7 @@ The time zone determines how the energy history is generated for the smart outle
 manager.outlets = [VeSyncOutletObjects]
 manager.switches = [VeSyncSwitchObjects]
 manager.fans = [VeSyncFanObjects]
+manger.bulbs = [VeSyncBulbObjects]
 ```
 
 If outlets are going to be continuously polled, a custom energy update interval can be set - The default is 6 hours (21600 seconds)
@@ -91,6 +94,10 @@ for s in manager.outlets:
 `VeSyncDevice.update()` - Fetch updated information about device
 
 `VeSyncDevice.active_time` - Return active time of the device in minutes
+
+`VeSyncDevice.get_config()` - Retrieve Configuration data such as firmware version for device and store in the `VeSyncDevice.config` dictionary
+
+`VeSyncDevice.firmware_update` - Return true if Firmware has update available. `VeSyncDevice.get_config()` must be called first
 
 ### Outlet Specific Energy API
 
@@ -133,6 +140,10 @@ The rectangular smart switch model supports some additional functionality on top
 
 `VeSyncFan.screen_status` - Get Status of screen on/off
 
+### Smart Light Bulb API
+
+`VeSyncBulb.set_brightness(brightness)` - Set bulb brightness values from 1 - 100
+
 ## Notes
 
 More detailed data is available within the `VesyncOutlet` by inspecting the `VesyncOutlet.energy` dictionary.
@@ -169,6 +180,7 @@ The `custom_components` directory should include the following files:
 ```bash
 custom_components/vesync/__init__.py
 custom_components/vesync/switch.py
+custom_components/vesync/fan.py
 custom_components/vesync/manifest.json
 ```
 

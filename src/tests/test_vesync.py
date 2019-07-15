@@ -1,6 +1,8 @@
-from unittest import mock
-from unittest.mock import patch
 import unittest
+import logging
+from unittest import mock
+from unittest.mock import patch, Mock
+
 from pyvesync import VeSync
 from pyvesync.helpers import Helpers
 
@@ -16,8 +18,7 @@ def mocked_req_post(*args, **kwargs):
             '{"traceId": "", "msg": "", "result": {"accountID": "12346536, \
                 "avatarIcon": "", "acceptLanguage": "", "gdprStatus": true, \
                     "nickName": "mynickname", "userType": "1", \
-                        "token": "somevaluehere"}, "code": 0 }',
-            200)
+                        "token": "somevaluehere"}, "code": 0 }', 200)
     elif args[
             0] == 'https://smartapi.vesync.com/cloud/v1/deviceManaged/devices':
         return MockResponse({"key2": "value2"}, 200)
@@ -96,6 +97,57 @@ class TestVesync(unittest.TestCase):
                                            'post',
                                            json=body)
             self.assertTrue(data)
+
+
+class TestApiFunc:
+    @patch('pyvesync.helpers.requests.get', autospec=True)
+    def test_api_get(self, get_mock):
+        """Test get api call."""
+        get_mock.return_value = Mock(ok=True, status_code=200)
+        get_mock.return_value.json.return_value = {'code': 0}
+
+        mock_return = Helpers.call_api('/call/location', method='get')
+
+        assert mock_return == ({'code': 0}, 200)
+
+    @patch('pyvesync.helpers.requests.post', autospec=True)
+    def test_api_post(self, post_mock):
+        """Test post api call."""
+        post_mock.return_value = Mock(ok=True, status_code=200)
+        post_mock.return_value.json.return_value = {'code': 0}
+
+        mock_return = Helpers.call_api('/call/location', method='post')
+
+        assert mock_return == ({'code': 0}, 200)
+
+    @patch('pyvesync.helpers.requests.put', autospec=True)
+    def test_api_put(self, put_mock):
+        """Test put api call."""
+        put_mock.return_value = Mock(ok=True, status_code=200)
+        put_mock.return_value.json.return_value = {'code': 0}
+
+        mock_return = Helpers.call_api('/call/location', method='put')
+
+        assert mock_return == ({'code': 0}, 200)
+
+    @patch('pyvesync.helpers.requests.get', autospec=True)
+    def test_api_bad_response(self, api_mock):
+        api_mock.return_value = Mock(ok=True, status_code=500)
+        api_mock.return_value.json.return_value = {}
+
+        mock_return = Helpers.call_api('/call/location', method='get')
+
+        assert mock_return == (None, None)
+
+    @patch('pyvesync.helpers.requests.get', autospec=True)
+    def test_api_exception(self, api_mock, caplog):
+        caplog.set_level(logging.DEBUG)
+        api_mock.return_value.raiseError.side_effect = Mock(
+            side_effect=Exception)
+
+        Helpers.call_api('/call/location', method='get')
+
+        assert len(caplog.records) == 2
 
     # @mock.patch('pyvesync.helpers.Helpers.requests.post',
     #   side_effect=mocked_req_post)

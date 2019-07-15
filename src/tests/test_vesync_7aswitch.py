@@ -1,9 +1,11 @@
-import pytest
-from unittest.mock import patch
 import logging
-from pyvesync import VeSync, VeSyncOutlet7A
+from unittest.mock import patch
+
+import pytest
 import pyvesync
+from pyvesync import VeSync, VeSyncOutlet7A
 from pyvesync.helpers import Helpers as helpers
+
 from . import call_json
 
 DEV_LIST_DETAIL = call_json.LIST_CONF_7A

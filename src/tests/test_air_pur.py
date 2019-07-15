@@ -51,7 +51,6 @@ class TestVesyncAirPurifier(object):
         fan = VeSyncAir131(DEV_LIST_DETAIL, self.vesync_obj)
         fan.get_details()
         dev_details = fan.details
-        fan.display()
         assert fan.device_status == 'on'
         assert type(dev_details) == dict
         assert dev_details['active_time'] == 1

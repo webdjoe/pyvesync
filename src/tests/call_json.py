@@ -13,7 +13,7 @@ USER_TYPE = helpers.USER_TYPE
 
 SAMPLE_ACTID = 'sample_id'
 SAMPLE_TOKEN = 'sample_tk'
-TRACE_ID = int(time.time())
+TRACE_ID = str(int(time.time()))
 """
 DEFAULT_BODY = Standard body for new device calls
 DEFAULT_HEADER = standard header for most calls
@@ -29,6 +29,9 @@ LIST_CONF_7A = device list entry for 7A outlet
 LIST_CONF_AIR = device list entry for air purifier
 LIST_CONF_15A = device list entry for 15A outlet
 LIST_CONF_WS = device list entry for wall switch
+LIST_CONF_ESL100 = device list entry for bulb ESL100
+LIST_CONF_OUTDOOR_1 = devlice list entry for outdoor outlet subDevice 1
+LIST_CONF_OUTDOOR_2 = devlice list entry for outdoor outlet subDevice 2
 DEVLIST_ALL = Return tuple for all devices
 DEVLIST_10AEU = device list return for only 10A eu outlet
 DEVLIST_10AUS = device list return for only 10A us outlet
@@ -36,12 +39,17 @@ DEVLIST_7A = device list return for only 7A outlet
 DEVLIST_15A = device list return for only 15A outlet
 DEVLIST_WS = device list return for only wall switch
 DEVLIST_AIR = device list return for just air purifier
+DEVLIST_ESL100 = device list return for just ESL100 bulb
+DEVLIST_OUTDOOR_1 = device list return for outdoor outlet subDevice 1
+DEVLIST_OUTDOOR_2 = device list return for outdoor outlet subDevice 2
 ---------------------------------------------------------
 DETAILS_10A = Return for 10A outlet device details
 DETAILS_15A = Return for 15A outlet device details
 DETAILS_7A = Return for 7A outlet device details
 DETAILS_WS = Return for wall switch device details
 DETAILS_AIR = Return for Air Purifier device details
+DETAILS_ESL100 = Return for ESL100 Bulb device details
+DETAILS_OUTDOOR = return for 2 plug outdoor outlet
 
 """
 
@@ -197,6 +205,63 @@ LIST_CONF_10AUS = {
     "cid": "10A-CID"
 }
 
+LIST_CONF_OUTDOOR_1 = {
+    "deviceRegion": "US",
+    "deviceName": "Outdoor Socket B",
+    "cid": "OUTDOOR-CID",
+    "deviceStatus": "on",
+    "connectionStatus": "online",
+    "connectionType": "wifi",
+    "deviceType": "ESO15-TB",
+    "type": "wifi-switch",
+    "uuid": "UUID",
+    "configModule": "OutdoorSocket15A",
+    "macID": None,
+    "mode": None,
+    "speed": None,
+    "extension": None,
+    "currentFirmVersion": None,
+    "subDeviceNo": 1
+}
+
+LIST_CONF_OUTDOOR_2 = {
+    "deviceRegion": "US",
+    "deviceName": "Outdoor Socket B",
+    "cid": "OUTDOOR-CID",
+    "deviceStatus": "on",
+    "connectionStatus": "online",
+    "connectionType": "wifi",
+    "deviceType": "ESO15-TB",
+    "type": "wifi-switch",
+    "uuid": "UUID",
+    "configModule": "OutdoorSocket15A",
+    "macID": None,
+    "mode": None,
+    "speed": None,
+    "extension": None,
+    "currentFirmVersion": None,
+    "subDeviceNo": 2
+}
+
+LIST_CONF_ESL100 = {
+    "deviceRegion": "US",
+    "deviceName": "Etekcity Soft White Bulb",
+    "cid": "ESL100-CID",
+    "deviceStatus": "on",
+    "connectionStatus": "online",
+    "connectionType": "wifi",
+    "deviceType": "ESL100",
+    "type": "Wifi-light",
+    "uuid": "UUID",
+    "configModule": "WifiSmartBulb",
+    "macID": None,
+    "mode": None,
+    "speed": None,
+    "extension": None,
+    "currentFirmVersion": None,
+    "subDeviceNo": None
+}
+
 LIST_CONF_AIR = {
     "deviceName": "Name Air Purifier",
     "cid": "AIRPUR-CID",
@@ -216,7 +281,8 @@ LIST_CONF_AIR = {
 
 FULL_DEV_LIST = [
     LIST_CONF_10AEU, LIST_CONF_10AUS, LIST_CONF_15A, LIST_CONF_7A,
-    LIST_CONF_AIR, LIST_CONF_WS
+    LIST_CONF_AIR, LIST_CONF_WS, LIST_CONF_ESL100, LIST_CONF_OUTDOOR_1,
+    LIST_CONF_OUTDOOR_2
 ]
 
 
@@ -239,6 +305,15 @@ DEVLIST_10AUS = ({'code': 0, 'result': {'list': [LIST_CONF_10AUS]}}, 200)
 DEVLIST_WS = ({'code': 0, 'result': {'list': [LIST_CONF_WS]}}, 200)
 
 DEVLIST_AIR = ({'code': 0, 'result': {'list': [LIST_CONF_AIR]}}, 200)
+
+DEVLIST_ESL100 = ({'code': 0, 'result': {'list': [LIST_CONF_ESL100]}}, 200)
+
+DEVLIST_OUTDOOR = ({
+    'code': 0,
+    'result': {
+        'list': [LIST_CONF_OUTDOOR_1, LIST_CONF_OUTDOOR_2]
+    }
+}, 200)
 
 
 def get_details_body():
@@ -292,6 +367,43 @@ DETAILS_10A = ({
     "nightLightAutomode": None,
     "power": "1",
     "voltage": "1"
+}, 200)
+
+DETAILS_OUTDOOR = ({
+    "code": 0,
+    "msg": None,
+    "connectionStatus": "online",
+    "activeTime": 1,
+    "energy": 1,
+    "power": "1",
+    "voltage": "1",
+    "deviceStatus": "on",
+    "deviceName": "Etekcity Outdoor Plug",
+    "subDevices": [{
+        "subDeviceNo": 1,
+        "defaultName": "Socket A",
+        "subDeviceName": "Outdoor Socket A",
+        "subDeviceStatus": "on",
+    }, {
+        "subDeviceNo": 2,
+        "defaultName": "Socket B",
+        "subDeviceName": "Outdoor Socket B",
+        "subDeviceStatus": "on",
+    }]
+}, 200)
+
+DETAILS_ESL100 = ({
+    "code": 0,
+    "msg": None,
+    "deviceStatus": "on",
+    "connectionStatus": "online",
+    "name": "Etekcity Soft White Bulb",
+    "brightNess": "1",
+    "timer": None,
+    "away": None,
+    "schedule": None,
+    "ownerShip": "1",
+    "scheduleCount": 0
 }, 200)
 
 DETAILS_AIR = ({

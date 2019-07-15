@@ -51,7 +51,6 @@ class TestVesyncWallSwitch(object):
         wswitch = VeSyncWallSwitch(DEV_LIST_DETAIL, self.vesync_obj)
         wswitch.get_details()
         dev_details = wswitch.details
-        wswitch.display()
         assert wswitch.device_status == 'on'
         assert type(dev_details) == dict
         assert dev_details['active_time'] == 1

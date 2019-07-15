@@ -172,10 +172,11 @@ class Helpers:
             'get_devices', '15a_toggle',
             '15a_energy', 'walls_detail', 'walls_toggle',
             '10a_toggle', '10a_energy', '15a_ntlight',
-            'airpur_detail', 'airpur_status'
+            'airpur_detail', 'airpur_status', 'outdoor_toggle',
+            'outdoor_energy', 'bulb_detail', 'bulb_toggle', 'config'
         ]
 
-        det_resp = ['15a_detail', '10a_detail']
+        det_resp = ['15a_detail', '10a_detail', 'outdoor_detail']
 
         if isinstance(resp, dict):
             if call in det_resp:
@@ -224,7 +225,7 @@ class Helpers:
             return False
 
     @staticmethod
-    def build_details_dict(r):
+    def build_details_dict(r: dict) -> dict:
         return {
             'active_time': r.get('activeTime', 0),
             'energy': r.get('energy', 0),
@@ -236,7 +237,7 @@ class Helpers:
         }
 
     @staticmethod
-    def build_energy_dict(r):
+    def build_energy_dict(r: dict) -> dict:
         return {
             'energy_consumption_of_today': r.get(
                 'energyConsumptionOfToday', 0),
@@ -245,4 +246,15 @@ class Helpers:
             'total_energy': r.get('totalEnergy', 0),
             'currency': r.get('currency', 0),
             'data': r.get('data', 0)
+        }
+
+    @staticmethod
+    def build_config_dict(r: dict) -> dict:
+        return {
+            'current_firmware_version': r.get("currentFirmVersion"),
+            'latest_firmware_version': r.get("latestFirmVersion"),
+            'maxPower': r.get("maxPower"),
+            'threshold': r.get("threshold") or r.get('threshHold'),
+            'power_protection': r.get("powerProtectionStatus"),
+            'energy_saving_status': r.get("energySavingStatus")
         }

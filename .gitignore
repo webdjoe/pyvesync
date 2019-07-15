@@ -5,6 +5,8 @@ src/pyvesync.egg-info/*
 *.vscode
 **/*.pyc
 .coverage
-htmlcov
+htmlcov/
 .pytest_cache
 *__pycache__
+cov_html/*
+cov_html/
