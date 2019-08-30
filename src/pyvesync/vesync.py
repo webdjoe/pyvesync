@@ -5,9 +5,9 @@ from itertools import chain
 from pyvesync.helpers import Helpers as helpers
 from pyvesync.vesyncoutlet import (VeSyncOutlet7A, VeSyncOutlet10A,
                                    VeSyncOutlet15A, VeSyncOutdoorPlug)
-from pyvesync.vesyncswitch import VeSyncWallSwitch
+from pyvesync.vesyncswitch import VeSyncWallSwitch, VeSyncDimmerSwitch
 from pyvesync.vesyncfan import VeSyncAir131
-from pyvesync.vesyncbulb import VeSyncBulbESL100
+from pyvesync.vesyncbulb import VeSyncBulbESL100, VeSyncBulbESL100CW
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +35,10 @@ class VSFactory(object):
             return VeSyncOutdoorPlug(config, manager)
         elif device_type == 'ESL100':
             return VeSyncBulbESL100(config, manager)
+        elif device_type == 'ESL100CW':
+            return VeSyncBulbESL100CW(config, manager)
+        elif device_type == 'ESWD16':
+            return VeSyncDimmerSwitch(config, manager)
         else:
             logger.debug('Unknown device found - ' + device_type)
 
@@ -124,9 +128,9 @@ class VeSync(object):
         outlet_types = [
             'wifi-switch-1.3', 'ESW03-USA', 'ESW01-EU', 'ESW15-USA', 'ESO15-TB'
         ]
-        switch_types = ['ESWL01', 'ESWL03']
+        switch_types = ['ESWL01', 'ESWL03', 'ESWD16']
         fan_types = ['LV-PUR131S']
-        bulb_types = ['ESL100']
+        bulb_types = ['ESL100', 'ESL100CW']
 
         num_devices = len(self.outlets) + len(self.switches) + len(self.fans) \
             + len(self.bulbs)

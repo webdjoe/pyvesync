@@ -8,7 +8,7 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='pyvesync',
-    version='1.1.0',
+    version='1.2.0',
     description='pyvesync is a library to manage Etekcity Switches',
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -21,7 +21,6 @@ setup(
         'Intended Audience :: Developers',
         'Intended Audience :: End Users/Desktop',
         'Natural Language :: English',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3.0',
     ],
     keywords=['iot', 'vesync'],

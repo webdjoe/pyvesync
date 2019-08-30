@@ -29,7 +29,7 @@ class VeSyncBaseDevice(object):
             self.current_firm_version = details.get('currentFirmVersion', None)
             self.sub_device_no = details.get('subDeviceNo', 0)
             self.config = {}
-            if self.connection_status is not 'online':
+            if self.connection_status != 'online':
                 self.device_status = 'off'
             else:
                 self.device_status = details.get('deviceStatus', None)
@@ -78,6 +78,7 @@ class VeSyncBaseDevice(object):
             else:
                 return False
         else:
+            return False
             logger.warning(
                 'Call device.get_config() to get firmware versions')
 

@@ -115,6 +115,20 @@ class Helpers:
             }
             body['method'] = 'energyyear'
             body['mobileId'] = MOBILE_ID
+        elif type_ == 'bypass':
+            body = {
+                **cls.req_body_base(manager),
+                **cls.req_body_auth(manager),
+                **cls.req_body_details()
+            }
+            body['method'] = 'bypass'
+        elif type_ == 'bypass_config':
+            body = {
+                **cls.req_body_base(manager),
+                **cls.req_body_auth(manager),
+                **cls.req_body_details()
+            }
+            body['method'] = 'firmwareUpdateInfo'
 
         return body
 
@@ -154,9 +168,9 @@ class Helpers:
                     headers=headers, timeout=API_TIMEOUT
                 )
         except requests.exceptions.RequestException as e:
-            logger.error(e)
+            logger.waring(e)
         except Exception as e:
-            logger.error(e)
+            logger.warning(e)
         else:
             if r.status_code == 200:
                 status_code = 200
@@ -196,12 +210,16 @@ class Helpers:
                 else:
                     logger.warning('Error getting details')
                     return False
-
+            elif call == 'bypass':
+                if 'code' in resp and 'result' in resp:
+                    return True
+                else:
+                    return False
             elif call == 'login' and 'code' in resp:
                 if resp['code'] == 0 and 'result' in resp:
                     return True
                 else:
-                    logger.error('Error in login response')
+                    logger.error('Error in %s response')
                     return False
             elif call == '7a_detail':
                 keys = ['deviceStatus', 'activeTime',
@@ -250,11 +268,15 @@ class Helpers:
 
     @staticmethod
     def build_config_dict(r: dict) -> dict:
+        if r.get("theshold") is not None:
+            threshold = r.get('threshold')
+        else:
+            threshold = r.get('threshHold')
         return {
             'current_firmware_version': r.get("currentFirmVersion"),
             'latest_firmware_version': r.get("latestFirmVersion"),
             'maxPower': r.get("maxPower"),
-            'threshold': r.get("threshold") or r.get('threshHold'),
+            'threshold': threshold,
             'power_protection': r.get("powerProtectionStatus"),
             'energy_saving_status': r.get("energySavingStatus")
         }

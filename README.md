@@ -20,6 +20,8 @@ pip install pyvesync
 6. Etekcity Smart WiFi Light Switch (model ESWL01)
 7. Levoit Smart Wifi Air Purifier (LV-PUR131S)
 8. Etekcity Soft White Dimmable Smart Bulb (ESL100)
+9. Etekcity Cool to Soft White Tunable Dimmable Bulb (ESL100CW)
+10. Etekcity Wifi Dimmer Switch (ESD16)
 
 ## Usage
 
@@ -30,6 +32,8 @@ from pyvesync import VeSync
 
 manager = VeSync("EMAIL", "PASSWORD", time_zone=DEFAULT_TZ)
 manager.login()
+
+# Get/Update Devices from server - populate device lists
 manager.update()
 
 my_switch = manager.outlets[0]
@@ -61,18 +65,22 @@ manger.bulbs = [VeSyncBulbObjects]
 ```
 
 If outlets are going to be continuously polled, a custom energy update interval can be set - The default is 6 hours (21600 seconds)
+
 ```python
 manager.energy_update_interval = time # time in seconds
 ```
- 
- ## Example Usage
- ### Get electricity metrics of outlets
+
+## Example Usage
+
+### Get electricity metrics of outlets
+
 ```python
 for s in manager.outlets:
   s.update_energy(check_bypass=False) # Get energy history for each device
 ```
 
 ## API Details
+
 ### Manager API
 
 `VeSync.get_devices()` - Returns a list of devices
@@ -116,6 +124,7 @@ for s in manager.outlets:
 `VesyncOutlet.yearly_energy_total` - Return total energy reading for the past year in kWh
 
 ### Model ESW15-USA 15A/1800W API
+
 The rectangular smart switch model supports some additional functionality on top of the regular api call
 
 `VeSyncOutlet.turn_on_nightlight()` - Turn on the nightlight
@@ -142,7 +151,39 @@ The rectangular smart switch model supports some additional functionality on top
 
 ### Smart Light Bulb API
 
+`VeSyncBulb.brightness` - Return brightness in percentage (1 - 100)
+
 `VeSyncBulb.set_brightness(brightness)` - Set bulb brightness values from 1 - 100
+
+### Smart Light Bulb API for Tunable Bulb
+
+`VeSyncBulb.color_temp_pct` - Return color temperature in percentage (0 - 100)
+
+`VeSyncBulb.color_temp_kelvin` - Return brightness in Kelvin
+
+`VeSyncBulb.set_color_temp(color_temp)` - Set color temperature in percentage (0 - 100)
+
+### Dimmable Switch Functions & Properties
+
+`VeSyncSwitch.brightness` - Return brightness of switch in percentage (1 - 100)
+
+`VeSyncSwitch.indicator_light_status` - return status of indicator light on switch
+
+`VeSyncSwitch.rgb_light_status` - return status of rgb light on faceplate
+
+`VeSyncSwitch.rgb_light_value` - return dictionary of rgb light color (0 - 255)
+
+`VeSyncSwitch.set_brightness(brightness)` - Set brightness of switch (1 - 100)
+
+`VeSyncSwitch.indicator_light_on()` - Turn indicator light on
+
+`VeSyncSwitch.indicator_light_off()` - Turn indicator light off
+
+`VeSyncSwitch.rgb_color_on()` - Turn rgb light on
+
+`VeSyncSwitch.rgb_color_off()` - Turn rgb light off
+
+`VeSyncSwitch.rgb_color_set(red, green, blue)` - Set color of rgb light (0 - 255)
 
 ## Notes
 
