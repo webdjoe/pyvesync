@@ -124,7 +124,7 @@ class VeSyncOutlet(VeSyncBaseDevice):
     def displayJSON(self):
         sup = super(VeSyncOutlet, self).displayJSON()
         supVal = json.loads(sup)
-        supVal.update({"Active Time":str(self.active_time)+' minutes',"Energy":str(self.energy_today)+" kWh","Power":str(self.power)+" Watts", "Voltage":str(self.voltage)+" Volts","Energy Week":str(self.weekly_energy_total)+" kWh","Energy Month":str(self.monthly_energy_total)+" kWh","Energy Year":str(self.yearly_energy_total)+" kWh"})
+        supVal.update({"Active Time":str(self.active_time),"Energy":str(self.energy_today),"Power":str(self.power), "Voltage":str(self.voltage),"Energy Week":str(self.weekly_energy_total),"Energy Month":str(self.monthly_energy_total),"Energy Year":str(self.yearly_energy_total)})
        
         return supVal
 

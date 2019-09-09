@@ -227,5 +227,5 @@ class VeSyncAir131(VeSyncBaseDevice):
     def displayJSON(self):
         sup = super(VeSyncAir131, self).displayJSON()
         supVal = json.loads(sup)
-        supVal.append({"Active Time":str(self.active_time)+' minutes',"Fan Level":self.fan_level,"Air Quality":self.air_quality,"Mode":self.mode,"Screen Status":self.screen_status,"Filter List":self.filter_life})
+        supVal.append({"Active Time":str(self.active_time),"Fan Level":self.fan_level,"Air Quality":self.air_quality,"Mode":self.mode,"Screen Status":self.screen_status,"Filter List":self.filter_life})
         return supVal

@@ -96,7 +96,7 @@ class VeSyncBulb(VeSyncBaseDevice):
         supVal = json.loads(sup)
         if self.connection_status == 'online':
             if self.dimmable_feature:
-                supVal.update({"Brightness":str(self.brightness)+"%"})
+                supVal.update({"Brightness":str(self.brightness)})
         return supVal
 
         
