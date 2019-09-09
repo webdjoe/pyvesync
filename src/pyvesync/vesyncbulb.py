@@ -1,4 +1,5 @@
 import logging
+import json
 from abc import ABCMeta, abstractmethod
 
 from pyvesync.helpers import Helpers as helpers
@@ -90,7 +91,15 @@ class VeSyncBulb(VeSyncBaseDevice):
             for line in disp1:
                 print("{:.<17} {} {}".format(line[0], line[1], line[2]))
 
+    def displayJSON(self):
+        sup = super(VeSyncBulb, self).displayJSON()
+        supVal = json.loads(sup)
+        if self.connection_status == 'online':
+            if self.dimmable_feature:
+                supVal.update({"Brightness":str(self.brightness)+"%"})
+        return supVal
 
+        
 class VeSyncBulbESL100(VeSyncBulb):
     """Object to hold VeSync ESL100 light bulb."""
     def __init__(self, details, manager):

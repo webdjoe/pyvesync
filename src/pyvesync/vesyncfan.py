@@ -1,3 +1,4 @@
+import json
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 from pyvesync.helpers import Helpers as helpers
 import logging
@@ -222,3 +223,9 @@ class VeSyncAir131(VeSyncBaseDevice):
                  ("Filter List: ", self.filter_life, " percent")]
         for line in disp1:
             print("{:.<15} {} {}".format(line[0], line[1], line[2]))
+            
+    def displayJSON(self):
+        sup = super(VeSyncAir131, self).displayJSON()
+        supVal = json.loads(sup)
+        supVal.append({"Active Time":str(self.active_time)+' minutes',"Fan Level":self.fan_level,"Air Quality":self.air_quality,"Mode":self.mode,"Screen Status":self.screen_status,"Filter List":self.filter_life})
+        return supVal

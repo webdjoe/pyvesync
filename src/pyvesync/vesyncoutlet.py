@@ -1,5 +1,6 @@
 import logging
 import time
+import json
 from abc import ABCMeta, abstractmethod
 
 from pyvesync.helpers import Helpers as helpers
@@ -120,6 +121,12 @@ class VeSyncOutlet(VeSyncBaseDevice):
         for line in disp1:
             print("{:.<15} {} {}".format(line[0], line[1], line[2]))
 
+    def displayJSON(self):
+        sup = super(VeSyncOutlet, self).displayJSON()
+        supVal = json.loads(sup)
+        supVal.update({"Active Time":str(self.active_time)+' minutes',"Energy":str(self.energy_today)+" kWh","Power":str(self.power)+" Watts", "Voltage":str(self.voltage)+" Volts","Energy Week":str(self.weekly_energy_total)+" kWh","Energy Month":str(self.monthly_energy_total)+" kWh","Energy Year":str(self.yearly_energy_total)+" kWh"})
+       
+        return supVal
 
 class VeSyncOutlet7A(VeSyncOutlet):
     def __init__(self, details, manager):
