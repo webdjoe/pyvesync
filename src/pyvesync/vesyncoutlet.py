@@ -121,6 +121,7 @@ class VeSyncOutlet(VeSyncBaseDevice):
         for line in disp1:
             print("{:.<15} {} {}".format(line[0], line[1], line[2]))
 
+
     def displayJSON(self):
         sup = super(VeSyncOutlet, self).displayJSON()
         supVal = json.loads(sup)
