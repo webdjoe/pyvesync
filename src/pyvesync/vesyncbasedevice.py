@@ -1,5 +1,6 @@
 import logging
 import collections
+import json
 logger = logging.getLogger(__name__)
 
 
@@ -97,3 +98,5 @@ class VeSyncBaseDevice(object):
         disp1 = collections.OrderedDict(disp)
         for k, v in disp1.items():
             print("{:.<15} {:<15}".format(k, v))
+    def displayJSON(self):
+        return json.dumps({'Device Name':self.device_name,'Model':self.device_type,'Subdevice No': str(self.sub_device_no),'Status':self.device_status,'Online':self.connection_status,'Type':self.type, 'CID':self.cid})#})
