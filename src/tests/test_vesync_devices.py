@@ -1,3 +1,5 @@
+"""Test VeSync manager methods."""
+
 import pytest
 from unittest.mock import patch, MagicMock
 import logging
@@ -24,8 +26,11 @@ BAD_DEV_LIST = {
 
 
 class TestDeviceList(object):
+    """Test getting and populating device lists."""
+
     @pytest.fixture()
     def api_mock(self, caplog):
+        """Mock call_api and initialize VeSync object."""
         self.mock_api_call = patch('pyvesync.helpers.Helpers.call_api')
         self.mock_api = self.mock_api_call.start()
         self.mock_api.create_autospec()
@@ -40,7 +45,7 @@ class TestDeviceList(object):
         self.mock_api_call.stop()
 
     def test_device_api(self, caplog, api_mock):
-        """Tests to ensure call_api is being called correctly"""
+        """Tests to ensure call_api is being called correctly."""
         head = json_vals.DEFAULT_HEADER
         self.mock_api.return_value = ({'V': 2}, 200)
         out, sw, fan, bulb = self.vesync_obj.get_devices()
@@ -59,10 +64,10 @@ class TestDeviceList(object):
     @patch('pyvesync.vesync.VeSyncAir131')
     def test_getdevs_vsfact(self, air_patch, ws_patch, out10a_patch,
                             out15a_patch, out7a_patch, api_mock):
-        """Test the get_devices, process_devices and VSFactory methods
-            to build list with device objects from details
-                Test for all 6 known devices -
-                4 outlets, 1 switch, 1 fan"""
+        """Test the get_devices, process_devices and VSFactory methods.
+        Build list with device objects from details
+        Test for all 6 known devices - 4 outlets, 2 switches, 1 fan.
+        """
 
         device_list = json_vals.DEVLIST_ALL
 
@@ -87,7 +92,7 @@ class TestDeviceList(object):
         assert len(bulbs) == 1
 
     def test_getdevs_code(self, caplog, api_mock):
-        """Test get_devices with code > 0 returned"""
+        """Test get_devices with code > 0 returned."""
         device_list = ({'code': 1, 'msg': 'gibberish'}, 200)
 
         self.mock_api.return_value = device_list
@@ -97,7 +102,7 @@ class TestDeviceList(object):
         assert 'Error retrieving device list' in caplog.text
 
     def test_get_devices_resp_changes(self, caplog, api_mock):
-        """Test if structure of device list response has changed"""
+        """Test if structure of device list response has changed."""
         device_list = ({'code': 0,
                         'NOTresult': {
                             'NOTlist': [{
@@ -114,13 +119,14 @@ class TestDeviceList(object):
         assert 'Device list in response not found' in caplog.text
 
     def test_7a_bad_conf(self, caplog, api_mock):
+        """Test bad device list response."""
         self.mock_api.return_value = (BAD_DEV_LIST, 200)
         devs = self.vesync_obj.get_devices()
         assert len(devs) == 4
         assert len(caplog.records) == 2
 
     def test_7a_no_dev_list(self, caplog, api_mock):
-        """Test if empty device list is handled correctly"""
+        """Test if empty device list is handled correctly."""
         empty_list = []
 
         self.vesync_obj.process_devices(empty_list)
@@ -128,7 +134,7 @@ class TestDeviceList(object):
         assert len(caplog.records) == 1
 
     def test_get_devices_deviceType_error(self, caplog, api_mock):
-        """Test result and list keys exist but deviceType not in list"""
+        """Test result and list keys exist but deviceType not in list."""
         device_list = ({'code': 0,
                         'result': {
                             'list': [{
@@ -144,19 +150,19 @@ class TestDeviceList(object):
         assert 'Details keys not found' in caplog.text
 
     def test_unknown_device(self, caplog, api_mock):
-        """Test unknown device type is handled correctly"""
+        """Test unknown device type is handled correctly."""
         unknown_dev = json_vals.LIST_CONF_7A
 
         unknown_dev['devType'] = "UNKNOWN-DEVTYPE"
 
-        pyvesync.vesync.VSFactory.getDevice(
+        pyvesync.vesync.get_device(
             'unkown_device', unknown_dev, self.vesync_obj)
 
         assert len(caplog.records) == 1
         assert 'Unknown' in caplog.text
 
     def test_time_check(self, api_mock):
-        """Test device details update throttle"""
+        """Test device details update throttle."""
         time_check = self.vesync_obj.device_time_check()
         assert time_check is True
         self.vesync_obj.last_update_ts = time.time()
@@ -177,9 +183,10 @@ class TestDeviceList(object):
     def test_resolve_updates(self, air_patch, ws_patch, esl100_patch,
                              outdoor_patch, out10a_patch, out15a_patch,
                              out7a_patch, caplog, api_mock):
-        """Test process_devices() with all devices -
-            Creates vesync object with all devices and returns
-            device list with new set of all devices"""
+        """Test process_devices() with all devices.
+        Creates vesync object with all devices and returns
+        device list with new set of all devices.
+        """
         outlet_10a = out10a_patch.return_value
         outlet_10a.cid = '10A-CID1'
         outlet_10a.device_type = 'ESW10-EU'
@@ -273,7 +280,7 @@ class TestDeviceList(object):
 
     @patch('pyvesync.vesync.VeSyncOutlet7A', autospec=True)
     def test_remove_device(self, outlet_patch, caplog, api_mock):
-        """Test remove device test"""
+        """Test remove device test."""
         device = copy.deepcopy(json_vals.LIST_CONF_7A)
 
         outlet_test = outlet_patch.return_value
@@ -300,7 +307,7 @@ class TestDeviceList(object):
 
     @patch('pyvesync.vesync.VeSyncOutdoorPlug', autospec=True)
     def test_add_dev_test(self, outdoor_patch, caplog, api_mock):
-        """Test add_device_test to return if device found in existing conf"""
+        """Test add_device_test to return if device found in existing conf."""
         outdoor_inst = pyvesync.VeSyncOutdoorPlug(
             json_vals.LIST_CONF_OUTDOOR_2, self.vesync_obj)
         self.vesync_obj.oulets = [outdoor_inst]
@@ -310,7 +317,7 @@ class TestDeviceList(object):
         assert add_test
 
     def test_display_func(self, caplog, api_mock):
-        """Test display function outputs text"""
+        """Test display function outputs text."""
         self.vesync_obj.outlets.append(
             VeSyncOutdoorPlug(json_vals.LIST_CONF_OUTDOOR_1, self.vesync_obj))
         self.vesync_obj.outlets.append(

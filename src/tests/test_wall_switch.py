@@ -61,7 +61,7 @@ class TestVesyncWallSwitch(object):
         self.mock_api.return_value = BAD_LIST
         vswitch15a = VeSyncWallSwitch(DEV_LIST_DETAIL, self.vesync_obj)
         vswitch15a.get_details()
-        assert len(caplog.records) == 2
+        assert len(caplog.records) == 1
         assert 'details' in caplog.text
 
     def test_ws_onoff(self, caplog, api_mock):

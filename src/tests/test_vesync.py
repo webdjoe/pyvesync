@@ -1,3 +1,5 @@
+"""General VeSync tests."""
+
 import unittest
 import logging
 from unittest import mock
@@ -8,8 +10,12 @@ from pyvesync.helpers import Helpers
 
 
 def mocked_req_post(*args, **kwargs):
+    """Test call_api post request."""
     class MockResponse:
+        """Mock response class."""
+
         def __init__(self, json_data, status_code):
+            """Initialize mock response class."""
             self.json_data = json_data
             self.status_code = status_code
 
@@ -27,7 +33,10 @@ def mocked_req_post(*args, **kwargs):
 
 
 class TestVesync(unittest.TestCase):
+    """Test VeSync object initialization."""
+
     def setUp(self):
+        """Setup VeSync argument cases."""
         self.vesync_1 = VeSync('sam@email.com', 'password', 'America/New_York')
         self.vesync_2 = VeSync('sam@email.com', 'password')
         self.vesync_3 = VeSync('sam@email.com', 'password', None)
@@ -39,12 +48,15 @@ class TestVesync(unittest.TestCase):
         self.vesync_9 = VeSync('sam@email.com', 'password', 1)
 
     def tearDown(self):
+        """Clean up test."""
         pass
 
     def test_instance(self):
+        """Test VeSync object is successfully initialized."""
         self.assertIsInstance(self.vesync_1, VeSync)
 
     def test_username(self):
+        """Test invalid username arguments."""
         self.assertEqual(self.vesync_1.username, 'sam@email.com')
         self.assertEqual(self.vesync_5.username, '')
         self.assertEqual(self.vesync_6.username, None)
@@ -53,6 +65,7 @@ class TestVesync(unittest.TestCase):
         self.assertEqual(self.vesync_1.username, 'tom@email.com')
 
     def test_password(self):
+        """Test invalid password arguments."""
         self.assertEqual(self.vesync_1.password, 'password')
         self.assertEqual(self.vesync_5.password, '')
         self.assertEqual(self.vesync_6.password, None)
@@ -61,6 +74,7 @@ class TestVesync(unittest.TestCase):
         self.assertEqual(self.vesync_1.password, 'other')
 
     def test_hash_password(self):
+        """Test password hash method."""
         self.assertEqual(Helpers.hash_password(self.vesync_1.password),
                          '5f4dcc3b5aa765d61d8327deb882cf99')
         self.assertEqual(Helpers.hash_password(self.vesync_5.password),
@@ -69,6 +83,7 @@ class TestVesync(unittest.TestCase):
             Helpers.hash_password(self.vesync_6.password)
 
     def test_time_zone(self):
+        """Test time zone argument handling."""
         self.assertEqual(self.vesync_1.time_zone, 'America/New_York')
         self.assertEqual(self.vesync_2.time_zone, 'America/New_York')
         self.assertEqual(self.vesync_3.time_zone, 'America/New_York')
@@ -78,6 +93,7 @@ class TestVesync(unittest.TestCase):
         self.assertEqual(self.vesync_1.time_zone, 'America/East')
 
     def test_login(self):
+        """Test login method."""
         mock_vesync = mock.Mock()
         mock_vesync.login.return_value = True
         self.assertTrue(mock_vesync.login())
@@ -100,6 +116,8 @@ class TestVesync(unittest.TestCase):
 
 
 class TestApiFunc:
+    """Test call_api() method."""
+
     @patch('pyvesync.helpers.requests.get', autospec=True)
     def test_api_get(self, get_mock):
         """Test get api call."""
@@ -132,6 +150,7 @@ class TestApiFunc:
 
     @patch('pyvesync.helpers.requests.get', autospec=True)
     def test_api_bad_response(self, api_mock):
+        """Test bad API response handling."""
         api_mock.return_value = Mock(ok=True, status_code=500)
         api_mock.return_value.json.return_value = {}
 
@@ -141,6 +160,7 @@ class TestApiFunc:
 
     @patch('pyvesync.helpers.requests.get', autospec=True)
     def test_api_exception(self, api_mock, caplog):
+        """Test call_api method exception handling."""
         caplog.set_level(logging.DEBUG)
         api_mock.return_value.raiseError.side_effect = Mock(
             side_effect=Exception)
@@ -148,22 +168,6 @@ class TestApiFunc:
         Helpers.call_api('/call/location', method='get')
 
         assert len(caplog.records) == 2
-
-    # @mock.patch('pyvesync.helpers.Helpers.requests.post',
-    #   side_effect=mocked_req_post)
-    # def test_login_call(self, mock_post):
-    #     vesync = self.vesync_1
-    #     response, status_code = vesync.call_api(
-    #         '/cloud/v1/user/login',
-    #         'post',
-    #         '{}'
-    #     )
-    #     self.assertEqual(response, '{"traceId": "", "msg": "",
-    #         "result": {"accountID": "12346536, "avatarIcon": "",
-    #         "acceptLanguage": "", "gdprStatus": true,
-    #         "nickName": "mynickname", "userType": "1",
-    #         "token": "somevaluehere"}, "code": 0 }')
-    #     self.assertEqual(status_code, 200)
 
 
 if __name__ == '__main__':
