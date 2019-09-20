@@ -1,6 +1,34 @@
-# pyvesync [![build status](https://img.shields.io/pypi/v/pyvesync.svg)](https://pypi.python.org/pypi/pyvesync)
+# pyvesync
 
-pyvesync is a library to manage VeSync compatible smart home devices.
+pyvesync is a library to manage VeSync compatible [smart home devices](#supported-devices)
+
+## Table of Contents
+
+- [pyvesync](#pyvesync)
+  - [Table of Contents](#table-of-contents)
+  - [Installation](#installation)
+  - [Supported Devices](#supported-devices)
+  - [Usage](#usage)
+  - [Configuration](#configuration)
+  - [Example Usage](#example-usage)
+    - [Get electricity metrics of outlets](#get-electricity-metrics-of-outlets)
+  - [API Details](#api-details)
+    - [Manager API](#manager-api)
+    - [Device API](#device-api)
+    - [Outlet Specific Energy Methods and Properties](#outlet-specific-energy-methods-and-properties)
+    - [Model ESW15-USA 15A/1800W Methods](#model-esw15-usa-15a1800w-methods)
+    - [Air Purifier LV-PUR131S Methods](#air-purifier-lv-pur131s-methods)
+    - [Dimmable Smart Light Bulb Method and Properties](#dimmable-smart-light-bulb-method-and-properties)
+    - [Tunable Smart Light Bulb Methods and Properties](#tunable-smart-light-bulb-methods-and-properties)
+    - [Dimmable Switch Methods and Properties](#dimmable-switch-methods-and-properties)
+    - [JSON Output API](#json-output-api)
+      - [JSON Output for All Devices](#json-output-for-all-devices)
+      - [JSON Output for Outlets](#json-output-for-outlets)
+      - [JSON Output for Dimmable Switch](#json-output-for-dimmable-switch)
+      - [JSON Output for Bulbs](#json-output-for-bulbs)
+      - [JSON Output for Air Purifier](#json-output-for-air-purifier)
+  - [Notes](#notes)
+  - [Integration with Home Assistant](#integration-with-home-assistant)
 
 ## Installation
 
@@ -107,7 +135,7 @@ for s in manager.outlets:
 
 `VeSyncDevice.firmware_update` - Return true if Firmware has update available. `VeSyncDevice.get_config()` must be called first
 
-### Outlet Specific Energy API
+### Outlet Specific Energy Methods and Properties
 
 `VeSyncOutlet.update_energy(bypass_check=False)` - Get outlet energy history - Builds week, month and year nested energy dictionary. Set `bypass_check=True` to disable the library from checking the update interval
 
@@ -123,7 +151,7 @@ for s in manager.outlets:
 
 `VesyncOutlet.yearly_energy_total` - Return total energy reading for the past year in kWh
 
-### Model ESW15-USA 15A/1800W API
+### Model ESW15-USA 15A/1800W Methods
 
 The rectangular smart switch model supports some additional functionality on top of the regular api call
 
@@ -131,7 +159,7 @@ The rectangular smart switch model supports some additional functionality on top
 
 `VeSyncOutlet.turn_off_nightlight()` - Turn off the nightlight
 
-### Air Purifier LV-PUR131S Functions
+### Air Purifier LV-PUR131S Methods
 
 `VeSyncFan.fan_level` - Return the level of the fan (1-3) or 0 for off
 
@@ -149,13 +177,13 @@ The rectangular smart switch model supports some additional functionality on top
 
 `VeSyncFan.screen_status` - Get Status of screen on/off
 
-### Smart Light Bulb API
+### Dimmable Smart Light Bulb Method and Properties
 
 `VeSyncBulb.brightness` - Return brightness in percentage (1 - 100)
 
 `VeSyncBulb.set_brightness(brightness)` - Set bulb brightness values from 1 - 100
 
-### Smart Light Bulb API for Tunable Bulb
+### Tunable Smart Light Bulb Methods and Properties
 
 `VeSyncBulb.color_temp_pct` - Return color temperature in percentage (0 - 100)
 
@@ -163,7 +191,7 @@ The rectangular smart switch model supports some additional functionality on top
 
 `VeSyncBulb.set_color_temp(color_temp)` - Set color temperature in percentage (0 - 100)
 
-### Dimmable Switch Functions & Properties
+### Dimmable Switch Methods and Properties
 
 `VeSyncSwitch.brightness` - Return brightness of switch in percentage (1 - 100)
 
@@ -185,6 +213,82 @@ The rectangular smart switch model supports some additional functionality on top
 
 `VeSyncSwitch.rgb_color_set(red, green, blue)` - Set color of rgb light (0 - 255)
 
+### JSON Output API
+
+The `device.displayJSON()` method outputs properties and status of the device
+
+#### JSON Output for All Devices
+
+```python
+device.displayJSON()
+
+#Returns:
+
+{
+  'Device Name': 'Device 1',
+  'Model': 'Device Model',
+  'Subdevice No': '1',
+  'Status': 'on',
+  'Online': 'online',
+  'Type': 'Device Type',
+  'CID': 'DEVICE-CID'
+}
+```
+
+#### JSON Output for Outlets
+
+```python
+{
+  'Active Time': '1', # in minutes
+  'Energy': '2.4', # today's energy in kWh
+  'Power': '12', # current power in W
+  'Voltage': '120', # current voltage
+  'Energy Week': '12', # totaly energy of week in kWh
+  'Energy Month': '50', # total energy of month in kWh
+  'Energy Year': '89', # total energy of year in kWh
+}
+```
+
+#### JSON Output for Dimmable Switch
+
+This output only applies to dimmable switch.  The standard switch has the default device JSON output shown [above](#json-output-for-all-devices)
+
+```python
+{
+  'Indicator Light': 'on', # status of indicator light
+  'Brightness': '50', # percent brightness
+  'RGB Light': 'on' # status of RGB Light on faceplate
+}
+```
+
+#### JSON Output for Bulbs
+
+```python
+# output for dimmable bulb
+{
+  'Brightness': '50' # brightness in percent
+}
+
+# output for tunable bulb
+{
+  'Kelvin': '5400' # color temperature in Kelvin
+}
+
+```
+
+#### JSON Output for Air Purifier
+
+```python
+{
+  'Active Time': '50', # minutes
+  'Fan Level': '2', # fan level 1-3
+  'Air Quality': '95', # air quality in percent
+  'Mode': 'auto',
+  'Screen Status': 'on',
+  'Filter Life': '99' # remaining filter life in percent
+}
+```
+
 ## Notes
 
 More detailed data is available within the `VesyncOutlet` by inspecting the `VesyncOutlet.energy` dictionary.
@@ -193,7 +297,7 @@ The `VesyncOutlet.energy` object includes 3 nested dictionaries `week`, `month`,
 
 ```python
 VesyncOutlet.energy['week']['energy_consumption_of_today']
-VesyncOutlet.energy['week']['cost_per_kwh'] 
+VesyncOutlet.energy['week']['cost_per_kwh']
 VesyncOutlet.energy['week']['max_energy']
 VesyncOutlet.energy['week']['total_energy']
 VesyncOutlet.energy['week']['data'] # which itself is a list of values
@@ -201,7 +305,7 @@ VesyncOutlet.energy['week']['data'] # which itself is a list of values
 
 ## Integration with Home Assistant
 
-This library is integrated with Home Assistant and documentation can be found at https://www.home-assistant.io/components/vesync/. The library version included with Home Assistant may lag behind development compared to this repository so those wanting to use the latest version can do the following to integrate with HA.
+This library is integrated with Home Assistant and documentation can be found at <https://www.home-assistant.io/components/vesync/>. The library version included with Home Assistant may lag behind development compared to this repository so those wanting to use the latest version can do the following to integrate with HA.
 
 1. Add a `custom_components` directory to your Home Assistant configuration directory
 2. Add a `vesync` directory as a directory within `custom_components`
@@ -209,15 +313,17 @@ This library is integrated with Home Assistant and documentation can be found at
 4. Add `__init__.py` to the `vesync` directory
 5. Add `manifest.json` to the `vesync` directory
 6. Add the following config to your Home Assistant `configuration.yaml` file:
+
 ```python
 vesync:
   username: VESYNC_USERNAME
   password: VESYNC_PASSWORD
 ```
 
-7. Restart Home Assistant
+1. Restart Home Assistant
 
 The `custom_components` directory should include the following files:
+
 ```bash
 custom_components/vesync/__init__.py
 custom_components/vesync/switch.py
