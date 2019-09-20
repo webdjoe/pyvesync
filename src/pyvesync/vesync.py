@@ -249,9 +249,10 @@ class VeSync:
 
     def update(self):
         """Fetch updated information about devices."""
+
         if self.device_time_check():
 
-            if not self.in_process:
+            if not self.in_process and self.enabled:
                 outlets, switches, fans, bulbs = self.get_devices()
 
                 self.outlets.extend(outlets)
@@ -264,6 +265,8 @@ class VeSync:
                 [device.update() for device in chain(*devices)]
 
                 self.last_update_ts = time.time()
+            else:
+                logger.error('You are not logged in to VeSync')
 
     def update_energy(self, bypass_check=False):
         """Fetch updated energy information about devices."""
