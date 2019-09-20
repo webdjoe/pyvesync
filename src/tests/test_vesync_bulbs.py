@@ -14,8 +14,11 @@ DEVICE_DETAILS = call_json.DETAILS_ESL100
 
 
 class TestVeSyncBulbESL100:
+    """Tests for VeSync dimmable bulb."""
+
     @pytest.fixture()
     def api_mock(self, caplog):
+        """Initilize the mock VeSync class and patch call_api."""
         self.mock_api_call = patch('pyvesync.helpers.Helpers.call_api')
         self.mock_api = self.mock_api_call.start()
         self.mock_api.create_autospect()
@@ -30,7 +33,7 @@ class TestVeSyncBulbESL100:
         self.mock_api_call.stop()
 
     def test_esl100_conf(self, api_mock):
-        """Tests that Wall Switch is instantiated properly"""
+        """Tests that Wall Switch is instantiated properly."""
         self.mock_api.return_value = DEV_LIST
         devices = self.vesync_obj.get_devices()
         bulbs = devices[3]
@@ -43,7 +46,7 @@ class TestVeSyncBulbESL100:
         assert bulb.uuid == "UUID"
 
     def test_esl100_details(self, api_mock):
-        """Test WS get_details() """
+        """Test WS get_details()."""
         self.mock_api.return_value = DEVICE_DETAILS
         bulb = VeSyncBulbESL100(DEV_LIST_DETAIL, self.vesync_obj)
         bulb.get_details()
@@ -53,14 +56,14 @@ class TestVeSyncBulbESL100:
         assert bulb.connection_status == 'online'
 
     def test_esl100_no_details(self, caplog, api_mock):
-        """Test no device details for disconnected bulb"""
+        """Test no device details for disconnected bulb."""
         self.mock_api.return_value = ({'code': 5}, 200)
         bulb = VeSyncBulbESL100(DEV_LIST_DETAIL, self.vesync_obj)
         bulb.update()
-        assert len(caplog.records) == 2
+        assert len(caplog.records) == 1
 
     def test_esl100_onoff(self, caplog, api_mock):
-        """Test power toggle for ESL100 bulb"""
+        """Test power toggle for ESL100 bulb."""
         self.mock_api.return_value = ({'code': 0}, 200)
         bulb = VeSyncBulbESL100(DEV_LIST_DETAIL, self.vesync_obj)
         assert bulb.turn_off()
@@ -78,5 +81,5 @@ class TestVeSyncBulbESL100:
     def test_features(self, api_mock):
         bulb = VeSyncBulbESL100(DEV_LIST_DETAIL, self.vesync_obj)
         assert bulb.dimmable_feature
-        assert not bulb.bulb_temp_feature
-        assert not bulb.color_change_feature
+        assert not bulb.color_temp_feature
+        assert not bulb.rgb_shift_feature

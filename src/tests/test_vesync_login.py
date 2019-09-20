@@ -1,3 +1,5 @@
+"""Test VeSync login method."""
+
 import logging
 import pytest
 from unittest.mock import patch
@@ -15,7 +17,7 @@ login_test_vals = [('sam@mail.com', 'pass', 'America/New_York', 'full corret'),
 
 @pytest.mark.parametrize('email, password, timezone, testid', login_test_vals)
 def test_vesync_init(email, password, timezone, testid):
-    """Testing only input validation"""
+    """Testing only input validation."""
     v_inst = VeSync(email, password, timezone)
     assert isinstance(v_inst, VeSync)
     assert v_inst.username == email
@@ -37,8 +39,11 @@ login_bad_call = [
 
 
 class TestLogin(object):
+    """Test VeSync login class."""
+
     @pytest.fixture()
     def api_mock(self, caplog):
+        """Mock call_api and initialize VeSync device."""
         self.mock_api_call = patch('pyvesync.helpers.Helpers.call_api')
         self.mock_api = self.mock_api_call.start()
         self.mock_api.create_autospec()
@@ -49,7 +54,7 @@ class TestLogin(object):
 
     @pytest.mark.parametrize('email, password, testid', login_bad_call)
     def test_bad_login(self, api_mock, email, password, testid):
-
+        """Test failed login."""
         full_return = ({'code': 455}, 200)
         self.mock_api.return_value = full_return
         vesync_obj = VeSync(email, password)
@@ -63,6 +68,7 @@ class TestLogin(object):
             assert not self.mock_api.called
 
     def test_good_login(self, api_mock):
+        """Test successful login."""
         full_return = ({
             'code': 0,
             'result': {
@@ -84,6 +90,7 @@ class TestLogin(object):
 @pytest.mark.parametrize('email, password, testid', login_bad_call)
 @patch('pyvesync.helpers.requests.post')
 def test_login(mock_api, email, password, testid):
+    """Test multiple failed login calls."""
     return_tuple = {'code': 455, 'msg': 'sdasd'}
     mock_api.return_value.ok = True
     mock_api.return_value.json.return_value = return_tuple

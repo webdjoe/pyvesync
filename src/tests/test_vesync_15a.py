@@ -79,7 +79,7 @@ class TestVesync15ASwitch(object):
         self.mock_api.return_value = (bad_15a_details, 200)
         vswitch15a = VeSyncOutlet15A(DEV_LIST_DETAIL, self.vesync_obj)
         vswitch15a.get_details()
-        assert len(caplog.records) == 2
+        assert len(caplog.records) == 1
 
     def test_15a_onoff(self, caplog, api_mock):
         """Test 15A Device On/Off Methods"""
@@ -167,13 +167,13 @@ class TestVesync15ASwitch(object):
         self.mock_api.return_value = (bad_history, 200)
         vswitch15a = VeSyncOutlet15A(DEV_LIST_DETAIL, self.vesync_obj)
         vswitch15a.update_energy()
-        assert len(caplog.records) == 2
+        assert len(caplog.records) == 1
         assert 'weekly' in caplog.text
         caplog.clear()
         vswitch15a.get_monthly_energy()
-        assert len(caplog.records) == 2
+        assert len(caplog.records) == 1
         assert 'monthly' in caplog.text
         caplog.clear()
         vswitch15a.get_yearly_energy()
-        assert len(caplog.records) == 2
+        assert len(caplog.records) == 1
         assert 'yearly' in caplog.text
