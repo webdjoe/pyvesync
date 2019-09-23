@@ -1,3 +1,5 @@
+"""Levoit Air Purifier tests."""
+
 import pytest
 from unittest.mock import patch
 import logging
@@ -17,8 +19,11 @@ BAD_LIST = call_json.DETAILS_BADCODE
 
 
 class TestVesyncAirPurifier(object):
+    """Air purifier tests."""
+
     @pytest.fixture()
     def api_mock(self, caplog):
+        """Mock call_api and initialize VeSync object."""
         self.mock_api_call = patch('pyvesync.helpers.Helpers.call_api')
         self.mock_api = self.mock_api_call.start()
         self.mock_api.create_autospect()
@@ -33,7 +38,7 @@ class TestVesyncAirPurifier(object):
         self.mock_api_call.stop()
 
     def test_airpur_conf(self, api_mock):
-        """Tests that 15A Outlet is instantiated properly"""
+        """Tests that 15A Outlet is instantiated properly."""
         self.mock_api.return_value = CORRECT_LIST
         fans = self.vesync_obj.get_devices()
         fan = fans[2]
@@ -46,7 +51,7 @@ class TestVesyncAirPurifier(object):
         assert fan.uuid == "UUID"
 
     def test_airpur_details(self, api_mock):
-        """Test 15A get_details() """
+        """Test 15A get_details()."""
         self.mock_api.return_value = CORRECT_DETAILS
         fan = VeSyncAir131(DEV_LIST_DETAIL, self.vesync_obj)
         fan.get_details()
@@ -63,15 +68,15 @@ class TestVesyncAirPurifier(object):
         assert fan.air_quality == 'excellent'
 
     def test_airpur_details_fail(self, caplog, api_mock):
-        """Test Air Purifier get_details with Code>0"""
+        """Test Air Purifier get_details with Code>0."""
         self.mock_api.return_value = BAD_LIST
         fan = VeSyncAir131(DEV_LIST_DETAIL, self.vesync_obj)
         fan.get_details()
-        assert len(caplog.records) == 2
+        assert len(caplog.records) == 1
         assert 'details' in caplog.text
 
     def test_airpur_onoff(self, caplog, api_mock):
-        """Test Air Purifier Device On/Off Methods"""
+        """Test Air Purifier Device On/Off Methods."""
         self.mock_api.return_value = ({"code": 0}, 200)
         fan = VeSyncAir131(DEV_LIST_DETAIL, self.vesync_obj)
         head = helpers.req_headers(self.vesync_obj)
@@ -96,14 +101,14 @@ class TestVesyncAirPurifier(object):
         assert off
 
     def test_airpur_onoff_fail(self, api_mock):
-        """Test Air Purifier On/Off Fail with Code>0"""
+        """Test Air Purifier On/Off Fail with Code>0."""
         self.mock_api.return_value = ({"code": 1}, 400)
         vswitch15a = VeSyncAir131(DEV_LIST_DETAIL, self.vesync_obj)
         assert not vswitch15a.turn_on()
         assert not vswitch15a.turn_off()
 
     def test_airpur_fanspeed(self, caplog, api_mock):
-        """Test changing fan speed of """
+        """Test changing fan speed of."""
         self.mock_api.return_value = ({'code': 0}, 200)
         fan = VeSyncAir131(DEV_LIST_DETAIL, self.vesync_obj)
         fan.details['level'] = 1
@@ -119,7 +124,7 @@ class TestVesyncAirPurifier(object):
         assert fan.fan_level == 2
 
     def test_mode_toggle(self, caplog, api_mock):
-        """Test changing modes on air purifier"""
+        """Test changing modes on air purifier."""
         self.mock_api.return_value = ({'code': 0}, 200)
         fan = VeSyncAir131(DEV_LIST_DETAIL, self.vesync_obj)
         f = fan.auto_mode()

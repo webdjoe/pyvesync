@@ -1,3 +1,5 @@
+"""Test scripts for Etekcity 10A Outlets."""
+
 import pytest
 from unittest.mock import patch
 import logging
@@ -18,8 +20,11 @@ BAD_10A_LIST = call_json.DETAILS_BADCODE
 
 
 class TestVesync10ASwitch(object):
+    """Test class for 10A outlets."""
+
     @pytest.fixture()
     def api_mock(self, caplog):
+        """Mock call_api() method and initialize VeSync object."""
         self.mock_api_call = patch('pyvesync.helpers.Helpers.call_api')
         self.mock_api = self.mock_api_call.start()
         self.mock_api.create_autospect()
@@ -37,7 +42,7 @@ class TestVesync10ASwitch(object):
                              [(CORRECT_10AEU_LIST, 'ESW01-EU'),
                               (CORRECT_10AUS_LIST, 'ESW03-USA')])
     def test_10a_conf(self, mock_return, devtype, api_mock):
-        """Tests that 10A US & EU Outlet is instantiated properly"""
+        """Tests that 10A US & EU Outlet is instantiated properly."""
         self.mock_api.return_value = mock_return
         outlets = self.vesync_obj.get_devices()
         outlets = outlets[0]
@@ -50,7 +55,7 @@ class TestVesync10ASwitch(object):
         assert outlet.uuid == "UUID"
 
     def test_10a_details(self, api_mock):
-        """Test 10A get_details() """
+        """Test 10A get_details()."""
         self.mock_api.return_value = CORRECT_10A_DETAILS
         outlet = VeSyncOutlet10A(DEV_LIST_DETAIL_US, self.vesync_obj)
         outlet.get_details()
@@ -65,25 +70,15 @@ class TestVesync10ASwitch(object):
         assert outlet.voltage == 1
 
     def test_10a_details_fail(self, caplog, api_mock):
-        """Test 10A get_details with Code>0"""
+        """Test 10A get_details with Code>0."""
         self.mock_api.return_value = BAD_10A_LIST
         out = VeSyncOutlet10A(DEV_LIST_DETAIL_EU, self.vesync_obj)
         out.get_details()
         assert len(caplog.records) == 1
         assert 'details' in caplog.text
 
-    @pytest.mark.parametrize('details, id', ((DEV_LIST_DETAIL_EU, 'EU'),
-                             (DEV_LIST_DETAIL_US, 'US')))
-    def test_10a_no_details(self, details, id, caplog, api_mock):
-        """Test 10A details return with no details and code=0"""
-        bad_10a_details = {"code": 0, "deviceStatus": "on"}
-        self.mock_api.return_value = (bad_10a_details, 200)
-        out = VeSyncOutlet10A(details, self.vesync_obj)
-        out.get_details()
-        assert len(caplog.records) == 2
-
     def test_10a_onoff(self, caplog, api_mock):
-        """Test 10A Device On/Off Methods"""
+        """Test 10A Device On/Off Methods."""
         self.mock_api.return_value = ({"code": 0}, 200)
         out = VeSyncOutlet10A(DEV_LIST_DETAIL_EU, self.vesync_obj)
         head = helpers.req_headers(self.vesync_obj)
@@ -106,14 +101,14 @@ class TestVesync10ASwitch(object):
         assert off
 
     def test_10a_onoff_fail(self, api_mock):
-        """Test 10A On/Off Fail with Code>0"""
+        """Test 10A On/Off Fail with Code>0."""
         self.mock_api.return_value = ({"code": 1}, 400)
         out = VeSyncOutlet10A(DEV_LIST_DETAIL_US, self.vesync_obj)
         assert not out.turn_on()
         assert not out.turn_off()
 
     def test_10a_weekly(self, api_mock):
-        """Test 10A get_weekly_energy"""
+        """Test 10A get_weekly_energy."""
         self.mock_api.return_value = ENERGY_HISTORY
         out = VeSyncOutlet10A(DEV_LIST_DETAIL_EU, self.vesync_obj)
         out.get_weekly_energy()
@@ -133,7 +128,7 @@ class TestVesync10ASwitch(object):
         assert out.weekly_energy_total == 1
 
     def test_10a_monthly(self, api_mock):
-        """Test 10A get_monthly_energy"""
+        """Test 10A get_monthly_energy."""
         self.mock_api.return_value = ENERGY_HISTORY
         out = VeSyncOutlet10A(DEV_LIST_DETAIL_EU, self.vesync_obj)
         out.get_monthly_energy()
@@ -153,7 +148,7 @@ class TestVesync10ASwitch(object):
         assert out.monthly_energy_total == 1
 
     def test_10a_yearly(self, api_mock):
-        """Test 10A get_yearly_energy"""
+        """Test 10A get_yearly_energy."""
         self.mock_api.return_value = ENERGY_HISTORY
         out = VeSyncOutlet10A(DEV_LIST_DETAIL_US, self.vesync_obj)
         out.get_yearly_energy()
@@ -173,18 +168,18 @@ class TestVesync10ASwitch(object):
         assert out.yearly_energy_total == 1
 
     def test_history_fail(self, caplog, api_mock):
-        """Test 15A energy failure"""
+        """Test 15A energy failure."""
         bad_history = {"code": 1}
         self.mock_api.return_value = (bad_history, 200)
         out = VeSyncOutlet10A(DEV_LIST_DETAIL_US, self.vesync_obj)
         out.update_energy()
-        assert len(caplog.records) == 2
+        assert len(caplog.records) == 1
         assert 'weekly' in caplog.text
         caplog.clear()
         out.get_monthly_energy()
-        assert len(caplog.records) == 2
+        assert len(caplog.records) == 1
         assert 'monthly' in caplog.text
         caplog.clear()
         out.get_yearly_energy()
-        assert len(caplog.records) == 2
+        assert len(caplog.records) == 1
         assert 'yearly' in caplog.text
