@@ -141,6 +141,16 @@ class VeSyncOutlet(VeSyncBaseDevice):
             "Energy Month": str(self.monthly_energy_total),
             "Energy Year": str(self.yearly_energy_total)})
 
+        if self.details.get('night_light_status') is not None:
+            supVal.update({
+                "Nightlight Status":
+                self.details.get('night_light_status'),
+                "Nightlight Automode":
+                self.details.get('night_light_automode'),
+                "Nightlight Brightness":
+                self.details.get('night_light_brightness')
+            })
+
         return supVal
 
 

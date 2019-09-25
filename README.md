@@ -2,6 +2,8 @@
 
 pyvesync is a library to manage VeSync compatible [smart home devices](#supported-devices)
 
+Only compatible with python 3.5+
+
 ## Table of Contents <!-- omit in toc -->
 
 - [Installation](#installation)
@@ -244,6 +246,9 @@ device.displayJSON()
   'Energy Week': '12', # totaly energy of week in kWh
   'Energy Month': '50', # total energy of month in kWh
   'Energy Year': '89', # total energy of year in kWh
+  'Nightlight Status': 'on', #status of nightlight for 15A outlets
+  'Nightlight Automode': 'manual', #auto/manual for 15A outlets
+  'Nightlight Brightness': '50' #brightness of nightlight
 }
 ```
 
