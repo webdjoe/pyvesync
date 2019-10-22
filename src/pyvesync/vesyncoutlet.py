@@ -395,6 +395,84 @@ class VeSyncOutlet10A(VeSyncOutlet):
         logger.warning('Error turning %s off', self.device_name)
         return False
 
+    def get_timers(self):
+        """Returns a list of the configured timers."""
+        body = helpers.req_body(self.manager, 'devicedetail')
+        body['method'] = 'getTimers'
+        body['uuid'] = self.uuid
+
+        response, _ = helpers.call_api(
+            '/10a/v1/app/getTimers',
+            'post',
+            headers=helpers.req_headers(self.manager),
+            json=body
+        )
+
+        if response and helpers.code_check(response):
+            if 'timers' in response:
+                return response['timers']
+            else:
+                logger.error('Timer list in response not found')
+        else:
+            logger.debug('Unable to get %s timers', self.device_name)
+
+    def start_timer(self, timerID):
+        """Start the timer with ID timerID - return True if successful."""
+        body = helpers.req_body(self.manager, 'devicestatus')
+        body['timerId'] = timerID
+        body['timerStatus'] = '1'
+
+        response, _ = helpers.call_api(
+            '/10a/v1/app/updateTimerStatus',
+            'put',
+            headers=helpers.req_headers(self.manager),
+            json=body
+        )
+
+        if helpers.code_check(response):
+            return True
+        logger.warning('Error starting timer %s on device %s', timerID, self.device_name)
+        return False
+
+    def stop_timer(self, timerID):
+        """Stops the timer with ID timerID - return True if successful."""
+        body = helpers.req_body(self.manager, 'devicestatus')
+        body['timerId'] = timerID
+        body['timerStatus'] = '0'
+
+        response, _ = helpers.call_api(
+            '/10a/v1/app/updateTimerStatus',
+            'put',
+            headers=helpers.req_headers(self.manager),
+            json=body
+        )
+
+        if helpers.code_check(response):
+            return True
+        logger.warning('Error stopping timer %s on device %s', timerID, self.device_name)
+        return False
+
+    def edit_timer(self, timerID, seconds, action="off"):
+        """Updates the timer given by timerID, setting the number of seconds for the timer to delay.
+        Use either "on" or "off" for action (what the outlet will do when the time is done)."""
+        body = helpers.req_body(self.manager, 'devicestatus')
+        body['timerId'] = timerID
+        body['status'] = '0' # timer does not start automatically when added
+        body['uuid'] = self.uuid
+        body['action'] = action
+        body['counterTime'] = seconds
+
+        response, _ = helpers.call_api(
+            '/10a/v1/app/updateTimer',
+            'put',
+            headers=helpers.req_headers(self.manager),
+            json=body
+        )
+
+        if helpers.code_check(response):
+            return True
+        logger.warning('Error editing timer %s on device %s', timerID, self.device_name)
+        return False
 
 class VeSyncOutlet15A(VeSyncOutlet):
     """Class for Etekcity 15A Rectangular Outlets."""
