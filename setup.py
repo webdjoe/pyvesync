@@ -27,7 +27,7 @@ setup(
         'Programming Language :: Python :: 3.5',
     ],
     keywords=['iot', 'vesync'],
-    packages=find_packages('src'),
+    packages=find_packages('src',exclude=['tests','tests.*']),
     package_dir={'': "src"},
     zip_safe=False,
     install_requires=['requests>=2.20.0'],
