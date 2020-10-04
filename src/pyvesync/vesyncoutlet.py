@@ -424,6 +424,8 @@ class VeSyncOutlet15A(VeSyncOutlet):
 
             self.device_status = r.get('deviceStatus')
             self.connection_status = r.get('connectionStatus')
+            self.nightlight_status = r.get('nightLightStatus')
+            self.nightlight_brightness = r.get('nightLightBrightness')
             self.details = helpers.build_details_dict(r)
         else:
             logger.debug('Unable to get %s details', self.device_name)

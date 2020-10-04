@@ -153,6 +153,10 @@ for s in manager.outlets:
 
 The rectangular smart switch model supports some additional functionality on top of the regular api call
 
+`VeSyncOutlet.nightlight_status` - Get the status of the nightlight
+
+`VeSyncOutlet.nightlight_brightness` - Get the brightness of the nightlight
+
 `VeSyncOutlet.turn_on_nightlight()` - Turn on the nightlight
 
 `VeSyncOutlet.turn_off_nightlight()` - Turn off the nightlight
