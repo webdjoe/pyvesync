@@ -23,7 +23,7 @@ def get_device(device_type, config, manager):
     """Return initilized device from API response."""
     if device_type == 'wifi-switch-1.3':
         return VeSyncOutlet7A(config, manager)
-    if device_type in ['ESW03-USA', 'ESW01-EU']:
+    if device_type in ['ESW03-USA', 'ESW10-USA', 'ESW01-EU']:
         return VeSyncOutlet10A(config, manager)
     if device_type == 'ESW15-USA':
         return VeSyncOutlet15A(config, manager)
