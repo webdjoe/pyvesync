@@ -52,7 +52,7 @@ class VeSyncES14(VeSyncBaseDevice):
                 return
             subuser_dict = self.bt_data_builder(r.get('result').get('weightDatas'))
 
-        return subuser_dict
+        self.details = subuser_dict
 
     def firmware_update(self) -> bool:
         """Override firmware update method."""
@@ -60,8 +60,7 @@ class VeSyncES14(VeSyncBaseDevice):
 
     def update(self):
         """Get weighing data and set data dictionaries."""
-        full_data = self.get_details()
-        self.details = full_data
+        self.get_details()
         user_list = self.get_subusers()
         self.user_list = user_list
 
@@ -73,14 +72,14 @@ class VeSyncES14(VeSyncBaseDevice):
                 user_list.append(user)
         return user_list
 
-    def get_user_data(self, user) -> list:
+    def get_user_data(self, user=0) -> list:
         """Get list of one users data points as list of dicts."""
         if user is None or user not in self.user_list:
             logger.debug('Subuser not found - %s', user)
             return []
         return self.details[user]
 
-    def user_dict(self, user) -> dict:
+    def user_dict(self, user=0) -> dict:
         """Return Dict of User Data in Grams"""
         user_dict = {}
         if user is None or user not in self.user_list:
@@ -92,7 +91,7 @@ class VeSyncES14(VeSyncBaseDevice):
             user_dict[timestamp] = weight
         return user_dict
 
-    def user_json_kg(self, user):
+    def user_json_kg(self, user=0):
         """Return JSON of User Data timestamp: weight"""
         user_dict = self.user_dict(user)
         json_dict = {}
@@ -101,7 +100,7 @@ class VeSyncES14(VeSyncBaseDevice):
                 json_dict[k] = v/1000
         return json.dumps(json_dict)
 
-    def user_json_lb(self, user):
+    def user_json_lb(self, user=0):
         """Return JSON of User Data timestamp: weight"""
         user_dict = self.user_dict(user)
         json_dict = {}
