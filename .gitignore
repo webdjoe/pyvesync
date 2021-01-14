@@ -10,3 +10,5 @@ htmlcov/
 *__pycache__
 cov_html/*
 cov_html/
+test/*
+/venv/

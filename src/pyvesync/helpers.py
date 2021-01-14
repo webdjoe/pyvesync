@@ -178,7 +178,7 @@ class Helpers:
                     headers=headers, timeout=API_TIMEOUT
                 )
         except requests.exceptions.RequestException as e:
-            logger.waring(e)
+            logger.warning(e)
         except Exception as e:
             logger.warning(e)
         else:

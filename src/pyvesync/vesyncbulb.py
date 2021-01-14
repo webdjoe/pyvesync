@@ -243,7 +243,7 @@ class VeSyncBulbESL100CW(VeSyncBulb):
             self.connection_status = 'offline'
             self.device_status = 'off'
         else:
-            logger.warning('%s - Unknown return code - %d with message %s',
+            logger.debug('%s - Unknown return code - %d with message %s',
                            self.device_name, r.get('code'), r.get('msg'))
 
     def get_config(self):
