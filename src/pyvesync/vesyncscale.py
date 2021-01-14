@@ -74,6 +74,8 @@ class VeSyncES14(VeSyncBaseDevice):
 
     def get_user_data(self, user=0) -> list:
         """Get list of one users data points as list of dicts."""
+        if len(self.get_subusers()) == 1:
+            user = self.get_subusers()[0]
         if user is None or user not in self.user_list:
             logger.debug('Subuser not found - %s', user)
             return []
