@@ -80,7 +80,7 @@ class VeSyncBaseDevice(object):
             if cfv != lfv:
                 return True
         else:
-            logger.warning(
+            logger.debug(
                 'Call device.get_config() to get firmware versions')
         return False
 
