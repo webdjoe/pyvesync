@@ -10,7 +10,8 @@ from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 logger = logging.getLogger(__name__)
 feature_dict = {
     'ESWL01': [],
-    'ESWD16': ['dimmable']
+    'ESWD16': ['dimmable'],
+    'ESWL03': []
 }
 
 
@@ -26,7 +27,7 @@ class VeSyncSwitch(VeSyncBaseDevice):
 
     def is_dimmable(self):
         """Return True if switch is dimmable."""
-        if 'dimmable' in feature_dict.get(self.device_type):
+        if 'dimmable' in feature_dict.get(self.device_type, []):
             return True
         else:
             return False
