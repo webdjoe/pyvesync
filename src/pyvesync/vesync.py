@@ -38,8 +38,7 @@ _DEVICE_TYPES = {
     'outlets': ['wifi-switch-1.3', 'ESW03-USA', 'ESW01-EU', 'ESW15-USA', 'ESO15-TB'],
     'switches': ['ESWL01', 'ESWL03', 'ESWD16'],
     'fans': ['LV-PUR131S'],
-    'bulbs': ['ESL100', 'ESL100CW'],
-    'scales': ['ESF14']
+    'bulbs': ['ESL100', 'ESL100CW']
 }
 
 
