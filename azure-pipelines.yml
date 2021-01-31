@@ -1,0 +1,65 @@
+# Python package
+# Create and test a Python package on multiple Python versions.
+# Add steps that analyze code, save the dist with the build record, publish to a PyPI-compatible index, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/python
+
+trigger:
+  branches:
+    include:
+    - '*'
+    exclude:
+    - 'master'
+pr:
+  - '*'
+
+jobs:
+- job: 'Validation'
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '3.6'
+    displayName: 'Use Python 3.6'
+  - script: |
+      python -m pip install --upgrade pip
+      pip install -r requirements.txt
+    displayName: 'Install dependencies'
+  - script: |
+      pip install flake8 flake8-docstrings
+      flake8 src/pyvesync
+    displayName: 'Flake8'
+  - script: |
+      pip install pylint
+      pylint src/pyvesync
+    displayName: 'Pylint'
+  - script: |
+      pip install mypy
+      mypy src/pyvesync
+    displayName: 'MyPy'
+
+- job: 'pytest'
+  pool:
+    vmImage: 'ubuntu-latest'
+  strategy:
+    matrix:
+      Python35:
+        python.version: '3.5'
+      Python36:
+        python.version: '3.6'
+      Python37:
+        python.version: '3.7'
+
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '$(python.version)'
+    displayName: 'Use Python $(python.version)'
+
+  - script: |
+      set -e
+      python -m pip install --upgrade pip
+      pip install -r requirements.txt
+      pip install -U pytest pytest-azurepipelines pytest-sugar
+    displayName: 'Install dependencies'
+  - script: |
+      pytest --junitxml=reports/pytest.xml
+    displayName: 'Run Tests'
