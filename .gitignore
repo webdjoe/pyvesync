@@ -10,3 +10,12 @@ htmlcov/
 *__pycache__
 cov_html/*
 cov_html/
+test/*
+/venv/
+.idea/
+src/tests/test1.py
+/src/tests/junit/
+/.tox/
+.tox/.tmp/
+.tox/dist/
+.tox/log/

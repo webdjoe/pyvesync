@@ -35,15 +35,15 @@ class TestVeSyncBulbESL100:
     def test_esl100_conf(self, api_mock):
         """Tests that Wall Switch is instantiated properly."""
         self.mock_api.return_value = DEV_LIST
-        devices = self.vesync_obj.get_devices()
-        bulbs = devices[3]
+        self.vesync_obj.get_devices()
+        bulbs = self.vesync_obj.bulbs
         assert len(bulbs) == 1
         bulb = bulbs[0]
         assert isinstance(bulb, VeSyncBulbESL100)
-        assert bulb.device_name == "Etekcity Soft White Bulb"
-        assert bulb.device_type == "ESL100"
-        assert bulb.cid == "ESL100-CID"
-        assert bulb.uuid == "UUID"
+        assert bulb.device_name == 'Etekcity Soft White Bulb'
+        assert bulb.device_type == 'ESL100'
+        assert bulb.cid == 'ESL100-CID'
+        assert bulb.uuid == 'UUID'
 
     def test_esl100_details(self, api_mock):
         """Test WS get_details()."""

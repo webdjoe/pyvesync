@@ -11,6 +11,7 @@ from pyvesync.helpers import Helpers
 
 def mocked_req_post(*args, **kwargs):
     """Test call_api post request."""
+
     class MockResponse:
         """Mock response class."""
 
@@ -24,10 +25,11 @@ def mocked_req_post(*args, **kwargs):
             '{"traceId": "", "msg": "", "result": {"accountID": "12346536, \
                 "avatarIcon": "", "acceptLanguage": "", "gdprStatus": true, \
                     "nickName": "mynickname", "userType": "1", \
-                        "token": "somevaluehere"}, "code": 0 }', 200)
-    elif args[
-            0] == 'https://smartapi.vesync.com/cloud/v1/deviceManaged/devices':
-        return MockResponse({"key2": "value2"}, 200)
+                        "token": "somevaluehere"}, "code": 0 }',
+            200,
+        )
+    elif args[0] == 'https://smartapi.vesync.com/cloud/v1/deviceManaged/devices':
+        return MockResponse({'key2': 'value2'}, 200)
 
     return MockResponse(None, 404)
 
@@ -75,10 +77,14 @@ class TestVesync(unittest.TestCase):
 
     def test_hash_password(self):
         """Test password hash method."""
-        self.assertEqual(Helpers.hash_password(self.vesync_1.password),
-                         '5f4dcc3b5aa765d61d8327deb882cf99')
-        self.assertEqual(Helpers.hash_password(self.vesync_5.password),
-                         'd41d8cd98f00b204e9800998ecf8427e')
+        self.assertEqual(
+            Helpers.hash_password(self.vesync_1.password),
+            '5f4dcc3b5aa765d61d8327deb882cf99',
+        )
+        self.assertEqual(
+            Helpers.hash_password(self.vesync_5.password),
+            'd41d8cd98f00b204e9800998ecf8427e',
+        )
         with self.assertRaises(AttributeError):
             Helpers.hash_password(self.vesync_6.password)
 
@@ -101,17 +107,21 @@ class TestVesync(unittest.TestCase):
         self.assertFalse(mock_vesync.login())
 
         with patch('pyvesync.helpers.Helpers.call_api') as mocked_post:
-            d = {"result": {"accountID": "12346536", "userType": "1",
-                 "token": "somevaluehere"}, "code": 0}
+            d = {
+                'result': {
+                    'accountID': '12346536',
+                    'userType': '1',
+                    'token': 'somevaluehere',
+                },
+                'code': 0,
+            }
             mocked_post.return_value = (d, 200)
 
             data = self.vesync_1.login()
             body = Helpers.req_body(self.vesync_1, 'login')
             body['email'] = self.vesync_1.username
             body['password'] = Helpers.hash_password(self.vesync_1.password)
-            mocked_post.assert_called_with('/cloud/v1/user/login',
-                                           'post',
-                                           json=body)
+            mocked_post.assert_called_with('/cloud/v1/user/login', 'post', json=body)
             self.assertTrue(data)
 
 
@@ -162,8 +172,7 @@ class TestApiFunc:
     def test_api_exception(self, api_mock, caplog):
         """Test call_api method exception handling."""
         caplog.set_level(logging.DEBUG)
-        api_mock.return_value.raiseError.side_effect = Mock(
-            side_effect=Exception)
+        api_mock.return_value.raiseError.side_effect = Mock(side_effect=Exception)
 
         Helpers.call_api('/call/location', method='get')
 
