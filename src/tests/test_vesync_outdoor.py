@@ -42,8 +42,8 @@ class TestVesyncOutdoorPlug:
     def test_outdoor_conf(self, api_mock):
         """Tests outdoor outlet is instantiated properly."""
         self.mock_api.return_value = CORRECT_OUTDOOR_LIST
-        outlets = self.vesync_obj.get_devices()
-        outlets = outlets[0]
+        self.vesync_obj.get_devices()
+        outlets = self.vesync_obj.outlets
         assert len(outlets) == 2
         outdoor_outlet = outlets[0]
         assert isinstance(outdoor_outlet, VeSyncOutdoorPlug)
@@ -70,7 +70,7 @@ class TestVesyncOutdoorPlug:
 
     def test_outdoor_outlet_onoff(self, caplog, api_mock):
         """Test Outdoor Outlet Device On/Off Methods."""
-        self.mock_api.return_value = ({"code": 0}, 200)
+        self.mock_api.return_value = ({'code': 0}, 200)
         outdoor_outlet = VeSyncOutdoorPlug(DEV_LIST_DETAIL, self.vesync_obj)
         head = helpers.req_headers(self.vesync_obj)
         body = helpers.req_body(self.vesync_obj, 'devicestatus')
@@ -80,25 +80,19 @@ class TestVesyncOutdoorPlug:
         body['switchNo'] = outdoor_outlet.sub_device_no
         on = outdoor_outlet.turn_on()
         self.mock_api.assert_called_with(
-            '/outdoorsocket15a/v1/device/devicestatus',
-            'put',
-            headers=head,
-            json=body
-            )
+            '/outdoorsocket15a/v1/device/devicestatus', 'put', headers=head, json=body
+        )
         assert on
         off = outdoor_outlet.turn_off()
         body['status'] = 'off'
         self.mock_api.assert_called_with(
-            '/outdoorsocket15a/v1/device/devicestatus',
-            'put',
-            headers=head,
-            json=body
-            )
+            '/outdoorsocket15a/v1/device/devicestatus', 'put', headers=head, json=body
+        )
         assert off
 
     def test_outdoor_outlet_onoff_fail(self, api_mock):
         """Test outdoor outlet On/Off Fail with Code>0."""
-        self.mock_api.return_value = ({"code": 1}, 400)
+        self.mock_api.return_value = ({'code': 1}, 400)
         outdoor_outlet = VeSyncOutdoorPlug(DEV_LIST_DETAIL, self.vesync_obj)
         assert not outdoor_outlet.turn_on()
         assert not outdoor_outlet.turn_off()
@@ -111,8 +105,11 @@ class TestVesyncOutdoorPlug:
         body = helpers.req_body(self.vesync_obj, 'energy_week')
         body['uuid'] = outdoor_outlet.uuid
         self.mock_api.assert_called_with(
-            '/outdoorsocket15a/v1/device/energyweek', 'post',
-            headers=helpers.req_headers(self.vesync_obj), json=body)
+            '/outdoorsocket15a/v1/device/energyweek',
+            'post',
+            headers=helpers.req_headers(self.vesync_obj),
+            json=body,
+        )
         energy_dict = outdoor_outlet.energy['week']
         assert energy_dict['energy_consumption_of_today'] == 1
         assert energy_dict['cost_per_kwh'] == 1
@@ -132,7 +129,8 @@ class TestVesyncOutdoorPlug:
             '/outdoorsocket15a/v1/device/energymonth',
             'post',
             headers=helpers.req_headers(self.vesync_obj),
-            json=body)
+            json=body,
+        )
         energy_dict = outdoor_outlet.energy['month']
         assert energy_dict['energy_consumption_of_today'] == 1
         assert energy_dict['cost_per_kwh'] == 1
@@ -152,7 +150,8 @@ class TestVesyncOutdoorPlug:
             '/outdoorsocket15a/v1/device/energyyear',
             'post',
             headers=helpers.req_headers(self.vesync_obj),
-            json=body)
+            json=body,
+        )
         energy_dict = outdoor_outlet.energy['year']
         assert energy_dict['energy_consumption_of_today'] == 1
         assert energy_dict['cost_per_kwh'] == 1
@@ -163,7 +162,7 @@ class TestVesyncOutdoorPlug:
 
     def test_history_fail(self, caplog, api_mock):
         """Test outdoor outlet energy failure."""
-        bad_history = {"code": 1}
+        bad_history = {'code': 1}
         self.mock_api.return_value = (bad_history, 200)
         outdoor_outlet = VeSyncOutdoorPlug(DEV_LIST_DETAIL, self.vesync_obj)
         outdoor_outlet.update_energy()

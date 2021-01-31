@@ -1,9 +1,10 @@
 """VeSync API for controling fans and purifiers."""
 
 import json
+import logging
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 from pyvesync.helpers import Helpers as helpers
-import logging
+
 
 logger = logging.getLogger(__name__)
 
@@ -13,12 +14,12 @@ class VeSyncAir131(VeSyncBaseDevice):
 
     def __init__(self, details, manager):
         """Initilize air purifier class."""
-        super(VeSyncAir131, self).__init__(details, manager)
+        super().__init__(details, manager)
 
         self.details = {}
 
-    def get_details(self):
-        """Build details dictionary."""
+    def get_details(self) -> None:
+        """Build Air Purifier details dictionary."""
         body = helpers.req_body(self.manager, 'devicedetail')
         body['uuid'] = self.uuid
         head = helpers.req_headers(self.manager)
@@ -27,7 +28,7 @@ class VeSyncAir131(VeSyncBaseDevice):
             '/131airPurifier/v1/device/deviceDetail',
             method='post',
             headers=head,
-            json=body
+            json=body,
         )
 
         if r is not None and helpers.code_check(r):
@@ -42,7 +43,7 @@ class VeSyncAir131(VeSyncBaseDevice):
         else:
             logger.debug('Error getting %s details', self.device_name)
 
-    def get_config(self):
+    def get_config(self) -> None:
         """Get configuration info for air purifier."""
         body = helpers.req_body(self.manager, 'devicedetail')
         body['method'] = 'configurations'
@@ -52,26 +53,27 @@ class VeSyncAir131(VeSyncBaseDevice):
             '/131airpurifier/v1/device/configurations',
             'post',
             headers=helpers.req_headers(self.manager),
-            json=body)
+            json=body,
+        )
 
         if helpers.code_check(r):
             self.config = helpers.build_config_dict(r)
         else:
-            logger.warning("Unable to get config info for %s",
+            logger.warning('Unable to get config info for %s',
                            self.device_name)
 
     @property
-    def active_time(self):
+    def active_time(self) -> int:
         """Return total time active in minutes."""
         return self.details.get('active_time', 0)
 
     @property
-    def fan_level(self):
+    def fan_level(self) -> int:
         """Get current fan level (1-3)."""
         return self.details.get('level', 0)
 
     @property
-    def filter_life(self):
+    def filter_life(self) -> int:
         """Get percentage of filter life remaining."""
         try:
             return self.details['filter_life'].get('percent', 0)
@@ -79,16 +81,16 @@ class VeSyncAir131(VeSyncBaseDevice):
             return 0
 
     @property
-    def air_quality(self):
+    def air_quality(self) -> str:
         """Get Air Quality."""
         return self.details.get('air_quality', 'unknown')
 
     @property
-    def screen_status(self):
+    def screen_status(self) -> str:
         """Return Screen status (on/off)."""
         return self.details.get('screen_status', 'unknown')
 
-    def turn_on(self):
+    def turn_on(self) -> bool:
         """Turn Air Purifier on."""
         if self.device_status != 'on':
             body = helpers.req_body(self.manager, 'devicestatus')
@@ -97,20 +99,18 @@ class VeSyncAir131(VeSyncBaseDevice):
             head = helpers.req_headers(self.manager)
 
             r, _ = helpers.call_api(
-                '/131airPurifier/v1/device/deviceStatus',
-                'put',
-                json=body,
-                headers=head
+                '/131airPurifier/v1/device/deviceStatus', 'put',
+                json=body, headers=head
             )
 
             if r is not None and helpers.code_check(r):
                 self.device_status = 'on'
                 return True
-            else:
-                logger.warning('Error turning %s on', self.device_name)
-                return False
+            logger.warning('Error turning %s on', self.device_name)
+            return False
+        return False
 
-    def turn_off(self):
+    def turn_off(self) -> bool:
         """Turn Air Purifier Off."""
         if self.device_status == 'on':
             body = helpers.req_body(self.manager, 'devicestatus')
@@ -119,28 +119,26 @@ class VeSyncAir131(VeSyncBaseDevice):
             head = helpers.req_headers(self.manager)
 
             r, _ = helpers.call_api(
-                '/131airPurifier/v1/device/deviceStatus',
-                'put',
-                json=body,
-                headers=head
+                '/131airPurifier/v1/device/deviceStatus', 'put',
+                json=body, headers=head
             )
 
             if r is not None and helpers.code_check(r):
                 self.device_status = 'off'
                 return True
-            else:
-                logger.warning('Error turning %s off', self.device_name)
-                return False
+            logger.warning('Error turning %s off', self.device_name)
+            return False
+        return True
 
-    def auto_mode(self):
+    def auto_mode(self) -> bool:
         """Set mode to auto."""
         return self.mode_toggle('auto')
 
-    def manual_mode(self):
+    def manual_mode(self) -> bool:
         """Set mode to manual."""
         return self.mode_toggle('manual')
 
-    def sleep_mode(self):
+    def sleep_mode(self) -> bool:
         """Set sleep mode to on."""
         return self.mode_toggle('sleep')
 
@@ -151,17 +149,17 @@ class VeSyncAir131(VeSyncBaseDevice):
         through speeds increasing by one.
         """
         if self.mode != 'manual':
-            logger.debug(
-                '{} not in manual mode, cannot change speed'.format(
-                    self.device_name))
+            logger.debug('%s not in manual mode, cannot change speed',
+                         self.device_name)
             return False
 
         try:
             level = self.details['level']
         except KeyError:
             logger.debug(
-                'Cannot change fan speed, no level set for {}'.format(
-                    self.device_name))
+                'Cannot change fan speed, no level set for %s',
+                self.device_name
+            )
             return False
 
         body = helpers.req_body(self.manager, 'devicestatus')
@@ -170,11 +168,11 @@ class VeSyncAir131(VeSyncBaseDevice):
         if speed is not None:
             if speed == level:
                 return True
-            elif speed in [1, 2, 3]:
+            if speed in [1, 2, 3]:
                 body['level'] = speed
             else:
-                logger.debug(
-                    'Invalid fan speed for {}'.format(self.device_name))
+                logger.debug('Invalid fan speed for %s',
+                             format(self.device_name))
                 return False
         else:
             if (level + 1) > 3:
@@ -183,10 +181,8 @@ class VeSyncAir131(VeSyncBaseDevice):
                 body['level'] = int(level + 1)
 
         r, _ = helpers.call_api(
-            '/131airPurifier/v1/device/updateSpeed',
-            'put',
-            json=body,
-            headers=head
+            '/131airPurifier/v1/device/updateSpeed', 'put',
+            json=body, headers=head
         )
 
         if r is not None and helpers.code_check(r):
@@ -201,50 +197,52 @@ class VeSyncAir131(VeSyncBaseDevice):
         body = helpers.req_body(self.manager, 'devicestatus')
         body['uuid'] = self.uuid
         if mode != self.mode and mode in ['sleep', 'auto', 'manual']:
-            body["mode"] = mode
+            body['mode'] = mode
             if mode == 'manual':
                 body['level'] = 1
 
             r, _ = helpers.call_api(
-                '/131airPurifier/v1/device/updateMode',
-                'put',
-                json=body,
-                headers=head
+                '/131airPurifier/v1/device/updateMode', 'put',
+                json=body, headers=head
             )
 
             if r is not None and helpers.code_check(r):
                 self.mode = mode
                 return True
 
-        logger.warning("Error setting %s mode - %s", self.device_name, mode)
+        logger.warning('Error setting %s mode - %s', self.device_name, mode)
         return False
 
-    def update(self):
+    def update(self) -> None:
         """Run function to get device details."""
         self.get_details()
 
-    def display(self):
+    def display(self) -> None:
         """Return formatted device info to stdout."""
-        super(VeSyncAir131, self).display()
-        disp1 = [("Active Time : ", self.active_time, ' minutes'),
-                 ("Fan Level: ", self.fan_level, ""),
-                 ("Air Quality: ", self.air_quality, ""),
-                 ("Mode: ", self.mode, ""),
-                 ("Screen Status: ", self.screen_status, ""),
-                 ("Filter List: ", self.filter_life, " percent")]
+        super().display()
+        disp1 = [
+            ('Active Time : ', self.active_time, ' minutes'),
+            ('Fan Level: ', self.fan_level, ''),
+            ('Air Quality: ', self.air_quality, ''),
+            ('Mode: ', self.mode, ''),
+            ('Screen Status: ', self.screen_status, ''),
+            ('Filter List: ', self.filter_life, ' percent'),
+        ]
         for line in disp1:
-            print("{:.<15} {} {}".format(line[0], line[1], line[2]))
+            print('{:.<15} {} {}'.format(line[0], line[1], line[2]))
 
-    def displayJSON(self):
+    def displayJSON(self) -> str:
         """Return air purifier status and properties in JSON output."""
         sup = super().displayJSON()
-        supVal = json.loads(sup)
-        supVal.append({
-            "Active Time": str(self.active_time),
-            "Fan Level": self.fan_level,
-            "Air Quality": self.air_quality,
-            "Mode": self.mode,
-            "Screen Status": self.screen_status,
-            "Filter Life": str(self.filter_life)
-            })
-        return supVal
+        sup_val = json.loads(sup)
+        sup_val.append(
+            {
+                'Active Time': str(self.active_time),
+                'Fan Level': self.fan_level,
+                'Air Quality': self.air_quality,
+                'Mode': self.mode,
+                'Screen Status': self.screen_status,
+                'Filter Life': str(self.filter_life),
+            }
+        )
+        return sup_val

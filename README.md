@@ -173,7 +173,7 @@ The rectangular smart switch model supports some additional functionality on top
 
 `VeSyncFan.manual_mode()` - Change fan mode to manual with fan level 1
 
-`VeSyncFan.sleep_mode()` - Change fan mode to sleep  
+`VeSyncFan.sleep_mode()` - Change fan mode to sleep
 
 `VeSyncFan.change_fan_speed(speed)` - Change fan speed with level 1, 2 or 3
 

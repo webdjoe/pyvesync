@@ -24,7 +24,7 @@ class Helpers:
     """VeSync Helper Functions."""
 
     @staticmethod
-    def req_headers(manager):
+    def req_headers(manager) -> dict:
         """Build header for api requests."""
         headers = {
             'accept-language': 'en',
@@ -32,46 +32,38 @@ class Helpers:
             'appVersion': APP_VERSION,
             'content-type': 'application/json',
             'tk': manager.token,
-            'tz': manager.time_zone
+            'tz': manager.time_zone,
         }
         return headers
 
     @staticmethod
-    def req_body_base(manager):
+    def req_body_base(manager) -> dict:
         """Return universal keys for body of api requests."""
-        return {
-            'timeZone': manager.time_zone,
-            'acceptLanguage': 'en'
-        }
+        return {'timeZone': manager.time_zone, 'acceptLanguage': 'en'}
 
     @staticmethod
-    def req_body_auth(manager):
+    def req_body_auth(manager) -> dict:
         """Keys for authenticating api requests."""
-        return {
-            'accountID': manager.account_id,
-            'token': manager.token
-        }
+        return {'accountID': manager.account_id, 'token': manager.token}
 
     @staticmethod
-    def req_body_details():
+    def req_body_details() -> dict:
         """Detail keys for api requests."""
         return {
             'appVersion': APP_VERSION,
             'phoneBrand': PHONE_BRAND,
             'phoneOS': PHONE_OS,
-            'traceId': str(int(time.time()))
+            'traceId': str(int(time.time())),
         }
 
     @classmethod
-    def req_body(cls, manager, type_):
+    def req_body(cls, manager, type_) -> dict:
         """Builder for body of api requests."""
         body = {}
 
         if type_ == 'login':
-            body = {
-                **cls.req_body_base(manager),
-                **cls.req_body_details()
-            }
+            body = {**cls.req_body_base(manager),
+                    **cls.req_body_details()}
             body['email'] = manager.username
             body['password'] = cls.hash_password(manager.password)
             body['devToken'] = ''
@@ -81,7 +73,7 @@ class Helpers:
             body = {
                 **cls.req_body_base(manager),
                 **cls.req_body_auth(manager),
-                **cls.req_body_details()
+                **cls.req_body_details(),
             }
             body['method'] = 'devicedetail'
             body['mobileId'] = MOBILE_ID
@@ -95,15 +87,13 @@ class Helpers:
             body['pageNo'] = '1'
             body['pageSize'] = '50'
         elif type_ == 'devicestatus':
-            body = {
-                **cls.req_body_base(manager),
-                **cls.req_body_auth(manager)
-            }
+            body = {**cls.req_body_base(manager),
+                    **cls.req_body_auth(manager)}
         elif type_ == 'energy_week':
             body = {
                 **cls.req_body_base(manager),
                 **cls.req_body_auth(manager),
-                **cls.req_body_details()
+                **cls.req_body_details(),
             }
             body['method'] = 'energyweek'
             body['mobileId'] = MOBILE_ID
@@ -111,7 +101,7 @@ class Helpers:
             body = {
                 **cls.req_body_base(manager),
                 **cls.req_body_auth(manager),
-                **cls.req_body_details()
+                **cls.req_body_details(),
             }
             body['method'] = 'energymonth'
             body['mobileId'] = MOBILE_ID
@@ -119,7 +109,7 @@ class Helpers:
             body = {
                 **cls.req_body_base(manager),
                 **cls.req_body_auth(manager),
-                **cls.req_body_details()
+                **cls.req_body_details(),
             }
             body['method'] = 'energyyear'
             body['mobileId'] = MOBILE_ID
@@ -127,35 +117,36 @@ class Helpers:
             body = {
                 **cls.req_body_base(manager),
                 **cls.req_body_auth(manager),
-                **cls.req_body_details()
+                **cls.req_body_details(),
             }
             body['method'] = 'bypass'
         elif type_ == 'bypass_config':
             body = {
                 **cls.req_body_base(manager),
                 **cls.req_body_auth(manager),
-                **cls.req_body_details()
+                **cls.req_body_details(),
             }
             body['method'] = 'firmwareUpdateInfo'
 
         return body
 
     @staticmethod
-    def calculate_hex(hex_string):
+    def calculate_hex(hex_string) -> float:
         """Credit for conversion to itsnotlupus/vesync_wsproxy."""
         hex_conv = hex_string.split(':')
-        converted_hex = (int(hex_conv[0], 16) + int(hex_conv[1], 16))/8192
+        converted_hex = (int(hex_conv[0], 16) + int(hex_conv[1], 16)) / 8192
 
         return converted_hex
 
     @staticmethod
-    def hash_password(string):
+    def hash_password(string) -> str:
         """Encode password."""
         return hashlib.md5(string.encode('utf-8')).hexdigest()
 
     @staticmethod
-    def call_api(api: str, method: str,
-                 json: dict = None, headers: dict = None):
+    def call_api(
+        api: str, method: str, json: dict = None, headers: dict = None
+    ) -> tuple:
         """Make API calls by passing endpoint, header and body."""
         response = None
         status_code = None
@@ -164,22 +155,22 @@ class Helpers:
             logger.debug("[%s] calling '%s' api", method, api)
             if method == 'get':
                 r = requests.get(
-                    API_BASE_URL + api, json=json,
-                    headers=headers, timeout=API_TIMEOUT
+                    API_BASE_URL + api, json=json, headers=headers,
+                    timeout=API_TIMEOUT
                 )
             elif method == 'post':
                 r = requests.post(
-                    API_BASE_URL + api, json=json,
-                    headers=headers, timeout=API_TIMEOUT
+                    API_BASE_URL + api, json=json, headers=headers,
+                    timeout=API_TIMEOUT
                 )
             elif method == 'put':
                 r = requests.put(
-                    API_BASE_URL + api, json=json,
-                    headers=headers, timeout=API_TIMEOUT
+                    API_BASE_URL + api, json=json, headers=headers,
+                    timeout=API_TIMEOUT
                 )
         except requests.exceptions.RequestException as e:
             logger.warning(e)
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-except
             logger.warning(e)
         else:
             if r.status_code == 200:
@@ -187,13 +178,12 @@ class Helpers:
                 response = r.json()
             else:
                 logger.debug('Unable to fetch %s%s', API_BASE_URL, api)
-        finally:
-            return (response, status_code)
+        return response, status_code
 
     @staticmethod
     def code_check(r: dict) -> bool:
         """Test if code == 0 for successful API call."""
-        if isinstance(r, dict) and r.get("code") == 0:
+        if isinstance(r, dict) and r.get('code') == 0:
             return True
         return False
 
@@ -207,7 +197,7 @@ class Helpers:
             'night_light_brightness': r.get('nightLightBrightness', None),
             'night_light_automode': r.get('nightLightAutomode', None),
             'power': r.get('power', 0),
-            'voltage': r.get('voltage', 0)
+            'voltage': r.get('voltage', 0),
         }
 
     @staticmethod
@@ -215,26 +205,26 @@ class Helpers:
         """Build energy dictionary from API response."""
         return {
             'energy_consumption_of_today': r.get(
-                'energyConsumptionOfToday', 0),
+                    'energyConsumptionOfToday', 0),
             'cost_per_kwh': r.get('costPerKWH', 0),
             'max_energy': r.get('maxEnergy', 0),
             'total_energy': r.get('totalEnergy', 0),
             'currency': r.get('currency', 0),
-            'data': r.get('data', 0)
+            'data': r.get('data', 0),
         }
 
     @staticmethod
     def build_config_dict(r: dict) -> dict:
         """Build configuration dictionary from API response."""
-        if r.get("theshold") is not None:
+        if r.get('theshold') is not None:
             threshold = r.get('threshold')
         else:
             threshold = r.get('threshHold')
         return {
-            'current_firmware_version': r.get("currentFirmVersion"),
-            'latest_firmware_version': r.get("latestFirmVersion"),
-            'maxPower': r.get("maxPower"),
+            'current_firmware_version': r.get('currentFirmVersion'),
+            'latest_firmware_version': r.get('latestFirmVersion'),
+            'maxPower': r.get('maxPower'),
             'threshold': threshold,
-            'power_protection': r.get("powerProtectionStatus"),
-            'energy_saving_status': r.get("energySavingStatus")
+            'power_protection': r.get('powerProtectionStatus'),
+            'energy_saving_status': r.get('energySavingStatus'),
         }

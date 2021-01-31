@@ -1,7 +1,7 @@
 """pyvesync setup script."""
 
-from setuptools import setup, find_packages
 from os import path
+from setuptools import setup, find_packages
 
 
 this_directory = path.abspath(path.dirname(__file__))
@@ -10,7 +10,7 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='pyvesync',
-    version='1.2.1',
+    version='1.3.1',
     description='pyvesync is a library to manage Etekcity\
                  Devices and Levoit Air Purifier',
     long_description=long_description,
@@ -24,12 +24,12 @@ setup(
         'Intended Audience :: Developers',
         'Intended Audience :: End Users/Desktop',
         'Natural Language :: English',
-        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
     ],
     keywords=['iot', 'vesync'],
-    packages=find_packages('src',exclude=['tests','tests.*']),
-    package_dir={'': "src"},
+    packages=find_packages('src', exclude=['tests', 'tests.*']),
+    package_dir={'': 'src'},
     zip_safe=False,
     install_requires=['requests>=2.20.0'],
-    python_requires='>=3.5',
+    python_requires='>=3.6',
 )

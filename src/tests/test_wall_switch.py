@@ -35,15 +35,15 @@ class TestVesyncWallSwitch(object):
     def test_ws_conf(self, api_mock):
         """Tests that Wall Switch is instantiated properly"""
         self.mock_api.return_value = CORRECT_WS_LIST
-        devices = self.vesync_obj.get_devices()
-        switch = devices[1]
+        self.vesync_obj.get_devices()
+        switch = self.vesync_obj.switches
         assert len(switch) == 1
         wswitch = switch[0]
         assert isinstance(wswitch, VeSyncWallSwitch)
-        assert wswitch.device_name == "Name Wall Switch"
-        assert wswitch.device_type == "ESWL01"
-        assert wswitch.cid == "WS-CID"
-        assert wswitch.uuid == "UUID"
+        assert wswitch.device_name == 'Name Wall Switch'
+        assert wswitch.device_type == 'ESWL01'
+        assert wswitch.cid == 'WS-CID'
+        assert wswitch.uuid == 'UUID'
 
     def test_ws_details(self, api_mock):
         """Test WS get_details() """
@@ -66,7 +66,7 @@ class TestVesyncWallSwitch(object):
 
     def test_ws_onoff(self, caplog, api_mock):
         """Test 15A Device On/Off Methods"""
-        self.mock_api.return_value = ({"code": 0}, 200)
+        self.mock_api.return_value = ({'code': 0}, 200)
         wswitch = VeSyncWallSwitch(DEV_LIST_DETAIL, self.vesync_obj)
         head = helpers.req_headers(self.vesync_obj)
         body = helpers.req_body(self.vesync_obj, 'devicestatus')
@@ -75,23 +75,19 @@ class TestVesyncWallSwitch(object):
         body['uuid'] = wswitch.uuid
         on = wswitch.turn_on()
         self.mock_api.assert_called_with(
-            '/inwallswitch/v1/device/devicestatus',
-            'put',
-            headers=head,
-            json=body)
+            '/inwallswitch/v1/device/devicestatus', 'put', headers=head, json=body
+        )
         assert on
         off = wswitch.turn_off()
         body['status'] = 'off'
         self.mock_api.assert_called_with(
-            '/inwallswitch/v1/device/devicestatus',
-            'put',
-            headers=head,
-            json=body)
+            '/inwallswitch/v1/device/devicestatus', 'put', headers=head, json=body
+        )
         assert off
 
     def test_ws_onoff_fail(self, api_mock):
         """Test ws On/Off Fail with Code>0"""
-        self.mock_api.return_value = ({"code": 1}, 400)
+        self.mock_api.return_value = ({'code': 1}, 400)
         vswitch15a = VeSyncWallSwitch(DEV_LIST_DETAIL, self.vesync_obj)
         assert not vswitch15a.turn_on()
         assert not vswitch15a.turn_off()
