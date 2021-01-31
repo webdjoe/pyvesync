@@ -316,7 +316,7 @@ After you capture the packets, please redact the `accountid` and `token`. If you
 For example:
 
 Before:
-```json
+```
 {
   'tk': 'abc123abc123==3rf',
   'accountId': '123456789',
@@ -324,7 +324,7 @@ Before:
 }
 ```
 After:
-```json
+```
 {
   'tk': 'AAA111AAA111==1AA',
   'accountId': '111111111',
