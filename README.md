@@ -1,4 +1,4 @@
-# pyvesync [![build status](https://img.shields.io/pypi/v/pyvesync.svg)](https://pypi.python.org/pypi/pyvesync) <!-- omit in toc -->
+# pyvesync [![build status](https://img.shields.io/pypi/v/pyvesync.svg)](https://pypi.python.org/pypi/pyvesync) [![Build Status](https://dev.azure.com/webdjoe/pyvesync/_apis/build/status/webdjoe.pyvesync?branchName=master)](https://dev.azure.com/webdjoe/pyvesync/_build/latest?definitionId=4&branchName=master) [![Open Source? Yes!](https://badgen.net/badge/Open%20Source%20%3F/Yes%21/blue?icon=github)](https://github.com/Naereen/badges/) [![PyPI license](https://img.shields.io/pypi/l/ansicolortags.svg)](https://pypi.python.org/pypi/ansicolortags/) <!-- omit in toc -->
 
 pyvesync is a library to manage VeSync compatible [smart home devices](#supported-devices)
 
@@ -26,7 +26,7 @@ pyvesync is a library to manage VeSync compatible [smart home devices](#supporte
     - [JSON Output for Bulbs](#json-output-for-bulbs)
     - [JSON Output for Air Purifier](#json-output-for-air-purifier)
 - [Notes](#notes)
-- [Integration with Home Assistant](#integration-with-home-assistant)
+- [Feature Requests](#feature-requests)
 
 ## Installation
 
@@ -56,7 +56,7 @@ To start with the module:
 ```python
 from pyvesync import VeSync
 
-manager = VeSync("EMAIL", "PASSWORD", time_zone=DEFAULT_TZ)
+manager = VeSync("EMAIL", "PASSWORD")
 manager.login()
 
 # Get/Update Devices from server - populate device lists
@@ -153,6 +153,10 @@ for s in manager.outlets:
 
 The rectangular smart switch model supports some additional functionality on top of the regular api call
 
+`VeSyncOutlet.nightlight_status` - Get the status of the nightlight
+
+`VeSyncOutlet.nightlight_brightness` - Get the brightness of the nightlight
+
 `VeSyncOutlet.turn_on_nightlight()` - Turn on the nightlight
 
 `VeSyncOutlet.turn_off_nightlight()` - Turn off the nightlight
@@ -169,7 +173,7 @@ The rectangular smart switch model supports some additional functionality on top
 
 `VeSyncFan.manual_mode()` - Change fan mode to manual with fan level 1
 
-`VeSyncFan.sleep_mode()` - Change fan mode to sleep  
+`VeSyncFan.sleep_mode()` - Change fan mode to sleep
 
 `VeSyncFan.change_fan_speed(speed)` - Change fan speed with level 1, 2 or 3
 
@@ -301,32 +305,31 @@ VesyncOutlet.energy['week']['total_energy']
 VesyncOutlet.energy['week']['data'] # which itself is a list of values
 ```
 
-## Integration with Home Assistant
+## Feature Requests
 
-This library is integrated with Home Assistant and documentation can be found at <https://www.home-assistant.io/components/vesync/>. The library version included with Home Assistant may lag behind development compared to this repository so those wanting to use the latest version can do the following to integrate with HA.
+If you would like new devices to be added, you will need to capture the packets from the app. The easiest way to do this is by using [Packet Capture for Android](https://play.google.com/store/apps/details?id=app.greyshirts.sslcapture&hl=en_US&gl=US). This works without rooting the device. If you do not have an android or are concerned with adding an app that uses a custom certificate to read the traffic, you can use an Android emulator such as [Nox](https://www.bignox.com/).
 
-1. Add a `custom_components` directory to your Home Assistant configuration directory
-2. Add a `vesync` directory as a directory within `custom_components`
-3. Add `switch.py` to the `vesync` directory
-4. Add `__init__.py` to the `vesync` directory
-5. Add `manifest.json` to the `vesync` directory
-6. Add the following config to your Home Assistant `configuration.yaml` file:
+When capturing packets make sure all packets are captured from the device list, along with all functions that the app contains. The captured packets are stored in text files, please do not capture with pcap format.
 
-```python
-vesync:
-  username: VESYNC_USERNAME
-  password: VESYNC_PASSWORD
+After you capture the packets, please redact the `accountid` and `token`. If you feel you must redact other keys, please do not delete them entirely. Replace letters with "A" and numbers with "1", leave all punctuation intact and maintain length. 
+
+For example:
+
+Before:
+```json
+{
+  'tk': 'abc123abc123==3rf',
+  'accountId': '123456789',
+  'cid': 'abcdef12-3gh-ij'
+}
 ```
+After:
+```json
+{
+  'tk': 'AAA111AAA111==1AA',
+  'accountId': '111111111',
+  'cid': 'AAAAAA11-1AA-AA'
+}
+``` 
 
-1. Restart Home Assistant
-
-The `custom_components` directory should include the following files:
-
-```bash
-custom_components/vesync/__init__.py
-custom_components/vesync/switch.py
-custom_components/vesync/fan.py
-custom_components/vesync/manifest.json
-```
-
-The version of the library defined in `manifest.json` should now get loaded within Home Assistant.
+All contributions are welcome, please run `tox` before submitting a PR to ensure code is valid.

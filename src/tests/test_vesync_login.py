@@ -7,12 +7,14 @@ import pyvesync
 from pyvesync.vesync import VeSync
 from pyvesync.helpers import Helpers as helpers
 
-login_test_vals = [('sam@mail.com', 'pass', 'America/New_York', 'full corret'),
-                   ('sam@mail.com', 'pass', 'invalidtz!', 'invalid tz'),
-                   ('sam@mail.com', 'pass', None, 'none tz'),
-                   ('sam@mail.com', 'pass', '', 'empty tz'),
-                   ('sam@mail.com', None, None, 'none tz pass'),
-                   ('sam@mail.com', '', '', 'empty pass')]
+login_test_vals = [
+    ('sam@mail.com', 'pass', 'America/New_York', 'full corret'),
+    ('sam@mail.com', 'pass', 'invalidtz!', 'invalid tz'),
+    ('sam@mail.com', 'pass', None, 'none tz'),
+    ('sam@mail.com', 'pass', '', 'empty tz'),
+    ('sam@mail.com', None, None, 'none tz pass'),
+    ('sam@mail.com', '', '', 'empty pass'),
+]
 
 
 @pytest.mark.parametrize('email, password, timezone, testid', login_test_vals)
@@ -61,28 +63,21 @@ class TestLogin(object):
         assert vesync_obj.login() is False
         if testid == 'correct':
             jd = helpers.req_body(vesync_obj, 'login')
-            self.mock_api.assert_called_with('/cloud/v1/user/login',
-                                             'post',
-                                             json=jd)
+            self.mock_api.assert_called_with('/cloud/v1/user/login', 'post', json=jd)
         else:
             assert not self.mock_api.called
 
     def test_good_login(self, api_mock):
         """Test successful login."""
-        full_return = ({
-            'code': 0,
-            'result': {
-                'accountID': 'sam_actid',
-                'token': 'sam_token'
-            }
-        }, 200)
+        full_return = (
+            {'code': 0, 'result': {'accountID': 'sam_actid', 'token': 'sam_token'}},
+            200,
+        )
         self.mock_api.return_value = full_return
         vesync_obj = VeSync('sam@mail.com', 'pass')
         assert vesync_obj.login() is True
         jd = helpers.req_body(vesync_obj, 'login')
-        self.mock_api.assert_called_with('/cloud/v1/user/login',
-                                         'post',
-                                         json=jd)
+        self.mock_api.assert_called_with('/cloud/v1/user/login', 'post', json=jd)
         assert vesync_obj.token == 'sam_token'
         assert vesync_obj.account_id == 'sam_actid'
 
@@ -103,6 +98,7 @@ def test_login(mock_api, email, password, testid):
             'https://smartapi.vesync.com/cloud/v1/user/login',
             headers=None,
             json=jd,
-            timeout=5)
+            timeout=5,
+        )
     else:
         assert not mock_api.called
