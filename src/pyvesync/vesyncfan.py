@@ -381,8 +381,6 @@ class VeSync300S(VeSyncBaseDevice):
             'method': 'setSwitch',
             'source': 'APP'
         }
-        print('body')
-        print(body)
 
         r, _ = Helpers.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
