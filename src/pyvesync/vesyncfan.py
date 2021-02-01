@@ -341,8 +341,11 @@ class VeSync300S(VeSyncBaseDevice):
             headers=head,
             json=body,
         )
-        inner_result = r.get('result', {}).get('result')
         outer_result = r.get('result', {})
+        inner_result = None
+        
+        if outer_result is not None:
+            inner_result = r.get('result', {}).get('result')
         if inner_result is not None and Helpers.code_check(r):
             if outer_result.get('code') == 0:
                 self.build_humid_dict(inner_result)
