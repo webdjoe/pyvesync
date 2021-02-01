@@ -327,12 +327,13 @@ class VeSync300S(VeSyncBaseDevice):
     def get_details(self) -> None:
         """Build 300S Humidifier details dictionary."""
         head = Helpers.bypass_header()
-        body = Helpers.req_body(self.manager, 'devicedetail')
+        body = Helpers.bypass_body_v2(self.manager)
         body['cid'] = self.cid
         body['configModule'] = self.config_module
         body['payload'] = {
             'method': 'getHumidifierStatus',
-            'source': 'APP'
+            'source': 'APP',
+            'data': {}
         }
 
         r, _ = Helpers.call_api(
