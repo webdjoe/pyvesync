@@ -455,6 +455,9 @@ class VeSync300S(VeSyncBaseDevice):
             return False
         head, body = self.__build_api_dict('setTargetHumidity')
 
+        # This is a hack
+        body['method'] = 'bypassV2'
+
         if not head and not body:
             return False
 
@@ -468,7 +471,7 @@ class VeSync300S(VeSyncBaseDevice):
             headers=head,
             json=body,
         )
-
+        print(body)
         if Helpers.code_check(r):
             return True
         logger.debug('Error setting humidity')
