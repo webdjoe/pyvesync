@@ -289,7 +289,7 @@ class VeSync300S(VeSyncBaseDevice):
             logger.debug('Invalid mode - %s', method)
             return {}, {}
         head = Helpers.bypass_header()
-        body = Helpers.req_body(self.manager, 'devicedetail')
+        body = Helpers.bypass_body_v2(self.manager)
         body['cid'] = self.cid
         body['configModule'] = self.config_module
         body['payload'] = {
@@ -434,9 +434,6 @@ class VeSync300S(VeSyncBaseDevice):
             'enabled': enable
         }
 
-        # This is a hack
-        body['method'] = 'bypassV2'
-
         r, _ = Helpers.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
@@ -458,9 +455,6 @@ class VeSync300S(VeSyncBaseDevice):
             logger.debug("Humidity value must be set between 0 and 100")
             return False
         head, body = self.__build_api_dict('setTargetHumidity')
-
-        # This is a hack
-        body['method'] = 'bypassV2'
 
         if not head and not body:
             return False
@@ -493,9 +487,6 @@ class VeSync300S(VeSyncBaseDevice):
             'mode': mode
         }
 
-        # This is a hack
-        body['method'] = 'bypassV2'
-
         r, _ = Helpers.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
@@ -517,9 +508,6 @@ class VeSync300S(VeSyncBaseDevice):
         head, body = self.__build_api_dict('setVirtualLevel')
         if not head and not body:
             return False
-
-        # This is a hack
-        body['method'] = 'bypassV2'
 
         body['payload']['data'] = {
             'id': 0,
