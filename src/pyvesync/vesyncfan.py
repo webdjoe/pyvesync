@@ -475,7 +475,7 @@ class VeSync300S(VeSyncBaseDevice):
             headers=head,
             json=body,
         )
-        print(body)
+
         if Helpers.code_check(r):
             return True
         logger.debug('Error setting humidity')
