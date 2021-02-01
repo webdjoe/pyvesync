@@ -364,7 +364,7 @@ class VeSync300S(VeSyncBaseDevice):
 
     def toggle_switch(self, toggle) -> bool:
         """Toggle humidifier on/off."""
-        if toggle != 'on' or toggle != 'off':
+        if toggle != 'on' and toggle != 'off':
             logger.debug('Invalid toggle value for humidifier switch')
             return False
         enable = bool(toggle == 'on')
@@ -381,6 +381,8 @@ class VeSync300S(VeSyncBaseDevice):
             'method': 'setSwitch',
             'source': 'APP'
         }
+        print('body')
+        print(body)
 
         r, _ = Helpers.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
