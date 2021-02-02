@@ -237,7 +237,7 @@ class VeSyncAir131(VeSyncBaseDevice):
         """Return air purifier status and properties in JSON output."""
         sup = super().displayJSON()
         sup_val = json.loads(sup)
-        sup_val.append(
+        sup_val.update(
             {
                 'Active Time': str(self.active_time),
                 'Fan Level': self.fan_level,
@@ -527,3 +527,48 @@ class VeSync300S(VeSyncBaseDevice):
             return True
         logger.debug('Error setting mist level')
         return False
+
+    def display(self) -> None:
+        """Return formatted device info to stdout."""
+        super().display()
+        disp1 = [
+            ('Mode: ', self.details['mode'], ''),
+            ('Humidity: ', self.details['humidity'], 'percent'),
+            ('Mist Virtual Level: ', self.details['mist_virtual_level'], ''),
+            ('Mist Level: ', self.details['mist_level'], ''),
+            ('Water Lacks: ', self.details['water_lacks'], ''),
+            ('Humidity High: ', self.details['humidity_high'], ''),
+            ('Water Tank Lifted: ', self.details['water_tank_lifted'], ''),
+            ('Display: ', self.details['display'], ''),
+            ('Automatic Stop Reach Target: ', self.details['automatic_stop_reach_target'], ''),
+            ('Night Light Brightness: ', self.details['night_light_brightness'], 'percent'),
+
+            ('Auto Target Humidity: ', self.config['auto_target_humidity'], 'percent'),
+            # ('Display: ', self.config['display'], ''), # duplicated from details
+            ('Automatic Stop: ', self.config['automatic_stop'], ''),
+        ]
+        for line in disp1:
+            print('{:.<29} {} {}'.format(line[0], line[1], line[2]))
+
+    def displayJSON(self) -> str:
+        """Return air purifier status and properties in JSON output."""
+        sup = super().displayJSON()
+        sup_val = json.loads(sup)
+        sup_val.update(
+            {
+                'Mode': self.details['mode'],
+                'Humidity': str(self.details['humidity']),
+                'Mist Virtual Level': str(self.details['mist_virtual_level']),
+                'Mist Level': str(self.details['mist_level']),
+                'Water Lacks': self.details['water_lacks'],
+                'Humidity High': self.details['humidity_high'],
+                'Water Tank Lifted': self.details['water_tank_lifted'],
+                'Display': self.details['display'],
+                'Automatic Stop Reach Target': self.details['automatic_stop_reach_target'],
+                'Night Light Brightness': self.details['night_light_brightness'],
+                'Auto Target Humidity': str(self.config['auto_target_humidity']),
+                'Display': self.config['display'],
+                'Automatic Stop': self.config['automatic_stop'],
+            }
+        )
+        return json.dumps(sup_val)
