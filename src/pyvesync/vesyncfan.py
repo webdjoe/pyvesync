@@ -452,8 +452,8 @@ class VeSync300S(VeSyncBaseDevice):
 
     def set_humidity(self, humidity: int) -> bool:
         """Set target 300S Humidifier humidity."""
-        if 0 > humidity > 100:
-            logger.debug("Humidity value must be set between 0 and 100")
+        if 30 > humidity or humidity > 80:
+            logger.debug("Humidity value must be set between 30 and 80")
             return False
         head, body = self.__build_api_dict('setTargetHumidity')
 
@@ -462,6 +462,32 @@ class VeSync300S(VeSyncBaseDevice):
 
         body['payload']['data'] = {
             'target_humidity': humidity
+        }
+
+        r, _ = Helpers.call_api(
+            '/cloud/v2/deviceManaged/bypassV2',
+            method='post',
+            headers=head,
+            json=body,
+        )
+
+        if Helpers.code_check(r):
+            return True
+        logger.debug('Error setting humidity')
+        return False
+
+    def set_night_light_brightness(self, brightness: int) -> bool:
+        """Set target 300S Humidifier night light brightness."""
+        if 0 > brightness or brightness > 100:
+            logger.debug("Brightness value must be set between 0 and 100")
+            return False
+        head, body = self.__build_api_dict('setNightLightBrightness')
+
+        if not head and not body:
+            return False
+
+        body['payload']['data'] = {
+            'night_light_brightness': brightness
         }
 
         r, _ = Helpers.call_api(
@@ -502,7 +528,7 @@ class VeSync300S(VeSyncBaseDevice):
 
     def set_mist_level(self, level: int) -> bool:
         """Set humidifier mist level with int between 0 - 9."""
-        if 0 > level > 9:
+        if 1 > level or level > 9:
             logger.debug('Humidifier mist level must be between 0 and 9')
             return False
 
