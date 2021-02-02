@@ -228,7 +228,7 @@ class VeSyncAir131(VeSyncBaseDevice):
             ('Air Quality: ', self.air_quality, ''),
             ('Mode: ', self.mode, ''),
             ('Screen Status: ', self.screen_status, ''),
-            ('Filter List: ', self.filter_life, ' percent'),
+            ('Filter Life: ', self.filter_life, ' percent'),
         ]
         for line in disp1:
             print('{:.<15} {} {}'.format(line[0], line[1], line[2]))
