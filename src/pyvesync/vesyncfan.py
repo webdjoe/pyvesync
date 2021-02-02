@@ -284,7 +284,7 @@ class VeSync300S(VeSyncBaseDevice):
         """
         modes = ['getHumidifierStatus', 'setAutomaticStop',
                  'setSwitch', 'setNightLightBrightness', 'setVirtualLevel',
-                 'setTargetHumidity', 'setHumidityMode']
+                 'setTargetHumidity', 'setHumidityMode', 'setDisplay']
         if method not in modes:
             logger.debug('Invalid mode - %s', method)
             return {}, {}
@@ -449,6 +449,42 @@ class VeSync300S(VeSyncBaseDevice):
         else:
             logger.debug('Error in api return json for %s', self.device_name)
         return False
+
+    def set_display(self, mode: str = 'NotSet') -> bool:
+        """Toggle display on/off."""
+        if mode in ['True', 'on', 'true']:
+            enable = True
+        elif mode in ['False', 'off', 'false']:
+            enable = False
+        else:
+            logger.debug("Mode must be true or false")
+            return False
+
+        head, body = self.__build_api_dict('setDisplay')
+
+        body['payload']['data'] = {
+            'state': enable
+        }
+
+        r, _ = Helpers.call_api(
+            '/cloud/v2/deviceManaged/bypassV2',
+            method='post',
+            headers=head,
+            json=body,
+        )
+
+        if Helpers.code_check(r):
+            return True
+        logger.debug("Error toggling 300S display - %s", self.device_name)
+        return False
+
+    def turn_on_display(self) -> bool:
+        """Turn 300S Humidifier on."""
+        return self.set_display('on')
+
+    def turn_off_display(self):
+        """Turn 300S Humidifier off."""
+        return self.set_display('off')
 
     def set_humidity(self, humidity: int) -> bool:
         """Set target 300S Humidifier humidity."""
