@@ -228,7 +228,7 @@ class VeSyncAir131(VeSyncBaseDevice):
             ('Air Quality: ', self.air_quality, ''),
             ('Mode: ', self.mode, ''),
             ('Screen Status: ', self.screen_status, ''),
-            ('Filter List: ', self.filter_life, ' percent'),
+            ('Filter Life: ', self.filter_life, ' percent'),
         ]
         for line in disp1:
             print('{:.<15} {} {}'.format(line[0], line[1], line[2]))
@@ -237,7 +237,7 @@ class VeSyncAir131(VeSyncBaseDevice):
         """Return air purifier status and properties in JSON output."""
         sup = super().displayJSON()
         sup_val = json.loads(sup)
-        sup_val.append(
+        sup_val.update(
             {
                 'Active Time': str(self.active_time),
                 'Fan Level': self.fan_level,
@@ -284,12 +284,12 @@ class VeSync300S(VeSyncBaseDevice):
         """
         modes = ['getHumidifierStatus', 'setAutomaticStop',
                  'setSwitch', 'setNightLightBrightness', 'setVirtualLevel',
-                 'setTargetHumidity', 'setHumidityMode']
+                 'setTargetHumidity', 'setHumidityMode', 'setDisplay']
         if method not in modes:
             logger.debug('Invalid mode - %s', method)
             return {}, {}
         head = Helpers.bypass_header()
-        body = Helpers.req_body(self.manager, 'devicedetail')
+        body = Helpers.bypass_body_v2(self.manager)
         body['cid'] = self.cid
         body['configModule'] = self.config_module
         body['payload'] = {
@@ -327,12 +327,13 @@ class VeSync300S(VeSyncBaseDevice):
     def get_details(self) -> None:
         """Build 300S Humidifier details dictionary."""
         head = Helpers.bypass_header()
-        body = Helpers.req_body(self.manager, 'devicedetail')
+        body = Helpers.bypass_body_v2(self.manager)
         body['cid'] = self.cid
         body['configModule'] = self.config_module
         body['payload'] = {
             'method': 'getHumidifierStatus',
-            'source': 'APP'
+            'source': 'APP',
+            'data': {}
         }
 
         r, _ = Helpers.call_api(
@@ -341,15 +342,18 @@ class VeSync300S(VeSyncBaseDevice):
             headers=head,
             json=body,
         )
-        inner_result = r.get('result', {}).get('result')
         outer_result = r.get('result', {})
+        inner_result = None
+        
+        if outer_result is not None:
+            inner_result = r.get('result', {}).get('result')
         if inner_result is not None and Helpers.code_check(r):
             if outer_result.get('code') == 0:
                 self.build_humid_dict(inner_result)
             else:
                 logger.debug('error in inner result dict from humidifier')
-            if inner_result.get('config', {}):
-                self.build_config_dict(inner_result)
+            if inner_result.get('configuration', {}):
+                self.build_config_dict(inner_result.get('configuration', {}))
             else:
                 logger.debug('No configuration found in humidifier status')
         else:
@@ -361,7 +365,7 @@ class VeSync300S(VeSyncBaseDevice):
 
     def toggle_switch(self, toggle) -> bool:
         """Toggle humidifier on/off."""
-        if toggle != 'on' or toggle != 'off':
+        if toggle != 'on' and toggle != 'off':
             logger.debug('Invalid toggle value for humidifier switch')
             return False
         enable = bool(toggle == 'on')
@@ -426,7 +430,10 @@ class VeSync300S(VeSyncBaseDevice):
         head, body = self.__build_api_dict('setAutomaticStop')
         if not head and not body:
             return False
-        body['payload']['data']['enabled'] = enable
+
+        body['payload']['data'] = {
+            'enabled': enable
+        }
 
         r, _ = Helpers.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
@@ -443,10 +450,46 @@ class VeSync300S(VeSyncBaseDevice):
             logger.debug('Error in api return json for %s', self.device_name)
         return False
 
+    def set_display(self, mode: str = 'NotSet') -> bool:
+        """Toggle display on/off."""
+        if mode in ['True', 'on', 'true']:
+            enable = True
+        elif mode in ['False', 'off', 'false']:
+            enable = False
+        else:
+            logger.debug("Mode must be true or false")
+            return False
+
+        head, body = self.__build_api_dict('setDisplay')
+
+        body['payload']['data'] = {
+            'state': enable
+        }
+
+        r, _ = Helpers.call_api(
+            '/cloud/v2/deviceManaged/bypassV2',
+            method='post',
+            headers=head,
+            json=body,
+        )
+
+        if Helpers.code_check(r):
+            return True
+        logger.debug("Error toggling 300S display - %s", self.device_name)
+        return False
+
+    def turn_on_display(self) -> bool:
+        """Turn 300S Humidifier on."""
+        return self.set_display('on')
+
+    def turn_off_display(self):
+        """Turn 300S Humidifier off."""
+        return self.set_display('off')
+
     def set_humidity(self, humidity: int) -> bool:
         """Set target 300S Humidifier humidity."""
-        if 0 > humidity > 100:
-            logger.debug("Humidity value must be set between 0 and 100")
+        if 30 > humidity or humidity > 80:
+            logger.debug("Humidity value must be set between 30 and 80")
             return False
         head, body = self.__build_api_dict('setTargetHumidity')
 
@@ -469,12 +512,38 @@ class VeSync300S(VeSyncBaseDevice):
         logger.debug('Error setting humidity')
         return False
 
+    def set_night_light_brightness(self, brightness: int) -> bool:
+        """Set target 300S Humidifier night light brightness."""
+        if 0 > brightness or brightness > 100:
+            logger.debug("Brightness value must be set between 0 and 100")
+            return False
+        head, body = self.__build_api_dict('setNightLightBrightness')
+
+        if not head and not body:
+            return False
+
+        body['payload']['data'] = {
+            'night_light_brightness': brightness
+        }
+
+        r, _ = Helpers.call_api(
+            '/cloud/v2/deviceManaged/bypassV2',
+            method='post',
+            headers=head,
+            json=body,
+        )
+
+        if Helpers.code_check(r):
+            return True
+        logger.debug('Error setting humidity')
+        return False
+
     def set_humidity_mode(self, mode: str) -> bool:
         """Set humidifier mode - sleep or auto."""
         if mode not in ['sleep', 'auto']:
             logger.debug('Invalid humidity mode used - %s', mode)
             return False
-        head, body = self.__build_api_dict('setTargetHumidity')
+        head, body = self.__build_api_dict('setHumidityMode')
         if not head and not body:
             return False
         body['payload']['data'] = {
@@ -495,7 +564,7 @@ class VeSync300S(VeSyncBaseDevice):
 
     def set_mist_level(self, level: int) -> bool:
         """Set humidifier mist level with int between 0 - 9."""
-        if 0 > level > 9:
+        if 1 > level or level > 9:
             logger.debug('Humidifier mist level must be between 0 and 9')
             return False
 
@@ -520,3 +589,48 @@ class VeSync300S(VeSyncBaseDevice):
             return True
         logger.debug('Error setting mist level')
         return False
+
+    def display(self) -> None:
+        """Return formatted device info to stdout."""
+        super().display()
+        disp1 = [
+            ('Mode: ', self.details['mode'], ''),
+            ('Humidity: ', self.details['humidity'], 'percent'),
+            ('Mist Virtual Level: ', self.details['mist_virtual_level'], ''),
+            ('Mist Level: ', self.details['mist_level'], ''),
+            ('Water Lacks: ', self.details['water_lacks'], ''),
+            ('Humidity High: ', self.details['humidity_high'], ''),
+            ('Water Tank Lifted: ', self.details['water_tank_lifted'], ''),
+            ('Display: ', self.details['display'], ''),
+            ('Automatic Stop Reach Target: ', self.details['automatic_stop_reach_target'], ''),
+            ('Night Light Brightness: ', self.details['night_light_brightness'], 'percent'),
+
+            ('Auto Target Humidity: ', self.config['auto_target_humidity'], 'percent'),
+            # ('Display: ', self.config['display'], ''), # duplicated from details
+            ('Automatic Stop: ', self.config['automatic_stop'], ''),
+        ]
+        for line in disp1:
+            print('{:.<29} {} {}'.format(line[0], line[1], line[2]))
+
+    def displayJSON(self) -> str:
+        """Return air purifier status and properties in JSON output."""
+        sup = super().displayJSON()
+        sup_val = json.loads(sup)
+        sup_val.update(
+            {
+                'Mode': self.details['mode'],
+                'Humidity': str(self.details['humidity']),
+                'Mist Virtual Level': str(self.details['mist_virtual_level']),
+                'Mist Level': str(self.details['mist_level']),
+                'Water Lacks': self.details['water_lacks'],
+                'Humidity High': self.details['humidity_high'],
+                'Water Tank Lifted': self.details['water_tank_lifted'],
+                'Display': self.details['display'],
+                'Automatic Stop Reach Target': self.details['automatic_stop_reach_target'],
+                'Night Light Brightness': self.details['night_light_brightness'],
+                'Auto Target Humidity': str(self.config['auto_target_humidity']),
+                'Display': self.config['display'],
+                'Automatic Stop': self.config['automatic_stop'],
+            }
+        )
+        return json.dumps(sup_val)

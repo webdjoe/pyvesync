@@ -241,6 +241,7 @@ class Helpers:
         bdy['method'] = 'bypassV2'
         bdy['debugMode'] = False
         bdy['deviceRegion'] = DEFAULT_REGION
+        return bdy
 
     @staticmethod
     def bypass_header():
