@@ -16,15 +16,17 @@ pyvesync is a library to manage VeSync compatible [smart home devices](#supporte
   - [Outlet Specific Energy Methods and Properties](#outlet-specific-energy-methods-and-properties)
   - [Model ESW15-USA 15A/1800W Methods](#model-esw15-usa-15a1800w-methods)
   - [Air Purifier LV-PUR131S Methods](#air-purifier-lv-pur131s-methods)
-  - [Dimmable Smart Light Bulb Method and Properties](#dimmable-smart-light-bulb-method-and-properties)
-  - [Tunable Smart Light Bulb Methods and Properties](#tunable-smart-light-bulb-methods-and-properties)
+  - [Dimmable Smart Light Bulb Method and Properties (ESL100)](#dimmable-smart-light-bulb-method-and-properties)
+  - [Tunable Smart Light Bulb Methods and Properties (ESL100CW)](#tunable-smart-light-bulb-methods-and-properties)
   - [Dimmable Switch Methods and Properties](#dimmable-switch-methods-and-properties)
+  - [Levoit 300S humidifer](#levoit-humidifier-300s-methods-and-properties)
   - [JSON Output API](#json-output-api)
     - [JSON Output for All Devices](#json-output-for-all-devices)
     - [JSON Output for Outlets](#json-output-for-outlets)
     - [JSON Output for Dimmable Switch](#json-output-for-dimmable-switch)
     - [JSON Output for Bulbs](#json-output-for-bulbs)
     - [JSON Output for Air Purifier](#json-output-for-air-purifier)
+    - [JSON Output for 300S Humidifier](#json-output-for-300s-humidifier)
 - [Notes](#notes)
 - [Feature Requests](#feature-requests)
 
@@ -56,7 +58,7 @@ To start with the module:
 ```python
 from pyvesync import VeSync
 
-manager = VeSync("EMAIL", "PASSWORD")
+manager = VeSync("EMAIL", "PASSWORD", "TIME_ZONE")
 manager.login()
 
 # Get/Update Devices from server - populate device lists
@@ -93,7 +95,7 @@ manger.bulbs = [VeSyncBulbObjects]
 If outlets are going to be continuously polled, a custom energy update interval can be set - The default is 6 hours (21600 seconds)
 
 ```python
-manager.energy_update_interval = time # time in seconds
+manager.energy_update_interval = 360 # time in seconds
 ```
 
 ## Example Usage
@@ -215,6 +217,52 @@ The rectangular smart switch model supports some additional functionality on top
 
 `VeSyncSwitch.rgb_color_set(red, green, blue)` - Set color of rgb light (0 - 255)
 
+### Levoit Humidifier 300S Methods and Properties
+
+The details dictionary contains all device status details 
+
+```python
+VeSync300S.details = {
+    'humidity': 80, # percent humidity in room
+    'mist_virtual_level': 0, # Level of mist output 1 - 9
+    'mist_level': 0,
+    'mode': 'manual', # auto, manual, sleep
+    'water_lacks': False,
+    'humidity_high': False,
+    'water_tank_lifted': False,
+    'display': False,
+    'automatic_stop_reach_target': False,
+    'night_light_brightness': 0
+    }
+```
+
+The configuration dictionary shows current settings
+
+```python
+VeSync300S.config = {
+    'auto_target_humidity': 80, # percent humidity in room
+    'display': True, # Display on/off
+    'automatic_stop': False
+    }
+```
+
+`VeSync300S.automatic_stop_on()` Set humidifier to stop at set humidity
+
+`VeSync300S.automatic_stop_off` Set humidifier to run continuously 
+
+`VeSync300S.turn_on_display()` Turn display on
+
+`VeSync300S.turn_off_display()` Turn display off
+
+`VeSync300S.set_humidity(30)` Set humidity between 30 and 80 percent
+
+`VeSync300S.set_night_light_brightness(50)` Set nightlight brightness between 1 and 100
+
+`VeSync300S.set_humidity_mode('sleep')` Set humidity mode - sleep/auto
+
+`VeSync300S.set_mist_level(4)` Set mist output 1 - 9
+
+
 ### JSON Output API
 
 The `device.displayJSON()` method outputs properties and status of the device
@@ -288,6 +336,22 @@ This output only applies to dimmable switch.  The standard switch has the defaul
   'Mode': 'auto',
   'Screen Status': 'on',
   'Filter Life': '99' # remaining filter life in percent
+}
+```
+#### JSON Output for 300S Humidifier
+
+```python
+{
+  'Mode': 'manual', # auto, manual, sleep
+  'Humidity': 20, # percent
+  'Mist Virtual Level': 6, # Mist level 1 - 9
+  'Water Lacks': True, # True/False
+  'Water Tank Lifted': True, # True/False
+  'Display': True, # True/False
+  'Automatic Stop Reach Target': True,
+  'Night Light Brightness': 10, # 1 - 100
+  'Auto Target Humidity': True, # True/False
+  'Automatic Stop': True # True/False
 }
 ```
 

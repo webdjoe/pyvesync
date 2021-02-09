@@ -363,12 +363,11 @@ class VeSync300S(VeSyncBaseDevice):
         """Update 300S Humidifier details."""
         self.get_details()
 
-    def toggle_switch(self, toggle) -> bool:
+    def toggle_switch(self, toggle: bool) -> bool:
         """Toggle humidifier on/off."""
-        if toggle not in ('on', 'off'):
+        if not isinstance(toggle, bool):
             logger.debug('Invalid toggle value for humidifier switch')
             return False
-        enable = bool(toggle == 'on')
 
         head = Helpers.bypass_header()
         body = Helpers.bypass_body_v2(self.manager)
@@ -376,7 +375,7 @@ class VeSync300S(VeSyncBaseDevice):
         body['configModule'] = self.config_module
         body['payload'] = {
             'data': {
-                'enabled': enable,
+                'enabled': toggle,
                 'id': 0
             },
             'method': 'setSwitch',
@@ -397,32 +396,23 @@ class VeSync300S(VeSyncBaseDevice):
 
     def turn_on(self) -> bool:
         """Turn 300S Humidifier on."""
-        return self.toggle_switch('on')
+        return self.toggle_switch(True)
 
     def turn_off(self):
         """Turn 300S Humidifier off."""
-        return self.toggle_switch('off')
+        return self.toggle_switch(False)
 
     def automatic_stop_on(self) -> bool:
         """Turn 300S Humidifier automatic stop on."""
-        return self.set_automatic_stop('on')
+        return self.set_automatic_stop(True)
 
     def automatic_stop_off(self) -> bool:
         """Turn 300S Humidifier automatic stop on."""
-        return self.set_automatic_stop('off')
+        return self.set_automatic_stop(False)
 
-    def set_automatic_stop(self, mode: str = 'NotSet') -> bool:
+    def set_automatic_stop(self, mode: bool) -> bool:
         """Set 300S Humidifier to automatic stop."""
-        if mode in ['True', 'on', 'true']:
-            enable = True
-        elif mode in ['False', 'off']:
-            enable = False
-        elif mode == 'NotSet':
-            if self.details['automatic_stop_reach_target']:
-                enable = False
-            else:
-                enable = True
-        else:
+        if mode not in (True, False):
             logger.debug(
                 'Invalid mode passed to set_automatic_stop - %s', mode)
             return False
@@ -432,7 +422,7 @@ class VeSync300S(VeSyncBaseDevice):
             return False
 
         body['payload']['data'] = {
-            'enabled': enable
+            'enabled': mode
         }
 
         r, _ = Helpers.call_api(
@@ -450,20 +440,16 @@ class VeSync300S(VeSyncBaseDevice):
             logger.debug('Error in api return json for %s', self.device_name)
         return False
 
-    def set_display(self, mode: str = 'NotSet') -> bool:
+    def set_display(self, mode: bool) -> bool:
         """Toggle display on/off."""
-        if mode in ['True', 'on', 'true']:
-            enable = True
-        elif mode in ['False', 'off', 'false']:
-            enable = False
-        else:
-            logger.debug("Mode must be true or false")
+        if not isinstance(mode, bool):
+            logger.debug("Mode must be True or False")
             return False
 
         head, body = self.__build_api_dict('setDisplay')
 
         body['payload']['data'] = {
-            'state': enable
+            'state': mode
         }
 
         r, _ = Helpers.call_api(
@@ -480,11 +466,11 @@ class VeSync300S(VeSyncBaseDevice):
 
     def turn_on_display(self) -> bool:
         """Turn 300S Humidifier on."""
-        return self.set_display('on')
+        return self.set_display(True)
 
     def turn_off_display(self):
         """Turn 300S Humidifier off."""
-        return self.set_display('off')
+        return self.set_display(False)
 
     def set_humidity(self, humidity: int) -> bool:
         """Set target 300S Humidifier humidity."""
@@ -540,14 +526,15 @@ class VeSync300S(VeSyncBaseDevice):
 
     def set_humidity_mode(self, mode: str) -> bool:
         """Set humidifier mode - sleep or auto."""
-        if mode not in ['sleep', 'auto']:
-            logger.debug('Invalid humidity mode used - %s', mode)
+        if mode.lower() not in ['sleep', 'auto']:
+            logger.debug('Invalid humidity mode used (sleep or auto)- %s',
+                         mode)
             return False
         head, body = self.__build_api_dict('setHumidityMode')
         if not head and not body:
             return False
         body['payload']['data'] = {
-            'mode': mode
+            'mode': mode.lower()
         }
 
         r, _ = Helpers.call_api(
