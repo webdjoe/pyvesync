@@ -9,7 +9,7 @@ from typing import List, Dict, DefaultDict, Union, Any
 
 from pyvesync.helpers import Helpers
 from pyvesync.vesyncbulb import VeSyncBulbESL100, VeSyncBulbESL100CW
-from pyvesync.vesyncfan import VeSyncAir131
+from pyvesync.vesyncfan import VeSyncAir131, VeSync300S
 from pyvesync.vesyncoutlet import (
     VeSyncOutlet7A,
     VeSyncOutlet10A,
@@ -39,13 +39,14 @@ _DEVICE_CLASS: Dict[str, Any] = {
     'ESL100': VeSyncBulbESL100,
     'ESL100CW': VeSyncBulbESL100CW,
     'ESWD16': VeSyncDimmerSwitch,
+    'Classic300S': VeSync300S
 }
 
 _DEVICE_TYPES_DICT: Dict[str, List[str]] = dict(
     outlets=['wifi-switch-1.3', 'ESW03-USA',
              'ESW01-EU', 'ESW15-USA', 'ESO15-TB'],
     switches=['ESWL01', 'ESWL03', 'ESWD16'],
-    fans=['LV-PUR131S'],
+    fans=['LV-PUR131S', 'Classic300S'],
     bulbs=['ESL100', 'ESL100CW'],
 )
 

@@ -12,12 +12,14 @@ API_RATE_LIMIT = 30
 API_TIMEOUT = 5
 
 DEFAULT_TZ = 'America/New_York'
+DEFAULT_REGION = 'US'
 
 APP_VERSION = '2.5.1'
 PHONE_BRAND = 'SM N9005'
 PHONE_OS = 'Android'
 MOBILE_ID = '1234567890123456'
 USER_TYPE = '1'
+BYPASS_APP_V = "VeSync 3.0.51"
 
 
 class Helpers:
@@ -85,7 +87,7 @@ class Helpers:
             }
             body['method'] = 'devices'
             body['pageNo'] = '1'
-            body['pageSize'] = '50'
+            body['pageSize'] = '100'
         elif type_ == 'devicestatus':
             body = {**cls.req_body_base(manager),
                     **cls.req_body_auth(manager)}
@@ -227,4 +229,24 @@ class Helpers:
             'threshold': threshold,
             'power_protection': r.get('powerProtectionStatus'),
             'energy_saving_status': r.get('energySavingStatus'),
+        }
+
+    @classmethod
+    def bypass_body_v2(cls, manager):
+        """Build body dict for bypass calls."""
+        bdy = {}
+        bdy.update(
+            **cls.req_body(manager, "bypass")
+        )
+        bdy['method'] = 'bypassV2'
+        bdy['debugMode'] = False
+        bdy['deviceRegion'] = DEFAULT_REGION
+        return bdy
+
+    @staticmethod
+    def bypass_header():
+        """Build bypass header dict."""
+        return {
+            'Content-Type': 'application/json; charset=UTF-8',
+            'User-Agent': 'VeSync/VeSync 3.0.51(F5321;Android 8.0.0)'
         }
