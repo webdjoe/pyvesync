@@ -344,7 +344,7 @@ class VeSync300S(VeSyncBaseDevice):
         )
         outer_result = r.get('result', {})
         inner_result = None
-        
+
         if outer_result is not None:
             inner_result = r.get('result', {}).get('result')
         if inner_result is not None and Helpers.code_check(r):
@@ -365,7 +365,7 @@ class VeSync300S(VeSyncBaseDevice):
 
     def toggle_switch(self, toggle) -> bool:
         """Toggle humidifier on/off."""
-        if toggle != 'on' and toggle != 'off':
+        if toggle not in ('on', 'off'):
             logger.debug('Invalid toggle value for humidifier switch')
             return False
         enable = bool(toggle == 'on')
@@ -488,7 +488,7 @@ class VeSync300S(VeSyncBaseDevice):
 
     def set_humidity(self, humidity: int) -> bool:
         """Set target 300S Humidifier humidity."""
-        if 30 > humidity or humidity > 80:
+        if humidity < 30 or humidity > 80:
             logger.debug("Humidity value must be set between 30 and 80")
             return False
         head, body = self.__build_api_dict('setTargetHumidity')
@@ -514,7 +514,7 @@ class VeSync300S(VeSyncBaseDevice):
 
     def set_night_light_brightness(self, brightness: int) -> bool:
         """Set target 300S Humidifier night light brightness."""
-        if 0 > brightness or brightness > 100:
+        if brightness < 0 or brightness > 100:
             logger.debug("Brightness value must be set between 0 and 100")
             return False
         head, body = self.__build_api_dict('setNightLightBrightness')
@@ -564,7 +564,7 @@ class VeSync300S(VeSyncBaseDevice):
 
     def set_mist_level(self, level: int) -> bool:
         """Set humidifier mist level with int between 0 - 9."""
-        if 1 > level or level > 9:
+        if level < 1 or level > 9:
             logger.debug('Humidifier mist level must be between 0 and 9')
             return False
 
@@ -602,11 +602,12 @@ class VeSync300S(VeSyncBaseDevice):
             ('Humidity High: ', self.details['humidity_high'], ''),
             ('Water Tank Lifted: ', self.details['water_tank_lifted'], ''),
             ('Display: ', self.details['display'], ''),
-            ('Automatic Stop Reach Target: ', self.details['automatic_stop_reach_target'], ''),
-            ('Night Light Brightness: ', self.details['night_light_brightness'], 'percent'),
-
-            ('Auto Target Humidity: ', self.config['auto_target_humidity'], 'percent'),
-            # ('Display: ', self.config['display'], ''), # duplicated from details
+            ('Automatic Stop Reach Target: ',
+                self.details['automatic_stop_reach_target'], ''),
+            ('Night Light Brightness: ',
+                self.details['night_light_brightness'], 'percent'),
+            ('Auto Target Humidity: ',
+                self.config['auto_target_humidity'], 'percent'),
             ('Automatic Stop: ', self.config['automatic_stop'], ''),
         ]
         for line in disp1:
@@ -620,16 +621,19 @@ class VeSync300S(VeSyncBaseDevice):
             {
                 'Mode': self.details['mode'],
                 'Humidity': str(self.details['humidity']),
-                'Mist Virtual Level': str(self.details['mist_virtual_level']),
+                'Mist Virtual Level': str(
+                    self.details['mist_virtual_level']),
                 'Mist Level': str(self.details['mist_level']),
                 'Water Lacks': self.details['water_lacks'],
                 'Humidity High': self.details['humidity_high'],
                 'Water Tank Lifted': self.details['water_tank_lifted'],
                 'Display': self.details['display'],
-                'Automatic Stop Reach Target': self.details['automatic_stop_reach_target'],
-                'Night Light Brightness': self.details['night_light_brightness'],
-                'Auto Target Humidity': str(self.config['auto_target_humidity']),
-                'Display': self.config['display'],
+                'Automatic Stop Reach Target': self.details[
+                    'automatic_stop_reach_target'],
+                'Night Light Brightness': self.details[
+                    'night_light_brightness'],
+                'Auto Target Humidity': str(self.config[
+                    'auto_target_humidity']),
                 'Automatic Stop': self.config['automatic_stop'],
             }
         )
