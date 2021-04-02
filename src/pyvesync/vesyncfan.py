@@ -113,12 +113,12 @@ class VeSyncAir200S(VeSyncBaseDevice):
         self.get_details()
 
     @property
-    def fan_level(self) -> str:
+    def fan_level(self) -> int:
         """Get current fan level (1-3)."""
         return self.details['level']
 
     @property
-    def filter_life(self) -> str:
+    def filter_life(self) -> int:
         """Get percentage of filter life remaining."""
         try:
             return self.details['filter_life']
@@ -235,11 +235,7 @@ class VeSyncAir200S(VeSyncBaseDevice):
         return self.set_display(False)
 
     def change_fan_speed(self, speed: int = None) -> bool:
-        """Adjust Fan Speed for air purifier.
-        Specifying 1,2,3 as argument or call without argument to cycle
-        through speeds increasing by one.
-        """
-
+        """1,2,3 or call without argument to increment by 1."""
         print(self.details['mode'])
         if self.details['mode'] != 'manual':
             logger.debug('%s not in manual mode, cannot change speed',

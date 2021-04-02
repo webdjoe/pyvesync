@@ -49,7 +49,7 @@ pip install pyvesync
 5. Etekcity Two Plug Outdoor Outlet (ESO15-TB) (Each plug is a separate object, energy readings are for both plugs combined)
 6. Etekcity Smart WiFi Light Switch (model ESWL01)
 7. Levoit Smart Wifi Air Purifier (LV-PUR131S)
-8. Levoit Smart Wifi Air Purifier (Core200S)
+8. Levoit Smart True HEPA Air Purifier (Core200S)
 9. Etekcity Soft White Dimmable Smart Bulb (ESL100)
 10. Etekcity Cool to Soft White Tunable Dimmable Bulb (ESL100CW)
 11. Etekcity Wifi Dimmer Switch (ESD16)
