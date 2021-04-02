@@ -10,6 +10,7 @@ from pyvesync.helpers import Helpers
 
 logger = logging.getLogger(__name__)
 
+
 class VeSyncAir200S(VeSyncBaseDevice):
     """Core200S Purifier Class."""
 
@@ -63,12 +64,14 @@ class VeSyncAir200S(VeSyncBaseDevice):
         self.details['child_lock'] = dev_dict.get('child_lock', False)
         self.details['night_light'] = dev_dict.get('night_light', 'off')
         self.details['display'] = dev_dict.get('display', False)
-        self.details['display_forever'] = dev_dict.get('display_forever', False)
+        self.details['display_forever'] = dev_dict.get('display_forever',
+                                                       False)
 
     def build_config_dict(self, conf_dict):
         """Build configuration dict for Core200s purifier."""
         self.config['display'] = conf_dict.get('display', False)
-        self.config['display_forever'] = conf_dict.get('display_forever', False)
+        self.config['display_forever'] = conf_dict.get('display_forever',
+                                                       False)
 
     def get_details(self) -> None:
         """Build Core200S Purifier details dictionary."""
@@ -110,12 +113,12 @@ class VeSyncAir200S(VeSyncBaseDevice):
         self.get_details()
 
     @property
-    def fan_level(self) -> int:
+    def fan_level(self) -> str:
         """Get current fan level (1-3)."""
         return self.details['level']
 
     @property
-    def filter_life(self) -> int:
+    def filter_life(self) -> str:
         """Get percentage of filter life remaining."""
         try:
             return self.details['filter_life']
@@ -174,7 +177,7 @@ class VeSyncAir200S(VeSyncBaseDevice):
         if mode not in (True, False):
             logger.debug('Invalid mode passed to set_child_lock - %s', mode)
             return False
-           
+
         head, body = self.__build_api_dict('setChildLock')
         if not head and not body:
             return False
@@ -182,7 +185,7 @@ class VeSyncAir200S(VeSyncBaseDevice):
         body['payload']['data'] = {
             'child_lock': mode
         }
-        
+
         r, _ = Helpers.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
@@ -233,7 +236,6 @@ class VeSyncAir200S(VeSyncBaseDevice):
 
     def change_fan_speed(self, speed: int = None) -> bool:
         """Adjust Fan Speed for air purifier.
-
         Specifying 1,2,3 as argument or call without argument to cycle
         through speeds increasing by one.
         """
@@ -280,7 +282,7 @@ class VeSyncAir200S(VeSyncBaseDevice):
             'level': level,
             'type': 'wind'
         }
- 
+
         r, _ = Helpers.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
@@ -297,7 +299,8 @@ class VeSyncAir200S(VeSyncBaseDevice):
     def set_night_light(self, mode: str) -> bool:
         """Set night list  - on, off or dim."""
         if mode.lower() not in ['on', 'off', 'dim']:
-            logger.debug('Invalid nightlight mode used (on, off or dim)- %s', mode)
+            logger.debug('Invalid nightlight mode used (on, off or dim)- %s',
+                         mode)
             return False
         head, body = self.__build_api_dict('setNightLight')
         if not head and not body:
@@ -385,6 +388,7 @@ class VeSyncAir200S(VeSyncBaseDevice):
             }
         )
         return json.dumps(sup_val)
+
 
 class VeSyncAir131(VeSyncBaseDevice):
     """Levoit Air Purifier Class."""
