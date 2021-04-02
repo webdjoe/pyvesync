@@ -109,6 +109,19 @@ class VeSyncAir200S(VeSyncBaseDevice):
         """Update Core200S Purifier details."""
         self.get_details()
 
+    @property
+    def fan_level(self) -> int:
+        """Get current fan level (1-3)."""
+        return self.details['level']
+
+    @property
+    def filter_life(self) -> int:
+        """Get percentage of filter life remaining."""
+        try:
+            return self.details['filter_life']
+        except KeyError:
+            return 0
+
     def toggle_switch(self, toggle: bool) -> bool:
         """Toggle purifier on/off."""
         if not isinstance(toggle, bool):
@@ -330,10 +343,6 @@ class VeSyncAir200S(VeSyncBaseDevice):
             return True
         logger.debug('Error setting purifier mode')
         return False
-
-    def auto_mode(self) -> bool:
-        """Set mode to auto."""
-        return self.mode_toggle('auto')
 
     def manual_mode(self) -> bool:
         """Set mode to manual."""

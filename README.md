@@ -267,7 +267,25 @@ VeSync300S.config = {
 
 ### Levoit Purifier Core200S Methods and Properties
 
-levoit-purifier-core200s-methods-and-properties
+`VeSyncAir200S.change_fan_speed(2)` 1|2|3 or call without argument to increment by one
+
+`VeSyncAir200S.child_lock_on()` Enable child lock
+
+`VeSyncAir200S.child_lock_off()` Disable child lock
+
+`VeSyncAir200S.turn_on_display()` Turn display on
+
+`VeSyncAir200S.turn_off_display()` Turn display off
+
+`VeSyncAir200S.sleep_mode()` - Change mode to sleep
+
+`VeSyncAir200S.manual_mode()` - Change mode to manual
+
+`VeSyncAir200S.set_night_light('on'|'dim'|'off')` - Set night light brightness
+
+`VeSyncAir200S.fan_level()` - Return the level of the fan (1-3)
+
+`VeSyncAir200S.filter_life()` - Return the percentage of filter life remaining
 
 ### JSON Output API
 
