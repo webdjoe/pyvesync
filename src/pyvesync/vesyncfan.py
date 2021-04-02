@@ -366,13 +366,13 @@ class VeSyncAir200S(VeSyncBaseDevice):
         sup_val.update(
             {
                 'Mode': self.details['mode'],
-                'Filter Life': self.details['filter_life'],
-                'Fan Level': self.details['level'],
+                'Filter Life': str(self.details['filter_life']),
+                'Fan Level': str(self.details['level']),
                 'Display': self.details['display'],
                 'Child Lock': self.details['child_lock'],
-                'Night Light': self.details['night_light'],
+                'Night Light': str(self.details['night_light']),
                 'Display Config': self.config['display'],
-                'Display_Forever Config': self.config['display_forever']
+                'Display_Forever Config': self.config['display_forever'],
             }
         )
         return json.dumps(sup_val)
