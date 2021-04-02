@@ -115,13 +115,13 @@ class VeSyncAir200S(VeSyncBaseDevice):
     @property
     def fan_level(self) -> int:
         """Get current fan level (1-3)."""
-        return self.details['level']
+        return int(self.details['level'])
 
     @property
     def filter_life(self) -> int:
         """Get percentage of filter life remaining."""
         try:
-            return self.details['filter_life']
+            return int(self.details['filter_life'])
         except KeyError:
             return 0
 
@@ -243,7 +243,7 @@ class VeSyncAir200S(VeSyncBaseDevice):
             return False
 
         try:
-            level = self.details['level']
+            level = int(self.details['level'])
         except KeyError:
             logger.debug(
                 'Cannot change fan speed, no level set for %s',
