@@ -10,6 +10,372 @@ from pyvesync.helpers import Helpers
 
 logger = logging.getLogger(__name__)
 
+class VeSyncAir200S(VeSyncBaseDevice):
+    """Core200S Purifier Class."""
+
+    def __init__(self, details, manager):
+        """Initilize Core200S Purifier class."""
+        super().__init__(details, manager)
+        self.enabled = True
+        self.details: Dict[str, Union[str, int, float]] = {
+            'filter_life': 0,
+            'mode': "manual",
+            'level': 0,
+            'display': False,
+            'child_lock': False,
+            'night_list': "off"
+        }
+        self.config: Dict[str, Union[str, int, float]] = {
+            'display': False,
+            'display_forever': False
+        }
+
+    def __build_api_dict(self, method: str) -> Tuple[Dict, Dict]:
+        """Build Core200S api call header and body.
+
+        Available methods are: 'getPurifierStatus', 'setSwitch',
+        'setNightLight', 'setLevel', 'setDisplay'
+        'setPurifierMode', 'setChildLock'
+        """
+        modes = ['getPurifierStatus', 'setSwitch', 'setNightLight',
+                 'setLevel', 'setPurifierMode', 'setDisplay',
+                 'setChildLock']
+        if method not in modes:
+            logger.debug('Invalid mode - %s', method)
+            return {}, {}
+        head = Helpers.bypass_header()
+        body = Helpers.bypass_body_v2(self.manager)
+        body['cid'] = self.cid
+        body['configModule'] = self.config_module
+        body['payload'] = {
+            'method': method,
+            'source': 'APP'
+        }
+        return head, body
+
+    def build_purifier_dict(self, dev_dict: Dict):
+        """Build Core200S purifier status dictionary."""
+        self.enabled = dev_dict.get('enabled')
+        self.details['filter_life'] = dev_dict.get('filter_life', 0)
+        self.details['mode'] = dev_dict.get('mode', 'manual')
+        self.details['level'] = dev_dict.get('level', 0)
+        self.details['display'] = dev_dict.get('display', False)
+        self.details['child_lock'] = dev_dict.get('child_lock', False)
+        self.details['night_light'] = dev_dict.get('night_light', 'off')
+        self.details['display'] = dev_dict.get('display', False)
+        self.details['display_forever'] = dev_dict.get('display_forever', False)
+
+    def build_config_dict(self, conf_dict):
+        """Build configuration dict for Core200s purifier."""
+        self.config['display'] = conf_dict.get('display', False)
+        self.config['display_forever'] = conf_dict.get('display_forever', False)
+
+    def get_details(self) -> None:
+        """Build Core200S Purifier details dictionary."""
+        head = Helpers.bypass_header()
+        body = Helpers.bypass_body_v2(self.manager)
+        body['cid'] = self.cid
+        body['configModule'] = self.config_module
+        body['payload'] = {
+            'method': 'getPurifierStatus',
+            'source': 'APP',
+            'data': {}
+        }
+
+        r, _ = Helpers.call_api(
+            '/cloud/v2/deviceManaged/bypassV2',
+            method='post',
+            headers=head,
+            json=body,
+        )
+        outer_result = r.get('result', {})
+        inner_result = None
+
+        if outer_result is not None:
+            inner_result = r.get('result', {}).get('result')
+        if inner_result is not None and Helpers.code_check(r):
+            if outer_result.get('code') == 0:
+                self.build_purifier_dict(inner_result)
+            else:
+                logger.debug('error in inner result dict from purifier')
+            if inner_result.get('configuration', {}):
+                self.build_config_dict(inner_result.get('configuration', {}))
+            else:
+                logger.debug('No configuration found in purifier status')
+        else:
+            logger.debug('Error in purifier response')
+
+    def update(self):
+        """Update Core200S Purifier details."""
+        self.get_details()
+
+    def toggle_switch(self, toggle: bool) -> bool:
+        """Toggle purifier on/off."""
+        if not isinstance(toggle, bool):
+            logger.debug('Invalid toggle value for purifier switch')
+            return False
+
+        head = Helpers.bypass_header()
+        body = Helpers.bypass_body_v2(self.manager)
+        body['cid'] = self.cid
+        body['configModule'] = self.config_module
+        body['payload'] = {
+            'data': {
+                'enabled': toggle,
+                'id': 0
+            },
+            'method': 'setSwitch',
+            'source': 'APP'
+        }
+
+        r, _ = Helpers.call_api(
+            '/cloud/v2/deviceManaged/bypassV2',
+            method='post',
+            headers=head,
+            json=body,
+        )
+
+        if Helpers.code_check(r):
+            return True
+        logger.debug("Error toggling Core200S purifier - %s", self.device_name)
+        return False
+
+    def turn_on(self) -> bool:
+        """Turn Core200S Purifier on."""
+        return self.toggle_switch(True)
+
+    def turn_off(self):
+        """Turn Core200S Purifier off."""
+        return self.toggle_switch(False)
+
+    def child_lock_on(self) -> bool:
+        """Turn Core200S child lock on."""
+        return self.set_child_lock(True)
+
+    def child_lock_off(self) -> bool:
+        """Turn Core200S child lock off."""
+        return self.set_child_lock(False)
+
+    def set_child_lock(self, mode: bool) -> bool:
+        """Set Core200S child lock."""
+        if mode not in (True, False):
+            logger.debug('Invalid mode passed to set_child_lock - %s', mode)
+            return False
+           
+        head, body = self.__build_api_dict('setChildLock')
+        if not head and not body:
+            return False
+
+        body['payload']['data'] = {
+            'child_lock': mode
+        }
+        
+        r, _ = Helpers.call_api(
+            '/cloud/v2/deviceManaged/bypassV2',
+            method='post',
+            headers=head,
+            json=body,
+        )
+
+        if r is not None and Helpers.code_check(r):
+            self.details['child_lock'] = mode
+            return True
+        if isinstance(r, dict):
+            logger.debug('Error toggling child lock')
+        else:
+            logger.debug('Error in api return json for %s', self.device_name)
+        return False
+
+    def set_display(self, mode: bool) -> bool:
+        """Toggle display on/off."""
+        if not isinstance(mode, bool):
+            logger.debug("Mode must be True or False")
+            return False
+
+        head, body = self.__build_api_dict('setDisplay')
+
+        body['payload']['data'] = {
+            'state': mode
+        }
+
+        r, _ = Helpers.call_api(
+            '/cloud/v2/deviceManaged/bypassV2',
+            method='post',
+            headers=head,
+            json=body,
+        )
+
+        if Helpers.code_check(r):
+            return True
+        logger.debug("Error toggling Core200S display - %s", self.device_name)
+        return False
+
+    def turn_on_display(self) -> bool:
+        """Turn Display on."""
+        return self.set_display(True)
+
+    def turn_off_display(self):
+        """Turn Display off."""
+        return self.set_display(False)
+
+    def change_fan_speed(self, speed: int = None) -> bool:
+        """Adjust Fan Speed for air purifier.
+
+        Specifying 1,2,3 as argument or call without argument to cycle
+        through speeds increasing by one.
+        """
+
+        print(self.details['mode'])
+        if self.details['mode'] != 'manual':
+            logger.debug('%s not in manual mode, cannot change speed',
+                         self.device_name)
+            return False
+
+        try:
+            level = self.details['level']
+        except KeyError:
+            logger.debug(
+                'Cannot change fan speed, no level set for %s',
+                self.device_name
+            )
+            return False
+
+        body = Helpers.req_body(self.manager, 'devicestatus')
+        body['uuid'] = self.uuid
+        head = Helpers.req_headers(self.manager)
+        if speed is not None:
+            if speed == level:
+                return True
+            if speed in [1, 2, 3]:
+                level = speed
+            else:
+                logger.debug('Invalid fan speed for %s',
+                             format(self.device_name))
+                return False
+        else:
+            if (level + 1) > 3:
+                level = 1
+            else:
+                level = int(level + 1)
+
+        head, body = self.__build_api_dict('setLevel')
+        if not head and not body:
+            return False
+
+        body['payload']['data'] = {
+            'id': 0,
+            'level': level,
+            'type': 'wind'
+        }
+ 
+        r, _ = Helpers.call_api(
+            '/cloud/v2/deviceManaged/bypassV2',
+            method='post',
+            headers=head,
+            json=body,
+        )
+
+        if r is not None and Helpers.code_check(r):
+            self.details['level'] = level
+            return True
+        logger.warning('Error changing %s speed', self.device_name)
+        return False
+
+    def set_night_light(self, mode: str) -> bool:
+        """Set night list  - on, off or dim."""
+        if mode.lower() not in ['on', 'off', 'dim']:
+            logger.debug('Invalid nightlight mode used (on, off or dim)- %s', mode)
+            return False
+        head, body = self.__build_api_dict('setNightLight')
+        if not head and not body:
+            return False
+        body['payload']['data'] = {
+            'night_light': mode.lower()
+        }
+
+        r, _ = Helpers.call_api(
+            '/cloud/v2/deviceManaged/bypassV2',
+            method='post',
+            headers=head,
+            json=body,
+        )
+
+        if r is not None and Helpers.code_check(r):
+            self.details['night_light'] = mode.lower()
+            return True
+        logger.debug('Error setting nightlight mode')
+        return False
+
+    def mode_toggle(self, mode: str) -> bool:
+        """Set purifier mode - sleep or manual."""
+        if mode.lower() not in ['sleep', 'manual']:
+            logger.debug('Invalid purifier mode used (sleep or manual)- %s',
+                         mode)
+            return False
+        head, body = self.__build_api_dict('setPurifierMode')
+        if not head and not body:
+            return False
+        body['payload']['data'] = {
+            'mode': mode.lower()
+        }
+
+        r, _ = Helpers.call_api(
+            '/cloud/v2/deviceManaged/bypassV2',
+            method='post',
+            headers=head,
+            json=body,
+        )
+
+        if Helpers.code_check(r):
+            return True
+        logger.debug('Error setting purifier mode')
+        return False
+
+    def auto_mode(self) -> bool:
+        """Set mode to auto."""
+        return self.mode_toggle('auto')
+
+    def manual_mode(self) -> bool:
+        """Set mode to manual."""
+        return self.mode_toggle('manual')
+
+    def sleep_mode(self) -> bool:
+        """Set sleep mode to on."""
+        return self.mode_toggle('sleep')
+
+    def display(self) -> None:
+        """Return formatted device info to stdout."""
+        super().display()
+        disp1 = [
+            ('Mode: ', self.details['mode'], ''),
+            ('Filter Life: ', self.details['filter_life'], 'percent'),
+            ('Fan Level: ', self.details['level'], ''),
+            ('Display: ', self.details['display'], ''),
+            ('Child Lock: ', self.details['child_lock'], ''),
+            ('Night Light: ', self.details['night_light'], ''),
+            ('Display Config: ', self.config['display'], ''),
+            ('Display_Forever Config: ', self.config['display_forever'], '')
+        ]
+        for line in disp1:
+            print('{:.<20} {} {}'.format(line[0], line[1], line[2]))
+
+    def displayJSON(self) -> str:
+        """Return air purifier status and properties in JSON output."""
+        sup = super().displayJSON()
+        sup_val = json.loads(sup)
+        sup_val.update(
+            {
+                'Mode': self.details['mode'],
+                'Filter Life': self.details['filter_life'],
+                'Fan Level': self.details['level'],
+                'Display': self.details['display'],
+                'Child Lock': self.details['child_lock'],
+                'Night Light': self.details['night_light'],
+                'Display Config': self.config['display'],
+                'Display_Forever Config': self.config['display_forever']
+            }
+        )
+        return json.dumps(sup_val)
 
 class VeSyncAir131(VeSyncBaseDevice):
     """Levoit Air Purifier Class."""
