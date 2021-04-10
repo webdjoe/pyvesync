@@ -24,7 +24,7 @@ class VeSyncAir200S(VeSyncBaseDevice):
             'level': 0,
             'display': False,
             'child_lock': False,
-            'night_list': "off"
+            'night_light': "off"
         }
         self.config: Dict[str, Union[str, int, float]] = {
             'display': False,
