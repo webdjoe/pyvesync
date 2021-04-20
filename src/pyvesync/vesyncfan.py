@@ -18,7 +18,7 @@ class VeSyncAir200S(VeSyncBaseDevice):
         """Initilize Core200S Purifier class."""
         super().__init__(details, manager)
         self.enabled = True
-        self.details: Dict[str, Union[str, int, float]] = {
+        self.details: Dict[str, Union[str, int, float, bool]] = {
             'filter_life': 0,
             'mode': "manual",
             'level': 0,
@@ -26,7 +26,7 @@ class VeSyncAir200S(VeSyncBaseDevice):
             'child_lock': False,
             'night_light': "off"
         }
-        self.config: Dict[str, Union[str, int, float]] = {
+        self.config: Dict[str, Union[str, int, float, bool]] = {
             'display': False,
             'display_forever': False
         }
@@ -94,7 +94,7 @@ class VeSyncAir200S(VeSyncBaseDevice):
         outer_result = r.get('result', {})
         inner_result = None
 
-        if outer_result is not None:
+        if outer_result:
             inner_result = r.get('result', {}).get('result')
         if inner_result is not None and Helpers.code_check(r):
             if outer_result.get('code') == 0:

@@ -28,7 +28,7 @@ pyvesync is a library to manage VeSync compatible [smart home devices](#supporte
     - [JSON Output for Bulbs](#json-output-for-bulbs)
     - [JSON Output for Air Purifier](#json-output-for-air-purifier)
     - [JSON Output for 300S Humidifier](#json-output-for-300s-humidifier)
-	- [JSON Output for Core200S Purifier](#json-output-for-core200s-purifier)
+    - [JSON Output for Core200S Purifier](#json-output-for-core200s-purifier)
 - [Notes](#notes)
 - [Feature Requests](#feature-requests)
 
