@@ -57,9 +57,13 @@ class VeSyncAir200S(VeSyncBaseDevice):
     def build_purifier_dict(self, dev_dict: Dict):
         """Build Core200S purifier status dictionary."""
         self.enabled = dev_dict.get('enabled')
+        if self.enabled:
+            self.device_status = 'on'
+        else:
+            self.device_status = 'off'
         self.details['filter_life'] = dev_dict.get('filter_life', 0)
-        self.details['mode'] = dev_dict.get('mode', 'manual')
-        self.details['level'] = dev_dict.get('level', 0)
+        self.mode = dev_dict.get('mode', 'manual')
+        self.speed = dev_dict.get('level', 0)
         self.details['display'] = dev_dict.get('display', False)
         self.details['child_lock'] = dev_dict.get('child_lock', False)
         self.details['night_light'] = dev_dict.get('night_light', 'off')
@@ -115,7 +119,7 @@ class VeSyncAir200S(VeSyncBaseDevice):
     @property
     def fan_level(self) -> int:
         """Get current fan level (1-3)."""
-        return int(self.details['level'])
+        return int(self.speed)
 
     @property
     def filter_life(self) -> int:
@@ -237,13 +241,13 @@ class VeSyncAir200S(VeSyncBaseDevice):
     def change_fan_speed(self, speed: int = None) -> bool:
         """1,2,3 or call without argument to increment by 1."""
         print(self.details['mode'])
-        if self.details['mode'] != 'manual':
+        if self.mode != 'manual':
             logger.debug('%s not in manual mode, cannot change speed',
                          self.device_name)
             return False
 
         try:
-            level = int(self.details['level'])
+            level = int(self.speed)
         except KeyError:
             logger.debug(
                 'Cannot change fan speed, no level set for %s',
@@ -287,7 +291,7 @@ class VeSyncAir200S(VeSyncBaseDevice):
         )
 
         if r is not None and Helpers.code_check(r):
-            self.details['level'] = level
+            self.speed = level
             return True
         logger.warning('Error changing %s speed', self.device_name)
         return False
@@ -355,9 +359,9 @@ class VeSyncAir200S(VeSyncBaseDevice):
         """Return formatted device info to stdout."""
         super().display()
         disp1 = [
-            ('Mode: ', self.details['mode'], ''),
+            ('Mode: ', self.mode, ''),
             ('Filter Life: ', self.details['filter_life'], 'percent'),
-            ('Fan Level: ', self.details['level'], ''),
+            ('Fan Level: ', self.speed, ''),
             ('Display: ', self.details['display'], ''),
             ('Child Lock: ', self.details['child_lock'], ''),
             ('Night Light: ', self.details['night_light'], ''),
@@ -373,9 +377,9 @@ class VeSyncAir200S(VeSyncBaseDevice):
         sup_val = json.loads(sup)
         sup_val.update(
             {
-                'Mode': self.details['mode'],
+                'Mode': self.mode],
                 'Filter Life': str(self.details['filter_life']),
-                'Fan Level': str(self.details['level']),
+                'Fan Level': str(self.speed),
                 'Display': self.details['display'],
                 'Child Lock': self.details['child_lock'],
                 'Night Light': str(self.details['night_light']),
