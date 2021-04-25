@@ -129,6 +129,21 @@ class VeSyncAir200S(VeSyncBaseDevice):
         except KeyError:
             return 0
 
+    @property
+    def display_state(self) -> bool:
+        """Get display state."""
+        return self.details['display']
+
+    @property
+    def child_lock(self) -> bool:
+        """Get child lock state."""
+        return self.details['child_lock']
+
+    @property
+    def night_light(self) -> str:
+        """Get night light state (on/dim/off)."""
+        return self.details['night_light']
+
     def toggle_switch(self, toggle: bool) -> bool:
         """Toggle purifier on/off."""
         if not isinstance(toggle, bool):
