@@ -377,7 +377,7 @@ class VeSyncAir200S(VeSyncBaseDevice):
         sup_val = json.loads(sup)
         sup_val.update(
             {
-                'Mode': self.mode],
+                'Mode': self.mode,
                 'Filter Life': str(self.details['filter_life']),
                 'Fan Level': str(self.speed),
                 'Display': self.details['display'],
