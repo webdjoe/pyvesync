@@ -240,7 +240,6 @@ class VeSyncAir200S(VeSyncBaseDevice):
 
     def change_fan_speed(self, speed: int = None) -> bool:
         """1,2,3 or call without argument to increment by 1."""
-        print(self.details['mode'])
         if self.mode != 'manual':
             logger.debug('%s not in manual mode, cannot change speed',
                          self.device_name)
