@@ -287,6 +287,12 @@ VeSync300S.config = {
 
 `VeSyncAir200S.filter_life()` - Return the percentage of filter life remaining
 
+`VeSyncAir200S.display_state()` - Return the state of the display (True=On/False=off)
+
+`VeSyncAir200S.child_lock()` - Return the state of the child lock (True=On/False=off)
+
+`VeSyncAir200S.night_light()` - Return the state of the night light (on/dim/off)
+
 ### JSON Output API
 
 The `device.displayJSON()` method outputs properties and status of the device
