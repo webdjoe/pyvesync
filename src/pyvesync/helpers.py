@@ -177,7 +177,8 @@ class Helpers:
         else:
             if r.status_code == 200:
                 status_code = 200
-                response = r.json()
+                if r.content:
+                    response = r.json()
             else:
                 logger.debug('Unable to fetch %s%s', API_BASE_URL, api)
         return response, status_code
