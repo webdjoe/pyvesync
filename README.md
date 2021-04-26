@@ -20,6 +20,7 @@ pyvesync is a library to manage VeSync compatible [smart home devices](#supporte
   - [Tunable Smart Light Bulb Methods and Properties (ESL100CW)](#tunable-smart-light-bulb-methods-and-properties)
   - [Dimmable Switch Methods and Properties](#dimmable-switch-methods-and-properties)
   - [Levoit 300S humidifer](#levoit-humidifier-300s-methods-and-properties)
+  - [Levoit Core200S air purifier Methods and Properties](#levoit-purifier-core200s-methods-and-properties)
   - [JSON Output API](#json-output-api)
     - [JSON Output for All Devices](#json-output-for-all-devices)
     - [JSON Output for Outlets](#json-output-for-outlets)
@@ -27,6 +28,7 @@ pyvesync is a library to manage VeSync compatible [smart home devices](#supporte
     - [JSON Output for Bulbs](#json-output-for-bulbs)
     - [JSON Output for Air Purifier](#json-output-for-air-purifier)
     - [JSON Output for 300S Humidifier](#json-output-for-300s-humidifier)
+    - [JSON Output for Core200S Purifier](#json-output-for-core200s-purifier)
 - [Notes](#notes)
 - [Feature Requests](#feature-requests)
 
@@ -47,9 +49,10 @@ pip install pyvesync
 5. Etekcity Two Plug Outdoor Outlet (ESO15-TB) (Each plug is a separate object, energy readings are for both plugs combined)
 6. Etekcity Smart WiFi Light Switch (model ESWL01)
 7. Levoit Smart Wifi Air Purifier (LV-PUR131S)
-8. Etekcity Soft White Dimmable Smart Bulb (ESL100)
-9. Etekcity Cool to Soft White Tunable Dimmable Bulb (ESL100CW)
-10. Etekcity Wifi Dimmer Switch (ESD16)
+8. Levoit Smart True HEPA Air Purifier (Core200S)
+9. Etekcity Soft White Dimmable Smart Bulb (ESL100)
+10. Etekcity Cool to Soft White Tunable Dimmable Bulb (ESL100CW)
+11. Etekcity Wifi Dimmer Switch (ESD16)
 
 ## Usage
 
@@ -262,6 +265,33 @@ VeSync300S.config = {
 
 `VeSync300S.set_mist_level(4)` Set mist output 1 - 9
 
+### Levoit Purifier Core200S Methods and Properties
+
+`VeSyncAir200S.change_fan_speed(2)` 1|2|3 or call without argument to increment by one
+
+`VeSyncAir200S.child_lock_on()` Enable child lock
+
+`VeSyncAir200S.child_lock_off()` Disable child lock
+
+`VeSyncAir200S.turn_on_display()` Turn display on
+
+`VeSyncAir200S.turn_off_display()` Turn display off
+
+`VeSyncAir200S.sleep_mode()` - Change mode to sleep
+
+`VeSyncAir200S.manual_mode()` - Change mode to manual
+
+`VeSyncAir200S.set_night_light('on'|'dim'|'off')` - Set night light brightness
+
+`VeSyncAir200S.fan_level()` - Return the level of the fan (1-3)
+
+`VeSyncAir200S.filter_life()` - Return the percentage of filter life remaining
+
+`VeSyncAir200S.display_state()` - Return the state of the display (True=On/False=off)
+
+`VeSyncAir200S.child_lock()` - Return the state of the child lock (True=On/False=off)
+
+`VeSyncAir200S.night_light()` - Return the state of the night light (on/dim/off)
 
 ### JSON Output API
 
@@ -352,6 +382,28 @@ This output only applies to dimmable switch.  The standard switch has the defaul
   'Night Light Brightness': 10, # 1 - 100
   'Auto Target Humidity': True, # True/False
   'Automatic Stop': True # True/False
+}
+```
+
+#### JSON Output for Core200S Purifier
+
+```python
+{
+	"Device Name": "MyPurifier",
+	"Model": "Core200S",
+	"Subdevice No": "None",
+	"Status": "on",
+	"Online": "online",
+	"Type": "wifi-air",
+	"CID": "asd_sdfKIHG7IJHGwJGJ7GJ_ag5h3G55",
+	"Mode": "manual",
+	"Filter Life": "99",
+	"Fan Level": "1",
+	"Display": true,
+	"Child Lock": false,
+	"Night Light": "off",
+	"Display Config": true,
+	"Display_Forever Config": false
 }
 ```
 
