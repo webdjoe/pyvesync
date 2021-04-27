@@ -10,7 +10,7 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='pyvesync',
-    version='1.3.1',
+    version='1.4.0',
     description='pyvesync is a library to manage Etekcity\
                  Devices and Levoit Air Purifier',
     long_description=long_description,
@@ -26,7 +26,7 @@ setup(
         'Natural Language :: English',
         'Programming Language :: Python :: 3.6',
     ],
-    keywords=['iot', 'vesync', 'levoit'],
+    keywords=['iot', 'vesync', 'levoit', 'etekcity'],
     packages=find_packages('src', exclude=['tests', 'tests.*']),
     package_dir={'': 'src'},
     zip_safe=False,
