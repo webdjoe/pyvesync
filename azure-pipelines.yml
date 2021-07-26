@@ -34,6 +34,7 @@ jobs:
   - script: |
       pip install mypy
       mypy src/pyvesync
+      python3 -m pip install types-requests
     displayName: 'MyPy'
 
 - job: 'pytest'
