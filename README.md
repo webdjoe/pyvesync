@@ -19,8 +19,9 @@ pyvesync is a library to manage VeSync compatible [smart home devices](#supporte
   - [Dimmable Smart Light Bulb Method and Properties (ESL100)](#dimmable-smart-light-bulb-method-and-properties)
   - [Tunable Smart Light Bulb Methods and Properties (ESL100CW)](#tunable-smart-light-bulb-methods-and-properties)
   - [Dimmable Switch Methods and Properties](#dimmable-switch-methods-and-properties)
-  - [Levoit 300S humidifer](#levoit-humidifier-300s-methods-and-properties)
-  - [Levoit Core200S air purifier Methods and Properties](#levoit-purifier-core200s-methods-and-properties)
+  - [Levoit 300S Humidifer](#levoit-humidifier-300s-methods-and-properties)
+  - [Levoit Core200S Air Purifier Methods and Properties](#levoit-purifier-core200s-methods-and-properties)
+  - [Levoit Core400S Air Purifier Methods and Properties](#levoit-purifier-core400s-methods-and-properties)
   - [JSON Output API](#json-output-api)
     - [JSON Output for All Devices](#json-output-for-all-devices)
     - [JSON Output for Outlets](#json-output-for-outlets)
@@ -29,6 +30,7 @@ pyvesync is a library to manage VeSync compatible [smart home devices](#supporte
     - [JSON Output for Air Purifier](#json-output-for-air-purifier)
     - [JSON Output for 300S Humidifier](#json-output-for-300s-humidifier)
     - [JSON Output for Core200S Purifier](#json-output-for-core200s-purifier)
+    - [JSON Output for Core400S Purifier](#json-output-for-core400s-purifier)
 - [Notes](#notes)
 - [Feature Requests](#feature-requests)
 
@@ -50,9 +52,10 @@ pip install pyvesync
 6. Etekcity Smart WiFi Light Switch (model ESWL01)
 7. Levoit Smart Wifi Air Purifier (LV-PUR131S)
 8. Levoit Smart True HEPA Air Purifier (Core200S)
-9. Etekcity Soft White Dimmable Smart Bulb (ESL100)
-10. Etekcity Cool to Soft White Tunable Dimmable Bulb (ESL100CW)
-11. Etekcity Wifi Dimmer Switch (ESD16)
+9. Levoit Air Purifier for Home Large Room (Core400S)
+10. Etekcity Soft White Dimmable Smart Bulb (ESL100)
+11. Etekcity Cool to Soft White Tunable Dimmable Bulb (ESL100CW)
+12. Etekcity Wifi Dimmer Switch (ESD16)
 
 ## Usage
 
@@ -293,6 +296,38 @@ VeSync300S.config = {
 
 `VeSyncAir200S.night_light()` - Return the state of the night light (on/dim/off)
 
+### Levoit Purifier Core400S Methods and Properties
+
+`VeSyncAir400S.change_fan_speed(2)` 1|2|3|4 or call without argument to increment by one
+
+`VeSyncAir400S.child_lock_on()` Enable child lock
+
+`VeSyncAir400S.child_lock_off()` Disable child lock
+
+`VeSyncAir400S.turn_on_display()` Turn display on
+
+`VeSyncAir400S.turn_off_display()` Turn display off
+
+`VeSyncAir400S.sleep_mode()` - Change mode to sleep
+
+`VeSyncAir400S.manual_mode()` - Change mode to manual
+
+`VeSyncAir400S.auto_mode()` - Change mode to auto
+
+`VeSyncAir400S.set_night_light('on'|'dim'|'off')` - Set night light brightness
+
+`VeSyncAir400S.fan_level()` - Return the level of the fan (1-4)
+
+`VeSyncAir400S.filter_life()` - Return the percentage of filter life remaining
+
+`VeSyncAir400S.air_quality()` - Return the air quality (PM 2.5 - ug/m3)
+
+`VeSyncAir400S.display_state()` - Return the state of the display (True=On/False=off)
+
+`VeSyncAir400S.child_lock()` - Return the state of the child lock (True=On/False=off)
+
+`VeSyncAir400S.night_light()` - Return the state of the night light (on/dim/off)
+
 ### JSON Output API
 
 The `device.displayJSON()` method outputs properties and status of the device
@@ -398,6 +433,29 @@ This output only applies to dimmable switch.  The standard switch has the defaul
 	"CID": "asd_sdfKIHG7IJHGwJGJ7GJ_ag5h3G55",
 	"Mode": "manual",
 	"Filter Life": "99",
+	"Fan Level": "1",
+	"Display": true,
+	"Child Lock": false,
+	"Night Light": "off",
+	"Display Config": true,
+	"Display_Forever Config": false
+}
+```
+
+#### JSON Output for Core400S Purifier
+
+```python
+{
+	"Device Name": "MyPurifier",
+	"Model": "Core200S",
+	"Subdevice No": "None",
+	"Status": "on",
+	"Online": "online",
+	"Type": "wifi-air",
+	"CID": "<CID>",
+	"Mode": "manual",
+	"Filter Life": "100",
+  "Air Quality": "5",
 	"Fan Level": "1",
 	"Display": true,
 	"Child Lock": false,
