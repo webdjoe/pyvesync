@@ -10,7 +10,7 @@ from .vesyncoutlet import (
     VeSyncOutdoorPlug,
 )
 from .vesyncswitch import VeSyncWallSwitch, VeSyncDimmerSwitch
-from .vesyncfan import VeSyncAir131, VeSyncAir200S, VeSyncAir400S
+from .vesyncfan import VeSyncAir131, VeSyncAir200S300S, VeSyncAir400S
 from .vesyncbulb import VeSyncBulbESL100
 import logging
 

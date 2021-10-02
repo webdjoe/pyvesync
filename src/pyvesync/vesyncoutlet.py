@@ -127,7 +127,7 @@ class VeSyncOutlet(VeSyncBaseDevice):
             ('Energy Year: ', self.yearly_energy_total, ' kWh'),
         ]
         for line in disp1:
-            print('{:.<15} {} {}'.format(line[0], line[1], line[2]))
+            print(f'{line[0]:.<15} {line[1]} {line[2]}')
 
     def displayJSON(self):
         """Return JSON details for outlet."""
