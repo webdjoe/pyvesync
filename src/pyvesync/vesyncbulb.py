@@ -114,7 +114,7 @@ class VeSyncBulb(VeSyncBaseDevice):
             if self.dimmable_feature:
                 disp1 = [('Brightness: ', self.brightness, '%')]
             for line in disp1:
-                print('{:.<17} {} {}'.format(line[0], line[1], line[2]))
+                print(f'{line[0]:.<17} {line[1]} {line[2]}')
 
     def displayJSON(self) -> str:
         """Return bulb device info in JSON format."""
