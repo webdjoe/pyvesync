@@ -172,7 +172,8 @@ class VeSyncAir200S300S(VeSyncBaseDevice):
 
         if Helpers.code_check(r):
             return True
-        logger.debug("Error toggling Core200S/300S purifier - %s", self.device_name)
+        logger.debug("Error toggling Core200S/300S purifier - %s",
+                     self.device_name)
         return False
 
     def turn_on(self) -> bool:
@@ -242,7 +243,8 @@ class VeSyncAir200S300S(VeSyncBaseDevice):
 
         if Helpers.code_check(r):
             return True
-        logger.debug("Error toggling Core200S/300S display - %s", self.device_name)
+        logger.debug("Error toggling Core200S/300S display - %s",
+                     self.device_name)
         return False
 
     def turn_on_display(self) -> bool:
@@ -576,7 +578,8 @@ class VeSyncAir400S(VeSyncBaseDevice):
 
         if Helpers.code_check(r):
             return True
-        logger.debug("Error toggling Core200S/300S purifier - %s", self.device_name)
+        logger.debug("Error toggling Core200S/300S purifier - %s",
+                     self.device_name)
         return False
 
     def turn_on(self) -> bool:
@@ -646,7 +649,8 @@ class VeSyncAir400S(VeSyncBaseDevice):
 
         if Helpers.code_check(r):
             return True
-        logger.debug("Error toggling Core200S/300S display - %s", self.device_name)
+        logger.debug("Error toggling Core200S/300S display - %s",
+                     self.device_name)
         return False
 
     def turn_on_display(self) -> bool:
