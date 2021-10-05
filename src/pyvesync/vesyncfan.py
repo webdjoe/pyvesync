@@ -11,11 +11,11 @@ from pyvesync.helpers import Helpers
 logger = logging.getLogger(__name__)
 
 
-class VeSyncAir200S(VeSyncBaseDevice):
-    """Core200S Purifier Class."""
+class VeSyncAir200S300S(VeSyncBaseDevice):
+    """Core200S/300S Purifier Class."""
 
     def __init__(self, details, manager):
-        """Initilize Core200S Purifier class."""
+        """Initilize Core200S/300S Purifier class."""
         super().__init__(details, manager)
         self.enabled = True
         self.details: Dict[str, Union[str, int, float, bool]] = {
@@ -32,7 +32,7 @@ class VeSyncAir200S(VeSyncBaseDevice):
         }
 
     def __build_api_dict(self, method: str) -> Tuple[Dict, Dict]:
-        """Build Core200S api call header and body.
+        """Build Core200S/300S api call header and body.
 
         Available methods are: 'getPurifierStatus', 'setSwitch',
         'setNightLight', 'setLevel', 'setDisplay'
@@ -55,7 +55,7 @@ class VeSyncAir200S(VeSyncBaseDevice):
         return head, body
 
     def build_purifier_dict(self, dev_dict: Dict):
-        """Build Core200S purifier status dictionary."""
+        """Build Core200S/300S purifier status dictionary."""
         self.enabled = dev_dict.get('enabled')
         if self.enabled:
             self.device_status = 'on'
@@ -72,13 +72,13 @@ class VeSyncAir200S(VeSyncBaseDevice):
                                                        False)
 
     def build_config_dict(self, conf_dict):
-        """Build configuration dict for Core200s purifier."""
+        """Build configuration dict for Core200S/300S purifier."""
         self.config['display'] = conf_dict.get('display', False)
         self.config['display_forever'] = conf_dict.get('display_forever',
                                                        False)
 
     def get_details(self) -> None:
-        """Build Core200S Purifier details dictionary."""
+        """Build Core200S/300S Purifier details dictionary."""
         head = Helpers.bypass_header()
         body = Helpers.bypass_body_v2(self.manager)
         body['cid'] = self.cid
@@ -113,7 +113,7 @@ class VeSyncAir200S(VeSyncBaseDevice):
             logger.debug('Error in purifier response')
 
     def update(self):
-        """Update Core200S Purifier details."""
+        """Update Core200S/300S Purifier details."""
         self.get_details()
 
     @property
@@ -172,27 +172,28 @@ class VeSyncAir200S(VeSyncBaseDevice):
 
         if Helpers.code_check(r):
             return True
-        logger.debug("Error toggling Core200S purifier - %s", self.device_name)
+        logger.debug("Error toggling Core200S/300S purifier - %s",
+                     self.device_name)
         return False
 
     def turn_on(self) -> bool:
-        """Turn Core200S Purifier on."""
+        """Turn Core200S/300S Purifier on."""
         return self.toggle_switch(True)
 
     def turn_off(self):
-        """Turn Core200S Purifier off."""
+        """Turn Core200S/300S Purifier off."""
         return self.toggle_switch(False)
 
     def child_lock_on(self) -> bool:
-        """Turn Core200S child lock on."""
+        """Turn Core200S/300S child lock on."""
         return self.set_child_lock(True)
 
     def child_lock_off(self) -> bool:
-        """Turn Core200S child lock off."""
+        """Turn Core200S/300S child lock off."""
         return self.set_child_lock(False)
 
     def set_child_lock(self, mode: bool) -> bool:
-        """Set Core200S child lock."""
+        """Set Core200S/300S child lock."""
         if mode not in (True, False):
             logger.debug('Invalid mode passed to set_child_lock - %s', mode)
             return False
@@ -242,7 +243,8 @@ class VeSyncAir200S(VeSyncBaseDevice):
 
         if Helpers.code_check(r):
             return True
-        logger.debug("Error toggling Core200S display - %s", self.device_name)
+        logger.debug("Error toggling Core200S/300S display - %s",
+                     self.device_name)
         return False
 
     def turn_on_display(self) -> bool:
@@ -279,7 +281,7 @@ class VeSyncAir200S(VeSyncBaseDevice):
                 level = speed
             else:
                 logger.debug('Invalid fan speed for %s',
-                             format(self.device_name))
+                             self.device_name)
                 return False
         else:
             if (level + 1) > 3:
@@ -383,7 +385,7 @@ class VeSyncAir200S(VeSyncBaseDevice):
             ('Display_Forever Config: ', self.config['display_forever'], '')
         ]
         for line in disp1:
-            print('{:.<20} {} {}'.format(line[0], line[1], line[2]))
+            print(f'{line[0]:.<20} {line[0]} {line[0]}')
 
     def displayJSON(self) -> str:
         """Return air purifier status and properties in JSON output."""
@@ -467,7 +469,7 @@ class VeSyncAir400S(VeSyncBaseDevice):
                                                        False)
 
     def build_config_dict(self, conf_dict):
-        """Build configuration dict for Core200s purifier."""
+        """Build configuration dict for Core200S/300S purifier."""
         self.config['display'] = conf_dict.get('display', False)
         self.config['display_forever'] = conf_dict.get('display_forever',
                                                        False)
@@ -576,7 +578,8 @@ class VeSyncAir400S(VeSyncBaseDevice):
 
         if Helpers.code_check(r):
             return True
-        logger.debug("Error toggling Core200S purifier - %s", self.device_name)
+        logger.debug("Error toggling Core200S/300S purifier - %s",
+                     self.device_name)
         return False
 
     def turn_on(self) -> bool:
@@ -646,7 +649,8 @@ class VeSyncAir400S(VeSyncBaseDevice):
 
         if Helpers.code_check(r):
             return True
-        logger.debug("Error toggling Core200S display - %s", self.device_name)
+        logger.debug("Error toggling Core200S/300S display - %s",
+                     self.device_name)
         return False
 
     def turn_on_display(self) -> bool:
@@ -683,7 +687,7 @@ class VeSyncAir400S(VeSyncBaseDevice):
                 level = speed
             else:
                 logger.debug('Invalid fan speed for %s',
-                             format(self.device_name))
+                             self.device_name)
                 return False
         else:
             if (level + 1) > 4:
@@ -794,7 +798,7 @@ class VeSyncAir400S(VeSyncBaseDevice):
             ('Display_Forever Config: ', self.config['display_forever'], ''),
         ]
         for line in disp1:
-            print('{:.<20} {} {}'.format(line[0], line[1], line[2]))
+            print(f'{line[0]:.<20} {line[1]} {line[2]}')
 
     def displayJSON(self) -> str:
         """Return air purifier status and properties in JSON output."""
@@ -979,7 +983,7 @@ class VeSyncAir131(VeSyncBaseDevice):
                 body['level'] = speed
             else:
                 logger.debug('Invalid fan speed for %s',
-                             format(self.device_name))
+                             self.device_name)
                 return False
         else:
             if (level + 1) > 3:
@@ -1036,7 +1040,7 @@ class VeSyncAir131(VeSyncBaseDevice):
             ('Filter Life: ', self.filter_life, ' percent'),
         ]
         for line in disp1:
-            print('{:.<15} {} {}'.format(line[0], line[1], line[2]))
+            print(f'{line[0]:.<15} {line[1]} {line[2]}')
 
     def displayJSON(self) -> str:
         """Return air purifier status and properties in JSON output."""
@@ -1055,7 +1059,7 @@ class VeSyncAir131(VeSyncBaseDevice):
         return sup_val
 
 
-class VeSync300S(VeSyncBaseDevice):
+class VeSyncHumid300S(VeSyncBaseDevice):
     """300S Humidifier Class."""
 
     def __init__(self, details, manager):
@@ -1403,7 +1407,7 @@ class VeSync300S(VeSyncBaseDevice):
             ('Automatic Stop: ', self.config['automatic_stop'], ''),
         ]
         for line in disp1:
-            print('{:.<29} {} {}'.format(line[0], line[1], line[2]))
+            print(f'{line[0]:.<29} {line[1]} {line[2]}')
 
     def displayJSON(self) -> str:
         """Return air purifier status and properties in JSON output."""
