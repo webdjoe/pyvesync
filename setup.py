@@ -10,7 +10,7 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='pyvesync',
-    version='1.4.0',
+    version='1.4.1',
     description='pyvesync is a library to manage Etekcity\
                  Devices and Levoit Air Purifier',
     long_description=long_description,
