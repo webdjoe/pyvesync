@@ -21,7 +21,7 @@ pyvesync is a library to manage VeSync compatible [smart home devices](#supporte
   - [Dimmable Switch Methods and Properties](#dimmable-switch-methods-and-properties)
   - [Levoit Humidifier 300S Methods and Properties](#levoit-humidifier-300s-methods-and-properties)
   - [Levoit Purifier Core200S Methods and Properties](#levoit-purifier-core200s-methods-and-properties)
-  - [Levoit Purifier Core300S400S Methods and Properties](#levoit-purifier-core300s400s-methods-and-properties)
+  - [Levoit Purifier Core300S/400S Methods and Properties](#levoit-purifier-core300s400s-methods-and-properties)
   - [JSON Output API](#json-output-api)
     - [JSON Output for All Devices](#json-output-for-all-devices)
     - [JSON Output for Outlets](#json-output-for-outlets)
@@ -297,7 +297,7 @@ VeSyncHumid300S.config = {
 
 `VeSyncAir200S.night_light()` - Return the state of the night light (on/dim/off)
 
-### Levoit Purifier Core300S400S Methods and Properties
+### Levoit Purifier Core300S/400S Methods and Properties
 
 `VeSyncAir300S400S.change_fan_speed(2)` 1|2|3|4 or call without argument to increment by one
 
