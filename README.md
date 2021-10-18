@@ -20,8 +20,8 @@ pyvesync is a library to manage VeSync compatible [smart home devices](#supporte
   - [Tunable Smart Light Bulb Methods and Properties](#tunable-smart-light-bulb-methods-and-properties)
   - [Dimmable Switch Methods and Properties](#dimmable-switch-methods-and-properties)
   - [Levoit Humidifier 300S Methods and Properties](#levoit-humidifier-300s-methods-and-properties)
-  - [Levoit Purifier Core200S/300S Methods and Properties](#levoit-purifier-core200s300s-methods-and-properties)
-  - [Levoit Purifier Core400S Methods and Properties](#levoit-purifier-core400s-methods-and-properties)
+  - [Levoit Purifier Core200S Methods and Properties](#levoit-purifier-core200s300s-methods-and-properties)
+  - [Levoit Purifier Core300S400S Methods and Properties](#levoit-purifier-core400s-methods-and-properties)
   - [JSON Output API](#json-output-api)
     - [JSON Output for All Devices](#json-output-for-all-devices)
     - [JSON Output for Outlets](#json-output-for-outlets)
@@ -269,65 +269,65 @@ VeSyncHumid300S.config = {
 
 `VeSyncHumid300S.set_mist_level(4)` Set mist output 1 - 9
 
-### Levoit Purifier Core200S/300S Methods and Properties
+### Levoit Purifier Core200S Methods and Properties
 
-`VeSyncAir200S300S.change_fan_speed(2)` 1|2|3 or call without argument to increment by one
+`VeSyncAir200S.change_fan_speed(2)` 1|2|3 or call without argument to increment by one
 
-`VeSyncAir200S300S.child_lock_on()` Enable child lock
+`VeSyncAir200S.child_lock_on()` Enable child lock
 
-`VeSyncAir200S300S.child_lock_off()` Disable child lock
+`VeSyncAir200S.child_lock_off()` Disable child lock
 
-`VeSyncAir200S300S.turn_on_display()` Turn display on
+`VeSyncAir200S.turn_on_display()` Turn display on
 
-`VeSyncAir200S300S.turn_off_display()` Turn display off
+`VeSyncAir200S.turn_off_display()` Turn display off
 
-`VeSyncAir200S300S.sleep_mode()` - Change mode to sleep
+`VeSyncAir200S.sleep_mode()` - Change mode to sleep
 
-`VeSyncAir200S300S.manual_mode()` - Change mode to manual
+`VeSyncAir200S.manual_mode()` - Change mode to manual
 
-`VeSyncAir200S300S.set_night_light('on'|'dim'|'off')` - Set night light brightness
+`VeSyncAir200S.set_night_light('on'|'dim'|'off')` - Set night light brightness
 
-`VeSyncAir200S300S.fan_level()` - Return the level of the fan (1-3)
+`VeSyncAir200S.fan_level()` - Return the level of the fan (1-3)
 
-`VeSyncAir200S300S.filter_life()` - Return the percentage of filter life remaining
+`VeSyncAir200S.filter_life()` - Return the percentage of filter life remaining
 
-`VeSyncAir200S300S.display_state()` - Return the state of the display (True=On/False=off)
+`VeSyncAir200S.display_state()` - Return the state of the display (True=On/False=off)
 
-`VeSyncAir200S300S.child_lock()` - Return the state of the child lock (True=On/False=off)
+`VeSyncAir200S.child_lock()` - Return the state of the child lock (True=On/False=off)
 
-`VeSyncAir200S300S.night_light()` - Return the state of the night light (on/dim/off)
+`VeSyncAir200S.night_light()` - Return the state of the night light (on/dim/off)
 
-### Levoit Purifier Core400S Methods and Properties
+### Levoit Purifier Core300S400S Methods and Properties
 
-`VeSyncAir400S.change_fan_speed(2)` 1|2|3|4 or call without argument to increment by one
+`VeSyncAir300S400S.change_fan_speed(2)` 1|2|3|4 or call without argument to increment by one
 
-`VeSyncAir400S.child_lock_on()` Enable child lock
+`VeSyncAir300S400S.child_lock_on()` Enable child lock
 
-`VeSyncAir400S.child_lock_off()` Disable child lock
+`VeSyncAir300S400S.child_lock_off()` Disable child lock
 
-`VeSyncAir400S.turn_on_display()` Turn display on
+`VeSyncAir300S400S.turn_on_display()` Turn display on
 
-`VeSyncAir400S.turn_off_display()` Turn display off
+`VeSyncAir300S400S.turn_off_display()` Turn display off
 
-`VeSyncAir400S.sleep_mode()` - Change mode to sleep
+`VeSyncAir300S400S.sleep_mode()` - Change mode to sleep
 
-`VeSyncAir400S.manual_mode()` - Change mode to manual
+`VeSyncAir300S400S.manual_mode()` - Change mode to manual
 
-`VeSyncAir400S.auto_mode()` - Change mode to auto
+`VeSyncAir300S400S.auto_mode()` - Change mode to auto
 
-`VeSyncAir400S.set_night_light('on'|'dim'|'off')` - Set night light brightness
+`VeSyncAir300S400S.set_night_light('on'|'dim'|'off')` - Set night light brightness
 
-`VeSyncAir400S.fan_level()` - Return the level of the fan (1-4)
+`VeSyncAir300S400S.fan_level()` - Return the level of the fan (1-4)
 
-`VeSyncAir400S.filter_life()` - Return the percentage of filter life remaining
+`VeSyncAir300S400S.filter_life()` - Return the percentage of filter life remaining
 
-`VeSyncAir400S.air_quality()` - Return the air quality (PM 2.5 - ug/m3)
+`VeSyncAir300S400S.air_quality()` - Return the air quality (PM 2.5 - ug/m3)
 
-`VeSyncAir400S.display_state()` - Return the state of the display (True=On/False=off)
+`VeSyncAir300S400S.display_state()` - Return the state of the display (True=On/False=off)
 
-`VeSyncAir400S.child_lock()` - Return the state of the child lock (True=On/False=off)
+`VeSyncAir300S400S.child_lock()` - Return the state of the child lock (True=On/False=off)
 
-`VeSyncAir400S.night_light()` - Return the state of the night light (on/dim/off)
+`VeSyncAir300S400S.night_light()` - Return the state of the night light (on/dim/off)
 
 ### JSON Output API
 
@@ -443,7 +443,7 @@ This output only applies to dimmable switch.  The standard switch has the defaul
 }
 ```
 
-#### JSON Output for Core400S Purifier
+#### JSON Output for 400S Purifier
 
 ```python
 {
