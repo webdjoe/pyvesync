@@ -11,11 +11,11 @@ from pyvesync.helpers import Helpers
 logger = logging.getLogger(__name__)
 
 
-class VeSyncAir200S300S(VeSyncBaseDevice):
-    """Core200S/300S Purifier Class."""
+class VeSyncAir200S(VeSyncBaseDevice):
+    """Core200S Purifier Class."""
 
     def __init__(self, details, manager):
-        """Initilize Core200S/300S Purifier class."""
+        """Initilize Core200S Purifier class."""
         super().__init__(details, manager)
         self.enabled = True
         self.details: Dict[str, Union[str, int, float, bool]] = {
@@ -32,7 +32,7 @@ class VeSyncAir200S300S(VeSyncBaseDevice):
         }
 
     def __build_api_dict(self, method: str) -> Tuple[Dict, Dict]:
-        """Build Core200S/300S api call header and body.
+        """Build Core200S api call header and body.
 
         Available methods are: 'getPurifierStatus', 'setSwitch',
         'setNightLight', 'setLevel', 'setDisplay'
@@ -55,7 +55,7 @@ class VeSyncAir200S300S(VeSyncBaseDevice):
         return head, body
 
     def build_purifier_dict(self, dev_dict: Dict):
-        """Build Core200S/300S purifier status dictionary."""
+        """Build Core200S purifier status dictionary."""
         self.enabled = dev_dict.get('enabled')
         if self.enabled:
             self.device_status = 'on'
@@ -72,13 +72,13 @@ class VeSyncAir200S300S(VeSyncBaseDevice):
                                                        False)
 
     def build_config_dict(self, conf_dict):
-        """Build configuration dict for Core200S/300S purifier."""
+        """Build configuration dict for Core200S purifier."""
         self.config['display'] = conf_dict.get('display', False)
         self.config['display_forever'] = conf_dict.get('display_forever',
                                                        False)
 
     def get_details(self) -> None:
-        """Build Core200S/300S Purifier details dictionary."""
+        """Build Core200S Purifier details dictionary."""
         head = Helpers.bypass_header()
         body = Helpers.bypass_body_v2(self.manager)
         body['cid'] = self.cid
@@ -113,7 +113,7 @@ class VeSyncAir200S300S(VeSyncBaseDevice):
             logger.debug('Error in purifier response')
 
     def update(self):
-        """Update Core200S/300S Purifier details."""
+        """Update Core200S Purifier details."""
         self.get_details()
 
     @property
@@ -172,28 +172,28 @@ class VeSyncAir200S300S(VeSyncBaseDevice):
 
         if Helpers.code_check(r):
             return True
-        logger.debug("Error toggling Core200S/300S purifier - %s",
+        logger.debug("Error toggling Core200S purifier - %s",
                      self.device_name)
         return False
 
     def turn_on(self) -> bool:
-        """Turn Core200S/300S Purifier on."""
+        """Turn Core200S Purifier on."""
         return self.toggle_switch(True)
 
     def turn_off(self):
-        """Turn Core200S/300S Purifier off."""
+        """Turn Core200S Purifier off."""
         return self.toggle_switch(False)
 
     def child_lock_on(self) -> bool:
-        """Turn Core200S/300S child lock on."""
+        """Turn Core200S child lock on."""
         return self.set_child_lock(True)
 
     def child_lock_off(self) -> bool:
-        """Turn Core200S/300S child lock off."""
+        """Turn Core200S child lock off."""
         return self.set_child_lock(False)
 
     def set_child_lock(self, mode: bool) -> bool:
-        """Set Core200S/300S child lock."""
+        """Set Core200S child lock."""
         if mode not in (True, False):
             logger.debug('Invalid mode passed to set_child_lock - %s', mode)
             return False
@@ -243,7 +243,7 @@ class VeSyncAir200S300S(VeSyncBaseDevice):
 
         if Helpers.code_check(r):
             return True
-        logger.debug("Error toggling Core200S/300S display - %s",
+        logger.debug("Error toggling Core200S display - %s",
                      self.device_name)
         return False
 
@@ -406,11 +406,11 @@ class VeSyncAir200S300S(VeSyncBaseDevice):
         return json.dumps(sup_val)
 
 
-class VeSyncAir400S(VeSyncBaseDevice):
-    """Core400S Purifier Class."""
+class VeSyncAir300S400S(VeSyncBaseDevice):
+    """Core300S/400S Purifier Class."""
 
     def __init__(self, details, manager):
-        """Initilize Core400S Purifier class."""
+        """Initilize Core300S/400S Purifier class."""
         super().__init__(details, manager)
         self.enabled = True
         self.details: Dict[str, Union[str, int, float, bool]] = {
@@ -428,7 +428,7 @@ class VeSyncAir400S(VeSyncBaseDevice):
         }
 
     def __build_api_dict(self, method: str) -> Tuple[Dict, Dict]:
-        """Build Core400S api call header and body.
+        """Build Core300S/400S api call header and body.
 
         Available methods are: 'getPurifierStatus', 'setSwitch',
         'setNightLight', 'setLevel', 'setDisplay'
@@ -451,7 +451,7 @@ class VeSyncAir400S(VeSyncBaseDevice):
         return head, body
 
     def build_purifier_dict(self, dev_dict: Dict):
-        """Build Core400S purifier status dictionary."""
+        """Build Core300S/400S purifier status dictionary."""
         self.enabled = dev_dict.get('enabled')
         if self.enabled:
             self.device_status = 'on'
@@ -475,7 +475,7 @@ class VeSyncAir400S(VeSyncBaseDevice):
                                                        False)
 
     def get_details(self) -> None:
-        """Build Core400S Purifier details dictionary."""
+        """Build Core300S/400S Purifier details dictionary."""
         head = Helpers.bypass_header()
         body = Helpers.bypass_body_v2(self.manager)
         body['cid'] = self.cid
@@ -511,7 +511,7 @@ class VeSyncAir400S(VeSyncBaseDevice):
             logger.debug('Error in purifier response')
 
     def update(self):
-        """Update Core400S Purifier details."""
+        """Update Core300S/400S Purifier details."""
         self.get_details()
 
     @property
@@ -583,23 +583,23 @@ class VeSyncAir400S(VeSyncBaseDevice):
         return False
 
     def turn_on(self) -> bool:
-        """Turn Core400S Purifier on."""
+        """Turn Core300S/400S Purifier on."""
         return self.toggle_switch(True)
 
     def turn_off(self):
-        """Turn Core400S Purifier off."""
+        """Turn Core300S/400S Purifier off."""
         return self.toggle_switch(False)
 
     def child_lock_on(self) -> bool:
-        """Turn Core400S child lock on."""
+        """Turn Core300S/400S child lock on."""
         return self.set_child_lock(True)
 
     def child_lock_off(self) -> bool:
-        """Turn Core400S child lock off."""
+        """Turn Core300S/400S child lock off."""
         return self.set_child_lock(False)
 
     def set_child_lock(self, mode: bool) -> bool:
-        """Set Core400S child lock."""
+        """Set Core300S/400S child lock."""
         if mode not in (True, False):
             logger.debug('Invalid mode passed to set_child_lock - %s', mode)
             return False

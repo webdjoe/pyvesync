@@ -12,8 +12,8 @@ from pyvesync.vesyncbulb import VeSyncBulbESL100, VeSyncBulbESL100CW
 from pyvesync.vesyncfan import (
     VeSyncAir131,
     VeSyncHumid300S,
-    VeSyncAir200S300S,
-    VeSyncAir400S,
+    VeSyncAir200S,
+    VeSyncAir300S400S,
 )
 from pyvesync.vesyncoutlet import (
     VeSyncOutlet7A,
@@ -45,9 +45,9 @@ _DEVICE_CLASS: Dict[str, Any] = {
     'ESL100CW': VeSyncBulbESL100CW,
     'ESWD16': VeSyncDimmerSwitch,
     'Classic300S': VeSyncHumid300S,
-    'Core200S': VeSyncAir200S300S,
-    'Core300S': VeSyncAir200S300S,
-    'Core400S': VeSyncAir400S,
+    'Core200S': VeSyncAir200S,
+    'Core300S': VeSyncAir300S400S,
+    'Core400S': VeSyncAir300S400S,
 }
 
 _DEVICE_TYPES_DICT: Dict[str, List[str]] = dict(
