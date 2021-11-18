@@ -14,6 +14,8 @@ pr:
 
 jobs:
 - job: 'Validation'
+  pool:
+    vmImage: 'ubuntu-20.04'
   steps:
   - task: UsePythonVersion@0
     inputs:
