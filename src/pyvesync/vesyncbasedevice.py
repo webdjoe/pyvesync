@@ -52,8 +52,10 @@ class VeSyncBaseDevice:
 
     def __str__(self):
         """Use device info for string represtation of class."""
-        return f'Device Name: {self.device_name}, Device Type: {self.device_type},\
-            SubDevice No.: {self.sub_device_no} Status: {self.device_status}'
+        return f'Device Name: {self.device_name}, \
+                 Device Type: {self.device_type},\
+                 SubDevice No.: {self.sub_device_no},\
+                 Status: {self.device_status}'
 
     def __repr__(self):
         """Representation of device details."""

@@ -5,14 +5,14 @@ import re
 import time
 from itertools import chain
 from collections import defaultdict
-from typing import List, Dict, DefaultDict, Union, Any
+from typing import List, Dict, DefaultDict, Union, Any, Type
 
 from pyvesync.helpers import Helpers
+from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 from pyvesync.vesyncbulb import VeSyncBulbESL100, VeSyncBulbESL100CW
 from pyvesync.vesyncfan import (
     VeSyncAir131,
-    VeSyncHumid200S,
-    VeSyncHumid300S,
+    VeSyncHumid200300S,
     VeSyncAir200S,
     VeSyncAir300S400S,
 )
@@ -33,7 +33,7 @@ DEFAULT_ENER_UP_INT: int = 21600
 
 # Class dictionary based on device type
 
-_DEVICE_CLASS: Dict[str, Any] = {
+_DEVICE_CLASS: Dict[str, Type[VeSyncBaseDevice]] = {
     'wifi-switch-1.3': VeSyncOutlet7A,
     'ESW03-USA': VeSyncOutlet10A,
     'ESW01-EU': VeSyncOutlet10A,
@@ -45,8 +45,8 @@ _DEVICE_CLASS: Dict[str, Any] = {
     'ESL100': VeSyncBulbESL100,
     'ESL100CW': VeSyncBulbESL100CW,
     'ESWD16': VeSyncDimmerSwitch,
-    'Classic300S': VeSyncHumid300S,
-    'Dual200S': VeSyncHumid200S,
+    'Classic300S': VeSyncHumid200300S,
+    'Dual200S': VeSyncHumid200300S,
     'Core200S': VeSyncAir200S,
     'Core300S': VeSyncAir300S400S,
     'Core400S': VeSyncAir300S400S,
@@ -56,7 +56,8 @@ _DEVICE_TYPES_DICT: Dict[str, List[str]] = dict(
     outlets=['wifi-switch-1.3', 'ESW03-USA',
              'ESW01-EU', 'ESW15-USA', 'ESO15-TB'],
     switches=['ESWL01', 'ESWL03', 'ESWD16'],
-    fans=['LV-PUR131S', 'Classic300S', 'Core200S', 'Core300S', 'Core400S', 'Dual200S'],
+    fans=['LV-PUR131S', 'Classic300S', 'Core200S',
+          'Core300S', 'Core400S', 'Dual200S'],
     bulbs=['ESL100', 'ESL100CW'],
 )
 
