@@ -1067,10 +1067,10 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
     """200S/300S Humidifier Class."""
 
     def __init__(self, details, manager):
-        """Initilize 200S/300S Humidifier class."""
+        """Initialize 200S/300S Humidifier class."""
         super().__init__(details, manager)
         self.enabled = True
-        if 'nightlight' in air_features.get(details.type):
+        if 'nightlight' in air_features.get(details['deviceType']):
             self.night_light = True
         else:
             self.night_light = False
