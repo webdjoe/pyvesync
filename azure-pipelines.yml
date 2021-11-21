@@ -7,8 +7,6 @@ trigger:
   branches:
     include:
     - '*'
-    exclude:
-    - 'master'
 pr:
   - '*'
 
