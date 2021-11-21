@@ -30,7 +30,7 @@ pyvesync is a library to manage VeSync compatible [smart home devices](#supporte
     - [JSON Output for Air Purifier](#json-output-for-air-purifier)
     - [JSON Output for 300S Humidifier](#json-output-for-300s-humidifier)
     - [JSON Output for Core200S Purifier](#json-output-for-core200s-purifier)
-    - [JSON Output for Core400S Purifier](#json-output-for-core400s-purifier)
+    - [JSON Output for 400S Purifier](#json-output-for-400s-purifier)
 - [Notes](#notes)
 - [Feature Requests](#feature-requests)
 
@@ -52,7 +52,7 @@ pip install pyvesync
 6. Etekcity Smart WiFi Light Switch (model ESWL01)
 7. Levoit Smart Wifi Air Purifier (LV-PUR131S)
 8. Levoit Smart True HEPA Air Purifier (Core200S)
-9. Levoit Air Purifier for Home Large Room (Core400S)
+9. Levoit Air Purifier for Home Large Room (Core300S/Core400S)
 10. Etekcity Soft White Dimmable Smart Bulb (ESL100)
 11. Etekcity Cool to Soft White Tunable Dimmable Bulb (ESL100CW)
 12. Etekcity Wifi Dimmer Switch (ESD16)
@@ -229,7 +229,7 @@ The rectangular smart switch model supports some additional functionality on top
 The details dictionary contains all device status details 
 
 ```python
-VeSyncHumid300S.details = {
+VeSyncHumid200S300S.details = {
     'humidity': 80, # percent humidity in room
     'mist_virtual_level': 0, # Level of mist output 1 - 9
     'mist_level': 0,
@@ -246,28 +246,28 @@ VeSyncHumid300S.details = {
 The configuration dictionary shows current settings
 
 ```python
-VeSyncHumid300S.config = {
+VeSyncHumid200S300S.config = {
     'auto_target_humidity': 80, # percent humidity in room
     'display': True, # Display on/off
     'automatic_stop': False
     }
 ```
 
-`VeSyncHumid300S.automatic_stop_on()` Set humidifier to stop at set humidity
+`VeSyncHumid200S300S.automatic_stop_on()` Set humidifier to stop at set humidity
 
-`VeSyncHumid300S.automatic_stop_off` Set humidifier to run continuously 
+`VeSyncHumid200S300S.automatic_stop_off` Set humidifier to run continuously 
 
-`VeSyncHumid300S.turn_on_display()` Turn display on
+`VeSyncHumid200S300S.turn_on_display()` Turn display on
 
-`VeSyncHumid300S.turn_off_display()` Turn display off
+`VeSyncHumid200S300S.turn_off_display()` Turn display off
 
-`VeSyncHumid300S.set_humidity(30)` Set humidity between 30 and 80 percent
+`VeSyncHumid200S300S.set_humidity(30)` Set humidity between 30 and 80 percent
 
-`VeSyncHumid300S.set_night_light_brightness(50)` Set nightlight brightness between 1 and 100
+`VeSyncHumid200S300S.set_night_light_brightness(50)` Set nightlight brightness between 1 and 100
 
-`VeSyncHumid300S.set_humidity_mode('sleep')` Set humidity mode - sleep/auto
+`VeSyncHumid200S300S.set_humidity_mode('sleep')` Set humidity mode - sleep/auto
 
-`VeSyncHumid300S.set_mist_level(4)` Set mist output 1 - 9
+`VeSyncHumid200S300S.set_mist_level(4)` Set mist output 1 - 9
 
 ### Levoit Purifier Core200S Methods and Properties
 
@@ -299,6 +299,8 @@ VeSyncHumid300S.config = {
 
 ### Levoit Purifier Core300S/400S Methods and Properties
 
+The core400S has a nightlight, while the Core300S does not.
+
 `VeSyncAir300S400S.change_fan_speed(2)` 1|2|3|4 or call without argument to increment by one
 
 `VeSyncAir300S400S.child_lock_on()` Enable child lock
@@ -327,7 +329,7 @@ VeSyncHumid300S.config = {
 
 `VeSyncAir300S400S.child_lock()` - Return the state of the child lock (True=On/False=off)
 
-`VeSyncAir300S400S.night_light()` - Return the state of the night light (on/dim/off)
+`VeSyncAir300S400S.night_light()` - Return the state of the night light (on/dim/off). The 300S does not have a nightlight.
 
 ### JSON Output API
 
