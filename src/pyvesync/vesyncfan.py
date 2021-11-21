@@ -7,6 +7,10 @@ from typing import Dict, Tuple, Union
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 from pyvesync.helpers import Helpers
 
+air_features = {
+    'Dual200S': [],
+    'Classic300S': ['nightlight']
+}
 
 logger = logging.getLogger(__name__)
 
@@ -1059,13 +1063,17 @@ class VeSyncAir131(VeSyncBaseDevice):
         return sup_val
 
 
-class VeSyncHumid300S(VeSyncBaseDevice):
-    """300S Humidifier Class."""
+class VeSyncHumid200300S(VeSyncBaseDevice):
+    """200S/300S Humidifier Class."""
 
     def __init__(self, details, manager):
-        """Initilize 300S Humidifier class."""
+        """Initialize 200S/300S Humidifier class."""
         super().__init__(details, manager)
         self.enabled = True
+        if 'nightlight' in air_features.get(details['deviceType']):
+            self.night_light = True
+        else:
+            self.night_light = False
         self.details: Dict[str, Union[str, int, float]] = {
             'humidity': 0,
             'mist_virtual_level': 0,
@@ -1076,8 +1084,9 @@ class VeSyncHumid300S(VeSyncBaseDevice):
             'water_tank_lifted': False,
             'display': False,
             'automatic_stop_reach_target': False,
-            'night_light_brightness': 0
         }
+        if self.night_light:
+            self.details['night_light_brightness'] = 0
         self.config: Dict[str, Union[str, int, float]] = {
             'auto_target_humidity': 0,
             'display': False,
@@ -1085,7 +1094,7 @@ class VeSyncHumid300S(VeSyncBaseDevice):
         }
 
     def __build_api_dict(self, method: str) -> Tuple[Dict, Dict]:
-        """Build 300S api call header and body.
+        """Build 200S/300S api call header and body.
 
         Available methods are: 'getHumidifierStatus', 'setAutomaticStop',
         'setSwitch', 'setNightLightBrightness', 'setVirtualLevel',
@@ -1108,7 +1117,7 @@ class VeSyncHumid300S(VeSyncBaseDevice):
         return head, body
 
     def build_humid_dict(self, dev_dict: Dict):
-        """Build 300S humidifier status dictionary."""
+        """Build 200S/300S humidifier status dictionary."""
         self.enabled = dev_dict.get('enabled')
         self.details['humidity'] = dev_dict.get('humidity', 0)
         self.details['mist_virtual_level'] = dev_dict.get(
@@ -1123,8 +1132,9 @@ class VeSyncHumid300S(VeSyncBaseDevice):
         self.details['automatic_stop_reach_target'] = dev_dict.get(
             'automatic_stop_reach_target', True
         )
-        self.details['night_light_brightness'] = dev_dict.get(
-            'night_light_brightness', 0)
+        if self.night_light:
+            self.details['night_light_brightness'] = dev_dict.get(
+                'night_light_brightness', 0)
 
     def build_config_dict(self, conf_dict):
         """Build configuration dict for 300s humidifier."""
@@ -1134,7 +1144,7 @@ class VeSyncHumid300S(VeSyncBaseDevice):
         self.config['automatic_stop'] = conf_dict.get('automatic_stop', True)
 
     def get_details(self) -> None:
-        """Build 300S Humidifier details dictionary."""
+        """Build 200S/300S Humidifier details dictionary."""
         head = Helpers.bypass_header()
         body = Helpers.bypass_body_v2(self.manager)
         body['cid'] = self.cid
@@ -1169,7 +1179,7 @@ class VeSyncHumid300S(VeSyncBaseDevice):
             logger.debug('Error in humidifier response')
 
     def update(self):
-        """Update 300S Humidifier details."""
+        """Update 200S/300S Humidifier details."""
         self.get_details()
 
     def toggle_switch(self, toggle: bool) -> bool:
@@ -1204,23 +1214,23 @@ class VeSyncHumid300S(VeSyncBaseDevice):
         return False
 
     def turn_on(self) -> bool:
-        """Turn 300S Humidifier on."""
+        """Turn 200S/300S Humidifier on."""
         return self.toggle_switch(True)
 
     def turn_off(self):
-        """Turn 300S Humidifier off."""
+        """Turn 200S/300S Humidifier off."""
         return self.toggle_switch(False)
 
     def automatic_stop_on(self) -> bool:
-        """Turn 300S Humidifier automatic stop on."""
+        """Turn 200S/300S Humidifier automatic stop on."""
         return self.set_automatic_stop(True)
 
     def automatic_stop_off(self) -> bool:
-        """Turn 300S Humidifier automatic stop on."""
+        """Turn 200S/300S Humidifier automatic stop on."""
         return self.set_automatic_stop(False)
 
     def set_automatic_stop(self, mode: bool) -> bool:
-        """Set 300S Humidifier to automatic stop."""
+        """Set 200S/300S Humidifier to automatic stop."""
         if mode not in (True, False):
             logger.debug(
                 'Invalid mode passed to set_automatic_stop - %s', mode)
@@ -1274,15 +1284,15 @@ class VeSyncHumid300S(VeSyncBaseDevice):
         return False
 
     def turn_on_display(self) -> bool:
-        """Turn 300S Humidifier on."""
+        """Turn 200S/300S Humidifier on."""
         return self.set_display(True)
 
     def turn_off_display(self):
-        """Turn 300S Humidifier off."""
+        """Turn 200S/300S Humidifier off."""
         return self.set_display(False)
 
     def set_humidity(self, humidity: int) -> bool:
-        """Set target 300S Humidifier humidity."""
+        """Set target 200S/300S Humidifier humidity."""
         if humidity < 30 or humidity > 80:
             logger.debug("Humidity value must be set between 30 and 80")
             return False
@@ -1308,7 +1318,11 @@ class VeSyncHumid300S(VeSyncBaseDevice):
         return False
 
     def set_night_light_brightness(self, brightness: int) -> bool:
-        """Set target 300S Humidifier night light brightness."""
+        """Set target 200S/300S Humidifier night light brightness."""
+        if not self.night_light:
+            logger.debug('%s is a %s does not have a nightlight',
+                         self.device_name, self.device_type)
+            return False
         if brightness < 0 or brightness > 100:
             logger.debug("Brightness value must be set between 0 and 100")
             return False
@@ -1400,12 +1414,13 @@ class VeSyncHumid300S(VeSyncBaseDevice):
             ('Display: ', self.details['display'], ''),
             ('Automatic Stop Reach Target: ',
                 self.details['automatic_stop_reach_target'], ''),
-            ('Night Light Brightness: ',
-                self.details['night_light_brightness'], 'percent'),
             ('Auto Target Humidity: ',
                 self.config['auto_target_humidity'], 'percent'),
             ('Automatic Stop: ', self.config['automatic_stop'], ''),
         ]
+        if self.night_light:
+            disp1.append(('Night Light Brightness: ',
+                          self.details['night_light_brightness'], 'percent'))
         for line in disp1:
             print(f'{line[0]:.<29} {line[1]} {line[2]}')
 
@@ -1426,11 +1441,12 @@ class VeSyncHumid300S(VeSyncBaseDevice):
                 'Display': self.details['display'],
                 'Automatic Stop Reach Target': self.details[
                     'automatic_stop_reach_target'],
-                'Night Light Brightness': self.details[
-                    'night_light_brightness'],
                 'Auto Target Humidity': str(self.config[
                     'auto_target_humidity']),
                 'Automatic Stop': self.config['automatic_stop'],
             }
         )
+        if self.night_light:
+            sup_val['Night Light Brightness'] = self.details[
+                'night_light_brightness']
         return json.dumps(sup_val)
