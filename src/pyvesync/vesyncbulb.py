@@ -63,7 +63,7 @@ class VeSyncBulb(VeSyncBaseDevice):
 
     @property
     def color_temp_feature(self) -> bool:
-        """Return true in color temperature can be changed (tunable)."""
+        """Return true if bulb supports color temperature changes."""
         if 'color_temp' in feature_dict[self.device_type]:
             return True
         return False
@@ -113,8 +113,8 @@ class VeSyncBulb(VeSyncBaseDevice):
         if self.connection_status == 'online':
             if self.dimmable_feature:
                 disp1 = [('Brightness: ', self.brightness, '%')]
-            for line in disp1:
-                print(f'{line[0]:.<17} {line[1]} {line[2]}')
+                for line in disp1:
+                    print(f'{line[0]:.<17} {line[1]} {line[2]}')
 
     def displayJSON(self) -> str:
         """Return bulb device info in JSON format."""

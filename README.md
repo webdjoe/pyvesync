@@ -38,25 +38,41 @@ pyvesync is a library to manage VeSync compatible [smart home devices](#supporte
 
 Install the latest version from pip:
 
-```python
+```bash
 pip install pyvesync
 ```
 
 ## Supported Devices
 
-1. Etekcity Voltson Smart WiFi Outlet (7A model ESW01-USA)
-2. Etekcity Voltson Smart WiFi Outlet (10A model ESW01-EU)
-3. Etekcity Voltson Smart Wifi Outlet (10A model ESW03-USA)
-4. Etekcity Voltson Smart WiFi Outlet (15A model ESW15-USA)
-5. Etekcity Two Plug Outdoor Outlet (ESO15-TB) (Each plug is a separate object, energy readings are for both plugs combined)
-6. Etekcity Smart WiFi Light Switch (model ESWL01)
-7. Levoit Smart Wifi Air Purifier (LV-PUR131S)
-8. Levoit Smart True HEPA Air Purifier (Core200S)
-9. Levoit Air Purifier for Home Large Room (Core300S/Core400S)
-10. Etekcity Soft White Dimmable Smart Bulb (ESL100)
-11. Etekcity Cool to Soft White Tunable Dimmable Bulb (ESL100CW)
-12. Etekcity Wifi Dimmer Switch (ESD16)
-13. Levoit Air Purifier (Core300S)
+### Etekcity Outlets
+
+1. Voltson Smart WiFi Outlet- Round (7A model ESW01-USA)
+2. Voltson Smart WiFi Outlet - Round (10A model ESW01-EU)
+3. Voltson Smart Wifi Outlet - Round (10A model ESW03-USA)
+4. Voltson Smart WiFi Outlet - Rectangle (15A model ESW15-USA)
+5. Two Plug Outdoor Outlet (ESO15-TB) (Each plug is a separate `VeSyncOutlet` object, energy readings are for both plugs combined)
+
+### Wall Switches
+1. Etekcity Smart WiFi Light Switch (model ESWL01)
+2. Etekcity Wifi Dimmer Switch (ESD16)
+
+### Levoit Air Purifiers
+
+1. LV-PUR131S
+2. Core 200S
+3. Core 300S
+4. Core 400S
+5. LAP-C201S-AUSR (Core 200S)
+
+### Etekcity Bulbs
+
+1. Soft White Dimmable Smart Bulb (ESL100)
+2. Cool to Soft White Tunable Dimmable Bulb (ESL100CW)
+
+### Levoit Humidifiers
+1. Dual 200S
+2. Classic 300S
+3. LUH-D301S-WEU Dual (200S)
 
 ## Usage
 
@@ -140,7 +156,7 @@ for s in manager.outlets:
 
 `VeSyncDevice.get_config()` - Retrieve Configuration data such as firmware version for device and store in the `VeSyncDevice.config` dictionary
 
-`VeSyncDevice.firmware_update` - Return true if Firmware has update available. `VeSyncDevice.get_config()` must be called first
+`VeSyncDevice.firmware_update` - Return true if Firmware has an update available. `VeSyncDevice.get_config()` must be called first
 
 ### Outlet Specific Energy Methods and Properties
 
@@ -224,7 +240,7 @@ The rectangular smart switch model supports some additional functionality on top
 
 `VeSyncSwitch.rgb_color_set(red, green, blue)` - Set color of rgb light (0 - 255)
 
-### Levoit Humidifier 300S Methods and Properties
+### Levoit Humidifier 200S/300S Methods and Properties
 
 The details dictionary contains all device status details 
 

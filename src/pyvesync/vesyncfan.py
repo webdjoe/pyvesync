@@ -10,6 +10,8 @@ from pyvesync.helpers import Helpers
 air_features = {
     'Dual200S': [],
     'Classic200S': [],
+    'LUH-D301S-WEU': [],
+    'LAP-C201S-AUSR': [],
     'Classic300S': ['nightlight']
 }
 

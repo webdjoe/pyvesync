@@ -148,7 +148,7 @@ class VeSyncDimmerSwitch(VeSyncSwitch):
     def __init__(self, details, manager):
         """Initilize dimmer switch class."""
         super().__init__(details, manager)
-        self._brightness = 'unknown'
+        self._brightness = 0
         self._rgb_value = {'red': 0, 'blue': 0, 'green': 0}
         self._rgb_status = 'unknown'
         self._indicator_light = 'unknown'
