@@ -23,6 +23,8 @@ from pyvesync.vesyncoutlet import (
     VeSyncOutdoorPlug,
 )
 from pyvesync.vesyncswitch import VeSyncWallSwitch, VeSyncDimmerSwitch
+from pyvesync.vesyncscale import VeSyncESF24
+
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +54,8 @@ _DEVICE_CLASS: Dict[str, Type[VeSyncBaseDevice]] = {
     'Core300S': VeSyncAir300S400S,
     'Core400S': VeSyncAir300S400S,
     'LUH-D301S-WEU': VeSyncHumid200300S,
-    'LAP-C201S-AUSR': VeSyncAir200S
+    'LAP-C201S-AUSR': VeSyncAir200S,
+    'ESF24': VeSyncESF24
 }
 
 _DEVICE_TYPES_DICT: Dict[str, List[str]] = dict(
@@ -63,6 +66,7 @@ _DEVICE_TYPES_DICT: Dict[str, List[str]] = dict(
           'Core300S', 'Core400S', 'Dual200S',
           'LUH-D301S-WEU', 'LAP-C201S-AUSR'],
     bulbs=['ESL100', 'ESL100CW'],
+    scales=['ESF24']
 )
 
 _DEVICE_TYPES: DefaultDict[str, list] = defaultdict(list, _DEVICE_TYPES_DICT)
