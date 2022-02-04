@@ -12,6 +12,7 @@ air_features = {
     'Classic200S': [],
     'LUH-D301S-WEU': [],
     'LAP-C201S-AUSR': [],
+    'LAP-C601S-WUS': [],
     'Classic300S': ['nightlight']
 }
 
