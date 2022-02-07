@@ -1114,7 +1114,8 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
         """
         modes = ['getHumidifierStatus', 'setAutomaticStop',
                  'setSwitch', 'setNightLightBrightness', 'setVirtualLevel',
-                 'setTargetHumidity', 'setHumidityMode', 'setDisplay', 'setLevel']
+                 'setTargetHumidity', 'setHumidityMode', 'setDisplay',
+                 'setLevel']
         if method not in modes:
             logger.debug('Invalid mode - %s', method)
             return {}, {}
