@@ -19,7 +19,7 @@ pyvesync is a library to manage VeSync compatible [smart home devices](#supporte
   - [Dimmable Smart Light Bulb Method and Properties](#dimmable-smart-light-bulb-method-and-properties)
   - [Tunable Smart Light Bulb Methods and Properties](#tunable-smart-light-bulb-methods-and-properties)
   - [Dimmable Switch Methods and Properties](#dimmable-switch-methods-and-properties)
-  - [Levoit Humidifier 300S Methods and Properties](#levoit-humidifier-300s-methods-and-properties)
+  - [Levoit Humidifier 300S/600s Methods and Properties](#levoit-humidifier-300s-600s-methods-and-properties)
   - [Levoit Purifier Core200S Methods and Properties](#levoit-purifier-core200s-methods-and-properties)
   - [Levoit Purifier Core300S/400S/600S Methods and Properties](#levoit-purifier-core300s400s600s-methods-and-properties)
   - [JSON Output API](#json-output-api)
@@ -29,6 +29,7 @@ pyvesync is a library to manage VeSync compatible [smart home devices](#supporte
     - [JSON Output for Bulbs](#json-output-for-bulbs)
     - [JSON Output for Air Purifier](#json-output-for-air-purifier)
     - [JSON Output for 300S Humidifier](#json-output-for-300s-humidifier)
+    - [JSON Output for 600S Humidifier](#json-output-for-600s-humidifier)
     - [JSON Output for Core200S Purifier](#json-output-for-core200s-purifier)
     - [JSON Output for 400S Purifier](#json-output-for-400s-purifier)
     - [JSON Output for 600S Purifier](#json-output-for-600s-purifier)
@@ -64,6 +65,7 @@ pip install pyvesync
 3. Core 300S
 4. Core 400S
 5. LAP-C201S-AUSR (Core 200S)
+6. LAP-C601S-WUS (Core 600s)
 
 ### Etekcity Bulbs
 
@@ -74,6 +76,7 @@ pip install pyvesync
 1. Dual 200S
 2. Classic 300S
 3. LUH-D301S-WEU Dual (200S)
+4. LUH-A602S-WUS (LV600S)
 
 ## Usage
 
@@ -241,7 +244,7 @@ The rectangular smart switch model supports some additional functionality on top
 
 `VeSyncSwitch.rgb_color_set(red, green, blue)` - Set color of rgb light (0 - 255)
 
-### Levoit Humidifier 200S/300S Methods and Properties
+### Levoit Humidifier 200S/300S/600S Methods and Properties
 
 The details dictionary contains all device status details 
 
@@ -285,6 +288,8 @@ VeSyncHumid200S300S.config = {
 `VeSyncHumid200S300S.set_humidity_mode('sleep')` Set humidity mode - sleep/auto
 
 `VeSyncHumid200S300S.set_mist_level(4)` Set mist output 1 - 9
+
+`VeSyncHumid200S300S.set_warm_level(4)` Set mist warm level 0 - 3 (0 is warming off)
 
 ### Levoit Purifier Core200S Methods and Properties
 
@@ -437,6 +442,34 @@ This output only applies to dimmable switch.  The standard switch has the defaul
   'Night Light Brightness': 10, # 1 - 100
   'Auto Target Humidity': True, # True/False
   'Automatic Stop': True # True/False
+}
+```
+
+#### JSON Output for 600S Humidifier
+
+```python
+{
+	"Device Name": "My Humidifier", 
+    "Model": "LUH-A602S-WUS", 
+    "Subdevice No": "None", 
+    "Status": "on", 
+    "Online": "online",
+    "Type": "wifi-air", 
+    "CID": "asd_sdfKIHG7IJHGwJGJ7GJ_ag5h3G55", 
+    "Mode": "humidity", 
+    "Humidity": "32",
+    "Mist Virtual Level": "9", 
+    "Mist Level": "3", 
+    "Water Lacks": false, 
+    "Humidity High": false, 
+    "Water Tank Lifted": false,
+    "Display": false, 
+    "Automatic Stop Reach Target": false, 
+    "Auto Target Humidity": "49", 
+    "Automatic Stop": true,
+    "Night Light Brightness": 0, 
+    "Mist Warm Enabled": true, 
+    "Mist Warm Level": 3
 }
 ```
 

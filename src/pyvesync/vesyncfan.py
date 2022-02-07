@@ -13,7 +13,8 @@ air_features = {
     'LUH-D301S-WEU': [],
     'LAP-C201S-AUSR': [],
     'LAP-C601S-WUS': [],
-    'Classic300S': ['nightlight']
+    'Classic300S': ['nightlight'],
+    'LUH-A602S-WUS': ['nightlight', 'warm'],
 }
 
 logger = logging.getLogger(__name__)
@@ -1078,6 +1079,10 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
             self.night_light = True
         else:
             self.night_light = False
+        if 'warm' in air_features.get(details['deviceType']):
+            self.warm = True
+        else:
+            self.warm = False
         self.details: Dict[str, Union[str, int, float]] = {
             'humidity': 0,
             'mist_virtual_level': 0,
@@ -1091,6 +1096,9 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
         }
         if self.night_light:
             self.details['night_light_brightness'] = 0
+        if self.warm:
+            self.details['warm_enabled'] = False
+            self.details['warm_level'] = 0
         self.config: Dict[str, Union[str, int, float]] = {
             'auto_target_humidity': 0,
             'display': False,
@@ -1106,7 +1114,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
         """
         modes = ['getHumidifierStatus', 'setAutomaticStop',
                  'setSwitch', 'setNightLightBrightness', 'setVirtualLevel',
-                 'setTargetHumidity', 'setHumidityMode', 'setDisplay']
+                 'setTargetHumidity', 'setHumidityMode', 'setDisplay', 'setLevel']
         if method not in modes:
             logger.debug('Invalid mode - %s', method)
             return {}, {}
@@ -1139,6 +1147,11 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
         if self.night_light:
             self.details['night_light_brightness'] = dev_dict.get(
                 'night_light_brightness', 0)
+        if self.warm:
+            self.details['warm_enabled'] = dev_dict.get(
+                'warm_enabled', False)
+            self.details['warm_level'] = dev_dict.get(
+                'warm_level', 0)
 
     def build_config_dict(self, conf_dict):
         """Build configuration dict for 300s humidifier."""
@@ -1321,6 +1334,38 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
         logger.debug('Error setting humidity')
         return False
 
+    def set_warm_level(self, warm_level: int) -> bool:
+        """Set target 600S Humidifier mist warmth."""
+        if not self.warm:
+            logger.debug('%s is a %s does not have a mist warmer',
+                         self.device_name, self.device_type)
+            return False
+        if warm_level < 0 or warm_level > 3:
+            logger.debug("warm_level value must be set between 0 and 3")
+            return False
+        head, body = self.__build_api_dict('setLevel')
+
+        if not head and not body:
+            return False
+
+        body['payload']['data'] = {
+            'type': 'warm',
+            'level': warm_level,
+            'id': 0,
+        }
+
+        r, _ = Helpers.call_api(
+            '/cloud/v2/deviceManaged/bypassV2',
+            method='post',
+            headers=head,
+            json=body,
+        )
+
+        if Helpers.code_check(r):
+            return True
+        logger.debug('Error setting warm')
+        return False
+
     def set_night_light_brightness(self, brightness: int) -> bool:
         """Set target 200S/300S Humidifier night light brightness."""
         if not self.night_light:
@@ -1425,6 +1470,11 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
         if self.night_light:
             disp1.append(('Night Light Brightness: ',
                           self.details['night_light_brightness'], 'percent'))
+        if self.warm:
+            disp1.append(('Mist Warmth Enabled: ',
+                          self.details['warm_enabled'], ''))
+            disp1.append(('Mist Warmth Level: ',
+                          self.details['warm_level'], ''))
         for line in disp1:
             print(f'{line[0]:.<29} {line[1]} {line[2]}')
 
@@ -1453,4 +1503,9 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
         if self.night_light:
             sup_val['Night Light Brightness'] = self.details[
                 'night_light_brightness']
+        if self.warm:
+            sup_val['Mist Warm Enabled'] = self.details[
+                'warm_enabled']
+            sup_val['Mist Warm Level'] = self.details[
+                'warm_level']
         return json.dumps(sup_val)
