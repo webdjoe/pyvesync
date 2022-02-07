@@ -14,7 +14,7 @@ air_features = {
     'LAP-C201S-AUSR': [],
     'LAP-C601S-WUS': [],
     'Classic300S': ['nightlight'],
-    'LUH-A602S-WUS': ['nightlight', 'warm'],
+    'LUH-A602S-WUS': ['warm'],
 }
 
 logger = logging.getLogger(__name__)
