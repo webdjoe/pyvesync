@@ -1400,8 +1400,9 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
     def set_humidity_mode(self, mode: str) -> bool:
         """Set humidifier mode - sleep or auto."""
         if mode.lower() not in ['sleep', 'auto', 'humidity']:
-            logger.debug('Invalid humidity mode used (sleep, auto, or humidity)- %s',
-                         mode)
+            logger.warning('Invalid humidity mode used (sleep, auto, or '
+                           'humidity)- %s',
+                           mode)
             return False
         head, body = self.__build_api_dict('setHumidityMode')
         if not head and not body:
@@ -1463,9 +1464,9 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
             ('Water Tank Lifted: ', self.details['water_tank_lifted'], ''),
             ('Display: ', self.details['display'], ''),
             ('Automatic Stop Reach Target: ',
-                self.details['automatic_stop_reach_target'], ''),
+             self.details['automatic_stop_reach_target'], ''),
             ('Auto Target Humidity: ',
-                self.config['auto_target_humidity'], 'percent'),
+             self.config['auto_target_humidity'], 'percent'),
             ('Automatic Stop: ', self.config['automatic_stop'], ''),
         ]
         if self.night_light:
@@ -1497,7 +1498,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
                 'Automatic Stop Reach Target': self.details[
                     'automatic_stop_reach_target'],
                 'Auto Target Humidity': str(self.config[
-                    'auto_target_humidity']),
+                                                'auto_target_humidity']),
                 'Automatic Stop': self.config['automatic_stop'],
             }
         )
