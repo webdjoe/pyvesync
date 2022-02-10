@@ -1399,8 +1399,8 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
 
     def set_humidity_mode(self, mode: str) -> bool:
         """Set humidifier mode - sleep or auto."""
-        if mode.lower() not in ['sleep', 'auto']:
-            logger.debug('Invalid humidity mode used (sleep or auto)- %s',
+        if mode.lower() not in ['sleep', 'auto', 'humidity']:
+            logger.debug('Invalid humidity mode used (sleep, auto, or humidity)- %s',
                          mode)
             return False
         head, body = self.__build_api_dict('setHumidityMode')
