@@ -51,6 +51,7 @@ _DEVICE_CLASS: Dict[str, Type[VeSyncBaseDevice]] = {
     'Core200S': VeSyncAir200S,
     'Core300S': VeSyncAir300S400S,
     'Core400S': VeSyncAir300S400S,
+    'LAP-C601S-WUS': VeSyncAir300S400S,
     'LUH-D301S-WEU': VeSyncHumid200300S,
     'LAP-C201S-AUSR': VeSyncAir200S,
     'LAP-C401S-WUSR': VeSyncAir300S400S,
@@ -62,7 +63,7 @@ _DEVICE_TYPES_DICT: Dict[str, List[str]] = dict(
     switches=['ESWL01', 'ESWL03', 'ESWD16'],
     fans=['LV-PUR131S', 'Classic200S', 'Classic300S', 'Core200S',
           'Core300S', 'Core400S', 'Dual200S',
-          'LUH-D301S-WEU', 'LAP-C201S-AUSR', 'LAP-C401S-WUSR'],
+          'LUH-D301S-WEU', 'LAP-C201S-AUSR', 'LAP-C401S-WUSR', 'LAP-C601S-WUS'],
     bulbs=['ESL100', 'ESL100CW'],
 )
 
