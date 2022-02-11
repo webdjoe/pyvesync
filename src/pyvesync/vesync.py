@@ -63,7 +63,8 @@ _DEVICE_TYPES_DICT: Dict[str, List[str]] = dict(
     switches=['ESWL01', 'ESWL03', 'ESWD16'],
     fans=['LV-PUR131S', 'Classic200S', 'Classic300S', 'Core200S',
           'Core300S', 'Core400S', 'Dual200S',
-          'LUH-D301S-WEU', 'LAP-C201S-AUSR', 'LAP-C401S-WUSR', 'LAP-C601S-WUS'],
+          'LUH-D301S-WEU', 'LAP-C201S-AUSR', 'LAP-C401S-WUSR',
+          'LAP-C601S-WUS'],
     bulbs=['ESL100', 'ESL100CW'],
 )
 
