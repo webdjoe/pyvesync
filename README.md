@@ -21,7 +21,7 @@ pyvesync is a library to manage VeSync compatible [smart home devices](#supporte
   - [Dimmable Switch Methods and Properties](#dimmable-switch-methods-and-properties)
   - [Levoit Humidifier 300S Methods and Properties](#levoit-humidifier-300s-methods-and-properties)
   - [Levoit Purifier Core200S Methods and Properties](#levoit-purifier-core200s-methods-and-properties)
-  - [Levoit Purifier Core300S/400S Methods and Properties](#levoit-purifier-core300s400s-methods-and-properties)
+  - [Levoit Purifier Core300S/400S/600S Methods and Properties](#levoit-purifier-core300s400s600s-methods-and-properties)
   - [JSON Output API](#json-output-api)
     - [JSON Output for All Devices](#json-output-for-all-devices)
     - [JSON Output for Outlets](#json-output-for-outlets)
@@ -31,6 +31,7 @@ pyvesync is a library to manage VeSync compatible [smart home devices](#supporte
     - [JSON Output for 300S Humidifier](#json-output-for-300s-humidifier)
     - [JSON Output for Core200S Purifier](#json-output-for-core200s-purifier)
     - [JSON Output for 400S Purifier](#json-output-for-400s-purifier)
+    - [JSON Output for 600S Purifier](#json-output-for-600s-purifier)
 - [Notes](#notes)
 - [Feature Requests](#feature-requests)
 
@@ -315,7 +316,7 @@ VeSyncHumid200S300S.config = {
 
 ### Levoit Purifier Core300S/400S Methods and Properties
 
-The core400S has a nightlight, while the Core300S does not.
+The core400S and core600s have a nightlight, while the Core300S does not.
 
 `VeSyncAir300S400S.change_fan_speed(2)` 1|2|3|4 or call without argument to increment by one
 
@@ -476,6 +477,28 @@ This output only applies to dimmable switch.  The standard switch has the defaul
 	"Filter Life": "100",
   "Air Quality": "5",
 	"Fan Level": "1",
+	"Display": true,
+	"Child Lock": false,
+	"Night Light": "off",
+	"Display Config": true,
+	"Display_Forever Config": false
+}
+
+#### JSON Output for 600S Purifier
+
+```python
+{
+	"Device Name": "My 600s",
+	"Model": "LAP-C601S-WUS",
+	"Subdevice No": "None",
+	"Status": "on",
+	"Online": "online",
+	"Type": "wifi-air",
+	"CID": "<CID>",
+	"Mode": "manual",
+	"Filter Life": "98",
+    "Air Quality": "4",
+	"Fan Level": "3",
 	"Display": true,
 	"Child Lock": false,
 	"Night Light": "off",
