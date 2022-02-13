@@ -14,7 +14,7 @@ air_features = {
     'LAP-C201S-AUSR': [],
     'LAP-C601S-WUS': [],
     'Classic300S': ['nightlight'],
-    'LUH-A602S-WUS': ['warm'],
+    'LUH-A602S-WUS': ['supports_warm', 'alt_humidity_mode'],
 }
 
 logger = logging.getLogger(__name__)
@@ -1079,10 +1079,14 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
             self.night_light = True
         else:
             self.night_light = False
-        if 'warm' in air_features.get(details['deviceType']):
-            self.warm = True
+        if 'supports_warm' in air_features.get(details['deviceType']):
+            self.supports_warm = True
         else:
-            self.warm = False
+            self.supports_warm = False
+        if 'alt_humidity_mode' in air_features.get(details['deviceType']):
+            self.alt_humidity_mode = True
+        else:
+            self.alt_humidity_mode = False
         self.details: Dict[str, Union[str, int, float]] = {
             'humidity': 0,
             'mist_virtual_level': 0,
@@ -1096,7 +1100,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
         }
         if self.night_light:
             self.details['night_light_brightness'] = 0
-        if self.warm:
+        if self.supports_warm:
             self.details['warm_enabled'] = False
             self.details['warm_level'] = 0
         self.config: Dict[str, Union[str, int, float]] = {
@@ -1148,7 +1152,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
         if self.night_light:
             self.details['night_light_brightness'] = dev_dict.get(
                 'night_light_brightness', 0)
-        if self.warm:
+        if self.supports_warm:
             self.details['warm_enabled'] = dev_dict.get(
                 'warm_enabled', False)
             self.details['warm_level'] = dev_dict.get(
@@ -1337,7 +1341,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
 
     def set_warm_level(self, warm_level: int) -> bool:
         """Set target 600S Humidifier mist warmth."""
-        if not self.warm:
+        if not self.supports_warm:
             logger.debug('%s is a %s does not have a mist warmer',
                          self.device_name, self.device_type)
             return False
@@ -1399,11 +1403,12 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
 
     def set_humidity_mode(self, mode: str) -> bool:
         """Set humidifier mode - sleep or auto."""
-        if mode.lower() not in ['sleep', 'auto', 'humidity']:
-            logger.warning('Invalid humidity mode used (sleep, auto, or '
-                           'humidity)- %s',
+        if mode.lower() not in ['sleep', 'auto']:
+            logger.warning('Invalid humidity mode used (sleep, auto)- %s',
                            mode)
             return False
+        if mode.lower() == 'auto' and self.alt_humidity_mode:
+            mode = 'humidity'
         head, body = self.__build_api_dict('setHumidityMode')
         if not head and not body:
             return False
@@ -1472,7 +1477,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
         if self.night_light:
             disp1.append(('Night Light Brightness: ',
                           self.details['night_light_brightness'], 'percent'))
-        if self.warm:
+        if self.supports_warm:
             disp1.append(('Mist Warmth Enabled: ',
                           self.details['warm_enabled'], ''))
             disp1.append(('Mist Warmth Level: ',
@@ -1505,7 +1510,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
         if self.night_light:
             sup_val['Night Light Brightness'] = self.details[
                 'night_light_brightness']
-        if self.warm:
+        if self.supports_warm:
             sup_val['Mist Warm Enabled'] = self.details[
                 'warm_enabled']
             sup_val['Mist Warm Level'] = self.details[
