@@ -180,6 +180,10 @@ class VeSyncAir200S(VeSyncBaseDevice):
         )
 
         if Helpers.code_check(r):
+            if toggle is True:
+                self.device_status = 'on'
+            else:
+                self.device_status = 'off'
             return True
         logger.debug("Error toggling Core200S purifier - %s",
                      self.device_name)
@@ -586,6 +590,10 @@ class VeSyncAir300S400S(VeSyncBaseDevice):
         )
 
         if Helpers.code_check(r):
+            if toggle is True:
+                self.device_status = 'on'
+            else:
+                self.device_status = 'off'
             return True
         logger.debug("Error toggling Core200S/300S purifier - %s",
                      self.device_name)
@@ -1214,6 +1222,10 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
         )
 
         if Helpers.code_check(r):
+            if toggle is True:
+                self.device_status = 'on'
+            else:
+                self.device_status = 'off'
             return True
         logger.debug("Error toggling 300S humidifier - %s", self.device_name)
         return False
