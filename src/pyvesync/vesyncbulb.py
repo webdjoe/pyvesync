@@ -2,14 +2,11 @@
 
 import logging
 import json
-from typing import Union, Dict, Type, TYPE_CHECKING
+from typing import Union, Dict, Type
 from abc import ABCMeta, abstractmethod
 from pyvesync.helpers import Helpers as helpers
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 
-
-if TYPE_CHECKING:
-    from pyvesync.vesync import VeSync
 
 logger = logging.getLogger(__name__)
 
