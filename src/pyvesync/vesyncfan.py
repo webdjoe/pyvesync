@@ -1,6 +1,5 @@
 """VeSync API for controling fans and purifiers."""
 
-from __future__ import annotations
 import json
 import logging
 from typing import Dict, Tuple, Union, Optional
