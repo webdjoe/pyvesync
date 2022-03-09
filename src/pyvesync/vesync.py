@@ -7,13 +7,13 @@ from itertools import chain
 from typing import Tuple
 from pyvesync.helpers import Helpers
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
-from pyvesync.vesyncbulb import *   # noqa: F403
+from pyvesync.vesyncbulb import *   # noqa: F403, F401
 import pyvesync.vesyncbulb as bulb_mods
-from pyvesync.vesyncfan import *   # noqa: F403
+from pyvesync.vesyncfan import *   # noqa: F403, F401
 import pyvesync.vesyncfan as fan_mods
-from pyvesync.vesyncoutlet import *   # noqa: F403
+from pyvesync.vesyncoutlet import *   # noqa: F403, F401
 import pyvesync.vesyncoutlet as outlet_mods
-from pyvesync.vesyncswitch import *   # noqa: F403
+from pyvesync.vesyncswitch import *   # noqa: F403, F401
 import pyvesync.vesyncswitch as switch_mods
 
 logger = logging.getLogger(__name__)
@@ -27,32 +27,32 @@ DEFAULT_ENER_UP_INT: int = 21600
 def object_factory(dev_type, config, manager) -> Tuple[str, VeSyncBaseDevice]:
     """Get device type and instantiate class."""
     def fans(dev_type, config, manager):
-        fan_cls = fan_modules[dev_type]  # noqa: F405
+        fan_cls = fan_mods.fan_modules[dev_type]  # noqa: F405
         fan_obj = getattr(fan_mods, fan_cls)
         return 'fans', fan_obj(config, manager)
 
     def outlets(dev_type, config, manager):
-        outlet_cls = outlet_modules[dev_type]  # noqa: F405
+        outlet_cls = outlet_mods.outlet_modules[dev_type]  # noqa: F405
         outlet_obj = getattr(outlet_mods, outlet_cls)
         return 'outlets', outlet_obj(config, manager)
 
     def switches(dev_type, config, manager):
-        switch_cls = switch_modules[dev_type]  # noqa: F405
+        switch_cls = switch_mods.switch_modules[dev_type]  # noqa: F405
         switch_obj = getattr(switch_mods, switch_cls)
         return 'switches', switch_obj(config, manager)
 
     def bulbs(dev_type, config, manager):
-        bulb_cls = bulb_modules[dev_type]  # noqa: F405
+        bulb_cls = bulb_mods.bulb_modules[dev_type]  # noqa: F405
         bulb_obj = getattr(bulb_mods, bulb_cls)
         return 'bulbs', bulb_obj(config, manager)
 
-    if dev_type in fan_modules:  # type: ignore  # noqa: F405
+    if dev_type in fan_mods.fan_modules:  # type: ignore  # noqa: F405
         type_str, dev_obj = fans(dev_type, config, manager)
-    elif dev_type in outlet_modules:  # type: ignore  # noqa: F405
+    elif dev_type in outlet_mods.outlet_modules:  # type: ignore  # noqa: F405
         type_str, dev_obj = outlets(dev_type, config, manager)
-    elif dev_type in switch_modules:  # type: ignore  # noqa: F405
+    elif dev_type in switch_mods.switch_modules:  # type: ignore  # noqa: F405
         type_str, dev_obj = switches(dev_type, config, manager)
-    elif dev_type in bulb_modules:  # type: ignore  # noqa: F405
+    elif dev_type in bulb_mods.bulb_modules:  # type: ignore  # noqa: F405
         type_str, dev_obj = bulbs(dev_type, config, manager)
     else:
         logger.debug('Unknown device named %s model %s',

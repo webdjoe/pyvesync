@@ -6,7 +6,7 @@ from .vesync import VeSync
 from .vesyncoutlet import *
 from .vesyncswitch import *
 from .vesyncoutlet import *
-from .vesyncbulb import VeSyncBulbESL100
+from .vesyncbulb import *
 import logging
 
 
