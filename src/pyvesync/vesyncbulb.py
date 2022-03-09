@@ -1,6 +1,5 @@
 """Etekcity Smart Light Bulb."""
 
-from __future__ import annotations
 import logging
 import json
 from typing import Union, Dict, Type, TYPE_CHECKING
