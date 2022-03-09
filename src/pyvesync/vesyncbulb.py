@@ -2,7 +2,7 @@
 
 import logging
 import json
-from typing import Union, Dict, Type
+from typing import Union, Dict
 from abc import ABCMeta, abstractmethod
 from pyvesync.helpers import Helpers as helpers
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
