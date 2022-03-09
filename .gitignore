@@ -20,3 +20,9 @@ src/tests/test1.py
 .tox/.tmp/
 .tox/dist/
 .tox/log/
+tools/*
+tools/
+test.py
+
+tools/__init__.py
+tools/vesyncdevice.py

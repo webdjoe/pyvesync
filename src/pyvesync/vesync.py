@@ -4,25 +4,17 @@ import logging
 import re
 import time
 from itertools import chain
-from collections import defaultdict
-from typing import List, Dict, DefaultDict, Union, Any, Type
-
+from typing import Tuple
 from pyvesync.helpers import Helpers
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
-from pyvesync.vesyncbulb import VeSyncBulbESL100, VeSyncBulbESL100CW
-from pyvesync.vesyncfan import (
-    VeSyncAir131,
-    VeSyncHumid200300S,
-    VeSyncAir200S,
-    VeSyncAir300S400S,
-)
-from pyvesync.vesyncoutlet import (
-    VeSyncOutlet7A,
-    VeSyncOutlet10A,
-    VeSyncOutlet15A,
-    VeSyncOutdoorPlug,
-)
-from pyvesync.vesyncswitch import VeSyncWallSwitch, VeSyncDimmerSwitch
+from pyvesync.vesyncbulb import *   # noqa: F403
+import pyvesync.vesyncbulb as bulb_mods
+from pyvesync.vesyncfan import *   # noqa: F403
+import pyvesync.vesyncfan as fan_mods
+from pyvesync.vesyncoutlet import *   # noqa: F403
+import pyvesync.vesyncoutlet as outlet_mods
+from pyvesync.vesyncswitch import *   # noqa: F403
+import pyvesync.vesyncswitch as switch_mods
 
 logger = logging.getLogger(__name__)
 
@@ -31,58 +23,48 @@ DEFAULT_TZ: str = 'America/New_York'
 
 DEFAULT_ENER_UP_INT: int = 21600
 
-# Class dictionary based on device type
 
-_DEVICE_CLASS: Dict[str, Type[VeSyncBaseDevice]] = {
-    'wifi-switch-1.3': VeSyncOutlet7A,
-    'ESW03-USA': VeSyncOutlet10A,
-    'ESW01-EU': VeSyncOutlet10A,
-    'ESW15-USA': VeSyncOutlet15A,
-    'ESWL01': VeSyncWallSwitch,
-    'ESWL03': VeSyncWallSwitch,
-    'LV-PUR131S': VeSyncAir131,
-    'ESO15-TB': VeSyncOutdoorPlug,
-    'ESL100': VeSyncBulbESL100,
-    'ESL100CW': VeSyncBulbESL100CW,
-    'ESWD16': VeSyncDimmerSwitch,
-    'Classic200S': VeSyncHumid200300S,
-    'Classic300S': VeSyncHumid200300S,
-    'Dual200S': VeSyncHumid200300S,
-    'Core200S': VeSyncAir200S,
-    'Core300S': VeSyncAir300S400S,
-    'Core400S': VeSyncAir300S400S,
-    'LAP-C601S-WUS': VeSyncAir300S400S,
-    'LUH-D301S-WEU': VeSyncHumid200300S,
-    'LAP-C201S-AUSR': VeSyncAir200S,
-    'LAP-C401S-WUSR': VeSyncAir300S400S,
-}
+def object_factory(dev_type, config, manager) -> Tuple[str, VeSyncBaseDevice]:
+    """Get device type and instantiate class."""
+    def fans(dev_type, config, manager):
+        fan_cls = fan_modules[dev_type]  # noqa: F405
+        fan_obj = getattr(fan_mods, fan_cls)
+        return 'fans', fan_obj(config, manager)
 
-_DEVICE_TYPES_DICT: Dict[str, List[str]] = dict(
-    outlets=['wifi-switch-1.3', 'ESW03-USA',
-             'ESW01-EU', 'ESW15-USA', 'ESO15-TB'],
-    switches=['ESWL01', 'ESWL03', 'ESWD16'],
-    fans=['LV-PUR131S', 'Classic200S', 'Classic300S', 'Core200S',
-          'Core300S', 'Core400S', 'Dual200S',
-          'LUH-D301S-WEU', 'LAP-C201S-AUSR', 'LAP-C401S-WUSR',
-          'LAP-C601S-WUS'],
-    bulbs=['ESL100', 'ESL100CW'],
-)
+    def outlets(dev_type, config, manager):
+        outlet_cls = outlet_modules[dev_type]  # noqa: F405
+        outlet_obj = getattr(outlet_mods, outlet_cls)
+        return 'outlets', outlet_obj(config, manager)
 
-_DEVICE_TYPES: DefaultDict[str, list] = defaultdict(list, _DEVICE_TYPES_DICT)
+    def switches(dev_type, config, manager):
+        switch_cls = switch_modules[dev_type]  # noqa: F405
+        switch_obj = getattr(switch_mods, switch_cls)
+        return 'switches', switch_obj(config, manager)
 
+    def bulbs(dev_type, config, manager):
+        bulb_cls = bulb_modules[dev_type]  # noqa: F405
+        bulb_obj = getattr(bulb_mods, bulb_cls)
+        return 'bulbs', bulb_obj(config, manager)
 
-def _device_builder(device_type: str,
-                    config: Dict[str, Union[str, int, float, None]],
-                    manager) -> Any:
-    """Build instantiated device objects from name."""
-    device_name = _DEVICE_CLASS.get(device_type)
-    if device_name:
-        return device_name(config, manager)
-    logger.debug('Unknown device found - %s', device_type)
-    return None
+    if dev_type in fan_modules:  # type: ignore  # noqa: F405
+        type_str, dev_obj = fans(dev_type, config, manager)
+    elif dev_type in outlet_modules:  # type: ignore  # noqa: F405
+        type_str, dev_obj = outlets(dev_type, config, manager)
+    elif dev_type in switch_modules:  # type: ignore  # noqa: F405
+        type_str, dev_obj = switches(dev_type, config, manager)
+    elif dev_type in bulb_modules:  # type: ignore  # noqa: F405
+        type_str, dev_obj = bulbs(dev_type, config, manager)
+    else:
+        logger.debug('Unknown device named %s model %s',
+                     config.get('deviceName', ''),
+                     config.get('deviceType', '')
+                     )
+        type_str = 'unknown'
+        dev_obj = None
+    return type_str, dev_obj
 
 
-class VeSync:
+class VeSync:  # pylint: disable=function-redefined
     """VeSync API functions."""
 
     def __init__(self, username, password, time_zone=DEFAULT_TZ):
@@ -105,8 +87,12 @@ class VeSync:
         self.bulbs = []
         self.scales = []
 
-        for dt in _DEVICE_TYPES:
-            self._dev_list[dt] = getattr(self, dt)
+        self._dev_list = {
+            'fans': self.fans,
+            'outlets': self.outlets,
+            'switches': self.switches,
+            'bulbs': self.bulbs
+        }
 
         if isinstance(time_zone, str) and time_zone:
             reg_test = r'[^a-zA-Z/_]'
@@ -221,9 +207,14 @@ class VeSync:
                 logger.debug('Error adding device')
                 continue
             dev_type = dev.get('deviceType')
-            for dt, v in self._dev_list.items():
-                if dev_type in _DEVICE_TYPES.get(dt, []):
-                    v.append(_device_builder(dev_type, dev, self))
+            try:
+                device_str, device_obj = object_factory(dev_type, dev, self)
+                device_list = getattr(self, device_str)
+                device_list.append(device_obj)
+            except AttributeError:
+                logger.debug('%s device not added', dev_type)
+                continue
+
         return True
 
     def get_devices(self) -> bool:

@@ -14,7 +14,7 @@ API_TIMEOUT = 5
 DEFAULT_TZ = 'America/New_York'
 DEFAULT_REGION = 'US'
 
-APP_VERSION = '2.5.1'
+APP_VERSION = '2.8.6'
 PHONE_BRAND = 'SM N9005'
 PHONE_OS = 'Android'
 MOBILE_ID = '1234567890123456'
@@ -155,17 +155,17 @@ class Helpers:
 
         try:
             logger.debug("[%s] calling '%s' api", method, api)
-            if method == 'get':
+            if method.lower() == 'get':
                 r = requests.get(
                     API_BASE_URL + api, json=json, headers=headers,
                     timeout=API_TIMEOUT
                 )
-            elif method == 'post':
+            elif method.lower() == 'post':
                 r = requests.post(
                     API_BASE_URL + api, json=json, headers=headers,
                     timeout=API_TIMEOUT
                 )
-            elif method == 'put':
+            elif method.lower() == 'put':
                 r = requests.put(
                     API_BASE_URL + api, json=json, headers=headers,
                     timeout=API_TIMEOUT
@@ -249,5 +249,5 @@ class Helpers:
         """Build bypass header dict."""
         return {
             'Content-Type': 'application/json; charset=UTF-8',
-            'User-Agent': 'VeSync/VeSync 3.0.51(F5321;Android 8.0.0)'
+            'User-Agent': 'okhttp/3.12.1'
         }

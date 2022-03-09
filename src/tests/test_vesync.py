@@ -2,11 +2,14 @@
 
 import unittest
 import logging
+import importlib
 from unittest import mock
 from unittest.mock import patch, Mock
 
 from pyvesync import VeSync
 from pyvesync.helpers import Helpers
+
+
 
 
 def mocked_req_post(*args, **kwargs):
@@ -56,6 +59,21 @@ class TestVesync(unittest.TestCase):
     def test_instance(self):
         """Test VeSync object is successfully initialized."""
         self.assertIsInstance(self.vesync_1, VeSync)
+
+    def test_imports(self):
+        """Test that __all__ contains only names that are actually exported."""
+        modules = ['pyvesync.vesyncfan',
+                   'pyvesync.vesyncbulb',
+                   'pyvesync.vesyncoutlet',
+                   'pyvesync.vesyncswitch']
+        for mod in modules:
+            import_mod = importlib.import_module(mod)
+
+            missing = set(n for n in import_mod.__all__
+                          if getattr(import_mod, n, None) is None)
+            self.assertFalse(
+                missing, msg="__all__ contains unresolved names: %s" % (
+                    ", ".join(missing),))
 
     def test_username(self):
         """Test invalid username arguments."""

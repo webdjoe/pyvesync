@@ -1,5 +1,6 @@
 [MASTER]
-ignore=src/tests
+ignore=src/tests,
+    tools/
 
 [BASIC]
 good-names=i,j,k,x,r,e,v,_,b,dt,d
@@ -41,6 +42,8 @@ disable=
     too-many-public-methods,
     too-many-return-statements,
     too-many-statements,
+    wildcard-import,
+    unused-wildcard-import,
     unnecessary-pass,
     unused-argument,
     useless-super-delegation

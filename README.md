@@ -483,7 +483,7 @@ This output only applies to dimmable switch.  The standard switch has the defaul
 	"Display Config": true,
 	"Display_Forever Config": false
 }
-
+```
 #### JSON Output for 600S Purifier
 
 ```python

@@ -7,16 +7,10 @@ import pyvesync
 import time
 import copy
 from itertools import chain
-from pyvesync import (
-    VeSyncAir131,
-    VeSyncBulbESL100,
-    VeSyncOutdoorPlug,
-    VeSyncOutlet10A,
-    VeSyncOutlet15A,
-    VeSyncOutlet7A,
-    VeSyncWallSwitch,
-    VeSyncDimmerSwitch
-)
+from pyvesync.vesyncfan import *
+from pyvesync.vesyncbulb import *
+from pyvesync.vesyncoutlet import *
+from pyvesync.vesyncswitch import *
 from . import call_json as json_vals
 
 BAD_DEV_LIST = {
@@ -149,7 +143,7 @@ class TestDeviceList(object):
 
         unknown_dev['devType'] = 'UNKNOWN-DEVTYPE'
 
-        pyvesync.vesync._device_builder('unknown_device', unknown_dev, self.vesync_obj)
+        pyvesync.vesync.object_factory('unknown_device', unknown_dev, self.vesync_obj)
 
         assert len(caplog.records) == 1
         assert 'Unknown' in caplog.text

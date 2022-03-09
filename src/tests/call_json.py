@@ -316,7 +316,7 @@ def get_devices_body():
     """Build device body dictionary."""
     body = DEFAULT_BODY
     body['method'] = 'devices'
-    return (body, 200)
+    return body, 200
 
 
 DEVLIST_ALL = ({'code': 0, 'result': {'list': FULL_DEV_LIST}}, 200)
@@ -346,7 +346,7 @@ DEVLIST_OUTDOOR = (
 def get_details_body():
     body = DEFAULT_BODY
     body['method'] = 'deviceDetail'
-    return (body, 200)
+    return body, 200
 
 
 DETAILS_15A = (
@@ -498,10 +498,10 @@ STATUS_BODY = {
 def off_body():
     body = STATUS_BODY
     body['status'] = 'off'
-    return (body, 200)
+    return body, 200
 
 
 def on_body(cls):
     body = STATUS_BODY
     body['status'] = 'on'
-    return (body, 200)
+    return body, 200
