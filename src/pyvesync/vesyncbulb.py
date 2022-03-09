@@ -44,7 +44,7 @@ class VeSyncBulb(VeSyncBaseDevice):
     __metaclass__ = ABCMeta
 
     def __init__(self, details: Dict[str, Union[str, list]],
-                 manager: Type[VeSync]):
+                 manager):
         """Initialize VeSync smart bulb base class."""
         super().__init__(details, manager)
         self._brightness = 0
@@ -152,7 +152,7 @@ class VeSyncBulb(VeSyncBaseDevice):
 class VeSyncBulbESL100(VeSyncBulb):
     """Object to hold VeSync ESL100 light bulb."""
 
-    def __init__(self, details, manager: Type[VeSync]):
+    def __init__(self, details, manager):
         """Initialize Etekcity ESL100 Dimmable Bulb."""
         super().__init__(details, manager)
         self.details: dict = {}
