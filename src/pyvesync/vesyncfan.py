@@ -493,9 +493,12 @@ class VeSyncAirBypass(VeSyncBaseDevice):
     @property
     def fan_level(self):
         """Get current fan level (1-3)."""
-        if self.speed.isnumeric():
-            return int(self.speed)
-        return self.speed
+        try:
+            speed = int(self.speed)
+        except ValueError:
+            speed = self.speed
+        return speed
+
 
     @property
     def filter_life(self) -> int:
