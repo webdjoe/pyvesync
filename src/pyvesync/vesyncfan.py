@@ -499,7 +499,6 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             speed = self.speed
         return speed
 
-
     @property
     def filter_life(self) -> int:
         """Get percentage of filter life remaining."""
