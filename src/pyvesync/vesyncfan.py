@@ -18,8 +18,9 @@ humid_features: dict = {
     'Classic200S': {
         'module': 'VeSyncHumid200300S',
         'models': ['Classic200S'],
-        'features': [],
+        'features': ['nightlight'],
         'modes': ['auto'],
+        'nightlight_api': '',
         'mist_levels': list(range(1, 10))
     },
     'Dual200S': {
@@ -30,7 +31,7 @@ humid_features: dict = {
                    'LUH-D301S-WEU'],
         'features': [],
         'modes': ['auto', 'sleep'],
-        'mist_level': ['low', 'high']
+        'mist_levels': ['low', 'high']
     },
     'LV600S': {
         'module': 'VeSyncHumid200300S',
@@ -1274,3 +1275,36 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
             sup_val['Warm mist enabled'] = self.details['warm_mist_enabled']
             sup_val['Warm mist level'] = self.details['warm_mist_level']
         return json.dumps(sup_val)
+
+
+class VeSyncHumid200S(VeSyncHumid200300S):
+    """Levoit Classic 200S Specific class."""
+
+    def __init__(self, details, manager):
+        """Initialize levoit 200S device class."""
+        super().__init__(details, manager)
+
+    def set_display(self, mode: bool) -> bool:
+        """Toggle display on/off."""
+        if not isinstance(mode, bool):
+            logger.debug("Mode must be True or False")
+            return False
+
+        head, body = self.build_api_dict('setIndicatorLightSwitch')
+
+        body['payload']['data'] = {
+            'enabled': mode,
+            'id': 0
+        }
+
+        r, _ = Helpers.call_api(
+            '/cloud/v2/deviceManaged/bypassV2',
+            method='post',
+            headers=head,
+            json=body,
+        )
+
+        if Helpers.code_check(r):
+            return True
+        logger.debug("Error toggling 300S display - %s", self.device_name)
+        return False
