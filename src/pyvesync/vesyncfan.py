@@ -881,7 +881,6 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
         self.details['humidity_high'] = dev_dict.get('humidity_high', False)
         self.details['water_tank_lifted'] = dev_dict.get(
             'water_tank_lifted', False)
-        self.details['display'] = dev_dict.get('display', False)
         self.details['automatic_stop_reach_target'] = dev_dict.get(
             'automatic_stop_reach_target', True
         )
@@ -893,6 +892,11 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
                 'warm_level', 0)
             self.details['warm_mist_enabled'] = dev_dict.get(
                 'warm_enabled', False)
+        try:
+            self.details['display'] = dev_dict['display']
+        except KeyError:
+            self.details['display'] = dev_dict.get(
+                'indicator_light_switch', False)
 
     def build_config_dict(self, conf_dict):
         """Build configuration dict for 300s humidifier."""
