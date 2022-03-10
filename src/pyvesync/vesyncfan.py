@@ -16,7 +16,7 @@ humid_features: dict = {
         'mist_levels': list(range(1, 10))
     },
     'Classic200S': {
-        'module': 'VeSyncHumid200300S',
+        'module': 'VeSyncHumid200S',
         'models': ['Classic200S'],
         'features': ['nightlight'],
         'modes': ['auto'],
