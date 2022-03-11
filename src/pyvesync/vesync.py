@@ -67,8 +67,11 @@ def object_factory(dev_type, config, manager) -> Tuple[str, VeSyncBaseDevice]:
 class VeSync:  # pylint: disable=function-redefined
     """VeSync API functions."""
 
-    def __init__(self, username, password, time_zone=DEFAULT_TZ):
+    def __init__(self, username, password, time_zone=DEFAULT_TZ, debug=False):
         """Initialize VeSync class with username, password and time zone."""
+        self.debug = debug
+        if debug:
+            logger.setLevel(logging.DEBUG)
         self.username = username
         self.password = password
         self.token = None
@@ -234,7 +237,8 @@ class VeSync:  # pylint: disable=function-redefined
         if response and Helpers.code_check(response):
             if 'result' in response and 'list' in response['result']:
                 device_list = response['result']['list']
-
+                if self.debug:
+                    logger.debug(str(device_list))
                 proc_return = self.process_devices(device_list)
             else:
                 logger.error('Device list in response not found')
