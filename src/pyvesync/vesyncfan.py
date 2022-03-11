@@ -155,7 +155,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         """
         modes = ['getPurifierStatus', 'setSwitch', 'setNightLight',
                  'setLevel', 'setPurifierMode', 'setDisplay',
-                 'setChildLock']
+                 'setChildLock', 'setIndicatorLight']
         if method not in modes:
             logger.debug('Invalid mode - %s', method)
             return {}, {}
@@ -858,7 +858,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
                  'setTargetHumidity', 'setHumidityMode', 'setDisplay']
         if method not in modes:
             logger.debug('Invalid mode - %s', method)
-            return {}, {}
+            raise ValueError
         head = Helpers.bypass_header()
         body = Helpers.bypass_body_v2(self.manager)
         body['cid'] = self.cid
