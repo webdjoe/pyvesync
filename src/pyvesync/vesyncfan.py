@@ -845,6 +845,10 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
             'display': False,
             'automatic_stop': True
         }
+        self._api_modes = ['getHumidifierStatus', 'setAutomaticStop',
+                           'setSwitch', 'setNightLightBrightness',
+                           'setVirtualLevel', 'setTargetHumidity',
+                           'setHumidityMode', 'setDisplay']
 
     def build_api_dict(self, method: str) -> Tuple[Dict, Dict]:
         """Build humidifier api call header and body.
@@ -853,10 +857,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
         'setSwitch', 'setNightLightBrightness', 'setVirtualLevel',
         'setTargetHumidity', 'setHumidityMode'
         """
-        modes = ['getHumidifierStatus', 'setAutomaticStop',
-                 'setSwitch', 'setNightLightBrightness', 'setVirtualLevel',
-                 'setTargetHumidity', 'setHumidityMode', 'setDisplay']
-        if method not in modes:
+        if method not in self._api_modes:
             logger.debug('Invalid mode - %s', method)
             raise ValueError
         head = Helpers.bypass_header()
@@ -1287,6 +1288,9 @@ class VeSyncHumid200S(VeSyncHumid200300S):
     def __init__(self, details, manager):
         """Initialize levoit 200S device class."""
         super().__init__(details, manager)
+        self._api_modes = ['getHumidifierStatus', 'setAutomaticStop',
+                           'setSwitch', 'setVirtualLevel', 'setTargetHumidity',
+                           'setHumidityMode', 'setIndicatorLightSwitch']
 
     def set_display(self, mode: bool) -> bool:
         """Toggle display on/off."""
