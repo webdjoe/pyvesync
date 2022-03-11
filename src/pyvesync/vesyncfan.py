@@ -1198,7 +1198,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
         try:
             level = int(level)
         except ValueError:
-            level = level
+            level = str(level)
         if level not in self.mist_levels:
             logger.debug('Humidifier mist level must be between 0 and 9')
             return False
