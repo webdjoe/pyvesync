@@ -12,15 +12,14 @@ humid_features: dict = {
         'module': 'VeSyncHumid200300S',
         'models': ['Classic300S', 'LUH-A601S-WUSB'],
         'features': ['night_light'],
-        'modes': ['auto', 'sleep'],
+        'mist_modes': ['auto', 'sleep'],
         'mist_levels': list(range(1, 10))
     },
     'Classic200S': {
         'module': 'VeSyncHumid200S',
         'models': ['Classic200S'],
         'features': ['nightlight'],
-        'modes': ['auto'],
-        'nightlight_api': '',
+        'mist_modes': ['auto'],
         'mist_levels': list(range(1, 10))
     },
     'Dual200S': {
@@ -30,7 +29,7 @@ humid_features: dict = {
                    'LUH-D301S-WJP',
                    'LUH-D301S-WEU'],
         'features': [],
-        'modes': ['auto', 'sleep'],
+        'mist_modes': ['auto', 'sleep'],
         'mist_levels': ['low', 'high']
     },
     'LV600S': {
@@ -41,7 +40,7 @@ humid_features: dict = {
                    'LUH-A602S-WEU',
                    'LUH-A602S-WJP'],
         'features': ['warm_mist', 'night_light'],
-        'modes': ['humidity', 'sleep'],
+        'mist_modes': ['humidity', 'sleep'],
         'mist_levels': list(range(1, 10)),
         'warm_mist_levels': ['1', '2', '3', 'off']
     },
@@ -1193,9 +1192,13 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
         set_auto = self.set_humidity_mode(call_str)
         return set_auto
 
-    def set_mist_level(self, level: int) -> bool:
+    def set_mist_level(self, level) -> bool:
         """Set humidifier mist level with int between 0 - 9."""
-        if level not in self.mist_modes:
+        try:
+            level = int(level)
+        except ValueError:
+            level = level
+        if level not in self.mist_levels:
             logger.debug('Humidifier mist level must be between 0 and 9')
             return False
 
