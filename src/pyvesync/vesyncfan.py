@@ -211,7 +211,12 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             headers=head,
             json=body,
         )
-
+        if not isinstance(r, dict):
+            logger.debug('Error in purifier response')
+            return
+        if not isinstance(r.get('result'), dict):
+            logger.debug('Error in purifier response')
+            return
         outer_result = r.get('result', {})
         inner_result = None
 
@@ -278,7 +283,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         if r is not None and Helpers.code_check(r):
             self.speed = new_speed
             return True
-        logger.warning('Error changing %s speed', self.device_name)
+        logger.debug('Error changing %s speed', self.device_name)
         return False
 
     def child_lock_on(self) -> bool:
@@ -402,7 +407,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             json=body,
         )
 
-        if Helpers.code_check(r):
+        if r is not None and Helpers.code_check(r):
             if toggle:
                 self.device_status = 'on'
             else:
@@ -439,7 +444,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             json=body,
         )
 
-        if Helpers.code_check(r):
+        if r is not None and Helpers.code_check(r):
             return True
         logger.debug("Error toggling purifier display - %s",
                      self.device_name)
@@ -612,11 +617,11 @@ class VeSyncAir131(VeSyncBaseDevice):
             json=body,
         )
 
-        if Helpers.code_check(r):
+        if r is not None and Helpers.code_check(r):
             self.config = Helpers.build_config_dict(r)
         else:
-            logger.warning('Unable to get config info for %s',
-                           self.device_name)
+            logger.debug('Unable to get config info for %s',
+                         self.device_name)
 
     @property
     def active_time(self) -> int:
@@ -662,7 +667,7 @@ class VeSyncAir131(VeSyncBaseDevice):
             if r is not None and Helpers.code_check(r):
                 self.device_status = 'on'
                 return True
-            logger.warning('Error turning %s on', self.device_name)
+            logger.debug('Error turning %s on', self.device_name)
             return False
         return False
 
@@ -682,7 +687,7 @@ class VeSyncAir131(VeSyncBaseDevice):
             if r is not None and Helpers.code_check(r):
                 self.device_status = 'off'
                 return True
-            logger.warning('Error turning %s off', self.device_name)
+            logger.debug('Error turning %s off', self.device_name)
             return False
         return True
 
@@ -744,7 +749,7 @@ class VeSyncAir131(VeSyncBaseDevice):
         if r is not None and Helpers.code_check(r):
             self.details['level'] = body['level']
             return True
-        logger.warning('Error changing %s speed', self.device_name)
+        logger.debug('Error changing %s speed', self.device_name)
         return False
 
     def mode_toggle(self, mode: str) -> bool:
@@ -766,7 +771,7 @@ class VeSyncAir131(VeSyncBaseDevice):
                 self.mode = mode
                 return True
 
-        logger.warning('Error setting %s mode - %s', self.device_name, mode)
+        logger.debug('Error setting %s mode - %s', self.device_name, mode)
         return False
 
     def update(self) -> None:
@@ -923,6 +928,8 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
             headers=head,
             json=body,
         )
+        if r is None or not isinstance(r, dict):
+            logger.debug("Error getting status of %s ", self.device_name)
         outer_result = r.get('result', {})
         inner_result = None
 
@@ -970,7 +977,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
             json=body,
         )
 
-        if Helpers.code_check(r):
+        if r is not None and Helpers.code_check(r):
             if toggle:
                 self.device_status = 'on'
             else:
@@ -1018,7 +1025,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
             json=body,
         )
 
-        if Helpers.code_check(r):
+        if r is not None and Helpers.code_check(r):
             return True
         if isinstance(r, dict):
             logger.debug('Error toggling automatic stop')
@@ -1045,7 +1052,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
             json=body,
         )
 
-        if Helpers.code_check(r):
+        if r is not None and Helpers.code_check(r):
             return True
         logger.debug("Error toggling 300S display - %s", self.device_name)
         return False
@@ -1079,7 +1086,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
             json=body,
         )
 
-        if Helpers.code_check(r):
+        if r is not None and Helpers.code_check(r):
             return True
         logger.debug('Error setting humidity')
         return False
@@ -1109,7 +1116,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
             json=body,
         )
 
-        if Helpers.code_check(r):
+        if r is not None and Helpers.code_check(r):
             return True
         logger.debug('Error setting humidity')
         return False
@@ -1136,7 +1143,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
             json=body,
         )
 
-        if Helpers.code_check(r):
+        if r is not None and Helpers.code_check(r):
             return True
         logger.debug('Error setting humidity mode')
         return False
@@ -1174,7 +1181,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
             json=body,
         )
 
-        if Helpers.code_check(r):
+        if r is not None and Helpers.code_check(r):
             return True
         logger.debug('Error setting warm')
         return False
@@ -1220,7 +1227,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
             json=body,
         )
 
-        if Helpers.code_check(r):
+        if r is not None and Helpers.code_check(r):
             return True
         logger.debug('Error setting mist level')
         return False
@@ -1315,7 +1322,7 @@ class VeSyncHumid200S(VeSyncHumid200300S):
             json=body,
         )
 
-        if Helpers.code_check(r):
+        if r is not None and Helpers.code_check(r):
             return True
         logger.debug("Error toggling 300S display - %s", self.device_name)
         return False

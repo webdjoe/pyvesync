@@ -171,9 +171,9 @@ class Helpers:
                     timeout=API_TIMEOUT
                 )
         except requests.exceptions.RequestException as e:
-            logger.warning(e)
+            logger.debug(e)
         except Exception as e:  # pylint: disable=broad-except
-            logger.warning(e)
+            logger.debug(e)
         else:
             if r.status_code == 200:
                 status_code = 200

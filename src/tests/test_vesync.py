@@ -4,7 +4,7 @@ import unittest
 import logging
 import importlib
 from unittest import mock
-from unittest.mock import patch, Mock
+from unittest.mock import patch, Mock, MagicMock
 
 from pyvesync import VeSync
 from pyvesync.helpers import Helpers
@@ -33,6 +33,8 @@ def mocked_req_post(*args, **kwargs):
         )
     elif args[0] == 'https://smartapi.vesync.com/cloud/v1/deviceManaged/devices':
         return MockResponse({'key2': 'value2'}, 200)
+    elif args[0] == 'https://smartapi.vesync.com/test/bad-response':
+        return MockResponse({}, 500)
 
     return MockResponse(None, 404)
 
@@ -179,11 +181,9 @@ class TestApiFunc:
     @patch('pyvesync.helpers.requests.get', autospec=True)
     def test_api_bad_response(self, api_mock):
         """Test bad API response handling."""
-        api_mock.return_value = Mock(ok=True, status_code=500)
-        api_mock.return_value.json.return_value = {}
-
-        mock_return = Helpers.call_api('/call/location', method='get')
-
+        api_mock.side_effect = MagicMock(status_code=400)
+        mock_return = Helpers.call_api('/test/bad-response', method='get')
+        print(api_mock.call_args_list)
         assert mock_return == (None, None)
 
     @patch('pyvesync.helpers.requests.get', autospec=True)

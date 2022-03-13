@@ -258,15 +258,19 @@ class VeSyncBulbESL100CW(VeSyncBulb):
             headers=helpers.req_headers(self.manager),
             json=body,
         )
-        if r.get('code') == 0 and r.get('result').get('light') is not None:
-            light = r.get('result').get('light')
+        if not isinstance(r, dict) or not helpers.code_check(r):
+            logger.debug('Error calling %s', self.device_name)
+            return
+        response = r
+        if response.get('result', {}).get('light') is not None:
+            light = response.get('result', {}).get('light')
             self.connection_status = 'online'
             self.device_status = light.get('action', 'off')
             if self.dimmable_feature:
                 self._brightness = light.get('brightness')
             if self.color_temp_feature:
                 self._color_temp = light.get('colorTempe')
-        elif r.get('code') == -11300027:
+        elif response.get('code') == -11300027:
             logger.debug('%s device offline', self.device_name)
             self.connection_status = 'offline'
             self.device_status = 'off'
@@ -274,8 +278,8 @@ class VeSyncBulbESL100CW(VeSyncBulb):
             logger.debug(
                 '%s - Unknown return code - %d with message %s',
                 self.device_name,
-                r.get('code'),
-                r.get('msg'),
+                response.get('code'),
+                response.get('msg'),
             )
 
     def get_config(self) -> None:
@@ -307,7 +311,7 @@ class VeSyncBulbESL100CW(VeSyncBulb):
             headers=helpers.req_headers(self.manager),
             json=body,
         )
-        if r.get('code') == 0:
+        if helpers.code_check(r) == 0:
             self.device_status = status
             return True
         logger.debug('%s offline', self.device_name)
@@ -367,6 +371,9 @@ class VeSyncBulbESL100CW(VeSyncBulb):
             headers=helpers.req_headers(self.manager),
             json=body,
         )
+
+        if not helpers.code_check(r):
+            return False
 
         if r.get('code') == -11300027:
             logger.debug('%s device offline', self.device_name)
