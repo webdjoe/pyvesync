@@ -10,35 +10,6 @@ from pyvesync import VeSync
 from pyvesync.helpers import Helpers
 
 
-
-
-def mocked_req_post(*args, **kwargs):
-    """Test call_api post request."""
-
-    class MockResponse:
-        """Mock response class."""
-
-        def __init__(self, json_data, status_code):
-            """Initialize mock response class."""
-            self.json_data = json_data
-            self.status_code = status_code
-
-    if args[0] == 'https://smartapi.vesync.com/cloud/v1/user/login':
-        return MockResponse(
-            '{"traceId": "", "msg": "", "result": {"accountID": "12346536, \
-                "avatarIcon": "", "acceptLanguage": "", "gdprStatus": true, \
-                    "nickName": "mynickname", "userType": "1", \
-                        "token": "somevaluehere"}, "code": 0 }',
-            200,
-        )
-    elif args[0] == 'https://smartapi.vesync.com/cloud/v1/deviceManaged/devices':
-        return MockResponse({'key2': 'value2'}, 200)
-    elif args[0] == 'https://smartapi.vesync.com/test/bad-response':
-        return MockResponse({}, 500)
-
-    return MockResponse(None, 404)
-
-
 class TestVesync(unittest.TestCase):
     """Test VeSync object initialization."""
 
