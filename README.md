@@ -548,4 +548,6 @@ After:
 }
 ``` 
 
-All contributions are welcome, please run `tox` before submitting a PR to ensure code is valid.
+All [contributions](CONTRIBUTING.md) are welcome, please run `tox` before submitting a PR to ensure code is valid.
+
+This project is licensed under [MIT](LICENSE).
