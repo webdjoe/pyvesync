@@ -101,6 +101,11 @@ def model_dict() -> dict:
             model_modules[model] = dev_dict['module']
     return model_modules
 
+def model_features(dev_type: str) -> dict:
+    model_feat_dict = {}
+    for dev_dict in {**air_features, **humid_features}.values():
+        if dev_type in dev_dict['models']:
+            return dev_dict
 
 fan_classes: set = {v['module']
                     for k, v in {**air_features, **humid_features}.items()}
@@ -117,7 +122,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         """Initialize air devices."""
         super().__init__(details, manager)
         self.enabled = True
-        self.config_dict = air_features.get(self.device_type, {})
+        self.config_dict = model_features(self.device_type)
         self.features = self.config_dict.get('features', [])
         if not isinstance(self.config_dict.get('modes'), list):
             logger.error(
@@ -816,7 +821,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
         """Initialize 200S/300S Humidifier class."""
         super().__init__(details, manager)
         self.enabled = True
-        self.config_dict = humid_features.get(self.device_type)
+        self.config_dict = model_features(self.device_type)
         self.mist_levels = self.config_dict.get('mist_levels')
         self.mist_modes = self.config_dict.get('mist_modes')
         self.features = self.config_dict.get('features')

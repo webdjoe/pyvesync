@@ -285,6 +285,30 @@ LIST_CONF_AIR = {
     'currentFirmVersion': None,
 }
 
+LIST_CONF_DUAL200S = {'deviceRegion': 'EU',
+                      'isOwner': True,
+                      'authKey': None,
+                      'deviceName': 'Humidificador',
+                      'deviceImg': 'https://image.vesync.com/defaultImages/Dual_200S_Series/icon_dual200s_humidifier_160.png',
+                      'cid': 'dfe4fe434',
+                      'deviceStatus': 'on',
+                      'connectionStatus': 'online',
+                      'connectionType': 'WiFi+BTOnboarding+BTNotify',
+                      'deviceType': 'LUH-D301S-WEU',
+                      'type': 'wifi-air',
+                      'uuid': 'dfesfwergf',
+                      'configModule': 'WFON_AHM_LUH-D301S-WEU_EU',
+                      'macID': 'aa:aa:aa:aa',
+                      'mode': None,
+                      'speed': None,
+                      'extension': None,
+                      'currentFirmVersion': None,
+                      'subDeviceNo': None,
+                      'subDeviceType': None,
+                      'deviceFirstSetupTime': 'Mar 7, 2022 7:00:39 PM',
+                      'deviceProp': None
+                      }
+
 LIST_CONF_DIMMER = {
                 "deviceRegion": "US",
                 "deviceName": "Etekcity Dimmer Switch",
@@ -336,6 +360,8 @@ DEVLIST_DIMMER = ({'code': 0, 'result': {'list': [LIST_CONF_DIMMER]}}, 200)
 DEVLIST_AIR = ({'code': 0, 'result': {'list': [LIST_CONF_AIR]}}, 200)
 
 DEVLIST_ESL100 = ({'code': 0, 'result': {'list': [LIST_CONF_ESL100]}}, 200)
+
+DEVLIST_DUAL200S = ({'code': 0, 'result': {'list': [LIST_CONF_DUAL200S]}}, 200)
 
 DEVLIST_OUTDOOR = (
     {'code': 0, 'result': {'list': [LIST_CONF_OUTDOOR_1, LIST_CONF_OUTDOOR_2]}},

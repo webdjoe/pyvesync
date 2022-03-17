@@ -81,6 +81,24 @@ class TestDeviceList(object):
         assert len(self.vesync_obj.fans) == 1
         assert len(self.vesync_obj.bulbs) == 1
 
+
+    def test_dual200s(
+            self, api_mock
+    ):
+        """Test the get_devices, process_devices and VSFactory methods.
+        Build list with device objects from details
+        Test for all 6 known devices - 4 outlets, 2 switches, 1 fan.
+        """
+
+        device_list = json_vals.DEVLIST_DUAL200S
+
+        self.mock_api.return_value = device_list
+
+        self.vesync_obj.get_devices()
+
+        assert len(self.vesync_obj.fans) == 1
+
+
     def test_getdevs_code(self, caplog, api_mock):
         """Test get_devices with code > 0 returned."""
         device_list = ({'code': 1, 'msg': 'gibberish'}, 200)
