@@ -30,7 +30,7 @@ humid_features: dict = {
                    'LUH-D301S-WEU'],
         'features': [],
         'mist_modes': ['auto', 'sleep'],
-        'mist_levels': list(range(1, 10))
+        'mist_levels': list(range(1, 3))
     },
     'LV600S': {
         'module': 'VeSyncHumid200300S',
