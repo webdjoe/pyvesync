@@ -857,7 +857,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
         self._api_modes = ['getHumidifierStatus', 'setAutomaticStop',
                            'setSwitch', 'setNightLightBrightness',
                            'setVirtualLevel', 'setTargetHumidity',
-                           'setHumidityMode', 'setDisplay']
+                           'setHumidityMode', 'setDisplay', 'setLevel']
 
     def build_api_dict(self, method: str) -> Tuple[Dict, Dict]:
         """Build humidifier api call header and body.
@@ -1204,6 +1204,10 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
             call_str = 'auto'
         set_auto = self.set_humidity_mode(call_str)
         return set_auto
+
+    def set_manual_mode(self):
+        """Set humifier to manual mode with 1 mist level"""
+        return self.set_mist_level(self.mist_levels[0])
 
     def set_mist_level(self, level) -> bool:
         """Set humidifier mist level with int between 0 - 9."""
