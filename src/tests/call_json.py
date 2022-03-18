@@ -343,6 +343,31 @@ def get_devices_body():
     return body, 200
 
 
+CONF_FAN_LIST = [{'deviceRegion': 'US', 'isOwner': True, 'authKey': None, 'deviceName': 'Bedroom Humidifier',
+                  'deviceImg': 'https://image.vesync.com/defaultImages/LV_600S_Series/icon_lv600s_humidifier_160.png',
+                  'cid': '<cid>', 'deviceStatus': 'on', 'connectionStatus': 'online',
+                  'connectionType': 'WiFi+BTOnboarding+BTNotify', 'deviceType': 'LUH-A602S-WUS', 'type': 'wifi-air',
+                  'uuid': 'uuid123', 'configModule': 'WFON_AHM_LUH-A602S-WUS_US',
+                  'macID': '24:d7:eb:01:8d:b2', 'mode': None, 'speed': None, 'extension': None,
+                  'currentFirmVersion': None, 'subDeviceNo': None, 'subDeviceType': None,
+                  'deviceFirstSetupTime': 'Dec 29, 2021 5:26:24 PM', 'deviceProp': None},
+                 {'deviceRegion': 'US', 'isOwner': True, 'authKey': None, 'deviceName': 'Bedroom Air Purifier',
+                  'deviceImg': 'https://image.vesync.com/defaultImages/LV_PUR131S_Series/icon_131_air_purifier_80.png',
+                  'cid': '<cid>', 'deviceStatus': 'on', 'connectionStatus': 'online', 'connectionType': 'wifi',
+                  'deviceType': 'LV-PUR131S', 'type': 'wifi-air', 'uuid': 'uuid122',
+                  'configModule': 'AirPurifier131', 'macID': None, 'mode': 'auto', 'speed': None, 'extension': None,
+                  'currentFirmVersion': None, 'subDeviceNo': None, 'subDeviceType': None,
+                  'deviceFirstSetupTime': 'Mar 11, 2021 4:43:47 PM', 'deviceProp': None},
+                 {'deviceRegion': 'US', 'isOwner': True, 'authKey': None, 'deviceName': 'Living Room Air Purifier',
+                  'deviceImg': 'https://image.vesync.com/defaultImages/LV_PUR131S_Series/icon_131_air_purifier_80.png',
+                  'cid': '<cid>', 'deviceStatus': 'on', 'connectionStatus': 'online', 'connectionType': 'wifi',
+                  'deviceType': 'LV-PUR131S', 'type': 'wifi-air', 'uuid': 'uuid2234',
+                  'configModule': 'AirPurifier131', 'macID': None, 'mode': 'auto', 'speed': None, 'extension': None,
+                  'currentFirmVersion': None, 'subDeviceNo': None, 'subDeviceType': None,
+                  'deviceFirstSetupTime': 'Dec 8, 2020 1:39:05 PM', 'deviceProp': None}]
+
+FAN_TEST = ({'code': 0, 'result': {'list': CONF_FAN_LIST}}, 200)
+
 DEVLIST_ALL = ({'code': 0, 'result': {'list': FULL_DEV_LIST}}, 200)
 
 DEVLIST_7A = ({'code': 0, 'result': {'list': [LIST_CONF_7A]}}, 200)
