@@ -42,7 +42,7 @@ humid_features: dict = {
         'features': ['warm_mist', 'night_light'],
         'mist_modes': ['humidity', 'sleep'],
         'mist_levels': list(range(1, 10)),
-        'warm_mist_levels': ['1', '2', '3', 'off']
+        'warm_mist_levels': [0, 1, 2, 3]
     },
 }
 
@@ -1159,11 +1159,11 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
             logger.debug('%s is a %s does not have a mist warmer',
                          self.device_name, self.device_type)
             return False
-        if not isinstance(warm_level, str):
+        if not isinstance(warm_level, int):
             try:
-                warm_level = str(warm_level)
+                warm_level = int(warm_level)
             except ValueError:
-                logger.debug('Error converting warm mist level to a string')
+                logger.debug('Error converting warm mist level to a integer')
         if warm_level not in self.warm_mist_levels:
             logger.debug("warm_level value must be - %s",
                          str(self.warm_mist_levels))
