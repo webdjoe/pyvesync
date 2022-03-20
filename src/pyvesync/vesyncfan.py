@@ -553,7 +553,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             disp1.append(('Air Quality: ',
                           self.details['air_quality'], 'ug/m3'))
         for line in disp1:
-            print(f'{line[0]:.<20} {line[0]} {line[0]}')
+            print(f'{line[0]:.<20} {line[1]} {line[2]}')
 
     def displayJSON(self) -> str:
         """Return air purifier status and properties in JSON output."""
