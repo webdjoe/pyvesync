@@ -53,7 +53,7 @@ air_features: dict = {
         'models': ['Core200S', 'LAP-C201S-AUSR', 'LAP-C202S-WUSR'],
         'modes': ['sleep', 'off'],
         'features': [],
-        'levels': list(range(1, 5))
+        'levels': list(range(1, 4))
     },
     'Core300S': {
         'module': 'VeSyncAirBypass',
@@ -85,7 +85,7 @@ air_features: dict = {
     'LV-PUR131S': {
         'module': 'VeSyncAir131',
         'models': ['LV-PUR131S', 'LV-RH131S'],
-        'features': []
+        'features': ['air_quality']
     },
 }
 
@@ -523,6 +523,11 @@ class VeSyncAirBypass(VeSyncBaseDevice):
     @property
     def display_state(self) -> bool:
         """Get display state."""
+        return bool(self.details['display'])
+
+    @property
+    def screen_status(self) -> bool:
+        """Get display status."""
         return bool(self.details['display'])
 
     @property
@@ -1242,6 +1247,46 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
         if r is not None and Helpers.code_check(r):
             return True
         logger.debug('Error setting mist level')
+        return False
+
+    @property
+    def humidity(self):
+        """Returns humidity level."""
+        return self.details['humidity']
+
+    @property
+    def mist_level(self):
+        """Returns current mist level."""
+        return self.details['virtual_mist_level']
+
+    @property
+    def mode(self):
+        """Returns current operations mode."""
+        return self.details['mode']
+
+    @property
+    def water_lacks(self):
+        """Returns true if tank is empty."""
+        return self.details['water_lacks']
+
+    @property
+    def auto_humidity(self):
+        """Returns auto target humidity."""
+        return self.config['auto_target_humidity']
+
+    @property
+    def auto_enabled(self):
+        """Returns true if auto mode is enabled."""
+        if self.details.get('mode') == 'auto' \
+                or self.details.get('mode') == 'humidity':
+            return True
+        return False
+
+    @property
+    def warm_mist_enabled(self):
+        """Returns true if warm mist feature enabled."""
+        if self.warm_mist_feature:
+            return self.details['warm_mist_enabled']
         return False
 
     def display(self) -> None:

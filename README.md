@@ -6,22 +6,37 @@ pyvesync is a library to manage VeSync compatible [smart home devices](#supporte
 
 - [Installation](#installation)
 - [Supported Devices](#supported-devices)
+  - [Etekcity Outlets](#etekcity-outlets)
+  - [Wall Switches](#wall-switches)
+  - [Levoit Air Purifiers](#levoit-air-purifiers)
+  - [Etekcity Bulbs](#etekcity-bulbs)
+  - [Levoit Humidifiers](#levoit-humidifiers)
 - [Usage](#usage)
 - [Configuration](#configuration)
+  - [Time Zones](#time-zones)
+  - [Outlet energy data update interval](#outlet-energy-data-update-interval)
 - [Example Usage](#example-usage)
   - [Get electricity metrics of outlets](#get-electricity-metrics-of-outlets)
 - [API Details](#api-details)
   - [Manager API](#manager-api)
-  - [Device API](#device-api)
-  - [Outlet Specific Energy Methods and Properties](#outlet-specific-energy-methods-and-properties)
-  - [Model ESW15-USA 15A/1800W Methods](#model-esw15-usa-15a1800w-methods)
-  - [Air Purifier LV-PUR131S Methods](#air-purifier-lv-pur131s-methods)
+  - [Standard Device API](#standard-device-api)
+    - [Standard Properties](#standard-properties)
+    - [Standard Methods](#standard-methods)
+  - [Outlet API Methods & Properties](#outlet-api-methods--properties)
+    - [Outlet power and energy API Methods & Properties](#outlet-power-and-energy-api-methods--properties)
+    - [Model ESW15-USA 15A/1800W Methods (Have a night light)](#model-esw15-usa-15a1800w-methods-have-a-night-light)
+  - [Standard Air Purifier Properties & Methods](#standard-air-purifier-properties--methods)
+    - [Air Purifier Properties](#air-purifier-properties)
+    - [Air Purifier Methods](#air-purifier-methods)
+    - [Levoit Purifier Core200S/300S/400S Properties](#levoit-purifier-core200s300s400s-properties)
+    - [Levoit Purifier Core200S/300S/400S Methods](#levoit-purifier-core200s300s400s-methods)
   - [Dimmable Smart Light Bulb Method and Properties](#dimmable-smart-light-bulb-method-and-properties)
   - [Tunable Smart Light Bulb Methods and Properties](#tunable-smart-light-bulb-methods-and-properties)
   - [Dimmable Switch Methods and Properties](#dimmable-switch-methods-and-properties)
-  - [Levoit Humidifier 300S Methods and Properties](#levoit-humidifier-300s-methods-and-properties)
-  - [Levoit Purifier Core200S Methods and Properties](#levoit-purifier-core200s-methods-and-properties)
-  - [Levoit Purifier Core300S/400S/600S Methods and Properties](#levoit-purifier-core300s400s600s-methods-and-properties)
+  - [Levoit Humidifier Methods and Properties](#levoit-humidifier-methods-and-properties)
+    - [Humidifier Properties](#humidifier-properties)
+    - [Humidifer Methods](#humidifer-methods)
+    - [600S warm mist feature](#600s-warm-mist-feature)
   - [JSON Output API](#json-output-api)
     - [JSON Output for All Devices](#json-output-for-all-devices)
     - [JSON Output for Outlets](#json-output-for-outlets)
@@ -33,7 +48,11 @@ pyvesync is a library to manage VeSync compatible [smart home devices](#supporte
     - [JSON Output for 400S Purifier](#json-output-for-400s-purifier)
     - [JSON Output for 600S Purifier](#json-output-for-600s-purifier)
 - [Notes](#notes)
+- [Debug mode](#debug-mode)
 - [Feature Requests](#feature-requests)
+
+- [Contributing](CONTRIBUTING.md)
+
 
 ## Installation
 
@@ -63,7 +82,7 @@ pip install pyvesync
 2. Core 200S
 3. Core 300S
 4. Core 400S
-5. LAP-C201S-AUSR (Core 200S)
+5. Core 600S
 
 ### Etekcity Bulbs
 
@@ -74,6 +93,7 @@ pip install pyvesync
 1. Dual 200S
 2. Classic 300S
 3. LUH-D301S-WEU Dual (200S)
+4. LV600S
 
 ## Usage
 
@@ -94,28 +114,41 @@ my_switch.turn_on()
 # Turn off the first switch
 my_switch.turn_off()
 
-# Get energy usage data
+# Get energy usage data for outlets
 manager.update_energy()
-
-# Display outlet device information
-for device in manager.outlets:
-    device.display()
 ```
-
-## Configuration
-
-The `time_zone` argument is optional but the specified time zone must match time zone in the tz database (IANNA Time Zone Database), see this link for reference:
-[tz database](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones).
-The time zone determines how the energy history is generated for the smart outlets, i.e. for the week starts at 12:01AM Sunday morning at the specified time zone.  If no time zone or an invalid time zone is entered the default is America/New_York
+Devices are stored in the respective lists in the instantiated `VeSync` class:
 
 ```python
-#Devices are respectively located in their own lists that can be iterated over
+manager.login()
+manager.update()
+
 manager.outlets = [VeSyncOutletObjects]
 manager.switches = [VeSyncSwitchObjects]
 manager.fans = [VeSyncFanObjects]
 manger.bulbs = [VeSyncBulbObjects]
-```
 
+# Get device (outlet, etc.) by device name
+dev_name = "My Device"
+for device in manager.outlets:
+  if device.device_name == dev_name:
+    my_device = device
+    device.display()
+
+# Turn on switch by switch name
+switch_name = "My Switch"
+for switch in manager.switches:
+  if switch.device_name == switch_name:
+    switch.turn_on()
+```
+## Configuration
+
+### Time Zones
+The `time_zone` argument is optional but the specified time zone must match time zone in the tz database (IANNA Time Zone Database), see this link for reference:
+[tz database](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones).
+The time zone determines how the energy history is generated for the smart outlets, i.e. for the week starts at 12:01AM Sunday morning at the specified time zone.  If no time zone or an invalid time zone is entered the default is America/New_York
+
+### Outlet energy data update interval
 If outlets are going to be continuously polled, a custom energy update interval can be set - The default is 6 hours (21600 seconds)
 
 ```python
@@ -126,6 +159,7 @@ manager.energy_update_interval = 360 # time in seconds
 
 ### Get electricity metrics of outlets
 
+Bypass the interval check to trigger outlet energy update.
 ```python
 for s in manager.outlets:
   s.update_energy(check_bypass=False) # Get energy history for each device
@@ -145,7 +179,29 @@ for s in manager.outlets:
 
 `VeSync.update_energy(bypass_check=False)` - Get energy history for all outlets - Builds week, month and year nested energy dictionary.  Set `bypass_check=True` to disable the library from checking the update interval
 
-### Device API
+### Standard Device API
+
+These properties and methods are available for all devices.
+
+#### Standard Properties
+
+`VeSyncDevice.device_name` - Name given when registering device
+
+`VeSyncDevice.device_type` - Model of device, used to determine proper device class.
+
+`VeSyncDevice.connection_status` - Device online/offline
+
+`VeSyncDevice.config_module` - Special configuration identifier for device. Currently, not used in this API.
+
+`VeSyncDevice.sub_device_no` - Sub-device number for certain devices. Used for the outdoor outlet.
+
+`VeSyncDevice.device_status` - Device on/off
+
+`VeSyncDevice.is_on` - Returns boolean True/False if device is on.
+
+`VeSyncDevice.firmware_update` - Returns True is new firmware is available
+
+#### Standard Methods
 
 `VeSyncDevice.turn_on()` - Turn on the device
 
@@ -157,9 +213,9 @@ for s in manager.outlets:
 
 `VeSyncDevice.get_config()` - Retrieve Configuration data such as firmware version for device and store in the `VeSyncDevice.config` dictionary
 
-`VeSyncDevice.firmware_update` - Return true if Firmware has an update available. `VeSyncDevice.get_config()` must be called first
+### Outlet API Methods & Properties
 
-### Outlet Specific Energy Methods and Properties
+#### Outlet power and energy API Methods & Properties
 
 `VeSyncOutlet.update_energy(bypass_check=False)` - Get outlet energy history - Builds week, month and year nested energy dictionary. Set `bypass_check=True` to disable the library from checking the update interval
 
@@ -175,7 +231,7 @@ for s in manager.outlets:
 
 `VesyncOutlet.yearly_energy_total` - Return total energy reading for the past year in kWh
 
-### Model ESW15-USA 15A/1800W Methods
+#### Model ESW15-USA 15A/1800W Methods (Have a night light)
 
 The rectangular smart switch model supports some additional functionality on top of the regular api call
 
@@ -187,13 +243,38 @@ The rectangular smart switch model supports some additional functionality on top
 
 `VeSyncOutlet.turn_off_nightlight()` - Turn off the nightlight
 
-### Air Purifier LV-PUR131S Methods
+### Standard Air Purifier Properties & Methods
 
-`VeSyncFan.fan_level` - Return the level of the fan (1-3) or 0 for off
+#### Air Purifier Properties 
+
+`VeSyncFan.details` - Dictionary of device details
+
+```python
+VeSyncFan.update()
+
+VeSyncFan.details = {
+  'active_time': 30004, # minutes
+  'filter_life': 45, # percent of filter life remaining
+  'screen_status': 'on', # display on/off
+  'level': 3, # fan level
+  'air_quality': 2, # air quality level
+}
+
+```
+
+`VeSyncFan.features` - Unique features to air purifier model. Currently, the only feature is air_quality, which is not supported on Core 200S.
+
+`VeSyncFan.modes` - Modes of operation supported by model - [sleep, off, auto]
+
+`VeSyncFan.fan_level` - Return the level of the fan
 
 `VeSyncFan.filter_life` - Return the percentage of filter life remaining
 
-`VeSyncFan.air_quality` - Return air quality reading
+`VeSyncFan.air_quality` - Return air quality reading - Not available on Core 200S
+
+`VeSyncFan.screen_status` - Get Status of screen on/off
+
+#### Air Purifier Methods
 
 `VeSyncFan.auto_mode()` - Change mode to auto
 
@@ -201,9 +282,31 @@ The rectangular smart switch model supports some additional functionality on top
 
 `VeSyncFan.sleep_mode()` - Change fan mode to sleep
 
-`VeSyncFan.change_fan_speed(speed)` - Change fan speed with level 1, 2 or 3
+`VeSyncFan.change_fan_speed(speed=None)` - Change fan speed. Call without speed to toggle to next speed
 
-`VeSyncFan.screen_status` - Get Status of screen on/off
+Compatible levels for each model:
+- Core 200S [1, 2, 3]
+- Core 300S/400S [1, 2, 3, 4]
+- PUR131S [1, 2, 3]
+
+#### Levoit Purifier Core200S/300S/400S Properties
+
+`VeSyncFan.child_lock` - Return the state of the child lock (True=On/False=off)
+
+`VeSyncAir.night_light` - Return the state of the night light (on/dim/off)
+
+#### Levoit Purifier Core200S/300S/400S Methods
+
+`VeSyncFan.child_lock_on()` Enable child lock
+
+`VeSyncFan.child_lock_off()` Disable child lock
+
+`VeSyncFan.turn_on_display()` Turn display on
+
+`VeSyncFan.turn_off_display()` Turn display off
+
+`VeSyncFan.set_night_light('on'|'dim'|'off')` - Set night light brightness
+
 
 ### Dimmable Smart Light Bulb Method and Properties
 
@@ -241,12 +344,14 @@ The rectangular smart switch model supports some additional functionality on top
 
 `VeSyncSwitch.rgb_color_set(red, green, blue)` - Set color of rgb light (0 - 255)
 
-### Levoit Humidifier 200S/300S Methods and Properties
+### Levoit Humidifier Methods and Properties
+
+#### Humidifier Properties
 
 The details dictionary contains all device status details 
 
 ```python
-VeSyncHumid200S300S.details = {
+VeSyncHumid.details = {
     'humidity': 80, # percent humidity in room
     'mist_virtual_level': 0, # Level of mist output 1 - 9
     'mist_level': 0,
@@ -263,90 +368,58 @@ VeSyncHumid200S300S.details = {
 The configuration dictionary shows current settings
 
 ```python
-VeSyncHumid200S300S.config = {
+VeSyncHumid.config = {
     'auto_target_humidity': 80, # percent humidity in room
     'display': True, # Display on/off
     'automatic_stop': False
     }
 ```
 
-`VeSyncHumid200S300S.automatic_stop_on()` Set humidifier to stop at set humidity
+The LV600S has warm mist settings that show in the details dictionary in addition to the key/values above.
 
-`VeSyncHumid200S300S.automatic_stop_off` Set humidifier to run continuously 
+```python
+VeSyncLV600S.details = {
+  'warm_mist_enabled': True,
+  'warm_mist_level': 2
+}
+```
 
-`VeSyncHumid200S300S.turn_on_display()` Turn display on
+`VeSyncHumid.humidity` - current humidity level in room
 
-`VeSyncHumid200S300S.turn_off_display()` Turn display off
+`VeSyncHumid.mist_level` - current mist level
 
-`VeSyncHumid200S300S.set_humidity(30)` Set humidity between 30 and 80 percent
+`VeSyncHumid.mode` - Mode of operation - sleep, off, auto/humidity 
 
-`VeSyncHumid200S300S.set_night_light_brightness(50)` Set nightlight brightness between 1 and 100
+`VeSyncHumid.water_lacks` - Returns True if water is low
 
-`VeSyncHumid200S300S.set_humidity_mode('sleep')` Set humidity mode - sleep/auto
+`VeSyncHumid.auto_humidity` - Target humidity for auto mode
 
-`VeSyncHumid200S300S.set_mist_level(4)` Set mist output 1 - 9
+`VeSyncHumid.auto_enabled` - Returns true if auto stop enabled at target humidity
 
-### Levoit Purifier Core200S Methods and Properties
+#### Humidifer Methods
 
-`VeSyncAir200S.change_fan_speed(2)` 1|2|3 or call without argument to increment by one
+`VeSyncHumid.automatic_stop_on()` Set humidifier to stop at set humidity
 
-`VeSyncAir200S.child_lock_on()` Enable child lock
+`VeSyncHumid.automatic_stop_off` Set humidifier to run continuously 
 
-`VeSyncAir200S.child_lock_off()` Disable child lock
+`VeSyncHumid.turn_on_display()` Turn display on
 
-`VeSyncAir200S.turn_on_display()` Turn display on
+`VeSyncHumid.turn_off_display()` Turn display off
 
-`VeSyncAir200S.turn_off_display()` Turn display off
+`VeSyncHumid.set_humidity(30)` Set humidity between 30 and 80 percent
 
-`VeSyncAir200S.sleep_mode()` - Change mode to sleep
+`VeSyncHumid.set_night_light_brightness(50)` Set nightlight brightness between 1 and 100
 
-`VeSyncAir200S.manual_mode()` - Change mode to manual
+`VeSyncHumid.set_humidity_mode('sleep')` Set humidity mode - sleep/auto
 
-`VeSyncAir200S.set_night_light('on'|'dim'|'off')` - Set night light brightness
+`VeSyncHumid.set_mist_level(4)` Set mist output 1 - 9
 
-`VeSyncAir200S.fan_level()` - Return the level of the fan (1-3)
+#### 600S warm mist feature
 
-`VeSyncAir200S.filter_life()` - Return the percentage of filter life remaining
+`VeSync600S.warm_mist_enabled` - Returns true if warm mist feature is enabled
 
-`VeSyncAir200S.display_state()` - Return the state of the display (True=On/False=off)
+`VeSync600S.set_warm_level(2)` - Sets warm mist level
 
-`VeSyncAir200S.child_lock()` - Return the state of the child lock (True=On/False=off)
-
-`VeSyncAir200S.night_light()` - Return the state of the night light (on/dim/off)
-
-### Levoit Purifier Core300S/400S Methods and Properties
-
-The core400S and core600s have a nightlight, while the Core300S does not.
-
-`VeSyncAir300S400S.change_fan_speed(2)` 1|2|3|4 or call without argument to increment by one
-
-`VeSyncAir300S400S.child_lock_on()` Enable child lock
-
-`VeSyncAir300S400S.child_lock_off()` Disable child lock
-
-`VeSyncAir300S400S.turn_on_display()` Turn display on
-
-`VeSyncAir300S400S.turn_off_display()` Turn display off
-
-`VeSyncAir300S400S.sleep_mode()` - Change mode to sleep
-
-`VeSyncAir300S400S.manual_mode()` - Change mode to manual
-
-`VeSyncAir300S400S.auto_mode()` - Change mode to auto
-
-`VeSyncAir300S400S.set_night_light('on'|'dim'|'off')` - Set night light brightness
-
-`VeSyncAir300S400S.fan_level()` - Return the level of the fan (1-4)
-
-`VeSyncAir300S400S.filter_life()` - Return the percentage of filter life remaining
-
-`VeSyncAir300S400S.air_quality()` - Return the air quality (PM 2.5 - ug/m3)
-
-`VeSyncAir300S400S.display_state()` - Return the state of the display (True=On/False=off)
-
-`VeSyncAir300S400S.child_lock()` - Return the state of the child lock (True=On/False=off)
-
-`VeSyncAir300S400S.night_light()` - Return the state of the night light (on/dim/off). The 300S does not have a nightlight.
 
 ### JSON Output API
 
@@ -521,9 +594,24 @@ VesyncOutlet.energy['week']['total_energy']
 VesyncOutlet.energy['week']['data'] # which itself is a list of values
 ```
 
+## Debug mode
+
+To make it easier to debug, there is a `debug` argument in the `VeSync` method. This prints out your device list and any other debug log messages.
+
+```python
+import pyvesync.vesync as vs
+
+manager = vs.VeSync('user', 'pass', debug=True)
+manager.login()
+manager.update()
+# Prints device list returned from Vesync
+```
+
 ## Feature Requests
 
-If you would like new devices to be added, you will need to capture the packets from the app. The easiest way to do this is by using [Packet Capture for Android](https://play.google.com/store/apps/details?id=app.greyshirts.sslcapture&hl=en_US&gl=US). This works without rooting the device. If you do not have an android or are concerned with adding an app that uses a custom certificate to read the traffic, you can use an Android emulator such as [Nox](https://www.bignox.com/).
+~~If you would like new devices to be added, you will need to capture the packets from the app. The easiest way to do this is by using [Packet Capture for Android](https://play.google.com/store/apps/details?id=app.greyshirts.sslcapture&hl=en_US&gl=US). This works without rooting the device. If you do not have an android or are concerned with adding an app that uses a custom certificate to read the traffic, you can use an Android emulator such as [Nox](https://www.bignox.com/).~~
+
+SSL pinning makes capturing packets with android not feasible anymore. Charles Proxy is a proxy that allows you to perform MITM SSL captures on an iOS device. This is the only way to capture packets that I am aware of that is currently possible.
 
 When capturing packets make sure all packets are captured from the device list, along with all functions that the app contains. The captured packets are stored in text files, please do not capture with pcap format.
 
