@@ -2,7 +2,7 @@
 
 import json
 import logging
-from typing import Dict, Tuple, Union, Optional
+from typing import Dict, Tuple, Union
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 from pyvesync.helpers import Helpers
 
@@ -101,11 +101,14 @@ def model_dict() -> dict:
             model_modules[model] = dev_dict['module']
     return model_modules
 
+
 def model_features(dev_type: str) -> dict:
-    model_feat_dict = {}
+    """Get features from device type."""
     for dev_dict in {**air_features, **humid_features}.values():
         if dev_type in dev_dict['models']:
             return dev_dict
+    raise ValueError('Device not configured')
+
 
 fan_classes: set = {v['module']
                     for k, v in {**air_features, **humid_features}.items()}
@@ -244,9 +247,9 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         self.get_details()
 
     def change_fan_speed(self,
-                         speed: Optional[Union[str, int]] = None) -> bool:
+                         speed=None) -> bool:
         """Change fan speed based on levels in configuration dict."""
-        speeds = self.config_dict.get('levels')
+        speeds: list = self.config_dict.get('levels', [])
         current_speed = self.speed
 
         if speed is not None:
@@ -1206,7 +1209,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
         return set_auto
 
     def set_manual_mode(self):
-        """Set humifier to manual mode with 1 mist level"""
+        """Set humifier to manual mode with 1 mist level."""
         return self.set_humidity_mode('manual')
 
     def set_mist_level(self, level) -> bool:
