@@ -3,34 +3,40 @@
 import logging
 import collections
 import json
-
+from typing import Optional, Union
 logger = logging.getLogger(__name__)
 
 
 class VeSyncBaseDevice:
     """Properties shared across all VeSync devices."""
 
-    def __init__(self, details, manager):
+    def __init__(self, details: dict, manager):
         """Initialize VeSync device base class."""
         self.manager = manager
         if 'cid' in details and details['cid'] is not None:
-            self.device_name = details.get('deviceName', None)
-            self.device_image = details.get('deviceImg', None)
-            self.cid = details.get('cid', None)
-            self.connection_status = details.get('connectionStatus', None)
-            self.connection_type = details.get('connectionType', None)
-            self.device_type = details.get('deviceType', None)
-            self.type = details.get('type', None)
-            self.uuid = details.get('uuid', None)
-            self.config_module = details.get('configModule', None)
-            self.mac_id = details.get('macID', None)
-            self.mode = details.get('mode', None)
-            self.speed = details.get('speed', None)
+            self.device_name: str = details.get('deviceName', None)
+            self.device_image: Optional[str] = details.get('deviceImg', None)
+            self.cid: str = details.get('cid', None)
+            self.connection_status: str = details.get('connectionStatus', None)
+            self.connection_type: Optional[str] = details.get(
+                'connectionType', None)
+            self.device_type: str = details.get('deviceType', None)
+            self.type: str = details.get('type', None)
+            self.uuid: Optional[str] = details.get('uuid', None)
+            self.config_module: str = details.get(
+                'configModule', None)
+            self.mac_id: Optional[str] = details.get('macID', None)
+            self.mode: Optional[str] = details.get('mode', None)
+            self.speed: Union[str, int, None] = details.get('speed', None)
             self.extension = details.get('extension', None)
             self.current_firm_version = details.get(
                     'currentFirmVersion', None)
             self.sub_device_no = details.get('subDeviceNo', 0)
-            self.config = {}
+            self.config: dict = {}
+            if isinstance(details.get('extension'), dict):
+                ext = details['extension']
+                self.speed = ext.get('fanSpeedLevel')
+                self.mode = ext.get('mode')
             if self.connection_status != 'online':
                 self.device_status = 'off'
             else:

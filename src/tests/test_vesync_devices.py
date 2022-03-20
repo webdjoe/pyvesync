@@ -7,16 +7,10 @@ import pyvesync
 import time
 import copy
 from itertools import chain
-from pyvesync import (
-    VeSyncAir131,
-    VeSyncBulbESL100,
-    VeSyncOutdoorPlug,
-    VeSyncOutlet10A,
-    VeSyncOutlet15A,
-    VeSyncOutlet7A,
-    VeSyncWallSwitch,
-    VeSyncDimmerSwitch
-)
+from pyvesync.vesyncfan import *
+from pyvesync.vesyncbulb import *
+from pyvesync.vesyncoutlet import *
+from pyvesync.vesyncswitch import *
 from . import call_json as json_vals
 
 BAD_DEV_LIST = {
@@ -87,6 +81,40 @@ class TestDeviceList(object):
         assert len(self.vesync_obj.fans) == 1
         assert len(self.vesync_obj.bulbs) == 1
 
+    def test_lv600(
+            self, api_mock
+    ):
+        """Test the get_devices, process_devices and VSFactory methods.
+        Build list with device objects from details
+        Test for all 6 known devices - 4 outlets, 2 switches, 1 fan.
+        """
+
+        device_list = json_vals.FAN_TEST
+
+        self.mock_api.return_value = device_list
+
+        self.vesync_obj.get_devices()
+
+        assert len(self.vesync_obj.fans) == 3
+
+
+    def test_dual200s(
+            self, api_mock
+    ):
+        """Test the get_devices, process_devices and VSFactory methods.
+        Build list with device objects from details
+        Test for all 6 known devices - 4 outlets, 2 switches, 1 fan.
+        """
+
+        device_list = json_vals.DEVLIST_DUAL200S
+
+        self.mock_api.return_value = device_list
+
+        self.vesync_obj.get_devices()
+
+        assert len(self.vesync_obj.fans) == 1
+
+
     def test_getdevs_code(self, caplog, api_mock):
         """Test get_devices with code > 0 returned."""
         device_list = ({'code': 1, 'msg': 'gibberish'}, 200)
@@ -149,7 +177,7 @@ class TestDeviceList(object):
 
         unknown_dev['devType'] = 'UNKNOWN-DEVTYPE'
 
-        pyvesync.vesync._device_builder('unknown_device', unknown_dev, self.vesync_obj)
+        pyvesync.vesync.object_factory('unknown_device', unknown_dev, self.vesync_obj)
 
         assert len(caplog.records) == 1
         assert 'Unknown' in caplog.text

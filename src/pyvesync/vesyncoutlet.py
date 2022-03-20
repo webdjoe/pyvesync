@@ -10,6 +10,23 @@ from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 
 logger = logging.getLogger(__name__)
 
+outlet_config = {
+    'wifi-switch-1.3': {
+        'module': 'VeSyncOutlet7A'},
+    'ESW03-USA': {
+        'module': 'VeSyncOutlet10A'},
+    'ESW01-EU': {
+        'module': 'VeSyncOutlet10A'},
+    'ESW15-USA': {
+        'module': 'VeSyncOutlet15A'},
+    'ESO15-TB': {
+        'module': 'VeSyncOutdoorPlug'},
+}
+
+outlet_modules = {k: v['module'] for k, v in outlet_config.items()}
+
+__all__ = list(outlet_modules.values()) + ['outlet_modules']
+
 
 class VeSyncOutlet(VeSyncBaseDevice):
     """Base class for Etekcity Outlets."""
@@ -614,6 +631,7 @@ class VeSyncOutdoorPlug(VeSyncOutlet):
                 self.device_status = sub_device_list[(dev_no + -1)].get(
                     'subDeviceStatus'
                 )
+                return
         logger.debug('Unable to get %s details', self.device_name)
 
     def get_config(self) -> None:

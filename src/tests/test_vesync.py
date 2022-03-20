@@ -2,36 +2,12 @@
 
 import unittest
 import logging
+import importlib
 from unittest import mock
-from unittest.mock import patch, Mock
+from unittest.mock import patch, Mock, MagicMock
 
 from pyvesync import VeSync
 from pyvesync.helpers import Helpers
-
-
-def mocked_req_post(*args, **kwargs):
-    """Test call_api post request."""
-
-    class MockResponse:
-        """Mock response class."""
-
-        def __init__(self, json_data, status_code):
-            """Initialize mock response class."""
-            self.json_data = json_data
-            self.status_code = status_code
-
-    if args[0] == 'https://smartapi.vesync.com/cloud/v1/user/login':
-        return MockResponse(
-            '{"traceId": "", "msg": "", "result": {"accountID": "12346536, \
-                "avatarIcon": "", "acceptLanguage": "", "gdprStatus": true, \
-                    "nickName": "mynickname", "userType": "1", \
-                        "token": "somevaluehere"}, "code": 0 }',
-            200,
-        )
-    elif args[0] == 'https://smartapi.vesync.com/cloud/v1/deviceManaged/devices':
-        return MockResponse({'key2': 'value2'}, 200)
-
-    return MockResponse(None, 404)
 
 
 class TestVesync(unittest.TestCase):
@@ -56,6 +32,21 @@ class TestVesync(unittest.TestCase):
     def test_instance(self):
         """Test VeSync object is successfully initialized."""
         self.assertIsInstance(self.vesync_1, VeSync)
+
+    def test_imports(self):
+        """Test that __all__ contains only names that are actually exported."""
+        modules = ['pyvesync.vesyncfan',
+                   'pyvesync.vesyncbulb',
+                   'pyvesync.vesyncoutlet',
+                   'pyvesync.vesyncswitch']
+        for mod in modules:
+            import_mod = importlib.import_module(mod)
+
+            missing = set(n for n in import_mod.__all__
+                          if getattr(import_mod, n, None) is None)
+            self.assertFalse(
+                missing, msg="__all__ contains unresolved names: %s" % (
+                    ", ".join(missing),))
 
     def test_username(self):
         """Test invalid username arguments."""
@@ -161,11 +152,9 @@ class TestApiFunc:
     @patch('pyvesync.helpers.requests.get', autospec=True)
     def test_api_bad_response(self, api_mock):
         """Test bad API response handling."""
-        api_mock.return_value = Mock(ok=True, status_code=500)
-        api_mock.return_value.json.return_value = {}
-
-        mock_return = Helpers.call_api('/call/location', method='get')
-
+        api_mock.side_effect = MagicMock(status_code=400)
+        mock_return = Helpers.call_api('/test/bad-response', method='get')
+        print(api_mock.call_args_list)
         assert mock_return == (None, None)
 
     @patch('pyvesync.helpers.requests.get', autospec=True)

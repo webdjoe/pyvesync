@@ -2,21 +2,37 @@
 
 import logging
 import json
+from typing import Union, Dict
 from abc import ABCMeta, abstractmethod
-from collections import defaultdict
-
 from pyvesync.helpers import Helpers as helpers
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 
+
 logger = logging.getLogger(__name__)
 
+
 # Possible features - dimmable, color_temp, rgb_shift
-feature_dict = defaultdict(
-    list, {'ESL100': ['dimmable'], 'ESL100CW': ['dimmable', 'color_temp']}
-)
+feature_dict: dict = {
+    'ESL100':
+        {
+            'module': 'VeSyncBulbESL100',
+            'features': ['dimmable']
+        },
+    'ESL100CW':
+        {
+            'module': 'VeSyncBulbESL100CW',
+            'features': ['dimmable', 'color_temp']
+        }
+}
 
 
-def pct_to_kelvin(pct, max_k=6500, min_k=2700):
+bulb_modules: dict = {k: v['module'] for k, v in feature_dict.items()}
+
+__all__: list = list(bulb_modules.values()) + ['bulb_modules']
+
+
+def pct_to_kelvin(pct: float,
+                  max_k: int = 6500, min_k: int = 2700) -> float:
     """Convert percent to kelvin."""
     kelvin = ((max_k - min_k) * pct / 100) + min_k
     return kelvin
@@ -27,11 +43,16 @@ class VeSyncBulb(VeSyncBaseDevice):
 
     __metaclass__ = ABCMeta
 
-    def __init__(self, details, manager):
+    def __init__(self, details: Dict[str, Union[str, list]],
+                 manager):
         """Initialize VeSync smart bulb base class."""
         super().__init__(details, manager)
         self._brightness = 0
         self._color_temp = 0
+        self.features = feature_dict.get(self.device_type, {}).get('features')
+        if self.features is None:
+            logger.error("No configuration set for - %s", self.device_name)
+            raise Exception
 
     @property
     def brightness(self) -> int:
@@ -57,7 +78,7 @@ class VeSyncBulb(VeSyncBaseDevice):
     @property
     def dimmable_feature(self) -> bool:
         """Return true if dimmable bulb."""
-        if 'dimmable' in feature_dict[self.device_type]:
+        if 'dimmable' in self.features:
             return True
         return False
 
@@ -134,7 +155,7 @@ class VeSyncBulbESL100(VeSyncBulb):
     def __init__(self, details, manager):
         """Initialize Etekcity ESL100 Dimmable Bulb."""
         super().__init__(details, manager)
-        self.details = {}
+        self.details: dict = {}
 
     def get_details(self) -> None:
         """Get details of dimmable bulb."""
@@ -237,15 +258,19 @@ class VeSyncBulbESL100CW(VeSyncBulb):
             headers=helpers.req_headers(self.manager),
             json=body,
         )
-        if r.get('code') == 0 and r.get('result').get('light') is not None:
-            light = r.get('result').get('light')
+        if not isinstance(r, dict) or not helpers.code_check(r):
+            logger.debug('Error calling %s', self.device_name)
+            return
+        response = r
+        if response.get('result', {}).get('light') is not None:
+            light = response.get('result', {}).get('light')
             self.connection_status = 'online'
             self.device_status = light.get('action', 'off')
             if self.dimmable_feature:
                 self._brightness = light.get('brightness')
             if self.color_temp_feature:
                 self._color_temp = light.get('colorTempe')
-        elif r.get('code') == -11300027:
+        elif response.get('code') == -11300027:
             logger.debug('%s device offline', self.device_name)
             self.connection_status = 'offline'
             self.device_status = 'off'
@@ -253,8 +278,8 @@ class VeSyncBulbESL100CW(VeSyncBulb):
             logger.debug(
                 '%s - Unknown return code - %d with message %s',
                 self.device_name,
-                r.get('code'),
-                r.get('msg'),
+                response.get('code'),
+                response.get('msg'),
             )
 
     def get_config(self) -> None:
@@ -286,7 +311,7 @@ class VeSyncBulbESL100CW(VeSyncBulb):
             headers=helpers.req_headers(self.manager),
             json=body,
         )
-        if r.get('code') == 0:
+        if helpers.code_check(r) == 0:
             self.device_status = status
             return True
         logger.debug('%s offline', self.device_name)
@@ -346,6 +371,9 @@ class VeSyncBulbESL100CW(VeSyncBulb):
             headers=helpers.req_headers(self.manager),
             json=body,
         )
+
+        if not helpers.code_check(r):
+            return False
 
         if r.get('code') == -11300027:
             logger.debug('%s device offline', self.device_name)

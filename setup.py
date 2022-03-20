@@ -10,12 +10,12 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='pyvesync',
-    version='1.4.3',
+    version='2.0.0',
     description='pyvesync is a library to manage Etekcity\
                  Devices and Levoit Air Purifier',
     long_description=long_description,
     long_description_content_type='text/markdown',
-    url='https://github.com/markperdue/pyvesync',
+    url='https://github.com/webdjoe/pyvesync',
     author='Mark Perdue, Joe Trabulsy',
     author_email='webdjoe@gmail.com',
     license='MIT',

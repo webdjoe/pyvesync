@@ -3,21 +3,32 @@
 import logging
 import json
 from abc import ABCMeta, abstractmethod
-from collections import defaultdict
-from typing import DefaultDict, Dict, List
+from typing import Dict, Union
 
 from pyvesync.helpers import Helpers as helpers
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 
 logger = logging.getLogger(__name__)
 
-feature_list: Dict[str, List[str]] = dict(
-    ESWL01=[],
-    ESWD16=['dimmable'],
-    ESWL03=[]
-)
+feature_dict: Dict[str, Dict[str, Union[list, str]]] = {
+    'ESWL01': {
+        'module': 'VeSyncWallSwitch',
+        'features': []
+    },
+    'ESWD16': {
+        'module': 'VeSyncDimmerSwitch',
+        'features': ['dimmable']
+    },
+    'ESWL03': {
+        'module': 'VeSyncWallSwitch',
+        'features': []
+    }
+}
 
-feature_dict: DefaultDict[str, List[str]] = defaultdict(list, feature_list)
+switch_modules: dict = {k: v['module']
+                        for k, v in feature_dict.items()}
+
+__all__: list = list(switch_modules.values()) + ['switch_modules']
 
 
 class VeSyncSwitch(VeSyncBaseDevice):
@@ -28,11 +39,15 @@ class VeSyncSwitch(VeSyncBaseDevice):
     def __init__(self, details, manager):
         """Initialize Switch Base Class."""
         super().__init__(details, manager)
+        self.features = feature_dict.get(self.device_type, {}).get('features')
+        if self.features is None:
+            logger.error('% device configuration not set', self.device_name)
+            raise Exception
         self.details = {}
 
     def is_dimmable(self) -> bool:
         """Return True if switch is dimmable."""
-        return bool('dimmable' in feature_dict.get(self.device_type, []))
+        return bool('dimmable' in self.features)
 
     @abstractmethod
     def get_details(self) -> None:
