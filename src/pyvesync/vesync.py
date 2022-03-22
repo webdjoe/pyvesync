@@ -214,7 +214,8 @@ class VeSync:  # pylint: disable=function-redefined
                 device_str, device_obj = object_factory(dev_type, dev, self)
                 device_list = getattr(self, device_str)
                 device_list.append(device_obj)
-            except AttributeError:
+            except AttributeError as err:
+                logger.debug('Error - %s', err)
                 logger.debug('%s device not added', dev_type)
                 continue
 

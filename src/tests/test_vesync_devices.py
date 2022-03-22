@@ -109,7 +109,7 @@ class TestDeviceList(object):
         device_list = json_vals.DEVLIST_DUAL200S
 
         self.mock_api.return_value = device_list
-
+        self.vesync_obj.debug = True
         self.vesync_obj.get_devices()
 
         assert len(self.vesync_obj.fans) == 1

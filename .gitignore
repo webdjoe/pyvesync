@@ -1,5 +1,6 @@
 *.DS_Store
 build/*
+.mypy_cache
 build
 dist/*
 src/pyvesync.egg-info/*

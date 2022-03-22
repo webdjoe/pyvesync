@@ -53,7 +53,7 @@ air_features: dict = {
         'models': ['Core200S', 'LAP-C201S-AUSR', 'LAP-C202S-WUSR'],
         'modes': ['sleep', 'off'],
         'features': [],
-        'levels': list(range(1, 5))
+        'levels': list(range(1, 4))
     },
     'Core300S': {
         'module': 'VeSyncAirBypass',
@@ -85,7 +85,7 @@ air_features: dict = {
     'LV-PUR131S': {
         'module': 'VeSyncAir131',
         'models': ['LV-PUR131S', 'LV-RH131S'],
-        'features': []
+        'features': ['air_quality']
     },
 }
 
@@ -523,6 +523,11 @@ class VeSyncAirBypass(VeSyncBaseDevice):
     @property
     def display_state(self) -> bool:
         """Get display state."""
+        return bool(self.details['display'])
+
+    @property
+    def screen_status(self) -> bool:
+        """Get display status."""
         return bool(self.details['display'])
 
     @property
@@ -1242,6 +1247,41 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
         if r is not None and Helpers.code_check(r):
             return True
         logger.debug('Error setting mist level')
+        return False
+
+    @property
+    def humidity(self):
+        """Get Humidity level."""
+        return self.details['humidity']
+
+    @property
+    def mist_level(self):
+        """Get current mist level."""
+        return self.details['virtual_mist_level']
+
+    @property
+    def water_lacks(self):
+        """If tank is empty return true."""
+        return self.details['water_lacks']
+
+    @property
+    def auto_humidity(self):
+        """Auto target humidity."""
+        return self.config['auto_target_humidity']
+
+    @property
+    def auto_enabled(self):
+        """Auto mode is enabled."""
+        if self.details.get('mode') == 'auto' \
+                or self.details.get('mode') == 'humidity':
+            return True
+        return False
+
+    @property
+    def warm_mist_enabled(self):
+        """Warm mist feature enabled."""
+        if self.warm_mist_feature:
+            return self.details['warm_mist_enabled']
         return False
 
     def display(self) -> None:
