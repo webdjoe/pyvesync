@@ -1251,32 +1251,27 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
 
     @property
     def humidity(self):
-        """Returns humidity level."""
+        """Get Humidity level."""
         return self.details['humidity']
 
     @property
     def mist_level(self):
-        """Returns current mist level."""
+        """Get current mist level."""
         return self.details['virtual_mist_level']
 
     @property
-    def mode(self):
-        """Returns current operations mode."""
-        return self.details['mode']
-
-    @property
     def water_lacks(self):
-        """Returns true if tank is empty."""
+        """If tank is empty return true."""
         return self.details['water_lacks']
 
     @property
     def auto_humidity(self):
-        """Returns auto target humidity."""
+        """Auto target humidity."""
         return self.config['auto_target_humidity']
 
     @property
     def auto_enabled(self):
-        """Returns true if auto mode is enabled."""
+        """Auto mode is enabled."""
         if self.details.get('mode') == 'auto' \
                 or self.details.get('mode') == 'humidity':
             return True
@@ -1284,7 +1279,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
 
     @property
     def warm_mist_enabled(self):
-        """Returns true if warm mist feature enabled."""
+        """Warm mist feature enabled."""
         if self.warm_mist_feature:
             return self.details['warm_mist_enabled']
         return False
