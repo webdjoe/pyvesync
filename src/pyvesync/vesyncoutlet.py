@@ -189,11 +189,8 @@ class VeSyncOutlet7A(VeSyncOutlet):
             self.details['active_time'] = r.get('activeTime', 0)
             self.details['energy'] = r.get('energy', 0)
             power = r.get('power', '0')
-
-
             self.details['power'] = self.parse_energy_detail(power)
             voltage = r.get('voltage', 0)
-
             self.details['voltage'] = self.parse_energy_detail(voltage)
         else:
             logger.debug('Unable to get %s details', self.device_name)
@@ -209,7 +206,6 @@ class VeSyncOutlet7A(VeSyncOutlet):
             logger.debug('Error parsing power response - %s', energy)
             power = 0
         return power
-
 
     def get_weekly_energy(self) -> None:
         """Get 7A outlet weekly energy info and buld weekly energy dict."""
