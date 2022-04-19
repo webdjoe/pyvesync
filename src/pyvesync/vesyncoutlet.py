@@ -195,7 +195,8 @@ class VeSyncOutlet7A(VeSyncOutlet):
         else:
             logger.debug('Unable to get %s details', self.device_name)
 
-    def parse_energy_detail(self, energy):
+    @staticmethod
+    def parse_energy_detail(energy):
         """Parse energy details to be compatible with new and old firmware."""
         try:
             if isinstance(energy, str) and ':' in energy:
