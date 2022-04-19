@@ -13,6 +13,7 @@ htmlcov/
 cov_html/*
 cov_html/
 test/*
+test/
 /venv/
 .idea/
 src/tests/test1.py
