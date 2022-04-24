@@ -184,6 +184,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         else:
             self.device_status = 'off'
         self.details['filter_life'] = dev_dict.get('filter_life', 0)
+        self.details['air_quality_value'] = dev_dict.get('air_quality_value', 0)
         self.mode = dev_dict.get('mode', 'manual')
         self.speed = dev_dict.get('level', 0)
         self.details['display'] = dev_dict.get('display', False)
@@ -519,6 +520,13 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             return int(self.details['filter_life'])
         except KeyError:
             return 0
+    @property
+    def filter_air_quality_valuelife(self) -> int:
+        """Get air quality value."""
+        try:
+            return int(self.details['air_quality_value'])
+        except KeyError:
+            return 0
 
     @property
     def display_state(self) -> bool:
@@ -546,6 +554,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         disp1 = [
             ('Mode: ', self.mode, ''),
             ('Filter Life: ', self.details['filter_life'], 'percent'),
+            ('Air Quality Value: ', self.details['air_quality_value'], ''),
             ('Fan Level: ', self.speed, ''),
             ('Display: ', self.details['display'], ''),
             ('Child Lock: ', self.details['child_lock'], ''),
@@ -568,6 +577,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             {
                 'Mode': self.mode,
                 'Filter Life': str(self.details['filter_life']),
+                'Air Quality Value': str(self.details['air_quality_value']),
                 'Fan Level': str(self.speed),
                 'Display': self.details['display'],
                 'Child Lock': self.details['child_lock'],
@@ -610,6 +620,7 @@ class VeSyncAir131(VeSyncBaseDevice):
             self.connection_status = r.get('connectionStatus', 'unknown')
             self.details['active_time'] = r.get('activeTime', 0)
             self.details['filter_life'] = r.get('filterLife', {})
+            self.details['air_quality_value'] = r.get('air_quality_value', {})
             self.details['screen_status'] = r.get('screenStatus', 'unknown')
             self.mode = r.get('mode', self.mode)
             self.details['level'] = r.get('level', 0)
