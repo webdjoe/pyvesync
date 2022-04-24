@@ -184,7 +184,8 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         else:
             self.device_status = 'off'
         self.details['filter_life'] = dev_dict.get('filter_life', 0)
-        self.details['air_quality_value'] = dev_dict.get('air_quality_value', 0)
+        self.details['air_quality_value'] = dev_dict.get('air_quality_value',
+                                                         0)
         self.mode = dev_dict.get('mode', 'manual')
         self.speed = dev_dict.get('level', 0)
         self.details['display'] = dev_dict.get('display', False)
@@ -520,6 +521,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             return int(self.details['filter_life'])
         except KeyError:
             return 0
+
     @property
     def filter_air_quality_valuelife(self) -> int:
         """Get air quality value."""
