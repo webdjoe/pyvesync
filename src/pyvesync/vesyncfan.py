@@ -523,7 +523,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             return 0
 
     @property
-    def filter_air_quality_valuelife(self) -> int:
+    def filter_air_quality_value(self) -> int:
         """Get air quality value."""
         try:
             return int(self.details['air_quality_value'])
