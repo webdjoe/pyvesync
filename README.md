@@ -262,6 +262,8 @@ VeSyncFan.details = {
 
 ```
 
+NOTE: LV-PUR131S outputs `air_quality` as a string, such as `Excellent` 
+
 `VeSyncFan.features` - Unique features to air purifier model. Currently, the only feature is air_quality, which is not supported on Core 200S.
 
 `VeSyncFan.modes` - Modes of operation supported by model - [sleep, off, auto]
@@ -270,7 +272,9 @@ VeSyncFan.details = {
 
 `VeSyncFan.filter_life` - Return the percentage of filter life remaining
 
-`VeSyncFan.air_quality` - Return air quality reading - Not available on Core 200S
+`VeSyncFan.air_quality` - Return air quality level as integer, 1 being the best - Not available on Core 200S
+
+`VeSyncFan.air_quality_value` - PM2.5 air quality reading
 
 `VeSyncFan.screen_status` - Get Status of screen on/off
 

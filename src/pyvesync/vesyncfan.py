@@ -146,7 +146,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             'night_light': 'off',
         }
         if self.air_quality_feature is True:
-            self.details['ait_quality'] = 0
+            self.details['air_quality'] = 0
         self.config: Dict[str, Union[str, int, float, bool]] = {
             'display': False,
             'display_forever': False
@@ -184,8 +184,6 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         else:
             self.device_status = 'off'
         self.details['filter_life'] = dev_dict.get('filter_life', 0)
-        self.details['air_quality_value'] = dev_dict.get('air_quality_value',
-                                                         0)
         self.mode = dev_dict.get('mode', 'manual')
         self.speed = dev_dict.get('level', 0)
         self.details['display'] = dev_dict.get('display', False)
@@ -195,6 +193,8 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         self.details['display_forever'] = dev_dict.get('display_forever',
                                                        False)
         if self.air_quality_feature:
+            self.details['air_quality_value'] = dev_dict.get(
+                'air_quality_value', 0)
             self.details['air_quality'] = dev_dict.get('air_quality', 0)
 
     def build_config_dict(self, conf_dict: Dict[str, str]) -> None:
@@ -523,14 +523,6 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             return 0
 
     @property
-    def filter_air_quality_value(self) -> int:
-        """Get air quality value."""
-        try:
-            return int(self.details['air_quality_value'])
-        except KeyError:
-            return 0
-
-    @property
     def display_state(self) -> bool:
         """Get display state."""
         return bool(self.details['display'])
@@ -556,7 +548,6 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         disp1 = [
             ('Mode: ', self.mode, ''),
             ('Filter Life: ', self.details['filter_life'], 'percent'),
-            ('Air Quality Value: ', self.details['air_quality_value'], ''),
             ('Fan Level: ', self.speed, ''),
             ('Display: ', self.details['display'], ''),
             ('Child Lock: ', self.details['child_lock'], ''),
@@ -579,7 +570,6 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             {
                 'Mode': self.mode,
                 'Filter Life': str(self.details['filter_life']),
-                'Air Quality Value': str(self.details['air_quality_value']),
                 'Fan Level': str(self.speed),
                 'Display': self.details['display'],
                 'Child Lock': self.details['child_lock'],
@@ -622,7 +612,6 @@ class VeSyncAir131(VeSyncBaseDevice):
             self.connection_status = r.get('connectionStatus', 'unknown')
             self.details['active_time'] = r.get('activeTime', 0)
             self.details['filter_life'] = r.get('filterLife', {})
-            self.details['air_quality_value'] = r.get('air_quality_value', {})
             self.details['screen_status'] = r.get('screenStatus', 'unknown')
             self.mode = r.get('mode', self.mode)
             self.details['level'] = r.get('level', 0)
@@ -813,7 +802,7 @@ class VeSyncAir131(VeSyncBaseDevice):
             ('Air Quality: ', self.air_quality, ''),
             ('Mode: ', self.mode, ''),
             ('Screen Status: ', self.screen_status, ''),
-            ('Filter Life: ', self.filter_life, ' percent'),
+            ('Filter Life: ', json.dumps(self.filter_life), ' percent'),
         ]
         for line in disp1:
             print(f'{line[0]:.<15} {line[1]} {line[2]}')
@@ -829,7 +818,7 @@ class VeSyncAir131(VeSyncBaseDevice):
                 'Air Quality': self.air_quality,
                 'Mode': self.mode,
                 'Screen Status': self.screen_status,
-                'Filter Life': str(self.filter_life),
+                'Filter Life': str(self.filter_life)
             }
         )
         return sup_val
