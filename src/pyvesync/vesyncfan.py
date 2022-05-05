@@ -560,7 +560,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             disp1.extend([('Air Quality Level: ',
                           self.details['air_quality'], ''),
                           ('Air Quality Value: ',
-                           self.details['air_quality_value'],'ug/m3')
+                           self.details['air_quality_value'], 'ug/m3')
                           ])
         for line in disp1:
             print(f'{line[0]:.<20} {line[1]} {line[2]}')
