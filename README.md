@@ -102,7 +102,7 @@ To start with the module:
 ```python
 from pyvesync import VeSync
 
-manager = VeSync("EMAIL", "PASSWORD", "TIME_ZONE")
+manager = VeSync("EMAIL", "PASSWORD", "TIME_ZONE", debug=False)
 manager.login()
 
 # Get/Update Devices from server - populate device lists
@@ -543,44 +543,46 @@ This output only applies to dimmable switch.  The standard switch has the defaul
 
 ```python
 {
-	"Device Name": "MyPurifier",
-	"Model": "Core200S",
-	"Subdevice No": "None",
-	"Status": "on",
-	"Online": "online",
-	"Type": "wifi-air",
-	"CID": "<CID>",
-	"Mode": "manual",
-	"Filter Life": "100",
-  "Air Quality": "5",
-	"Fan Level": "1",
-	"Display": true,
-	"Child Lock": false,
-	"Night Light": "off",
-	"Display Config": true,
-	"Display_Forever Config": false
+  "Device Name": "MyPurifier",
+  "Model": "Core200S",
+  "Subdevice No": "None",
+  "Status": "on",
+  "Online": "online",
+  "Type": "wifi-air",
+  "CID": "<CID>",
+  "Mode": "manual",
+  "Filter Life": "100",
+  "Air Quality Level": "5",
+  "Air Quality Value": "1",
+  "Fan Level": "1",
+  "Display": true,
+  "Child Lock": false,
+  "Night Light": "off",
+  "Display Config": true,
+  "Display_Forever Config": false
 }
 ```
 #### JSON Output for 600S Purifier
 
 ```python
 {
-	"Device Name": "My 600s",
-	"Model": "LAP-C601S-WUS",
-	"Subdevice No": "None",
-	"Status": "on",
-	"Online": "online",
-	"Type": "wifi-air",
-	"CID": "<CID>",
-	"Mode": "manual",
-	"Filter Life": "98",
-    "Air Quality": "4",
-	"Fan Level": "3",
-	"Display": true,
-	"Child Lock": false,
-	"Night Light": "off",
-	"Display Config": true,
-	"Display_Forever Config": false
+  "Device Name": "My 600s",
+  "Model": "LAP-C601S-WUS",
+  "Subdevice No": "None",
+  "Status": "on",
+  "Online": "online",
+  "Type": "wifi-air",
+  "CID": "<CID>",
+  "Mode": "manual",
+  "Filter Life": "98",
+  "Air Quality Level": "5",
+  "Air Quality Value": "1",
+  "Fan Level": "3",
+  "Display": true,
+  "Child Lock": false,
+  "Night Light": "off",
+  "Display Config": true,
+  "Display_Forever Config": false
 }
 ```
 
