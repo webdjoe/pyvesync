@@ -557,8 +557,11 @@ class VeSyncAirBypass(VeSyncBaseDevice):
              self.config['display_forever'], '')
         ]
         if self.air_quality_feature:
-            disp1.append(('Air Quality: ',
-                          self.details['air_quality'], 'ug/m3'))
+            disp1.extend([('Air Quality Level: ',
+                          self.details['air_quality'], ''),
+                          ('Air Quality Value: ',
+                           self.details['air_quality_value'],'ug/m3')
+                          ])
         for line in disp1:
             print(f'{line[0]:.<20} {line[1]} {line[2]}')
 
@@ -579,9 +582,9 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             }
         )
         if self.air_quality_feature:
-            sup_val.update(
-                {'Air Quality': str(self.details['air_quality'])}
-            )
+            sup_val['Air Quality Level'] = str(self.details['air_quality'])
+            sup_val['Air Quality Value'] = str(
+                self.details['air_quality_value'])
         return json.dumps(sup_val)
 
 
@@ -802,8 +805,8 @@ class VeSyncAir131(VeSyncBaseDevice):
             ('Air Quality: ', self.air_quality, ''),
             ('Mode: ', self.mode, ''),
             ('Screen Status: ', self.screen_status, ''),
-            ('Filter Life: ', json.dumps(self.filter_life), ' percent'),
-        ]
+            ('Filter Life: ', json.dumps(self.filter_life), ' percent')
+            ]
         for line in disp1:
             print(f'{line[0]:.<15} {line[1]} {line[2]}')
 
