@@ -217,7 +217,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
-            json=body,
+            json_object=body,
         )
         if not isinstance(r, dict):
             logger.debug('Error in purifier response')
@@ -285,7 +285,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
-            json=body,
+            json_object=body,
         )
 
         if r is not None and Helpers.code_check(r):
@@ -320,7 +320,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
-            json=body,
+            json_object=body,
         )
 
         if r is not None and Helpers.code_check(r):
@@ -360,7 +360,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
-            json=body,
+            json_object=body,
         )
 
         if Helpers.code_check(r):
@@ -412,7 +412,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
-            json=body,
+            json_object=body,
         )
 
         if r is not None and Helpers.code_check(r):
@@ -449,7 +449,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
-            json=body,
+            json_object=body,
         )
 
         if r is not None and Helpers.code_check(r):
@@ -483,7 +483,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
-            json=body,
+            json_object=body,
         )
 
         if r is not None and Helpers.code_check(r):
@@ -543,7 +543,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
     def display(self) -> None:
         """Return formatted device info to stdout."""
         super().display()
-        disp1 = [
+        disp = [
             ('Mode: ', self.mode, ''),
             ('Filter Life: ', self.details['filter_life'], 'percent'),
             ('Fan Level: ', self.speed, ''),
@@ -555,10 +555,10 @@ class VeSyncAirBypass(VeSyncBaseDevice):
              self.config['display_forever'], '')
         ]
         if self.air_quality_feature:
-            disp1.append(('Air Quality: ',
+            disp.append(('Air Quality: ',
                           self.details['air_quality'], 'ug/m3'))
-        for line in disp1:
-            print(f'{line[0]:.<20} {line[1]} {line[2]}')
+        for line in disp:
+            print(f'{line[0]:.<30} {line[1]} {line[2]}')
 
     def displayJSON(self) -> str:
         """Return air purifier status and properties in JSON output."""
@@ -580,7 +580,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             sup_val.update(
                 {'Air Quality': str(self.details['air_quality'])}
             )
-        return json.dumps(sup_val)
+        return json.dumps(sup_val, indent = 4)
 
 
 class VeSyncAir131(VeSyncBaseDevice):
@@ -602,7 +602,7 @@ class VeSyncAir131(VeSyncBaseDevice):
             '/131airPurifier/v1/device/deviceDetail',
             method='post',
             headers=head,
-            json=body,
+            json_object=body,
         )
 
         if r is not None and Helpers.code_check(r):
@@ -627,7 +627,7 @@ class VeSyncAir131(VeSyncBaseDevice):
             '/131airpurifier/v1/device/configurations',
             'post',
             headers=Helpers.req_headers(self.manager),
-            json=body,
+            json_object=body,
         )
 
         if r is not None and Helpers.code_check(r):
@@ -674,7 +674,7 @@ class VeSyncAir131(VeSyncBaseDevice):
 
             r, _ = Helpers.call_api(
                 '/131airPurifier/v1/device/deviceStatus', 'put',
-                json=body, headers=head
+                json_object=body, headers=head
             )
 
             if r is not None and Helpers.code_check(r):
@@ -694,7 +694,7 @@ class VeSyncAir131(VeSyncBaseDevice):
 
             r, _ = Helpers.call_api(
                 '/131airPurifier/v1/device/deviceStatus', 'put',
-                json=body, headers=head
+                json_object=body, headers=head
             )
 
             if r is not None and Helpers.code_check(r):
@@ -756,7 +756,7 @@ class VeSyncAir131(VeSyncBaseDevice):
 
         r, _ = Helpers.call_api(
             '/131airPurifier/v1/device/updateSpeed', 'put',
-            json=body, headers=head
+            json_object=body, headers=head
         )
 
         if r is not None and Helpers.code_check(r):
@@ -777,7 +777,7 @@ class VeSyncAir131(VeSyncBaseDevice):
 
             r, _ = Helpers.call_api(
                 '/131airPurifier/v1/device/updateMode', 'put',
-                json=body, headers=head
+                json_object=body, headers=head
             )
 
             if r is not None and Helpers.code_check(r):
@@ -794,7 +794,7 @@ class VeSyncAir131(VeSyncBaseDevice):
     def display(self) -> None:
         """Return formatted device info to stdout."""
         super().display()
-        disp1 = [
+        disp = [
             ('Active Time : ', self.active_time, ' minutes'),
             ('Fan Level: ', self.fan_level, ''),
             ('Air Quality: ', self.air_quality, ''),
@@ -802,8 +802,8 @@ class VeSyncAir131(VeSyncBaseDevice):
             ('Screen Status: ', self.screen_status, ''),
             ('Filter Life: ', self.filter_life, ' percent'),
         ]
-        for line in disp1:
-            print(f'{line[0]:.<15} {line[1]} {line[2]}')
+        for line in disp:
+            print(f'{line[0]:.<30} {line[1]} {line[2]}')
 
     def displayJSON(self) -> str:
         """Return air purifier status and properties in JSON output."""
@@ -819,7 +819,7 @@ class VeSyncAir131(VeSyncBaseDevice):
                 'Filter Life': str(self.filter_life),
             }
         )
-        return sup_val
+        return json.dumps(sup_val, indent = 4)
 
 
 class VeSyncHumid200300S(VeSyncBaseDevice):
@@ -939,7 +939,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
-            json=body,
+            json_object=body,
         )
         if r is None or not isinstance(r, dict):
             logger.debug("Error getting status of %s ", self.device_name)
@@ -988,7 +988,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
-            json=body,
+            json_object=body,
         )
 
         if r is not None and Helpers.code_check(r):
@@ -1036,7 +1036,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
-            json=body,
+            json_object=body,
         )
 
         if r is not None and Helpers.code_check(r):
@@ -1063,7 +1063,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
-            json=body,
+            json_object=body,
         )
 
         if r is not None and Helpers.code_check(r):
@@ -1097,7 +1097,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
-            json=body,
+            json_object=body,
         )
 
         if r is not None and Helpers.code_check(r):
@@ -1127,7 +1127,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
-            json=body,
+            json_object=body,
         )
 
         if r is not None and Helpers.code_check(r):
@@ -1154,7 +1154,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
-            json=body,
+            json_object=body,
         )
 
         if r is not None and Helpers.code_check(r):
@@ -1192,7 +1192,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
-            json=body,
+            json_object=body,
         )
 
         if r is not None and Helpers.code_check(r):
@@ -1242,7 +1242,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
-            json=body,
+            json_object=body,
         )
 
         if r is not None and Helpers.code_check(r):
@@ -1288,7 +1288,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
     def display(self) -> None:
         """Return formatted device info to stdout."""
         super().display()
-        disp1 = [
+        disp = [
             ('Mode: ', self.details['mode'], ''),
             ('Humidity: ', self.details['humidity'], 'percent'),
             ('Mist Virtual Level: ', self.details['mist_virtual_level'], ''),
@@ -1304,15 +1304,15 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
             ('Automatic Stop: ', self.config['automatic_stop'], ''),
         ]
         if self.night_light:
-            disp1.append(('Night Light Brightness: ',
+            disp.append(('Night Light Brightness: ',
                           self.details['night_light_brightness'], 'percent'))
         if self.warm_mist_feature:
-            disp1.append(('Warm mist enabled: ',
+            disp.append(('Warm mist enabled: ',
                           self.details['warm_mist_enabled'], ''))
-            disp1.append(('Warm mist level: ',
+            disp.append(('Warm mist level: ',
                           self.details['warm_mist_level'], ''))
-        for line in disp1:
-            print(f'{line[0]:.<29} {line[1]} {line[2]}')
+        for line in disp:
+            print(f'{line[0]:.<30} {line[1]} {line[2]}')
 
     def displayJSON(self) -> str:
         """Return air purifier status and properties in JSON output."""
@@ -1342,7 +1342,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
         if self.warm_mist_feature:
             sup_val['Warm mist enabled'] = self.details['warm_mist_enabled']
             sup_val['Warm mist level'] = self.details['warm_mist_level']
-        return json.dumps(sup_val)
+        return json.dumps(sup_val, indent = 4)
 
 
 class VeSyncHumid200S(VeSyncHumid200300S):
@@ -1372,7 +1372,7 @@ class VeSyncHumid200S(VeSyncHumid200300S):
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
-            json=body,
+            json_object=body,
         )
 
         if r is not None and Helpers.code_check(r):

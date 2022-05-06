@@ -90,7 +90,7 @@ class VeSyncWallSwitch(VeSyncSwitch):
 
         r, _ = helpers.call_api(
             '/inwallswitch/v1/device/devicedetail', 'post',
-            headers=head, json=body
+            headers=head, json_object=body
         )
 
         if r is not None and helpers.code_check(r):
@@ -111,7 +111,7 @@ class VeSyncWallSwitch(VeSyncSwitch):
             '/inwallswitch/v1/device/configurations',
             'post',
             headers=helpers.req_headers(self.manager),
-            json=body,
+            json_object=body,
         )
 
         if helpers.code_check(r):
@@ -129,7 +129,7 @@ class VeSyncWallSwitch(VeSyncSwitch):
 
         r, _ = helpers.call_api(
             '/inwallswitch/v1/device/devicestatus', 'put',
-            headers=head, json=body
+            headers=head, json_object=body
         )
 
         if r is not None and helpers.code_check(r):
@@ -147,7 +147,7 @@ class VeSyncWallSwitch(VeSyncSwitch):
 
         r, _ = helpers.call_api(
             '/inwallswitch/v1/device/devicestatus', 'put',
-            headers=head, json=body
+            headers=head, json_object=body
         )
 
         if r is not None and helpers.code_check(r):
@@ -175,7 +175,7 @@ class VeSyncDimmerSwitch(VeSyncSwitch):
         head = helpers.req_headers(self.manager)
 
         r, _ = helpers.call_api(
-            '/dimmer/v1/device/devicedetail', 'post', headers=head, json=body
+            '/dimmer/v1/device/devicedetail', 'post', headers=head, json_object=body
         )
 
         if r is not None and helpers.code_check(r):
@@ -222,7 +222,7 @@ class VeSyncDimmerSwitch(VeSyncSwitch):
 
         r, _ = helpers.call_api(
             '/dimmer/v1/device/devicestatus', 'put',
-            headers=head, json=body
+            headers=head, json_object=body
         )
 
         if r is not None and helpers.code_check(r):
@@ -253,7 +253,7 @@ class VeSyncDimmerSwitch(VeSyncSwitch):
 
         r, _ = helpers.call_api(
             '/dimmer/v1/device/indicatorlightstatus',
-            'put', headers=head, json=body
+            'put', headers=head, json_object=body
         )
 
         if r is not None and helpers.code_check(r):
@@ -286,7 +286,7 @@ class VeSyncDimmerSwitch(VeSyncSwitch):
 
         r, _ = helpers.call_api(
             '/dimmer/v1/device/devicergbstatus', 'put',
-            headers=head, json=body
+            headers=head, json_object=body
         )
 
         if r is not None and helpers.code_check(r):
@@ -329,7 +329,7 @@ class VeSyncDimmerSwitch(VeSyncSwitch):
 
             r, _ = helpers.call_api(
                 '/dimmer/v1/device/updatebrightness', 'put',
-                headers=head, json=body
+                headers=head, json_object=body
             )
 
             if r is not None and helpers.code_check(r):
@@ -351,7 +351,7 @@ class VeSyncDimmerSwitch(VeSyncSwitch):
                     'RGB Light': str(self._rgb_status),
                 }
             )
-        return sup_val
+        return json.dumps(sup_val, indent = 4)
 
     def get_config(self) -> None:
         """Get dimmable switch device configuration info."""
@@ -363,7 +363,7 @@ class VeSyncDimmerSwitch(VeSyncSwitch):
             '/dimmer/v1/device/configurations',
             'post',
             headers=helpers.req_headers(self.manager),
-            json=body,
+            json_object=body,
         )
 
         if helpers.code_check(r):

@@ -5,6 +5,7 @@ import re
 import time
 from itertools import chain
 from typing import Tuple
+import pyvesync.helpers
 from pyvesync.helpers import Helpers
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 from pyvesync.vesyncbulb import *   # noqa: F403, F401
@@ -72,6 +73,11 @@ class VeSync:  # pylint: disable=function-redefined
         self.debug = debug
         if debug:
             logger.setLevel(logging.DEBUG)
+            bulb_mods.logger.setLevel(logging.DEBUG)
+            switch_mods.logger.setLevel(logging.DEBUG)
+            outlet_mods.logger.setLevel(logging.DEBUG)
+            fan_mods.logger.setLevel(logging.DEBUG)
+            pyvesync.helpers.logger.setLevel(logging.DEBUG)
         self.username = username
         self.password = password
         self.token = None
@@ -231,15 +237,15 @@ class VeSync:  # pylint: disable=function-redefined
         response, _ = Helpers.call_api(
             '/cloud/v1/deviceManaged/devices',
             'post',
-            headers=Helpers.req_headers(self),
-            json=Helpers.req_body(self, 'devicelist'),
+            headers=Helpers.req_header_bypass(),
+            json_object=Helpers.req_body(self, 'devicelist'),
         )
 
         if response and Helpers.code_check(response):
             if 'result' in response and 'list' in response['result']:
                 device_list = response['result']['list']
-                if self.debug:
-                    logger.debug(str(device_list))
+                #if self.debug:
+                #    logger.debug(str(device_list))
                 proc_return = self.process_devices(device_list)
             else:
                 logger.error('Device list in response not found')
@@ -263,13 +269,16 @@ class VeSync:  # pylint: disable=function-redefined
 
         response, _ = Helpers.call_api(
             '/cloud/v1/user/login', 'post',
-            json=Helpers.req_body(self, 'login')
+            json_object=Helpers.req_body(self, 'login')
         )
 
         if Helpers.code_check(response) and 'result' in response:
             self.token = response.get('result').get('token')
             self.account_id = response.get('result').get('accountID')
             self.enabled = True
+            logger.debug('Login successful')
+            logger.debug('token %s',self.token)
+            logger.debug('account_id %s',self.account_id)
 
             return True
         logger.error('Error logging in with username and password')
@@ -295,6 +304,7 @@ class VeSync:  # pylint: disable=function-redefined
 
             devices = list(self._dev_list.values())
 
+            logger.debug('Start updating the device details one by one')
             for device in chain(*devices):
                 device.update()
 

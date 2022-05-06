@@ -39,6 +39,14 @@ class Helpers:
         return headers
 
     @staticmethod
+    def req_header_bypass() -> dict:
+        """Build header for api requests on 'bypass' endpoint."""
+        return {
+            'Content-Type': 'application/json; charset=UTF-8',
+            'User-Agent': 'okhttp/3.12.1'
+            }
+
+    @staticmethod
     def req_body_base(manager) -> dict:
         """Return universal keys for body of api requests."""
         return {'timeZone': manager.time_zone, 'acceptLanguage': 'en'}
@@ -122,6 +130,14 @@ class Helpers:
                 **cls.req_body_details(),
             }
             body['method'] = 'bypass'
+        elif type_ == 'bypassV2':
+            body = {
+                **cls.req_body_base(manager),
+                **cls.req_body_auth(manager),
+                **cls.req_body_details(),
+            }
+            body['deviceRegion'] = DEFAULT_REGION
+            body['method'] = 'bypassV2'
         elif type_ == 'bypass_config':
             body = {
                 **cls.req_body_base(manager),
@@ -147,29 +163,34 @@ class Helpers:
 
     @staticmethod
     def call_api(
-        api: str, method: str, json: dict = None, headers: dict = None
+        api: str, method: str, json_object: dict = None, headers: dict = None
     ) -> tuple:
         """Make API calls by passing endpoint, header and body."""
         response = None
         status_code = None
 
         try:
+            logger.debug("=======call_api=============================")
             logger.debug("[%s] calling '%s' api", method, api)
             if method.lower() == 'get':
                 r = requests.get(
-                    API_BASE_URL + api, json=json, headers=headers,
+                    API_BASE_URL + api, json=json_object, headers=headers,
                     timeout=API_TIMEOUT
                 )
             elif method.lower() == 'post':
                 r = requests.post(
-                    API_BASE_URL + api, json=json, headers=headers,
+                    API_BASE_URL + api, json=json_object, headers=headers,
                     timeout=API_TIMEOUT
                 )
             elif method.lower() == 'put':
                 r = requests.put(
-                    API_BASE_URL + api, json=json, headers=headers,
+                    API_BASE_URL + api, json=json_object, headers=headers,
                     timeout=API_TIMEOUT
                 )
+            logger.debug("API call URL: \n  %s", r.request.url)
+            logger.debug("API call headers: \n  %s", r.request.headers)
+            logger.debug("API call json: \n  %s", r.request.body)
+               
         except requests.exceptions.RequestException as e:
             logger.debug(e)
         except Exception as e:  # pylint: disable=broad-except
@@ -181,13 +202,18 @@ class Helpers:
                     response = r.json()
             else:
                 logger.debug('Unable to fetch %s%s', API_BASE_URL, api)
+        logger.debug("API response: \n\n  %s \n ",response)
         return response, status_code
 
     @staticmethod
     def code_check(r: dict) -> bool:
         """Test if code == 0 for successful API call."""
+        if r is None:
+            logger.error('No response from API')
+            return False
         if isinstance(r, dict) and r.get('code') == 0:
             return True
+        logger.debug('Unknown return code - %d with message %s',r.get('code'), r.get('msg'))
         return False
 
     @staticmethod

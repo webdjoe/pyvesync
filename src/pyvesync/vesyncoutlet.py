@@ -134,7 +134,7 @@ class VeSyncOutlet(VeSyncBaseDevice):
     def display(self):
         """Return formatted device info to stdout."""
         super().display()
-        disp1 = [
+        disp = [
             ('Active Time : ', self.active_time, ' minutes'),
             ('Energy: ', self.energy_today, ' kWh'),
             ('Power: ', self.power, ' Watts'),
@@ -143,8 +143,8 @@ class VeSyncOutlet(VeSyncBaseDevice):
             ('Energy Month: ', self.monthly_energy_total, ' kWh'),
             ('Energy Year: ', self.yearly_energy_total, ' kWh'),
         ]
-        for line in disp1:
-            print(f'{line[0]:.<15} {line[1]} {line[2]}')
+        for line in disp:
+            print(f'{line[0]:.<30} {line[1]} {line[2]}')
 
     def displayJSON(self):
         """Return JSON details for outlet."""
@@ -162,7 +162,7 @@ class VeSyncOutlet(VeSyncBaseDevice):
             }
         )
 
-        return sup_val
+        return json.dumps(sup_val, indent = 4)
 
 
 class VeSyncOutlet7A(VeSyncOutlet):
@@ -308,7 +308,7 @@ class VeSyncOutlet10A(VeSyncOutlet):
             '/10a/v1/device/devicedetail',
             'post',
             headers=Helpers.req_headers(self.manager),
-            json=body,
+            json_object=body,
         )
 
         if Helpers.code_check(r):
@@ -329,7 +329,7 @@ class VeSyncOutlet10A(VeSyncOutlet):
             '/10a/v1/device/configurations',
             'post',
             headers=Helpers.req_headers(self.manager),
-            json=body,
+            json_object=body,
         )
 
         if Helpers.code_check(r):
@@ -346,7 +346,7 @@ class VeSyncOutlet10A(VeSyncOutlet):
             '/10a/v1/device/energyweek',
             'post',
             headers=Helpers.req_headers(self.manager),
-            json=body,
+            json_object=body,
         )
 
         if Helpers.code_check(response):
@@ -363,7 +363,7 @@ class VeSyncOutlet10A(VeSyncOutlet):
             '/10a/v1/device/energymonth',
             'post',
             headers=Helpers.req_headers(self.manager),
-            json=body,
+            json_object=body,
         )
 
         if Helpers.code_check(response):
@@ -380,7 +380,7 @@ class VeSyncOutlet10A(VeSyncOutlet):
             '/10a/v1/device/energyyear',
             'post',
             headers=Helpers.req_headers(self.manager),
-            json=body,
+            json_object=body,
         )
 
         if Helpers.code_check(response):
@@ -398,7 +398,7 @@ class VeSyncOutlet10A(VeSyncOutlet):
             '/10a/v1/device/devicestatus',
             'put',
             headers=Helpers.req_headers(self.manager),
-            json=body,
+            json_object=body,
         )
 
         if Helpers.code_check(response):
@@ -417,7 +417,7 @@ class VeSyncOutlet10A(VeSyncOutlet):
             '/10a/v1/device/devicestatus',
             'put',
             headers=Helpers.req_headers(self.manager),
-            json=body,
+            json_object=body,
         )
 
         if Helpers.code_check(response):
@@ -445,7 +445,7 @@ class VeSyncOutlet15A(VeSyncOutlet):
             '/15a/v1/device/devicedetail',
             'post',
             headers=Helpers.req_headers(self.manager),
-            json=body,
+            json_object=body,
         )
 
         attr_list = (
@@ -479,7 +479,7 @@ class VeSyncOutlet15A(VeSyncOutlet):
             '/15a/v1/device/configurations',
             'post',
             headers=Helpers.req_headers(self.manager),
-            json=body,
+            json_object=body,
         )
 
         if Helpers.code_check(r):
@@ -496,7 +496,7 @@ class VeSyncOutlet15A(VeSyncOutlet):
             '/15a/v1/device/energyweek',
             'post',
             headers=Helpers.req_headers(self.manager),
-            json=body,
+            json_object=body,
         )
 
         if Helpers.code_check(response):
@@ -513,7 +513,7 @@ class VeSyncOutlet15A(VeSyncOutlet):
             '/15a/v1/device/energymonth',
             'post',
             headers=Helpers.req_headers(self.manager),
-            json=body,
+            json_object=body,
         )
 
         if Helpers.code_check(response):
@@ -530,7 +530,7 @@ class VeSyncOutlet15A(VeSyncOutlet):
             '/15a/v1/device/energyyear',
             'post',
             headers=Helpers.req_headers(self.manager),
-            json=body,
+            json_object=body,
         )
 
         if Helpers.code_check(response):
@@ -548,7 +548,7 @@ class VeSyncOutlet15A(VeSyncOutlet):
             '/15a/v1/device/devicestatus',
             'put',
             headers=Helpers.req_headers(self.manager),
-            json=body,
+            json_object=body,
         )
 
         if Helpers.code_check(response):
@@ -567,7 +567,7 @@ class VeSyncOutlet15A(VeSyncOutlet):
             '/15a/v1/device/devicestatus',
             'put',
             headers=Helpers.req_headers(self.manager),
-            json=body,
+            json_object=body,
         )
 
         if Helpers.code_check(response):
@@ -587,7 +587,7 @@ class VeSyncOutlet15A(VeSyncOutlet):
             '/15a/v1/device/nightlightstatus',
             'put',
             headers=Helpers.req_headers(self.manager),
-            json=body,
+            json_object=body,
         )
 
         if Helpers.code_check(response):
@@ -605,7 +605,7 @@ class VeSyncOutlet15A(VeSyncOutlet):
             '/15a/v1/device/nightlightstatus',
             'put',
             headers=Helpers.req_headers(self.manager),
-            json=body,
+            json_object=body,
         )
 
         if Helpers.code_check(response):
@@ -629,7 +629,7 @@ class VeSyncOutdoorPlug(VeSyncOutlet):
             '/outdoorsocket15a/v1/device/devicedetail',
             'post',
             headers=Helpers.req_headers(self.manager),
-            json=body,
+            json_object=body,
         )
 
         if Helpers.code_check(r):
@@ -655,7 +655,7 @@ class VeSyncOutdoorPlug(VeSyncOutlet):
             '/outdoorsocket15a/v1/device/configurations',
             'post',
             headers=Helpers.req_headers(self.manager),
-            json=body,
+            json_object=body,
         )
 
         if Helpers.code_check(r):
@@ -671,7 +671,7 @@ class VeSyncOutdoorPlug(VeSyncOutlet):
             '/outdoorsocket15a/v1/device/energyweek',
             'post',
             headers=Helpers.req_headers(self.manager),
-            json=body,
+            json_object=body,
         )
 
         if Helpers.code_check(response):
@@ -688,7 +688,7 @@ class VeSyncOutdoorPlug(VeSyncOutlet):
             '/outdoorsocket15a/v1/device/energymonth',
             'post',
             headers=Helpers.req_headers(self.manager),
-            json=body,
+            json_object=body,
         )
 
         if Helpers.code_check(response):
@@ -704,7 +704,7 @@ class VeSyncOutdoorPlug(VeSyncOutlet):
             '/outdoorsocket15a/v1/device/energyyear',
             'post',
             headers=Helpers.req_headers(self.manager),
-            json=body,
+            json_object=body,
         )
 
         if Helpers.code_check(response):
@@ -723,7 +723,7 @@ class VeSyncOutdoorPlug(VeSyncOutlet):
             '/outdoorsocket15a/v1/device/devicestatus',
             'put',
             headers=Helpers.req_headers(self.manager),
-            json=body,
+            json_object=body,
         )
 
         if Helpers.code_check(response):

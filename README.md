@@ -89,6 +89,9 @@ pip install pyvesync
 1. Soft White Dimmable Smart Bulb (ESL100)
 2. Cool to Soft White Tunable Dimmable Bulb (ESL100CW)
 
+### Valceno Bulbs
+1. Multicolor Bulb (XYD0001)
+
 ### Levoit Humidifiers
 1. Dual 200S
 2. Classic 300S
@@ -321,6 +324,41 @@ Compatible levels for each model:
 `VeSyncBulb.color_temp_kelvin` - Return brightness in Kelvin
 
 `VeSyncBulb.set_color_temp(color_temp)` - Set color temperature in percentage (0 - 100)
+
+### Multicolor Smart Light Bulb Methods and Properties
+
+**Properties**
+
+`VeSyncBulb.brightness` - Return brightness in percentage (1 - 100)
+
+`VeSyncBulb.color_temp_pct` - Return white temperature in percentage (0 - 100)
+
+`VeSyncBulb.color_temp_kelvin` - Return white temperature in Kelvin
+
+`VeSyncBulb.color_value_hsv` - Return color value in HSV format
+
+`VeSyncBulb.color_value_rgb` - Return color value in RGB format
+
+`VeSyncBulb.color_mode` - Return bulb color mode (string values: 'white' , 'hsv' )
+
+`VeSyncBulb.color_hue` - Return color hue (float values from 0.0 - 360.0)
+
+`VeSyncBulb.color_saturation` - Return color saturation (float values from 0.0 - 100.0)
+
+`VeSyncBulb.color_value` - Return color value, equivalent to brightness in color mode (int values from 0 - 100)
+
+**Methods**
+
+`VeSyncBulb.set_brightness(brightness)` - Set bulb brightness (int values from 0 - 100) (also used to set Color brightness value when in color mode)
+
+`VeSyncBulb.set_color_mode(color_mode)` - Set bulb color mode (string values: 'white' , 'hsv' )
+('color' may be used as an alias to 'hsv')
+
+`VeSyncBulb.set_color_temp(color_temp)` - Set bulb white temperature (int values from 0 - 100)
+
+`VeSyncBulb.set_color_hue(color_hue)` - Set color hue (float values from 0.0 - 360.0)
+
+`VeSyncBulb.set_color_saturation(color_saturation)` - Set color saturation (float values from 0.0 - 100.0)
 
 ### Dimmable Switch Methods and Properties
 
