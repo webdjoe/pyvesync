@@ -17,6 +17,7 @@ TRACE_ID = str(int(time.time()))
 """
 DEFAULT_BODY = Standard body for new device calls
 DEFAULT_HEADER = standard header for most calls
+DEFAULT_HEADER_BYPASS = standard header for most calls api V2
 ENERGY_HISTORY = standard outlet energy history response
 -------------------------------------------------------
 login_call_body(email, pass) = body of login call
@@ -30,7 +31,6 @@ LIST_CONF_AIR = device list entry for air purifier
 LIST_CONF_15A = device list entry for 15A outlet
 LIST_CONF_WS = device list entry for wall switch
 LIST_CONF_ESL100 = device list entry for bulb ESL100
-LIST_CONF_XYD0001 = device list entry for bulb Valceno A19 Multicolor US
 LIST_CONF_OUTDOOR_1 = devlice list entry for outdoor outlet subDevice 1
 LIST_CONF_OUTDOOR_2 = devlice list entry for outdoor outlet subDevice 2
 DEVLIST_ALL = Return tuple for all devices
@@ -41,7 +41,6 @@ DEVLIST_15A = device list return for only 15A outlet
 DEVLIST_WS = device list return for only wall switch
 DEVLIST_AIR = device list return for just air purifier
 DEVLIST_ESL100 = device list return for just ESL100 bulb
-DEVLIST_XYD0001 = device list return for just XYD0001 bulb Valceno A19 Multicolor US
 DEVLIST_OUTDOOR_1 = device list return for outdoor outlet subDevice 1
 DEVLIST_OUTDOOR_2 = device list return for outdoor outlet subDevice 2
 ---------------------------------------------------------
@@ -62,6 +61,11 @@ DEFAULT_HEADER = {
     'content-type': 'application/json',
     'tk': SAMPLE_TOKEN,
     'tz': DEFAULT_TZ,
+}
+
+DEFAULT_HEADER_BYPASS = {
+    'Content-Type': 'application/json; charset=UTF-8',
+    'User-Agent': 'okhttp/3.12.1'
 }
 
 DEFAULT_BODY = {
@@ -112,7 +116,7 @@ LOGIN_RET_BODY = (
 
 
 def login_call_body(email, password):
-    json = {
+    json_object = {
         'acceptLanguage': 'en',
         'appVersion': APP_VERSION,
         'devToken': '',
@@ -125,7 +129,7 @@ def login_call_body(email, password):
         'traceId': TRACE_ID,
         'userType': '1',
     }
-    return json
+    return json_object
 
 
 LIST_CONF_7A = {
@@ -270,26 +274,6 @@ LIST_CONF_ESL100 = {
     'subDeviceNo': None,
 }
 
-
-LIST_CONF_XYD0001 = {
-    'deviceRegion': 'US',
-    'deviceName': 'Valceno Multicolor Bulb',
-    'cid': 'XYD0001-CID',
-    'deviceStatus': 'on',
-    'connectionStatus': 'online',
-    'connectionType': 'WiFi+BTOnboarding+BTNotify',
-    'deviceType': 'XYD0001',
-    'type': 'Wifi-light',
-    'uuid': 'UUID',
-    'configModule': 'VC_WFON_BLB_A19-MC_US',
-    'macID': None,
-    'mode': None,
-    'speed': None,
-    'extension': None,
-    'currentFirmVersion': None,
-    'subDeviceNo': None,
-}
-
 LIST_CONF_AIR = {
     'deviceName': 'Name Air Purifier',
     'cid': 'AIRPUR-CID',
@@ -352,7 +336,6 @@ FULL_DEV_LIST = [
     LIST_CONF_AIR,
     LIST_CONF_WS,
     LIST_CONF_ESL100,
-    LIST_CONF_XYD0001,
     LIST_CONF_OUTDOOR_1,
     LIST_CONF_OUTDOOR_2,
     LIST_CONF_DIMMER
@@ -408,8 +391,6 @@ DEVLIST_DIMMER = ({'code': 0, 'result': {'list': [LIST_CONF_DIMMER]}}, 200)
 DEVLIST_AIR = ({'code': 0, 'result': {'list': [LIST_CONF_AIR]}}, 200)
 
 DEVLIST_ESL100 = ({'code': 0, 'result': {'list': [LIST_CONF_ESL100]}}, 200)
-
-DEVLIST_XYD0001 = ({'code': 0, 'result': {'list': [LIST_CONF_XYD0001]}}, 200)
 
 DEVLIST_DUAL200S = ({'code': 0, 'result': {'list': [LIST_CONF_DUAL200S]}}, 200)
 
@@ -526,22 +507,6 @@ DETAILS_ESL100 = (
         'schedule': None,
         'ownerShip': '1',
         'scheduleCount': 0,
-    },
-    200,
-)
-
-DETAILS_XYD0001 = (
-    {
-        'code': 0,
-        'msg': None,
-        'deviceStatus': 'on',
-        'connectionStatus': 'online',
-        'name': 'Valceno Multicolor Bulb',
-        'brightNess': '1',
-        'timer': None,
-        'away': None,
-        'schedule': None,
-        'ownerShip': '1',
     },
     200,
 )

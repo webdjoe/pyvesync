@@ -556,7 +556,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         ]
         if self.air_quality_feature:
             disp.append(('Air Quality: ',
-                          self.details['air_quality'], 'ug/m3'))
+                         self.details['air_quality'], 'ug/m3'))
         for line in disp:
             print(f'{line[0]:.<30} {line[1]} {line[2]}')
 
@@ -580,7 +580,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             sup_val.update(
                 {'Air Quality': str(self.details['air_quality'])}
             )
-        return json.dumps(sup_val, indent = 4)
+        return json.dumps(sup_val, indent=4)
 
 
 class VeSyncAir131(VeSyncBaseDevice):
@@ -819,7 +819,7 @@ class VeSyncAir131(VeSyncBaseDevice):
                 'Filter Life': str(self.filter_life),
             }
         )
-        return json.dumps(sup_val, indent = 4)
+        return json.dumps(sup_val, indent=4)
 
 
 class VeSyncHumid200300S(VeSyncBaseDevice):
@@ -1305,12 +1305,12 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
         ]
         if self.night_light:
             disp.append(('Night Light Brightness: ',
-                          self.details['night_light_brightness'], 'percent'))
+                         self.details['night_light_brightness'], 'percent'))
         if self.warm_mist_feature:
             disp.append(('Warm mist enabled: ',
-                          self.details['warm_mist_enabled'], ''))
+                         self.details['warm_mist_enabled'], ''))
             disp.append(('Warm mist level: ',
-                          self.details['warm_mist_level'], ''))
+                         self.details['warm_mist_level'], ''))
         for line in disp:
             print(f'{line[0]:.<30} {line[1]} {line[2]}')
 
@@ -1342,7 +1342,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
         if self.warm_mist_feature:
             sup_val['Warm mist enabled'] = self.details['warm_mist_enabled']
             sup_val['Warm mist level'] = self.details['warm_mist_level']
-        return json.dumps(sup_val, indent = 4)
+        return json.dumps(sup_val, indent=4)
 
 
 class VeSyncHumid200S(VeSyncHumid200300S):

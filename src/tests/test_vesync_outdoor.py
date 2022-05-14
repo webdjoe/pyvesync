@@ -80,13 +80,13 @@ class TestVesyncOutdoorPlug:
         body['switchNo'] = outdoor_outlet.sub_device_no
         on = outdoor_outlet.turn_on()
         self.mock_api.assert_called_with(
-            '/outdoorsocket15a/v1/device/devicestatus', 'put', headers=head, json=body
+            '/outdoorsocket15a/v1/device/devicestatus', 'put', headers=head, json_object=body
         )
         assert on
         off = outdoor_outlet.turn_off()
         body['status'] = 'off'
         self.mock_api.assert_called_with(
-            '/outdoorsocket15a/v1/device/devicestatus', 'put', headers=head, json=body
+            '/outdoorsocket15a/v1/device/devicestatus', 'put', headers=head, json_object=body
         )
         assert off
 
@@ -108,7 +108,7 @@ class TestVesyncOutdoorPlug:
             '/outdoorsocket15a/v1/device/energyweek',
             'post',
             headers=helpers.req_headers(self.vesync_obj),
-            json=body,
+            json_object=body,
         )
         energy_dict = outdoor_outlet.energy['week']
         assert energy_dict['energy_consumption_of_today'] == 1
@@ -129,7 +129,7 @@ class TestVesyncOutdoorPlug:
             '/outdoorsocket15a/v1/device/energymonth',
             'post',
             headers=helpers.req_headers(self.vesync_obj),
-            json=body,
+            json_object=body,
         )
         energy_dict = outdoor_outlet.energy['month']
         assert energy_dict['energy_consumption_of_today'] == 1
@@ -150,7 +150,7 @@ class TestVesyncOutdoorPlug:
             '/outdoorsocket15a/v1/device/energyyear',
             'post',
             headers=helpers.req_headers(self.vesync_obj),
-            json=body,
+            json_object=body,
         )
         energy_dict = outdoor_outlet.energy['year']
         assert energy_dict['energy_consumption_of_today'] == 1

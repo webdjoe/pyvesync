@@ -45,7 +45,7 @@ class TestDeviceList(object):
 
     def test_device_api(self, caplog, api_mock):
         """Tests to ensure call_api is being called correctly."""
-        head = json_vals.DEFAULT_HEADER
+        head = json_vals.DEFAULT_HEADER_BYPASS
         self.mock_api.return_value = ({'V': 2}, 200)
         self.vesync_obj.get_devices()
         call_list = self.mock_api.call_args_list

@@ -3,6 +3,7 @@
 import hashlib
 import logging
 import time
+import json
 import requests
 
 logger = logging.getLogger(__name__)
@@ -43,7 +44,7 @@ class Helpers:
         """Build header for api requests on 'bypass' endpoint."""
         return {
             'Content-Type': 'application/json; charset=UTF-8',
-            'User-Agent': 'okhttp/3.12.1'
+            'User-Agent': 'okhttp/3.12.1',
             }
 
     @staticmethod
@@ -163,7 +164,7 @@ class Helpers:
 
     @staticmethod
     def call_api(
-        api: str, method: str, json_object: dict = None, headers: dict = None
+        api: str, method: str, json_object: dict = None, headers: dict = None,
     ) -> tuple:
         """Make API calls by passing endpoint, header and body."""
         response = None
@@ -172,6 +173,9 @@ class Helpers:
         try:
             logger.debug("=======call_api=============================")
             logger.debug("[%s] calling '%s' api", method, api)
+            logger.debug("API call URL: \n  %s%s", API_BASE_URL, api)
+            logger.debug("API call headers: \n  %s", json.dumps(headers))
+            logger.debug("API call json: \n  %s", json.dumps(json_object))
             if method.lower() == 'get':
                 r = requests.get(
                     API_BASE_URL + api, json=json_object, headers=headers,
@@ -187,10 +191,10 @@ class Helpers:
                     API_BASE_URL + api, json=json_object, headers=headers,
                     timeout=API_TIMEOUT
                 )
-            logger.debug("API call URL: \n  %s", r.request.url)
-            logger.debug("API call headers: \n  %s", r.request.headers)
-            logger.debug("API call json: \n  %s", r.request.body)
-               
+            # logger.debug("API call URL: \n  %s", r.request.url)
+            # logger.debug("API call headers: \n  %s", r.request.headers)
+            # logger.debug("API call json: \n  %s", r.request.body)
+
         except requests.exceptions.RequestException as e:
             logger.debug(e)
         except Exception as e:  # pylint: disable=broad-except
@@ -200,9 +204,9 @@ class Helpers:
                 status_code = 200
                 if r.content:
                     response = r.json()
+                    logger.debug("API response: \n\n  %s \n ", response)
             else:
                 logger.debug('Unable to fetch %s%s', API_BASE_URL, api)
-        logger.debug("API response: \n\n  %s \n ",response)
         return response, status_code
 
     @staticmethod
@@ -213,7 +217,8 @@ class Helpers:
             return False
         if isinstance(r, dict) and r.get('code') == 0:
             return True
-        logger.debug('Unknown return code - %d with message %s',r.get('code'), r.get('msg'))
+        # logger.debug('Unknown return code: %d with message: %s',
+        #             r.get('code'), r.get('msg'))
         return False
 
     @staticmethod
@@ -245,7 +250,7 @@ class Helpers:
     @staticmethod
     def build_config_dict(r: dict) -> dict:
         """Build configuration dictionary from API response."""
-        if r.get('theshold') is not None:
+        if r.get('threshold') is not None:
             threshold = r.get('threshold')
         else:
             threshold = r.get('threshHold')
@@ -275,5 +280,5 @@ class Helpers:
         """Build bypass header dict."""
         return {
             'Content-Type': 'application/json; charset=UTF-8',
-            'User-Agent': 'okhttp/3.12.1'
+            'User-Agent': 'okhttp/3.12.1',
         }

@@ -112,7 +112,7 @@ class TestVesync(unittest.TestCase):
             body = Helpers.req_body(self.vesync_1, 'login')
             body['email'] = self.vesync_1.username
             body['password'] = Helpers.hash_password(self.vesync_1.password)
-            mocked_post.assert_called_with('/cloud/v1/user/login', 'post', json=body)
+            mocked_post.assert_called_with('/cloud/v1/user/login', 'post', json_object=body)
             self.assertTrue(data)
 
 
@@ -165,7 +165,7 @@ class TestApiFunc:
 
         Helpers.call_api('/call/location', method='get')
 
-        assert len(caplog.records) == 2
+        assert len(caplog.records) == 6
 
 
 if __name__ == '__main__':

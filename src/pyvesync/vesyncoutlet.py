@@ -162,7 +162,7 @@ class VeSyncOutlet(VeSyncBaseDevice):
             }
         )
 
-        return json.dumps(sup_val, indent = 4)
+        return json.dumps(sup_val, indent=4)
 
 
 class VeSyncOutlet7A(VeSyncOutlet):

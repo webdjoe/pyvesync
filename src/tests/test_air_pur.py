@@ -87,7 +87,7 @@ class TestVesyncAirPurifier:
         body['uuid'] = fan.uuid
         on = fan.turn_on()
         self.mock_api.assert_called_with(
-            '/131airPurifier/v1/device/deviceStatus', 'put', json=body, headers=head
+            '/131airPurifier/v1/device/deviceStatus', 'put', json_object=body, headers=head
         )
         call_args = self.mock_api.call_args_list[0][0]
         assert call_args[0] == '/131airPurifier/v1/device/deviceStatus'
@@ -97,7 +97,7 @@ class TestVesyncAirPurifier:
         off = fan.turn_off()
         body['status'] = 'off'
         self.mock_api.assert_called_with(
-            '/131airPurifier/v1/device/deviceStatus', 'put', json=body, headers=head
+            '/131airPurifier/v1/device/deviceStatus', 'put', json_object=body, headers=head
         )
         assert off
 

@@ -75,8 +75,10 @@ class TestVeSyncBulbESL100:
         assert bulb.set_brightness(50)
 
     def test_invalid_brightness(self, caplog, api_mock):
+        self.mock_api.return_value = ({'code': 0}, 200)
         bulb = VeSyncBulbESL100(DEV_LIST_DETAIL, self.vesync_obj)
-        assert not bulb.set_brightness(5000)
+        assert bulb.set_brightness(5000)
+        assert len(caplog.records) == 1
 
     def test_features(self, api_mock):
         bulb = VeSyncBulbESL100(DEV_LIST_DETAIL, self.vesync_obj)

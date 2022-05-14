@@ -100,10 +100,9 @@ class VeSyncBaseDevice:
         ]
         if self.uuid is not None:
             disp.append(('UUID: ', self.uuid))
-        
+
         for line in disp:
             print(f'{line[0]:.<30} {line[1]}')
-
 
     def displayJSON(self) -> str:  # pylint: disable=invalid-name
         """JSON API for device details."""
@@ -116,5 +115,5 @@ class VeSyncBaseDevice:
                 'Online': self.connection_status,
                 'Type': self.type,
                 'CID': self.cid,
-            }, 
-            indent = 4)
+            },
+            indent=4)

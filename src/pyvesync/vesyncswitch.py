@@ -175,7 +175,8 @@ class VeSyncDimmerSwitch(VeSyncSwitch):
         head = helpers.req_headers(self.manager)
 
         r, _ = helpers.call_api(
-            '/dimmer/v1/device/devicedetail', 'post', headers=head, json_object=body
+            '/dimmer/v1/device/devicedetail', 'post',
+            headers=head, json_object=body
         )
 
         if r is not None and helpers.code_check(r):
@@ -351,7 +352,7 @@ class VeSyncDimmerSwitch(VeSyncSwitch):
                     'RGB Light': str(self._rgb_status),
                 }
             )
-        return json.dumps(sup_val, indent = 4)
+        return json.dumps(sup_val, indent=4)
 
     def get_config(self) -> None:
         """Get dimmable switch device configuration info."""

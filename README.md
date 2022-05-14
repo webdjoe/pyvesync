@@ -10,6 +10,7 @@ pyvesync is a library to manage VeSync compatible [smart home devices](#supporte
   - [Wall Switches](#wall-switches)
   - [Levoit Air Purifiers](#levoit-air-purifiers)
   - [Etekcity Bulbs](#etekcity-bulbs)
+  - [Valceno Bulbs](#valceno-bulbs)
   - [Levoit Humidifiers](#levoit-humidifiers)
 - [Usage](#usage)
 - [Configuration](#configuration)
@@ -30,9 +31,11 @@ pyvesync is a library to manage VeSync compatible [smart home devices](#supporte
     - [Air Purifier Methods](#air-purifier-methods)
     - [Levoit Purifier Core200S/300S/400S Properties](#levoit-purifier-core200s300s400s-properties)
     - [Levoit Purifier Core200S/300S/400S Methods](#levoit-purifier-core200s300s400s-methods)
-  - [Dimmable Smart Light Bulb Method and Properties](#dimmable-smart-light-bulb-method-and-properties)
-  - [Tunable Smart Light Bulb Methods and Properties](#tunable-smart-light-bulb-methods-and-properties)
-  - [Dimmable Switch Methods and Properties](#dimmable-switch-methods-and-properties)
+  - [Lights API Methods & Properties](#lights-api-methods-properties)
+    - [Dimmable Light Bulb Method and Properties](#dimmable-light-bulb-method-and-properties)
+    - [Tunable Light Bulb Methods and Properties](#tunable-light-bulb-methods-and-properties)
+    - [Multicolor light bulb Methods and Properties](#multicolor-light-bulb-methods-and-properties)
+    - [Dimmable Switch Methods and Properties](#dimmable-switch-methods-and-properties)
   - [Levoit Humidifier Methods and Properties](#levoit-humidifier-methods-and-properties)
     - [Humidifier Properties](#humidifier-properties)
     - [Humidifer Methods](#humidifer-methods)
@@ -41,7 +44,9 @@ pyvesync is a library to manage VeSync compatible [smart home devices](#supporte
     - [JSON Output for All Devices](#json-output-for-all-devices)
     - [JSON Output for Outlets](#json-output-for-outlets)
     - [JSON Output for Dimmable Switch](#json-output-for-dimmable-switch)
-    - [JSON Output for Bulbs](#json-output-for-bulbs)
+    - [JSON Output for Dimmable Bulb](#json-output-for-dimmable-bulb)
+    - [JSON Output for Tunable Bulb](#json-output-for-tunable-bulb)
+    - [JSON Output for Multicolor Bulb](#json-output-for-multicolor-bulb)
     - [JSON Output for Air Purifier](#json-output-for-air-purifier)
     - [JSON Output for 300S Humidifier](#json-output-for-300s-humidifier)
     - [JSON Output for Core200S Purifier](#json-output-for-core200s-purifier)
@@ -119,6 +124,12 @@ my_switch.turn_off()
 
 # Get energy usage data for outlets
 manager.update_energy()
+
+# Set bulb brightness to 75% of first bulb in the list
+my_bulb = manager.bulbs[0]
+my_bulb.set_brightness(75)
+# get its details in JSON and print
+print(my_bulb.displayJSON())
 ```
 Devices are stored in the respective lists in the instantiated `VeSync` class:
 
@@ -129,7 +140,7 @@ manager.update()
 manager.outlets = [VeSyncOutletObjects]
 manager.switches = [VeSyncSwitchObjects]
 manager.fans = [VeSyncFanObjects]
-manger.bulbs = [VeSyncBulbObjects]
+manager.bulbs = [VeSyncBulbObjects]
 
 # Get device (outlet, etc.) by device name
 dev_name = "My Device"
@@ -311,33 +322,39 @@ Compatible levels for each model:
 `VeSyncFan.set_night_light('on'|'dim'|'off')` - Set night light brightness
 
 
-### Dimmable Smart Light Bulb Method and Properties
+### Lights API Methods & Properties
+
+#### Dimmable Light Bulb Method and Properties
 
 `VeSyncBulb.brightness` - Return brightness in percentage (1 - 100)
 
 `VeSyncBulb.set_brightness(brightness)` - Set bulb brightness values from 1 - 100
 
-### Tunable Smart Light Bulb Methods and Properties
+#### Tunable Light Bulb Methods and Properties
+
+`VeSyncBulb.brightness` - Return brightness in percentage (1 - 100)
+
+`VeSyncBulb.set_brightness(brightness)` - Set bulb brightness values from 1 - 100
 
 `VeSyncBulb.color_temp_pct` - Return color temperature in percentage (0 - 100)
 
 `VeSyncBulb.color_temp_kelvin` - Return brightness in Kelvin
 
-`VeSyncBulb.set_color_temp(color_temp)` - Set color temperature in percentage (0 - 100)
+`VeSyncBulb.set_color_temp(color_temp)` - Set white temperature in percentage (0 - 100)
 
-### Multicolor Smart Light Bulb Methods and Properties
+#### Multicolor Light Bulb Methods and Properties
 
 **Properties**
 
-`VeSyncBulb.brightness` - Return brightness in percentage (1 - 100)
+`VeSyncBulb.brightness` - Return brightness in percentage (int values from 1 - 100)
 
-`VeSyncBulb.color_temp_pct` - Return white temperature in percentage (0 - 100)
+`VeSyncBulb.color_temp_pct` - Return white temperature in percentage (int values from 0 - 100)
 
-`VeSyncBulb.color_temp_kelvin` - Return white temperature in Kelvin
+`VeSyncBulb.color_temp_kelvin` - Return white temperature in Kelvin (int values from 2700-6500)
 
-`VeSyncBulb.color_value_hsv` - Return color value in HSV format
+`VeSyncBulb.color_value_hsv` - Return color value in HSV format (float 0.0-360.0, float 0.0-100.0, int 0-100 )
 
-`VeSyncBulb.color_value_rgb` - Return color value in RGB format
+`VeSyncBulb.color_value_rgb` - Return color value in RGB format (float values up to 255.0, 255.0, 255.0 )
 
 `VeSyncBulb.color_mode` - Return bulb color mode (string values: 'white' , 'hsv' )
 
@@ -345,22 +362,38 @@ Compatible levels for each model:
 
 `VeSyncBulb.color_saturation` - Return color saturation (float values from 0.0 - 100.0)
 
-`VeSyncBulb.color_value` - Return color value, equivalent to brightness in color mode (int values from 0 - 100)
+`VeSyncBulb.color_value` - Return color value (int values from 0 - 100)
 
 **Methods**
 
-`VeSyncBulb.set_brightness(brightness)` - Set bulb brightness (int values from 0 - 100) (also used to set Color brightness value when in color mode)
+`VeSyncBulb.set_brightness(brightness)` 
+- Set bulb brightness (int values from 0 - 100) 
+- (also used to set Color Value when in color mode)
 
-`VeSyncBulb.set_color_mode(color_mode)` - Set bulb color mode (string values: 'white' , 'hsv' )
-('color' may be used as an alias to 'hsv')
+`VeSyncBulb.set_color_mode(color_mode)` 
+- Set bulb color mode (string values: `white` , `hsv` )
+- `color` may be used as an alias to `hsv`
 
-`VeSyncBulb.set_color_temp(color_temp)` - Set bulb white temperature (int values from 0 - 100)
+`VeSyncBulb.set_color_temp(color_temp)` 
+- Set bulb white temperature (int values from 0 - 100)
+- Setting this will automatically force the bulb into White mode
 
-`VeSyncBulb.set_color_hue(color_hue)` - Set color hue (float values from 0.0 - 360.0)
+`VeSyncBulb.set_color_hue(color_hue)` 
+- Set color hue (float values from 0.0 - 360.0)
+- Setting this will automatically force the bulb into Colored mode
 
-`VeSyncBulb.set_color_saturation(color_saturation)` - Set color saturation (float values from 0.0 - 100.0)
+`VeSyncBulb.set_color_saturation(color_saturation)` 
+- Set color saturation (float values from 0.0 - 100.0)
+- Setting this will automatically force the bulb into Colored mode
 
-### Dimmable Switch Methods and Properties
+`VeSyncBulb.set_color_value(color_value)` 
+- Set color value (float values from 0.0 - 100.0)
+- Setting this will automatically force the bulb into Colored mode
+
+`VeSyncBulb.turn_on(brightness, color_temp, color_saturation, color_hue, color_mode color_value)` 
+- Set every property, in a single call
+- All parameters are optional
+#### Dimmable Switch Methods and Properties
 
 `VeSyncSwitch.brightness` - Return brightness of switch in percentage (1 - 100)
 
@@ -471,13 +504,13 @@ device.displayJSON()
 #Returns:
 
 {
-  'Device Name': 'Device 1',
-  'Model': 'Device Model',
-  'Subdevice No': '1',
-  'Status': 'on',
-  'Online': 'online',
-  'Type': 'Device Type',
-  'CID': 'DEVICE-CID'
+  "Device Name": "Device 1",
+  "Model": "Device Model",
+  "Subdevice No": "1",
+  "Status": "on",
+  "Online": "online",
+  "Type": "Device Type",
+  "CID": "DEVICE-CID"
 }
 ```
 
@@ -485,13 +518,13 @@ device.displayJSON()
 
 ```python
 {
-  'Active Time': '1', # in minutes
-  'Energy': '2.4', # today's energy in kWh
-  'Power': '12', # current power in W
-  'Voltage': '120', # current voltage
-  'Energy Week': '12', # totaly energy of week in kWh
-  'Energy Month': '50', # total energy of month in kWh
-  'Energy Year': '89', # total energy of year in kWh
+  "Active Time": "1", # in minutes
+  "Energy": "2.4", # today's energy in kWh
+  "Power": "12", # current power in W
+  "Voltage": "120", # current voltage
+  "Energy Week": "12", # totaly energy of week in kWh
+  "Energy Month": "50", # total energy of month in kWh
+  "Energy Year": "89", # total energy of year in kWh
 }
 ```
 
@@ -501,23 +534,47 @@ This output only applies to dimmable switch.  The standard switch has the defaul
 
 ```python
 {
-  'Indicator Light': 'on', # status of indicator light
-  'Brightness': '50', # percent brightness
-  'RGB Light': 'on' # status of RGB Light on faceplate
+  "Indicator Light": "on", # status of indicator light
+  "Brightness": "50", # percent brightness
+  "RGB Light": "on" # status of RGB Light on faceplate
 }
 ```
 
-#### JSON Output for Bulbs
+#### JSON Output for Dimmable Bulb
 
 ```python
 # output for dimmable bulb
 {
-  'Brightness': '50' # brightness in percent
+  # all default outputs plus...
+  "Brightness": "50" # brightness in percent
 }
+```
 
+#### JSON Output for Tunable Bulb
+
+```python
 # output for tunable bulb
 {
-  'Kelvin': '5400' # color temperature in Kelvin
+  # all default outputs plus...
+  "Brightness": "50" # brightness in percent
+  "Kelvin": "5400" # white temperature in Kelvin
+}
+
+
+```
+
+#### JSON Output for Multicolor Bulb
+
+```python
+# output for valceno multicolor bulb
+{
+  # all default outputs plus...
+  "Brightness": "100", # brightness in percent (also used for color value in hsv mode)
+  "WhiteTemperaturePct": "0", # white temperature in percent
+  "WhiteTemperatureKelvin": "2700", # white temperature in Kelvin
+  "ColorHSV": "hsv(hue=79.99, saturation=90.0, value=100)", # color definition in HSV model
+  "ColorRGB": "rgb(red=178.5, green=255.0, blue=25.5)", # color definition in RGB model
+  "ColorMode": "hsv" # color mode ( white / hsv )
 }
 
 ```
@@ -526,28 +583,28 @@ This output only applies to dimmable switch.  The standard switch has the defaul
 
 ```python
 {
-  'Active Time': '50', # minutes
-  'Fan Level': '2', # fan level 1-3
-  'Air Quality': '95', # air quality in percent
-  'Mode': 'auto',
-  'Screen Status': 'on',
-  'Filter Life': '99' # remaining filter life in percent
+  "Active Time": "50", # minutes
+  "Fan Level": "2", # fan level 1-3
+  "Air Quality": "95", # air quality in percent
+  "Mode": "auto",
+  "Screen Status": "on",
+  "Filter Life": "99" # remaining filter life in percent
 }
 ```
 #### JSON Output for 300S Humidifier
 
 ```python
 {
-  'Mode': 'manual', # auto, manual, sleep
-  'Humidity': 20, # percent
-  'Mist Virtual Level': 6, # Mist level 1 - 9
-  'Water Lacks': True, # True/False
-  'Water Tank Lifted': True, # True/False
-  'Display': True, # True/False
-  'Automatic Stop Reach Target': True,
-  'Night Light Brightness': 10, # 1 - 100
-  'Auto Target Humidity': True, # True/False
-  'Automatic Stop': True # True/False
+  "Mode": "manual", # auto, manual, sleep
+  "Humidity": 20, # percent
+  "Mist Virtual Level": 6, # Mist level 1 - 9
+  "Water Lacks": true, # True/False
+  "Water Tank Lifted": true, # True/False
+  "Display": true, # True/False
+  "Automatic Stop Reach Target": true,
+  "Night Light Brightness": 10, # 1 - 100
+  "Auto Target Humidity": true, # True/False
+  "Automatic Stop": true # True/False
 }
 ```
 
@@ -586,7 +643,7 @@ This output only applies to dimmable switch.  The standard switch has the defaul
 	"CID": "<CID>",
 	"Mode": "manual",
 	"Filter Life": "100",
-  "Air Quality": "5",
+	"Air Quality": "5",
 	"Fan Level": "1",
 	"Display": true,
 	"Child Lock": false,
@@ -608,7 +665,7 @@ This output only applies to dimmable switch.  The standard switch has the defaul
 	"CID": "<CID>",
 	"Mode": "manual",
 	"Filter Life": "98",
-    "Air Quality": "4",
+	"Air Quality": "4",
 	"Fan Level": "3",
 	"Display": true,
 	"Child Lock": false,

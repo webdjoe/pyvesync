@@ -29,7 +29,7 @@ feature_dict: dict = {
         {
             'module': 'VeSyncBulbValcenoA19MC',
             'features': ['dimmable', 'color_temp', 'rgb_shift']
-        }
+        },
 }
 
 
@@ -53,16 +53,20 @@ class VeSyncBulb(VeSyncBaseDevice):
                  manager):
         """Initialize VeSync smart bulb base class."""
         super().__init__(details, manager)
-        self._brightness = 0
-        self._color_temp = 0
-        self._color_value = 0
-        self._color_hue = 0
-        self._color_saturation = 0
-        self._color_mode = ''   # possible: white, color, hsv
+        self._brightness = int(0)
+        self._color_temp = int(0)
+        self._color_value = int(0)
+        self._color_hue = float(0)
+        self._color_saturation = float(0)
+        self._color_mode = str('')   # possible: white, color, hsv
         self.features = feature_dict.get(self.device_type, {}).get('features')
         if self.features is None:
             logger.error("No configuration set for - %s", self.device_name)
             raise Exception
+    # self.get_config()
+    # self.current_firm_version = self.config.get('currentFirmVersion', None)
+    # self.latest_firm_version = self.config.get('latestFirmVersion', None)
+    # self.firmware_url = self.config.get('firmwareUrl', None)
 
     @property
     def brightness(self) -> int:
@@ -87,21 +91,21 @@ class VeSyncBulb(VeSyncBaseDevice):
 
     @property
     def color_hue(self) -> float:
-        """Return color hue of bulb.""" # from 0 to 360
+        """Return color hue of bulb."""  # from 0 to 360
         if self.rgb_shift_feature and self._color_hue is not None:
             return float(self._color_hue)
         return 0
 
     @property
     def color_saturation(self) -> float:
-        """Return color saturation of bulb in percent.""" # from 0 to 100
+        """Return color saturation of bulb in percent."""  # from 0 to 100
         if self.rgb_shift_feature and self._color_saturation is not None:
             return float(self._color_saturation)
         return 0
 
     @property
-    def color_value(self) -> int: 
-        """Return color value of bulb in percent.""" # from 0 to 100
+    def color_value(self) -> int:
+        """Return color value of bulb in percent."""  # from 0 to 100
         if self.rgb_shift_feature and self._color_value is not None:
             return int(self._color_value)
         return 0
@@ -110,35 +114,35 @@ class VeSyncBulb(VeSyncBaseDevice):
     def color_value_hsv(self) -> tuple:
         """Return color of bulb in hsv."""
         if self.rgb_shift_feature and self._color_value is not None:
-            hsv = namedtuple('hsv',['hue','saturation','value'])
-            hsv_tuple = hsv(hue = float(round(self._color_hue,2)),
-                            saturation = float(round(self._color_saturation,2)),
-                            value = int(round(self._color_value,0))
+            hsv = namedtuple('hsv', ['hue', 'saturation', 'value'])
+            hsv_tuple = hsv(hue=float(round(self._color_hue, 2)),
+                            saturation=float(round(
+                                            self._color_saturation, 2)),
+                            value=int(round(self._color_value, 0))
                             )
-            # hsv = (float(self._color_hue) , float(self._color_saturation), int(self._color_value))
             return hsv_tuple
-        return 0
+        return hsv(0, 0, 0)
 
     @property
     def color_value_rgb(self) -> tuple:
         """Return color of bulb in rgb."""
         if self.rgb_shift_feature and self._color_value is not None:
-            rgb = namedtuple('rgb',['red','green','blue'])
-            converted = colorsys.hsv_to_rgb(self._color_hue/360, self._color_saturation/100, self._color_value/100)
-            #rgb_tuple = tuple( [round(x*255,2) for x in rgb] )
-            rgb_tuple = rgb(red = float(round(converted[0],2)),
-                            green = float(round(converted[1],2)),
-                            blue = float(round(converted[2],2))
-                            )
+            rgb = namedtuple('rgb', ['red', 'green', 'blue'])
+            converted = colorsys.hsv_to_rgb(self._color_hue/360,
+                                            self._color_saturation/100,
+                                            self._color_value/100)
+            rgb_tuple = rgb(red=float(round(converted[0], 2)*255),
+                            green=float(round(converted[1], 2)*255),
+                            blue=float(round(converted[2], 2)*255))
             return rgb_tuple
-        return 0
+        return rgb(0, 0, 0)
 
     @property
     def color_mode(self) -> str:
-        """Return color mode of bulb.""" # { white, hsv }
+        """Return color mode of bulb."""  # { white, hsv }
         if self.rgb_shift_feature and self._color_mode is not None:
             return str(self._color_mode)
-        return None
+        return ''
 
     @property
     def dimmable_feature(self) -> bool:
@@ -164,9 +168,9 @@ class VeSyncBulb(VeSyncBaseDevice):
     @abstractmethod
     def get_details(self) -> None:
         """Get vesync bulb details."""
-        
+
     @abstractmethod
-    def interpret_apicall_result(self) -> None:
+    def _interpret_apicall_result(self, response) -> None:
         """Update bulb status from any api call response."""
 
     @abstractmethod
@@ -201,16 +205,18 @@ class VeSyncBulb(VeSyncBaseDevice):
         """Return formatted bulb info to stdout."""
         super().display()
         if self.connection_status == 'online':
-            disp = [] # initiate list
+            disp = []  # initiate list
             if self.dimmable_feature:
-                disp.append( ('Brightness: ', self.brightness, '%') )
+                disp.append(('Brightness: ', str(self.brightness), '%'))
             if self.color_temp_feature:
-                disp.append( ('White Temperature Pct: ', self.color_temp_pct, '%') )
-                disp.append( ('White Temperature Kelvin: ', self.color_temp_kelvin, 'K') )
+                disp.append(('White Temperature Pct: ',
+                             str(self.color_temp_pct), '%'))
+                disp.append(('White Temperature Kelvin: ',
+                             str(self.color_temp_kelvin), 'K'))
             if self.rgb_shift_feature:
-                disp.append( ('ColorHSV: ', str(self.color_value_hsv), '') )
-                disp.append( ('ColorRGB: ', str(self.color_value_rgb), '') )
-                disp.append( ('ColorMode: ', self.color_mode, '') )
+                disp.append(('ColorHSV: ', str(self.color_value_hsv), ''))
+                disp.append(('ColorRGB: ', str(self.color_value_rgb), ''))
+                disp.append(('ColorMode: ', str(self.color_mode), ''))
             if len(disp) > 0:
                 for line in disp:
                     print(f'{line[0]:.<30} {line[1]} {line[2]}')
@@ -223,13 +229,15 @@ class VeSyncBulb(VeSyncBaseDevice):
             if self.dimmable_feature:
                 sup_val.update({'Brightness': str(self.brightness)})
             if self.color_temp_feature:
-                sup_val.update({'WhiteTemperaturePct': str(self.color_temp_pct)})
-                sup_val.update({'WhiteTemperatureKelvin': str(self.color_temp_kelvin)})
+                sup_val.update(
+                    {'WhiteTemperaturePct': str(self.color_temp_pct)})
+                sup_val.update(
+                    {'WhiteTemperatureKelvin': str(self.color_temp_kelvin)})
             if self.rgb_shift_feature:
                 sup_val.update({'ColorHSV': str(self.color_value_hsv)})
                 sup_val.update({'ColorRGB': str(self.color_value_rgb)})
                 sup_val.update({'ColorMode': str(self.color_mode)})
-        return json.dumps(sup_val, indent = 4)
+        return json.dumps(sup_val, indent=4)
 
 
 class VeSyncBulbESL100(VeSyncBulb):
@@ -274,7 +282,7 @@ class VeSyncBulbESL100(VeSyncBulb):
         if helpers.code_check(r):
             self.config = helpers.build_config_dict(r)
         else:
-            logger.warning('Error getting %s config info', self.device_name)
+            logger.debug('Error getting %s config info', self.device_name)
 
     def toggle(self, status) -> bool:
         """Toggle dimmable bulb."""
@@ -297,10 +305,18 @@ class VeSyncBulbESL100(VeSyncBulb):
         if not self.dimmable_feature:
             logger.debug('%s is not dimmable', self.device_name)
             return False
-        if isinstance(brightness, int) and (brightness <= 0 or brightness > 100):
-            logger.warning('Warning: brightness value should be between 0 and 100')
+        if not isinstance(brightness, int):
+            logger.error(
+                'Error: brightness value should be a integer '
+                'number between 1 and 100')
+            return False
+        if brightness < 1 or brightness > 100:
+            logger.warning(
+                'Warning: brightness value should be '
+                'between 1 and 100')
         # ensure brightness is between 0 and 100
-        brightness = max(0,(min(100,brightness)))
+        brightness = max(1, (min(100, brightness)))
+
         body = helpers.req_body(self.manager, 'devicestatus')
         body['uuid'] = self.uuid
         body['status'] = 'on'
@@ -405,9 +421,17 @@ class VeSyncBulbESL100CW(VeSyncBulb):
         if not self.dimmable_feature:
             logger.debug('%s is not dimmable', self.device_name)
             return False
-        if brightness <= 0 or brightness > 100:
-            logger.debug('Invalid brightness')
+        if not isinstance(brightness, int):
+            logger.error(
+                'Error: brightness value should be a integer '
+                'number between 1 and 100 OR None')
             return False
+        if brightness < 1 or brightness > 100:
+            logger.warning(
+                'Warning: brightness value should be '
+                'between 1 and 100')
+        # ensure brightness is between 0 and 100
+        brightness = max(1, (min(100, brightness)))
 
         body = helpers.req_body(self.manager, 'bypass')
         body['cid'] = self.cid
@@ -436,7 +460,8 @@ class VeSyncBulbESL100CW(VeSyncBulb):
     def set_color_temp(self, color_temp: int) -> bool:
         """Set Color Temperature of Bulb in pct (1 - 100)."""
         if color_temp < 0 or color_temp > 100:
-            logger.debug('Invalid color temperature - only between 0 and 100')
+            logger.debug(
+                'Invalid color temperature - only between 0 and 100')
             return False
         body = helpers.req_body(self.manager, 'bypass')
         body['cid'] = self.cid
@@ -478,19 +503,18 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
     """VeSync Multicolor Bulb."""
 
     def __init__(self, details, manager):
-        """Initialize Valceno Multicolor bulb."""
+        """Initialize Multicolor bulb."""
         super().__init__(details, manager)
 
     def get_details(self) -> None:
         """Get details of multicolor bulb."""
         body = helpers.req_body(self.manager, 'bypassV2')
-        # body = helpers.bypass_body_v2(self.manager)
         body['cid'] = self.cid
         body['configModule'] = self.config_module
         body['payload'] = {
             'method': 'getLightStatusV2',
             'source': 'APP',
-            'data': {}
+            'data': {},
         }
         r, _ = helpers.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
@@ -501,9 +525,9 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
         if not isinstance(r, dict) or not helpers.code_check(r):
             logger.debug('Error calling %s', self.device_name)
             return
-        self.interpret_apicall_result(r)
+        self._interpret_apicall_result(r)
 
-    def interpret_apicall_result(self, response) -> None:
+    def _interpret_apicall_result(self, response) -> None:
         if response.get('result', {}).get('result') is not None:
             innerresult = response.get('result', {}).get('result')
             self.connection_status = 'online'
@@ -514,7 +538,8 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
                 self._color_temp = innerresult.get('colorTemp')
             if self.rgb_shift_feature:
                 self._color_mode = innerresult.get('colorMode')
-                self._color_hue = round(innerresult.get('hue')/27.777777,2)
+                self._color_hue = float(round(innerresult.get('hue')
+                                              / 27.777777, 2))
                 self._color_saturation = innerresult.get('saturation')/100
                 self._color_value = innerresult.get('value')
         elif response.get('code') == -11300030:
@@ -535,7 +560,7 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
 
     def get_config(self) -> None:
         """Get configuration and firmware info of multicolor bulb."""
-        body = helpers.req_body(self.manager, 'devicedetail')
+        body = helpers.req_body(self.manager, 'bypass')
         body['method'] = 'configurations'
         body['uuid'] = self.uuid
         r, _ = helpers.call_api(
@@ -545,18 +570,38 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
             json_object=body,
         )
         if helpers.code_check(r):
-            self.config = helpers.build_config_dict(r)
+            if r.get('result') is not None:
+                result = r.get('result')
+                self.__build_config_dict(result)
         else:
             logger.debug('Error getting %s config info', self.device_name)
-            logger.debug('  return code - %d with message %s',r.get('code'), r.get('msg'))
+            logger.debug('  return code - %d with message %s',
+                         r.get('code'), r.get('msg'))
+
+    def __build_config_dict(self, conf_dict: Dict[str, str]) -> None:
+        """Build configuration dict for Multicolor bulb."""
+        self.config['currentFirmVersion'] = (
+            conf_dict.get('currentFirmVersion', ''))
+        self.config['latestFirmVersion'] = (
+            conf_dict.get('latestFirmVersion', ''))
+        self.config['firmwareUrl'] = (
+            conf_dict.get('firmwareUrl', ''))
+        self.config['allowNotify'] = (
+            conf_dict.get('allowNotify', ''))
+        self.config['deviceImg'] = (
+            conf_dict.get('deviceImg', ''))
+        self.config['defaultDeviceImg'] = (
+            conf_dict.get('defaultDeviceImg', ''))
+        self.config['ownerShip'] = (
+            conf_dict.get('ownerShip', False))
 
     def toggle(self, status) -> bool:
         """Toggle multicolor bulb."""
         body = helpers.req_body(self.manager, 'bypassV2')
         if status == 'off':
-           statusBool = False
+            status_bool = False
         else:
-           statusBool = True
+            status_bool = True
         body['cid'] = self.cid
         body['configModule'] = self.config_module
         body['payload'] = {
@@ -564,7 +609,7 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
             'source': 'APP',
             'data': {
                 'id': 0,
-                'enabled': statusBool
+                'enabled': status_bool,
                 }
             }
         r, _ = helpers.call_api(
@@ -585,10 +630,16 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
         if not self.dimmable_feature:
             logger.debug('%s is not dimmable', self.device_name)
             return False
-        if brightness <= 0 or brightness > 100:
-            logger.warning('Warning: brightness value should be between 0 and 100')
+        if not isinstance(brightness, int):
+            logger.error(
+                'Error: brightness value should be a integer number '
+                'between 1 and 100 OR None')
+            return False
+        if brightness < 1 or brightness > 100:
+            logger.warning(
+                'Warning: brightness value should be between 1 and 100')
         # ensure brightness is between 0 and 100
-        brightness = max(0,(min(100,brightness)))
+        brightness = max(1, (min(100, brightness)))
         body = helpers.req_body(self.manager, 'bypassV2')
         body['cid'] = self.cid
         body['configModule'] = self.config_module
@@ -602,7 +653,7 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
                 'colorMode': '',
                 'hue': '',
                 'saturation': '',
-                'value': ''
+                'value': '',
                 }
             }
         r, _ = helpers.call_api(
@@ -612,7 +663,7 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
             json_object=body
             )
         if helpers.code_check(r):
-            self.interpret_apicall_result(r)
+            self._interpret_apicall_result(r)
             self._brightness = brightness
             return True
         self.device_status = 'off'
@@ -620,14 +671,65 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
         logger.debug('%s offline', self.device_name)
         return False
 
-    def set_color_temp(self, color_temp: int) -> bool:
-        """Set White Temperature of Bulb in pct (1 - 100)."""
-        if not self.color_temp_feature:
-            logger.debug('%s is not white temperature tunable', self.device_name)
+    def set_color_value(self, color_value: int) -> bool:
+        """Set color value of multicolor bulb."""
+        if not self.rgb_shift_feature:
+            logger.debug('%s is not color capable', self.device_name)
             return False
-        if color_temp <= 0 or color_temp > 100:
-            logger.debug('Warning: color_temp value should be between 0 and 100')
-        color_temp = max(0,(min(100,color_temp))) # ensure color_temp is between 0 and 100
+        if color_value < 1 or color_value > 100:
+            logger.warning(
+                'Warning: color_value value should be between 1 and 100')
+        # ensure color_value is between 0 and 100
+        color_value = max(1, (min(100, color_value)))
+        body = helpers.req_body(self.manager, 'bypassV2')
+        body['cid'] = self.cid
+        body['configModule'] = self.config_module
+        # color value is actually set by the brightness
+        # parameter when color_mode = hsv
+        body['payload'] = {
+            'method': 'setLightStatusV2',
+            'source': 'APP',
+            'data': {
+                'force': 1,
+                'brightness': color_value,
+                'colorTemp': '',
+                'colorMode': 'hsv',
+                'hue': '',
+                'saturation': '',
+                'value': '',
+                }
+            }
+        r, _ = helpers.call_api(
+            '/cloud/v2/deviceManaged/bypassV2',
+            'post',
+            headers=helpers.req_header_bypass(),
+            json_object=body
+            )
+        if helpers.code_check(r):
+            self._interpret_apicall_result(r)
+            self._color_value = color_value
+            return True
+        self.device_status = 'off'
+        self.connection_status = 'offline'
+        logger.debug('%s offline', self.device_name)
+        return False
+
+    def set_color_temp(self, color_temp: int) -> bool:
+        """Set White Temperature of Bulb in pct (0 - 100)."""
+        if not self.color_temp_feature:
+            logger.debug(
+                '%s is not white temperature tunable', self.device_name)
+            return False
+        if not isinstance(color_temp, int):
+            logger.error(
+                'Error: color_temp value should be a integer number '
+                'between 0 and 100 OR None')
+            return False
+        if color_temp < 0 or color_temp > 100:
+            logger.debug(
+                'Warning: color_temp value should be between 0 and 100')
+        # ensure color_temp is between 0 and 100
+        color_temp = max(0, (min(100, color_temp)))
         body = helpers.req_body(self.manager, 'bypassV2')
         body['cid'] = self.cid
         body['configModule'] = self.config_module
@@ -641,7 +743,7 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
                 'colorMode': 'white',
                 'hue': '',
                 'saturation': '',
-                'value': ''
+                'value': '',
                 }
             }
         r, _ = helpers.call_api(
@@ -651,7 +753,7 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
             json_object=body,
             )
         if helpers.code_check(r):
-            self.interpret_apicall_result(r)
+            self._interpret_apicall_result(r)
             self.device_status = 'on'
             self._color_temp = color_temp
             return True
@@ -659,17 +761,19 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
         self.connection_status = 'offline'
         logger.debug('%s offline', self.device_name)
         return False
-            
 
     def set_color_saturation(self, color_saturation: int) -> bool:
         """Set Color Saturation of Bulb in pct (1 - 100)."""
-        if not self.color_temp_feature:
+        if not self.rgb_shift_feature:
             logger.debug('%s is not color capable', self.device_name)
             return False
-        if color_saturation <= 0 or color_saturation > 100:
-            logger.debug('Warning: color_saturation value should be between 0 and 100')
-        color_saturation = max(0,(min(100,color_saturation))) # ensure color_temp is between 0 and 100
-        color_saturation_api : int = round(color_saturation*100, None) # convert value to api expected range (0-10000)
+        if color_saturation < 0 or color_saturation > 100:
+            logger.debug(
+                'Warning: color_saturation value should be between 0 - 100')
+        # ensure color_temp is between 0 and 100
+        color_saturation = max(0, (min(100, color_saturation)))
+        # convert value to api expected range (0-10000)
+        color_saturation_api: int = round(color_saturation*100, None)
         body = helpers.req_body(self.manager, 'bypassV2')
         body['cid'] = self.cid
         body['configModule'] = self.config_module
@@ -683,7 +787,7 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
                 'colorMode': 'hsv',
                 'hue': '',
                 'saturation': color_saturation_api,
-                'value': ''
+                'value': '',
                 }
             }
         r, _ = helpers.call_api(
@@ -693,7 +797,7 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
             json_object=body,
             )
         if helpers.code_check(r):
-            self.interpret_apicall_result(r)
+            self._interpret_apicall_result(r)
             self.device_status = 'on'
             self._color_saturation = color_saturation
             return True
@@ -707,12 +811,13 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
         if not self.rgb_shift_feature:
             logger.debug('%s is not color capable', self.device_name)
             return False
-        if color_hue <= 0 or color_hue > 360:
-            logger.warning('Warning: color_hue value should be between 0 and 360')
+        if color_hue < 0 or color_hue > 360:
+            logger.warning(
+                'Warning: color_hue value should be between 0 and 360')
         # ensure color_hue is between 0 and 360
-        color_hue = max(0,(min(360,color_hue)))
+        color_hue = max(0, (min(360, color_hue)))
         # convert value to api expected range (0-10000)
-        color_hue_api : int = round(color_hue*27.777777,None)
+        color_hue_api: int = round(color_hue*27.777777, None)
         body = helpers.req_body(self.manager, 'bypassV2')
         body['cid'] = self.cid
         body['configModule'] = self.config_module
@@ -726,17 +831,17 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
                 'colorMode': 'hsv',
                 'hue': color_hue_api,
                 'saturation': '',
-                'value': ''
+                'value': '',
                 }
             }
         r, _ = helpers.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             'post',
             headers=helpers.req_header_bypass(),
-            json_object=body
+            json_object=body,
             )
         if helpers.code_check(r):
-            self.interpret_apicall_result(r)
+            self._interpret_apicall_result(r)
             self.device_status = 'on'
             self._color_hue = color_hue
             return True
@@ -744,7 +849,6 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
         self.connection_status = 'offline'
         logger.debug('%s offline', self.device_name)
         return False
-
 
     def set_color_mode(self, color_mode: str) -> bool:
         """Set Color Mode of Bulb (white / hsv)."""
@@ -755,9 +859,9 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
         possible_modes = {'white': 'white',
                           'color': 'hsv',
                           'hsv': 'hsv'}
-        if not color_mode in possible_modes.keys():
-          logger.error("Color mode specified is not acceptable")
-          return False
+        if color_mode not in possible_modes:
+            logger.error("Color mode specified is not acceptable")
+            return False
         body = helpers.req_body(self.manager, 'bypassV2')
         body['cid'] = self.cid
         body['configModule'] = self.config_module
@@ -771,19 +875,203 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
                 'colorMode': possible_modes[color_mode],
                 'hue': '',
                 'saturation': '',
-                'value': ''
+                'value': '',
                 }
             }
         r, _ = helpers.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             'post',
             headers=helpers.req_header_bypass(),
-            json_object=body
+            json_object=body,
             )
         if helpers.code_check(r):
-            self.interpret_apicall_result(r)
+            self._interpret_apicall_result(r)
             self.device_status = 'on'
-            self._color_mode = possible_modes[color_mode]
+            self._color_mode = str(possible_modes[color_mode])
+            return True
+        self.device_status = 'off'
+        self.connection_status = 'offline'
+        logger.debug('%s offline', self.device_name)
+        return False
+
+    def turn_on(self,
+                brightness: int = None,
+                color_temp: int = None,
+                color_saturation: int = None,
+                color_hue: float = None,
+                color_mode: str = None,
+                color_value: int = None,
+                ) -> bool:
+        """Turn on Multicolor bulbs and adjust parameters."""
+        # initiate variables
+        color_mode_api = ''
+        should_force = 1
+        if (color_temp is None and
+                color_saturation is None and
+                color_hue is None and
+                color_mode is None and
+                color_value is None):
+
+            if brightness is not None:
+                should_force = 0
+            else:
+                # Turn on without any extra parameters
+                if self.toggle('on'):
+                    self.device_status = 'on'
+                    return True
+                self.device_status = 'off'
+                self.connection_status = 'offline'
+                logger.debug('%s offline', self.device_name)
+                return False
+
+        # """Set brightness of multicolor bulb."""
+        brightness_api: Union[str, int] = ''
+        if brightness is not None:
+            if not self.dimmable_feature:
+                logger.debug('%s is not dimmable', self.device_name)
+                return False
+            if not isinstance(brightness, int):
+                logger.error(
+                    'Error: brightness value should be a integer '
+                    'number between 1 and 100 OR None')
+                return False
+            if brightness < 1 or brightness > 100:
+                logger.warning(
+                    'Warning: brightness value should be '
+                    'between 1 and 100')
+            # ensure brightness is between 0 and 100
+            brightness = max(1, (min(100, brightness)))
+            brightness_api = int(brightness)
+
+        # """Set White Temperature of Bulb in pct (1 - 100)."""
+        color_temp_api: Union[str, int] = ''
+        if color_temp is not None:
+            if not self.color_temp_feature:
+                logger.debug(
+                    '%s is not white temperature tunable', self.device_name)
+                return False
+            if not isinstance(color_temp, int):
+                logger.error(
+                    'Error: color_temp value should be a integer '
+                    'number between 0 and 100 OR None')
+                return False
+            if color_temp < 0 or color_temp > 100:
+                logger.debug(
+                    'Warning: color_temp value should be between 0 and 100')
+            # ensure color_temp is between 0 and 100
+            color_temp = max(0, (min(100, color_temp)))
+            color_temp_api = color_temp
+            color_mode_api = 'white'
+
+        # """Set Color Saturation of Bulb in pct (1 - 100)."""
+        color_saturation_api: Union[str, int] = ''
+        if color_saturation is not None:
+            if not self.color_temp_feature:
+                logger.debug('%s is not color capable', self.device_name)
+                return False
+            if not isinstance(color_saturation, int):
+                logger.error(
+                    'Error: color_saturation value should be a integer '
+                    'number between 0 and 100 OR None')
+                return False
+            if color_saturation < 0 or color_saturation > 100:
+                logger.debug(
+                    'Warning: color_saturation value should be '
+                    'between 0 and 100')
+            # ensure color_temp is between 0 and 100
+            color_saturation = max(0, (min(100, color_saturation)))
+            # convert value to api expected range (0-10000)
+            color_saturation_api = round(color_saturation*100, None)
+            color_mode_api = 'hsv'
+
+        # """Set Color Hue of Bulb in pct (1 - 100)."""
+        color_hue_api: Union[str, int] = ''
+        if color_hue is not None:
+            if not self.rgb_shift_feature:
+                logger.debug('%s is not color capable', self.device_name)
+                return False
+            if not isinstance(color_hue, float):
+                logger.error(
+                    'Error: color_hue value should be a float number '
+                    'between 0 and 360 OR None')
+                return False
+            if color_hue <= 0 or color_hue > 360:
+                logger.warning(
+                    'Warning: color_hue value should be between 0 and 360')
+            # ensure color_hue is between 0 and 360
+            color_hue = max(0, (min(360, color_hue)))
+            # convert value to api expected range (0-10000)
+            color_hue_api = round(color_hue*27.777777, None)
+            color_mode_api = 'hsv'
+
+        # """Set Color Mode of Bulb (white / hsv)."""
+        if color_mode is not None:
+            if not self.rgb_shift_feature:
+                logger.debug('%s is not color capable', self.device_name)
+                return False
+            if not isinstance(color_mode, str):
+                logger.error('Error: color_mode should be a string value')
+                return False
+            color_mode = color_mode.lower()
+            possible_modes = {'white': 'white',
+                              'color': 'hsv',
+                              'hsv': 'hsv'}
+            if color_mode not in possible_modes:
+                logger.error(
+                    'Color mode specified is not acceptable '
+                    '(Try: "white"/"color"/"hsv")')
+                return False
+            color_mode_api = str(possible_modes[color_mode])
+
+        # """Set color value of multicolor bulb."""
+        if color_value is not None:
+            if not self.rgb_shift_feature:
+                logger.debug('%s is not color capable', self.device_name)
+                return False
+            if not isinstance(color_value, int):
+                logger.error(
+                    'Error: color_value value should be a integer number '
+                    'between 1 and 100 OR None')
+                return False
+            if color_value < 1 or color_value > 100:
+                logger.warning(
+                    'Warning: color_value value should be between 1 and 100')
+            # ensure color_value is between 0 and 100
+            color_value = max(1, (min(100, color_value)))
+            # color value is actually set by the brightness
+            # parameter when color_mode = hsv
+            should_force = 1
+            brightness_api = color_value
+            color_mode_api = 'hsv'
+
+        # Prepare JSON for API call
+        body = helpers.req_body(self.manager, 'bypassV2')
+        body['cid'] = self.cid
+        body['configModule'] = self.config_module
+        body['payload'] = {
+            'method': 'setLightStatusV2',
+            'source': 'APP',
+            'data': {
+                'force': should_force,
+                'brightness': brightness_api,
+                'colorTemp': color_temp_api,
+                'colorMode': color_mode_api,
+                'hue': color_hue_api,
+                'saturation': color_saturation_api,
+                'value': ''
+                }
+            }
+        # Make API call
+        r, _ = helpers.call_api(
+            '/cloud/v2/deviceManaged/bypassV2',
+            'post',
+            headers=helpers.req_header_bypass(),
+            json_object=body,
+            )
+        # Check result
+        if helpers.code_check(r):
+            self._interpret_apicall_result(r)
+            self.device_status = 'on'
             return True
         self.device_status = 'off'
         self.connection_status = 'offline'
