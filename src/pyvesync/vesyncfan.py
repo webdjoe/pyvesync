@@ -557,11 +557,12 @@ class VeSyncAirBypass(VeSyncBaseDevice):
              self.config['display_forever'], '')
         ]
         if self.air_quality_feature:
-            disp.extend([('Air Quality Level: ',
-                          self.details['air_quality'], ''),
-                          ('Air Quality Value: ',
-                           self.details['air_quality_value'], 'ug/m3')
-                          ])
+            disp.extend([
+                ('Air Quality Level: ',
+                    self.details['air_quality'], ''),
+                ('Air Quality Value: ',
+                    self.details['air_quality_value'], 'ug/m3')
+                ])
         for line in disp:
             print(f'{line[0]:.<30} {line[1]} {line[2]}')
 
