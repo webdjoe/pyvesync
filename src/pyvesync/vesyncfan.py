@@ -146,7 +146,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             'night_light': 'off',
         }
         if self.air_quality_feature is True:
-            self.details['ait_quality'] = 0
+            self.details['air_quality'] = 0
         self.config: Dict[str, Union[str, int, float, bool]] = {
             'display': False,
             'display_forever': False
@@ -193,6 +193,8 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         self.details['display_forever'] = dev_dict.get('display_forever',
                                                        False)
         if self.air_quality_feature:
+            self.details['air_quality_value'] = dev_dict.get(
+                'air_quality_value', 0)
             self.details['air_quality'] = dev_dict.get('air_quality', 0)
 
     def build_config_dict(self, conf_dict: Dict[str, str]) -> None:
@@ -555,8 +557,11 @@ class VeSyncAirBypass(VeSyncBaseDevice):
              self.config['display_forever'], '')
         ]
         if self.air_quality_feature:
-            disp.append(('Air Quality: ',
-                         self.details['air_quality'], 'ug/m3'))
+            disp.extend([('Air Quality Level: ',
+                          self.details['air_quality'], ''),
+                          ('Air Quality Value: ',
+                           self.details['air_quality_value'], 'ug/m3')
+                          ])
         for line in disp:
             print(f'{line[0]:.<30} {line[1]} {line[2]}')
 
@@ -578,7 +583,10 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         )
         if self.air_quality_feature:
             sup_val.update(
-                {'Air Quality': str(self.details['air_quality'])}
+                {'Air Quality Level': str(self.details['air_quality'])}
+            )
+            sup_val.update(
+                {'Air Quality Value': str(self.details['air_quality_value'])}
             )
         return json.dumps(sup_val, indent=4)
 
@@ -800,8 +808,8 @@ class VeSyncAir131(VeSyncBaseDevice):
             ('Air Quality: ', self.air_quality, ''),
             ('Mode: ', self.mode, ''),
             ('Screen Status: ', self.screen_status, ''),
-            ('Filter Life: ', self.filter_life, ' percent'),
-        ]
+            ('Filter Life: ', json.dumps(self.filter_life), ' percent')
+            ]
         for line in disp:
             print(f'{line[0]:.<30} {line[1]} {line[2]}')
 
@@ -816,7 +824,7 @@ class VeSyncAir131(VeSyncBaseDevice):
                 'Air Quality': self.air_quality,
                 'Mode': self.mode,
                 'Screen Status': self.screen_status,
-                'Filter Life': str(self.filter_life),
+                'Filter Life': str(self.filter_life)
             }
         )
         return json.dumps(sup_val, indent=4)
