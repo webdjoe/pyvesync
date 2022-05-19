@@ -627,272 +627,27 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
 
     def set_brightness(self, brightness: int) -> bool:
         """Set brightness of multicolor bulb."""
-        if not self.dimmable_feature:
-            logger.debug('%s is not dimmable', self.device_name)
-            return False
-        if not isinstance(brightness, int):
-            logger.error(
-                'Error: brightness value should be a integer number '
-                'between 1 and 100 OR None')
-            return False
-        if brightness < 1 or brightness > 100:
-            logger.warning(
-                'Warning: brightness value should be between 1 and 100')
-        # ensure brightness is between 0 and 100
-        brightness = max(1, (min(100, brightness)))
-        body = helpers.req_body(self.manager, 'bypassV2')
-        body['cid'] = self.cid
-        body['configModule'] = self.config_module
-        body['payload'] = {
-            'method': 'setLightStatusV2',
-            'source': 'APP',
-            'data': {
-                'force': 0,
-                'brightness': brightness,
-                'colorTemp': '',
-                'colorMode': '',
-                'hue': '',
-                'saturation': '',
-                'value': '',
-                }
-            }
-        r, _ = helpers.call_api(
-            '/cloud/v2/deviceManaged/bypassV2',
-            'post',
-            headers=helpers.req_header_bypass(),
-            json_object=body
-            )
-        if helpers.code_check(r):
-            self._interpret_apicall_result(r)
-            self._brightness = brightness
-            return True
-        self.device_status = 'off'
-        self.connection_status = 'offline'
-        logger.debug('%s offline', self.device_name)
-        return False
+        return self.turn_on(brightness=brightness)
 
     def set_color_value(self, color_value: int) -> bool:
         """Set color value of multicolor bulb."""
-        if not self.rgb_shift_feature:
-            logger.debug('%s is not color capable', self.device_name)
-            return False
-        if color_value < 1 or color_value > 100:
-            logger.warning(
-                'Warning: color_value value should be between 1 and 100')
-        # ensure color_value is between 0 and 100
-        color_value = max(1, (min(100, color_value)))
-        body = helpers.req_body(self.manager, 'bypassV2')
-        body['cid'] = self.cid
-        body['configModule'] = self.config_module
-        # color value is actually set by the brightness
-        # parameter when color_mode = hsv
-        body['payload'] = {
-            'method': 'setLightStatusV2',
-            'source': 'APP',
-            'data': {
-                'force': 1,
-                'brightness': color_value,
-                'colorTemp': '',
-                'colorMode': 'hsv',
-                'hue': '',
-                'saturation': '',
-                'value': '',
-                }
-            }
-        r, _ = helpers.call_api(
-            '/cloud/v2/deviceManaged/bypassV2',
-            'post',
-            headers=helpers.req_header_bypass(),
-            json_object=body
-            )
-        if helpers.code_check(r):
-            self._interpret_apicall_result(r)
-            self._color_value = color_value
-            return True
-        self.device_status = 'off'
-        self.connection_status = 'offline'
-        logger.debug('%s offline', self.device_name)
-        return False
+        return self.turn_on(color_value=color_value)
 
     def set_color_temp(self, color_temp: int) -> bool:
         """Set White Temperature of Bulb in pct (0 - 100)."""
-        if not self.color_temp_feature:
-            logger.debug(
-                '%s is not white temperature tunable', self.device_name)
-            return False
-        if not isinstance(color_temp, int):
-            logger.error(
-                'Error: color_temp value should be a integer number '
-                'between 0 and 100 OR None')
-            return False
-        if color_temp < 0 or color_temp > 100:
-            logger.debug(
-                'Warning: color_temp value should be between 0 and 100')
-        # ensure color_temp is between 0 and 100
-        color_temp = max(0, (min(100, color_temp)))
-        body = helpers.req_body(self.manager, 'bypassV2')
-        body['cid'] = self.cid
-        body['configModule'] = self.config_module
-        body['payload'] = {
-            'method': 'setLightStatusV2',
-            'source': 'APP',
-            'data': {
-                'force': 1,
-                'brightness': '',
-                'colorTemp': color_temp,
-                'colorMode': 'white',
-                'hue': '',
-                'saturation': '',
-                'value': '',
-                }
-            }
-        r, _ = helpers.call_api(
-            '/cloud/v2/deviceManaged/bypassV2',
-            'post',
-            headers=helpers.req_header_bypass(),
-            json_object=body,
-            )
-        if helpers.code_check(r):
-            self._interpret_apicall_result(r)
-            self.device_status = 'on'
-            self._color_temp = color_temp
-            return True
-        self.device_status = 'off'
-        self.connection_status = 'offline'
-        logger.debug('%s offline', self.device_name)
-        return False
+        return self.turn_on(color_temp=color_temp)
 
     def set_color_saturation(self, color_saturation: int) -> bool:
         """Set Color Saturation of Bulb in pct (1 - 100)."""
-        if not self.rgb_shift_feature:
-            logger.debug('%s is not color capable', self.device_name)
-            return False
-        if color_saturation < 0 or color_saturation > 100:
-            logger.debug(
-                'Warning: color_saturation value should be between 0 - 100')
-        # ensure color_temp is between 0 and 100
-        color_saturation = max(0, (min(100, color_saturation)))
-        # convert value to api expected range (0-10000)
-        color_saturation_api: int = round(color_saturation*100, None)
-        body = helpers.req_body(self.manager, 'bypassV2')
-        body['cid'] = self.cid
-        body['configModule'] = self.config_module
-        body['payload'] = {
-            'method': 'setLightStatusV2',
-            'source': 'APP',
-            'data': {
-                'force': 1,
-                'brightness': '',
-                'colorTemp': '',
-                'colorMode': 'hsv',
-                'hue': '',
-                'saturation': color_saturation_api,
-                'value': '',
-                }
-            }
-        r, _ = helpers.call_api(
-            '/cloud/v2/deviceManaged/bypassV2',
-            'post',
-            headers=helpers.req_header_bypass(),
-            json_object=body,
-            )
-        if helpers.code_check(r):
-            self._interpret_apicall_result(r)
-            self.device_status = 'on'
-            self._color_saturation = color_saturation
-            return True
-        self.device_status = 'off'
-        self.connection_status = 'offline'
-        logger.debug('%s offline', self.device_name)
-        return False
+        return self.turn_on(color_saturation=color_saturation)
 
     def set_color_hue(self, color_hue: float) -> bool:
         """Set Color Hue of Bulb (0 - 360)."""
-        if not self.rgb_shift_feature:
-            logger.debug('%s is not color capable', self.device_name)
-            return False
-        if color_hue < 0 or color_hue > 360:
-            logger.warning(
-                'Warning: color_hue value should be between 0 and 360')
-        # ensure color_hue is between 0 and 360
-        color_hue = max(0, (min(360, color_hue)))
-        # convert value to api expected range (0-10000)
-        color_hue_api: int = round(color_hue*27.777777, None)
-        body = helpers.req_body(self.manager, 'bypassV2')
-        body['cid'] = self.cid
-        body['configModule'] = self.config_module
-        body['payload'] = {
-            'method': 'setLightStatusV2',
-            'source': 'APP',
-            'data': {
-                'force': 1,
-                'brightness': '',
-                'colorTemp': '',
-                'colorMode': 'hsv',
-                'hue': color_hue_api,
-                'saturation': '',
-                'value': '',
-                }
-            }
-        r, _ = helpers.call_api(
-            '/cloud/v2/deviceManaged/bypassV2',
-            'post',
-            headers=helpers.req_header_bypass(),
-            json_object=body,
-            )
-        if helpers.code_check(r):
-            self._interpret_apicall_result(r)
-            self.device_status = 'on'
-            self._color_hue = color_hue
-            return True
-        self.device_status = 'off'
-        self.connection_status = 'offline'
-        logger.debug('%s offline', self.device_name)
-        return False
+        return self.turn_on(color_hue=color_hue)
 
     def set_color_mode(self, color_mode: str) -> bool:
         """Set Color Mode of Bulb (white / hsv)."""
-        if not self.rgb_shift_feature:
-            logger.debug('%s is not color capable', self.device_name)
-            return False
-        color_mode = color_mode.lower()
-        possible_modes = {'white': 'white',
-                          'color': 'hsv',
-                          'hsv': 'hsv'}
-        if color_mode not in possible_modes:
-            logger.error("Color mode specified is not acceptable")
-            return False
-        body = helpers.req_body(self.manager, 'bypassV2')
-        body['cid'] = self.cid
-        body['configModule'] = self.config_module
-        body['payload'] = {
-            'method': 'setLightStatusV2',
-            'source': 'APP',
-            'data': {
-                'force': 1,
-                'brightness': '',
-                'colorTemp': '',
-                'colorMode': possible_modes[color_mode],
-                'hue': '',
-                'saturation': '',
-                'value': '',
-                }
-            }
-        r, _ = helpers.call_api(
-            '/cloud/v2/deviceManaged/bypassV2',
-            'post',
-            headers=helpers.req_header_bypass(),
-            json_object=body,
-            )
-        if helpers.code_check(r):
-            self._interpret_apicall_result(r)
-            self.device_status = 'on'
-            self._color_mode = str(possible_modes[color_mode])
-            return True
-        self.device_status = 'off'
-        self.connection_status = 'offline'
-        logger.debug('%s offline', self.device_name)
-        return False
+        return self.turn_on(color_mode=color_mode)
 
     def turn_on(self,
                 brightness: int = None,
