@@ -408,7 +408,7 @@ class VeSyncBulbESL100CW(VeSyncBulb):
             headers=helpers.req_headers(self.manager),
             json_object=body,
         )
-        if helpers.code_check(r) == 0:
+        if helpers.code_check(r):
             self.device_status = status
             return True
         logger.debug('%s offline', self.device_name)
