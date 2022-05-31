@@ -394,9 +394,10 @@ Compatible levels for each model:
 - Set color value (float values from 0.0 - 100.0)
 - Setting this will automatically force the bulb into Colored mode
 
-`VeSyncBulb.turn_on(brightness, color_temp, color_saturation, color_hue, color_mode color_value)` 
+`VeSyncBulb.set_status(brightness, color_temp, color_saturation, color_hue, color_mode color_value)` 
 - Set every property, in a single call
 - All parameters are optional
+
 #### Dimmable Switch Methods and Properties
 
 `VeSyncSwitch.brightness` - Return brightness of switch in percentage (1 - 100)
