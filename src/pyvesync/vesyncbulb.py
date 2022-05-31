@@ -166,6 +166,10 @@ class VeSyncBulb(VeSyncBaseDevice):
         return False
 
     @abstractmethod
+    def set_status(self) -> bool:
+        """Set vesync bulb attributes(brightness, color_temp, etc)."""
+
+    @abstractmethod
     def get_details(self) -> None:
         """Get vesync bulb details."""
 
@@ -627,36 +631,36 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
 
     def set_brightness(self, brightness: int) -> bool:
         """Set brightness of multicolor bulb."""
-        return self.turn_on(brightness=brightness)
+        return self.set_status(brightness=brightness)
 
     def set_color_value(self, color_value: int) -> bool:
         """Set color value of multicolor bulb."""
-        return self.turn_on(color_value=color_value)
+        return self.set_status(color_value=color_value)
 
     def set_color_temp(self, color_temp: int) -> bool:
         """Set White Temperature of Bulb in pct (0 - 100)."""
-        return self.turn_on(color_temp=color_temp)
+        return self.set_status(color_temp=color_temp)
 
     def set_color_saturation(self, color_saturation: int) -> bool:
         """Set Color Saturation of Bulb in pct (1 - 100)."""
-        return self.turn_on(color_saturation=color_saturation)
+        return self.set_status(color_saturation=color_saturation)
 
     def set_color_hue(self, color_hue: float) -> bool:
         """Set Color Hue of Bulb (0 - 360)."""
-        return self.turn_on(color_hue=color_hue)
+        return self.set_status(color_hue=color_hue)
 
     def set_color_mode(self, color_mode: str) -> bool:
         """Set Color Mode of Bulb (white / hsv)."""
-        return self.turn_on(color_mode=color_mode)
+        return self.set_status(color_mode=color_mode)
 
-    def turn_on(self,
-                brightness: int = None,
-                color_temp: int = None,
-                color_saturation: int = None,
-                color_hue: float = None,
-                color_mode: str = None,
-                color_value: int = None,
-                ) -> bool:
+    def set_status(self,
+                   brightness: int = None,
+                   color_temp: int = None,
+                   color_saturation: int = None,
+                   color_hue: float = None,
+                   color_mode: str = None,
+                   color_value: int = None,
+                   ) -> bool:
         """Turn on Multicolor bulbs and adjust parameters."""
         # initiate variables
         color_mode_api = ''

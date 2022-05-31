@@ -191,10 +191,6 @@ class Helpers:
                     API_BASE_URL + api, json=json_object, headers=headers,
                     timeout=API_TIMEOUT
                 )
-            # logger.debug("API call URL: \n  %s", r.request.url)
-            # logger.debug("API call headers: \n  %s", r.request.headers)
-            # logger.debug("API call json: \n  %s", r.request.body)
-
         except requests.exceptions.RequestException as e:
             logger.debug(e)
         except Exception as e:  # pylint: disable=broad-except
@@ -217,8 +213,6 @@ class Helpers:
             return False
         if isinstance(r, dict) and r.get('code') == 0:
             return True
-        # logger.debug('Unknown return code: %d with message: %s',
-        #             r.get('code'), r.get('msg'))
         return False
 
     @staticmethod
