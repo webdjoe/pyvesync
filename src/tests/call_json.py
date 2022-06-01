@@ -17,6 +17,7 @@ TRACE_ID = str(int(time.time()))
 """
 DEFAULT_BODY = Standard body for new device calls
 DEFAULT_HEADER = standard header for most calls
+DEFAULT_HEADER_BYPASS = standard header for most calls api V2
 ENERGY_HISTORY = standard outlet energy history response
 -------------------------------------------------------
 login_call_body(email, pass) = body of login call
@@ -60,6 +61,11 @@ DEFAULT_HEADER = {
     'content-type': 'application/json',
     'tk': SAMPLE_TOKEN,
     'tz': DEFAULT_TZ,
+}
+
+DEFAULT_HEADER_BYPASS = {
+    'Content-Type': 'application/json; charset=UTF-8',
+    'User-Agent': 'okhttp/3.12.1'
 }
 
 DEFAULT_BODY = {
@@ -110,7 +116,7 @@ LOGIN_RET_BODY = (
 
 
 def login_call_body(email, password):
-    json = {
+    json_object = {
         'acceptLanguage': 'en',
         'appVersion': APP_VERSION,
         'devToken': '',
@@ -123,7 +129,7 @@ def login_call_body(email, password):
         'traceId': TRACE_ID,
         'userType': '1',
     }
-    return json
+    return json_object
 
 
 LIST_CONF_7A = {

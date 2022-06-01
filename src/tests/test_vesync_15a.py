@@ -89,13 +89,13 @@ class TestVesync15ASwitch(object):
         body['uuid'] = vswitch15a.uuid
         on = vswitch15a.turn_on()
         self.mock_api.assert_called_with(
-            '/15a/v1/device/devicestatus', 'put', headers=head, json=body
+            '/15a/v1/device/devicestatus', 'put', headers=head, json_object=body
         )
         assert on
         off = vswitch15a.turn_off()
         body['status'] = 'off'
         self.mock_api.assert_called_with(
-            '/15a/v1/device/devicestatus', 'put', headers=head, json=body
+            '/15a/v1/device/devicestatus', 'put', headers=head, json_object=body
         )
         assert off
 
@@ -117,7 +117,7 @@ class TestVesync15ASwitch(object):
             '/15a/v1/device/energyweek',
             'post',
             headers=helpers.req_headers(self.vesync_obj),
-            json=body,
+            json_object=body,
         )
         energy_dict = vswitch15a.energy['week']
         assert energy_dict['energy_consumption_of_today'] == 1
@@ -138,7 +138,7 @@ class TestVesync15ASwitch(object):
             '/15a/v1/device/energymonth',
             'post',
             headers=helpers.req_headers(self.vesync_obj),
-            json=body,
+            json_object=body,
         )
         energy_dict = vswitch15a.energy['month']
         assert energy_dict['energy_consumption_of_today'] == 1
@@ -159,7 +159,7 @@ class TestVesync15ASwitch(object):
             '/15a/v1/device/energyyear',
             'post',
             headers=helpers.req_headers(self.vesync_obj),
-            json=body,
+            json_object=body,
         )
         energy_dict = vswitch15a.energy['year']
         assert energy_dict['energy_consumption_of_today'] == 1

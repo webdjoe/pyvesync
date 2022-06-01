@@ -75,13 +75,13 @@ class TestVesyncWallSwitch(object):
         body['uuid'] = wswitch.uuid
         on = wswitch.turn_on()
         self.mock_api.assert_called_with(
-            '/inwallswitch/v1/device/devicestatus', 'put', headers=head, json=body
+            '/inwallswitch/v1/device/devicestatus', 'put', headers=head, json_object=body
         )
         assert on
         off = wswitch.turn_off()
         body['status'] = 'off'
         self.mock_api.assert_called_with(
-            '/inwallswitch/v1/device/devicestatus', 'put', headers=head, json=body
+            '/inwallswitch/v1/device/devicestatus', 'put', headers=head, json_object=body
         )
         assert off
 

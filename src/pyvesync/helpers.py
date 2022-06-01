@@ -3,6 +3,7 @@
 import hashlib
 import logging
 import time
+import json
 import requests
 
 logger = logging.getLogger(__name__)
@@ -37,6 +38,14 @@ class Helpers:
             'tz': manager.time_zone,
         }
         return headers
+
+    @staticmethod
+    def req_header_bypass() -> dict:
+        """Build header for api requests on 'bypass' endpoint."""
+        return {
+            'Content-Type': 'application/json; charset=UTF-8',
+            'User-Agent': 'okhttp/3.12.1',
+            }
 
     @staticmethod
     def req_body_base(manager) -> dict:
@@ -122,6 +131,14 @@ class Helpers:
                 **cls.req_body_details(),
             }
             body['method'] = 'bypass'
+        elif type_ == 'bypassV2':
+            body = {
+                **cls.req_body_base(manager),
+                **cls.req_body_auth(manager),
+                **cls.req_body_details(),
+            }
+            body['deviceRegion'] = DEFAULT_REGION
+            body['method'] = 'bypassV2'
         elif type_ == 'bypass_config':
             body = {
                 **cls.req_body_base(manager),
@@ -147,27 +164,31 @@ class Helpers:
 
     @staticmethod
     def call_api(
-        api: str, method: str, json: dict = None, headers: dict = None
+        api: str, method: str, json_object: dict = None, headers: dict = None,
     ) -> tuple:
         """Make API calls by passing endpoint, header and body."""
         response = None
         status_code = None
 
         try:
+            logger.debug("=======call_api=============================")
             logger.debug("[%s] calling '%s' api", method, api)
+            logger.debug("API call URL: \n  %s%s", API_BASE_URL, api)
+            logger.debug("API call headers: \n  %s", json.dumps(headers))
+            logger.debug("API call json: \n  %s", json.dumps(json_object))
             if method.lower() == 'get':
                 r = requests.get(
-                    API_BASE_URL + api, json=json, headers=headers,
+                    API_BASE_URL + api, json=json_object, headers=headers,
                     timeout=API_TIMEOUT
                 )
             elif method.lower() == 'post':
                 r = requests.post(
-                    API_BASE_URL + api, json=json, headers=headers,
+                    API_BASE_URL + api, json=json_object, headers=headers,
                     timeout=API_TIMEOUT
                 )
             elif method.lower() == 'put':
                 r = requests.put(
-                    API_BASE_URL + api, json=json, headers=headers,
+                    API_BASE_URL + api, json=json_object, headers=headers,
                     timeout=API_TIMEOUT
                 )
         except requests.exceptions.RequestException as e:
@@ -179,6 +200,7 @@ class Helpers:
                 status_code = 200
                 if r.content:
                     response = r.json()
+                    logger.debug("API response: \n\n  %s \n ", response)
             else:
                 logger.debug('Unable to fetch %s%s', API_BASE_URL, api)
         return response, status_code
@@ -186,6 +208,9 @@ class Helpers:
     @staticmethod
     def code_check(r: dict) -> bool:
         """Test if code == 0 for successful API call."""
+        if r is None:
+            logger.error('No response from API')
+            return False
         if isinstance(r, dict) and r.get('code') == 0:
             return True
         return False
@@ -219,7 +244,7 @@ class Helpers:
     @staticmethod
     def build_config_dict(r: dict) -> dict:
         """Build configuration dictionary from API response."""
-        if r.get('theshold') is not None:
+        if r.get('threshold') is not None:
             threshold = r.get('threshold')
         else:
             threshold = r.get('threshHold')
@@ -249,5 +274,5 @@ class Helpers:
         """Build bypass header dict."""
         return {
             'Content-Type': 'application/json; charset=UTF-8',
-            'User-Agent': 'okhttp/3.12.1'
+            'User-Agent': 'okhttp/3.12.1',
         }
