@@ -19,7 +19,7 @@ humid_features: dict = {
         'module': 'VeSyncHumid200S',
         'models': ['Classic200S'],
         'features': [],
-        'mist_modes': ['auto', 'manual'],
+        'mist_modes': ['auto', 'manual', 'manual'],
         'mist_levels': list(range(1, 10))
     },
     'Dual200S': {
@@ -1386,5 +1386,5 @@ class VeSyncHumid200S(VeSyncHumid200300S):
 
         if r is not None and Helpers.code_check(r):
             return True
-        logger.debug("Error toggling 300S display - %s", self.device_name)
+        logger.debug("Error toggling 200S display - %s", self.device_name)
         return False
