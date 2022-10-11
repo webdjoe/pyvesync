@@ -738,7 +738,9 @@ manager.update()
 
 ~~If you would like new devices to be added, you will need to capture the packets from the app. The easiest way to do this is by using [Packet Capture for Android](https://play.google.com/store/apps/details?id=app.greyshirts.sslcapture&hl=en_US&gl=US). This works without rooting the device. If you do not have an android or are concerned with adding an app that uses a custom certificate to read the traffic, you can use an Android emulator such as [Nox](https://www.bignox.com/).~~
 
-SSL pinning makes capturing packets with android not feasible anymore. Charles Proxy is a proxy that allows you to perform MITM SSL captures on an iOS device. This is the only way to capture packets that I am aware of that is currently possible.
+SSL pinning makes capturing packets with Android ~~not feasible anymore~~ harder than before. A system-wide proxy (https://play.google.com/store/apps/details?id=org.proxydroid&hl=en) can be used if ssl pinning is disabled (https://github.com/ViRb3/TrustMeAlready).
+
+Charles Proxy is a proxy that allows you to perform MITM SSL captures on an iOS device. This is the only way to capture packets that I am aware of that is currently possible.
 
 When capturing packets make sure all packets are captured from the device list, along with all functions that the app contains. The captured packets are stored in text files, please do not capture with pcap format.
 
