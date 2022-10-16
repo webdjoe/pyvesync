@@ -51,14 +51,14 @@ air_features: dict = {
     'Core200S': {
         'module': 'VeSyncAirBypass',
         'models': ['Core200S', 'LAP-C201S-AUSR', 'LAP-C202S-WUSR'],
-        'modes': ['sleep', 'off'],
+        'modes': ['sleep', 'off', 'manual'],
         'features': [],
         'levels': list(range(1, 4))
     },
     'Core300S': {
         'module': 'VeSyncAirBypass',
         'models': ['Core300S', 'LAP-C301S-WJP'],
-        'modes': ['sleep', 'off', 'auto'],
+        'modes': ['sleep', 'off', 'auto', 'manual'],
         'features': ['air_quality'],
         'levels': list(range(1, 5))
     },
@@ -68,7 +68,7 @@ air_features: dict = {
                    'LAP-C401S-WJP',
                    'LAP-C401S-WUSR',
                    'LAP-C401S-WAAA'],
-        'modes': ['sleep', 'off', 'auto'],
+        'modes': ['sleep', 'off', 'auto', 'manual'],
         'features': ['air_quality'],
         'levels': list(range(1, 5))
     },
@@ -78,7 +78,7 @@ air_features: dict = {
                    'LAP-C601S-WUS',
                    'LAP-C601S-WUSR',
                    'LAP-C601S-WEU'],
-        'modes': ['sleep', 'off', 'auto'],
+        'modes': ['sleep', 'off', 'auto', 'manual'],
         'features': ['air_quality'],
         'levels': list(range(1, 5))
     },
@@ -260,8 +260,6 @@ class VeSyncAirBypass(VeSyncBaseDevice):
                              speed, str(speeds))
                 return False
             new_speed = speed
-            if current_speed == new_speed:
-                return True
         else:
             if current_speed == speeds[-1]:
                 new_speed = speeds[0]
@@ -366,6 +364,12 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         )
 
         if Helpers.code_check(r):
+            if mode.lower() == 'manual':
+                self.speed = 1
+                self.mode = 'manual'
+            else:
+                self.mode = mode
+                self.speed = 0
             return True
         logger.debug('Error setting purifier mode')
         return False
@@ -1386,5 +1390,5 @@ class VeSyncHumid200S(VeSyncHumid200300S):
 
         if r is not None and Helpers.code_check(r):
             return True
-        logger.debug("Error toggling 300S display - %s", self.device_name)
+        logger.debug("Error toggling 200S display - %s", self.device_name)
         return False
