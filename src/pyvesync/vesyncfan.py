@@ -44,6 +44,14 @@ humid_features: dict = {
         'mist_levels': list(range(1, 10)),
         'warm_mist_levels': [0, 1, 2, 3]
     },
+    'OASISMIST': {
+        'module': 'VeSyncHumid200300S',
+        'models': ['LUH-O451S-WUS'],
+        'features': ['warm_mist'],
+        'mist_modes': ['humidity', 'sleep', 'manual'],
+        'mist_levels': list(range(1, 10)),
+        'warm_mist_levels': list(range(1, 3))
+    },
 }
 
 
