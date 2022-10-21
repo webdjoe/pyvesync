@@ -50,7 +50,7 @@ humid_features: dict = {
         'features': ['warm_mist'],
         'mist_modes': ['humidity', 'sleep', 'manual'],
         'mist_levels': list(range(1, 10)),
-        'warm_mist_levels': list(range(1, 3))
+        'warm_mist_levels': list(range(4))
     },
 }
 
