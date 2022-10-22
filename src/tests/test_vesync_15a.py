@@ -5,9 +5,9 @@ from pyvesync import VeSync, VeSyncOutlet15A
 from pyvesync.helpers import Helpers as helpers
 from . import call_json
 
-DEV_LIST_DETAIL = call_json.LIST_CONF_15A
+DEV_LIST_DETAIL = call_json.DeviceList.LIST_CONF_15A
 
-CORRECT_15A_LIST = call_json.DEVLIST_15A
+CORRECT_15A_LIST = call_json.DeviceList.DEVLIST_15A
 
 ENERGY_HISTORY = call_json.ENERGY_HISTORY
 

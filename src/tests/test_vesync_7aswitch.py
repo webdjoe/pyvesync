@@ -2,7 +2,6 @@
 
 import logging
 from unittest.mock import patch
-
 import pytest
 import pyvesync
 from pyvesync import VeSync, VeSyncOutlet7A
@@ -10,9 +9,9 @@ from pyvesync.helpers import Helpers as helpers
 
 from . import call_json
 
-DEV_LIST_DETAIL = call_json.LIST_CONF_7A
+DEV_LIST_DETAIL = call_json.DeviceList.LIST_CONF_7A
 
-CORRECT_7A_LIST = call_json.DEVLIST_7A
+CORRECT_7A_LIST = call_json.DeviceList.DEVLIST_7A
 
 CORRECT_7A_DETAILS = call_json.DETAILS_7A
 
@@ -25,7 +24,7 @@ class TestVesync7ASwitch(object):
     @pytest.fixture()
     def api_mock(self, caplog):
         """Mock call_api() and initialize VeSync object."""
-        self.mock_api_call = patch.object(pyvesync.helpers.Helpers, 'call_api')
+        self.mock_api_call = patch('pyvesync.helpers.Helpers.call_api')
         self.mock_api = self.mock_api_call.start()
         self.mock_api.create_autospect()
         self.mock_api.return_value.ok = True

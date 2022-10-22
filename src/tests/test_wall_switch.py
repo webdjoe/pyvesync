@@ -5,9 +5,9 @@ from pyvesync import VeSync, VeSyncWallSwitch
 from pyvesync.helpers import Helpers as helpers
 from . import call_json
 
-DEV_LIST_DETAIL = call_json.LIST_CONF_WS
+DEV_LIST_DETAIL = call_json.DeviceList.LIST_CONF_WS
 
-CORRECT_WS_LIST = call_json.DEVLIST_WS
+CORRECT_WS_LIST = call_json.DeviceList.DEVLIST_WS
 
 ENERGY_HISTORY = call_json.ENERGY_HISTORY
 
