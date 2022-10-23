@@ -3,7 +3,6 @@ from unittest.mock import MagicMock, patch
 from collections import namedtuple
 import pytest
 from pyvesync import VeSync, VeSyncBulbESL100, VeSyncBulbESL100CW, VeSyncBulbESL100MC, VeSyncBulbValcenoA19MC
-
 from . import call_json
 
 DEV_LIST = call_json.DeviceList.DEVLIST_ESL100
@@ -265,14 +264,14 @@ class TestVeSyncBulbValceno:
         self.vesync_obj = VeSync('sam@mail.com', 'pass')
         self.vesync_obj.enabled = True
         self.vesync_obj.login = True
-        self.vesync_obj.token = 'sample_tk'
-        self.vesync_obj.account_id = 'sample_actid'
+        self.vesync_obj.token = call_json.SAMPLE_TOKEN
+        self.vesync_obj.account_id = call_json.SAMPLE_ACTID
         caplog.set_level(logging.DEBUG)
         yield
         self.mock_api_call.stop()
 
-    def test_esl100vc_conf(self, api_mock):
-        """Tests that Wall Switch is instantiated properly."""
+    def test_valceno_conf(self, api_mock):
+        """Tests that Valceno is instantiated properly."""
         self.mock_api.return_value = DEV_LIST_VALCENO
         self.vesync_obj.get_devices()
         bulbs = self.vesync_obj.bulbs
@@ -284,8 +283,8 @@ class TestVeSyncBulbValceno:
         assert bulb.cid == 'CID-VALCENO'
         assert bulb.uuid == 'UUID-VALCENO'
 
-    def test_esl100vc_details(self, api_mock):
-        """Test WS get_details()."""
+    def test_valceno_details(self, api_mock):
+        """Test Valceno get_details()."""
         self.mock_api.return_value = DEV_LIST_VALCENO
         bulb = VeSyncBulbValcenoA19MC(DEV_LIST_DETAIL_VALCENO, self.vesync_obj)
         bulb.get_details()
@@ -293,8 +292,8 @@ class TestVeSyncBulbValceno:
         assert bulb.device_status == 'on'
         assert bulb.connection_status == 'online'
 
-    def test_esl100vc_onoff(self, caplog, api_mock):
-        """Test power toggle for ESL100 bulb."""
+    def test_valceno_onoff(self, caplog, api_mock):
+        """Test power toggle for Valceno MC bulb."""
         self.mock_api.return_value = ({'code': 0}, 200)
         bulb = VeSyncBulbValcenoA19MC(DEV_LIST_DETAIL_VALCENO, self.vesync_obj)
         assert bulb.turn_off()
@@ -303,22 +302,48 @@ class TestVeSyncBulbValceno:
         assert bulb.device_status == 'on'
 
     def test_brightness(self, api_mock):
+        """Test brightness on Valceno."""
         self.mock_api.return_value = ({'code': 0}, 200)
         bulb = VeSyncBulbValcenoA19MC(DEV_LIST_DETAIL_VALCENO, self.vesync_obj)
         assert bulb.set_brightness(50)
         assert bulb.brightness == 50
 
     def test_invalid_brightness(self, caplog, api_mock):
+        """Test invalid brightness on Valceno."""
         self.mock_api.return_value = ({'code': 0}, 200)
         bulb = VeSyncBulbValcenoA19MC(DEV_LIST_DETAIL_VALCENO, self.vesync_obj)
         assert bulb.set_brightness(5000)
         assert bulb.brightness == 100
 
     def test_color(self, api_mock):
+        """Test set color on Valceno."""
         self.mock_api.return_value = ({'code': 0}, 200)
         bulb = VeSyncBulbValcenoA19MC(DEV_LIST_DETAIL_VALCENO, self.vesync_obj)
         assert bulb.set_rgb(50, 100, 150)
         assert bulb.color_rgb == namedtuple('rgb', 'red green blue')(50, 100, 150)
+
+    def test_hue(self, api_mock):
+        """Test hue on Valceno MC Bulb."""
+        self.mock_api.return_value = ({'code': 0}, 200)
+        bulb = VeSyncBulbValcenoA19MC(DEV_LIST_DETAIL_VALCENO, self.vesync_obj)
+        bulb.set_color_hue(230.5)
+        body_dict = {
+            "method": "setLightStatusV2",
+            "source": "APP",
+            "data":
+                {
+                    "force": 1,
+                    "brightness": "",
+                    "colorTemp": "",
+                    "colorMode": "hsv",
+                    "hue": 6403,
+                    "saturation": "",
+                    "value": ""
+                }
+        }
+        mock_call = self.mock_api.call_args[1]['json_object']['payload']
+        assert mock_call == body_dict
+
 
     def test_features(self, api_mock):
         bulb = VeSyncBulbValcenoA19MC(DEV_LIST_DETAIL_VALCENO, self.vesync_obj)

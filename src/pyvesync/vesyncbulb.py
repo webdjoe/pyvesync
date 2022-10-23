@@ -204,9 +204,9 @@ class VeSyncBulb(VeSyncBaseDevice):
                      green=rgb_dict['green'],
                      blue=rgb_dict['blue'])
 
-    def _validate_hsv(self, hue: Optional[int] = None,
-                      saturation: Optional[int] = None,
-                      value: Optional[int] = None) -> Color:
+    def _validate_hsv(self, hue: Optional[NUMERIC_T] = None,
+                      saturation: Optional[NUMERIC_T] = None,
+                      value: Optional[NUMERIC_T] = None) -> Color:
         """Validate HSV Arguments."""
         hsv_dict = {'hue': hue, 'saturation': saturation, 'value': value}
         for clr, val in hsv_dict.items():
@@ -236,12 +236,11 @@ class VeSyncBulb(VeSyncBaseDevice):
         return Color(hue=hsv_dict['hue'], saturation=hsv_dict['saturation'],
                      value=hsv_dict['value'])
 
-    def _validate_brightness(self, brightness,
-                             start: int = 0, stop: int = 100) -> int:
+    def _validate_brightness(self, brightness: NUMERIC_T,
+                             start: float = 0, stop: float = 100) -> float:
         """Validate brightness value."""
         try:
-            brightness_update = max(start, (min(stop, int(
-                round(float(brightness), 0)))))
+            brightness_update = max(start, (min(stop, round(float(brightness), 2))))
         except (ValueError, TypeError):
             if self._brightness is not None:
                 brightness_update = self.brightness
@@ -261,12 +260,11 @@ class VeSyncBulb(VeSyncBaseDevice):
                 temp_update = 100
         return temp_update
 
-    def _validate_any(self, value, start: int = 0, stop: int = 100,
-                      default: int = 100):
+    def _validate_any(self, value: NUMERIC_T, start: float = 0, stop: float = 100,
+                      default: float = 100) -> float:
         """Validate any value."""
         try:
-            value_update = max(start, (min(stop, int(
-                round(float(value), 0)))))
+            value_update = max(start, (min(stop, round(float(value), 2))))
         except (ValueError, TypeError):
             value_update = default
         return value_update
@@ -456,11 +454,11 @@ class VeSyncBulbESL100MC(VeSyncBulb):
         rgb = Color(hue=hue, saturation=saturation, value=value).rgb
         return self.set_status(red=rgb.red, green=rgb.green, blue=rgb.blue)
 
-    def set_status(self, brightness: Optional[int] = None,
-                   red: Optional[int] = None,
-                   green: Optional[int] = None,
-                   blue: Optional[int] = None,
-                   color_mode: Optional[str] = None) -> bool:
+    def set_status(self, brightness: Optional[NUMERIC_T] = None,
+                   red: Optional[NUMERIC_T] = None,
+                   green: Optional[NUMERIC_T] = None,
+                   blue: Optional[NUMERIC_T] = None,
+                   color_mode: Optional[NUMERIC_T] = None) -> bool:
         """Set status of VeSync ESL100MC."""
         if red is not None or green is not None or blue is not None:
             new_color = self._validate_rgb(red, green, blue)
@@ -987,37 +985,53 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
                 value: NUMERIC_T = None) -> bool:
         """Set HSV Values."""
         arg_dict = {"hue": hue, "saturation": saturation, "value": value}
+        if hue is not None:
+            hue_update = self._validate_any(hue, 0, 360, 360)
+        else:
+            hue_update = ""
+        if saturation is not None:
+            sat_update = self._validate_any(saturation, 0, 100, 100)
+        else:
+            sat_update = ""
+        if value is not None:
+            value_update = self._validate_any(value, 0, 100, 100)
+        else:
+            value_update = ""
+        arg_dict = {
+            "hue": hue_update,
+            "saturation": sat_update,
+            "value": value_update
+        }
+
         if self._color is not None:
             current_dict = {"hue": self.color_hue,
                             "saturation": self.color_saturation,
                             "value": self.color_value}
-            if arg_dict == current_dict:
-                logger.debug("HSV Values already set to same values")
-                return False
+            same_colors = True
             for key, val in arg_dict.items():
-                if val is None:
+                if val is not "":
                     if val != current_dict[key]:
-                        arg_dict[key] = current_dict[key]
-        new_color: Color = Color(hue=arg_dict["hue"],
-                                 saturation=arg_dict["saturation"],
-                                 value=arg_dict["value"])
+                        same_colors = False
+            if same_colors:
+                logger.debug("Device already in requested state")
+                return True
+        for key, val in arg_dict.items():
+            if val is not "":
+                if key == 'hue':
+                    arg_dict[key] = int(round(val*27.77778, 0))
+                if key == "saturation":
+                    arg_dict[key] = int(round(val*100, 0))
+                if key == "value":
+                    arg_dict[key] = int(round(val, 0))
         req_dict: Dict[str, Union[str, int]] = {
-            "force"
-            "colorMode": "hsv",
-            "hue": int(round(new_color.hsv.hue * 27.77778, 0)),
-            "saturation": int(round(new_color.hsv.saturation * 100, 0)),
-            "value": int(round(new_color.hsv.value * 100, 0))
+            "colorMode": "hsv"
         }
-        if self._set_status_api(req_dict):
-            self._color = Color(hue=arg_dict['hue'],
-                                saturation=arg_dict['saturation'],
-                                value=arg_dict['value'])
-            return True
-        return False
+        req_dict.update(arg_dict)
+        return self._set_status_api(req_dict)
 
     def set_status(self,
-                   brightness: int = None,
-                   color_temp: int = None,
+                   brightness: float = None,
+                   color_temp: float = None,
                    color_saturation: NUMERIC_T = None,
                    color_hue: NUMERIC_T = None,
                    color_mode: str = None,
@@ -1063,8 +1077,8 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
         request_dict = {
             "force": 1,
             "colorMode": '',
-            "brightness": 100,
-            "colorTemp": 100,
+            "brightness": '',
+            "colorTemp": '',
             "hue": "",
             "saturation": "",
             "value": ""
@@ -1105,7 +1119,7 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
                     'Color mode specified is not acceptable '
                     '(Try: "white"/"color"/"hsv")')
                 return False
-
+            request_dict['colorMode'] = possible_modes[color_mode]
         if self._set_status_api(request_dict):
             if brightness_update is not None:
                 self._brightness = brightness_update
@@ -1118,7 +1132,7 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
         """Call api to set status - INTERNAL."""
         data_dict_start = {
             "force": 1,
-            "brightness": 100,
+            "brightness": '',
             "colorTemp": "",
             "colorMode": "",
             "hue": "",
