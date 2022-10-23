@@ -1037,7 +1037,11 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
         """
         arg_list = ['brightness', 'color_temp', 'color_saturation',
                     'color_hue', 'color_mode', 'color_value']
-        if all(locals().get(x) is None for x in arg_list):
+        toggle_on = True
+        for val in arg_list:
+            if locals()[val] is not None:
+                toggle_on = False
+        if toggle_on:
             self.turn_on()
 
         # If any HSV color values are passed,
@@ -1095,6 +1099,7 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
                 return False
             request_dict['colorMode'] = possible_modes[color_mode]
         if self._set_status_api(request_dict):
+            self._brightness = brightness_update
             return True
         return False
 
