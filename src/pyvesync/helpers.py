@@ -295,17 +295,17 @@ class Helpers:
 class HSV(NamedTuple):
     """HSV color space."""
 
-    hue: int
-    saturation: int
-    value: int
+    hue: float
+    saturation: float
+    value: float
 
 
 class RGB(NamedTuple):
     """RGB color space."""
 
-    red: int
-    green: int
-    blue: int
+    red: float
+    green: float
+    blue: float
 
 
 @dataclass
@@ -349,10 +349,10 @@ class Color:
             logger.error('No color values provided')
 
     @staticmethod
-    def min_max(value, min_val, max_val, default) -> int:
+    def min_max(value: NUMERIC, min_val: float, max_val: float, default: float) -> float:
         """Check if value is within min and max values."""
         try:
-            val = max(min_val, (min(max_val, int(round(float(value), 0)))))
+            val = max(min_val, (min(max_val, round(float(value), 2))))
         except (ValueError, TypeError):
             val = default
         return val
@@ -370,7 +370,7 @@ class Color:
         )
 
     @classmethod
-    def valid_rgb(cls, r: int, g: int, b: int) -> list:
+    def valid_rgb(cls, r: float, g: float, b: float) -> list:
         """Check if RGB values are valid."""
         rgb = []
         for val in (r, g, b):
