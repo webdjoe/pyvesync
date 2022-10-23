@@ -2,6 +2,7 @@ import logging
 from unittest.mock import MagicMock, patch
 from collections import namedtuple
 import pytest
+from pyvesync.helpers import RGB
 from pyvesync import VeSync, VeSyncBulbESL100, VeSyncBulbESL100CW, VeSyncBulbESL100MC, VeSyncBulbValcenoA19MC
 from . import call_json
 
@@ -317,10 +318,23 @@ class TestVeSyncBulbValceno:
 
     def test_color(self, api_mock):
         """Test set color on Valceno."""
-        self.mock_api.return_value = ({'code': 0}, 200)
+        self.mock_api.return_value = (
+            {
+                'code': 0,
+                'msg': '',
+                'result':
+                    {'code': 0,
+                     'result': {
+                         "enabled": 'on',
+                         "colorMode": 'hsv',
+                         'brightness': 100,
+                         'hue': 5833,
+                         'saturation': 6700,
+                         'value': 59
+        }}}, 200)
         bulb = VeSyncBulbValcenoA19MC(DEV_LIST_DETAIL_VALCENO, self.vesync_obj)
         assert bulb.set_rgb(50, 100, 150)
-        assert bulb.color_rgb == namedtuple('rgb', 'red green blue')(50, 100, 150)
+        assert bulb.color_rgb == RGB(50, 100, 150)
 
     def test_hue(self, api_mock):
         """Test hue on Valceno MC Bulb."""

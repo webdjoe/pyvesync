@@ -349,7 +349,8 @@ class Color:
             logger.error('No color values provided')
 
     @staticmethod
-    def min_max(value: NUMERIC, min_val: float, max_val: float, default: float) -> float:
+    def min_max(value: Union[int, float, str], min_val: float,
+                max_val: float, default: float) -> float:
         """Check if value is within min and max values."""
         try:
             val = max(min_val, (min(max_val, round(float(value), 2))))
@@ -358,7 +359,9 @@ class Color:
         return val
 
     @classmethod
-    def valid_hsv(cls, h: NUMERIC, s: NUMERIC, v: NUMERIC) -> tuple:
+    def valid_hsv(cls, h: Union[int, float, str],
+                  s: Union[int, float, str],
+                  v: Union[int, float, str]) -> tuple:
         """Check if HSV values are valid."""
         valid_hue = cls.min_max(h, 0, 360, 360)
         valid_saturation = cls.min_max(s, 0, 100, 100)
