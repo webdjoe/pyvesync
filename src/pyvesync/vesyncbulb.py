@@ -374,12 +374,14 @@ class VeSyncBulb(VeSyncBaseDevice):
                 sup_val.update({'ColorMode': str(self.color_mode)})
         return json.dumps(sup_val, indent=4)
 
+    @property
     def color_value_rgb(self) -> Optional[NamedTuple]:
         """Legacy Method .... Depreciated."""
         if self._color is not None:
             return self._color.rgb
         return None
 
+    @property
     def color_value_hsv(self) -> Optional[NamedTuple]:
         """Legacy Method .... Depreciated."""
         if self._color is not None:
