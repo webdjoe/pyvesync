@@ -70,14 +70,9 @@ class VeSync:  # pylint: disable=function-redefined
 
     def __init__(self, username, password, time_zone=DEFAULT_TZ, debug=False):
         """Initialize VeSync class with username, password and time zone."""
-        self.debug = debug
+        self._debug = debug
         if debug:
-            logger.setLevel(logging.DEBUG)
-            bulb_mods.logger.setLevel(logging.DEBUG)
-            switch_mods.logger.setLevel(logging.DEBUG)
-            outlet_mods.logger.setLevel(logging.DEBUG)
-            fan_mods.logger.setLevel(logging.DEBUG)
-            helpermodule.logger.setLevel(logging.DEBUG)
+            self.debug = debug
         self.username = username
         self.password = password
         self.token = None
@@ -114,6 +109,29 @@ class VeSync:  # pylint: disable=function-redefined
         else:
             self.time_zone = DEFAULT_TZ
             logger.debug('Time zone is not a string')
+
+    @property
+    def debug(self) -> bool:
+        """Return debug flag."""
+        return self._debug
+
+    @debug.setter
+    def debug(self, new_flag: bool) -> None:
+        """Set debug flag."""
+        log_modules = [bulb_mods,
+                       switch_mods,
+                       outlet_mods,
+                       fan_mods,
+                       helpermodule]
+        if new_flag:
+            logger.setLevel(logging.DEBUG)
+            for m in log_modules:
+                m.logger.setLevel(logging.DEBUG)
+        elif new_flag is False:
+            logger.setLevel(logging.WARNING)
+            for m in log_modules:
+                m.logger.setLevel(logging.WARNING)
+        self._debug = new_flag
 
     @property
     def energy_update_interval(self) -> int:
