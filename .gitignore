@@ -25,6 +25,7 @@ src/tests/test1.py
 tools/*
 tools/
 test.py
-
+test
 tools/__init__.py
 tools/vesyncdevice.py
+123test.py

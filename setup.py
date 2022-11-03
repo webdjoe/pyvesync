@@ -27,9 +27,9 @@ setup(
         'Programming Language :: Python :: 3.6',
     ],
     keywords=['iot', 'vesync', 'levoit', 'etekcity'],
-    packages=find_packages('src', exclude=['tests', 'tests.*']),
+    packages=find_packages('pyvesync', exclude=['test.*', 'tests.*']),
     package_dir={'': 'src'},
     zip_safe=False,
     install_requires=['requests>=2.20.0'],
-    python_requires='>=3.6',
+    python_requires='>=3.7',
 )
