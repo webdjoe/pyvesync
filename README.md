@@ -102,6 +102,7 @@ pip install pyvesync
 2. Classic 300S
 3. LUH-D301S-WEU Dual (200S)
 4. LV600S
+5. OasisMist LUS-04515-WUS
 
 ## Usage
 
