@@ -102,6 +102,7 @@ pip install pyvesync
 2. Classic 300S
 3. LUH-D301S-WEU Dual (200S)
 4. LV600S
+5. OasisMist LUS-04515-WUS
 
 ## Usage
 
@@ -350,15 +351,22 @@ Compatible levels for each model:
 
 **Properties**
 
+`VeSyncBulb.color` - Returns a dataclass with HSV and RGB attributes that are named tuples
+
+```
+VeSyncBulb.color.rbg = namedtuple('RGB', ['red', 'green', 'blue'])
+VeSyncBulb.color.hsv = namedtuple('HSV', ['hue', 'saturation', 'value'])
+```
+
+`VeSyncBulb.color_hsv` - Returns a named tuple with HSV values
+
+`VeSyncBulb.color_rgb` - Returns a named tuple with RGB values
+
 `VeSyncBulb.brightness` - Return brightness in percentage (int values from 1 - 100)
 
 `VeSyncBulb.color_temp_pct` - Return white temperature in percentage (int values from 0 - 100)
 
 `VeSyncBulb.color_temp_kelvin` - Return white temperature in Kelvin (int values from 2700-6500)
-
-`VeSyncBulb.color_value_hsv` - Return color value in HSV format (float 0.0-360.0, float 0.0-100.0, int 0-100 )
-
-`VeSyncBulb.color_value_rgb` - Return color value in RGB format (float values up to 255.0, 255.0, 255.0 )
 
 `VeSyncBulb.color_mode` - Return bulb color mode (string values: 'white' , 'hsv' )
 
@@ -368,11 +376,28 @@ Compatible levels for each model:
 
 `VeSyncBulb.color_value` - Return color value (int values from 0 - 100)
 
+*The following properties are also still available for backwards compatibility*
+
+`VeSyncBulb.color_value_hsv` - Return color value in HSV format (float 0.0-360.0, float 0.0-100.0, int 0-100 )
+
+`VeSyncBulb.color_value_rgb` - Return color value in RGB format (float values up to 255.0, 255.0, 255.0 )
+
+
 **Methods**
 
 `VeSyncBulb.set_brightness(brightness)` 
 - Set bulb brightness (int values from 0 - 100) 
 - (also used to set Color Value when in color mode)
+
+`VeSyncBulb.set_hsv(hue, saturation, value)`
+- Set bulb color in HSV format 
+- Arguments: hue (numeric) 0 - 360, saturation (numeric) 0-100, value (numeric) 0-100
+- Returns bool
+
+`VeSyncBulb.set_rgb(red, green, blue)`
+- Set bulb color in RGB format
+- Arguments: red (numeric) 0-255, green (numeric) 0-255, blue (numeric) 0-255
+- Returns bool
 
 `VeSyncBulb.set_color_mode(color_mode)` 
 - Set bulb color mode (string values: `white` , `hsv` )

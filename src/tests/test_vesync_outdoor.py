@@ -7,11 +7,11 @@ from pyvesync import VeSync, VeSyncOutdoorPlug
 from pyvesync.helpers import Helpers as helpers
 from . import call_json
 
-DEV_LIST_DETAIL = call_json.LIST_CONF_OUTDOOR_1
+DEV_LIST_DETAIL = call_json.DeviceList.LIST_CONF_OUTDOOR_1
 
-DEV_LIST_DETAIL_2 = call_json.LIST_CONF_OUTDOOR_2
+DEV_LIST_DETAIL_2 = call_json.DeviceList.LIST_CONF_OUTDOOR_2
 
-CORRECT_OUTDOOR_LIST = call_json.DEVLIST_OUTDOOR
+CORRECT_OUTDOOR_LIST = call_json.DeviceList.DEVLIST_OUTDOOR
 
 ENERGY_HISTORY = call_json.ENERGY_HISTORY
 

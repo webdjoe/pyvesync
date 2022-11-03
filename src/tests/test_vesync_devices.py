@@ -1,11 +1,11 @@
 """Test VeSync manager methods."""
 
 import pytest
-from unittest.mock import patch, MagicMock
-import logging
+from unittest.mock import patch
 import pyvesync
-import time
+import logging
 import copy
+import time
 from itertools import chain
 from pyvesync.vesyncfan import *
 from pyvesync.vesyncbulb import *
@@ -70,7 +70,7 @@ class TestDeviceList(object):
         Test for all 6 known devices - 4 outlets, 2 switches, 1 fan.
         """
 
-        device_list = json_vals.DEVLIST_ALL
+        device_list = json_vals.DeviceList.DEVLIST_ALL
 
         self.mock_api.return_value = device_list
 
@@ -78,8 +78,8 @@ class TestDeviceList(object):
 
         assert len(self.vesync_obj.outlets) == 6
         assert len(self.vesync_obj.switches) == 2
-        assert len(self.vesync_obj.fans) == 1
-        assert len(self.vesync_obj.bulbs) == 1
+        assert len(self.vesync_obj.fans) == 4
+        assert len(self.vesync_obj.bulbs) == 4
 
     def test_lv600(
             self, api_mock
@@ -89,7 +89,7 @@ class TestDeviceList(object):
         Test for all 6 known devices - 4 outlets, 2 switches, 1 fan.
         """
 
-        device_list = json_vals.FAN_TEST
+        device_list = json_vals.DeviceList.FAN_TEST
 
         self.mock_api.return_value = device_list
 
@@ -106,7 +106,7 @@ class TestDeviceList(object):
         Test for all 6 known devices - 4 outlets, 2 switches, 1 fan.
         """
 
-        device_list = json_vals.DEVLIST_DUAL200S
+        device_list = json_vals.DeviceList.DEVLIST_DUAL200S
 
         self.mock_api.return_value = device_list
         self.vesync_obj.debug = True
@@ -173,7 +173,7 @@ class TestDeviceList(object):
 
     def test_unknown_device(self, caplog, api_mock):
         """Test unknown device type is handled correctly."""
-        unknown_dev = json_vals.LIST_CONF_7A
+        unknown_dev = json_vals.DeviceList.LIST_CONF_7A
 
         unknown_dev['devType'] = 'UNKNOWN-DEVTYPE'
 
@@ -198,7 +198,7 @@ class TestDeviceList(object):
     @patch('pyvesync.vesync.VeSyncOutlet7A', autospec=True)
     def test_remove_device(self, outlet_patch, caplog, api_mock):
         """Test remove device test."""
-        device = copy.deepcopy(json_vals.LIST_CONF_7A)
+        device = copy.deepcopy(json_vals.DeviceList.LIST_CONF_7A)
 
         outlet_test = outlet_patch.return_value
         outlet_test.cid = '7A-CID'
@@ -226,36 +226,36 @@ class TestDeviceList(object):
     def test_add_dev_test(self, outdoor_patch, caplog, api_mock):
         """Test add_device_test to return if device found in existing conf."""
         outdoor_inst = pyvesync.VeSyncOutdoorPlug(
-            json_vals.LIST_CONF_OUTDOOR_2, self.vesync_obj
+            json_vals.DeviceList.LIST_CONF_OUTDOOR_2, self.vesync_obj
         )
         self.vesync_obj.outlets = [outdoor_inst]
 
-        add_test = self.vesync_obj.add_dev_test(json_vals.LIST_CONF_OUTDOOR_1)
+        add_test = self.vesync_obj.add_dev_test(json_vals.DeviceList.LIST_CONF_OUTDOOR_1)
 
         assert add_test
 
     def test_display_func(self, caplog, api_mock):
         """Test display function outputs text."""
         self.vesync_obj.outlets.append(
-            VeSyncOutdoorPlug(json_vals.LIST_CONF_OUTDOOR_1, self.vesync_obj)
+            VeSyncOutdoorPlug(json_vals.DeviceList.LIST_CONF_OUTDOOR_1, self.vesync_obj)
         )
         self.vesync_obj.outlets.append(
-            VeSyncOutlet10A(json_vals.LIST_CONF_10AUS, self.vesync_obj)
+            VeSyncOutlet10A(json_vals.DeviceList.LIST_CONF_10AUS, self.vesync_obj)
         )
         self.vesync_obj.outlets.append(
-            VeSyncOutlet15A(json_vals.LIST_CONF_15A, self.vesync_obj)
+            VeSyncOutlet15A(json_vals.DeviceList.LIST_CONF_15A, self.vesync_obj)
         )
         self.vesync_obj.outlets.append(
-            VeSyncOutlet7A(json_vals.LIST_CONF_7A, self.vesync_obj)
+            VeSyncOutlet7A(json_vals.DeviceList.LIST_CONF_7A, self.vesync_obj)
         )
         self.vesync_obj.switches.append(
-            VeSyncWallSwitch(json_vals.LIST_CONF_WS, self.vesync_obj)
+            VeSyncWallSwitch(json_vals.DeviceList.LIST_CONF_WS, self.vesync_obj)
         )
         self.vesync_obj.fans.append(
-            VeSyncAir131(json_vals.LIST_CONF_AIR, self.vesync_obj)
+            VeSyncAir131(json_vals.DeviceList.LIST_CONF_AIR, self.vesync_obj)
         )
         self.vesync_obj.bulbs.append(
-            VeSyncBulbESL100(json_vals.LIST_CONF_ESL100, self.vesync_obj)
+            VeSyncBulbESL100(json_vals.DeviceList.LIST_CONF_ESL100, self.vesync_obj)
         )
 
         dev_list = [
@@ -321,7 +321,7 @@ class TestDeviceList(object):
         air_patch.device_type = 'LV-PUR131S'
         air_patch.device_name = 'fan Removed'
 
-        json_ret = json_vals.FULL_DEV_LIST
+        json_ret = json_vals.DeviceList.FULL_DEV_LIST
 
         self.vesync_obj.outlets.extend(
             [out7a_patch, out10a_patch, outdoor_patch]
@@ -334,5 +334,5 @@ class TestDeviceList(object):
 
         assert len(self.vesync_obj.outlets) == 6
         assert len(self.vesync_obj.switches) == 2
-        assert len(self.vesync_obj.fans) == 1
-        assert len(self.vesync_obj.bulbs) == 1
+        assert len(self.vesync_obj.fans) == 4
+        assert len(self.vesync_obj.bulbs) == 4

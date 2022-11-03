@@ -8,9 +8,9 @@ from pyvesync import VeSync
 from pyvesync.helpers import Helpers as helpers
 from . import call_json
 
-DEV_LIST_DETAIL = call_json.LIST_CONF_AIR
+DEV_LIST_DETAIL = call_json.DeviceList.LIST_CONF_AIR
 
-CORRECT_LIST = call_json.DEVLIST_AIR
+CORRECT_LIST = call_json.DeviceList.DEVLIST_AIR
 
 ENERGY_HISTORY = call_json.ENERGY_HISTORY
 

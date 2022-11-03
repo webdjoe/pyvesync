@@ -4,7 +4,11 @@ import hashlib
 import logging
 import time
 import json
+import colorsys
+from dataclasses import dataclass, field, InitVar
+from typing import NamedTuple, Optional, Union
 import requests
+
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +25,8 @@ PHONE_OS = 'Android'
 MOBILE_ID = '1234567890123456'
 USER_TYPE = '1'
 BYPASS_APP_V = "VeSync 3.0.51"
+
+NUMERIC = Optional[Union[int, float, str]]
 
 
 class Helpers:
@@ -276,3 +282,128 @@ class Helpers:
             'Content-Type': 'application/json; charset=UTF-8',
             'User-Agent': 'okhttp/3.12.1',
         }
+
+    @staticmethod
+    def named_tuple_to_str(named_tuple: NamedTuple) -> str:
+        """Convert named tuple to string."""
+        tuple_str = ''
+        for key, val in named_tuple._asdict().items():
+            tuple_str += f'{key}: {val}, '
+        return tuple_str
+
+
+class HSV(NamedTuple):
+    """HSV color space."""
+
+    hue: float
+    saturation: float
+    value: float
+
+
+class RGB(NamedTuple):
+    """RGB color space."""
+
+    red: float
+    green: float
+    blue: float
+
+
+@dataclass
+class Color:
+    """Dataclass for color values.
+
+    For HSV, pass hue as value in degrees 0-360, saturation and value as values
+    between 0 and 100.
+
+    For RGB, pass red, green and blue as values between 0 and 255.
+
+    To instantiate pass kw arguments for colors hue, saturation and value or
+    red, green and blue.
+
+    Instance attributes are:
+    hsv (nameduple) : hue (0-360), saturation (0-100), value (0-100)
+
+    rgb (namedtuple) : red (0-255), green (0-255), blue
+
+    """
+
+    red: InitVar[NUMERIC] = field(default=None, repr=False, compare=False)
+    green: InitVar[NUMERIC] = field(default=None, repr=False, compare=False)
+    blue: InitVar[NUMERIC] = field(default=None, repr=False, compare=False)
+    hue: InitVar[NUMERIC] = field(default=None, repr=False, compare=False)
+    saturation: InitVar[NUMERIC] = field(default=None, repr=False,
+                                         compare=False)
+    value: InitVar[NUMERIC] = field(default=None, repr=False, compare=False)
+    hsv: HSV = field(init=False)
+    rgb: RGB = field(init=False)
+
+    def __post_init__(self, red, green, blue, hue, saturation, value):
+        """Check HSV or RGB Values and create named tuples."""
+        if any(x is not None for x in [hue, saturation, value]):
+            self.hsv = HSV(*self.valid_hsv(hue, saturation, value))
+            self.rgb = self.hsv_to_rgb(hue, saturation, value)
+        elif any(x is not None for x in [red, green, blue]):
+            self.rgb = RGB(*self.valid_rgb(red, green, blue))
+            self.hsv = self.rgb_to_hsv(red, green, blue)
+        else:
+            logger.error('No color values provided')
+
+    @staticmethod
+    def min_max(value: Union[int, float, str], min_val: float,
+                max_val: float, default: float) -> float:
+        """Check if value is within min and max values."""
+        try:
+            val = max(min_val, (min(max_val, round(float(value), 2))))
+        except (ValueError, TypeError):
+            val = default
+        return val
+
+    @classmethod
+    def valid_hsv(cls, h: Union[int, float, str],
+                  s: Union[int, float, str],
+                  v: Union[int, float, str]) -> tuple:
+        """Check if HSV values are valid."""
+        valid_hue = float(cls.min_max(h, 0, 360, 360))
+        valid_saturation = float(cls.min_max(s, 0, 100, 100))
+        valid_value = float(cls.min_max(v, 0, 100, 100))
+        return (
+            valid_hue,
+            valid_saturation,
+            valid_value
+        )
+
+    @classmethod
+    def valid_rgb(cls, r: float, g: float, b: float) -> list:
+        """Check if RGB values are valid."""
+        rgb = []
+        for val in (r, g, b):
+            valid_val = cls.min_max(val, 0, 255, 255)
+            rgb.append(valid_val)
+        return rgb
+
+    @staticmethod
+    def hsv_to_rgb(hue, saturation, value) -> RGB:
+        """Convert HSV to RGB."""
+        return RGB(
+            *tuple(round(i * 255, 0) for i in colorsys.hsv_to_rgb(
+                hue / 360,
+                saturation / 100,
+                value / 100
+            ))
+        )
+
+    @staticmethod
+    def rgb_to_hsv(red, green, blue) -> HSV:
+        """Convert RGB to HSV."""
+        hsv_tuple = colorsys.rgb_to_hsv(
+                red / 255,
+                green / 255,
+                blue / 255
+            )
+        hsv_factors = [360, 100, 100]
+
+        return HSV(
+            float(round(hsv_tuple[0] * hsv_factors[0], 2)),
+            float(round(hsv_tuple[1] * hsv_factors[1], 2)),
+            float(round(hsv_tuple[2] * hsv_factors[2], 0)),
+        )

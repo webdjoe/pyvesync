@@ -7,10 +7,10 @@ from pyvesync import VeSync, VeSyncOutlet10A
 from pyvesync.helpers import Helpers as helpers
 from . import call_json
 
-DEV_LIST_DETAIL_EU = call_json.LIST_CONF_10AEU
-DEV_LIST_DETAIL_US = call_json.LIST_CONF_10AUS
-CORRECT_10AUS_LIST = call_json.DEVLIST_10AUS
-CORRECT_10AEU_LIST = call_json.DEVLIST_10AEU
+DEV_LIST_DETAIL_EU = call_json.DeviceList.LIST_CONF_10AEU
+DEV_LIST_DETAIL_US = call_json.DeviceList.LIST_CONF_10AUS
+CORRECT_10AUS_LIST = call_json.DeviceList.DEVLIST_10AUS
+CORRECT_10AEU_LIST = call_json.DeviceList.DEVLIST_10AEU
 
 ENERGY_HISTORY = call_json.ENERGY_HISTORY
 
