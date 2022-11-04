@@ -499,7 +499,7 @@ class VeSyncBulbESL100MC(VeSyncBulb):
         }
 
         if color_mode is not None:
-            body['payload']['data']['colorMode'] = color_mode
+            body['payload']['data']['colorMode'] = str(color_mode)
 
         if new_color is not None:
             body['payload']['data']['red'] = int(new_color.rgb.red)
@@ -520,12 +520,16 @@ class VeSyncBulbESL100MC(VeSyncBulb):
         if not isinstance(r, dict) or r.get('code') != 0:
             logger.debug("Error in setting bulb status")
             return False
+        if color_mode is not None:
+            self._color_mode = str(color_mode)
         if new_color is not None:
             self._color = Color(red=int(new_color.rgb.red),
                                 green=int(new_color.rgb.green),
                                 blue=int(new_color.rgb.blue))
+            self._color_mode = 'color'
         if brightness is not None:
             self._brightness = brightness
+            self._color_mode = 'white'
         self.device_status = 'on'
         return True
 
