@@ -510,6 +510,9 @@ class VeSyncBulbESL100MC(VeSyncBulb):
 
         if brightness is not None:
             body['payload']['data']['brightness'] = brightness
+            body['payload']['data']['red'] = 0
+            body['payload']['data']['green'] = 0
+            body['payload']['data']['blue'] = 0
             body['payload']['data']['colorMode'] = 'white'
 
         r, _ = helpers.call_api(
