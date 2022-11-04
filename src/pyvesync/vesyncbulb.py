@@ -487,6 +487,9 @@ class VeSyncBulbESL100MC(VeSyncBulb):
                 'action': 'on',
                 'speed': 0,
                 'brightness': '',
+                'red': '',
+                'green': '',
+                'blue': '',
             }
         }
 
