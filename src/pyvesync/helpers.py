@@ -7,6 +7,7 @@ import json
 import colorsys
 from dataclasses import dataclass, field, InitVar
 from typing import NamedTuple, Optional, Union
+import re
 import requests
 
 
@@ -171,6 +172,23 @@ class Helpers:
         return hashlib.md5(string.encode('utf-8')).hexdigest()
 
     @staticmethod
+    def redactor(stringvalue: str) -> str:
+        """Redact sensitive strings from debug output."""
+        stringvalue = re.sub(r'(?<="cid": )"[^"]+"',
+                             "##_REDACTED_##", stringvalue)
+        stringvalue = re.sub(r'(?<="token": )"[^"]+"',
+                             "##_REDACTED_##", stringvalue)
+        stringvalue = re.sub(r'(?i)(?<="accountID": )"[^"]+"',
+                             "##_REDACTED_##", stringvalue)
+        stringvalue = re.sub(r'(?<="tk": )"[^"]+"',
+                             "##_REDACTED_##", stringvalue)
+        stringvalue = re.sub(r'(?<="authKey": )"[^"]+"',
+                             "##_REDACTED_##", stringvalue)
+        stringvalue = re.sub(r'(?<="uuid": )"[^"]+"',
+                             "##_REDACTED_##", stringvalue)
+        return stringvalue
+
+    @staticmethod
     def call_api(api: str, method: str, json_object:  Optional[dict] = None,
                  headers: Optional[dict] = None) -> tuple:
         """Make API calls by passing endpoint, header and body."""
@@ -181,8 +199,10 @@ class Helpers:
             logger.debug("=======call_api=============================")
             logger.debug("[%s] calling '%s' api", method, api)
             logger.debug("API call URL: \n  %s%s", API_BASE_URL, api)
-            logger.debug("API call headers: \n  %s", json.dumps(headers))
-            logger.debug("API call json: \n  %s", json.dumps(json_object))
+            logger.debug("API call headers: \n  %s",
+                         Helpers.redactor(json.dumps(headers)))
+            logger.debug("API call json: \n  %s",
+                         Helpers.redactor(json.dumps(json_object)))
             if method.lower() == 'get':
                 r = requests.get(
                     API_BASE_URL + api, json=json_object, headers=headers,
