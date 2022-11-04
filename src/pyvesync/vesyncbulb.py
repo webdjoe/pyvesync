@@ -506,6 +506,7 @@ class VeSyncBulbESL100MC(VeSyncBulb):
             body['payload']['data']['green'] = int(new_color.rgb.green)
             body['payload']['data']['blue'] = int(new_color.rgb.blue)
             body['payload']['data']['colorMode'] = 'color'
+            body['payload']['data']['brightness'] = 100
 
         if brightness is not None:
             body['payload']['data']['brightness'] = brightness
