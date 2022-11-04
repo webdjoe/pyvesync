@@ -346,7 +346,7 @@ class VeSyncBulb(VeSyncBaseDevice):
                 disp.append(('ColorHSV: ', helpers.named_tuple_to_str(
                     self.color.hsv), ''))
                 disp.append(('ColorRGB: ', helpers.named_tuple_to_str(
-                    self.color.hsv), ''))
+                    self.color.rgb), ''))
                 disp.append(('ColorMode: ', str(self.color_mode), ''))
             if len(disp) > 0:
                 for line in disp:
