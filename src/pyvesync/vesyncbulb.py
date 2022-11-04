@@ -456,6 +456,10 @@ class VeSyncBulbESL100MC(VeSyncBulb):
         rgb = Color(hue=hue, saturation=saturation, value=value).rgb
         return self.set_status(red=rgb.red, green=rgb.green, blue=rgb.blue)
 
+    def set_color_mode(self, color_mode: str) -> bool:
+        """Set Color Mode of Bulb (white / color)."""
+        return self.set_status(color_mode=color_mode)
+
     def set_status(self, brightness: Optional[NUMERIC_T] = None,
                    red: Optional[NUMERIC_T] = None,
                    green: Optional[NUMERIC_T] = None,
@@ -493,6 +497,9 @@ class VeSyncBulbESL100MC(VeSyncBulb):
                 'colorMode': '',
             }
         }
+
+        if color_mode is not None:
+            body['payload']['data']['colorMode'] = color_mode
 
         if new_color is not None:
             body['payload']['data']['red'] = int(new_color.rgb.red)
