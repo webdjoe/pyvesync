@@ -490,6 +490,7 @@ class VeSyncBulbESL100MC(VeSyncBulb):
                 'red': '',
                 'green': '',
                 'blue': '',
+                'colorMode': '',
             }
         }
 
@@ -501,6 +502,7 @@ class VeSyncBulbESL100MC(VeSyncBulb):
 
         if brightness is not None:
             body['payload']['data']['brightness'] = brightness
+            body['payload']['data']['colorMode'] = 'white'
 
         r, _ = helpers.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
