@@ -486,6 +486,7 @@ class VeSyncBulbESL100MC(VeSyncBulb):
             'data': {
                 'action': 'on',
                 'speed': 0,
+                'brightness': '',
             }
         }
 
