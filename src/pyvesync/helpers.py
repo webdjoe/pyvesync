@@ -174,18 +174,19 @@ class Helpers:
     @staticmethod
     def redactor(stringvalue: str) -> str:
         """Redact sensitive strings from debug output."""
-        stringvalue = re.sub(r'(?<="cid": )"[^"]+"',
-                             "##_REDACTED_##", stringvalue)
-        stringvalue = re.sub(r'(?<="token": )"[^"]+"',
-                             "##_REDACTED_##", stringvalue)
-        stringvalue = re.sub(r'(?i)(?<="accountID": )"[^"]+"',
-                             "##_REDACTED_##", stringvalue)
-        stringvalue = re.sub(r'(?<="tk": )"[^"]+"',
-                             "##_REDACTED_##", stringvalue)
-        stringvalue = re.sub(r'(?<="authKey": )"[^"]+"',
-                             "##_REDACTED_##", stringvalue)
-        stringvalue = re.sub(r'(?<="uuid": )"[^"]+"',
-                             "##_REDACTED_##", stringvalue)
+        stringvalue = re.sub(r''.join((
+                                      '(?i)',
+                                      '((?<=token": ")|',
+                                      '(?<=password": ")|',
+                                      '(?<=email": ")|',
+                                      '(?<=tk": ")|',
+                                      '(?<=accountId": ")|',
+                                      '(?<=authKey": ")|',
+                                      '(?<=uuid": ")|',
+                                      '(?<=cid": "))',
+                                      '[^"]+')
+                                      ),
+                             '##_REDACTED_##', stringvalue)
         return stringvalue
 
     @staticmethod
@@ -227,7 +228,8 @@ class Helpers:
                 status_code = 200
                 if r.content:
                     response = r.json()
-                    logger.debug("API response: \n\n  %s \n ", response)
+                    logger.debug("API response: \n\n  %s \n ",
+                                 Helpers.redactor(json.dumps(response)))
             else:
                 logger.debug('Unable to fetch %s%s', API_BASE_URL, api)
         return response, status_code
