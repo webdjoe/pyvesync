@@ -76,7 +76,8 @@ def object_factory(dev_type, config, manager) -> Tuple[str, VeSyncBaseDevice]:
 class VeSync:  # pylint: disable=function-redefined
     """VeSync API functions."""
 
-    def __init__(self, username, password, time_zone=DEFAULT_TZ, debug=False):
+    def __init__(self, username, password, time_zone=DEFAULT_TZ,
+                 debug=False, redact=True):
         """Initialize VeSync class with username, password and time zone."""
         self.debug = debug
         if debug:  # pragma: no cover
@@ -87,6 +88,9 @@ class VeSync:  # pylint: disable=function-redefined
             fan_mods.logger.setLevel(logging.DEBUG)
             helpermodule.logger.setLevel(logging.DEBUG)
             kitchen_mods.logger.setLevel(logging.DEBUG)
+        self._redact = redact
+        if redact:
+            self.redact = redact
         self.username = username
         self.password = password
         self.token = None
@@ -149,6 +153,20 @@ class VeSync:  # pylint: disable=function-redefined
             for m in log_modules:
                 m.logger.setLevel(logging.WARNING)
         self._debug = new_flag
+
+    @property
+    def redact(self) -> bool:
+        """Return debug flag."""
+        return self._redact
+
+    @redact.setter
+    def redact(self, new_flag: bool) -> None:
+        """Set debug flag."""
+        if new_flag:
+            Helpers.shouldredact = True
+        elif new_flag is False:
+            Helpers.shouldredact = False
+        self._redact = new_flag
 
     @property
     def energy_update_interval(self) -> int:

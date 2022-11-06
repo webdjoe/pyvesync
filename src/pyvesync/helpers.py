@@ -171,22 +171,25 @@ class Helpers:
         """Encode password."""
         return hashlib.md5(string.encode('utf-8')).hexdigest()
 
-    @staticmethod
-    def redactor(stringvalue: str) -> str:
+    shouldredact = True
+
+    @classmethod
+    def redactor(cls, stringvalue: str) -> str:
         """Redact sensitive strings from debug output."""
-        stringvalue = re.sub(r''.join((
-                                      '(?i)',
-                                      '((?<=token": ")|',
-                                      '(?<=password": ")|',
-                                      '(?<=email": ")|',
-                                      '(?<=tk": ")|',
-                                      '(?<=accountId": ")|',
-                                      '(?<=authKey": ")|',
-                                      '(?<=uuid": ")|',
-                                      '(?<=cid": "))',
-                                      '[^"]+')
-                                      ),
-                             '##_REDACTED_##', stringvalue)
+        if cls.shouldredact:
+            stringvalue = re.sub(r''.join((
+                                          '(?i)',
+                                          '((?<=token": ")|',
+                                          '(?<=password": ")|',
+                                          '(?<=email": ")|',
+                                          '(?<=tk": ")|',
+                                          '(?<=accountId": ")|',
+                                          '(?<=authKey": ")|',
+                                          '(?<=uuid": ")|',
+                                          '(?<=cid": "))',
+                                          '[^"]+')
+                                          ),
+                                 '##_REDACTED_##', stringvalue)
         return stringvalue
 
     @staticmethod
