@@ -38,7 +38,7 @@ class TestDeviceList(object):
         self.mock_api = self.mock_api_call.start()
         self.mock_api.create_autospec()
         self.mock_api.return_value.ok = True
-        self.vesync_obj = pyvesync.vesync.VeSync('sam@mail.com', 'pass')
+        self.vesync_obj = pyvesync.vesync.VeSync('sam@mail.com', 'pass', debug=True)
         self.vesync_obj.enabled = True
         self.vesync_obj.token = 'sample_tk'
         self.vesync_obj.account_id = 'sample_id'

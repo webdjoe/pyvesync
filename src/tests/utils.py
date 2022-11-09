@@ -364,7 +364,7 @@ class TestBase:
         self.mock_api = self.mock_api_call.start()
         self.mock_api.create_autospect()
         self.mock_api.return_value.ok = True
-        self.manager = VeSync('EMAIL', 'PASSWORD')
+        self.manager = VeSync('EMAIL', 'PASSWORD', debug=True)
         self.manager.enabled = True
         self.manager.token = Defaults.token
         self.manager.account_id = Defaults.account_id

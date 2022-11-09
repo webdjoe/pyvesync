@@ -1,4 +1,4 @@
-enable_white_mode:
+automatic_stop_off:
   headers:
     Content-Type: application/json; charset=UTF-8
     User-Agent: okhttp/3.12.1
@@ -6,20 +6,15 @@ enable_white_mode:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 2.8.6
-    cid: XYD0001-CID
+    cid: LUH-O451S-WUS-CID
     configModule: ConfigModule
+    debugMode: false
     deviceRegion: US
     method: bypassV2
     payload:
       data:
-        brightness: ''
-        colorMode: white
-        colorTemp: ''
-        force: 1
-        hue: ''
-        saturation: ''
-        value: ''
-      method: setLightStatusV2
+        enabled: false
+      method: setAutomaticStop
       source: APP
     phoneBrand: SM N9005
     phoneOS: Android
@@ -28,7 +23,7 @@ enable_white_mode:
     traceId: TRACE_ID
   method: post
   url: /cloud/v2/deviceManaged/bypassV2
-set_brightness:
+automatic_stop_on:
   headers:
     Content-Type: application/json; charset=UTF-8
     User-Agent: okhttp/3.12.1
@@ -36,20 +31,15 @@ set_brightness:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 2.8.6
-    cid: XYD0001-CID
+    cid: LUH-O451S-WUS-CID
     configModule: ConfigModule
+    debugMode: false
     deviceRegion: US
     method: bypassV2
     payload:
       data:
-        brightness: 50
-        colorMode: ''
-        colorTemp: ''
-        force: 0
-        hue: ''
-        saturation: ''
-        value: ''
-      method: setLightStatusV2
+        enabled: true
+      method: setAutomaticStop
       source: APP
     phoneBrand: SM N9005
     phoneOS: Android
@@ -58,7 +48,7 @@ set_brightness:
     traceId: TRACE_ID
   method: post
   url: /cloud/v2/deviceManaged/bypassV2
-set_color_temp:
+set_auto_mode:
   headers:
     Content-Type: application/json; charset=UTF-8
     User-Agent: okhttp/3.12.1
@@ -66,20 +56,15 @@ set_color_temp:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 2.8.6
-    cid: XYD0001-CID
+    cid: LUH-O451S-WUS-CID
     configModule: ConfigModule
+    debugMode: false
     deviceRegion: US
     method: bypassV2
     payload:
       data:
-        brightness: ''
-        colorMode: white
-        colorTemp: 50
-        force: 1
-        hue: ''
-        saturation: ''
-        value: ''
-      method: setLightStatusV2
+        mode: humidity
+      method: setHumidityMode
       source: APP
     phoneBrand: SM N9005
     phoneOS: Android
@@ -88,7 +73,7 @@ set_color_temp:
     traceId: TRACE_ID
   method: post
   url: /cloud/v2/deviceManaged/bypassV2
-set_hsv:
+set_humidity:
   headers:
     Content-Type: application/json; charset=UTF-8
     User-Agent: okhttp/3.12.1
@@ -96,20 +81,67 @@ set_hsv:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 2.8.6
-    cid: XYD0001-CID
+    cid: LUH-O451S-WUS-CID
     configModule: ConfigModule
+    debugMode: false
     deviceRegion: US
     method: bypassV2
     payload:
       data:
-        brightness: 100
-        colorMode: hsv
-        colorTemp: ''
-        force: 1
-        hue: 5556
-        saturation: 5000
-        value: ''
-      method: setLightStatusV2
+        target_humidity: 50
+      method: setTargetHumidity
+      source: APP
+    phoneBrand: SM N9005
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
+set_manual_mode:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 2.8.6
+    cid: LUH-O451S-WUS-CID
+    configModule: ConfigModule
+    debugMode: false
+    deviceRegion: US
+    method: bypassV2
+    payload:
+      data:
+        mode: manual
+      method: setHumidityMode
+      source: APP
+    phoneBrand: SM N9005
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
+set_mist_level:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 2.8.6
+    cid: LUH-O451S-WUS-CID
+    configModule: ConfigModule
+    debugMode: false
+    deviceRegion: US
+    method: bypassV2
+    payload:
+      data:
+        id: 0
+        level: 2
+        type: mist
+      method: setVirtualLevel
       source: APP
     phoneBrand: SM N9005
     phoneOS: Android
@@ -126,8 +158,9 @@ turn_off:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 2.8.6
-    cid: XYD0001-CID
+    cid: LUH-O451S-WUS-CID
     configModule: ConfigModule
+    debugMode: false
     deviceRegion: US
     method: bypassV2
     payload:
@@ -135,6 +168,31 @@ turn_off:
         enabled: false
         id: 0
       method: setSwitch
+      source: APP
+    phoneBrand: SM N9005
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
+turn_off_display:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 2.8.6
+    cid: LUH-O451S-WUS-CID
+    configModule: ConfigModule
+    debugMode: false
+    deviceRegion: US
+    method: bypassV2
+    payload:
+      data:
+        state: false
+      method: setDisplay
       source: APP
     phoneBrand: SM N9005
     phoneOS: Android
@@ -151,8 +209,9 @@ turn_on:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 2.8.6
-    cid: XYD0001-CID
+    cid: LUH-O451S-WUS-CID
     configModule: ConfigModule
+    debugMode: false
     deviceRegion: US
     method: bypassV2
     payload:
@@ -160,6 +219,31 @@ turn_on:
         enabled: true
         id: 0
       method: setSwitch
+      source: APP
+    phoneBrand: SM N9005
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
+turn_on_display:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 2.8.6
+    cid: LUH-O451S-WUS-CID
+    configModule: ConfigModule
+    debugMode: false
+    deviceRegion: US
+    method: bypassV2
+    payload:
+      data:
+        state: true
+      method: setDisplay
       source: APP
     phoneBrand: SM N9005
     phoneOS: Android
@@ -176,13 +260,14 @@ update:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 2.8.6
-    cid: XYD0001-CID
+    cid: LUH-O451S-WUS-CID
     configModule: ConfigModule
+    debugMode: false
     deviceRegion: US
     method: bypassV2
     payload:
       data: {}
-      method: getLightStatusV2
+      method: getHumidifierStatus
       source: APP
     phoneBrand: SM N9005
     phoneOS: Android

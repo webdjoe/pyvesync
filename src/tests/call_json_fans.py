@@ -190,6 +190,7 @@ DETAILS_RESPONSES = {
     'Core300S': FanDetails.details_core,
     'Core400S': FanDetails.details_core,
     'Core600S': FanDetails.details_core,
+    'LUH-O451S-WUS': FanDetails.details_lv600s,
 }
 
 FunctionResponses.default_factory = lambda: ({

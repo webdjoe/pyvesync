@@ -157,16 +157,5 @@ class TestApiFunc:
         print(api_mock.call_args_list)
         assert mock_return == (None, None)
 
-    @patch('pyvesync.helpers.requests.get', autospec=True)
-    def test_api_exception(self, api_mock, caplog):
-        """Test call_api method exception handling."""
-        caplog.set_level(logging.DEBUG)
-        api_mock.return_value.raiseError.side_effect = Mock(side_effect=Exception)
-
-        Helpers.call_api('/call/location', method='get')
-
-        assert len(caplog.records) == 6
-
-
 if __name__ == '__main__':
     unittest.main()

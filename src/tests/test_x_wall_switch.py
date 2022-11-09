@@ -26,7 +26,7 @@ class TestVesyncWallSwitch(object):
         self.mock_api = self.mock_api_call.start()
         self.mock_api.create_autospect()
         self.mock_api.return_value.ok = True
-        self.vesync_obj = VeSync('sam@mail.com', 'pass')
+        self.vesync_obj = VeSync('sam@mail.com', 'pass', debug=True)
         self.vesync_obj.enabled = True
         self.vesync_obj.login = True
         self.vesync_obj.token = DEFAULTS.token
