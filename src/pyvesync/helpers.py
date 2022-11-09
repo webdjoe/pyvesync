@@ -363,9 +363,9 @@ class Color:
                   s: Union[int, float, str],
                   v: Union[int, float, str]) -> tuple:
         """Check if HSV values are valid."""
-        valid_hue = cls.min_max(h, 0, 360, 360)
-        valid_saturation = cls.min_max(s, 0, 100, 100)
-        valid_value = cls.min_max(v, 0, 100, 100)
+        valid_hue = float(cls.min_max(h, 0, 360, 360))
+        valid_saturation = float(cls.min_max(s, 0, 100, 100))
+        valid_value = float(cls.min_max(v, 0, 100, 100))
         return (
             valid_hue,
             valid_saturation,
@@ -385,7 +385,7 @@ class Color:
     def hsv_to_rgb(hue, saturation, value) -> RGB:
         """Convert HSV to RGB."""
         return RGB(
-            *tuple(round(i * 255) for i in colorsys.hsv_to_rgb(
+            *tuple(round(i * 255, 0) for i in colorsys.hsv_to_rgb(
                 hue / 360,
                 saturation / 100,
                 value / 100
@@ -403,7 +403,7 @@ class Color:
         hsv_factors = [360, 100, 100]
 
         return HSV(
-            int(round(hsv_tuple[0] * hsv_factors[0], 0)),
-            int(round(hsv_tuple[1] * hsv_factors[1], 0)),
-            int(round(hsv_tuple[2] * hsv_factors[2], 0)),
+            float(round(hsv_tuple[0] * hsv_factors[0], 2)),
+            float(round(hsv_tuple[1] * hsv_factors[1], 2)),
+            float(round(hsv_tuple[2] * hsv_factors[2], 0)),
         )

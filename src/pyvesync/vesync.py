@@ -116,6 +116,29 @@ class VeSync:  # pylint: disable=function-redefined
             logger.debug('Time zone is not a string')
 
     @property
+    def debug(self) -> bool:
+        """Return debug flag."""
+        return self._debug
+
+    @debug.setter
+    def debug(self, new_flag: bool) -> None:
+        """Set debug flag."""
+        log_modules = [bulb_mods,
+                       switch_mods,
+                       outlet_mods,
+                       fan_mods,
+                       helpermodule]
+        if new_flag:
+            logger.setLevel(logging.DEBUG)
+            for m in log_modules:
+                m.logger.setLevel(logging.DEBUG)
+        elif new_flag is False:
+            logger.setLevel(logging.WARNING)
+            for m in log_modules:
+                m.logger.setLevel(logging.WARNING)
+        self._debug = new_flag
+
+    @property
     def energy_update_interval(self) -> int:
         """Return energy update interval."""
         return self._energy_update_interval

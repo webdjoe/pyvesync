@@ -63,7 +63,7 @@ class VeSyncBulb(VeSyncBaseDevice):
         super().__init__(details, manager)
         self._brightness = int(0)
         self._color_temp = int(0)
-        self._color_value = int(0)
+        self._color_value = float(0)
         self._color_hue = float(0)
         self._color_saturation = float(0)
         self._color_mode: str = ''   # possible: white, color, hsv
@@ -119,32 +119,32 @@ class VeSyncBulb(VeSyncBaseDevice):
         return 0
 
     @property
-    def color_value(self) -> int:
+    def color_value(self) -> float:
         """Return color value of bulb in percent (0-100)."""
         if self.rgb_shift_feature and self._color is not None:
-            return int(self._color.hsv.value)
+            return self._color.hsv.value
         return 0
 
     @property
     def color(self) -> Optional[Color]:
         """Return color of bulb in the form of a dataclass with two attributes.
 
-        self.color.hsv -> (NamedTuple) Hue: int 0-360,
-            Saturation: int 0-100 and Value: int 0-100
-        self.color.rgb -> (NamedTuple) Red: int 0-255,
-            Green: int 0-255 and Blue: int 0-255
+        self.color.hsv -> (NamedTuple) Hue: float 0-360,
+            Saturation: float 0-100 and Value: float 0-100
+        self.color.rgb -> (NamedTuple) Red: float 0-255,
+            Green: float 0-255 and Blue: float 0-255
         """
         if self.rgb_shift_feature is True and self._color is not None:
             return self._color
         return None
 
     @color.setter
-    def color(self, red: Optional[int] = None,
-              green: Optional[int] = None,
-              blue: Optional[int] = None,
-              hue: Optional[int] = None,
-              saturation: Optional[int] = None,
-              value: Optional[int] = None) -> None:
+    def color(self, red: Optional[float] = None,
+              green: Optional[float] = None,
+              blue: Optional[float] = None,
+              hue: Optional[float] = None,
+              saturation: Optional[float] = None,
+              value: Optional[float] = None) -> None:
         self._color = Color(red=red, green=green, blue=blue,
                             hue=hue, saturation=saturation, value=value)
 
@@ -230,7 +230,7 @@ class VeSyncBulb(VeSyncBaseDevice):
                 if self.color is not None:
                     valid_item = getattr(self.color.hsv, itm)
                 else:
-                    logger.debug("No current saturation value, setting to 0")
+                    logger.debug("No current %s value, setting to 0", itm)
                     valid_item = 100
             hsv_dict[itm] = valid_item
         return Color(hue=hsv_dict['hue'], saturation=hsv_dict['saturation'],
@@ -301,9 +301,9 @@ class VeSyncBulb(VeSyncBaseDevice):
             logger.debug("HSV not supported by bulb")
             return False
 
-    def set_rgb(self, red: Optional[int] = None,
-                green: Optional[int] = None,
-                blue: Optional[int] = None) -> bool:
+    def set_rgb(self, red: Optional[float] = None,
+                green: Optional[float] = None,
+                blue: Optional[float] = None) -> bool:
         """Set RGB if supported by bulb. Red 0-255, Green 0-255, Blue 0-255."""
         if self.rgb_shift_feature is False:
             logger.debug("RGB not supported by bulb")
@@ -441,13 +441,13 @@ class VeSyncBulbESL100MC(VeSyncBulb):
         """Set brightness of bulb."""
         return self.set_status(brightness=brightness)
 
-    def set_rgb_color(self, red: int, green: int, blue: int) -> bool:
+    def set_rgb_color(self, red: float, green: float, blue: float) -> bool:
         """Set RGB Color of bulb."""
         return self.set_status(red=red, green=green, blue=blue)
 
-    def set_rgb(self, red: Optional[int] = None,
-                green: Optional[int] = None,
-                blue: Optional[int] = None) -> bool:
+    def set_rgb(self, red: Optional[float] = None,
+                green: Optional[float] = None,
+                blue: Optional[float] = None) -> bool:
         """Set RGB Color of bulb."""
         return self.set_status(red=red, green=green, blue=blue)
 
@@ -509,6 +509,7 @@ class VeSyncBulbESL100MC(VeSyncBulb):
         if not isinstance(r, dict) or r.get('code') != 0:
             logger.debug("Error in setting bulb status")
             return False
+
         if color_mode == 'color' and new_color is not None:
             self._color_mode = 'color'
             self._color = Color(red=new_color.rgb.red,
@@ -517,6 +518,7 @@ class VeSyncBulbESL100MC(VeSyncBulb):
         elif brightness is not None:
             self._brightness = int(brightness_update)
             self._color_mode = 'white'
+
         self.device_status = 'on'
         return True
 
@@ -836,9 +838,9 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
                 self._color_temp = innerresult.get('colorTemp')
             if self.rgb_shift_feature:
                 self._color_mode = innerresult.get('colorMode')
-                hue = int(round(innerresult.get('hue')/27.777777, 0))
-                sat = innerresult.get('saturation')/100
-                val = innerresult.get('value')
+                hue = float(round(innerresult.get('hue')/27.777777, 2))
+                sat = float(innerresult.get('saturation')/100)
+                val = float(innerresult.get('value'))
                 self._color = Color(hue=hue, saturation=sat, value=val)
         elif response.get('code') == -11300030:
             logger.debug('%s device request timeout', self.device_name)
@@ -943,21 +945,22 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
         """Set brightness of multicolor bulb."""
         return self.set_status(brightness=brightness)
 
-    def set_color_value(self, color_value: int) -> bool:
-        """Set color value of multicolor bulb."""
-        return self.set_status(color_value=color_value)
-
     def set_color_temp(self, color_temp: int) -> bool:
         """Set White Temperature of Bulb in pct (0 - 100)."""
         return self.set_status(color_temp=color_temp)
 
-    def set_color_saturation(self, color_saturation: int) -> bool:
-        """Set Color Saturation of Bulb in pct (1 - 100)."""
-        return self.set_status(color_saturation=color_saturation)
-
     def set_color_hue(self, color_hue: float) -> bool:
         """Set Color Hue of Bulb (0 - 360)."""
         return self.set_status(color_hue=color_hue)
+
+    def set_color_saturation(self, color_saturation: float) -> bool:
+        """Set Color Saturation of Bulb in pct (1 - 100)."""
+        return self.set_status(color_saturation=color_saturation)
+
+    def set_color_value(self, color_value: float) -> bool:
+        """Set Value of multicolor bulb in pct (1 - 100)."""
+        # Equivalent to brightness level, when in color mode.
+        return self.set_status(color_value=color_value)
 
     def set_color_mode(self, color_mode: str) -> bool:
         """Set Color Mode of Bulb (white / hsv)."""
@@ -983,13 +986,14 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
         arg_dict = {
             "hue": hue_update,
             "saturation": sat_update,
-            "value": value_update
+            "brightness": value_update
         }
+        # the api expects the hsv Value in the brightness parameter
 
         if self._color is not None:
             current_dict = {"hue": self.color_hue,
                             "saturation": self.color_saturation,
-                            "value": self.color_value}
+                            "brightness": self.color_value}
             same_colors = True
             for key, val in arg_dict.items():
                 if val != "":
@@ -1003,7 +1007,7 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
                 arg_dict[key] = int(round(val*27.77778, 0))
             if key == "saturation" and isinstance(val, float):
                 arg_dict[key] = int(round(val*100, 0))
-            if key == "value" and isinstance(val, float):
+            if key == "brightness" and isinstance(val, float):
                 arg_dict[key] = int(round(val, 0))
         arg_dict['colorMode'] = 'hsv'
         return self._set_status_api(arg_dict)
@@ -1030,13 +1034,13 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
             brightness between 0 and 100, by default None
         color_temp : int, optional
             color temperature between 0 and 100, by default None
-        color_saturation : int, optional
-            color saturation between 0 and 100, by default None
-        color_hue : float, optional
-            color hue between 0 and 360, by default None
         color_mode : str, optional
             color mode hsv or white, by default None
-        color_value : int, optional
+        color_hue : float, optional
+            color hue between 0 and 360, by default None
+        color_saturation : float, optional
+            color saturation between 0 and 100, by default None
+        color_value : float, optional
             color value between 0 and 100, by default None
 
         Returns
