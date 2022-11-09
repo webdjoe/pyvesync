@@ -308,6 +308,12 @@ class VeSyncDimmerSwitch(VeSyncSwitch):
 
     def rgb_color_set(self, red: int, green: int, blue: int) -> bool:
         """Set RGB color of faceplate."""
+        try:
+            red = int(red)
+            green = int(green)
+            blue = int(blue)
+        except ValueError:
+            return False
         if isinstance(red, int) and isinstance(
                 green, int) and isinstance(blue, int):
             for color in [red, green, blue]:

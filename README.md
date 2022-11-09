@@ -31,10 +31,10 @@ pyvesync is a library to manage VeSync compatible [smart home devices](#supporte
     - [Air Purifier Methods](#air-purifier-methods)
     - [Levoit Purifier Core200S/300S/400S Properties](#levoit-purifier-core200s300s400s-properties)
     - [Levoit Purifier Core200S/300S/400S Methods](#levoit-purifier-core200s300s400s-methods)
-  - [Lights API Methods & Properties](#lights-api-methods-properties)
-    - [Dimmable Light Bulb Method and Properties](#dimmable-light-bulb-method-and-properties)
-    - [Tunable Light Bulb Methods and Properties](#tunable-light-bulb-methods-and-properties)
-    - [Multicolor light bulb Methods and Properties](#multicolor-light-bulb-methods-and-properties)
+  - [Lights API Methods & Properties](#lights-api-methods--properties)
+    - [Brightness Light Bulb Method and Properties](#brightness-light-bulb-method-and-properties)
+    - [Light Bulb Color Temperature Methods and Properties](#light-bulb-color-temperature-methods-and-properties)
+    - [Multicolor Light Bulb Methods and Properties](#multicolor-light-bulb-methods-and-properties)
     - [Dimmable Switch Methods and Properties](#dimmable-switch-methods-and-properties)
   - [Levoit Humidifier Methods and Properties](#levoit-humidifier-methods-and-properties)
     - [Humidifier Properties](#humidifier-properties)
@@ -259,7 +259,7 @@ The rectangular smart switch model supports some additional functionality on top
 
 ### Standard Air Purifier Properties & Methods
 
-#### Air Purifier Properties 
+#### Air Purifier Properties
 
 `VeSyncFan.details` - Dictionary of device details
 
@@ -276,7 +276,7 @@ VeSyncFan.details = {
 
 ```
 
-NOTE: LV-PUR131S outputs `air_quality` as a string, such as `Excellent` 
+NOTE: LV-PUR131S outputs `air_quality` as a string, such as `Excellent`
 
 `VeSyncFan.features` - Unique features to air purifier model. Currently, the only feature is air_quality, which is not supported on Core 200S.
 
@@ -328,18 +328,16 @@ Compatible levels for each model:
 
 ### Lights API Methods & Properties
 
-#### Dimmable Light Bulb Method and Properties
+#### Brightness Light Bulb Method and Properties
 
+*Compatible with all bulbs*
 `VeSyncBulb.brightness` - Return brightness in percentage (1 - 100)
 
 `VeSyncBulb.set_brightness(brightness)` - Set bulb brightness values from 1 - 100
 
-#### Tunable Light Bulb Methods and Properties
+#### Light Bulb Color Temperature Methods and Properties
 
-`VeSyncBulb.brightness` - Return brightness in percentage (1 - 100)
-
-`VeSyncBulb.set_brightness(brightness)` - Set bulb brightness values from 1 - 100
-
+**NOTE: only compatible with ESL100CW and Valceno Bulbs, NOT compatible with ESL100MC Bulbs**
 `VeSyncBulb.color_temp_pct` - Return color temperature in percentage (0 - 100)
 
 `VeSyncBulb.color_temp_kelvin` - Return brightness in Kelvin
@@ -348,8 +346,8 @@ Compatible levels for each model:
 
 #### Multicolor Light Bulb Methods and Properties
 
+*Compatible with ESL100MC & Valceno Bulbs*
 **Properties**
-
 `VeSyncBulb.color` - Returns a dataclass with HSV and RGB attributes that are named tuples
 
 ```
@@ -361,13 +359,7 @@ VeSyncBulb.color.hsv = namedtuple('HSV', ['hue', 'saturation', 'value'])
 
 `VeSyncBulb.color_rgb` - Returns a named tuple with RGB values
 
-`VeSyncBulb.brightness` - Return brightness in percentage (int values from 1 - 100)
-
-`VeSyncBulb.color_temp_pct` - Return white temperature in percentage (int values from 0 - 100)
-
-`VeSyncBulb.color_temp_kelvin` - Return white temperature in Kelvin (int values from 2700-6500)
-
-`VeSyncBulb.color_mode` - Return bulb color mode (string values: 'white' , 'hsv' )
+`VeSyncBulb.color_mode` - Return bulb color mode (string values: 'white', 'color', 'hsv')
 
 `VeSyncBulb.color_hue` - Return color hue (float values from 0.0 - 360.0)
 
@@ -376,51 +368,38 @@ VeSyncBulb.color.hsv = namedtuple('HSV', ['hue', 'saturation', 'value'])
 `VeSyncBulb.color_value` - Return color value (int values from 0 - 100)
 
 *The following properties are also still available for backwards compatibility*
+`VeSyncBulb.color_value_hsv` - Return color value in HSV named tuple format (hue: float 0.0-360.0, saturation: float 0.0-100.0, value: float 0-100 )
 
-`VeSyncBulb.color_value_hsv` - Return color value in HSV format (float 0.0-360.0, float 0.0-100.0, int 0-100 )
-
-`VeSyncBulb.color_value_rgb` - Return color value in RGB format (float values up to 255.0, 255.0, 255.0 )
-
+`VeSyncBulb.color_value_rgb` - Return color value in RGB named tuple format (red: float, green: float, blue: float 0-255.0)
 
 **Methods**
-
-`VeSyncBulb.set_brightness(brightness)` 
-- Set bulb brightness (int values from 0 - 100) 
-- (also used to set Color Value when in color mode)
-
 `VeSyncBulb.set_hsv(hue, saturation, value)`
-- Set bulb color in HSV format 
+
+- Set bulb color in HSV format
 - Arguments: hue (numeric) 0 - 360, saturation (numeric) 0-100, value (numeric) 0-100
 - Returns bool
 
 `VeSyncBulb.set_rgb(red, green, blue)`
+
 - Set bulb color in RGB format
 - Arguments: red (numeric) 0-255, green (numeric) 0-255, blue (numeric) 0-255
 - Returns bool
 
-`VeSyncBulb.set_color_mode(color_mode)` 
-- Set bulb color mode (string values: `white` , `hsv` )
-- `color` may be used as an alias to `hsv`
+`VeSyncBulb.enable_white_mode()`
 
-`VeSyncBulb.set_color_temp(color_temp)` 
+- Turn bulb to white mode - returns bool
+
+`VeSyncBulb.set_color_temp(color_temp)`
+
 - Set bulb white temperature (int values from 0 - 100)
 - Setting this will automatically force the bulb into White mode
 
-`VeSyncBulb.set_color_hue(color_hue)` 
-- Set color hue (float values from 0.0 - 360.0)
-- Setting this will automatically force the bulb into Colored mode
+`VeSyncBulb.set_status(brightness, color_temp, color_saturation, color_hue, color_mode color_value)`
 
-`VeSyncBulb.set_color_saturation(color_saturation)` 
-- Set color saturation (float values from 0.0 - 100.0)
-- Setting this will automatically force the bulb into Colored mode
-
-`VeSyncBulb.set_color_value(color_value)` 
-- Set color value (float values from 0.0 - 100.0)
-- Setting this will automatically force the bulb into Colored mode
-
-`VeSyncBulb.set_status(brightness, color_temp, color_saturation, color_hue, color_mode color_value)` 
 - Set every property, in a single call
 - All parameters are optional
+
+**NOTE: Due to the varying API between bulbs, avoid setting the `color_mode` argument directly, instead set colors values with `set_hsv` or `set_rgb` to turn on color and use `enable_white_mode()` to turn off color.**
 
 #### Dimmable Switch Methods and Properties
 
@@ -448,7 +427,7 @@ VeSyncBulb.color.hsv = namedtuple('HSV', ['hue', 'saturation', 'value'])
 
 #### Humidifier Properties
 
-The details dictionary contains all device status details 
+The details dictionary contains all device status details
 
 ```python
 VeSyncHumid.details = {
@@ -488,7 +467,7 @@ VeSyncLV600S.details = {
 
 `VeSyncHumid.mist_level` - current mist level
 
-`VeSyncHumid.mode` - Mode of operation - sleep, off, auto/humidity 
+`VeSyncHumid.mode` - Mode of operation - sleep, off, auto/humidity
 
 `VeSyncHumid.water_lacks` - Returns True if water is low
 
@@ -500,7 +479,7 @@ VeSyncLV600S.details = {
 
 `VeSyncHumid.automatic_stop_on()` Set humidifier to stop at set humidity
 
-`VeSyncHumid.automatic_stop_off` Set humidifier to run continuously 
+`VeSyncHumid.automatic_stop_off` Set humidifier to run continuously
 
 `VeSyncHumid.turn_on_display()` Turn display on
 
@@ -741,7 +720,7 @@ SSL pinning makes capturing packets with android not feasible anymore. Charles P
 
 When capturing packets make sure all packets are captured from the device list, along with all functions that the app contains. The captured packets are stored in text files, please do not capture with pcap format.
 
-After you capture the packets, please redact the `accountid` and `token`. If you feel you must redact other keys, please do not delete them entirely. Replace letters with "A" and numbers with "1", leave all punctuation intact and maintain length. 
+After you capture the packets, please redact the `accountid` and `token`. If you feel you must redact other keys, please do not delete them entirely. Replace letters with "A" and numbers with "1", leave all punctuation intact and maintain length.
 
 For example:
 
@@ -760,8 +739,10 @@ After:
   'accountId': '111111111',
   'cid': 'AAAAAA11-1AA-AA'
 }
-``` 
+```
 
 All [contributions](CONTRIBUTING.md) are welcome, please run `tox` before submitting a PR to ensure code is valid.
+
+Ensure new devices are integrated in tests, please review the [testing](tests/README.md) documentation for more information.
 
 This project is licensed under [MIT](LICENSE).

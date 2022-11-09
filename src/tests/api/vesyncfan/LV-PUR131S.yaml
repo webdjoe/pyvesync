@@ -1,0 +1,108 @@
+change_fan_speed:
+  headers:
+    accept-language: en
+    accountId: sample_id
+    appVersion: 2.8.6
+    content-type: application/json
+    tk: sample_tk
+    tz: America/New_York
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    level: 3
+    timeZone: America/New_York
+    token: sample_tk
+    uuid: LV-PUR131S-UUID
+  method: put
+  url: /131airPurifier/v1/device/updateSpeed
+manual_mode:
+  headers:
+    accept-language: en
+    accountId: sample_id
+    appVersion: 2.8.6
+    content-type: application/json
+    tk: sample_tk
+    tz: America/New_York
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    level: 1
+    mode: manual
+    timeZone: America/New_York
+    token: sample_tk
+    uuid: LV-PUR131S-UUID
+  method: put
+  url: /131airPurifier/v1/device/updateMode
+sleep_mode:
+  headers:
+    accept-language: en
+    accountId: sample_id
+    appVersion: 2.8.6
+    content-type: application/json
+    tk: sample_tk
+    tz: America/New_York
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    mode: sleep
+    timeZone: America/New_York
+    token: sample_tk
+    uuid: LV-PUR131S-UUID
+  method: put
+  url: /131airPurifier/v1/device/updateMode
+turn_off:
+  headers:
+    accept-language: en
+    accountId: sample_id
+    appVersion: 2.8.6
+    content-type: application/json
+    tk: sample_tk
+    tz: America/New_York
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    status: 'off'
+    timeZone: America/New_York
+    token: sample_tk
+    uuid: LV-PUR131S-UUID
+  method: put
+  url: /131airPurifier/v1/device/deviceStatus
+turn_on:
+  headers:
+    accept-language: en
+    accountId: sample_id
+    appVersion: 2.8.6
+    content-type: application/json
+    tk: sample_tk
+    tz: America/New_York
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    status: 'on'
+    timeZone: America/New_York
+    token: sample_tk
+    uuid: LV-PUR131S-UUID
+  method: put
+  url: /131airPurifier/v1/device/deviceStatus
+update:
+  headers:
+    accept-language: en
+    accountId: sample_id
+    appVersion: 2.8.6
+    content-type: application/json
+    tk: sample_tk
+    tz: America/New_York
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 2.8.6
+    method: devicedetail
+    mobileId: '1234567890123456'
+    phoneBrand: SM N9005
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+    uuid: LV-PUR131S-UUID
+  method: post
+  url: /131airPurifier/v1/device/deviceDetail

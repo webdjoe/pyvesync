@@ -80,25 +80,3 @@ class TestLogin(object):
         self.mock_api.assert_called_with('/cloud/v1/user/login', 'post', json_object=jd)
         assert vesync_obj.token == 'sam_token'
         assert vesync_obj.account_id == 'sam_actid'
-
-
-@pytest.mark.parametrize('email, password, testid', login_bad_call)
-@patch('pyvesync.helpers.requests.post')
-def test_login(mock_api, email, password, testid):
-    """Test multiple failed login calls."""
-    return_tuple = {'code': 455, 'msg': 'sdasd'}
-    mock_api.return_value.ok = True
-    mock_api.return_value.json.return_value = return_tuple
-    vesync_obj = VeSync(email, password)
-    vesync_login = vesync_obj.login()
-    assert vesync_login is False
-    if testid == 'correct':
-        jd = helpers.req_body(vesync_obj, 'login')
-        mock_api.assert_called_with(
-            'https://smartapi.vesync.com/cloud/v1/user/login',
-            headers=None,
-            json=jd,
-            timeout=5,
-        )
-    else:
-        assert not mock_api.called

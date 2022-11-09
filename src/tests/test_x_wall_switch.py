@@ -3,17 +3,20 @@ from unittest.mock import patch
 import logging
 from pyvesync import VeSync, VeSyncWallSwitch
 from pyvesync.helpers import Helpers as helpers
-from . import call_json
+import call_json
+import call_json_switches
 
-DEV_LIST_DETAIL = call_json.DeviceList.LIST_CONF_WS
+DEVICE_TYPE = 'ESWL01'
 
-CORRECT_WS_LIST = call_json.DeviceList.DEVLIST_WS
+DEV_LIST_DETAIL = call_json.DeviceList.device_list_item(DEVICE_TYPE)
 
-ENERGY_HISTORY = call_json.ENERGY_HISTORY
+CORRECT_WS_LIST = call_json.DeviceList.device_list_response(DEVICE_TYPE)
 
-CORRECT_WS_DETAILS = call_json.DETAILS_WS
+CORRECT_WS_DETAILS = call_json_switches.DETAILS_RESPONSES[DEVICE_TYPE]
 
 BAD_LIST = call_json.DETAILS_BADCODE
+
+DEFAULTS = call_json.Defaults
 
 
 class TestVesyncWallSwitch(object):
@@ -26,8 +29,8 @@ class TestVesyncWallSwitch(object):
         self.vesync_obj = VeSync('sam@mail.com', 'pass')
         self.vesync_obj.enabled = True
         self.vesync_obj.login = True
-        self.vesync_obj.token = 'sample_tk'
-        self.vesync_obj.account_id = 'sample_actid'
+        self.vesync_obj.token = DEFAULTS.token
+        self.vesync_obj.account_id = DEFAULTS.account_id
         caplog.set_level(logging.DEBUG)
         yield
         self.mock_api_call.stop()
@@ -40,10 +43,10 @@ class TestVesyncWallSwitch(object):
         assert len(switch) == 1
         wswitch = switch[0]
         assert isinstance(wswitch, VeSyncWallSwitch)
-        assert wswitch.device_name == 'Name Wall Switch'
-        assert wswitch.device_type == 'ESWL01'
-        assert wswitch.cid == 'WS-CID'
-        assert wswitch.uuid == 'UUID'
+        assert wswitch.device_name == DEFAULTS.name(DEVICE_TYPE)
+        assert wswitch.device_type == DEVICE_TYPE
+        assert wswitch.cid == DEFAULTS.cid(DEVICE_TYPE)
+        assert wswitch.uuid == DEFAULTS.uuid(DEVICE_TYPE)
 
     def test_ws_details(self, api_mock):
         """Test WS get_details() """

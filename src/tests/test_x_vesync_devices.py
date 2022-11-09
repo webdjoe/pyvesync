@@ -11,7 +11,11 @@ from pyvesync.vesyncfan import *
 from pyvesync.vesyncbulb import *
 from pyvesync.vesyncoutlet import *
 from pyvesync.vesyncswitch import *
-from . import call_json as json_vals
+import call_json as json_vals
+from call_json_switches import SWITCHES_NUM
+from call_json_outlets import OUTLETS_NUM
+from call_json_fans import FANS_NUM
+from call_json_bulbs import BULBS_NUM
 
 BAD_DEV_LIST = {
     'result': {
@@ -27,7 +31,7 @@ BAD_DEV_LIST = {
 class TestDeviceList(object):
     """Test getting and populating device lists."""
 
-    @pytest.fixture()
+    @pytest.fixture(scope='function')
     def api_mock(self, caplog):
         """Mock call_api and initialize VeSync object."""
         self.mock_api_call = patch('pyvesync.helpers.Helpers.call_api')
@@ -70,16 +74,16 @@ class TestDeviceList(object):
         Test for all 6 known devices - 4 outlets, 2 switches, 1 fan.
         """
 
-        device_list = json_vals.DeviceList.DEVLIST_ALL
+        device_list = json_vals.DeviceList.device_list_response()
 
         self.mock_api.return_value = device_list
 
         self.vesync_obj.get_devices()
 
-        assert len(self.vesync_obj.outlets) == 6
-        assert len(self.vesync_obj.switches) == 2
-        assert len(self.vesync_obj.fans) == 4
-        assert len(self.vesync_obj.bulbs) == 4
+        assert len(self.vesync_obj.outlets) == OUTLETS_NUM
+        assert len(self.vesync_obj.switches) == SWITCHES_NUM
+        assert len(self.vesync_obj.fans) == FANS_NUM
+        assert len(self.vesync_obj.bulbs) == BULBS_NUM
 
     def test_lv600(
             self, api_mock
@@ -97,7 +101,6 @@ class TestDeviceList(object):
 
         assert len(self.vesync_obj.fans) == 3
 
-
     def test_dual200s(
             self, api_mock
     ):
@@ -106,14 +109,13 @@ class TestDeviceList(object):
         Test for all 6 known devices - 4 outlets, 2 switches, 1 fan.
         """
 
-        device_list = json_vals.DeviceList.DEVLIST_DUAL200S
+        device_list = json_vals.DeviceList.device_list_response('Dual200S')
 
         self.mock_api.return_value = device_list
         self.vesync_obj.debug = True
         self.vesync_obj.get_devices()
 
         assert len(self.vesync_obj.fans) == 1
-
 
     def test_getdevs_code(self, caplog, api_mock):
         """Test get_devices with code > 0 returned."""
@@ -237,13 +239,13 @@ class TestDeviceList(object):
     def test_display_func(self, caplog, api_mock):
         """Test display function outputs text."""
         self.vesync_obj.outlets.append(
-            VeSyncOutdoorPlug(json_vals.DeviceList.LIST_CONF_OUTDOOR_1, self.vesync_obj)
+            VeSyncOutdoorPlug(json_vals.DeviceList.device_list_item('ESO15-TB', 0), self.vesync_obj)
         )
         self.vesync_obj.outlets.append(
-            VeSyncOutlet10A(json_vals.DeviceList.LIST_CONF_10AUS, self.vesync_obj)
+            VeSyncOutlet10A(json_vals.DeviceList.device_list_item('ESW01-EU'), self.vesync_obj)
         )
         self.vesync_obj.outlets.append(
-            VeSyncOutlet15A(json_vals.DeviceList.LIST_CONF_15A, self.vesync_obj)
+            VeSyncOutlet15A(json_vals.DeviceList.device_list_item('ESW15-USA'), self.vesync_obj)
         )
         self.vesync_obj.outlets.append(
             VeSyncOutlet7A(json_vals.DeviceList.LIST_CONF_7A, self.vesync_obj)

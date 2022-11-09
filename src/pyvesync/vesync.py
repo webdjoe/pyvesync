@@ -71,7 +71,7 @@ class VeSync:  # pylint: disable=function-redefined
     def __init__(self, username, password, time_zone=DEFAULT_TZ, debug=False):
         """Initialize VeSync class with username, password and time zone."""
         self.debug = debug
-        if debug:
+        if debug:  # pragma: no cover
             logger.setLevel(logging.DEBUG)
             bulb_mods.logger.setLevel(logging.DEBUG)
             switch_mods.logger.setLevel(logging.DEBUG)

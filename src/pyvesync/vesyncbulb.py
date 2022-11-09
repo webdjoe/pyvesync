@@ -346,7 +346,7 @@ class VeSyncBulb(VeSyncBaseDevice):
                 disp.append(('ColorHSV: ', helpers.named_tuple_to_str(
                     self.color.hsv), ''))
                 disp.append(('ColorRGB: ', helpers.named_tuple_to_str(
-                    self.color.hsv), ''))
+                    self.color.rgb), ''))
                 disp.append(('ColorMode: ', str(self.color_mode), ''))
             if len(disp) > 0:
                 for line in disp:
@@ -456,25 +456,31 @@ class VeSyncBulbESL100MC(VeSyncBulb):
         rgb = Color(hue=hue, saturation=saturation, value=value).rgb
         return self.set_status(red=rgb.red, green=rgb.green, blue=rgb.blue)
 
+    def enable_white_mode(self) -> bool:
+        """Enable white mode on bulb."""
+        return self.set_status(brightness=100)
+
     def set_status(self, brightness: Optional[NUMERIC_T] = None,
                    red: Optional[NUMERIC_T] = None,
                    green: Optional[NUMERIC_T] = None,
-                   blue: Optional[NUMERIC_T] = None,
-                   color_mode: Optional[NUMERIC_T] = None) -> bool:
+                   blue: Optional[NUMERIC_T] = None) -> bool:
         """Set status of VeSync ESL100MC."""
-        if red is not None or green is not None or blue is not None:
+        brightness_update = 100
+        if red is not None and green is not None and blue is not None:
             new_color = self._validate_rgb(red, green, blue)
+            color_mode = 'color'
+            if new_color == self._color:
+                logger.debug("New color is same as current color")
+                return True
         else:
+            logger.debug("RGB Values not provided")
             new_color = None
-        if brightness is not None:
-            brightness = int(self._validate_brightness(brightness))
-        else:
-            brightness = None
-
-        if brightness == self.brightness and \
-                new_color == self.color:
-            logger.debug("No change in status")
-            return True
+            if brightness is not None:
+                brightness_update = int(self._validate_brightness(brightness))
+                color_mode = 'white'
+            else:
+                logger.debug("Brightness and RGB values are not set")
+                return False
 
         head = helpers.bypass_header()
         body = helpers.bypass_body_v2(self.manager)
@@ -486,17 +492,13 @@ class VeSyncBulbESL100MC(VeSyncBulb):
             'data': {
                 'action': 'on',
                 'speed': 0,
+                'brightness': brightness_update,
+                'red': 0 if new_color is None else int(new_color.rgb.red),
+                'green': 0 if new_color is None else int(new_color.rgb.green),
+                'blue': 0 if new_color is None else int(new_color.rgb.blue),
+                'colorMode': 'color' if new_color is not None else 'white',
             }
         }
-
-        if new_color is not None:
-            body['payload']['data']['red'] = new_color.rgb.red
-            body['payload']['data']['green'] = new_color.rgb.green
-            body['payload']['data']['blue'] = new_color.rgb.blue
-            body['payload']['data']['colorMode'] = 'color'
-
-        if brightness is not None:
-            body['payload']['data']['brightness'] = brightness
 
         r, _ = helpers.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
@@ -507,12 +509,14 @@ class VeSyncBulbESL100MC(VeSyncBulb):
         if not isinstance(r, dict) or r.get('code') != 0:
             logger.debug("Error in setting bulb status")
             return False
-        if new_color is not None:
+        if color_mode == 'color' and new_color is not None:
+            self._color_mode = 'color'
             self._color = Color(red=new_color.rgb.red,
                                 green=new_color.rgb.green,
                                 blue=new_color.rgb.blue)
-        if brightness is not None:
-            self._brightness = brightness
+        elif brightness is not None:
+            self._brightness = int(brightness_update)
+            self._color_mode = 'white'
         self.device_status = 'on'
         return True
 
@@ -1003,6 +1007,10 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
                 arg_dict[key] = int(round(val, 0))
         arg_dict['colorMode'] = 'hsv'
         return self._set_status_api(arg_dict)
+
+    def enable_white_mode(self) -> bool:
+        """Enable white color mode."""
+        return self.set_status(color_mode='white')
 
     def set_status(self,
                    brightness: NUMERIC_T = None,
