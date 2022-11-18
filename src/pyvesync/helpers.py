@@ -15,7 +15,8 @@ logger = logging.getLogger(__name__)
 API_BASE_URL = 'https://smartapi.vesync.com'
 API_RATE_LIMIT = 30
 API_TIMEOUT = 5
-USER_AGENT = "VeSync/3.2.39 (com.etekcity.vesyncPlatform; build:5; iOS 15.5.0) Alamofire/5.2.1"
+USER_AGENT = ("VeSync/3.2.39 (com.etekcity.vesyncPlatform;"
+              " build:5; iOS 15.5.0) Alamofire/5.2.1")
 
 DEFAULT_TZ = 'America/New_York'
 DEFAULT_REGION = 'US'

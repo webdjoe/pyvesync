@@ -1,4 +1,4 @@
-from pyvesync import VeSyncOutlet15A
+from pyvesync.vesyncoutlet import VeSyncOutlet15A
 from pyvesync.helpers import Helpers as helpers
 import call_json
 import utils

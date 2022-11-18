@@ -97,8 +97,8 @@ class VeSyncBaseDevice:
         body['region'] = self.device_region
         body['method'] = 'configInfo'
         r, _ = helper.call_api('/cloud/v1/deviceManaged/configInfo',
-                                'post',
-                                json_object=body)
+                               'post',
+                               json_object=body)
         if not isinstance(r, dict) or r.get('code') != 0 or r.get('result') is None:
             logger.error('Error getting config info for %s', self.device_name)
             return

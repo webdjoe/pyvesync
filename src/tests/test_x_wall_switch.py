@@ -1,7 +1,8 @@
 import pytest
 from unittest.mock import patch
 import logging
-from pyvesync import VeSync, VeSyncWallSwitch
+from pyvesync import VeSync
+from pyvesync.vesyncswitch import VeSyncWallSwitch
 from pyvesync.helpers import Helpers as helpers
 import call_json
 import call_json_switches

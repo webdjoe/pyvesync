@@ -53,7 +53,6 @@ def object_factory(dev_type, config, manager) -> Tuple[str, VeSyncBaseDevice]:
         kitchen_obj = getattr(kitchen_mods, kitchen_cls)
         return 'kitchen', kitchen_obj(config, manager)
 
-
     if dev_type in fan_mods.fan_modules:  # type: ignore  # noqa: F405
         type_str, dev_obj = fans(dev_type, config, manager)
     elif dev_type in outlet_mods.outlet_modules:  # type: ignore  # noqa: F405

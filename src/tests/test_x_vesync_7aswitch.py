@@ -3,7 +3,8 @@
 import logging
 from unittest.mock import patch
 import pytest
-from pyvesync import VeSync, VeSyncOutlet7A
+from pyvesync import VeSync
+from pyvesync.vesyncoutlet import VeSyncOutlet7A
 from pyvesync.helpers import Helpers as helpers
 import call_json
 import call_json_outlets

@@ -227,7 +227,7 @@ class TestDeviceList(object):
     @patch('pyvesync.vesync.VeSyncOutdoorPlug', autospec=True)
     def test_add_dev_test(self, outdoor_patch, caplog, api_mock):
         """Test add_device_test to return if device found in existing conf."""
-        outdoor_inst = pyvesync.VeSyncOutdoorPlug(
+        outdoor_inst = VeSyncOutdoorPlug(
             json_vals.DeviceList.LIST_CONF_OUTDOOR_2, self.vesync_obj
         )
         self.vesync_obj.outlets = [outdoor_inst]

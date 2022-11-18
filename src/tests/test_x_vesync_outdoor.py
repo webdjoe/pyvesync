@@ -1,7 +1,7 @@
 """Test scripts for Etekcity Outdoor Outlet."""
 from typing import Any, Dict, Union
 from copy import deepcopy
-from pyvesync import VeSyncOutdoorPlug
+from pyvesync.vesyncoutlet import VeSyncOutdoorPlug
 from pyvesync.helpers import Helpers as helpers
 import call_json
 import call_json_outlets
