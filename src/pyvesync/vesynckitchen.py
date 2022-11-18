@@ -354,15 +354,15 @@ class VeSyncAirFryer158(VeSyncBaseDevice):
 
     def end(self):
         """End the cooking process."""
-        if self.preheat is True \
-                and self.fryer_status.cook_status in ['preheatStop', 'heating']:
+        if self.preheat is False \
+                and self.fryer_status.cook_status in ['cookStop', 'cooking']:
             cmd = {
                 'cookMode': {
                     'cookStatus': 'end'
                 }
             }
         elif self.preheat is False \
-                and self.fryer_status.cook_status in ['cookStop', 'cooking']:
+                and self.fryer_status.cook_status in ['preheatStop', 'heating']:
             cmd = {
                 'preheat': {
                     'cookStatus': 'end'
@@ -396,7 +396,13 @@ class VeSyncAirFryer158(VeSyncBaseDevice):
                     'cookStatus': 'pause'
                 }
             }
-        return self._status_api(cmd)
+        if self._status_api(cmd) is True:
+            if self.preheat is True:
+                self.fryer_status.cook_status = 'preheatStop'
+            else:
+                self.fryer_status.cook_status = 'cookStop'
+            return True
+        return False
 
     def _validate_temp(self, set_temp: int) -> bool:
         """Temperature validation."""
@@ -433,7 +439,13 @@ class VeSyncAirFryer158(VeSyncBaseDevice):
                     'cookStatus': 'cooking'
                 }
             }
-        return self._status_api(cmd)
+        if self._status_api(cmd) is True:
+            if self.preheat is True:
+                self.fryer_status.cook_status = 'heating'
+            else:
+                self.fryer_status.cook_status = 'cooking'
+            return True
+        return False
 
     def set_preheat(self, target_temp: int, cook_time: int) -> bool:
         """Set preheat mode with cooking time."""
