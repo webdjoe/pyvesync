@@ -194,7 +194,7 @@ class FryerStatus:
 
 
 class VeSyncAirFryer158(VeSyncBaseDevice):
-    """Corsori Air Fryer Class."""
+    """Cosori Air Fryer Class."""
 
     def __init__(self, details, manager):
         """Init the VeSync Air Fryer 158 class."""

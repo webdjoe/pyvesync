@@ -104,8 +104,8 @@ pip install pyvesync
 4. LV600S
 5. OasisMist LUS-O415S-WUS
 
-Corsori Air Fryer
-1. Corsori 3.7 and 5.8 Quart Air Fryer 
+Cosori Air Fryer
+1. Cosori 3.7 and 5.8 Quart Air Fryer 
 
 ## Usage
 
@@ -503,13 +503,13 @@ VeSyncLV600S.details = {
 
 `VeSync600S.set_warm_level(2)` - Sets warm mist level
 
-### Corsori Devices
+### Cosori Devices
 
-Corsori devices are found under the `manager.kitchen` class attribute. 
+Cosori devices are found under the `manager.kitchen` class attribute. 
 
-#### Corsori 3.7 and 5.8 Quart Air Fryer
+#### Cosori 3.7 and 5.8 Quart Air Fryer
 
-The Corsori 3.7 and 5.8 Quart Air Fryer has several methods and properties that can be used to monitor and control 
+The Cosori 3.7 and 5.8 Quart Air Fryer has several methods and properties that can be used to monitor and control 
 the device.
 
 The api structured in a way that splits the functionality and status into two classes that are both accesseible from 
