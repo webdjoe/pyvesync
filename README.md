@@ -104,6 +104,9 @@ pip install pyvesync
 4. LV600S
 5. OasisMist LUS-O415S-WUS
 
+Corsori Air Fryer
+1. Corsori 3.7 and 5.8 Quart Air Fryer 
+
 ## Usage
 
 To start with the module:
@@ -500,6 +503,70 @@ VeSyncLV600S.details = {
 
 `VeSync600S.set_warm_level(2)` - Sets warm mist level
 
+### Corsori Devices
+
+Corsori devices are found under the `manager.kitchen` class attribute. 
+
+#### Corsori 3.7 and 5.8 Quart Air Fryer
+
+The Corsori 3.7 and 5.8 Quart Air Fryer has several methods and properties that can be used to monitor and control 
+the device.
+
+The api structured in a way that splits the functionality and status into two classes that are both accesseible from 
+the instantiated device class. 
+
+##### Air Fryer Properties
+
+All properties cannot be directly set, they must be set from the `get_details()` or methods that set the status. 
+They can be set through the `VeSyncAirFryer158.fryer_status` dataclass but should be avoided. This separation of 
+functionality and status is purposeful to avoid inconsistent states.
+
+`VeSyncAirFryer158.temp_unit` - Temperature units of the device (fahrenheight or celsius)
+
+`VeSyncAirFryer158.current_temp` - Current temperature in the defined temperature units
+
+`VeSyncAirFryer158.cook_set_temp` - Set temperature or target temperature for preheat
+
+`VeSyncAirFryer158.cook_last_time` - The last minutes remaining returned from API for cook mode
+
+`VeSyncAirFryer158.preheat_last_time` - The last minutes remaining returned from API for preheat mode
+
+`VeSyncAirFryer158.cook_status` - Status of air fryer. This can be the following states:
+1. `standby` - Air fryer is off and no cook or preheat is in progress
+2. `cooking` - Air fryer is actively cooking
+3. `cookStop` - Cooking is paused and can be resumed
+4. `cookEnd` - Cooking is ended and can be resumed
+5. `heating` - Air fryer is preheating
+6. `heatStop` - Preheat is paused and can be resumed
+7. `heatEnd` - Preheat is ended and cooking mode can be started with `cook_from_preheat()` method
+
+`VeSyncAirFryer158.is_heating` - Returns true if air fryer is preheating
+
+`VeSyncAirFryer158.is_cooking` - Returns true if air fryer is cooking
+
+`VeSyncAirFryer158.is_paused` - Returns true if air fryer is paused and can be resumed
+
+`VeSyncAirFryer158.remaining_time` - Returns minutes remaining based on timestamp of last API return when air fryer 
+is running
+
+`VeSyncAirFryer158.fryer_status` - Dataclass that contains the status of the air fryer. The attributes of this 
+dataclass are directly accessible from the `VeSyncAirFryer158` properties and **should not be directly set.**
+
+##### Air Fryer Methods
+
+`VeSyncAirFryer158.update()` - Retrieve current status
+
+`VeSyncAirFryer158.cook(set_temp: int, set_time: int)` - Set air fryer cook mode based on time and temp in defined units
+
+`VeSyncAirFryer158.preheat(set_temp: int, set_time: int)` - Set air fryer preheat mode based on time and temp in defined units
+
+`VeSyncAirFryer158.cook_from_preheat()` - Start cook mode when air fryer is in `preheatEnd` state
+
+`VeSyncAirFryer158.pause()` - Pause air fryer when in `cooking` or `heating` state
+
+`VeSyncAirFryer158.resume()` - Resume air fryer when in `cookStop` or `heatStop` state
+
+`VeSyncAirFryer158.end()` - End cooking or preheating and return air fryer to `standby` state
 
 ### JSON Output API
 

@@ -15,6 +15,7 @@ import pyvesync.vesyncfan as fan_mods
 from pyvesync.vesyncoutlet import *   # noqa: F403, F401
 import pyvesync.vesyncoutlet as outlet_mods
 from pyvesync.vesyncswitch import *   # noqa: F403, F401
+import pyvesync.vesynckitchen as kitchen_mods
 import pyvesync.vesyncswitch as switch_mods
 
 logger = logging.getLogger(__name__)
@@ -47,6 +48,12 @@ def object_factory(dev_type, config, manager) -> Tuple[str, VeSyncBaseDevice]:
         bulb_obj = getattr(bulb_mods, bulb_cls)
         return 'bulbs', bulb_obj(config, manager)
 
+    def kitchen(dev_type, config, manager):
+        kitchen_cls = kitchen_mods.kitchen_modules[dev_type]
+        kitchen_obj = getattr(kitchen_mods, kitchen_cls)
+        return 'kitchen', kitchen_obj(config, manager)
+
+
     if dev_type in fan_mods.fan_modules:  # type: ignore  # noqa: F405
         type_str, dev_obj = fans(dev_type, config, manager)
     elif dev_type in outlet_mods.outlet_modules:  # type: ignore  # noqa: F405
@@ -55,6 +62,8 @@ def object_factory(dev_type, config, manager) -> Tuple[str, VeSyncBaseDevice]:
         type_str, dev_obj = switches(dev_type, config, manager)
     elif dev_type in bulb_mods.bulb_modules:  # type: ignore  # noqa: F405
         type_str, dev_obj = bulbs(dev_type, config, manager)
+    elif dev_type in kitchen_mods.kitchen_modules:
+        type_str, dev_obj = kitchen(dev_type, config, manager)
     else:
         logger.debug('Unknown device named %s model %s',
                      config.get('deviceName', ''),
@@ -78,10 +87,12 @@ class VeSync:  # pylint: disable=function-redefined
             outlet_mods.logger.setLevel(logging.DEBUG)
             fan_mods.logger.setLevel(logging.DEBUG)
             helpermodule.logger.setLevel(logging.DEBUG)
+            kitchen_mods.logger.setLevel(logging.DEBUG)
         self.username = username
         self.password = password
         self.token = None
         self.account_id = None
+        self.country_code = None
         self.devices = None
         self.enabled = False
         self.update_interval = API_RATE_LIMIT
@@ -95,12 +106,14 @@ class VeSync:  # pylint: disable=function-redefined
         self.fans = []
         self.bulbs = []
         self.scales = []
+        self.kitchen = []
 
         self._dev_list = {
             'fans': self.fans,
             'outlets': self.outlets,
             'switches': self.switches,
-            'bulbs': self.bulbs
+            'bulbs': self.bulbs,
+            'kitchen': self.kitchen
         }
 
         if isinstance(time_zone, str) and time_zone:
@@ -296,6 +309,7 @@ class VeSync:  # pylint: disable=function-redefined
         if Helpers.code_check(response) and 'result' in response:
             self.token = response.get('result').get('token')
             self.account_id = response.get('result').get('accountID')
+            self.country_code = response.get('result').get('countryCode')
             self.enabled = True
             logger.debug('Login successful')
             logger.debug('token %s', self.token)

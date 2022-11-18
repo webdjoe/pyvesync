@@ -3,6 +3,7 @@
 import logging
 import json
 from typing import Optional, Union
+from pyvesync.helpers import Helpers as helper
 logger = logging.getLogger(__name__)
 
 
@@ -30,6 +31,8 @@ class VeSyncBaseDevice:
             self.extension = details.get('extension', None)
             self.current_firm_version = details.get(
                     'currentFirmVersion', None)
+            self.device_region: Optional[str] = details.get('deviceRegion', None)
+            self.pid = None
             self.sub_device_no = details.get('subDeviceNo', 0)
             self.config: dict = {}
             if isinstance(details.get('extension'), dict):
@@ -86,6 +89,20 @@ class VeSyncBaseDevice:
         else:
             logger.debug('Call device.get_config() to get firmware versions')
         return False
+
+    def get_pid(self) -> None:
+        """Get managed device configuration."""
+        body = helper.req_body(self.manager, 'devicedetail')
+        body['configModule'] = self.config_module
+        body['region'] = self.device_region
+        body['method'] = 'configInfo'
+        r, _ = helper.call_api('/cloud/v1/deviceManaged/configInfo',
+                                'post',
+                                json_object=body)
+        if not isinstance(r, dict) or r.get('code') != 0 or r.get('result') is None:
+            logger.error('Error getting config info for %s', self.device_name)
+            return
+        self.pid = r.get('result', {}).get('pid')
 
     def display(self) -> None:
         """Print formatted device info to stdout."""
