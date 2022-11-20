@@ -262,11 +262,13 @@ class VeSyncBulb(VeSyncBaseDevice):
         return temp_update
 
     @staticmethod
-    def _validate_any(value: Union[int, float, str], start: float = 0,
-                      stop: float = 100, default: float = 100) -> float:
+    def _validate_any(value: Union[int, float, str],
+                      start: Union[int, float] = 0,
+                      stop: Union[int, float] = 100,
+                      default: Union[int, float] = 100) -> float:
         """Validate any value."""
         try:
-            value_update = max(start, (min(stop, round(float(value), 2))))
+            value_update = max(float(start), (min(float(stop), round(float(value), 2))))
         except (ValueError, TypeError):
             value_update = default
         return value_update
