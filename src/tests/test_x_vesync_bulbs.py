@@ -265,6 +265,28 @@ class TestVeSyncBulbValceno(TestBase):
         bulb = VeSyncBulbValcenoA19MC(DEV_LIST_DETAIL_VALCENO, self.manager)
         assert bulb.set_brightness(5000)
         assert bulb.brightness == 100
+        
+    def test_invalid_saturation(self):
+        """Test invalid saturation on Valceno."""
+        self.mock_api.return_value = ({'code': 0}, 200)
+        bulb = VeSyncBulbValcenoA19MC(DEV_LIST_DETAIL_VALCENO, self.manager)
+        assert bulb.set_color_saturation(5000)
+        body_dict = {
+            "method": "setLightStatusV2",
+            "source": "APP",
+            "data":
+                {
+                    "force": 1,
+                    "brightness": "",
+                    "colorTemp": "",
+                    "colorMode": "hsv",
+                    "hue": "",
+                    "saturation": 10000,
+                    "value": ""
+                }
+        }
+        mock_call = self.mock_api.call_args[1]['json_object']['payload']
+        assert mock_call == body_dict
 
     def test_color(self):
         """Test set color on Valceno."""
