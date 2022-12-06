@@ -28,3 +28,4 @@ test.py
 
 tools/__init__.py
 tools/vesyncdevice.py
+pyvesync.und
