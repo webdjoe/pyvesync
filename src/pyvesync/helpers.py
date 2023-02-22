@@ -171,9 +171,8 @@ class Helpers:
         return hashlib.md5(string.encode('utf-8')).hexdigest()
 
     @staticmethod
-    def call_api(
-        api: str, method: str, json_object: dict = None, headers: dict = None,
-    ) -> tuple:
+    def call_api(api: str, method: str, json_object:  Optional[dict] = None,
+                 headers: Optional[dict] = None) -> tuple:
         """Make API calls by passing endpoint, header and body."""
         response = None
         status_code = None

@@ -24,7 +24,6 @@ good-names=i,j,k,x,r,e,v,_,b,dt,d
 
 disable=
     format,
-    abstract-class-little-used,
     abstract-method,
     arguments-differ,
     cyclic-import,
@@ -33,9 +32,7 @@ disable=
     inconsistent-return-statements,
     invalid-name,
     locally-disabled,
-    no-self-use,
     not-an-iterable,
-    redefined-variable-type,
     too-few-public-methods,
     too-many-arguments,
     too-many-branches,

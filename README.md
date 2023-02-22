@@ -23,15 +23,15 @@ pyvesync is a library to manage VeSync compatible [smart home devices](#supporte
   - [Standard Device API](#standard-device-api)
     - [Standard Properties](#standard-properties)
     - [Standard Methods](#standard-methods)
-  - [Outlet API Methods & Properties](#outlet-api-methods--properties)
-    - [Outlet power and energy API Methods & Properties](#outlet-power-and-energy-api-methods--properties)
+  - [Outlet API Methods \& Properties](#outlet-api-methods--properties)
+    - [Outlet power and energy API Methods \& Properties](#outlet-power-and-energy-api-methods--properties)
     - [Model ESW15-USA 15A/1800W Methods (Have a night light)](#model-esw15-usa-15a1800w-methods-have-a-night-light)
-  - [Standard Air Purifier Properties & Methods](#standard-air-purifier-properties--methods)
+  - [Standard Air Purifier Properties \& Methods](#standard-air-purifier-properties--methods)
     - [Air Purifier Properties](#air-purifier-properties)
     - [Air Purifier Methods](#air-purifier-methods)
     - [Levoit Purifier Core200S/300S/400S Properties](#levoit-purifier-core200s300s400s-properties)
     - [Levoit Purifier Core200S/300S/400S Methods](#levoit-purifier-core200s300s400s-methods)
-  - [Lights API Methods & Properties](#lights-api-methods--properties)
+  - [Lights API Methods \& Properties](#lights-api-methods--properties)
     - [Brightness Light Bulb Method and Properties](#brightness-light-bulb-method-and-properties)
     - [Light Bulb Color Temperature Methods and Properties](#light-bulb-color-temperature-methods-and-properties)
     - [Multicolor Light Bulb Methods and Properties](#multicolor-light-bulb-methods-and-properties)
@@ -40,6 +40,10 @@ pyvesync is a library to manage VeSync compatible [smart home devices](#supporte
     - [Humidifier Properties](#humidifier-properties)
     - [Humidifer Methods](#humidifer-methods)
     - [600S warm mist feature](#600s-warm-mist-feature)
+  - [Cosori Devices](#cosori-devices)
+    - [Cosori 3.7 and 5.8 Quart Air Fryer](#cosori-37-and-58-quart-air-fryer)
+      - [Air Fryer Properties](#air-fryer-properties)
+      - [Air Fryer Methods](#air-fryer-methods)
   - [JSON Output API](#json-output-api)
     - [JSON Output for All Devices](#json-output-for-all-devices)
     - [JSON Output for Outlets](#json-output-for-outlets)
@@ -55,8 +59,6 @@ pyvesync is a library to manage VeSync compatible [smart home devices](#supporte
 - [Notes](#notes)
 - [Debug mode](#debug-mode)
 - [Feature Requests](#feature-requests)
-
-- [Contributing](CONTRIBUTING.md)
 
 
 ## Installation
@@ -105,7 +107,7 @@ pip install pyvesync
 5. OasisMist LUS-O415S-WUS
 
 Cosori Air Fryer
-1. Cosori 3.7 and 5.8 Quart Air Fryer 
+1. Cosori 3.7 and 5.8 Quart Air Fryer
 
 ## Usage
 
@@ -505,20 +507,20 @@ VeSyncLV600S.details = {
 
 ### Cosori Devices
 
-Cosori devices are found under the `manager.kitchen` class attribute. 
+Cosori devices are found under the `manager.kitchen` class attribute.
 
 #### Cosori 3.7 and 5.8 Quart Air Fryer
 
-The Cosori 3.7 and 5.8 Quart Air Fryer has several methods and properties that can be used to monitor and control 
+The Cosori 3.7 and 5.8 Quart Air Fryer has several methods and properties that can be used to monitor and control
 the device.
 
-The api structured in a way that splits the functionality and status into two classes that are both accesseible from 
-the instantiated device class. 
+The api structured in a way that splits the functionality and status into two classes that are both accesseible from
+the instantiated device class.
 
 ##### Air Fryer Properties
 
-All properties cannot be directly set, they must be set from the `get_details()` or methods that set the status. 
-They can be set through the `VeSyncAirFryer158.fryer_status` dataclass but should be avoided. This separation of 
+All properties cannot be directly set, they must be set from the `get_details()` or methods that set the status.
+They can be set through the `VeSyncAirFryer158.fryer_status` dataclass but should be avoided. This separation of
 functionality and status is purposeful to avoid inconsistent states.
 
 `VeSyncAirFryer158.temp_unit` - Temperature units of the device (fahrenheight or celsius)
@@ -537,7 +539,7 @@ functionality and status is purposeful to avoid inconsistent states.
 3. `cookStop` - Cooking is paused and can be resumed
 4. `cookEnd` - Cooking is ended and can be resumed
 5. `heating` - Air fryer is preheating
-6. `heatStop` - Preheat is paused and can be resumed
+6. `preheatStop` - Preheat is paused and can be resumed
 7. `heatEnd` - Preheat is ended and cooking mode can be started with `cook_from_preheat()` method
 
 `VeSyncAirFryer158.is_heating` - Returns true if air fryer is preheating
@@ -546,10 +548,10 @@ functionality and status is purposeful to avoid inconsistent states.
 
 `VeSyncAirFryer158.is_paused` - Returns true if air fryer is paused and can be resumed
 
-`VeSyncAirFryer158.remaining_time` - Returns minutes remaining based on timestamp of last API return when air fryer 
+`VeSyncAirFryer158.remaining_time` - Returns minutes remaining based on timestamp of last API return when air fryer
 is running
 
-`VeSyncAirFryer158.fryer_status` - Dataclass that contains the status of the air fryer. The attributes of this 
+`VeSyncAirFryer158.fryer_status` - Dataclass that contains the status of the air fryer. The attributes of this
 dataclass are directly accessible from the `VeSyncAirFryer158` properties and **should not be directly set.**
 
 ##### Air Fryer Methods
@@ -558,13 +560,13 @@ dataclass are directly accessible from the `VeSyncAirFryer158` properties and **
 
 `VeSyncAirFryer158.cook(set_temp: int, set_time: int)` - Set air fryer cook mode based on time and temp in defined units
 
-`VeSyncAirFryer158.preheat(set_temp: int, set_time: int)` - Set air fryer preheat mode based on time and temp in defined units
+`VeSyncAirFryer158.set_preheat(target_temp: int, cook_time: int)` - Set air fryer preheat mode based on time and temp in defined units
 
 `VeSyncAirFryer158.cook_from_preheat()` - Start cook mode when air fryer is in `preheatEnd` state
 
 `VeSyncAirFryer158.pause()` - Pause air fryer when in `cooking` or `heating` state
 
-`VeSyncAirFryer158.resume()` - Resume air fryer when in `cookStop` or `heatStop` state
+`VeSyncAirFryer158.resume()` - Resume air fryer when in `cookStop` or `preheatStop` state
 
 `VeSyncAirFryer158.end()` - End cooking or preheating and return air fryer to `standby` state
 

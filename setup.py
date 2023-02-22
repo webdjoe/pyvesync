@@ -26,7 +26,7 @@ setup(
         'Natural Language :: English',
         'Programming Language :: Python :: 3.8',
     ],
-    keywords=['iot', 'vesync', 'levoit', 'etekcity'],
+    keywords=['iot', 'vesync', 'levoit', 'etekcity', 'cosori', 'valceno'],
     packages=find_packages('src', exclude=['tests', 'tests.*']),
     package_dir={'': 'src'},
     zip_safe=False,

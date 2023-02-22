@@ -2,7 +2,7 @@
 import json
 import logging
 import time
-from typing import Optional, Union
+from typing import Optional, Union, Set
 from dataclasses import dataclass
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 from pyvesync.helpers import Helpers as helpers
@@ -11,13 +11,38 @@ logger = logging.getLogger(__name__)
 
 
 kitchen_features: dict = {
-    'CS137-AF/CS158-AF': {
+    'Cosori3758L': {
         'module': 'VeSyncAirFryer158',
+        'models': ['CS137-AF/CS158-AF', 'CS158-AF', 'CS137-AF', 'CS358-AF'],
         'features': [],
     }
 }
 
-kitchen_modules: dict = {k: v['module'] for k, v in kitchen_features.items()}
+
+def model_dict() -> dict:
+    """Build purifier and humidifier model dictionary."""
+    model_modules = {}
+    for dev_dict in kitchen_features.values():
+        for model in dev_dict['models']:
+            model_modules[model] = dev_dict['module']
+    return model_modules
+
+
+def model_features(dev_type: str) -> dict:
+    """Get features from device type."""
+    for dev_dict in kitchen_features.values():
+        if dev_type in dev_dict['models']:
+            return dev_dict
+    raise ValueError('Device not configured')
+
+
+kitchen_classes: Set[str] = {v['module'] for k, v in kitchen_features.items()}
+
+
+kitchen_modules: dict = model_dict()
+
+
+__all__ = list(kitchen_classes)
 
 
 RECIPE_ID = 1
@@ -206,7 +231,7 @@ class VeSyncAirFryer158(VeSyncBaseDevice):
         self.fryer_status.temp_unit = self.get_temp_unit()
         self.ready_start = self.get_remote_cook_mode()
 
-    def get_body(self, method: str = None) -> dict:
+    def get_body(self, method:  Optional[str] = None) -> dict:
         """Return body of api calls."""
         body = {
             **helpers.req_body(self.manager, 'bypass'),
@@ -513,8 +538,8 @@ class VeSyncAirFryer158(VeSyncBaseDevice):
         })
         return cmd
 
-    def _set_cook(self, set_temp: int = None, set_time: int = None,
-                  status: str = 'cooking') -> bool:
+    def _set_cook(self, set_temp: Optional[int] = None,
+                  set_time: Optional[int] = None, status: str = 'cooking') -> bool:
         if set_temp is not None and set_time is not None:
             set_cmd = self._cmd_api_dict
 

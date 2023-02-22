@@ -72,7 +72,7 @@ class VeSyncBulb(VeSyncBaseDevice):
             self.device_type, {}).get('features')
         if self.features is None:
             logger.error("No configuration set for - %s", self.device_name)
-            raise Exception
+            raise KeyError(f"No configuration set for {self.device_name}")
         self._rgb_values = {
             'red': 0,
             'green': 0,
@@ -564,7 +564,7 @@ class VeSyncBulbESL100MC(VeSyncBulb):
 class VeSyncBulbESL100(VeSyncBulb):
     """Object to hold VeSync ESL100 light bulb."""
 
-    def __init__(self, details, manager):
+    def __init__(self, details: dict, manager) -> None:
         """Initialize Etekcity ESL100 Dimmable Bulb."""
         super().__init__(details, manager)
         self.details: dict = {}
@@ -1023,7 +1023,7 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
                    color_temp: NUMERIC_T = None,
                    color_saturation: NUMERIC_T = None,
                    color_hue: NUMERIC_T = None,
-                   color_mode: str = None,
+                   color_mode: Optional[str] = None,
                    color_value: NUMERIC_T = None
                    ) -> bool:
         """Set multicolor bulb parameters.

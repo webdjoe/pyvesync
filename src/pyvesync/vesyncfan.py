@@ -2,7 +2,7 @@
 
 import json
 import logging
-from typing import Dict, Tuple, Union
+from typing import Dict, Tuple, Union, Optional
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 from pyvesync.helpers import Helpers
 
@@ -139,7 +139,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             logger.error(
                 'Please set modes for %s in the configuration',
                 self.device_type)
-            raise Exception
+            raise KeyError(f'Modes not set in configuration for {self.device_name}')
         self.modes = self.config_dict['modes']
         if 'air_quality' in self.features:
             self.air_quality_feature = True
@@ -737,7 +737,7 @@ class VeSyncAir131(VeSyncBaseDevice):
         """Set sleep mode to on."""
         return self.mode_toggle('sleep')
 
-    def change_fan_speed(self, speed: int = None) -> bool:
+    def change_fan_speed(self, speed: Optional[int] = None) -> bool:
         """Adjust Fan Speed for air purifier.
 
         Specifying 1,2,3 as argument or call without argument to cycle
@@ -865,7 +865,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
             self.night_light = True
         else:
             self.night_light = False
-        self.details: Dict[str, Union[str, int, float]] = {
+        self.details = {
             'humidity': 0,
             'mist_virtual_level': 0,
             'mist_level': 0,
@@ -878,7 +878,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
         }
         if self.night_light is True:
             self.details['night_light_brightness'] = 0
-        self.config: Dict[str, Union[str, int, float]] = {
+        self.config = {
             'auto_target_humidity': 0,
             'display': False,
             'automatic_stop': True
