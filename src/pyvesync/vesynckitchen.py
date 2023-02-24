@@ -64,14 +64,14 @@ def check_status(func):
     def wrapper(self, *args, **kwargs):
         seconds_elapsed = int(time.time()) - self.last_update
         logger.debug("Seconds elapsed between updates: %s", seconds_elapsed)
-        check_status = False
+        refresh = False
         if self.refresh_interval is None:
-            check_status = bool(seconds_elapsed > REFRESH_INTERVAL)
+            refresh = bool(seconds_elapsed > REFRESH_INTERVAL)
         elif self.refresh_interval == 0:
-            check_status = True
+            refresh = True
         elif self.refresh_interval > 0:
-            check_status = bool(seconds_elapsed > self.refresh_interval)
-        if check_status is True:
+            refresh = bool(seconds_elapsed > self.refresh_interval)
+        if refresh is True:
             logger.debug("Updating status, %s seconds elapsed", seconds_elapsed)
             self.update()
         return func(self, *args, **kwargs)
@@ -124,7 +124,7 @@ class FryerStatus:
         """Return preheat time remaining."""
         if self.preheat is False or self.cook_status == 'preheatEnd':
             return 0
-        if self.cook_status == 'pullOut' or self.cook_status == 'preheatStop':
+        if self.cook_status in ['pullOut', 'preheatStop']:
             if self.preheat_last_time is None:
                 return 0
             return int(self.preheat_last_time // 60)
@@ -135,9 +135,10 @@ class FryerStatus:
 
     @property
     def cook_time_remaining(self) -> int:
+        """Returns the amount of time remaining if cooking."""
         if self.preheat is True or self.cook_status == 'cookEnd':
             return 0
-        if self.cook_status == 'pullOut' or self.cook_status == 'cookStop':
+        if self.cook_status in ['pullOut', 'cookStop']:
             if self.cook_last_time is None:
                 return 0
             return int(max(self.cook_last_time // 60, 0))
@@ -171,7 +172,6 @@ class FryerStatus:
 
     def status_request(self, json_cmd: dict):
         """Set status from jsonCmd of API call."""
-        self.last_update = int(time.time())
         self.last_timestamp = None
         if not isinstance(json_cmd, dict):
             return
