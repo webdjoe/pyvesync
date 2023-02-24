@@ -507,25 +507,38 @@ VeSyncLV600S.details = {
 
 ### Cosori Devices
 
-Cosori devices are found under the `manager.kitchen` class attribute.
+Cosori devices are found under the `manager.kitchen` VeSync class attribute.
 
 #### Cosori 3.7 and 5.8 Quart Air Fryer
 
 The Cosori 3.7 and 5.8 Quart Air Fryer has several methods and properties that can be used to monitor and control
 the device.
 
-The api structured in a way that splits the functionality and status into two classes that are both accesseible from
-the instantiated device class.
+This library splits the functionality and status into two classes that are both accessible from the device instance.
+
+To maintain consistency of state, the update() method is called after each of the methods that change the state of the device.
+
+There is also an instance attribute that can be set `VeSyncAirFryer158.refresh_interval` that will set the interval in seconds that the state of the air fryer should be updated before a method that changes state is called. This is an additional API call but is necessary to maintain state, especially when trying to `pause` or `resume` the device. Defaults to 60 seconds but can be set via:
+
+```python
+# Change to 120 seconds before status is updated between calls
+VeSyncAirFryer158.refresh_interval = 120
+
+# Set status update before every call
+VeSyncAirFryer158.refresh_interval = 0
+
+# Disable status update before every call
+VeSyncAirFryer158.refresh_interval = -1
+```
 
 ##### Air Fryer Properties
 
 All properties cannot be directly set, they must be set from the `get_details()` or methods that set the status.
-They can be set through the `VeSyncAirFryer158.fryer_status` dataclass but should be avoided. This separation of
-functionality and status is purposeful to avoid inconsistent states.
+They can be set through the `VeSyncAirFryer158.fryer_status` dataclass but should be avoided. This separation of functionality and status is purposeful to avoid inconsistent states.
 
-`VeSyncAirFryer158.temp_unit` - Temperature units of the device (fahrenheight or celsius)
+`VeSyncAirFryer158.temp_unit` - Temperature units of the device (`fahrenheit` or `celsius`)
 
-`VeSyncAirFryer158.current_temp` - Current temperature in the defined temperature units
+`VeSyncAirFryer158.current_temp` - Current temperature in the defined temperature units. If device is not running, this defaults to `None`
 
 `VeSyncAirFryer158.cook_set_temp` - Set temperature or target temperature for preheat
 
@@ -548,11 +561,9 @@ functionality and status is purposeful to avoid inconsistent states.
 
 `VeSyncAirFryer158.is_paused` - Returns true if air fryer is paused and can be resumed
 
-`VeSyncAirFryer158.remaining_time` - Returns minutes remaining based on timestamp of last API return when air fryer
-is running
+`VeSyncAirFryer158.remaining_time` - Returns minutes remaining based on timestamp of last API return when air fryer is running. Returns `None` if not running
 
-`VeSyncAirFryer158.fryer_status` - Dataclass that contains the status of the air fryer. The attributes of this
-dataclass are directly accessible from the `VeSyncAirFryer158` properties and **should not be directly set.**
+`VeSyncAirFryer158.fryer_status` - Dataclass that contains the status of the air fryer. The attributes of this dataclass are directly accessible from the `VeSyncAirFryer158` properties and **should not be directly set.**
 
 ##### Air Fryer Methods
 

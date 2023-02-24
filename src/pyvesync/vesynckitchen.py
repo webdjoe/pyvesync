@@ -2,6 +2,7 @@
 import json
 import logging
 import time
+from functools import wraps
 from typing import Optional, Union, Set
 from dataclasses import dataclass
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
@@ -45,10 +46,36 @@ kitchen_modules: dict = model_dict()
 __all__ = list(kitchen_classes)
 
 
+# Status refresh interval in seconds
+# API calls outside of interval are automatically refreshed
+# Set VeSyncAirFryer158.refresh_interval to 0 to refresh every call
+# Set to None or -1 to disable auto-refresh
+REFRESH_INTERVAL = 60
+
 RECIPE_ID = 1
 RECIPE_TYPE = 3
 CUSTOM_RECIPE = 'Manual Cook'
 COOK_MODE = 'custom'
+
+
+def check_status(func):
+    """Check interval between updates."""
+    @wraps(func)
+    def wrapper(self, *args, **kwargs):
+        seconds_elapsed = int(time.time()) - self.last_update
+        logger.debug("Seconds elapsed between updates: %s", seconds_elapsed)
+        check_status = False
+        if self.refresh_interval is None:
+            check_status = bool(seconds_elapsed > REFRESH_INTERVAL)
+        elif self.refresh_interval == 0:
+            check_status = True
+        elif self.refresh_interval > 0:
+            check_status = bool(seconds_elapsed > self.refresh_interval)
+        if check_status is True:
+            logger.debug("Updating status, %s seconds elapsed", seconds_elapsed)
+            self.update()
+        return func(self, *args, **kwargs)
+    return wrapper
 
 
 @dataclass(init=False, eq=False, repr=False)
@@ -93,27 +120,44 @@ class FryerStatus:
             raise ValueError(f'Invalid temperature unit - {temp_unit}')
 
     @property
+    def preheat_time_remaining(self) -> int:
+        """Return preheat time remaining."""
+        if self.preheat is False or self.cook_status == 'preheatEnd':
+            return 0
+        if self.cook_status == 'pullOut' or self.cook_status == 'preheatStop':
+            if self.preheat_last_time is None:
+                return 0
+            return int(self.preheat_last_time // 60)
+        if self.preheat_last_time is not None and self.last_timestamp is not None:
+            return int(max((self.preheat_last_time -
+                            (int(time.time()) - self.last_timestamp)) // 60, 0))
+        return 0
+
+    @property
+    def cook_time_remaining(self) -> int:
+        if self.preheat is True or self.cook_status == 'cookEnd':
+            return 0
+        if self.cook_status == 'pullOut' or self.cook_status == 'cookStop':
+            if self.cook_last_time is None:
+                return 0
+            return int(max(self.cook_last_time // 60, 0))
+        if self.cook_last_time is not None and self.last_timestamp is not None:
+            return int(max((self.cook_last_time -
+                            (int(time.time()) - self.last_timestamp)) // 60, 0))
+        return 0
+
+    @property
     def remaining_time(self):
         """Return minutes remaining if cooking/heating."""
-        if self.cook_status == 'cooking' and self.last_timestamp is not None:
-            remaining = self.cook_last_time - (int(time.time())
-                                               - self.last_timestamp) // 60
-        elif self.cook_status == 'heating' and self.last_timestamp is not None:
-            remaining = self.preheat_last_time - (int(time.time())
-                                                  - self.last_timestamp) // 60
-        elif self.cook_status == 'cookStop' and self.last_timestamp is not None:
-            remaining = self.cook_last_time
-        elif self.cook_status == 'preheatStop' and self.last_timestamp is not None:
-            remaining = self.preheat_last_time
-        else:
-            return None
-        return remaining if remaining > 0 else 0
+        if self.preheat is True:
+            return self.preheat_time_remaining
+        return self.cook_time_remaining
 
     @property
     def is_running(self) -> bool:
         """Return if cooking or heating."""
-        return (self.cook_status in ['cooking', 'heating']) \
-            and (self.remaining_time > 0)
+        return bool(self.cook_status in ['cooking', 'heating']) and \
+            bool(self.remaining_time > 0)
 
     @property
     def is_cooking(self) -> bool:
@@ -125,50 +169,46 @@ class FryerStatus:
         """Return if heating."""
         return self.cook_status == 'heating' and self.remaining_time > 0
 
-    @property
-    def in_session(self) -> bool:
-        """Return if in session."""
-        return self.cook_status is not None
-
     def status_request(self, json_cmd: dict):
         """Set status from jsonCmd of API call."""
+        self.last_update = int(time.time())
+        self.last_timestamp = None
         if not isinstance(json_cmd, dict):
             return
         self.preheat = False
         preheat = json_cmd.get('preheat')
         cook = json_cmd.get('cookMode')
         if isinstance(preheat, dict):
-            self.cook_last_time = None
+            self.preheat = True
             if preheat.get('preheatStatus') == 'stop':
-                self.preheat = True
                 self.cook_status = 'preheatStop'
-                self.last_timestamp = None
             elif preheat.get('preheatStatus') == 'heating':
                 self.cook_status = 'heating'
                 self.last_timestamp = int(time.time())
                 self.preheat_set_time = preheat.get('preheatSetTime',
                                                     self.preheat_set_time)
-                self.preheat_last_time = self.preheat_set_time
+                if preheat.get('preheatSetTime') is not None:
+                    self.preheat_last_time = preheat.get('preheatSetTime')
                 self.cook_set_temp = preheat.get('targetTemp', self.cook_set_temp)
-                self.cook_set_time = preheat.get('cookSetTime')
+                self.cook_set_time = preheat.get('cookSetTime', self.cook_set_time)
+                self.cook_last_time = None
             elif preheat.get('preheatStatus') == 'end':
-                self.set_standby()
-
+                self.cook_status = 'preheatEnd'
+                self.preheat_last_time = 0
         elif isinstance(cook, dict):
             self.clear_preheat()
             if cook.get('cookStatus') == 'stop':
                 self.cook_status = 'cookStop'
-                self.last_timestamp = None
             elif cook.get('cookStatus') == 'cooking':
                 self.cook_status = 'cooking'
                 self.last_timestamp = int(time.time())
                 self.cook_set_time = cook.get('cookSetTime', self.cook_set_time)
-                self.cook_last_time = cook.get('cookLastTime', self.cook_last_time)
                 self.cook_set_temp = cook.get('cookSetTemp', self.cook_set_temp)
                 self.current_temp = cook.get('currentTemp', self.current_temp)
                 self.temp_unit = cook.get('tempUnit', self.temp_unit)
             elif cook.get('cookStatus') == 'end':
                 self.set_standby()
+                self.cook_status = 'cookEnd'
 
     def clear_preheat(self):
         """Clear preheat status."""
@@ -181,27 +221,33 @@ class FryerStatus:
         self.cook_status = 'standby'
         self.clear_preheat()
         self.cook_last_time = None
+        self.current_temp = None
         self.cook_set_time = None
         self.cook_set_temp = None
         self.last_timestamp = None
 
     def status_response(self, return_status: dict) -> None:
         """Set status of Air Fryer Based on API Response."""
+        self.last_timestamp = None
+        self.preheat = False
         self.cook_status = return_status.get('cookStatus')
         if self.cook_status == 'standby':
             self.set_standby()
+            return
 
         #  If drawer is pulled out, set standby if resp does not contain other details
         if self.cook_status == 'pullOut':
             self.last_timestamp = None
             if 'currentTemp' not in return_status or 'tempUnit' not in return_status:
                 self.set_standby()
+                self.cook_status = 'pullOut'
                 return
-
-        #  Set preheat if appropriate
-        if self.cook_status in ['heating', 'preheatStop']:
+        if return_status.get('preheatLastTime') is not None or \
+                self.cook_status in ['heating', 'preheatStop', 'preheatEnd']:
             self.preheat = True
 
+        self.cook_set_time = return_status.get('cookSetTime', self.cook_set_time)
+        self.cook_last_time = return_status.get('cookLastTime')
         self.current_temp = return_status.get('curentTemp')
         self.cook_set_temp = return_status.get('targetTemp',
                                                return_status.get('cookSetTemp'))
@@ -213,8 +259,14 @@ class FryerStatus:
         if self.cook_status in ['cooking', 'heating']:
             self.last_timestamp = int(time.time())
 
+        if self.cook_status == 'preheatEnd':
+            self.preheat_last_time = 0
+            self.cook_last_time = None
+        if self.cook_status == 'cookEnd':
+            self.cook_last_time = 0
+
         #  If Cooking, clear preheat status
-        if self.cook_status in ['cooking', 'cookStop']:
+        if self.cook_status in ['cooking', 'cookStop', 'cookEnd']:
             self.clear_preheat()
 
 
@@ -230,6 +282,8 @@ class VeSyncAirFryer158(VeSyncBaseDevice):
             self.get_pid()
         self.fryer_status.temp_unit = self.get_temp_unit()
         self.ready_start = self.get_remote_cook_mode()
+        self.last_update = int(time.time())
+        self.refresh_interval = 0
 
     def get_body(self, method:  Optional[str] = None) -> dict:
         """Return body of api calls."""
@@ -279,7 +333,7 @@ class VeSyncAirFryer158(VeSyncBaseDevice):
         if not isinstance(r, dict) or r.get('code') != 0 \
                 or not isinstance(r.get('result'), dict):
             return False
-        return r.get('result', {}).get('cookMode')
+        return r.get('result', {}).get('readyStart', False)
 
     @property
     def temp_unit(self) -> Optional[str]:
@@ -316,7 +370,6 @@ class VeSyncAirFryer158(VeSyncBaseDevice):
         """Return preheat last time."""
         if self.preheat is True:
             return self.fryer_status.preheat_last_time
-        logger.debug("Air fryer not preheating")
         return None
 
     @property
@@ -324,7 +377,6 @@ class VeSyncAirFryer158(VeSyncBaseDevice):
         """Return preheat set time."""
         if self.preheat is True:
             return self.fryer_status.preheat_set_time
-        logger.debug("Air fryer not preheating")
         return None
 
     @property
@@ -377,6 +429,7 @@ class VeSyncAirFryer158(VeSyncBaseDevice):
         self.fryer_status.status_response(return_status)
         return True
 
+    @check_status
     def end(self):
         """End the cooking process."""
         if self.preheat is False \
@@ -386,7 +439,7 @@ class VeSyncAirFryer158(VeSyncBaseDevice):
                     'cookStatus': 'end'
                 }
             }
-        elif self.preheat is False \
+        elif self.preheat is True \
                 and self.fryer_status.cook_status in ['preheatStop', 'heating']:
             cmd = {
                 'preheat': {
@@ -403,6 +456,7 @@ class VeSyncAirFryer158(VeSyncBaseDevice):
             return True
         return False
 
+    @check_status
     def pause(self) -> bool:
         """Pause the cooking process."""
         if self.cook_status not in ['cooking', 'heating']:
@@ -418,7 +472,7 @@ class VeSyncAirFryer158(VeSyncBaseDevice):
         else:
             cmd = {
                 'cookMode': {
-                    'cookStatus': 'pause'
+                    'cookStatus': 'stop'
                 }
             }
         if self._status_api(cmd) is True:
@@ -441,12 +495,14 @@ class VeSyncAirFryer158(VeSyncBaseDevice):
                 return False
         return True
 
+    @check_status
     def cook(self, set_temp: int, set_time: int) -> bool:
         """Set cook time and temperature in Minutes."""
         if self._validate_temp(set_temp) is False:
             return False
         return self._set_cook(set_temp, set_time)
 
+    @check_status
     def resume(self) -> bool:
         """Resume paused preheat or cook."""
         if self.cook_status not in ['preheatStop', 'cookStop']:
@@ -472,6 +528,7 @@ class VeSyncAirFryer158(VeSyncBaseDevice):
             return True
         return False
 
+    @check_status
     def set_preheat(self, target_temp: int, cook_time: int) -> bool:
         """Set preheat mode with cooking time."""
         if self.cook_status not in ['standby', 'cookEnd', 'preheatEnd']:
@@ -490,6 +547,7 @@ class VeSyncAirFryer158(VeSyncBaseDevice):
         }
         return self._status_api(json_cmd)
 
+    # @check_status
     def cook_from_preheat(self) -> bool:
         """Start Cook when preheat has ended."""
         if self.preheat is False or self.cook_status != 'preheatEnd':
@@ -567,7 +625,9 @@ class VeSyncAirFryer158(VeSyncBaseDevice):
                          ' %s', self.device_name, resp.get("code"),
                          resp.get("msg"), debug_msg)
             return False
+        self.last_update = int(time.time())
         self.fryer_status.status_request(json_cmd)
+        self.update()
         return True
 
     def displayJSON(self) -> str:
