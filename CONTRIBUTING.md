@@ -39,3 +39,6 @@ cd pyvesync
 tox
 ```
 
+# Ensure new devices are Integrated in Tests
+
+If you integrate a new device, please read the [testing README](tests/README.md) to ensure that your device is tested.

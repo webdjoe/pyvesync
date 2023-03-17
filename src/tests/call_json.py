@@ -1,5 +1,10 @@
-import time
+import copy
 import pyvesync.helpers as helpers
+from utils import Defaults
+import call_json_switches
+import call_json_outlets
+import call_json_bulbs
+import call_json_fans
 
 API_BASE_URL = helpers.API_BASE_URL
 API_RATE_LIMIT = helpers.API_RATE_LIMIT
@@ -11,9 +16,7 @@ PHONE_OS = helpers.PHONE_OS
 MOBILE_ID = helpers.MOBILE_ID
 USER_TYPE = helpers.USER_TYPE
 
-SAMPLE_ACTID = 'sample_id'
-SAMPLE_TOKEN = 'sample_tk'
-TRACE_ID = str(int(time.time()))
+
 """
 DEFAULT_BODY = Standard body for new device calls
 DEFAULT_HEADER = standard header for most calls
@@ -54,12 +57,18 @@ DETAILS_OUTDOOR = return for 2 plug outdoor outlet
 
 """
 
+BULBS = call_json_bulbs.BULBS
+FANS = call_json_fans.FANS
+OUTLETS = call_json_outlets.OUTLETS
+SWITCHES = call_json_switches.SWITCHES
+
+
 DEFAULT_HEADER = {
     'accept-language': 'en',
-    'accountId': SAMPLE_ACTID,
+    'accountId': Defaults.account_id,
     'appVersion': APP_VERSION,
     'content-type': 'application/json',
-    'tk': SAMPLE_TOKEN,
+    'tk': Defaults.token,
     'tz': DEFAULT_TZ,
 }
 
@@ -68,62 +77,50 @@ DEFAULT_HEADER_BYPASS = {
     'User-Agent': 'okhttp/3.12.1'
 }
 
+
 def BYPASS_V1_BODY(cid: str, config_module: str, json_cmd: dict):
     return {
-	"traceId": TRACE_ID,
-	"method": "bypass",
-	"token": SAMPLE_TOKEN,
-	"accountID": SAMPLE_ACTID,
-	"timeZone": DEFAULT_TZ,
-	"acceptLanguage": "en",
-	"appVersion": APP_VERSION,
-	"phoneBrand": PHONE_BRAND,
-	"phoneOS": PHONE_OS,
-	"cid": cid,
-	"configModule": config_module,
-	"jsonCmd": json_cmd
-}
+        "traceId": Defaults.trace_id,
+        "method": "bypass",
+        "token": Defaults.token,
+        "accountID": Defaults.account_id,
+        "timeZone": DEFAULT_TZ,
+        "acceptLanguage": "en",
+        "appVersion": APP_VERSION,
+        "phoneBrand": PHONE_BRAND,
+        "phoneOS": PHONE_OS,
+        "cid": cid,
+        "configModule": config_module,
+        "jsonCmd": json_cmd
+    }
+
 
 DEFAULT_BODY = {
     'acceptLanguage': 'en',
-    'accountID': SAMPLE_ACTID,
+    'accountID': Defaults.account_id,
     'appVersion': APP_VERSION,
     'pageNo': 1,
     'pageSize': 100,
     'phoneBrand': PHONE_BRAND,
     'phoneOS': PHONE_OS,
     'timeZone': DEFAULT_TZ,
-    'token': SAMPLE_TOKEN,
-    'traceId': TRACE_ID,
+    'token': Defaults.token,
+    'traceId': Defaults.trace_id,
 }
 
-ENERGY_HISTORY = (
-    {
-        'code': 0,
-        'energyConsumptionOfToday': 1,
-        'costPerKWH': 1,
-        'maxEnergy': 1,
-        'totalEnergy': 1,
-        'data': [
-            1,
-            1,
-        ],
-    },
-    200,
-)
 
 LOGIN_RET_BODY = (
     {
-        'traceId': TRACE_ID,
+        'traceId': Defaults.trace_id,
         'msg': '',
         'result': {
-            'accountID': SAMPLE_ACTID,
+            'accountID': Defaults.account_id,
             'avatarIcon': '',
             'acceptLanguage': 'en',
             'gdprStatus': True,
             'nickName': 'nick',
             'userType': '1',
-            'token': SAMPLE_TOKEN,
+            'token': Defaults.token,
         },
         'code': 0,
     },
@@ -142,13 +139,88 @@ def login_call_body(email, password):
         'phoneBrand': PHONE_BRAND,
         'phoneOS': PHONE_OS,
         'timeZone': DEFAULT_TZ,
-        'traceId': TRACE_ID,
+        'traceId': Defaults.trace_id,
         'userType': '1',
     }
     return json_object
 
 
 class DeviceList:
+    list_response_base = {
+        'code': 0,
+        'msg': 'Success',
+        'result': {
+            'pageNo': 1,
+            'pageSize': 100,
+            'total': 0,
+            'list': [],
+        }
+    }
+    device_list_base = {
+        'extension': None,
+        'isOwner': True,
+        'authKey': None,
+        'deviceStatus': 'on',
+        'connectionStatus': 'online',
+        'connectionType': 'wifi',
+        'mode': None,
+        'speed': None,
+        'deviceProps': None,
+        'configModule': 'ConfigModule',
+    }
+
+    bulbs = dict.fromkeys(call_json_bulbs.BULBS, "wifi-light")
+    outlets = dict.fromkeys(call_json_outlets.OUTLETS, "wifi-switch")
+    fans = dict.fromkeys(call_json_fans.FANS, "wifi-air")
+    switches = dict.fromkeys(call_json_switches.SWITCHES, "Switches")
+
+    @classmethod
+    def device_list_item(cls, model, sub_device_no=0):
+        model_types = {**cls.bulbs, **cls.outlets, **cls.fans, **cls.switches}
+
+        device_dict = cls.device_list_base
+        model_dict = device_dict.copy()
+        model_dict['deviceType'] = model
+        model_dict['deviceName'] = Defaults.name(model)
+        model_dict['type'] = model_types.get(model)
+        model_dict['cid'] = Defaults.cid(model)
+        model_dict['uuid'] = Defaults.uuid(model)
+        model_dict['macID'] = Defaults.macid(model)
+        if model == 'ESO15-TB':
+            model_dict['subDeviceNo'] = 1
+        return model_dict
+
+    @classmethod
+    def device_list_response(cls, device_types=None, _types=None):
+        """Class method that returns the api get_devices response
+
+        Args:
+            _types (list, str, optional): Can be one or list of types of devices. Defaults to None.
+                can be bulb, fans, switches, outlets in list or string
+            device_types (list, str optional): List or string of device_type(s) to return. Defaults to None.
+
+        """
+
+        response_base = copy.deepcopy(cls.list_response_base)
+        if _types is not None:
+            if isinstance(_types, list):
+                full_model_list = {}
+                for _type in _types:
+                    device_types = full_model_list.update(cls.__dict__[_type])
+            else:
+                full_model_list = cls.__dict__[_types]
+        else:
+            full_model_list = {**cls.bulbs, **cls.outlets, **cls.fans, **cls.switches}
+        if device_types is not None:
+            if isinstance(device_types, list):
+                full_model_list = {k: v for k, v in full_model_list.items() if k in device_types}
+            else:
+                full_model_list = {k: v for k, v in full_model_list.items() if k == device_types}
+        for model in full_model_list:
+            response_base['result']['list'].append(cls.device_list_item(model))
+            response_base['result']['total'] += 1
+        return response_base, 200
+
     LIST_CONF_7A = {
         'deviceType': 'wifi-switch-1.3',
         'extension': None,
@@ -431,7 +503,7 @@ class DeviceList:
         "macID": None,
         "subDeviceNo": None,
         "subDeviceType": None
-      }
+    }
 
     API_URL = '/cloud/v1/deviceManaged/devices'
 
@@ -456,6 +528,8 @@ class DeviceList:
         LIST_CONF_VALCENO
 
     ]
+
+
 
     @classmethod
     def DEVICE_LIST_RETURN(cls, dev_conf: dict) -> tuple:
@@ -499,6 +573,37 @@ class DeviceList:
     )
 
 
+class DeviceDetails:
+    """Responses for get_details() method for all devices.
+
+    class attributes:
+    outlets : dict
+        Dictionary of outlet responses for each device type.
+    switches : dict
+        Dictionary of switch responses for each device type.
+    bulbs : dict
+        Dictionary of bulb responses for each device type.
+    fans : dict
+        Dictionary of humidifier & air pur responses for each device type.
+    all_devices : dict
+        Dictionary of all device responses for each device type.
+
+    Example
+    -------
+    outlets = {'ESW01-EU': {'switches': [{'outlet': 0, 'switch': 'on'}]}}
+    """
+
+    outlets = call_json_outlets.DETAILS_RESPONSES
+    switches = call_json_switches.DETAILS_RESPONSES
+    fans = call_json_fans.DETAILS_RESPONSES
+    bulbs = call_json_bulbs.DETAILS_RESPONSES
+    all_devices = {
+        'outlets': outlets,
+        'switches': switches,
+        'fans': fans,
+        'bulbs': bulbs
+        }
+
 
 def get_devices_body():
     """Build device body dictionary."""
@@ -507,188 +612,11 @@ def get_devices_body():
     return body, 200
 
 
-
-
-
-
-
 def get_details_body():
     body = DEFAULT_BODY
     body['method'] = 'deviceDetail'
     return body, 200
 
-
-DETAILS_15A = (
-    {
-        'code': 0,
-        'msg': None,
-        'deviceStatus': 'on',
-        'connectionStatus': 'online',
-        'activeTime': 1,
-        'energy': 1,
-        'nightLightStatus': 'on',
-        'nightLightBrightness': 50,
-        'nightLightAutomode': 'manual',
-        'power': '1',
-        'voltage': '1',
-    },
-    200,
-)
-
-DETAILS_7A = (
-    {
-        'deviceStatus': 'on',
-        'deviceImg': '',
-        'activeTime': 1,
-        'energy': 1,
-        'power': '1000:1000',
-        'voltage': '1000:1000',
-    },
-    200,
-)
-
-DETAILS_WS = (
-    {
-        'code': 0,
-        'msg': None,
-        'deviceStatus': 'on',
-        'connectionStatus': 'online',
-        'activeTime': 1,
-        'power': 'None',
-        'voltage': 'None',
-    },
-    200,
-)
-
-DETAILS_10A = (
-    {
-        'code': 0,
-        'msg': None,
-        'deviceStatus': 'on',
-        'connectionStatus': 'online',
-        'activeTime': 1,
-        'energy': 1,
-        'nightLightStatus': None,
-        'nightLightBrightness': None,
-        'nightLightAutomode': None,
-        'power': '1',
-        'voltage': '1',
-    },
-    200,
-)
-
-DETAILS_OUTDOOR = (
-    {
-        'code': 0,
-        'msg': None,
-        'connectionStatus': 'online',
-        'activeTime': 1,
-        'energy': 1,
-        'power': '1',
-        'voltage': '1',
-        'deviceStatus': 'on',
-        'deviceName': 'Etekcity Outdoor Plug',
-        'subDevices': [
-            {
-                'subDeviceNo': 1,
-                'defaultName': 'Socket A',
-                'subDeviceName': 'Outdoor Socket A',
-                'subDeviceStatus': 'on',
-            },
-            {
-                'subDeviceNo': 2,
-                'defaultName': 'Socket B',
-                'subDeviceName': 'Outdoor Socket B',
-                'subDeviceStatus': 'on',
-            },
-        ],
-    },
-    200,
-)
-
-DETAILS_ESL100 = (
-    {
-        'code': 0,
-        'msg': None,
-        'deviceStatus': 'on',
-        'connectionStatus': 'online',
-        'name': 'Etekcity Soft White Bulb',
-        'brightNess': '1',
-        'timer': None,
-        'away': None,
-        'schedule': None,
-        'ownerShip': '1',
-        'scheduleCount': 0,
-    },
-    200,
-)
-
-DETAILS_ESL100CW = (
-    {
-        "code": 0,
-        "msg": None,
-        "deviceStatus": "on",
-        "connectionStatus": "online",
-        "deviceImg": "https://smartapi.vesync.com/v1/app/imgs/icon_dimmable_bulb/icon_dimmable_bulb_160.png",
-        "name": "Etekcity Soft White Bulb",
-        "brightNess": "100",
-    },
-    200
-)
-
-DETAILS_ESL100MC = (
-    {
-        "action": "on",
-        "brightness": 100,
-        "colorMode": "color",
-        "speed": 0,
-        "red": 255,
-        "green": 1,
-        "blue": 0
-    }, 200
-)
-
-DETAILS_VALCENO = (
-    {
-        "traceId": TRACE_ID,
-        "code": 0,
-        "msg": "request success",
-        "result": {
-            "traceId": TRACE_ID,
-            "code": 0,
-            "result": {
-                "enabled": "off",
-                "colorMode": "hsv",
-                "brightness": 80,
-                "colorTemp": 100,
-                "hue": 10000,
-                "saturation": 10000,
-                "value": 10
-            }
-        }
-    }, 200
-)
-
-DETAILS_AIR = (
-    {
-        'code': 0,
-        'msg': None,
-        'deviceStatus': 'on',
-        'connectionStatus': 'online',
-        'activeTime': 1,
-        'deviceImg': None,
-        'deviceName': 'XXXXXXX',
-        'filterLife': {'change': False, 'useHour': None, 'percent': 100},
-        'airQuality': 'excellent',
-        'screenStatus': 'on',
-        'mode': 'manual',
-        'level': 1,
-        'schedule': None,
-        'timer': None,
-        'scheduleCount': 0,
-    },
-    200,
-)
 
 DETAILS_BADCODE = (
     {
@@ -703,8 +631,8 @@ DETAILS_BADCODE = (
 )
 
 STATUS_BODY = {
-    'accountID': SAMPLE_ACTID,
-    'token': SAMPLE_TOKEN,
+    'accountID': Defaults.account_id,
+    'token': Defaults.token,
     'uuid': 'UUID',
     'timeZone': DEFAULT_TZ,
 }
@@ -716,7 +644,7 @@ def off_body():
     return body, 200
 
 
-def on_body(cls):
+def on_body():
     body = STATUS_BODY
     body['status'] = 'on'
     return body, 200

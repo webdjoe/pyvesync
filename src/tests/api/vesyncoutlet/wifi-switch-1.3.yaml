@@ -1,0 +1,60 @@
+get_monthly_energy:
+  headers:
+    accept-language: en
+    accountId: sample_id
+    appVersion: 2.8.6
+    content-type: application/json
+    tk: sample_tk
+    tz: America/New_York
+  method: get
+  url: /v1/device/wifi-switch-1.3-CID/energy/month
+get_weekly_energy:
+  headers:
+    accept-language: en
+    accountId: sample_id
+    appVersion: 2.8.6
+    content-type: application/json
+    tk: sample_tk
+    tz: America/New_York
+  method: get
+  url: /v1/device/wifi-switch-1.3-CID/energy/week
+get_yearly_energy:
+  headers:
+    accept-language: en
+    accountId: sample_id
+    appVersion: 2.8.6
+    content-type: application/json
+    tk: sample_tk
+    tz: America/New_York
+  method: get
+  url: /v1/device/wifi-switch-1.3-CID/energy/year
+turn_off:
+  headers:
+    accept-language: en
+    accountId: sample_id
+    appVersion: 2.8.6
+    content-type: application/json
+    tk: sample_tk
+    tz: America/New_York
+  method: put
+  url: /v1/wifi-switch-1.3/wifi-switch-1.3-CID/status/off
+turn_on:
+  headers:
+    accept-language: en
+    accountId: sample_id
+    appVersion: 2.8.6
+    content-type: application/json
+    tk: sample_tk
+    tz: America/New_York
+  method: put
+  url: /v1/wifi-switch-1.3/wifi-switch-1.3-CID/status/on
+update:
+  headers:
+    accept-language: en
+    accountId: sample_id
+    appVersion: 2.8.6
+    content-type: application/json
+    tk: sample_tk
+    tz: America/New_York
+  method: get
+  url: /v1/device/wifi-switch-1.3-CID/detail

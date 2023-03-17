@@ -3,7 +3,7 @@
 import logging
 import json
 from abc import ABCMeta, abstractmethod
-from typing import Dict, Union
+from typing import Dict, Union, Optional
 
 from pyvesync.helpers import Helpers as helpers
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
@@ -42,7 +42,7 @@ class VeSyncSwitch(VeSyncBaseDevice):
         self.features = feature_dict.get(self.device_type, {}).get('features')
         if self.features is None:
             logger.error('% device configuration not set', self.device_name)
-            raise Exception
+            raise KeyError(f'Device configuration not set {self.device_name}')
         self.details = {}
 
     def is_dimmable(self) -> bool:
@@ -273,10 +273,10 @@ class VeSyncDimmerSwitch(VeSyncSwitch):
         """Turn indicator light off."""
         return self.indicator_light_toggle('off')
 
-    def rgb_color_status(
-            self, status: str,
-            red: int = None, blue: int = None, green: int = None
-    ) -> bool:
+    def rgb_color_status(self, status: str,
+                         red: Optional[int] = None,
+                         blue: Optional[int] = None,
+                         green: Optional[int] = None) -> bool:
         """Set faceplate RGB color."""
         body = helpers.req_body(self.manager, 'devicestatus')
         body['status'] = status
@@ -308,6 +308,12 @@ class VeSyncDimmerSwitch(VeSyncSwitch):
 
     def rgb_color_set(self, red: int, green: int, blue: int) -> bool:
         """Set RGB color of faceplate."""
+        try:
+            red = int(red)
+            green = int(green)
+            blue = int(blue)
+        except ValueError:
+            return False
         if isinstance(red, int) and isinstance(
                 green, int) and isinstance(blue, int):
             for color in [red, green, blue]:
@@ -344,7 +350,7 @@ class VeSyncDimmerSwitch(VeSyncSwitch):
     def displayJSON(self) -> str:
         """JSON API for dimmer switch."""
         sup_val = json.loads(super().displayJSON())
-        if self.is_dimmable:  # pylint: disable=using-constant-test
+        if self.is_dimmable is True:  # pylint: disable=using-constant-test
             sup_val.update(
                 {
                     'Indicator Light': str(self.active_time),

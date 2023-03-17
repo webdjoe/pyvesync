@@ -2,7 +2,7 @@
 
 import json
 import logging
-from typing import Dict, Tuple, Union
+from typing import Dict, Tuple, Union, Optional
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 from pyvesync.helpers import Helpers
 
@@ -65,7 +65,7 @@ air_features: dict = {
     },
     'Core300S': {
         'module': 'VeSyncAirBypass',
-        'models': ['Core300S', 'LAP-C301S-WJP'],
+        'models': ['Core300S', 'LAP-C301S-WJP', 'LAP-C302S-WUSB'],
         'modes': ['sleep', 'off', 'auto', 'manual'],
         'features': ['air_quality'],
         'levels': list(range(1, 5))
@@ -139,7 +139,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             logger.error(
                 'Please set modes for %s in the configuration',
                 self.device_type)
-            raise Exception
+            raise KeyError(f'Modes not set in configuration for {self.device_name}')
         self.modes = self.config_dict['modes']
         if 'air_quality' in self.features:
             self.air_quality_feature = True
@@ -200,7 +200,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         self.details['display'] = dev_dict.get('display', False)
         self.details['display_forever'] = dev_dict.get('display_forever',
                                                        False)
-        if self.air_quality_feature:
+        if self.air_quality_feature is True:
             self.details['air_quality_value'] = dev_dict.get(
                 'air_quality_value', 0)
             self.details['air_quality'] = dev_dict.get('air_quality', 0)
@@ -571,9 +571,9 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         if self.air_quality_feature:
             disp.extend([
                 ('Air Quality Level: ',
-                    self.details['air_quality'], ''),
+                    self.details.get('air_quality', ''), ''),
                 ('Air Quality Value: ',
-                    self.details['air_quality_value'], 'ug/m3')
+                    self.details.get('air_quality_value', ''), 'ug/m3')
                 ])
         for line in disp:
             print(f'{line[0]:.<30} {line[1]} {line[2]}')
@@ -594,12 +594,12 @@ class VeSyncAirBypass(VeSyncBaseDevice):
                 'Display_Forever Config': self.config['display_forever'],
             }
         )
-        if self.air_quality_feature:
+        if self.air_quality_feature is True:
             sup_val.update(
-                {'Air Quality Level': str(self.details['air_quality'])}
+                {'Air Quality Level': str(self.details.get('air_quality', ''))}
             )
             sup_val.update(
-                {'Air Quality Value': str(self.details['air_quality_value'])}
+                {'Air Quality Value': str(self.details.get('air_quality_value', ''))}
             )
         return json.dumps(sup_val, indent=4)
 
@@ -737,7 +737,7 @@ class VeSyncAir131(VeSyncBaseDevice):
         """Set sleep mode to on."""
         return self.mode_toggle('sleep')
 
-    def change_fan_speed(self, speed: int = None) -> bool:
+    def change_fan_speed(self, speed: Optional[int] = None) -> bool:
         """Adjust Fan Speed for air purifier.
 
         Specifying 1,2,3 as argument or call without argument to cycle
@@ -865,7 +865,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
             self.night_light = True
         else:
             self.night_light = False
-        self.details: Dict[str, Union[str, int, float]] = {
+        self.details = {
             'humidity': 0,
             'mist_virtual_level': 0,
             'mist_level': 0,
@@ -878,7 +878,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
         }
         if self.night_light is True:
             self.details['night_light_brightness'] = 0
-        self.config: Dict[str, Union[str, int, float]] = {
+        self.config = {
             'auto_target_humidity': 0,
             'display': False,
             'automatic_stop': True
@@ -1279,7 +1279,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
     @property
     def mist_level(self):
         """Get current mist level."""
-        return self.details['virtual_mist_level']
+        return self.details['mist_virtual_level']
 
     @property
     def water_lacks(self):
@@ -1326,12 +1326,12 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
         ]
         if self.night_light:
             disp.append(('Night Light Brightness: ',
-                         self.details['night_light_brightness'], 'percent'))
+                         self.details.get('night_light_brightness', ''), 'percent'))
         if self.warm_mist_feature:
             disp.append(('Warm mist enabled: ',
-                         self.details['warm_mist_enabled'], ''))
+                         self.details.get('warm_mist_enabled', ''), ''))
             disp.append(('Warm mist level: ',
-                         self.details['warm_mist_level'], ''))
+                         self.details.get('warm_mist_level', ''), ''))
         for line in disp:
             print(f'{line[0]:.<30} {line[1]} {line[2]}')
 

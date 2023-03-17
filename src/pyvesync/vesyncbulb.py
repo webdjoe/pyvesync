@@ -72,7 +72,7 @@ class VeSyncBulb(VeSyncBaseDevice):
             self.device_type, {}).get('features')
         if self.features is None:
             logger.error("No configuration set for - %s", self.device_name)
-            raise Exception
+            raise KeyError(f"No configuration set for {self.device_name}")
         self._rgb_values = {
             'red': 0,
             'green': 0,
@@ -262,11 +262,13 @@ class VeSyncBulb(VeSyncBaseDevice):
         return temp_update
 
     @staticmethod
-    def _validate_any(value: Union[int, float, str], start: float = 0,
-                      stop: float = 100, default: float = 100) -> float:
+    def _validate_any(value: Union[int, float, str],
+                      start: Union[int, float] = 0,
+                      stop: Union[int, float] = 100,
+                      default: Union[int, float] = 100) -> float:
         """Validate any value."""
         try:
-            value_update = max(start, (min(stop, round(float(value), 2))))
+            value_update = max(float(start), (min(float(stop), round(float(value), 2))))
         except (ValueError, TypeError):
             value_update = default
         return value_update
@@ -346,7 +348,7 @@ class VeSyncBulb(VeSyncBaseDevice):
                 disp.append(('ColorHSV: ', helpers.named_tuple_to_str(
                     self.color.hsv), ''))
                 disp.append(('ColorRGB: ', helpers.named_tuple_to_str(
-                    self.color.hsv), ''))
+                    self.color.rgb), ''))
                 disp.append(('ColorMode: ', str(self.color_mode), ''))
             if len(disp) > 0:
                 for line in disp:
@@ -456,25 +458,31 @@ class VeSyncBulbESL100MC(VeSyncBulb):
         rgb = Color(hue=hue, saturation=saturation, value=value).rgb
         return self.set_status(red=rgb.red, green=rgb.green, blue=rgb.blue)
 
+    def enable_white_mode(self) -> bool:
+        """Enable white mode on bulb."""
+        return self.set_status(brightness=100)
+
     def set_status(self, brightness: Optional[NUMERIC_T] = None,
                    red: Optional[NUMERIC_T] = None,
                    green: Optional[NUMERIC_T] = None,
-                   blue: Optional[NUMERIC_T] = None,
-                   color_mode: Optional[NUMERIC_T] = None) -> bool:
+                   blue: Optional[NUMERIC_T] = None) -> bool:
         """Set status of VeSync ESL100MC."""
-        if red is not None or green is not None or blue is not None:
+        brightness_update = 100
+        if red is not None and green is not None and blue is not None:
             new_color = self._validate_rgb(red, green, blue)
+            color_mode = 'color'
+            if new_color == self._color:
+                logger.debug("New color is same as current color")
+                return True
         else:
+            logger.debug("RGB Values not provided")
             new_color = None
-        if brightness is not None:
-            brightness = int(self._validate_brightness(brightness))
-        else:
-            brightness = None
-
-        if brightness == self.brightness and \
-                new_color == self.color:
-            logger.debug("No change in status")
-            return True
+            if brightness is not None:
+                brightness_update = int(self._validate_brightness(brightness))
+                color_mode = 'white'
+            else:
+                logger.debug("Brightness and RGB values are not set")
+                return False
 
         head = helpers.bypass_header()
         body = helpers.bypass_body_v2(self.manager)
@@ -486,17 +494,13 @@ class VeSyncBulbESL100MC(VeSyncBulb):
             'data': {
                 'action': 'on',
                 'speed': 0,
+                'brightness': brightness_update,
+                'red': 0 if new_color is None else int(new_color.rgb.red),
+                'green': 0 if new_color is None else int(new_color.rgb.green),
+                'blue': 0 if new_color is None else int(new_color.rgb.blue),
+                'colorMode': 'color' if new_color is not None else 'white',
             }
         }
-
-        if new_color is not None:
-            body['payload']['data']['red'] = int(new_color.rgb.red)
-            body['payload']['data']['green'] = int(new_color.rgb.green)
-            body['payload']['data']['blue'] = int(new_color.rgb.blue)
-            body['payload']['data']['colorMode'] = 'color'
-
-        if brightness is not None:
-            body['payload']['data']['brightness'] = brightness
 
         r, _ = helpers.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
@@ -507,12 +511,16 @@ class VeSyncBulbESL100MC(VeSyncBulb):
         if not isinstance(r, dict) or r.get('code') != 0:
             logger.debug("Error in setting bulb status")
             return False
-        if new_color is not None:
-            self._color = Color(red=int(new_color.rgb.red),
-                                green=int(new_color.rgb.green),
-                                blue=int(new_color.rgb.blue))
-        if brightness is not None:
-            self._brightness = brightness
+
+        if color_mode == 'color' and new_color is not None:
+            self._color_mode = 'color'
+            self._color = Color(red=new_color.rgb.red,
+                                green=new_color.rgb.green,
+                                blue=new_color.rgb.blue)
+        elif brightness is not None:
+            self._brightness = int(brightness_update)
+            self._color_mode = 'white'
+
         self.device_status = 'on'
         return True
 
@@ -556,7 +564,7 @@ class VeSyncBulbESL100MC(VeSyncBulb):
 class VeSyncBulbESL100(VeSyncBulb):
     """Object to hold VeSync ESL100 light bulb."""
 
-    def __init__(self, details, manager):
+    def __init__(self, details: dict, manager) -> None:
         """Initialize Etekcity ESL100 Dimmable Bulb."""
         super().__init__(details, manager)
         self.details: dict = {}
@@ -1006,12 +1014,16 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
         arg_dict['colorMode'] = 'hsv'
         return self._set_status_api(arg_dict)
 
+    def enable_white_mode(self) -> bool:
+        """Enable white color mode."""
+        return self.set_status(color_mode='white')
+
     def set_status(self,
                    brightness: NUMERIC_T = None,
                    color_temp: NUMERIC_T = None,
                    color_saturation: NUMERIC_T = None,
                    color_hue: NUMERIC_T = None,
-                   color_mode: str = None,
+                   color_mode: Optional[str] = None,
                    color_value: NUMERIC_T = None
                    ) -> bool:
         """Set multicolor bulb parameters.
