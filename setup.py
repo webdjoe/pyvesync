@@ -10,7 +10,7 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='pyvesync',
-    version='2.1.1',
+    version='2.1.6',
     description='pyvesync is a library to manage Etekcity\
                  Devices and Levoit Air Purifier',
     long_description=long_description,
@@ -24,12 +24,12 @@ setup(
         'Intended Audience :: Developers',
         'Intended Audience :: End Users/Desktop',
         'Natural Language :: English',
-        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.8',
     ],
-    keywords=['iot', 'vesync', 'levoit', 'etekcity'],
+    keywords=['iot', 'vesync', 'levoit', 'etekcity', 'cosori', 'valceno'],
     packages=find_packages('src', exclude=['tests', 'tests.*']),
     package_dir={'': 'src'},
     zip_safe=False,
     install_requires=['requests>=2.20.0'],
-    python_requires='>=3.6',
+    python_requires='>=3.8',
 )

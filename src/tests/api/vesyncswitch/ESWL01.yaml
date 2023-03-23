@@ -1,0 +1,56 @@
+turn_off:
+  headers:
+    accept-language: en
+    accountId: sample_id
+    appVersion: 2.8.6
+    content-type: application/json
+    tk: sample_tk
+    tz: America/New_York
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    status: 'off'
+    timeZone: America/New_York
+    token: sample_tk
+    uuid: ESWL01-UUID
+  method: put
+  url: /inwallswitch/v1/device/devicestatus
+turn_on:
+  headers:
+    accept-language: en
+    accountId: sample_id
+    appVersion: 2.8.6
+    content-type: application/json
+    tk: sample_tk
+    tz: America/New_York
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    status: 'on'
+    timeZone: America/New_York
+    token: sample_tk
+    uuid: ESWL01-UUID
+  method: put
+  url: /inwallswitch/v1/device/devicestatus
+update:
+  headers:
+    accept-language: en
+    accountId: sample_id
+    appVersion: 2.8.6
+    content-type: application/json
+    tk: sample_tk
+    tz: America/New_York
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 2.8.6
+    method: devicedetail
+    mobileId: '1234567890123456'
+    phoneBrand: SM N9005
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+    uuid: ESWL01-UUID
+  method: post
+  url: /inwallswitch/v1/device/devicedetail

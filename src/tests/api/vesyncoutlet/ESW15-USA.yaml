@@ -1,0 +1,156 @@
+get_monthly_energy:
+  headers:
+    accept-language: en
+    accountId: sample_id
+    appVersion: 2.8.6
+    content-type: application/json
+    tk: sample_tk
+    tz: America/New_York
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 2.8.6
+    method: energymonth
+    mobileId: '1234567890123456'
+    phoneBrand: SM N9005
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+    uuid: ESW15-USA-UUID
+  method: post
+  url: /15a/v1/device/energymonth
+get_weekly_energy:
+  headers:
+    accept-language: en
+    accountId: sample_id
+    appVersion: 2.8.6
+    content-type: application/json
+    tk: sample_tk
+    tz: America/New_York
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 2.8.6
+    method: energyweek
+    mobileId: '1234567890123456'
+    phoneBrand: SM N9005
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+    uuid: ESW15-USA-UUID
+  method: post
+  url: /15a/v1/device/energyweek
+get_yearly_energy:
+  headers:
+    accept-language: en
+    accountId: sample_id
+    appVersion: 2.8.6
+    content-type: application/json
+    tk: sample_tk
+    tz: America/New_York
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 2.8.6
+    method: energyyear
+    mobileId: '1234567890123456'
+    phoneBrand: SM N9005
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+    uuid: ESW15-USA-UUID
+  method: post
+  url: /15a/v1/device/energyyear
+turn_off:
+  headers:
+    accept-language: en
+    accountId: sample_id
+    appVersion: 2.8.6
+    content-type: application/json
+    tk: sample_tk
+    tz: America/New_York
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    status: 'off'
+    timeZone: America/New_York
+    token: sample_tk
+    uuid: ESW15-USA-UUID
+  method: put
+  url: /15a/v1/device/devicestatus
+turn_off_nightlight:
+  headers:
+    accept-language: en
+    accountId: sample_id
+    appVersion: 2.8.6
+    content-type: application/json
+    tk: sample_tk
+    tz: America/New_York
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    mode: manual
+    timeZone: America/New_York
+    token: sample_tk
+    uuid: ESW15-USA-UUID
+  method: put
+  url: /15a/v1/device/nightlightstatus
+turn_on:
+  headers:
+    accept-language: en
+    accountId: sample_id
+    appVersion: 2.8.6
+    content-type: application/json
+    tk: sample_tk
+    tz: America/New_York
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    status: 'on'
+    timeZone: America/New_York
+    token: sample_tk
+    uuid: ESW15-USA-UUID
+  method: put
+  url: /15a/v1/device/devicestatus
+turn_on_nightlight:
+  headers:
+    accept-language: en
+    accountId: sample_id
+    appVersion: 2.8.6
+    content-type: application/json
+    tk: sample_tk
+    tz: America/New_York
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    mode: auto
+    timeZone: America/New_York
+    token: sample_tk
+    uuid: ESW15-USA-UUID
+  method: put
+  url: /15a/v1/device/nightlightstatus
+update:
+  headers:
+    accept-language: en
+    accountId: sample_id
+    appVersion: 2.8.6
+    content-type: application/json
+    tk: sample_tk
+    tz: America/New_York
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 2.8.6
+    method: devicedetail
+    mobileId: '1234567890123456'
+    phoneBrand: SM N9005
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+    uuid: ESW15-USA-UUID
+  method: post
+  url: /15a/v1/device/devicedetail

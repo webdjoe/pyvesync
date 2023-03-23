@@ -1,1 +1,0 @@
-"""pyvesync test scripts."""

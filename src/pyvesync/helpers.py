@@ -15,6 +15,8 @@ logger = logging.getLogger(__name__)
 API_BASE_URL = 'https://smartapi.vesync.com'
 API_RATE_LIMIT = 30
 API_TIMEOUT = 5
+USER_AGENT = ("VeSync/3.2.39 (com.etekcity.vesyncPlatform;"
+              " build:5; iOS 15.5.0) Alamofire/5.2.1")
 
 DEFAULT_TZ = 'America/New_York'
 DEFAULT_REGION = 'US'
@@ -169,9 +171,8 @@ class Helpers:
         return hashlib.md5(string.encode('utf-8')).hexdigest()
 
     @staticmethod
-    def call_api(
-        api: str, method: str, json_object: dict = None, headers: dict = None,
-    ) -> tuple:
+    def call_api(api: str, method: str, json_object:  Optional[dict] = None,
+                 headers: Optional[dict] = None) -> tuple:
         """Make API calls by passing endpoint, header and body."""
         response = None
         status_code = None

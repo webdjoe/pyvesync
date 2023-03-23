@@ -1,0 +1,280 @@
+automatic_stop_off:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 2.8.6
+    cid: Classic200S-CID
+    configModule: ConfigModule
+    debugMode: false
+    deviceRegion: US
+    method: bypassV2
+    payload:
+      data:
+        enabled: false
+      method: setAutomaticStop
+      source: APP
+    phoneBrand: SM N9005
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
+automatic_stop_on:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 2.8.6
+    cid: Classic200S-CID
+    configModule: ConfigModule
+    debugMode: false
+    deviceRegion: US
+    method: bypassV2
+    payload:
+      data:
+        enabled: true
+      method: setAutomaticStop
+      source: APP
+    phoneBrand: SM N9005
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
+set_auto_mode:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 2.8.6
+    cid: Classic200S-CID
+    configModule: ConfigModule
+    debugMode: false
+    deviceRegion: US
+    method: bypassV2
+    payload:
+      data:
+        mode: auto
+      method: setHumidityMode
+      source: APP
+    phoneBrand: SM N9005
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
+set_humidity:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 2.8.6
+    cid: Classic200S-CID
+    configModule: ConfigModule
+    debugMode: false
+    deviceRegion: US
+    method: bypassV2
+    payload:
+      data:
+        target_humidity: 50
+      method: setTargetHumidity
+      source: APP
+    phoneBrand: SM N9005
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
+set_manual_mode:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 2.8.6
+    cid: Classic200S-CID
+    configModule: ConfigModule
+    debugMode: false
+    deviceRegion: US
+    method: bypassV2
+    payload:
+      data:
+        mode: manual
+      method: setHumidityMode
+      source: APP
+    phoneBrand: SM N9005
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
+set_mist_level:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 2.8.6
+    cid: Classic200S-CID
+    configModule: ConfigModule
+    debugMode: false
+    deviceRegion: US
+    method: bypassV2
+    payload:
+      data:
+        id: 0
+        level: 2
+        type: mist
+      method: setVirtualLevel
+      source: APP
+    phoneBrand: SM N9005
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
+turn_off:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 2.8.6
+    cid: Classic200S-CID
+    configModule: ConfigModule
+    debugMode: false
+    deviceRegion: US
+    method: bypassV2
+    payload:
+      data:
+        enabled: false
+        id: 0
+      method: setSwitch
+      source: APP
+    phoneBrand: SM N9005
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
+turn_off_display:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 2.8.6
+    cid: Classic200S-CID
+    configModule: ConfigModule
+    debugMode: false
+    deviceRegion: US
+    method: bypassV2
+    payload:
+      data:
+        enabled: false
+        id: 0
+      method: setIndicatorLightSwitch
+      source: APP
+    phoneBrand: SM N9005
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
+turn_on:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 2.8.6
+    cid: Classic200S-CID
+    configModule: ConfigModule
+    debugMode: false
+    deviceRegion: US
+    method: bypassV2
+    payload:
+      data:
+        enabled: true
+        id: 0
+      method: setSwitch
+      source: APP
+    phoneBrand: SM N9005
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
+turn_on_display:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 2.8.6
+    cid: Classic200S-CID
+    configModule: ConfigModule
+    debugMode: false
+    deviceRegion: US
+    method: bypassV2
+    payload:
+      data:
+        enabled: true
+        id: 0
+      method: setIndicatorLightSwitch
+      source: APP
+    phoneBrand: SM N9005
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
+update:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 2.8.6
+    cid: Classic200S-CID
+    configModule: ConfigModule
+    debugMode: false
+    deviceRegion: US
+    method: bypassV2
+    payload:
+      data: {}
+      method: getHumidifierStatus
+      source: APP
+    phoneBrand: SM N9005
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2

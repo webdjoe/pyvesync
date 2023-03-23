@@ -1,0 +1,32 @@
+# .coveragerc to control coverage.py
+[run]
+branch = True
+omit =
+    *tests*
+
+[report]
+# Regexes for lines to exclude from consideration
+exclude_lines =
+    # Have to re-enable the standard pragma
+    pragma: no cover
+
+    # Don't complain about missing debug-only code:
+    def __repr__
+    def __str__
+    def __eq__
+    def __hash__
+    if self\.debug
+    # Disable test coverage for firmware updates
+    def firmware_update
+    def get_config
+    # Don't complain if tests don't hit defensive assertion code:
+    raise AssertionError
+    raise NotImplementedError
+
+    # Don't complain about abstract methods, they aren't run:
+    @(abc\.)?abstractmethod
+
+ignore_errors = True
+
+[html]
+directory = coverage_html_report

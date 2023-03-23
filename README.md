@@ -23,23 +23,27 @@ pyvesync is a library to manage VeSync compatible [smart home devices](#supporte
   - [Standard Device API](#standard-device-api)
     - [Standard Properties](#standard-properties)
     - [Standard Methods](#standard-methods)
-  - [Outlet API Methods & Properties](#outlet-api-methods--properties)
-    - [Outlet power and energy API Methods & Properties](#outlet-power-and-energy-api-methods--properties)
+  - [Outlet API Methods \& Properties](#outlet-api-methods--properties)
+    - [Outlet power and energy API Methods \& Properties](#outlet-power-and-energy-api-methods--properties)
     - [Model ESW15-USA 15A/1800W Methods (Have a night light)](#model-esw15-usa-15a1800w-methods-have-a-night-light)
-  - [Standard Air Purifier Properties & Methods](#standard-air-purifier-properties--methods)
+  - [Standard Air Purifier Properties \& Methods](#standard-air-purifier-properties--methods)
     - [Air Purifier Properties](#air-purifier-properties)
     - [Air Purifier Methods](#air-purifier-methods)
     - [Levoit Purifier Core200S/300S/400S Properties](#levoit-purifier-core200s300s400s-properties)
     - [Levoit Purifier Core200S/300S/400S Methods](#levoit-purifier-core200s300s400s-methods)
-  - [Lights API Methods & Properties](#lights-api-methods-properties)
-    - [Dimmable Light Bulb Method and Properties](#dimmable-light-bulb-method-and-properties)
-    - [Tunable Light Bulb Methods and Properties](#tunable-light-bulb-methods-and-properties)
-    - [Multicolor light bulb Methods and Properties](#multicolor-light-bulb-methods-and-properties)
+  - [Lights API Methods \& Properties](#lights-api-methods--properties)
+    - [Brightness Light Bulb Method and Properties](#brightness-light-bulb-method-and-properties)
+    - [Light Bulb Color Temperature Methods and Properties](#light-bulb-color-temperature-methods-and-properties)
+    - [Multicolor Light Bulb Methods and Properties](#multicolor-light-bulb-methods-and-properties)
     - [Dimmable Switch Methods and Properties](#dimmable-switch-methods-and-properties)
   - [Levoit Humidifier Methods and Properties](#levoit-humidifier-methods-and-properties)
     - [Humidifier Properties](#humidifier-properties)
     - [Humidifer Methods](#humidifer-methods)
     - [600S warm mist feature](#600s-warm-mist-feature)
+  - [Cosori Devices](#cosori-devices)
+    - [Cosori 3.7 and 5.8 Quart Air Fryer](#cosori-37-and-58-quart-air-fryer)
+      - [Air Fryer Properties](#air-fryer-properties)
+      - [Air Fryer Methods](#air-fryer-methods)
   - [JSON Output API](#json-output-api)
     - [JSON Output for All Devices](#json-output-for-all-devices)
     - [JSON Output for Outlets](#json-output-for-outlets)
@@ -55,8 +59,6 @@ pyvesync is a library to manage VeSync compatible [smart home devices](#supporte
 - [Notes](#notes)
 - [Debug mode](#debug-mode)
 - [Feature Requests](#feature-requests)
-
-- [Contributing](CONTRIBUTING.md)
 
 
 ## Installation
@@ -102,7 +104,10 @@ pip install pyvesync
 2. Classic 300S
 3. LUH-D301S-WEU Dual (200S)
 4. LV600S
-5. OasisMist LUS-04515-WUS
+5. OasisMist LUS-O415S-WUS
+
+Cosori Air Fryer
+1. Cosori 3.7 and 5.8 Quart Air Fryer
 
 ## Usage
 
@@ -260,7 +265,7 @@ The rectangular smart switch model supports some additional functionality on top
 
 ### Standard Air Purifier Properties & Methods
 
-#### Air Purifier Properties 
+#### Air Purifier Properties
 
 `VeSyncFan.details` - Dictionary of device details
 
@@ -277,7 +282,7 @@ VeSyncFan.details = {
 
 ```
 
-NOTE: LV-PUR131S outputs `air_quality` as a string, such as `Excellent` 
+NOTE: LV-PUR131S outputs `air_quality` as a string, such as `Excellent`
 
 `VeSyncFan.features` - Unique features to air purifier model. Currently, the only feature is air_quality, which is not supported on Core 200S.
 
@@ -329,18 +334,16 @@ Compatible levels for each model:
 
 ### Lights API Methods & Properties
 
-#### Dimmable Light Bulb Method and Properties
+#### Brightness Light Bulb Method and Properties
 
+*Compatible with all bulbs*
 `VeSyncBulb.brightness` - Return brightness in percentage (1 - 100)
 
 `VeSyncBulb.set_brightness(brightness)` - Set bulb brightness values from 1 - 100
 
-#### Tunable Light Bulb Methods and Properties
+#### Light Bulb Color Temperature Methods and Properties
 
-`VeSyncBulb.brightness` - Return brightness in percentage (1 - 100)
-
-`VeSyncBulb.set_brightness(brightness)` - Set bulb brightness values from 1 - 100
-
+**NOTE: only compatible with ESL100CW and Valceno Bulbs, NOT compatible with ESL100MC Bulbs**
 `VeSyncBulb.color_temp_pct` - Return color temperature in percentage (0 - 100)
 
 `VeSyncBulb.color_temp_kelvin` - Return brightness in Kelvin
@@ -349,8 +352,8 @@ Compatible levels for each model:
 
 #### Multicolor Light Bulb Methods and Properties
 
+*Compatible with ESL100MC & Valceno Bulbs*
 **Properties**
-
 `VeSyncBulb.color` - Returns a dataclass with HSV and RGB attributes that are named tuples
 
 ```
@@ -362,13 +365,7 @@ VeSyncBulb.color.hsv = namedtuple('HSV', ['hue', 'saturation', 'value'])
 
 `VeSyncBulb.color_rgb` - Returns a named tuple with RGB values
 
-`VeSyncBulb.brightness` - Return brightness in percentage (int values from 1 - 100)
-
-`VeSyncBulb.color_temp_pct` - Return white temperature in percentage (int values from 0 - 100)
-
-`VeSyncBulb.color_temp_kelvin` - Return white temperature in Kelvin (int values from 2700-6500)
-
-`VeSyncBulb.color_mode` - Return bulb color mode (string values: 'white' , 'hsv' )
+`VeSyncBulb.color_mode` - Return bulb color mode (string values: 'white', 'color', 'hsv')
 
 `VeSyncBulb.color_hue` - Return color hue (float values from 0.0 - 360.0)
 
@@ -377,51 +374,38 @@ VeSyncBulb.color.hsv = namedtuple('HSV', ['hue', 'saturation', 'value'])
 `VeSyncBulb.color_value` - Return color value (int values from 0 - 100)
 
 *The following properties are also still available for backwards compatibility*
+`VeSyncBulb.color_value_hsv` - Return color value in HSV named tuple format (hue: float 0.0-360.0, saturation: float 0.0-100.0, value: float 0-100 )
 
-`VeSyncBulb.color_value_hsv` - Return color value in HSV format (float 0.0-360.0, float 0.0-100.0, int 0-100 )
-
-`VeSyncBulb.color_value_rgb` - Return color value in RGB format (float values up to 255.0, 255.0, 255.0 )
-
+`VeSyncBulb.color_value_rgb` - Return color value in RGB named tuple format (red: float, green: float, blue: float 0-255.0)
 
 **Methods**
-
-`VeSyncBulb.set_brightness(brightness)` 
-- Set bulb brightness (int values from 0 - 100) 
-- (also used to set Color Value when in color mode)
-
 `VeSyncBulb.set_hsv(hue, saturation, value)`
-- Set bulb color in HSV format 
+
+- Set bulb color in HSV format
 - Arguments: hue (numeric) 0 - 360, saturation (numeric) 0-100, value (numeric) 0-100
 - Returns bool
 
 `VeSyncBulb.set_rgb(red, green, blue)`
+
 - Set bulb color in RGB format
 - Arguments: red (numeric) 0-255, green (numeric) 0-255, blue (numeric) 0-255
 - Returns bool
 
-`VeSyncBulb.set_color_mode(color_mode)` 
-- Set bulb color mode (string values: `white` , `hsv` )
-- `color` may be used as an alias to `hsv`
+`VeSyncBulb.enable_white_mode()`
 
-`VeSyncBulb.set_color_temp(color_temp)` 
+- Turn bulb to white mode - returns bool
+
+`VeSyncBulb.set_color_temp(color_temp)`
+
 - Set bulb white temperature (int values from 0 - 100)
 - Setting this will automatically force the bulb into White mode
 
-`VeSyncBulb.set_color_hue(color_hue)` 
-- Set color hue (float values from 0.0 - 360.0)
-- Setting this will automatically force the bulb into Colored mode
+`VeSyncBulb.set_status(brightness, color_temp, color_saturation, color_hue, color_mode color_value)`
 
-`VeSyncBulb.set_color_saturation(color_saturation)` 
-- Set color saturation (float values from 0.0 - 100.0)
-- Setting this will automatically force the bulb into Colored mode
-
-`VeSyncBulb.set_color_value(color_value)` 
-- Set color value (float values from 0.0 - 100.0)
-- Setting this will automatically force the bulb into Colored mode
-
-`VeSyncBulb.set_status(brightness, color_temp, color_saturation, color_hue, color_mode color_value)` 
 - Set every property, in a single call
 - All parameters are optional
+
+**NOTE: Due to the varying API between bulbs, avoid setting the `color_mode` argument directly, instead set colors values with `set_hsv` or `set_rgb` to turn on color and use `enable_white_mode()` to turn off color.**
 
 #### Dimmable Switch Methods and Properties
 
@@ -449,7 +433,7 @@ VeSyncBulb.color.hsv = namedtuple('HSV', ['hue', 'saturation', 'value'])
 
 #### Humidifier Properties
 
-The details dictionary contains all device status details 
+The details dictionary contains all device status details
 
 ```python
 VeSyncHumid.details = {
@@ -489,7 +473,7 @@ VeSyncLV600S.details = {
 
 `VeSyncHumid.mist_level` - current mist level
 
-`VeSyncHumid.mode` - Mode of operation - sleep, off, auto/humidity 
+`VeSyncHumid.mode` - Mode of operation - sleep, off, auto/humidity
 
 `VeSyncHumid.water_lacks` - Returns True if water is low
 
@@ -501,7 +485,7 @@ VeSyncLV600S.details = {
 
 `VeSyncHumid.automatic_stop_on()` Set humidifier to stop at set humidity
 
-`VeSyncHumid.automatic_stop_off` Set humidifier to run continuously 
+`VeSyncHumid.automatic_stop_off` Set humidifier to run continuously
 
 `VeSyncHumid.turn_on_display()` Turn display on
 
@@ -521,6 +505,81 @@ VeSyncLV600S.details = {
 
 `VeSync600S.set_warm_level(2)` - Sets warm mist level
 
+### Cosori Devices
+
+Cosori devices are found under the `manager.kitchen` VeSync class attribute.
+
+#### Cosori 3.7 and 5.8 Quart Air Fryer
+
+The Cosori 3.7 and 5.8 Quart Air Fryer has several methods and properties that can be used to monitor and control
+the device.
+
+This library splits the functionality and status into two classes that are both accessible from the device instance.
+
+To maintain consistency of state, the update() method is called after each of the methods that change the state of the device.
+
+There is also an instance attribute that can be set `VeSyncAirFryer158.refresh_interval` that will set the interval in seconds that the state of the air fryer should be updated before a method that changes state is called. This is an additional API call but is necessary to maintain state, especially when trying to `pause` or `resume` the device. Defaults to 60 seconds but can be set via:
+
+```python
+# Change to 120 seconds before status is updated between calls
+VeSyncAirFryer158.refresh_interval = 120
+
+# Set status update before every call
+VeSyncAirFryer158.refresh_interval = 0
+
+# Disable status update before every call
+VeSyncAirFryer158.refresh_interval = -1
+```
+
+##### Air Fryer Properties
+
+All properties cannot be directly set, they must be set from the `get_details()` or methods that set the status.
+They can be set through the `VeSyncAirFryer158.fryer_status` dataclass but should be avoided. This separation of functionality and status is purposeful to avoid inconsistent states.
+
+`VeSyncAirFryer158.temp_unit` - Temperature units of the device (`fahrenheit` or `celsius`)
+
+`VeSyncAirFryer158.current_temp` - Current temperature in the defined temperature units. If device is not running, this defaults to `None`
+
+`VeSyncAirFryer158.cook_set_temp` - Set temperature or target temperature for preheat
+
+`VeSyncAirFryer158.cook_last_time` - The last minutes remaining returned from API for cook mode
+
+`VeSyncAirFryer158.preheat_last_time` - The last minutes remaining returned from API for preheat mode
+
+`VeSyncAirFryer158.cook_status` - Status of air fryer. This can be the following states:
+1. `standby` - Air fryer is off and no cook or preheat is in progress
+2. `cooking` - Air fryer is actively cooking
+3. `cookStop` - Cooking is paused and can be resumed
+4. `cookEnd` - Cooking is ended and can be resumed
+5. `heating` - Air fryer is preheating
+6. `preheatStop` - Preheat is paused and can be resumed
+7. `heatEnd` - Preheat is ended and cooking mode can be started with `cook_from_preheat()` method
+
+`VeSyncAirFryer158.is_heating` - Returns true if air fryer is preheating
+
+`VeSyncAirFryer158.is_cooking` - Returns true if air fryer is cooking
+
+`VeSyncAirFryer158.is_paused` - Returns true if air fryer is paused and can be resumed
+
+`VeSyncAirFryer158.remaining_time` - Returns minutes remaining based on timestamp of last API return when air fryer is running. Returns `None` if not running
+
+`VeSyncAirFryer158.fryer_status` - Dataclass that contains the status of the air fryer. The attributes of this dataclass are directly accessible from the `VeSyncAirFryer158` properties and **should not be directly set.**
+
+##### Air Fryer Methods
+
+`VeSyncAirFryer158.update()` - Retrieve current status
+
+`VeSyncAirFryer158.cook(set_temp: int, set_time: int)` - Set air fryer cook mode based on time and temp in defined units
+
+`VeSyncAirFryer158.set_preheat(target_temp: int, cook_time: int)` - Set air fryer preheat mode based on time and temp in defined units
+
+`VeSyncAirFryer158.cook_from_preheat()` - Start cook mode when air fryer is in `preheatEnd` state
+
+`VeSyncAirFryer158.pause()` - Pause air fryer when in `cooking` or `heating` state
+
+`VeSyncAirFryer158.resume()` - Resume air fryer when in `cookStop` or `preheatStop` state
+
+`VeSyncAirFryer158.end()` - End cooking or preheating and return air fryer to `standby` state
 
 ### JSON Output API
 
@@ -744,7 +803,7 @@ Charles Proxy is a proxy that allows you to perform MITM SSL captures on an iOS 
 
 When capturing packets make sure all packets are captured from the device list, along with all functions that the app contains. The captured packets are stored in text files, please do not capture with pcap format.
 
-After you capture the packets, please redact the `accountid` and `token`. If you feel you must redact other keys, please do not delete them entirely. Replace letters with "A" and numbers with "1", leave all punctuation intact and maintain length. 
+After you capture the packets, please redact the `accountid` and `token`. If you feel you must redact other keys, please do not delete them entirely. Replace letters with "A" and numbers with "1", leave all punctuation intact and maintain length.
 
 For example:
 
@@ -763,8 +822,10 @@ After:
   'accountId': '111111111',
   'cid': 'AAAAAA11-1AA-AA'
 }
-``` 
+```
 
 All [contributions](CONTRIBUTING.md) are welcome, please run `tox` before submitting a PR to ensure code is valid.
+
+Ensure new devices are integrated in tests, please review the [testing](tests/README.md) documentation for more information.
 
 This project is licensed under [MIT](LICENSE).
