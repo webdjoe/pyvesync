@@ -52,14 +52,12 @@ pyvesync is a library to manage VeSync compatible [smart home devices](#supporte
     - [JSON Output for Tunable Bulb](#json-output-for-tunable-bulb)
     - [JSON Output for Multicolor Bulb](#json-output-for-multicolor-bulb)
     - [JSON Output for Air Purifier](#json-output-for-air-purifier)
-    - [JSON Output for 300S Humidifier](#json-output-for-300s-humidifier)
     - [JSON Output for Core200S Purifier](#json-output-for-core200s-purifier)
     - [JSON Output for 400S Purifier](#json-output-for-400s-purifier)
     - [JSON Output for 600S Purifier](#json-output-for-600s-purifier)
 - [Notes](#notes)
 - [Debug mode](#debug-mode)
 - [Feature Requests](#feature-requests)
-
 
 ## Installation
 
@@ -80,6 +78,7 @@ pip install pyvesync
 5. Two Plug Outdoor Outlet (ESO15-TB) (Each plug is a separate `VeSyncOutlet` object, energy readings are for both plugs combined)
 
 ### Wall Switches
+
 1. Etekcity Smart WiFi Light Switch (model ESWL01)
 2. Etekcity Wifi Dimmer Switch (ESD16)
 
@@ -97,9 +96,11 @@ pip install pyvesync
 2. Cool to Soft White Tunable Dimmable Bulb (ESL100CW)
 
 ### Valceno Bulbs
+
 1. Multicolor Bulb (XYD0001)
 
 ### Levoit Humidifiers
+
 1. Dual 200S
 2. Classic 300S
 3. LUH-D301S-WEU Dual (200S)
@@ -107,6 +108,7 @@ pip install pyvesync
 5. OasisMist LUS-O415S-WUS
 
 Cosori Air Fryer
+
 1. Cosori 3.7 and 5.8 Quart Air Fryer
 
 ## Usage
@@ -137,6 +139,7 @@ my_bulb.set_brightness(75)
 # get its details in JSON and print
 print(my_bulb.displayJSON())
 ```
+
 Devices are stored in the respective lists in the instantiated `VeSync` class:
 
 ```python
@@ -161,14 +164,17 @@ for switch in manager.switches:
   if switch.device_name == switch_name:
     switch.turn_on()
 ```
+
 ## Configuration
 
 ### Time Zones
+
 The `time_zone` argument is optional but the specified time zone must match time zone in the tz database (IANNA Time Zone Database), see this link for reference:
 [tz database](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones).
 The time zone determines how the energy history is generated for the smart outlets, i.e. for the week starts at 12:01AM Sunday morning at the specified time zone.  If no time zone or an invalid time zone is entered the default is America/New_York
 
 ### Outlet energy data update interval
+
 If outlets are going to be continuously polled, a custom energy update interval can be set - The default is 6 hours (21600 seconds)
 
 ```python
@@ -180,7 +186,9 @@ manager.energy_update_interval = 360 # time in seconds
 ### Get electricity metrics of outlets
 
 Bypass the interval check to trigger outlet energy update.
+
 ```python
+
 for s in manager.outlets:
   s.update_energy(check_bypass=False) # Get energy history for each device
 ```
@@ -309,6 +317,7 @@ NOTE: LV-PUR131S outputs `air_quality` as a string, such as `Excellent`
 `VeSyncFan.change_fan_speed(speed=None)` - Change fan speed. Call without speed to toggle to next speed
 
 Compatible levels for each model:
+
 - Core 200S [1, 2, 3]
 - Core 300S/400S [1, 2, 3, 4]
 - PUR131S [1, 2, 3]
@@ -330,7 +339,6 @@ Compatible levels for each model:
 `VeSyncFan.turn_off_display()` Turn display off
 
 `VeSyncFan.set_night_light('on'|'dim'|'off')` - Set night light brightness
-
 
 ### Lights API Methods & Properties
 
@@ -356,7 +364,7 @@ Compatible levels for each model:
 **Properties**
 `VeSyncBulb.color` - Returns a dataclass with HSV and RGB attributes that are named tuples
 
-```
+```python
 VeSyncBulb.color.rbg = namedtuple('RGB', ['red', 'green', 'blue'])
 VeSyncBulb.color.hsv = namedtuple('HSV', ['hue', 'saturation', 'value'])
 ```
@@ -547,6 +555,7 @@ They can be set through the `VeSyncAirFryer158.fryer_status` dataclass but shoul
 `VeSyncAirFryer158.preheat_last_time` - The last minutes remaining returned from API for preheat mode
 
 `VeSyncAirFryer158.cook_status` - Status of air fryer. This can be the following states:
+
 1. `standby` - Air fryer is off and no cook or preheat is in progress
 2. `cooking` - Air fryer is actively cooking
 3. `cookStop` - Cooking is paused and can be resumed
@@ -680,9 +689,9 @@ This output only applies to dimmable switch.  The standard switch has the defaul
   "Filter Life": "99" # remaining filter life in percent
 }
 ```
-#### JSON Output for 300S Humidifier
 
 ```python
+
 {
   "Mode": "manual", # auto, manual, sleep
   "Humidity": 20, # percent
@@ -701,21 +710,21 @@ This output only applies to dimmable switch.  The standard switch has the defaul
 
 ```python
 {
-	"Device Name": "MyPurifier",
-	"Model": "Core200S",
-	"Subdevice No": "None",
-	"Status": "on",
-	"Online": "online",
-	"Type": "wifi-air",
-	"CID": "asd_sdfKIHG7IJHGwJGJ7GJ_ag5h3G55",
-	"Mode": "manual",
-	"Filter Life": "99",
-	"Fan Level": "1",
-	"Display": true,
-	"Child Lock": false,
-	"Night Light": "off",
-	"Display Config": true,
-	"Display_Forever Config": false
+  "Device Name": "MyPurifier",
+  "Model": "Core200S",
+  "Subdevice No": "None",
+  "Status": "on",
+  "Online": "online",
+  "Type": "wifi-air",
+  "CID": "asd_sdfKIHG7IJHGwJGJ7GJ_ag5h3G55",
+  "Mode": "manual",
+  "Filter Life": "99",
+  "Fan Level": "1",
+  "Display": true,
+  "Child Lock": false,
+  "Night Light": "off",
+  "Display Config": true,
+  "Display_Forever Config": false
 }
 ```
 
@@ -742,6 +751,7 @@ This output only applies to dimmable switch.  The standard switch has the defaul
   "Display_Forever Config": false
 }
 ```
+
 #### JSON Output for 600S Purifier
 
 ```python
@@ -797,7 +807,7 @@ manager.update()
 
 ~~If you would like new devices to be added, you will need to capture the packets from the app. The easiest way to do this is by using [Packet Capture for Android](https://play.google.com/store/apps/details?id=app.greyshirts.sslcapture&hl=en_US&gl=US). This works without rooting the device. If you do not have an android or are concerned with adding an app that uses a custom certificate to read the traffic, you can use an Android emulator such as [Nox](https://www.bignox.com/).~~
 
-SSL pinning makes capturing packets with Android ~~not feasible anymore~~ harder than before. A system-wide proxy (https://play.google.com/store/apps/details?id=org.proxydroid&hl=en) can be used if ssl pinning is disabled (https://github.com/ViRb3/TrustMeAlready).
+SSL pinning makes capturing packets with Android ~~not feasible anymore~~ harder than before. A system-wide proxy [ProxyDroid](https://play.google.com/store/apps/details?id=org.proxydroid&hl=en) can be used if ssl pinning is disabled [TrustMeAlready](https://github.com/ViRb3/TrustMeAlready).
 
 Charles Proxy is a proxy that allows you to perform MITM SSL captures on an iOS device. This is the only way to capture packets that I am aware of that is currently possible.
 
@@ -808,19 +818,22 @@ After you capture the packets, please redact the `accountid` and `token`. If you
 For example:
 
 Before:
-```
+
+```json
 {
-  'tk': 'abc123abc123==3rf',
-  'accountId': '123456789',
-  'cid': 'abcdef12-3gh-ij'
+  "tk": "abc123abc123==3rf",
+  "accountId": "123456789",
+  "cid": "abcdef12-3gh-ij"
 }
 ```
+
 After:
-```
+
+```json
 {
-  'tk': 'AAA111AAA111==1AA',
-  'accountId': '111111111',
-  'cid': 'AAAAAA11-1AA-AA'
+  "tk": "AAA111AAA111==1AA",
+  "accountId": "111111111",
+  "cid": "AAAAAA11-1AA-AA"
 }
 ```
 

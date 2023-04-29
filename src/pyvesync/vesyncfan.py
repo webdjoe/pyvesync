@@ -685,6 +685,32 @@ class VeSyncAir131(VeSyncBaseDevice):
         """Return Screen status (on/off)."""
         return self.details.get('screen_status', 'unknown')
 
+    def turn_on_display(self) -> bool:
+        """Turn display on."""
+        return self.toggle_display('on')
+
+    def turn_off_display(self) -> bool:
+        """Turn display off."""
+        return self.toggle_display('off')
+
+    def toggle_display(self, status: str) -> bool:
+        """Toggle Display of VeSync LV-PUR131."""
+        if status.lower() not in ['on', 'off']:
+            logger.debug('Invalid display status - %s', status)
+            return False
+        head = Helpers.req_headers(self.manager)
+        body = Helpers.req_body(self.manager, 'devicestatus')
+        body['status'] = status.lower()
+        r, _ = Helpers.call_api(
+            '/131airPurifier/v1/device/updateScreen', 'put',
+            json_object=body, headers=head
+        )
+        if r is not None and Helpers.code_check(r):
+            self.details['screen_status'] = status.lower()
+            return True
+        logger.debug('Error toggling display for %s', self.device_name)
+        return False
+
     def turn_on(self) -> bool:
         """Turn Air Purifier on."""
         if self.device_status != 'on':
