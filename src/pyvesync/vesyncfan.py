@@ -4,7 +4,7 @@ import json
 import logging
 from typing import Dict, Tuple, Union, Optional
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
-from pyvesync.helpers import Helpers
+from pyvesync.helpers import Helpers, Timer
 
 
 humid_features: dict = {
@@ -153,6 +153,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             'child_lock': False,
             'night_light': 'off',
         }
+        self.timer: Optional[Timer] = None
         if self.air_quality_feature is True:
             self.details['air_quality'] = 0
         self.config: Dict[str, Union[str, int, float, bool]] = {
@@ -170,7 +171,8 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         """
         modes = ['getPurifierStatus', 'setSwitch', 'setNightLight',
                  'setLevel', 'setPurifierMode', 'setDisplay',
-                 'setChildLock', 'setIndicatorLight']
+                 'setChildLock', 'setIndicatorLight', 'getTimer',
+                 'addTimer', 'delTimer']
         if method not in modes:
             logger.debug('Invalid mode - %s', method)
             return {}, {}
@@ -255,6 +257,121 @@ class VeSyncAirBypass(VeSyncBaseDevice):
     def update(self):
         """Update Purifier details."""
         self.get_details()
+
+    def get_timer(self) -> Optional[Timer]:
+        """Retrieve running timer from purifier."""
+        head, body = self.build_api_dict('getTimer')
+        if not head and not body:
+            return None
+
+        r, _ = Helpers.call_api(
+            '/cloud/v2/deviceManaged/bypassV2',
+            method='post',
+            headers=head,
+            json_object=body,
+        )
+        if not isinstance(r, dict):
+            logger.debug('Error in purifier response')
+            return None
+        if r.get('code') != 0:
+            logger.debug('Error in purifier response, code %s', r.get('code', 'unknown'))
+            return None
+        if r.get('result', {}).get('code') != 0:
+            logger.debug('Error in purifier result response, code %s',
+                         r.get('result', {}).get('code', 'unknown'))
+            return None
+        timers = r.get('result', {}).get('result', {}).get('timers', [])
+        if not isinstance(timers, list) or len(timers) < 1:
+            self.timer = None
+            logger.debug('No timer found')
+            return None
+
+        timer = timers[0]
+        if self.timer is None:
+            self.timer = Timer(timer_duration=timer.get('duration', 0),
+                               action=timer.get('action'),
+                               id=timer.get('id'),
+                               remaining=timer.get('remaining'))
+        else:
+            self.timer.update(time_remaining=timer.get('remaining'))
+        logger.debug('Timer found: %s', str(self.timer))
+        return self.timer
+
+    def set_timer(self, timer_duration: int, action: str) -> bool:
+        """Set timer for Purifier.
+
+        Arguments
+        ----------
+        timer_duration: int
+            Duration of timer in seconds
+        action: str
+            Action to take when timer expires, can be off, on, or sleep
+        """
+        if action not in ['off', 'on', 'sleep']:
+            logger.debug('Invalid action %s', action)
+            return False
+
+        head, body = self.build_api_dict('addTimer')
+        if not head and not body:
+            return False
+
+        body['payload']['data'] = {
+            'total': timer_duration,
+            'action': action,
+        }
+
+        r, _ = Helpers.call_api(
+            '/cloud/v2/deviceManaged/bypassV2',
+            method='post',
+            headers=head,
+            json_object=body,
+        )
+
+        if r.get('code') != 0:
+            logger.debug('Error in purifier response, code %s', r.get('code', 'unknown'))
+            return False
+        if r.get('result', {}).get('code') != 0:
+            logger.debug('Error in purifier result response, code %s',
+                         r.get('result', {}).get('code', 'unknown'))
+            return False
+        timer_id = r.get('result', {}).get('result', {}).get('id')
+        if timer_id is not None:
+            self.timer = Timer(timer_duration=timer_duration,
+                               action=action,
+                               id=timer_id)
+        else:
+            self.timer = Timer(timer_duration=timer_duration,
+                               action=action)
+        return True
+
+    def clear_timer(self) -> bool:
+        """Clear timer."""
+        self.get_timer()
+        if self.timer is None:
+            logger.debug('No timer to clear')
+            return False
+        if self.timer.id is None:
+            logger.debug("Timer doesn't have an ID, can't clear")
+        head, body = self.build_api_dict('delTimer')
+        if not head and not body:
+            return False
+
+        body['payload']['data'] = {
+            'id': self.timer.id
+        }
+
+        r, _ = Helpers.call_api(
+            '/cloud/v2/deviceManaged/bypassV2',
+            method='post',
+            headers=head,
+            json_object=body,
+        )
+
+        if r.get('code') != 0:
+            logger.debug('Error in purifier response, code %s', r.get('code', 'unknown'))
+            return False
+        logger.debug("Timer cleared")
+        return True
 
     def change_fan_speed(self,
                          speed=None) -> bool:
@@ -611,7 +728,7 @@ class VeSyncAir131(VeSyncBaseDevice):
         """Initilize air purifier class."""
         super().__init__(details, manager)
 
-        self.details: Dict = {}
+        self.details = {}
 
     def get_details(self) -> None:
         """Build Air Purifier details dictionary."""
