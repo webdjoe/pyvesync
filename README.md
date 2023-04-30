@@ -44,6 +44,7 @@ pyvesync is a library to manage VeSync compatible [smart home devices](#supporte
     - [Cosori 3.7 and 5.8 Quart Air Fryer](#cosori-37-and-58-quart-air-fryer)
       - [Air Fryer Properties](#air-fryer-properties)
       - [Air Fryer Methods](#air-fryer-methods)
+  - [Timer Dataclass](#timer-dataclass)
   - [JSON Output API](#json-output-api)
     - [JSON Output for All Devices](#json-output-for-all-devices)
     - [JSON Output for Outlets](#json-output-for-outlets)
@@ -340,6 +341,12 @@ Compatible levels for each model:
 
 `VeSyncFan.set_night_light('on'|'dim'|'off')` - Set night light brightness
 
+`VeSyncFan.get_timer()` - Get any running timers, returns Timer Dataclass
+
+`VeSyncFan.set_timer(timer_duration=3000, action='off')` - Set a timer for the device, duration in seconds, action is either 'on', 'off' or 'sleep'
+
+`VeSyncFan.clear_timer()` - Cancel any running timer
+
 ### Lights API Methods & Properties
 
 #### Brightness Light Bulb Method and Properties
@@ -362,7 +369,7 @@ Compatible levels for each model:
 
 *Compatible with ESL100MC & Valceno Bulbs*
 **Properties**
-`VeSyncBulb.color` - Returns a dataclass with HSV and RGB attributes that are named tuples
+`VeSyncBulb.color` - Returns a Dataclass with HSV and RGB attributes that are named tuples
 
 ```python
 VeSyncBulb.color.rbg = namedtuple('RGB', ['red', 'green', 'blue'])
@@ -572,7 +579,7 @@ They can be set through the `VeSyncAirFryer158.fryer_status` dataclass but shoul
 
 `VeSyncAirFryer158.remaining_time` - Returns minutes remaining based on timestamp of last API return when air fryer is running. Returns `None` if not running
 
-`VeSyncAirFryer158.fryer_status` - Dataclass that contains the status of the air fryer. The attributes of this dataclass are directly accessible from the `VeSyncAirFryer158` properties and **should not be directly set.**
+`VeSyncAirFryer158.fryer_status` - Dataclass that contains the status of the air fryer. The attributes of this Dataclass are directly accessible from the `VeSyncAirFryer158` properties and **should not be directly set.**
 
 ##### Air Fryer Methods
 
@@ -589,6 +596,42 @@ They can be set through the `VeSyncAirFryer158.fryer_status` dataclass but shoul
 `VeSyncAirFryer158.resume()` - Resume air fryer when in `cookStop` or `preheatStop` state
 
 `VeSyncAirFryer158.end()` - End cooking or preheating and return air fryer to `standby` state
+
+
+### Timer Dataclass
+
+Currently *only implemented for Levoit Core 200S and 300S Air Purifier*, will eventually integrate with remaining devices. This object is created when `get_timer()` or `set_timer()` is called.
+
+```python
+from pyvesync.helpers import Timer
+
+timer = Timer(timer_duration=60, action='sleep', id=1)
+
+# Get time remaining in seconds
+timer.remaining_time
+
+# Get status
+timer.status
+
+# Get action
+timer.action
+
+# Set status - active, paused, or done
+timer.status = 'paused'
+
+# set time remaining in seconds, does not edit status
+timer.remaining_time = 120
+
+# Pause timer
+timer.pause()
+
+# End timer
+timer.end()
+
+# Resume timer
+timer.start()
+```
+
 
 ### JSON Output API
 
