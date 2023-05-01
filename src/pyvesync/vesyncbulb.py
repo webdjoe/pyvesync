@@ -471,7 +471,7 @@ class VeSyncBulbESL100MC(VeSyncBulb):
         if red is not None and green is not None and blue is not None:
             new_color = self._validate_rgb(red, green, blue)
             color_mode = 'color'
-            if new_color == self._color:
+            if self.device_status == 'on' and new_color == self._color:
                 logger.debug("New color is same as current color")
                 return True
         else:
@@ -479,6 +479,10 @@ class VeSyncBulbESL100MC(VeSyncBulb):
             new_color = None
             if brightness is not None:
                 brightness_update = int(self._validate_brightness(brightness))
+                # Do nothing if brightness is passed and same as current
+                if self.device_status == 'on' and brightness_update == self._brightness:
+                    logger.debug('Brightness already set to %s', brightness)
+                    return True
                 color_mode = 'white'
             else:
                 logger.debug("Brightness and RGB values are not set")
@@ -627,7 +631,11 @@ class VeSyncBulbESL100(VeSyncBulb):
             logger.debug('%s is not dimmable', self.device_name)
             return False
         brightness_update = int(self._validate_brightness(brightness))
-
+        if self.device_status == 'on' and brightness_update == self._brightness:
+            logger.debug("Device already in requested state")
+            return True
+        if self.device_status == 'off':
+            self.toggle('on')
         body = helpers.req_body(self.manager, 'devicestatus')
         body['uuid'] = self.uuid
         body['status'] = 'on'
@@ -734,7 +742,8 @@ class VeSyncBulbESL100CW(VeSyncBulb):
     def set_brightness(self, brightness: int) -> bool:
         """Set brightness of tunable bulb."""
         brightness_update = int(self._validate_brightness(brightness))
-        if brightness_update == self._brightness:
+        if self.device_status == 'on' and brightness_update == self._brightness:
+            logger.debug("Device already in requested state")
             return True
         body = helpers.req_body(self.manager, 'bypass')
         body['cid'] = self.cid
@@ -765,7 +774,8 @@ class VeSyncBulbESL100CW(VeSyncBulb):
     def set_color_temp(self, color_temp: int) -> bool:
         """Set Color Temperature of Bulb in pct (1 - 100)."""
         color_temp_update = self._validate_color_temp(color_temp)
-        if color_temp_update == self._color_temp:
+        if self.device_status == 'on' and color_temp_update == self._color_temp:
+            logger.debug("Device already in requested state")
             return True
         body = helpers.req_body(self.manager, 'bypass')
         body['cid'] = self.cid
@@ -1001,7 +1011,7 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
                 if val != "":
                     if val != current_dict[key]:
                         same_colors = False
-            if same_colors:
+            if self.device_status == 'on' and same_colors:
                 logger.debug("Device already in requested state")
                 return True
         for key, val in arg_dict.items():
@@ -1084,7 +1094,7 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
             if all(locals().get(k) is None for k in force_list):
 
                 # Do nothing if brightness is passed and same as current
-                if brightness_update == self._brightness:
+                if self.device_status == 'on' and brightness_update == self._brightness:
                     logger.debug('Brightness already set to %s', brightness)
                     return True
                 request_dict['force'] = 0
