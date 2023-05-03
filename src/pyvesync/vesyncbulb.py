@@ -854,7 +854,8 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
                 sat = float(innerresult.get('saturation')/100)
                 val = float(innerresult.get('value'))
                 self._color = Color(hue=hue, saturation=sat, value=val)
-        elif response.get('code') == -11300030:
+        elif (response.get('code') == -11300030 or
+              response.get('code') == -11302030):
             logger.debug('%s device request timeout', self.device_name)
             self.connection_status = 'offline'
             self.device_status = 'off'

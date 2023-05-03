@@ -15,7 +15,9 @@ logger = logging.getLogger(__name__)
 
 API_BASE_URL = 'https://smartapi.vesync.com'
 API_RATE_LIMIT = 30
-API_TIMEOUT = 5
+# If device is out of reach, the cloud api sends a timeout response after 7 seconds,
+# using 8 here so there is time enough to catch that message
+API_TIMEOUT = 8
 USER_AGENT = ("VeSync/3.2.39 (com.etekcity.vesyncPlatform;"
               " build:5; iOS 15.5.0) Alamofire/5.2.1")
 
