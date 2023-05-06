@@ -7,6 +7,7 @@ import json
 import colorsys
 from dataclasses import dataclass, field, InitVar
 from typing import NamedTuple, Optional, Union
+import re
 import requests
 
 
@@ -170,6 +171,27 @@ class Helpers:
         """Encode password."""
         return hashlib.md5(string.encode('utf-8')).hexdigest()
 
+    shouldredact = True
+
+    @classmethod
+    def redactor(cls, stringvalue: str) -> str:
+        """Redact sensitive strings from debug output."""
+        if cls.shouldredact:
+            stringvalue = re.sub(r''.join((
+                                          '(?i)',
+                                          '((?<=token": ")|',
+                                          '(?<=password": ")|',
+                                          '(?<=email": ")|',
+                                          '(?<=tk": ")|',
+                                          '(?<=accountId": ")|',
+                                          '(?<=authKey": ")|',
+                                          '(?<=uuid": ")|',
+                                          '(?<=cid": "))',
+                                          '[^"]+')
+                                          ),
+                                 '##_REDACTED_##', stringvalue)
+        return stringvalue
+
     @staticmethod
     def call_api(api: str, method: str, json_object:  Optional[dict] = None,
                  headers: Optional[dict] = None) -> tuple:
@@ -181,8 +203,10 @@ class Helpers:
             logger.debug("=======call_api=============================")
             logger.debug("[%s] calling '%s' api", method, api)
             logger.debug("API call URL: \n  %s%s", API_BASE_URL, api)
-            logger.debug("API call headers: \n  %s", json.dumps(headers))
-            logger.debug("API call json: \n  %s", json.dumps(json_object))
+            logger.debug("API call headers: \n  %s",
+                         Helpers.redactor(json.dumps(headers)))
+            logger.debug("API call json: \n  %s",
+                         Helpers.redactor(json.dumps(json_object)))
             if method.lower() == 'get':
                 r = requests.get(
                     API_BASE_URL + api, json=json_object, headers=headers,
@@ -207,7 +231,8 @@ class Helpers:
                 status_code = 200
                 if r.content:
                     response = r.json()
-                    logger.debug("API response: \n\n  %s \n ", response)
+                    logger.debug("API response: \n\n  %s \n ",
+                                 Helpers.redactor(json.dumps(response)))
             else:
                 logger.debug('Unable to fetch %s%s', API_BASE_URL, api)
         return response, status_code
