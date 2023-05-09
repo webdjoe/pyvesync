@@ -29,8 +29,8 @@ jobs:
       name: 'Pylint'
     - run: |
         pip install mypy
-        mypy src/pyvesync
         python3 -m pip install types-requests
+        mypy src/pyvesync
       name: 'MyPy'
 
   pytest:
@@ -43,6 +43,8 @@ jobs:
           - '3.10'
           - '3.11'  
     steps:
+    - name: Checkout repo
+      uses: actions/checkout@v3  
     - name: 'Use Python ${{matrix.python-version}}'
       uses: actions/setup-python@v4
       with:
