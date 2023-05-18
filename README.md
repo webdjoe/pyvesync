@@ -58,6 +58,7 @@ pyvesync is a library to manage VeSync compatible [smart home devices](#supporte
     - [JSON Output for 600S Purifier](#json-output-for-600s-purifier)
 - [Notes](#notes)
 - [Debug mode](#debug-mode)
+- [Redact mode](#redact-mode)
 - [Feature Requests](#feature-requests)
 
 ## Installation
@@ -119,8 +120,9 @@ To start with the module:
 ```python
 from pyvesync import VeSync
 
-manager = VeSync("EMAIL", "PASSWORD", "TIME_ZONE", debug=False)
+manager = VeSync("EMAIL", "PASSWORD", "TIME_ZONE", debug=False, redact=True)
 manager.login()
+# debug and redact are optional arguments, the above values are their defaults
 
 # Get/Update Devices from server - populate device lists
 manager.update()
@@ -841,6 +843,20 @@ To make it easier to debug, there is a `debug` argument in the `VeSync` method. 
 import pyvesync.vesync as vs
 
 manager = vs.VeSync('user', 'pass', debug=True)
+manager.login()
+manager.update()
+# Prints device list returned from Vesync
+```
+
+## Redact mode
+
+To make it easier to post logs online , there is a `redact` argument in the `VeSync` method. This redacts any sensitive information from the logs.
+The dafault is set to True
+
+```python
+import pyvesync.vesync as vs
+
+manager = vs.VeSync('user', 'pass', debug=True, redact=True)
 manager.login()
 manager.update()
 # Prints device list returned from Vesync
