@@ -95,6 +95,13 @@ air_features: dict = {
         'models': ['LV-PUR131S', 'LV-RH131S'],
         'features': ['air_quality']
     },
+    'LAP-V102S-AAS': {
+        'module': 'VeSyncVital100S',
+        'models': ['LAP-V102S-AASR'],
+        'modes': ['manual', 'auto', 'off'],
+        'features': ['air_quality'],
+        'levels': list(range(1, 5))
+    }
 }
 
 
@@ -716,6 +723,224 @@ class VeSyncAirBypass(VeSyncBaseDevice):
                 {'Air Quality Value': str(self.details.get('air_quality_value', ''))}
             )
         return json.dumps(sup_val, indent=4)
+
+
+class VeSyncVital100S(VeSyncAirBypass):
+    """Levoit Vital 100S Air Purifier Class."""
+
+    def __init__(self, details: Dict[str, list], manager):
+        super().__init__(details, manager)
+
+    def update(self):
+        """Update Purifier details."""
+        self.get_details()
+
+    def get_details(self) -> None:
+        """Build Bypass Purifier details dictionary."""
+        head = Helpers.bypass_header()
+        body = Helpers.bypass_body_v2(self.manager)
+        body['cid'] = self.cid
+        body['deviceId'] = self.cid
+        body['configModule'] = self.config_module
+        body['payload'] = {
+            'method': 'getPurifierStatus',
+            'source': 'APP',
+            'data': {}
+        }
+
+        r, _ = Helpers.call_api(
+            '/cloud/v2/deviceManaged/bypassV2',
+            method='post',
+            headers=head,
+            json_object=body,
+        )
+        if not isinstance(r, dict):
+            logger.debug('Error in purifier response')
+            return
+        if not isinstance(r.get('result'), dict):
+            logger.debug('Error in purifier response')
+            return
+        outer_result = r.get('result', {})
+        inner_result = None
+
+        if outer_result:
+            inner_result = r.get('result', {}).get('result')
+        if inner_result is not None and Helpers.code_check(r):
+            if outer_result.get('code') == 0:
+                self.build_purifier_dict(inner_result)
+            else:
+                logger.debug('error in inner result dict from purifier')
+            if inner_result.get('configuration', {}):
+                self.build_config_dict(inner_result.get('configuration', {}))
+            else:
+                logger.debug('No configuration found in purifier status')
+        else:
+            logger.debug('Error in purifier response')
+
+    def build_purifier_dict(self, dev_dict: dict) -> None:
+        """Build Bypass purifier status dictionary."""
+        power_switch = dev_dict.get('power_switch', 0)
+        if power_switch == 1:
+            self.enabled = True
+            self.device_status = 'on'
+        else:
+            self.enabled = False
+            self.device_status = 'off'
+        self.details['filter_life'] = dev_dict.get('filterLifePercent', 0)
+        self.mode = dev_dict.get('workMode', 'manual')
+        self.speed = dev_dict.get('manualSpeedLevel', 0)
+        self.details['display'] = dev_dict.get('display', False)
+        self.details['child_lock'] = True if dev_dict.get('childLockSwitch',
+                                                          0) == 0 else False
+        self.details['night_light'] = dev_dict.get('night_light', 'off')
+        self.details['display'] = True if dev_dict.get('screenState', 0) == 1 else False
+        self.details['display_forever'] = dev_dict.get('display_forever',
+                                                       False)
+        self.details['light_detection_switch'] = True if dev_dict.get(
+            'lightDetectionSwitch', 0) == 1 else False
+        if self.air_quality_feature is True:
+            self.details['air_quality_value'] = dev_dict.get(
+                'PM25', 0)
+            self.details['air_quality'] = dev_dict.get('air_quality', 0)
+        if dev_dict.get('timerRemain') is not None:
+            self.timer = Timer(dev_dict['timerRemain'], 'off')
+
+    def toggle_switch(self, toggle: bool) -> bool:
+        """Toggle purifier on/off."""
+        if not isinstance(toggle, bool):
+            logger.debug('Invalid toggle value for purifier switch')
+            return False
+
+        head = Helpers.bypass_header()
+        body = Helpers.bypass_body_v2(self.manager)
+        if toggle is True:
+            power = 1
+        else:
+            power = 0
+        body['cid'] = self.cid
+        body['deviceId'] = self.cid
+        body['configModule'] = self.config_module
+        body['payload'] = {
+            'data': {
+                'powerSwitch': power,
+                'switchIdx': 0
+            },
+            'method': 'setSwitch',
+            'source': 'APP'
+        }
+
+        r, _ = Helpers.call_api(
+            '/cloud/v2/deviceManaged/bypassV2',
+            method='post',
+            headers=head,
+            json_object=body,
+        )
+
+        if r is not None and Helpers.code_check(r):
+            if toggle:
+                self.device_status = 'on'
+            else:
+                self.device_status = 'off'
+            return True
+        logger.debug("Error toggling purifier - %s",
+                     self.device_name)
+        return False
+
+    def set_child_lock(self, mode: bool) -> bool:
+        """Levoit 100S Set Child Lock not Implemented."""
+        logger.debug("Child lock not implemented for %s", self.device_name)
+        return False
+
+    def set_display(self, mode: bool) -> bool:
+        """Levoit Vital 100S Set Display not Implemented."""
+        logger.debug("Display not implemented for %s", self.device_name)
+        return False
+
+    def sleep_mode(self) -> bool:
+        """Levoit Vital 100S Sleep Mode Not Implemented."""
+        logger.debug("Sleep mode not implemented for %s", self.device_name)
+        return False
+
+    def change_fan_speed(self, speed=None) -> bool:
+        """Change fan speed based on levels in configuration dict."""
+        speeds: list = self.config_dict.get('levels', [])
+        current_speed = self.speed
+
+        if speed is not None:
+            if speed not in speeds:
+                logger.debug("%s is invalid speed - valid speeds are %s",
+                             speed, str(speeds))
+                return False
+            new_speed = speed
+        else:
+            if current_speed == speeds[-1]:
+                new_speed = speeds[0]
+            else:
+                current_index = speeds.index(current_speed)
+                new_speed = speeds[current_index + 1]
+
+        body = Helpers.req_body(self.manager, 'devicestatus')
+        body['uuid'] = self.uuid
+
+        head, body = self.build_api_dict('setLevel')
+        if not head and not body:
+            return False
+        body['deviceId'] = self.cid
+        body['payload']['data'] = {
+            'levelIdx': 0,
+            'manualSpeedLevel': new_speed,
+            'levelType': 'wind'
+        }
+
+        r, _ = Helpers.call_api(
+            '/cloud/v2/deviceManaged/bypassV2',
+            method='post',
+            headers=head,
+            json_object=body,
+        )
+
+        if r is not None and Helpers.code_check(r):
+            self.speed = new_speed
+            self.mode = 'manual'
+            return True
+        logger.debug('Error changing %s speed', self.device_name)
+        return False
+
+    def mode_toggle(self, mode: str) -> bool:
+        """Set purifier mode - sleep or manual."""
+        if mode.lower() not in self.modes:
+            logger.debug('Invalid purifier mode used - %s',
+                         mode)
+            return False
+
+        # Call change_fan_speed if mode is set to manual
+        if mode == 'manual':
+            if self.speed is None or self.speed == 0:
+                return self.change_fan_speed(1)
+            else:
+                return self.change_fan_speed(self.speed)
+
+        head, body = self.build_api_dict('setPurifierMode')
+        if not head and not body:
+            return False
+
+        body['deviceId'] = self.cid
+        body['payload']['data'] = {
+            'workMode': mode.lower()
+        }
+
+        r, _ = Helpers.call_api(
+            '/cloud/v2/deviceManaged/bypassV2',
+            method='post',
+            headers=head,
+            json_object=body,
+        )
+
+        if Helpers.code_check(r):
+            self.mode = mode
+            return True
+        logger.debug('Error setting purifier mode')
+        return False
 
 
 class VeSyncAir131(VeSyncBaseDevice):
