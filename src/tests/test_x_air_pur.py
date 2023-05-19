@@ -1,13 +1,15 @@
 """Levoit Air Purifier tests."""
-from pyvesync.vesyncfan import VeSyncAir131
+from pyvesync.vesyncfan import VeSyncAir131, VeSyncAirBypass
 from pyvesync.helpers import Helpers as helpers
 import call_json
 import call_json_fans
 from utils import TestBase, Defaults
 
 LVPUR131S = 'LV-PUR131S'
+CORE200S = 'Core200S'
 
 DEV_LIST_DETAIL = call_json.DeviceList.device_list_item(LVPUR131S)
+CORE200S_DETAIL = call_json.DeviceList.device_list_item(CORE200S)
 
 CORRECT_LIST = call_json.DeviceList.device_list_response(LVPUR131S)
 
@@ -68,8 +70,8 @@ class TestVesyncAirPurifier(TestBase):
         body['uuid'] = fan.uuid
         on = fan.turn_on()
         self.mock_api.assert_called_with(
-            '/131airPurifier/v1/device/deviceStatus', 'put', json_object=body, headers=head
-        )
+            '/131airPurifier/v1/device/deviceStatus', 'put',
+            json_object=body, headers=head)
         call_args = self.mock_api.call_args_list[0][0]
         assert call_args[0] == '/131airPurifier/v1/device/deviceStatus'
         assert call_args[1] == 'put'
@@ -78,8 +80,8 @@ class TestVesyncAirPurifier(TestBase):
         off = fan.turn_off()
         body['status'] = 'off'
         self.mock_api.assert_called_with(
-            '/131airPurifier/v1/device/deviceStatus', 'put', json_object=body, headers=head
-        )
+            '/131airPurifier/v1/device/deviceStatus', 'put',
+            json_object=body, headers=head)
         assert off
 
     def test_airpur_onoff_fail(self):
@@ -119,3 +121,22 @@ class TestVesyncAirPurifier(TestBase):
         f = fan.sleep_mode()
         assert fan.mode == 'sleep'
         assert f
+
+    def test_airpur_set_timer(self):
+        """Test timer function of Core*00S Purifiers."""
+        self.mock_api.return_value = (call_json_fans.INNER_RESULT({'id': 1}), 200)
+        fan = VeSyncAirBypass(CORE200S_DETAIL, self.manager)
+        fan.set_timer(100)
+        assert fan.timer is not None
+        assert fan.timer.timer_duration == 100
+        assert fan.timer.done is False
+        assert fan.timer.action == 'off'
+        assert fan.timer.running is True
+
+    def test_airpur_clear_timer(self):
+        """Test clear_timer method for Core air purifiers."""
+        self.mock_api.return_value = call_json_fans.FunctionResponses['Core200S']
+        fan = VeSyncAirBypass(CORE200S_DETAIL, self.manager)
+        fan.timer = call_json_fans.FAN_TIMER
+        fan.clear_timer()
+        assert fan.timer is None

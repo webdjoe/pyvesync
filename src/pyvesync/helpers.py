@@ -435,3 +435,179 @@ class Color:
             float(round(hsv_tuple[1] * hsv_factors[1], 2)),
             float(round(hsv_tuple[2] * hsv_factors[2], 0)),
         )
+
+
+@dataclass
+class Timer:
+    """Dataclass for timers.
+
+    Parameters
+    ----------
+    timer_duration : int
+        Length of timer in seconds
+    action : str
+        Action to perform when timer is done
+    id: int
+        ID of timer, defaults to 1
+
+    Attributes
+    ----------
+    update_time : int
+        Timestamp of last update
+
+    Properties
+    ----------
+    status : str
+        Status of timer, one of 'active', 'paused', 'done'
+    time_remaining : int
+        Time remaining on timer in seconds
+    running : bool
+        True if timer is running
+    paused : bool
+        True if timer is paused
+    done : bool
+        True if timer is done
+
+    Methods
+    -------
+    start()
+        Restarts paused timer
+    end()
+        Ends timer
+    pause()
+        Pauses timer
+    update(time_remaining: Optional[int] = None, status: Optional[str] = None)
+        Updates timer with new time remaining and/or status
+    """
+
+    timer_duration: int
+    action: str
+    id: int = 1
+    remaining: InitVar[Optional[int]] = None
+    _status: str = 'active'
+    _remain: int = 0
+    update_time: Optional[int] = int(time.time())
+
+    def __post_init__(self, remaining) -> None:
+        """Set remaining time if provided."""
+        if remaining is not None:
+            self._remain = remaining
+        else:
+            self._remain = self.timer_duration
+
+    @property
+    def status(self) -> str:
+        """Return status of timer."""
+        return self._status
+
+    @status.setter
+    def status(self, status: str) -> None:
+        """Set status of timer."""
+        if status not in ['active', 'paused', 'done']:
+            raise ValueError(f'Invalid status {status}')
+        self._internal_update()
+        if status == 'done' or self._status == 'done':
+            return self.end()
+        if self.status == 'paused' and status == 'active':
+            self.update_time = int(time.time())
+        if self.status == 'active' and status == 'paused':
+            self.update_time = None
+        self._status = status
+
+    @property
+    def _seconds_since_check(self) -> int:
+        """Return seconds since last update."""
+        if self.update_time is None:
+            return 0
+        return int(time.time()) - self.update_time
+
+    @property
+    def time_remaining(self) -> int:
+        """Return remaining seconds."""
+        self._internal_update()
+        return self._remain
+
+    @time_remaining.setter
+    def time_remaining(self, remaining: int) -> None:
+        """Set time remaining in seconds."""
+        if remaining <= 0:
+            return self.end()
+        self._internal_update()
+        if self._status == 'done':
+            self._remain = 0
+            return
+        self._remain = remaining
+
+    def _internal_update(self) -> None:
+        """Use time remaining update status."""
+        if self._status == 'paused':
+            self.update_time = None
+            return
+        if self._status == 'done' or (self._seconds_since_check > self._remain
+                                      and self._status == 'active'):
+            self._status = 'done'
+            self.update_time = None
+            self._remain = 0
+        if self._status == 'active':
+            self._remain = self._remain - self._seconds_since_check
+            self.update_time = int(time.time())
+
+    @property
+    def running(self) -> bool:
+        """Check if timer is active."""
+        if self.time_remaining > 0 and self.status == 'active':
+            return True
+        return False
+
+    @property
+    def paused(self) -> bool:
+        """Check if timer is paused."""
+        return bool(self.status == 'paused')
+
+    @property
+    def done(self) -> bool:
+        """Check if timer is complete."""
+        return bool(self.time_remaining <= 0 or self._status == 'done')
+
+    def end(self) -> None:
+        """Change status of timer to done."""
+        self._status = 'done'
+        self._remain = 0
+        self.update_time = None
+
+    def start(self) -> None:
+        """Restart paused timer."""
+        if self._status != 'paused':
+            return
+        self.update_time = int(time.time())
+        self.status = 'active'
+
+    def update(self, *, time_remaining: Optional[int] = None,
+               status: Optional[str] = None) -> None:
+        """Update timer.
+
+        Accepts only KW args
+
+        Parameters
+        ----------
+        time_remaining : int
+            Time remaining on timer in seconds
+        status : str
+            Status of timer, can be active, paused, or done
+
+        Returns
+        -------
+        None
+        """
+        if time_remaining is not None:
+            self.time_remaining = time_remaining
+        if status is not None:
+            self.status = status
+
+    def pause(self) -> None:
+        """Pause timer. NOTE - this does not stop the timer via API only locally."""
+        self._internal_update()
+        if self.status == 'done':
+            return
+        self.status = 'paused'
+        self.update_time = None

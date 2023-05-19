@@ -32,8 +32,8 @@ METHOD_RESPONSES['DEV_TYPE']['set_status'] = status_response
 
 METHOD_RESPONSES['DEVTYPE'].default_factory = lambda: ({"code": 0, "msg": "success"}, 200)
 
-If changing default response for all devices, change the default factory of the import default dict
-but make sure to use `deepcopy` to avoid unintended side effects.
+If changing default response for all devices, change the default factory of the import
+default dict but make sure to use `deepcopy` to avoid unintended side effects.
 """
 from copy import deepcopy
 from utils import FunctionResponses, Defaults
@@ -51,7 +51,6 @@ class OutletDefaults:
     power = 1  # kilowatt-hours
     round_7a_voltage = '1000:1000'  # 1 volt
     round_7a_power = '1000:1000'  # 1 watt
-
 
 
 class OutletDetails:

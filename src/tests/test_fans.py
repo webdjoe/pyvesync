@@ -104,9 +104,12 @@ class TestAirPurifiers(TestBase):
     base_methods = [['turn_on'], ['turn_off'], ['sleep_mode'], ['manual_mode'],
                     ['change_fan_speed', {'speed': 3}]]
     device_methods = {
-        'Core300S': [['auto_mode'], ['turn_on_display'], ['turn_off_display']],
-        'Core400S': [['auto_mode'], ['turn_on_display'], ['turn_off_display']],
-        'Core600S': [['auto_mode'], ['turn_on_display'], ['turn_off_display']],
+        'Core300S': [['auto_mode'], ['turn_on_display'], ['turn_off_display'],
+                     ['set_timer', {'timer_duration': 100}], ['clear_timer']],
+        'Core400S': [['auto_mode'], ['turn_on_display'], ['turn_off_display'],
+                     ['set_timer', {'timer_duration': 100}], ['clear_timer']],
+        'Core600S': [['auto_mode'], ['turn_on_display'], ['turn_off_display'],
+                     ['set_timer', {'timer_duration': 100}], ['clear_timer']],
 
     }
 
@@ -213,6 +216,8 @@ class TestAirPurifiers(TestBase):
         elif method[0] == 'change_fan_speed':
             fan_obj.mode = 'manual'
             fan_obj.details['level'] = 1
+        elif method[0] == 'clear_timer':
+            fan_obj.timer = call_json_fans.FAN_TIMER
 
         # Call method with kwargs if defined
         if method_kwargs:

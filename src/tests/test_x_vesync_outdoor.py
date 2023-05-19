@@ -9,7 +9,8 @@ from utils import TestBase, Defaults
 
 DEVICE_TYPE = 'ESO15-TB'
 
-DEV_LIST_DETAIL: Dict[str, Union[str, int, float]] = call_json.DeviceList.device_list_item(DEVICE_TYPE, 0)
+DEV_LIST_DETAIL: Dict[str, Union[str, int, float]
+                      ] = call_json.DeviceList.device_list_item(DEVICE_TYPE, 0)
 
 DEV_LIST_DETAIL_2: Dict[str, Any] = call_json.DeviceList.device_list_item(DEVICE_TYPE, 1)
 

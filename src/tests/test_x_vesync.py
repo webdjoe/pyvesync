@@ -1,7 +1,6 @@
 """General VeSync tests."""
 
 import unittest
-import logging
 import importlib
 from unittest import mock
 from unittest.mock import patch, Mock, MagicMock
@@ -112,7 +111,8 @@ class TestVesync(unittest.TestCase):
             body = Helpers.req_body(self.vesync_1, 'login')
             body['email'] = self.vesync_1.username
             body['password'] = Helpers.hash_password(self.vesync_1.password)
-            mocked_post.assert_called_with('/cloud/v1/user/login', 'post', json_object=body)
+            mocked_post.assert_called_with('/cloud/v1/user/login', 'post',
+                                           json_object=body)
             self.assertTrue(data)
 
 
@@ -156,6 +156,7 @@ class TestApiFunc:
         mock_return = Helpers.call_api('/test/bad-response', method='get')
         print(api_mock.call_args_list)
         assert mock_return == (None, None)
+
 
 if __name__ == '__main__':
     unittest.main()

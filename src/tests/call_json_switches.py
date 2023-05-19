@@ -53,6 +53,8 @@ class SwitchDetails:
                           "devicename": Defaults.name('ESWD16'),
                           "deviceStatus": "on"
                       }, 200)
+
+
 DETAILS_RESPONSES = {
     'ESWL01': SwitchDetails.details_ws,
     'ESWD16': SwitchDetails.details_eswd16,

@@ -51,6 +51,30 @@ change_fan_speed:
     traceId: TRACE_ID
   method: post
   url: /cloud/v2/deviceManaged/bypassV2
+clear_timer:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 2.8.6
+    cid: Core600S-CID
+    configModule: ConfigModule
+    debugMode: false
+    deviceRegion: US
+    method: bypassV2
+    payload:
+      data: {}
+      method: getTimer
+      source: APP
+    phoneBrand: SM N9005
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
 manual_mode:
   headers:
     Content-Type: application/json; charset=UTF-8
@@ -71,6 +95,32 @@ manual_mode:
         type: wind
       method: setLevel
       type: APP
+    phoneBrand: SM N9005
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
+set_timer:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 2.8.6
+    cid: Core600S-CID
+    configModule: ConfigModule
+    debugMode: false
+    deviceRegion: US
+    method: bypassV2
+    payload:
+      data:
+        action: 'off'
+        total: 100
+      method: addTimer
+      source: APP
     phoneBrand: SM N9005
     phoneOS: Android
     timeZone: America/New_York
