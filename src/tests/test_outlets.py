@@ -41,7 +41,8 @@ logger.setLevel(logging.DEBUG)
 OUTLET_DEV_TYPES = call_json_outlets.OUTLETS
 POWER_METHODS = ['get_energy_update']
 OUTLET_PARAMS = []
-[OUTLET_PARAMS.append([dev, method]) for dev in OUTLET_DEV_TYPES for method in POWER_METHODS]
+[OUTLET_PARAMS.append([dev, method]
+                      ) for dev in OUTLET_DEV_TYPES for method in POWER_METHODS]
 
 
 class TestOutlets(TestBase):
@@ -142,9 +143,12 @@ class TestOutlets(TestBase):
 
         # Assert device attributes match default values
         assert int(outlet_obj.details['active_time']) == int(Defaults.active_time)
-        assert int(outlet_obj.details['energy']) == int(call_json_outlets.OutletDefaults.energy)
-        assert int(outlet_obj.details['power']) == int(call_json_outlets.OutletDefaults.power)
-        assert int(outlet_obj.details['voltage']) == int(call_json_outlets.OutletDefaults.voltage)
+        assert int(outlet_obj.details['energy']) == int(
+            call_json_outlets.OutletDefaults.energy)
+        assert int(outlet_obj.details['power']) == int(
+            call_json_outlets.OutletDefaults.power)
+        assert int(outlet_obj.details['voltage']) == int(
+            call_json_outlets.OutletDefaults.voltage)
 
     def test_methods(self, dev_type, method):
         """Test device methods API request and response.

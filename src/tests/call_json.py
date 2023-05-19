@@ -195,9 +195,10 @@ class DeviceList:
         """Class method that returns the api get_devices response
 
         Args:
-            _types (list, str, optional): Can be one or list of types of devices. Defaults to None.
-                can be bulb, fans, switches, outlets in list or string
-            device_types (list, str optional): List or string of device_type(s) to return. Defaults to None.
+            _types (list, str, optional): Can be one or list of types of devices.
+                Defaults to None. can be bulb, fans, switches, outlets in list or string
+            device_types (list, str optional): List or string of device_type(s)
+                to return. Defaults to None.
 
         """
 
@@ -213,9 +214,11 @@ class DeviceList:
             full_model_list = {**cls.bulbs, **cls.outlets, **cls.fans, **cls.switches}
         if device_types is not None:
             if isinstance(device_types, list):
-                full_model_list = {k: v for k, v in full_model_list.items() if k in device_types}
+                full_model_list = {k: v for k, v in full_model_list.items()
+                                   if k in device_types}
             else:
-                full_model_list = {k: v for k, v in full_model_list.items() if k == device_types}
+                full_model_list = {k: v for k, v in full_model_list.items()
+                                   if k == device_types}
         for model in full_model_list:
             response_base['result']['list'].append(cls.device_list_item(model))
             response_base['result']['total'] += 1
@@ -437,7 +440,7 @@ class DeviceList:
     LIST_CONF_600S = {
         'deviceRegion': 'US',
         'deviceName': 'Bedroom Humidifier',
-        'deviceImg': 'https://image.vesync.com/defaultImages/LV_600S_Series/icon_lv600s_humidifier_160.png',
+        'deviceImg': '',
         'cid': 'CID-600S',
         'deviceStatus': 'on',
         'connectionStatus': 'online',
@@ -529,8 +532,6 @@ class DeviceList:
 
     ]
 
-
-
     @classmethod
     def DEVICE_LIST_RETURN(cls, dev_conf: dict) -> tuple:
         """Test the fan."""
@@ -545,7 +546,8 @@ class DeviceList:
             200
         )
 
-    FAN_TEST = ({'code': 0, 'result': {'list': [LIST_CONF_600S, LIST_CONF_LV131S, LIST_CONF_DUAL200S]}}, 200)
+    FAN_TEST = ({'code': 0, 'result': {'list': [LIST_CONF_600S, LIST_CONF_LV131S,
+                                                LIST_CONF_DUAL200S]}}, 200)
 
     DEVLIST_ALL = ({'code': 0, 'result': {'list': FULL_DEV_LIST}}, 200)
 

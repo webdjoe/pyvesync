@@ -33,7 +33,7 @@ METHOD_RESPONSES['DEV_TYPE']['set_status'] = status_response
 METHOD_RESPONSES['DEVTYPE'].default_factory = lambda: ({"code": 0, "msg": "success"}, 200)
 """
 from copy import deepcopy
-from pyvesync import vesyncfan
+from pyvesync import vesyncfan, helpers
 from utils import Defaults, FunctionResponses
 
 HUMID_MODELS = []
@@ -48,6 +48,21 @@ FANS = HUMID_MODELS + AIR_MODELS
 FANS_NUM = len(FANS)
 # FANS = ['Core200S', 'Core300S', 'Core400S', 'Core600S', 'LV-PUR131S', 'LV600S',
 #         'Classic300S', 'Classic200S', 'Dual200S', 'LV600S']
+
+
+def INNER_RESULT(inner: dict) -> dict:
+    return {
+        "traceId": Defaults.trace_id,
+        "code": 0,
+        "msg": "request success",
+        "module": None,
+        "stacktrace": None,
+        "result": {
+            "traceId": Defaults.trace_id,
+            "code": 0,
+            "result": inner
+        }
+    }
 
 
 class FanDefaults:
@@ -70,7 +85,11 @@ class FanDetails:
             'activeTime': Defaults.active_time,
             'deviceImg': None,
             'deviceName': 'LV-PUR131S-NAME',
-            'filterLife': {'change': False, 'useHour': None, 'percent': 100},
+            'filterLife': {
+                'change': False,
+                'useHour': None,
+                'percent': 100
+            },
             'airQuality': 'excellent',
             'screenStatus': 'on',
             'mode': 'manual',
@@ -82,102 +101,96 @@ class FanDetails:
         200,
     )
 
-    details_lv600s = (
-        {
+    details_lv600s = ({
+        "traceId": Defaults.trace_id,
+        "code": 0,
+        "msg": "请求成功",
+        "result": {
             "traceId": Defaults.trace_id,
             "code": 0,
-            "msg": "请求成功",
             "result": {
-                "traceId": Defaults.trace_id,
-                "code": 0,
-                "result": {
-                    "enabled": True,
-                    "humidity": FanDefaults.humidity,
-                    "mist_virtual_level": 8,
-                    "mist_level": FanDefaults.mist_level,
-                    "mode": "manual",
-                    "water_lacks": False,
-                    "humidity_high": False,
-                    "water_tank_lifted": False,
+                "enabled": True,
+                "humidity": FanDefaults.humidity,
+                "mist_virtual_level": 8,
+                "mist_level": FanDefaults.mist_level,
+                "mode": "manual",
+                "water_lacks": False,
+                "humidity_high": False,
+                "water_tank_lifted": False,
+                "display": False,
+                "automatic_stop_reach_target": True,
+                "night_light_brightness": 0,
+                "warm_mist_level": 0,
+                "warm_mist_enabled": False,
+                "configuration": {
+                    "auto_target_humidity": 50,
                     "display": False,
-                    "automatic_stop_reach_target": True,
-                    "night_light_brightness": 0,
-                    "warm_mist_level": 0,
-                    "warm_mist_enabled": False,
-                    "configuration": {
-                        "auto_target_humidity": 50,
-                        "display": False,
-                        "automatic_stop": True
-                    }
+                    "automatic_stop": True
                 }
             }
-        }, 200
-    )
+        }
+    }, 200)
 
-    details_classic200s300s = (
-        {
+    details_classic200s300s = ({
+        "traceId": Defaults.trace_id,
+        "code": 0,
+        "msg": "请求成功",
+        "result": {
             "traceId": Defaults.trace_id,
             "code": 0,
-            "msg": "请求成功",
             "result": {
-                "traceId": Defaults.trace_id,
-                "code": 0,
-                "result": {
-                    "enabled": True,
-                    "humidity": FanDefaults.humidity,
-                    "mist_virtual_level": 8,
-                    "mist_level": FanDefaults.mist_level,
-                    "mode": "manual",
-                    "water_lacks": False,
-                    "humidity_high": False,
-                    "water_tank_lifted": False,
+                "enabled": True,
+                "humidity": FanDefaults.humidity,
+                "mist_virtual_level": 8,
+                "mist_level": FanDefaults.mist_level,
+                "mode": "manual",
+                "water_lacks": False,
+                "humidity_high": False,
+                "water_tank_lifted": False,
+                "display": False,
+                "automatic_stop_reach_target": True,
+                "night_light_brightness": 0,
+                "configuration": {
+                    "auto_target_humidity": 50,
                     "display": False,
-                    "automatic_stop_reach_target": True,
-                    "night_light_brightness": 0,
-                    "configuration": {
-                        "auto_target_humidity": 50,
-                        "display": False,
-                        "automatic_stop": True
-                    }
+                    "automatic_stop": True
                 }
             }
-        }, 200
-    )
+        }
+    }, 200)
 
-    details_core = (
-        {
+    details_core = ({
+        "traceId": Defaults.trace_id,
+        "code": 0,
+        "msg": "request success",
+        "result": {
             "traceId": Defaults.trace_id,
             "code": 0,
-            "msg": "request success",
             "result": {
-                "traceId": Defaults.trace_id,
-                "code": 0,
-                "result": {
-                    "enabled": True,
-                    "filter_life": 3,
-                    "mode": "manual",
-                    "level": FanDefaults.fan_level,
-                    "air_quality": FanDefaults.air_quality,
-                    "air_quality_value": FanDefaults.air_quality_value,
+                "enabled": True,
+                "filter_life": 3,
+                "mode": "manual",
+                "level": FanDefaults.fan_level,
+                "air_quality": FanDefaults.air_quality,
+                "air_quality_value": FanDefaults.air_quality_value,
+                "display": True,
+                "child_lock": True,
+                "configuration": {
                     "display": True,
-                    "child_lock": True,
-                    "configuration": {
-                        "display": True,
-                        "display_forever": True,
-                        "auto_preference": {
-                            "type": "default",
-                            "room_size": 0
-                        }
-                    },
-                    "extension": {
-                        "schedule_count": 0,
-                        "timer_remain": 0
-                    },
-                    "device_error_code": 0
-                }
+                    "display_forever": True,
+                    "auto_preference": {
+                        "type": "default",
+                        "room_size": 0
+                    }
+                },
+                "extension": {
+                    "schedule_count": 0,
+                    "timer_remain": 0
+                },
+                "device_error_code": 0
             }
-        }, 200
-    )
+        }
+    }, 200)
 
 
 DETAILS_RESPONSES = {
@@ -194,13 +207,25 @@ DETAILS_RESPONSES = {
 }
 
 FunctionResponses.default_factory = lambda: ({
-                                                "traceId": Defaults.trace_id,
-                                                "code": 0,
-                                                "msg": "request success",
-                                                "result": {
-                                                    "traceId": Defaults.trace_id,
-                                                    "code": 0
-                                                }
-                                            }, 200)
+    "traceId": Defaults.trace_id,
+    "code": 0,
+    "msg": "request success",
+    "result": {
+        "traceId": Defaults.trace_id,
+        "code": 0
+    }
+}, 200)
 
 METHOD_RESPONSES = {k: deepcopy(FunctionResponses) for k in FANS}
+
+# Add responses for methods with different responses than the default
+
+# Timer Responses
+
+for k in AIR_MODELS:
+    METHOD_RESPONSES[k]['set_timer'] = (INNER_RESULT({'id': 1}), 200)
+    METHOD_RESPONSES[k]['get_timer'] = (INNER_RESULT({'id': 1,
+                                                      'remain': 100,
+                                                      'total': 100,
+                                                      'action': 'off'}), 200)
+FAN_TIMER = helpers.Timer(100, 'off')

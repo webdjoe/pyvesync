@@ -261,6 +261,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
     def get_timer(self) -> Optional[Timer]:
         """Retrieve running timer from purifier."""
         head, body = self.build_api_dict('getTimer')
+        body['payload']['data'] = {}
         if not head and not body:
             return None
 
@@ -297,27 +298,23 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         logger.debug('Timer found: %s', str(self.timer))
         return self.timer
 
-    def set_timer(self, timer_duration: int, action: str) -> bool:
+    def set_timer(self, timer_duration: int) -> bool:
         """Set timer for Purifier.
 
         Arguments
         ----------
         timer_duration: int
             Duration of timer in seconds
-        action: str
-            Action to take when timer expires, can be off, on, or sleep
         """
-        if action not in ['off', 'on', 'sleep']:
-            logger.debug('Invalid action %s', action)
-            return False
-
+        if self.device_status != 'on':
+            logger.debug("Can't set timer when device is off")
         head, body = self.build_api_dict('addTimer')
         if not head and not body:
             return False
 
         body['payload']['data'] = {
             'total': timer_duration,
-            'action': action,
+            'action': 'off',
         }
 
         r, _ = Helpers.call_api(
@@ -337,11 +334,11 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         timer_id = r.get('result', {}).get('result', {}).get('id')
         if timer_id is not None:
             self.timer = Timer(timer_duration=timer_duration,
-                               action=action,
+                               action='off',
                                id=timer_id)
         else:
             self.timer = Timer(timer_duration=timer_duration,
-                               action=action)
+                               action='off')
         return True
 
     def clear_timer(self) -> bool:

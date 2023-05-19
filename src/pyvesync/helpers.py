@@ -605,7 +605,7 @@ class Timer:
             self.status = status
 
     def pause(self) -> None:
-        """Pause timer."""
+        """Pause timer. NOTE - this does not stop the timer via API only locally."""
         self._internal_update()
         if self.status == 'done':
             return

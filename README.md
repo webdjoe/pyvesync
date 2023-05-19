@@ -44,7 +44,7 @@ pyvesync is a library to manage VeSync compatible [smart home devices](#supporte
     - [Cosori 3.7 and 5.8 Quart Air Fryer](#cosori-37-and-58-quart-air-fryer)
       - [Air Fryer Properties](#air-fryer-properties)
       - [Air Fryer Methods](#air-fryer-methods)
-  - [Timer Dataclass](#timer-dataclass)
+  - [Timer DataClass](#timer-dataclass)
   - [JSON Output API](#json-output-api)
     - [JSON Output for All Devices](#json-output-for-all-devices)
     - [JSON Output for Outlets](#json-output-for-outlets)
@@ -343,9 +343,9 @@ Compatible levels for each model:
 
 `VeSyncFan.set_night_light('on'|'dim'|'off')` - Set night light brightness
 
-`VeSyncFan.get_timer()` - Get any running timers, returns Timer Dataclass
+`VeSyncFan.get_timer()` - Get any running timers, stores Timer DataClass in `VeSyncFan.timer`
 
-`VeSyncFan.set_timer(timer_duration=3000, action='off')` - Set a timer for the device, duration in seconds, action is either 'on', 'off' or 'sleep'
+`VeSyncFan.set_timer(timer_duration=3000)` - Set a timer for the device, only turns device off. Timer DataClass stored in `VeSyncFan.timer`
 
 `VeSyncFan.clear_timer()` - Cancel any running timer
 
@@ -600,16 +600,17 @@ They can be set through the `VeSyncAirFryer158.fryer_status` dataclass but shoul
 `VeSyncAirFryer158.end()` - End cooking or preheating and return air fryer to `standby` state
 
 
-### Timer Dataclass
+### Timer DataClass
 
-Currently *only implemented for Levoit Core 200S and 300S Air Purifier*, will eventually integrate with remaining devices. This object is created when `get_timer()` or `set_timer()` is called.
+This is the a Timer DataClass that is used in the  `get_timer()` or `set_timer()` methods *only implemented for Levoit Core 200S and 300S Air Purifier*, will eventually integrate with remaining devices. This object is created when the device timer methods are called. **The `pause()`, `resume()` and `stop()` methods for this DataClass only impact the timer locally and do not update the API.**
 
 ```python
 from pyvesync.helpers import Timer
 
-timer = Timer(timer_duration=60, action='sleep', id=1)
+timer = Timer(timer_duration=60, id=1)
 
 # Get time remaining in seconds
+# Calculates based on timer elapsed each time property is called
 timer.remaining_time
 
 # Get status
@@ -618,19 +619,19 @@ timer.status
 # Get action
 timer.action
 
-# Set status - active, paused, or done
-timer.status = 'paused'
+# Set status - active or done
+timer.status = 'active'
 
 # set time remaining in seconds, does not edit status
 timer.remaining_time = 120
 
-# Pause timer
+# Pause timer - Does not update API - only pauses locally
 timer.pause()
 
-# End timer
+# End timer -Does not update API - only ends locally
 timer.end()
 
-# Resume timer
+# Resume timer - Does not update API - only Resumes locally
 timer.start()
 ```
 
