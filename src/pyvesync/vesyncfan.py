@@ -97,7 +97,7 @@ air_features: dict = {
     },
     'LAP-V102S-AAS': {
         'module': 'VeSyncVital100S',
-        'models': ['LAP-V102S-AASR'],
+        'models': ['LAP-V102S-AASR', 'LAP-V102S-WUS', 'LAP-V102S-WEU', 'LAP-V102S-AUSR'],
         'modes': ['manual', 'auto', 'off'],
         'features': ['air_quality'],
         'levels': list(range(1, 5))
