@@ -95,10 +95,19 @@ air_features: dict = {
         'models': ['LV-PUR131S', 'LV-RH131S'],
         'features': ['air_quality']
     },
-    'LAP-V102S-AAS': {
-        'module': 'VeSyncVital100S',
-        'models': ['LAP-V102S-AASR', 'LAP-V102S-WUS', 'LAP-V102S-WEU', 'LAP-V102S-AUSR'],
+    'Vital100S': {
+        'module': 'VeSyncVital',
+        'models': ['LAP-V102S-AASR', 'LAP-V102S-WUS', 'LAP-V102S-WEU',
+                   'LAP-V102S-AUSR', 'LAP-V102S-WJP'],
         'modes': ['manual', 'auto', 'sleep', 'off'],
+        'features': ['air_quality'],
+        'levels': list(range(1, 5))
+    },
+    'Vital200S': {
+        'module': 'VeSyncVital',
+        'models': ['LAP-V201S-AASR', 'LAP-V201S-WJP', 'LAP-V201S-WEU',
+                   'LAP-V102S-AUSR', 'LAP-V201S-WUS'],
+        'modes': ['manual', 'auto', 'sleep', 'off', 'pet'],
         'features': ['air_quality'],
         'levels': list(range(1, 5))
     }
@@ -725,32 +734,28 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         return json.dumps(sup_val, indent=4)
 
 
-class VeSyncVital100S(VeSyncAirBypass):
-    """Levoit Vital 100S Air Purifier Class."""
+class VeSyncVital(VeSyncAirBypass):
+    """Levoit Vital 100S/200S Air Purifier Class."""
 
     def __init__(self, details: Dict[str, list], manager):
         super().__init__(details, manager)
         self.set_speed_level: Optional[int] = None
         self.auto_prefences: List[str] = ['default', 'efficient', 'quiet']
 
-    def update(self):
-        """Update Purifier details."""
-        self.get_details()
+    @property
+    def light_detection(self) -> bool:
+        """Return true if light detection feature is enabled."""
+        return self.details['light_detection_switch']
 
-    def build_api_dict(self, method: str) -> Tuple[Dict, Dict]:
-        """Return default body for Levoit Vital 100s API."""
-        header = Helpers.bypass_header()
-        body = Helpers.bypass_body_v2(self.manager)
-        body['cid'] = self.cid
-        body['deviceId'] = self.cid
-        body['configModule'] = self.config_module
-        body['configModel'] = self.config_module
-        body['payload'] = {
-            'method': method,
-            'source': 'APP',
-            'data': {}
-        }
-        return header, body
+    @light_detection.setter
+    def light_detection(self, toggle: bool) -> None:
+        """Set light detection feature."""
+        self.details['light_detection_switch'] = toggle
+
+    @property
+    def light_detection_state(self) -> bool:
+        """Return true if light is detected."""
+        return self.details['environment_light_state']
 
     def get_details(self) -> None:
         """Build Levoit 100S Purifier details dictionary."""
@@ -785,6 +790,21 @@ class VeSyncVital100S(VeSyncAirBypass):
         else:
             logger.debug('Error in purifier response')
 
+    def build_api_dict(self, method: str) -> Tuple[Dict, Dict]:
+        """Return default body for Levoit Vital 100S/200S API."""
+        header = Helpers.bypass_header()
+        body = Helpers.bypass_body_v2(self.manager)
+        body['cid'] = self.cid
+        body['deviceId'] = self.cid
+        body['configModule'] = self.config_module
+        body['configModel'] = self.config_module
+        body['payload'] = {
+            'method': method,
+            'source': 'APP',
+            'data': {}
+        }
+        return header, body
+
     def build_purifier_dict(self, dev_dict: dict) -> None:
         """Build Bypass purifier status dictionary."""
         power_switch = dev_dict.get('power_switch', 0)
@@ -817,6 +837,10 @@ class VeSyncVital100S(VeSyncAirBypass):
             self.details['auto_preference_type'] = dev_dict.get('autoPreference', {}).get('autoPreferenceType', 'default')
         else:
             self.details['auto_preference_type'] = None
+
+    def pet_mode(self) -> bool:
+        """Set Pet Mode for Levoit Vital 200S."""
+        return self.mode_toggle('pet')
 
     def set_light_detection(self, toggle: bool) -> bool:
         """Enable/Disable Light Detection Feature."""
@@ -851,21 +875,6 @@ class VeSyncVital100S(VeSyncAirBypass):
     def set_light_detection_off(self) -> bool:
         """Turn off light detection feature."""
         return self.set_light_detection(False)
-
-    @property
-    def light_detection(self) -> bool:
-        """Return true if light detection feature is enabled."""
-        return self.details['light_detection_switch']
-
-    @light_detection.setter
-    def light_detection(self, toggle: bool) -> None:
-        """Set light detection feature."""
-        self.details['light_detection_switch'] = toggle
-
-    @property
-    def light_detection_state(self) -> bool:
-        """Return true if light is detected."""
-        return self.details['environment_light_state']
 
     def toggle_switch(self, toggle: bool) -> bool:
         """Toggle purifier on/off."""
@@ -926,7 +935,7 @@ class VeSyncVital100S(VeSyncAirBypass):
         return False
 
     def set_display(self, toggle: bool) -> bool:
-        """Levoit Vital 100S Set Display on/off with True/False."""
+        """Levoit Vital 100S/200S Set Display on/off with True/False."""
         if toggle:
             toggle_id = 1
         else:
@@ -1020,7 +1029,7 @@ class VeSyncVital100S(VeSyncAirBypass):
         return False
 
     def set_auto_preference(self, preference: str = 'default', room_size: int = 600) -> bool:
-        """Set Levoit Vital 100S auto mode.
+        """Set Levoit Vital 100S/200S auto mode.
 
         Parameters
         ----------
