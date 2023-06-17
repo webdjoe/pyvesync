@@ -29,8 +29,9 @@ pyvesync is a library to manage VeSync compatible [smart home devices](#supporte
   - [Standard Air Purifier Properties \& Methods](#standard-air-purifier-properties--methods)
     - [Air Purifier Properties](#air-purifier-properties)
     - [Air Purifier Methods](#air-purifier-methods)
-    - [Levoit Purifier Core200S/300S/400S Properties](#levoit-purifier-core200s300s400s-properties)
-    - [Levoit Purifier Core200S/300S/400S Methods](#levoit-purifier-core200s300s400s-methods)
+    - [Levoit Purifier Core200S/300S/400S and Vital 100S Properties](#levoit-purifier-core200s300s400s-and-vital-100s-properties)
+    - [Levoit Purifier Core200S/300S/400S and Vital 100S Methods](#levoit-purifier-core200s300s400s-and-vital-100s-methods)
+    - [Levoit 100S Properties and Methods](#levoit-100s-properties-and-methods)
   - [Lights API Methods \& Properties](#lights-api-methods--properties)
     - [Brightness Light Bulb Method and Properties](#brightness-light-bulb-method-and-properties)
     - [Light Bulb Color Temperature Methods and Properties](#light-bulb-color-temperature-methods-and-properties)
@@ -91,6 +92,7 @@ pip install pyvesync
 3. Core 300S
 4. Core 400S
 5. Core 600S
+6. Vital 100S
 
 ### Etekcity Bulbs
 
@@ -324,14 +326,15 @@ Compatible levels for each model:
 - Core 200S [1, 2, 3]
 - Core 300S/400S [1, 2, 3, 4]
 - PUR131S [1, 2, 3]
+- Vital 100S [1, 2, 3, 4]
 
-#### Levoit Purifier Core200S/300S/400S Properties
+#### Levoit Purifier Core200S/300S/400S and Vital 100S Properties
 
 `VeSyncFan.child_lock` - Return the state of the child lock (True=On/False=off)
 
-`VeSyncAir.night_light` - Return the state of the night light (on/dim/off)
+`VeSyncAir.night_light` - Return the state of the night light (on/dim/off) *Not available on Vital 100S
 
-#### Levoit Purifier Core200S/300S/400S Methods
+#### Levoit Purifier Core200S/300S/400S and Vital 100S Methods
 
 `VeSyncFan.child_lock_on()` Enable child lock
 
@@ -348,6 +351,24 @@ Compatible levels for each model:
 `VeSyncFan.set_timer(timer_duration=3000)` - Set a timer for the device, only turns device off. Timer DataClass stored in `VeSyncFan.timer`
 
 `VeSyncFan.clear_timer()` - Cancel any running timer
+
+#### Levoit 100S Properties and Methods
+
+The Levoit 100S has additional features not available on other models.
+
+`VeSyncFan.set_fan_speed` - The manual fan speed that is currently set (remains constant when in auto/sleep mode)
+
+`VeSyncFan.fan_level` - Returns the fan level purifier is currently operating on whether in auto/manual/sleep mode
+
+`VeSyncFan.light_detection` - Returns the state of the light detection mode (True=On/False=off)
+
+`VeSyncFan.light_detection_state` - Returns whether light is detected (True/False)
+
+`VeSyncFan.set_auto_preference(preference='default', room_size=600)` - Set the auto mode preference. Preference can be 'default', 'efficient' or quiet. Room size defaults to 600
+
+`VeSyncFan.set_light_detection_on()` - Turn on light detection mode
+
+`VeSyncFan.set_light_detection_off()` - Turn off light detection mode
 
 ### Lights API Methods & Properties
 
