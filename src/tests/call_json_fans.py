@@ -159,6 +159,33 @@ class FanDetails:
         }
     }, 200)
 
+    details_oasismist1000S = ({
+        "traceId": Defaults.trace_id,
+        "code": 0,
+        "msg": "request success",
+        "result": {
+            "traceId": Defaults.trace_id,
+            "code": 0,
+            "result": {
+                "powerSwitch": 0,
+                "humidity": FanDefaults.humidity,
+                "targetHumidity": 50,
+                "virtualLevel": 1,
+                "mistLevel": FanDefaults.mist_level,
+                "workMode": "manual",
+                "waterLacksState": 0,
+                "waterTankLifted": 0,
+                "autoStopSwitch": 1,
+                "autoStopState": 0,
+                "screenSwitch": 1,
+                "screenState": 0,
+                "scheduleCount": 0,
+                "timerRemain": 0,
+                "errorCode": 0
+            }
+        }
+    }, 200)
+
     details_core = ({
         "traceId": Defaults.trace_id,
         "code": 0,
@@ -254,6 +281,7 @@ DETAILS_RESPONSES = {
     'LUH-O451S-WUS': FanDetails.details_lv600s,
     'LAP-V201S-AASR': FanDetails.details_vital100s,
     'LAP-V102S-AASR': FanDetails.details_vital100s,
+    'LUH-M101S-WUS': FanDetails.details_oasismist1000S
 }
 
 FunctionResponses.default_factory = lambda: ({
