@@ -139,7 +139,7 @@ class TestSwitches(TestBase):
         all_kwargs = parse_args(self.mock_api)
 
         # Assert request matches recored request or write new records
-        assert_test(method_call, all_kwargs, dev_type)
+        assert_test(method_call, all_kwargs, dev_type, self.write_api, self.overwrite)
 
         # Assert device details match expected values
         assert switch_obj.active_time == Defaults.active_time
@@ -225,7 +225,8 @@ class TestSwitches(TestBase):
         all_kwargs = parse_args(self.mock_api)
 
         # Assert request matches recored request or write new records
-        assert_test(method_call, all_kwargs, dev_type)
+        assert_test(method_call, all_kwargs, dev_type,
+                    self.write_api, self.overwrite)
 
         self.mock_api.reset_mock()
         self.mock_api.return_value = call_json.DETAILS_BADCODE

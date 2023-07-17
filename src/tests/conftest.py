@@ -1,7 +1,27 @@
+def pytest_addoption(parser):
+    """Prevent new API's from being written during pipeline tests."""
+    parser.addoption(
+        "--write_api", action="store_true", default=False,
+          help="run tests without writing API to yaml"
+    )
+    parser.addoption(
+        "--overwrite", action="store_true", default=False,
+          help="overwrite existing API in yaml - WARNING do not use unless absolutely necessary"
+    )
+
 def pytest_generate_tests(metafunc):
     if metafunc.cls is None or 'test_x' in metafunc.module.__name__:
         return
-
+    if metafunc.config.getoption('--write_api'):
+        write_api = True
+    else:
+        write_api = False
+    if metafunc.config.getoption('--overwrite'):
+        overwrite = True
+    else:
+        overwrite = False
+    metafunc.cls.overwrite = overwrite
+    metafunc.cls.write_api = write_api
     if 'device' in metafunc.cls.__dict__:
         device = metafunc.cls.__dict__['device']
         if device not in metafunc.cls.__dict__:

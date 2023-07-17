@@ -152,7 +152,8 @@ class TestBulbs(TestBase):
         all_kwargs = parse_args(self.mock_api)
 
         # Assert request matches recored request or write new records
-        assert_test(method_call, all_kwargs, dev_type)
+        assert_test(method_call, all_kwargs, dev_type,
+                    self.write_api, self.overwrite)
 
         # Assert device details match expected values
         assert bulb_obj.brightness == Defaults.brightness
@@ -234,7 +235,8 @@ class TestBulbs(TestBase):
         all_kwargs = parse_args(self.mock_api)
 
         # Assert request matches recored request or write new records
-        assert_test(method_call, all_kwargs, dev_type)
+        assert_test(method_call, all_kwargs, dev_type,
+                     self.write_api, self.overwrite)
 
     def _assert_color(self, bulb_obj):
         assert math.isclose(bulb_obj.color_rgb.red, DEFAULT_COLOR.rgb.red, rel_tol=1)

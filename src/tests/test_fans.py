@@ -150,7 +150,7 @@ class TestAirPurifiers(TestBase):
         all_kwargs = parse_args(self.mock_api)
 
         # Assert request matches recored request or write new records
-        assert_test(method_call, all_kwargs, dev_type)
+        assert_test(method_call, all_kwargs, dev_type, self.write_api, self.overwrite)
 
     def test_methods(self, dev_type, method):
         """Test device methods API request and response.
@@ -229,7 +229,8 @@ class TestAirPurifiers(TestBase):
         all_kwargs = parse_args(self.mock_api)
 
         # Assert request matches recored request or write new records
-        assert_test(method_call, all_kwargs, dev_type)
+        assert_test(method_call, all_kwargs, dev_type,
+                     self.write_api, self.overwrite)
 
 
 class TestHumidifiers(TestBase):
@@ -329,7 +330,8 @@ class TestHumidifiers(TestBase):
         all_kwargs = parse_args(self.mock_api)
 
         # Assert request matches recored request or write new records
-        assert_test(method_call, all_kwargs, dev_type)
+        assert_test(method_call, all_kwargs, dev_type,
+                     self.write_api, self.overwrite)
 
     def test_methods(self, dev_type, method):
         """Test device methods API request and response.
@@ -403,4 +405,5 @@ class TestHumidifiers(TestBase):
         all_kwargs = parse_args(self.mock_api)
 
         # Assert request matches recored request or write new records
-        assert_test(method_call, all_kwargs, dev_type)
+        assert_test(method_call, all_kwargs, dev_type,
+                     self.write_api, self.overwrite)
