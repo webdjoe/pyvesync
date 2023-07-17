@@ -738,6 +738,7 @@ class VeSyncVital(VeSyncAirBypass):
     """Levoit Vital 100S/200S Air Purifier Class."""
 
     def __init__(self, details: Dict[str, list], manager):
+        """Initialize the VeSync Vital 100S/200S Air Purifier Class."""
         super().__init__(details, manager)
         self.set_speed_level: Optional[int] = None
         self.auto_prefences: List[str] = ['default', 'efficient', 'quiet']
@@ -822,8 +823,10 @@ class VeSyncVital(VeSyncAirBypass):
         self.details['night_light'] = dev_dict.get('night_light', 'off')
         self.details['display'] = bool(dev_dict.get('screenState', 0))
         self.details['display_forever'] = dev_dict.get('display_forever', False)
-        self.details['light_detection_switch'] = bool(dev_dict.get('lightDetectionSwitch', 0))
-        self.details['environment_light_state'] = bool(dev_dict.get('environmentLightState', 0))
+        self.details['light_detection_switch'] = bool(
+            dev_dict.get('lightDetectionSwitch', 0))
+        self.details['environment_light_state'] = bool(
+            dev_dict.get('environmentLightState', 0))
         self.details['screen_state'] = bool(dev_dict.get('screenState', 0))
         self.details['screen_switch'] = bool(dev_dict.get('screenSwitch', 0))
 
@@ -834,7 +837,8 @@ class VeSyncVital(VeSyncAirBypass):
         if dev_dict.get('timerRemain') is not None:
             self.timer = Timer(dev_dict['timerRemain'], 'off')
         if isinstance(dev_dict.get('autoPreference'), dict):
-            self.details['auto_preference_type'] = dev_dict.get('autoPreference', {}).get('autoPreferenceType', 'default')
+            self.details['auto_preference_type'] = dev_dict.get(
+                'autoPreference', {}).get('autoPreferenceType', 'default')
         else:
             self.details['auto_preference_type'] = None
 
@@ -909,9 +913,9 @@ class VeSyncVital(VeSyncAirBypass):
                      self.device_name)
         return False
 
-    def set_child_lock(self, toggle: bool) -> bool:
+    def set_child_lock(self, mode: bool) -> bool:
         """Levoit 100S set Child Lock."""
-        if toggle:
+        if mode:
             toggle_id = 1
         else:
             toggle_id = 0
@@ -928,21 +932,21 @@ class VeSyncVital(VeSyncAirBypass):
         )
 
         if r is not None and Helpers.code_check(r):
-            self.details['child_lock'] = toggle
+            self.details['child_lock'] = mode
             return True
 
         logger.debug("Error toggling purifier child lock - %s", self.device_name)
         return False
 
-    def set_display(self, toggle: bool) -> bool:
+    def set_display(self, mode: bool) -> bool:
         """Levoit Vital 100S/200S Set Display on/off with True/False."""
-        if toggle:
-            toggle_id = 1
+        if mode:
+            mode_id = 1
         else:
-            toggle_id = 0
+            mode_id = 0
         head, body = self.build_api_dict('setDisplay')
         body['payload']['data'] = {
-            'screenSwitch': toggle_id
+            'screenSwitch': mode_id
         }
 
         r, _ = Helpers.call_api(
@@ -953,13 +957,14 @@ class VeSyncVital(VeSyncAirBypass):
         )
 
         if r is not None and Helpers.code_check(r):
-            self.details['screen_switch'] = toggle
+            self.details['screen_switch'] = mode
             return True
 
         logger.debug("Error toggling purifier display - %s", self.device_name)
         return False
 
-    def set_timer(self, timer_duration: int, action: str = 'off', method: str = 'powerSwitch') -> bool:
+    def set_timer(self, timer_duration: int, action: str = 'off',
+                  method: str = 'powerSwitch') -> bool:
         """Set timer for Levoit 100S.
 
         Parameters
@@ -1028,7 +1033,8 @@ class VeSyncVital(VeSyncAirBypass):
         logger.debug("Error setting timer for - %s", self.device_name)
         return False
 
-    def set_auto_preference(self, preference: str = 'default', room_size: int = 600) -> bool:
+    def set_auto_preference(self, preference: str = 'default',
+                            room_size: int = 600) -> bool:
         """Set Levoit Vital 100S/200S auto mode.
 
         Parameters
@@ -1040,7 +1046,8 @@ class VeSyncVital(VeSyncAirBypass):
             Room size in square feet, by default 600
         """
         if preference not in self.auto_prefences:
-            logger.debug("%s is invalid preference - valid preferences are default, efficient, quiet",
+            logger.debug("%s is invalid preference -"
+                         " valid preferences are default, efficient, quiet",
                          preference)
             return False
         head, body = self.build_api_dict('setAutoPreference')
@@ -1082,7 +1089,7 @@ class VeSyncVital(VeSyncAirBypass):
                 return False
             new_speed = speed
         else:
-            if current_speed == speeds[-1] or current_speed == 0:
+            if current_speed in [speeds[-1], 0]:
                 new_speed = speeds[0]
             else:
                 current_index = speeds.index(current_speed)
@@ -1132,8 +1139,7 @@ class VeSyncVital(VeSyncAirBypass):
         if mode == 'manual':
             if self.speed is None or self.speed == 0:
                 return self.change_fan_speed(1)
-            else:
-                return self.change_fan_speed(self.speed)
+            return self.change_fan_speed(self.speed)
 
         if mode == 'off':
             return self.turn_off()

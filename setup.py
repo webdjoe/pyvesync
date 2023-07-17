@@ -32,5 +32,8 @@ setup(
     package_dir={'': 'src'},
     zip_safe=False,
     install_requires=['requests>=2.20.0'],
+    extras_require={
+        'dev': ['pytest', 'pytest-cov', 'yaml', 'tox']
+    },
     python_requires='>=3.8',
 )

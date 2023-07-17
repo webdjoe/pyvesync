@@ -139,7 +139,8 @@ class TestOutlets(TestBase):
         all_kwargs = parse_args(self.mock_api)
 
         # Assert request matches recored request or write new records
-        assert_test(method_call, all_kwargs, dev_type)
+        assert_test(method_call, all_kwargs, dev_type,
+                    self.write_api, self.overwrite)
 
         # Assert device attributes match default values
         assert int(outlet_obj.details['active_time']) == int(Defaults.active_time)
@@ -222,7 +223,8 @@ class TestOutlets(TestBase):
         all_kwargs = parse_args(self.mock_api)
 
         # Assert request matches recored request or write new records
-        assert_test(method_call, all_kwargs, dev_type)
+        assert_test(method_call, all_kwargs, dev_type,
+                    self.write_api, self.overwrite)
 
         # Test bad responses
         self.mock_api.reset_mock()

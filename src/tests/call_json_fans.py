@@ -88,7 +88,7 @@ class FanDetails:
             'filterLife': {
                 'change': False,
                 'useHour': None,
-                'percent': 100
+                'percent': FanDefaults.filter_life,
             },
             'airQuality': 'excellent',
             'screenStatus': 'on',
@@ -168,7 +168,7 @@ class FanDetails:
             "code": 0,
             "result": {
                 "enabled": True,
-                "filter_life": 3,
+                "filter_life": FanDefaults.filter_life,
                 "mode": "manual",
                 "level": FanDefaults.fan_level,
                 "air_quality": FanDefaults.air_quality,
@@ -192,6 +192,54 @@ class FanDetails:
         }
     }, 200)
 
+    details_vital100s = ({
+        "traceId": Defaults.trace_id,
+        "code": 0,
+        "msg": "request success",
+        "module": None,
+        "stacktrace": None,
+        "result": {
+            "traceId": Defaults.trace_id,
+            "code": 0,
+            "result": {
+                "powerSwitch": Defaults.bin_toggle,
+                "filterLifePercent": FanDefaults.filter_life,
+                "workMode": "manual",
+                "manualSpeedLevel": FanDefaults.fan_level,
+                "fanSpeedLevel": FanDefaults.fan_level,
+                "AQLevel": FanDefaults.air_quality,
+                "PM25": FanDefaults.air_quality_value,
+                "screenState": Defaults.bin_toggle,
+                "childLockSwitch": Defaults.bin_toggle,
+                "screenSwitch": Defaults.bin_toggle,
+                "lightDetectionSwitch": Defaults.bin_toggle,
+                "environmentLightState": Defaults.bin_toggle,
+                "autoPreference": {
+                            "autoPreferenceType": "default",
+                            "roomSize": 0
+                },
+                "scheduleCount": 0,
+                "timerRemain": 0,
+                "efficientModeTimeRemain": 0,
+                "sleepPreference": {
+                    "sleepPreferenceType": "default",
+                    "cleaningBeforeBedSwitch": 1,
+                    "cleaningBeforeBedSpeedLevel": 3,
+                    "cleaningBeforeBedMinutes": 5,
+                    "whiteNoiseSleepAidSwitch": 1,
+                    "whiteNoiseSleepAidSpeedLevel": 1,
+                    "whiteNoiseSleepAidMinutes": 45,
+                    "duringSleepSpeedLevel": 5,
+                    "duringSleepMinutes": 480,
+                    "afterWakeUpPowerSwitch": 1,
+                    "afterWakeUpWorkMode": "auto",
+                    "afterWakeUpFanSpeedLevel": 1
+                },
+                "errorCode": 0
+            }
+        }
+    }, 200)
+
 
 DETAILS_RESPONSES = {
     'LV-PUR131S': FanDetails.details_air,
@@ -204,6 +252,8 @@ DETAILS_RESPONSES = {
     'Core400S': FanDetails.details_core,
     'Core600S': FanDetails.details_core,
     'LUH-O451S-WUS': FanDetails.details_lv600s,
+    'LAP-V201S-AASR': FanDetails.details_vital100s,
+    'LAP-V102S-AASR': FanDetails.details_vital100s,
 }
 
 FunctionResponses.default_factory = lambda: ({

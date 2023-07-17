@@ -889,15 +889,80 @@ manager.update()
 
 ## Feature Requests
 
-~~If you would like new devices to be added, you will need to capture the packets from the app. The easiest way to do this is by using [Packet Capture for Android](https://play.google.com/store/apps/details?id=app.greyshirts.sslcapture&hl=en_US&gl=US). This works without rooting the device. If you do not have an android or are concerned with adding an app that uses a custom certificate to read the traffic, you can use an Android emulator such as [Nox](https://www.bignox.com/).~~
+Before filing an issue to request a new feature or device, please ensure that you will take the time to test the feature throuroughly. New features cannot be simply tested on Home Assistant. A separate integration must be created which is not part of this library. In order to test a new feature, clone the branch and install into a new virtual environment.
 
-SSL pinning makes capturing packets with Android ~~not feasible anymore~~ harder than before. A system-wide proxy [ProxyDroid](https://play.google.com/store/apps/details?id=org.proxydroid&hl=en) can be used if ssl pinning is disabled [TrustMeAlready](https://github.com/ViRb3/TrustMeAlready).
+```bash
+mkdir python_test && cd python_test
 
-Charles Proxy is a proxy that allows you to perform MITM SSL captures on an iOS device. This is the only way to capture packets that I am aware of that is currently possible.
+# Check Python version is 3.8 or higher
+python3 --version # or python --version or python3.8 --version
+# Create a new venv
+python3 -m venv pyvesync-venv
+# Activate the venv on linux
+source pyvesync-venv/bin/activate
+# or ....
+pyvesync-venv\Scripts\activate.ps1 # on powershell
+pyvesync-venv\Scripts\activate.bat # on command prompt
 
-When capturing packets make sure all packets are captured from the device list, along with all functions that the app contains. The captured packets are stored in text files, please do not capture with pcap format.
+# Install branch to be tested into new virtual environment
+pip install git+https://github.com/webdjoe/pyvesync@BRANCHNAME
+```
 
-After you capture the packets, please redact the `accountid` and `token`. If you feel you must redact other keys, please do not delete them entirely. Replace letters with "A" and numbers with "1", leave all punctuation intact and maintain length.
+Test functionality with a script
+
+`test.py`
+
+```python
+import sys
+import logging
+import json
+from pyvesync import VeSync
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+def test_device():
+  # Instantiate VeSync class and login
+  manager = VeSync(user, password, debug=True)
+  if manager.login() == False
+    logger("Unable to login")
+    return
+
+  # Test specific device
+  # If this were a humidifier and there is only one humidifier/purifier
+  # You can access it with the device index
+  fan = manager.fans[0]
+  # or loop through the fan devices and test for device with "My Device" name
+  # Use lower() to avoid capitalization issues
+  my_device_name = "My Device"
+  fan = None
+  for dev in manager.fans:
+    if dev.name.lower() == my_device_name.lower()
+      fan = dev
+  if fan == None:
+    logger.debug("Device not found")
+    logger.debug("Devices found - \n" + json.dumps(manager._dev_list))
+    return
+
+  # Test all device methods and functionality
+  # Be aware some devices lose internet connectivity if turned off
+  fan.turn_on()
+  fan.turn_off()
+  fan.sleep_mode()
+
+# Make script runnable from command line
+if __name__ == "__main__":
+  logger.debug("Testing device")
+  test_device()
+...
+
+```
+
+## Device Requests
+
+SSL pinning makes capturing packets much harder. In order to be able to capture packets, SSL pinning needs to be disabled before running an SSL proxy. Use an Android emulator such as Android Studio, which is available for Windows and Linux for free. Download the APK from APKPure or a similiar site and use [Objection](https://github.com/sensepost/objection) or [Frida](https://frida.re/docs/gadget/). Followed by capturing the packets with Charles Proxy or another SSL proxy application.
+
+Be sure to capture all packets from the device list and each of the possible device menus and actions. Please redact the `accountid` and `token` from the captured packets. If you feel you must redact other keys, please do not delete them entirely. Replace letters with "A" and numbers with "1", leave all punctuation intact and maintain length.
 
 For example:
 
@@ -921,8 +986,8 @@ After:
 }
 ```
 
-All [contributions](CONTRIBUTING.md) are welcome, please run `tox` before submitting a PR to ensure code is valid.
+# Contributing
 
-Ensure new devices are integrated in tests, please review the [testing](tests/README.md) documentation for more information.
+All [contributions](CONTRIBUTING.md) are welcome.
 
 This project is licensed under [MIT](LICENSE).

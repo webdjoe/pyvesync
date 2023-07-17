@@ -35,7 +35,7 @@ class TestVesyncAirPurifier(TestBase):
         assert fan.uuid == Defaults.uuid(LVPUR131S)
 
     def test_airpur_details(self):
-        """Test 15A get_details()."""
+        """Test Air Purifier get_details()."""
         self.mock_api.return_value = CORRECT_DETAILS
         fan = VeSyncAir131(DEV_LIST_DETAIL, self.manager)
         fan.get_details()
@@ -43,11 +43,11 @@ class TestVesyncAirPurifier(TestBase):
         assert fan.device_status == 'on'
         assert isinstance(dev_details, dict)
         assert dev_details['active_time'] == 1
-        assert fan.filter_life == 100
-        assert dev_details['screen_status'] == 'on'
+        assert fan.filter_life == call_json_fans.FanDefaults.filter_life
+        assert dev_details['screen_status'] == Defaults.str_toggle
         assert fan.mode == 'manual'
-        assert dev_details['level'] == 1
-        assert fan.fan_level == 1
+        assert dev_details['level'] == call_json_fans.FanDefaults.fan_level
+        assert fan.fan_level == call_json_fans.FanDefaults.fan_level
         assert dev_details['air_quality'] == 'excellent'
         assert fan.air_quality == 'excellent'
 
