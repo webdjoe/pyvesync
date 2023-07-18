@@ -12,9 +12,10 @@ TestBase: class
 """
 import logging
 from pathlib import Path
+from typing import Any
 import pytest
 import yaml
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 from unittest.mock import patch
 from requests.structures import CaseInsensitiveDict
 from pyvesync.vesync import VeSync
@@ -29,7 +30,6 @@ FunctionResponses: defaultdict = defaultdict(lambda: ({"code": 0, "msg": None}, 
 CALL_API_ARGS = ['url', 'method', 'data', 'headers']
 
 ID_KEYS = ['CID', 'UUID', 'MACID']
-
 
 class Defaults:
     """General defaults for API responses and requests.
@@ -68,6 +68,9 @@ class Defaults:
     color = Color(red=50, green=100, blue=225)
     brightness = 100
     color_temp = 100
+    bool_toggle = True
+    str_toggle = 'on'
+    bin_toggle = 1
 
     @staticmethod
     def name(dev_type: str = 'NA'):
@@ -223,27 +226,27 @@ class YAMLWriter:
         self._existing_api = None
 
     @staticmethod
-    def _get_path(module):
+    def _get_path(module) -> Path:
         yaml_dir = Path.joinpath(Path(__file__).parent, 'api', module)
         if not yaml_dir.exists():
             yaml_dir.mkdir(parents=True)
         return yaml_dir
 
-    def _new_file(self):
+    def _new_file(self) -> bool:
         if not self.file.exists():
             logger.debug(f'Creating new file {self.file}')
             self.file.touch()
             return True
         return False
 
-    def _get_existing_yaml(self):
+    def _get_existing_yaml(self) -> Any:
         if self.new_file:
             return None
         with open(self.file, 'rb') as f:
             data = yaml.full_load(f)
         return data
 
-    def existing_api(self, method):
+    def existing_api(self, method) -> bool:
         """Check YAML file for existing data for API call.
 
         Arguments
@@ -262,8 +265,7 @@ class YAMLWriter:
             if current_dict is not None:
                 logger.debug(f'API call {method} already exists in {self.file}')
                 return True
-            return current_dict
-        return None
+        return False
 
     def write_api(self, method, yaml_dict, overwrite=False):
         """Write API data to YAML file.
@@ -344,6 +346,8 @@ class TestBase:
     self.caplog : LogCaptureFixture
         Pytest fixture for capturing logs
     """
+    overwrite = False
+    write_api = False
 
     @pytest.fixture(autouse=True, scope='function')
     def setup(self, caplog):
@@ -373,8 +377,15 @@ class TestBase:
         self.mock_api_call.stop()
 
 
-def assert_test(test_func, all_kwargs, dev_type=None, overwrite=False):
-    """Test function for tests run on API request data.
+def assert_test(test_func, all_kwargs, dev_type=None,
+                 write_api=False, overwrite=False):
+    """Test pyvesync API calls against existing API.
+
+    Set `write_api=True` to True to write API call data to YAML file. 
+    This will not overwrite existing data unless overwrite is True.
+    The overwrite argument is only used when API changes, defaults
+    to false for development testing. `overwrite=True` and `write_api=True`
+    need to both be set to overwrite existing data.
 
     Arguments
     ----------
@@ -384,8 +395,11 @@ def assert_test(test_func, all_kwargs, dev_type=None, overwrite=False):
         Dictionary of call_api() arguments
     dev_type : str, optional
         Device type being tested
+    write_api : bool, optional
+        Write API call data to YAML file, default to False
     overwrite : bool, optional
-        Overwrite existing data, default to False
+        Overwrite existing data ONLY USE FOR CHANGING API,
+          default to False. Must be set with `write_api=True`
 
     Returns
     -------
@@ -407,7 +421,15 @@ def assert_test(test_func, all_kwargs, dev_type=None, overwrite=False):
         cls_name = dev_type
     method_name = test_func.__name__
     writer = YAMLWriter(mod, cls_name)
-    if writer.existing_api(method_name) is not None:
-        assert writer._existing_api == all_kwargs
-    writer.write_api(method_name, all_kwargs, overwrite)
+    if overwrite is True and write_api is True:
+        writer.write_api(method_name, all_kwargs, overwrite)
+        return True
+    if writer.existing_api(method_name) is False:
+        logger.debug("No existing, API data for %s %s %s", mod, cls_name, method_name)
+        if write_api is True:
+            logger.debug("Writing API data for %s %s %s", mod, cls_name, method_name)
+            writer.write_api(method_name, all_kwargs, overwrite)
+        else:
+            logger.debug("Not writing API data for %s %s %s", mod, cls_name, method_name)
+    assert writer._existing_api == all_kwargs
     return True

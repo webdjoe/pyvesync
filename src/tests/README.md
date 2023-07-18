@@ -9,10 +9,41 @@ The tests primarily run each API call for each device and record the request det
 The structure of the framework is as follows:
 
 1. `call_json.py` - This file contains general functions and the device list builder. This file does not need to be edited when adding a device.
-2. `call_json_DEVICE.py` - This file contains device specific responses such as the `get_details()` response and specific method responses. This file pulls in the device type list from each module. The minimum addition is to add the appropriate response to the `DeviceDetails` class and the device type associated with that response in the `DETAILS_RESPONSES` dictionary.
+2. `call_json_DEVICE.py` - This file contains device specific responses such as the `get_details()` response and specific method responses. This file pulls in the device type list from each module. The minimum addition is to add the appropriate response to the `DeviceDetails` class and the device type associated with that response in the `DETAILS_RESPONSES` dictionary. This file also contains the `DeviceDefaults` class which are specific to the device.
 3. `test_DEVICE.py`  - Each module in pyvesync has it's own test module, typically with one class that inherits the `utils.BaseTest` class. The class has two methods - `test_details()` and `test_methods()` that are parametrized by `utils.pytest_generate_tests`
 4. `utils.py` - Contains the general default values for all devices in the `Defaults` class and the `TestBase` class that contains the fixture that instantiates the VS object and patches the `call_api()` method.
-5. `conftest.py` - Contains the `pytest_generate_tests` function that is used to parametrize the tests.
+5. `conftest.py` - Contains the `pytest_generate_tests` function that is used to parametrize the tests based on all device types listed in the respective modules.
+
+
+## Running the tests
+
+There are two pytest command line arguments built into the tests to specify when to write the api data to YAML files or when to overwrite the existing API calls in the YAML files.
+
+To run a tests for development on existing devices or if you are not ready to write the api calls yet:
+
+```bash
+# Through pytest
+pytest
+
+# or through tox
+tox -e testenv # you can also use the environments lint, pylint, mypy
+```
+
+If developing a new device and it is completed and thoroughly tested, pass the `--write_api` to pytest. Be sure to include the `--` before the argument in the tox command.
+
+```bash
+pytest --write_api
+
+tox -e testenv -- --write_api
+```
+
+If fixing an existing device where the API call was incorrect or the api has changed, pass `--write_api` and `overwrite` to pytest. Both arguments need to be provided to overwrite existing API data already in the YAML files.
+
+```bash
+pytest --write_api --overwrite
+
+tox -e testenv -- --write_api --overwrite
+```
 
 ## Testing Process
 
@@ -20,7 +51,7 @@ The first test run verifies that all of the devices defined in each pyvesync mod
 
 The testing framework takes the approach of verifying the response and request of each API call separately. The request side of the call is verified by recording the request for a mocked call. The requests are recorded into YAML files in the `api` folder of the tests directory, grouped in folders by module and file by device type.
 
-The response side of the API is tested through the use of responses that have been documented in the `call_json` files.
+The response side of the API is tested through the use of responses that have been documented in the `call_json` files and the values specified in the `Defaults` and `DeviceDefaults` classes.
 
 ## File Structure
 
@@ -40,23 +71,26 @@ The `call_json.py` file contains the functions to build the `get_devices()` resp
 
 #### call_json_DEVICE.py
 
-Each device module has it's own call_json file. The structure of the files maintains a consistency for easy test definition. The `DeviceDetails` (SwitchDetails, OutletDetails) class contains the `get_details()` responses for each device as a class attribute. The name of the class attribute does not matter.
+Each device module has it's own `call_json` file. The structure of the files maintains a consistency for easy test definition. The `DeviceDetails` (SwitchDetails, OutletDetails) class contains the `get_details()` responses for each device as a class attribute. The name of the class attribute does not matter.
 
 The `DETAILS_RESPONSES` dictionary contains the device type as the key and references the `DeviceDetails` class attribute as the value. The `DETAILS_RESPONSES` dictionary is used to lookup the appropriate response for each device type.
 
 The responses for device methods are also defined in the `call_json_DEVICE` module. The METHOD_RESPONSES dictionary uses a defaultdict imported from `utils.py` with a simple `{"code": 0, "message": ""}` as the default value. The `METHOD_RESPONSES` dictionary is created with keys of device type and values as the defaultdict object. From here the method responses can be added to the defaultdict object for specific scenarios.
 
 ```python
-from utils import FunctionResponses
+from utils import FunctionResponses 
 from copy import deepcopy
 
 device_types = ['dev1', 'dev2']
 
-method_response = FunctionResponses
+# defaultdict with default value - ({"code": 0, "msg": None}, 200)
+method_response = FunctionResponses 
 
+# Use deepcopy to build the device response dictionary used to test the get_details() method
 device_responses = {dev_type: deepcopy(method_response) for dev_type in device_types}
 
 # Define response for specific device & method
+# All response must be tuples with (json response, 200)
 device_responses['dev1']['special_method'] = ({'response': 'special response', 'msg': 'special method'}, 200)
 
 # The default factory can be change for a single device type since deepcopy is used.
@@ -65,6 +99,8 @@ device_responses['dev2'].default_factory = lambda: ({'new_code': 0, 'msg': 'succ
 ```
 
 The method responses can also be a function that accept one argument that contains the kwargs used in the method call. This allows for more complex responses based on the method call.
+
+The test will know whether it is a straight value or function and call it accordingly.
 
 For example, this is the set status response of the valceno bulb:
 
@@ -115,7 +151,7 @@ METHOD_RESPONSES['XYD0001'].update(XYD0001_RESP)
 
 ### **`api`** directory with `YAML` files
 
-API requests recorded from the mocked `call_api()` method. The first time a test is run, it will record the request if it does not already exists. The `api` directory contains folders for each module and files for each device_type. The structure of the YAML files is:
+API requests recorded from the mocked `call_api()` method. The `api` directory contains folders for each module and files for each device_type. The structure of the YAML files is:
 
 **File** `tests/api/switches/esl100.yaml`
 ```yaml
@@ -143,7 +179,7 @@ turn_off:
 
 The `utils.py`  file contains several helper functions and classes:
 
-**Default values for API responses and requests**
+### Default values for API responses and requests
 
 The recorded requests are automatically scrubbed with these default values to remove sensitive information and normalize the data. Any new API calls added to `call_json_` files should use the defaults values wherever possible.
 
@@ -167,7 +203,7 @@ device_uuid = Defaults.uuid(dev_type="ESL100") # returns 'ESL100-UUID'
 device_mac = Defaults.macid(dev_type="ESL100") # returns 'ESL100-MACID'
 ```
 
-The `utils` module contains the base class with a fixture that instantiates the VeSync object and patches `call_api()` automatically.
+The `utils` module contains the base class with a fixture that instantiates the VeSync object and patches `call_api()` automatically, allowing a return value to be set..
 
 ```python
 from utils import TestBase, FunctionResponses
