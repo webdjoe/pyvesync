@@ -921,39 +921,79 @@ from pyvesync import VeSync
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
+USERNAME = "YOUR USERNAME"
+PASSWORD = "YOUR PASSWORD"
+
 def test_device():
-  # Instantiate VeSync class and login
-  manager = VeSync(user, password, debug=True)
-  if manager.login() == False
-    logger("Unable to login")
-    return
+    # Instantiate VeSync class and login
+    manager = VeSync(USERNAME, PASSWORD, debug=True)
+    if manager.login() == False:
+        logger.debug("Unable to login")
+        return
 
-  # Test specific device
-  # If this were a humidifier and there is only one humidifier/purifier
-  # You can access it with the device index
-  fan = manager.fans[0]
-  # or loop through the fan devices and test for device with "My Device" name
-  # Use lower() to avoid capitalization issues
-  my_device_name = "My Device"
-  fan = None
-  for dev in manager.fans:
-    if dev.name.lower() == my_device_name.lower()
-      fan = dev
-  if fan == None:
-    logger.debug("Device not found")
-    logger.debug("Devices found - \n" + json.dumps(manager._dev_list))
-    return
+    # Pull and update devices
+    manager.update()
 
-  # Test all device methods and functionality
-  # Be aware some devices lose internet connectivity if turned off
-  fan.turn_on()
-  fan.turn_off()
-  fan.sleep_mode()
+    fan = None
+    logger.debug(str(manager.fans))
 
-# Make script runnable from command line
+    for dev in manager.fans:
+        # Print all device info
+        logger.debug(dev.device_name + "\n")
+        logger.debug(dev.display())
+
+        # Find correct device
+        if dev.device_name.lower() == DEVICE_NAME.lower():
+            fan = dev
+            break
+
+    if fan == None:
+        logger.debug("Device not found")
+        logger.debug("Devices found - \n %s", str(manager._dev_list))
+        return
+
+
+    logger.debug('--------------%s-----------------' % fan.device_name)
+    logger.debug(dev.display())
+    logger.debug(dev.displayJSON())
+    # Test all device methods and functionality
+    # Test Properties
+    logger.debug("Fan is on - %s", fan.is_on)
+    logger.debug("Modes - %s", fan.modes)
+    logger.debug("Fan Level - %s", fan.fan_level)
+    logger.debug("Fan Air Quality - %s", fan.air_quality)
+    logger.debug("Screen Status - %s", fan.screen_status)
+
+    fan.turn_on()
+    fan.turn_off()
+    fan.sleep_mode()
+    fan.auto_mode()
+    fan.manual_mode()
+    fan.change_fan_speed(3)
+    fan.change_fan_speed(2)
+    fan.child_lock_on()
+    fan.child_lock_off()
+    fan.turn_off_display()
+    fan.turn_on_display()
+
+    fan.set_light_detection_on()
+    logger.debug(fan.light_detection_state)
+    logger.debug(fan.light_detection)
+
+    # Only on Vital 200S
+    fan.pet_mode()
+
+    logger.debug("Set Fan Speed - %s", fan.set_fan_speed)
+    logger.debug("Current Fan Level - %s", fan.fan_level)
+    logger.debug("Current mode - %s", fan.mode)
+
+    # Display all device info
+    logger.debug(dev.display())
+    logger.debug(dev.displayJSON())
+
 if __name__ == "__main__":
-  logger.debug("Testing device")
-  test_device()
+    logger.debug("Testing device")
+    test_device()
 ...
 
 ```

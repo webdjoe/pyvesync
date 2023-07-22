@@ -206,9 +206,9 @@ class Helpers:
             logger.debug("[%s] calling '%s' api", method, api)
             logger.debug("API call URL: \n  %s%s", API_BASE_URL, api)
             logger.debug("API call headers: \n  %s",
-                         Helpers.redactor(json.dumps(headers)))
+                         Helpers.redactor(json.dumps(headers, indent=2)))
             logger.debug("API call json: \n  %s",
-                         Helpers.redactor(json.dumps(json_object)))
+                         Helpers.redactor(json.dumps(json_object, indent=2)))
             if method.lower() == 'get':
                 r = requests.get(
                     API_BASE_URL + api, json=json_object, headers=headers,
@@ -234,7 +234,7 @@ class Helpers:
                 if r.content:
                     response = r.json()
                     logger.debug("API response: \n\n  %s \n ",
-                                 Helpers.redactor(json.dumps(response)))
+                                 Helpers.redactor(json.dumps(response, indent=2)))
             else:
                 logger.debug('Unable to fetch %s%s', API_BASE_URL, api)
         return response, status_code
