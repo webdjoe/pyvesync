@@ -106,7 +106,7 @@ air_features: dict = {
     'Vital200S': {
         'module': 'VeSyncVital',
         'models': ['LAP-V201S-AASR', 'LAP-V201S-WJP', 'LAP-V201S-WEU',
-                   'LAP-V102S-AUSR', 'LAP-V201S-WUS'],
+                   'LAP-V201S-WUS', 'LAP-V201-AUSR'],
         'modes': ['manual', 'auto', 'sleep', 'off', 'pet'],
         'features': ['air_quality'],
         'levels': list(range(1, 5))
@@ -783,6 +783,7 @@ class VeSyncVital(VeSyncAirBypass):
             if outer_result.get('code') == 0:
                 self.build_purifier_dict(inner_result)
             else:
+                self.online = False
                 logger.debug('error in inner result dict from purifier')
             if inner_result.get('configuration', {}):
                 self.build_config_dict(inner_result.get('configuration', {}))
@@ -808,9 +809,10 @@ class VeSyncVital(VeSyncAirBypass):
 
     def build_purifier_dict(self, dev_dict: dict) -> None:
         """Build Bypass purifier status dictionary."""
-        power_switch = dev_dict.get('power_switch', 0)
+        self.online = True
+        power_switch = bool(dev_dict.get('powerSwitch', 0))
         self.enabled = power_switch
-        self.device_status = 'on' if power_switch else 'off'
+        self.device_status = 'on' if power_switch is True else 'off'
         self.mode = dev_dict.get('workMode', 'manual')
 
         self.speed = dev_dict.get('fanSpeedLevel', 0)
@@ -818,16 +820,12 @@ class VeSyncVital(VeSyncAirBypass):
         self.set_speed_level = dev_dict.get('manualSpeedLevel', 1)
 
         self.details['filter_life'] = dev_dict.get('filterLifePercent', 0)
-        self.details['display'] = dev_dict.get('display', False)
         self.details['child_lock'] = bool(dev_dict.get('childLockSwitch', 0))
-        self.details['night_light'] = dev_dict.get('night_light', 'off')
         self.details['display'] = bool(dev_dict.get('screenState', 0))
-        self.details['display_forever'] = dev_dict.get('display_forever', False)
         self.details['light_detection_switch'] = bool(
             dev_dict.get('lightDetectionSwitch', 0))
         self.details['environment_light_state'] = bool(
             dev_dict.get('environmentLightState', 0))
-        self.details['screen_state'] = bool(dev_dict.get('screenState', 0))
         self.details['screen_switch'] = bool(dev_dict.get('screenSwitch', 0))
 
         if self.air_quality_feature is True:
@@ -856,7 +854,7 @@ class VeSyncVital(VeSyncAirBypass):
             logger.debug("Light Detection is already set to %s", toggle_id)
             return True
 
-        head, body = self.build_api_dict('setLightDetectionSwitch')
+        head, body = self.build_api_dict('setLightDetection')
         body['payload']['data']['lightDetectionSwitch'] = toggle_id
         r, _ = Helpers.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
@@ -914,7 +912,7 @@ class VeSyncVital(VeSyncAirBypass):
         return False
 
     def set_child_lock(self, mode: bool) -> bool:
-        """Levoit 100S set Child Lock."""
+        """Levoit 100S/200S set Child Lock."""
         if mode:
             toggle_id = 1
         else:
