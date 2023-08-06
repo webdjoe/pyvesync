@@ -17,7 +17,7 @@ class VeSyncBaseDevice:
             self.device_name: str = details.get('deviceName', None)
             self.device_image: Optional[str] = details.get('deviceImg', None)
             self.cid: str = details.get('cid', None)
-            if details.get('deviceProp', None) != None:
+            if isinstance(details.get('deviceProp'), dict):
                 self.connection_status: str = details['deviceProp'].get('connectionStatus', None)
             else:
                 self.connection_status: str = details.get('connectionStatus', None)
@@ -45,7 +45,7 @@ class VeSyncBaseDevice:
             if self.connection_status != 'online':
                 self.device_status = 'off'
             else:
-                if details.get('deviceProp', None) != None:
+                if isinstance(details.get('deviceProp'), dict):
                     powerSwitch = details['deviceProp'].get('powerSwitch', None)
                     if powerSwitch == 0:
                         self.device_status = 'off'
