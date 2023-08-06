@@ -17,7 +17,10 @@ class VeSyncBaseDevice:
             self.device_name: str = details.get('deviceName', None)
             self.device_image: Optional[str] = details.get('deviceImg', None)
             self.cid: str = details.get('cid', None)
-            self.connection_status: str = details.get('connectionStatus', None)
+            if details.get('deviceProp', None) != None:
+                self.connection_status: str = details['deviceProp'].get('connectionStatus', None)
+            else:
+                self.connection_status: str = details.get('connectionStatus', None)
             self.connection_type: Optional[str] = details.get(
                 'connectionType', None)
             self.device_type: str = details.get('deviceType', None)
@@ -42,8 +45,16 @@ class VeSyncBaseDevice:
             if self.connection_status != 'online':
                 self.device_status = 'off'
             else:
-                self.device_status = details.get('deviceStatus', None)
-
+                if details.get('deviceProp', None) != None:
+                    powerSwitch = details['deviceProp'].get('powerSwitch', None)
+                    if powerSwitch == 0:
+                        self.device_status = 'off'
+                    elif powerSwitch == 1:
+                        self.device_status = 'on'
+                    else:
+                        self.device_status = None
+                else:
+                    self.device_status = details.get('deviceStatus', None)
         else:
             logger.error('No cid found for %s', self.__class__.__name__)
 
@@ -74,6 +85,7 @@ class VeSyncBaseDevice:
     @property
     def is_on(self) -> bool:
         """Return true if device is on."""
+        print(self.device_status)
         if self.device_status == 'on':
             return True
         return False

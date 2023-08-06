@@ -808,7 +808,7 @@ class VeSyncVital(VeSyncAirBypass):
 
     def build_purifier_dict(self, dev_dict: dict) -> None:
         """Build Bypass purifier status dictionary."""
-        power_switch = dev_dict.get('power_switch', 0)
+        power_switch = dev_dict.get('powerSwitch', 0)
         self.enabled = power_switch
         self.device_status = 'on' if power_switch else 'off'
         self.mode = dev_dict.get('workMode', 'manual')
