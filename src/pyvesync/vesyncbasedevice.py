@@ -85,7 +85,6 @@ class VeSyncBaseDevice:
     @property
     def is_on(self) -> bool:
         """Return true if device is on."""
-        print(self.device_status)
         if self.device_status == 'on':
             return True
         return False
