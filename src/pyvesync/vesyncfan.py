@@ -825,7 +825,8 @@ class VeSyncVital(VeSyncAirBypass):
         self.details['display_forever'] = dev_dict.get('display_forever', False)
         self.details['light_detection_switch'] = bool(
             dev_dict.get('lightDetectionSwitch', 0))
-        self.details['environment_light_state'] = bool(
+        # This is inverted in the API 1 for no light detected 0 for light detected
+        self.details['environment_light_state'] = not bool(
             dev_dict.get('environmentLightState', 0))
         self.details['screen_state'] = bool(dev_dict.get('screenState', 0))
         self.details['screen_switch'] = bool(dev_dict.get('screenSwitch', 0))
