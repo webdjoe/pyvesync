@@ -18,7 +18,8 @@ class VeSyncBaseDevice:
             self.device_image: Optional[str] = details.get('deviceImg', None)
             self.cid: str = details.get('cid', None)
             if isinstance(details.get('deviceProp'), dict):
-                self.connection_status: str = details['deviceProp'].get('connectionStatus', None)
+                self.connection_status: str = details['deviceProp'].get(
+                        'connectionStatus', None)
             else:
                 self.connection_status: str = details.get('connectionStatus', None)
             self.connection_type: Optional[str] = details.get(
