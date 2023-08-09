@@ -10,7 +10,7 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='pyvesync',
-    version='2.1.8',
+    version='2.1.9',
     description='pyvesync is a library to manage Etekcity\
                  Devices, Cosori Air Fryers and Levoit Air \
                      Purifiers run on the VeSync app.',
@@ -28,9 +28,8 @@ setup(
         'Programming Language :: Python :: 3.8',
     ],
     keywords=['iot', 'vesync', 'levoit', 'etekcity', 'cosori', 'valceno'],
-    packages=find_packages('src', exclude=['tests', 'tests.*']),
+    packages=find_packages('src', exclude=['tests', 'test*']),
     package_dir={'': 'src'},
-    zip_safe=False,
     install_requires=['requests>=2.20.0'],
     extras_require={
         'dev': ['pytest', 'pytest-cov', 'yaml', 'tox']

@@ -1,1 +1,3 @@
 include README.md LICENSE requirements.txt
+exclude test
+prune test
