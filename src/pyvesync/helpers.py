@@ -195,6 +195,19 @@ class Helpers:
         return stringvalue
 
     @staticmethod
+    def nested_code_check(response: dict) -> bool:
+        """Return true if all code values are 0."""
+        if isinstance(response, dict):
+            for key, value in response.items():
+                if key == 'code':
+                    if value != 0:
+                        return False
+                elif isinstance(value, dict):
+                    if not Helpers.nested_code_check(value):
+                        return False
+        return True
+
+    @staticmethod
     def call_api(api: str, method: str, json_object:  Optional[dict] = None,
                  headers: Optional[dict] = None) -> tuple:
         """Make API calls by passing endpoint, header and body."""

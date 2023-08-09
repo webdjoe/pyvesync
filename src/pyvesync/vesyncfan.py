@@ -99,14 +99,14 @@ air_features: dict = {
         'module': 'VeSyncVital',
         'models': ['LAP-V102S-AASR', 'LAP-V102S-WUS', 'LAP-V102S-WEU',
                    'LAP-V102S-AUSR', 'LAP-V102S-WJP'],
-        'modes': ['manual', 'auto', 'sleep', 'off'],
+        'modes': ['manual', 'auto', 'sleep', 'off', 'pet'],
         'features': ['air_quality'],
         'levels': list(range(1, 5))
     },
     'Vital200S': {
         'module': 'VeSyncVital',
         'models': ['LAP-V201S-AASR', 'LAP-V201S-WJP', 'LAP-V201S-WEU',
-                   'LAP-V102S-AUSR', 'LAP-V201S-WUS'],
+                   'LAP-V201S-WUS', 'LAP-V201-AUSR'],
         'modes': ['manual', 'auto', 'sleep', 'off', 'pet'],
         'features': ['air_quality'],
         'levels': list(range(1, 5))
@@ -768,28 +768,20 @@ class VeSyncVital(VeSyncAirBypass):
             headers=head,
             json_object=body,
         )
-        if not isinstance(r, dict):
-            logger.debug('Error in purifier response')
+        if Helpers.nested_code_check(r) is False or not isinstance(r, dict):
+            logger.debug('Error getting purifier details')
+            self.connection_status = 'offline'
             return
-        if not isinstance(r.get('result'), dict):
-            logger.debug('Error in purifier response')
-            return
-        outer_result = r.get('result', {})
-        inner_result = None
 
-        if outer_result:
-            inner_result = r.get('result', {}).get('result')
-        if inner_result is not None and Helpers.code_check(r):
-            if outer_result.get('code') == 0:
-                self.build_purifier_dict(inner_result)
-            else:
-                logger.debug('error in inner result dict from purifier')
-            if inner_result.get('configuration', {}):
-                self.build_config_dict(inner_result.get('configuration', {}))
-            else:
-                logger.debug('No configuration found in purifier status')
+        inner_result = r.get('result', {}).get('result')
+
+        if inner_result is not None:
+            self.build_purifier_dict(inner_result)
         else:
-            logger.debug('Error in purifier response')
+            self.connection_status = 'offline'
+            logger.debug('error in inner result dict from purifier')
+        if inner_result.get('configuration', {}):
+            self.build_config_dict(inner_result.get('configuration', {}))
 
     def build_api_dict(self, method: str) -> Tuple[Dict, Dict]:
         """Return default body for Levoit Vital 100S/200S API."""
@@ -808,9 +800,10 @@ class VeSyncVital(VeSyncAirBypass):
 
     def build_purifier_dict(self, dev_dict: dict) -> None:
         """Build Bypass purifier status dictionary."""
-        power_switch = dev_dict.get('power_switch', 0)
+        self.connection_status = 'online'
+        power_switch = bool(dev_dict.get('powerSwitch', 0))
         self.enabled = power_switch
-        self.device_status = 'on' if power_switch else 'off'
+        self.device_status = 'on' if power_switch is True else 'off'
         self.mode = dev_dict.get('workMode', 'manual')
 
         self.speed = dev_dict.get('fanSpeedLevel', 0)
@@ -818,16 +811,12 @@ class VeSyncVital(VeSyncAirBypass):
         self.set_speed_level = dev_dict.get('manualSpeedLevel', 1)
 
         self.details['filter_life'] = dev_dict.get('filterLifePercent', 0)
-        self.details['display'] = dev_dict.get('display', False)
         self.details['child_lock'] = bool(dev_dict.get('childLockSwitch', 0))
-        self.details['night_light'] = dev_dict.get('night_light', 'off')
         self.details['display'] = bool(dev_dict.get('screenState', 0))
-        self.details['display_forever'] = dev_dict.get('display_forever', False)
         self.details['light_detection_switch'] = bool(
             dev_dict.get('lightDetectionSwitch', 0))
         self.details['environment_light_state'] = bool(
             dev_dict.get('environmentLightState', 0))
-        self.details['screen_state'] = bool(dev_dict.get('screenState', 0))
         self.details['screen_switch'] = bool(dev_dict.get('screenSwitch', 0))
 
         if self.air_quality_feature is True:
@@ -848,15 +837,12 @@ class VeSyncVital(VeSyncAirBypass):
 
     def set_light_detection(self, toggle: bool) -> bool:
         """Enable/Disable Light Detection Feature."""
-        if toggle is True:
-            toggle_id = 1
-        else:
-            toggle_id = 0
+        toggle_id = int(toggle)
         if self.details['light_detection_switch'] == toggle_id:
             logger.debug("Light Detection is already set to %s", toggle_id)
             return True
 
-        head, body = self.build_api_dict('setLightDetectionSwitch')
+        head, body = self.build_api_dict('setLightDetection')
         body['payload']['data']['lightDetectionSwitch'] = toggle_id
         r, _ = Helpers.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
@@ -865,7 +851,7 @@ class VeSyncVital(VeSyncAirBypass):
             json_object=body,
         )
 
-        if r is not None and Helpers.code_check(r):
+        if r is not None and Helpers.nested_code_check(r):
             self.details['light_detection'] = toggle
             return True
         logger.debug("Error toggling purifier - %s",
@@ -903,7 +889,7 @@ class VeSyncVital(VeSyncAirBypass):
             json_object=body,
         )
 
-        if r is not None and Helpers.code_check(r):
+        if r is not None and Helpers.nested_code_check(r):
             if toggle:
                 self.device_status = 'on'
             else:
@@ -914,7 +900,7 @@ class VeSyncVital(VeSyncAirBypass):
         return False
 
     def set_child_lock(self, mode: bool) -> bool:
-        """Levoit 100S set Child Lock."""
+        """Levoit 100S/200S set Child Lock."""
         if mode:
             toggle_id = 1
         else:
@@ -931,7 +917,7 @@ class VeSyncVital(VeSyncAirBypass):
             json_object=body,
         )
 
-        if r is not None and Helpers.code_check(r):
+        if r is not None and Helpers.nested_code_check(r):
             self.details['child_lock'] = mode
             return True
 
@@ -956,7 +942,7 @@ class VeSyncVital(VeSyncAirBypass):
             json_object=body,
         )
 
-        if r is not None and Helpers.code_check(r):
+        if r is not None and Helpers.nested_code_check(r):
             self.details['screen_switch'] = mode
             return True
 
@@ -1006,7 +992,7 @@ class VeSyncVital(VeSyncAirBypass):
             json_object=body,
         )
 
-        if r is not None and Helpers.code_check(r):
+        if r is not None and Helpers.nested_code_check(r):
             self.timer = Timer(timer_duration, action)
             return True
 
@@ -1026,7 +1012,7 @@ class VeSyncVital(VeSyncAirBypass):
             json_object=body,
         )
 
-        if r is not None and Helpers.code_check(r):
+        if r is not None and Helpers.nested_code_check(r):
             self.timer = None
             return True
 
@@ -1165,6 +1151,32 @@ class VeSyncVital(VeSyncAirBypass):
             return True
         logger.debug('Error setting purifier mode')
         return False
+
+    def displayJSON(self) -> str:
+        """Return air purifier status and properties in JSON output."""
+        sup = super().displayJSON()
+        sup_val = json.loads(sup)
+        sup_val.update(
+            {
+                'Mode': self.mode,
+                'Filter Life': str(self.details['filter_life']),
+                'Fan Level': str(self.speed),
+                'Display On': self.details['display'],
+                'Child Lock': self.details['child_lock'],
+                'Night Light': str(self.details['night_light']),
+                'Display Set On': self.details['screen_switch'],
+                'Light Detection Enabled': self.details['light_detection_switch'],
+                'Environment Light State': self.details['environment_light_state']
+            }
+        )
+        if self.air_quality_feature is True:
+            sup_val.update(
+                {'Air Quality Level': str(self.details.get('air_quality', ''))}
+            )
+            sup_val.update(
+                {'Air Quality Value': str(self.details.get('air_quality_value', ''))}
+            )
+        return json.dumps(sup_val, indent=4)
 
 
 class VeSyncAir131(VeSyncBaseDevice):
