@@ -153,18 +153,63 @@ class VeSyncAirBypass(VeSyncBaseDevice):
     """Base class for Levoit Purifier Bypass API Calls."""
 
     def __init__(self, details: Dict[str, list], manager):
-        """Initialize air devices."""
+        """Initialize air purifier devices.
+
+        Instantiated by manager object, not directly. Inherits from
+        VeSyncBaseDevice class.
+
+        Arguments
+        ----------
+        details : dict
+            Dictionary of device details
+        manager : VeSync
+            Instantiated VeSync object used to make API calls
+
+        Attributes
+        ----------
+        modes : list
+            List of available operation modes for device
+        air_quality_feature : bool
+            True if device has air quality sensor
+        details : dict
+            Dictionary of device details
+        timer : Timer
+            Timer object for device, None if no timer exists. See `Timer` class
+        config : dict
+            Dictionary of device configuration
+
+        Notes
+        -----
+        The `details` attribute holds device information that is updated when
+        the `update()` method is called. An example of the `details` attribute:
+        >>> {
+        >>>     'filter_life': 0,
+        >>>     'mode': 'manual',
+        >>>     'level': 0,
+        >>>     'display': False,
+        >>>     'child_lock': False,
+        >>>     'night_light': 'off',
+        >>>     'air_quality': 0 # air quality level
+        >>>     'air_quality_value': 0, # PM2.5 value from device,
+        >>>     'display_forever': False
+        >>> }
+
+        See Also
+        --------
+        VeSyncBaseDevice : Parent class for all VeSync devices
+
+        """
         super().__init__(details, manager)
         self.enabled = True
-        self.config_dict = model_features(self.device_type)
-        self.features = self.config_dict.get('features', [])
-        if not isinstance(self.config_dict.get('modes'), list):
+        self._config_dict = model_features(self.device_type)
+        self._features = self._config_dict.get('features', [])
+        if not isinstance(self._config_dict.get('modes'), list):
             logger.error(
                 'Please set modes for %s in the configuration',
                 self.device_type)
             raise KeyError(f'Modes not set in configuration for {self.device_name}')
-        self.modes = self.config_dict['modes']
-        if 'air_quality' in self.features:
+        self.modes = self._config_dict['modes']
+        if 'air_quality' in self._features:
             self.air_quality_feature = True
         else:
             self.air_quality_feature = False
@@ -282,7 +327,30 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         self.get_details()
 
     def get_timer(self) -> Optional[Timer]:
-        """Retrieve running timer from purifier."""
+        """Retrieve running timer from purifier.
+
+        Returns Timer object if timer is running, None if no timer is running.
+
+        Arguments
+        ----------
+        None
+
+        Returns
+        -------
+        Timer or None
+
+        Notes
+        -----
+        Timer object tracks the time remaining based on the last update. Timer
+        properties include `status`, `time_remaining`, `duration`, `action`, `paused` and
+        `done`. The methods `start()`, `end()` and `pause()` are available but should be called
+        through the purifier object to update through the API.
+
+        See Also
+        --------
+        Timer : Timer object used to track device timers
+
+        """
         head, body = self.build_api_dict('getTimer')
         body['payload']['data'] = {}
         if not head and not body:
@@ -328,6 +396,10 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         ----------
         timer_duration: int
             Duration of timer in seconds
+
+        Returns
+        -------
+        bool
         """
         if self.device_status != 'on':
             logger.debug("Can't set timer when device is off")
@@ -365,7 +437,14 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         return True
 
     def clear_timer(self) -> bool:
-        """Clear timer."""
+        """Clear timer.
+
+        Returns True if no error is returned from API call.
+
+        Returns
+        -------
+        bool
+        """
         self.get_timer()
         if self.timer is None:
             logger.debug('No timer to clear')
@@ -395,8 +474,18 @@ class VeSyncAirBypass(VeSyncBaseDevice):
 
     def change_fan_speed(self,
                          speed=None) -> bool:
-        """Change fan speed based on levels in configuration dict."""
-        speeds: list = self.config_dict.get('levels', [])
+        """Change fan speed based on levels in configuration dict.
+
+        Arguments
+        ----------
+        speed: int
+            Speed to change fan to. If no speed is passed, the next speed in
+
+        Returns
+        -------
+        bool
+        """
+        speeds: list = self._config_dict.get('levels', [])
         current_speed = self.speed
 
         if speed is not None:
@@ -448,7 +537,19 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         return self.set_child_lock(False)
 
     def set_child_lock(self, mode: bool) -> bool:
-        """Set Bypass child lock."""
+        """Set Bypass child lock.
+
+        Set child lock to on or off.
+
+        Arguments
+        ----------
+        mode: bool
+            True to turn child lock on, False to turn off
+
+        Returns
+        -------
+        bool
+        """
         if mode not in (True, False):
             logger.debug('Invalid mode passed to set_child_lock - %s', mode)
             return False
@@ -478,7 +579,19 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         return False
 
     def mode_toggle(self, mode: str) -> bool:
-        """Set purifier mode - sleep or manual."""
+        """Set purifier mode - sleep or manual.
+
+        Set purifier mode based on devices available modes.
+
+        Arguments
+        ----------
+        mode: str
+            Mode to set purifier. Based on device modes in attribute `modes`
+
+        Returns
+        -------
+        bool
+        """
         if mode.lower() not in self.modes:
             logger.debug('Invalid purifier mode used - %s',
                          mode)
@@ -1072,7 +1185,7 @@ class VeSyncVital(VeSyncAirBypass):
             Speed to set based on levels in configuration dict, by default None
             If None, will cycle through levels in configuration dict
         """
-        speeds: list = self.config_dict.get('levels', [])
+        speeds: list = self._config_dict.get('levels', [])
         current_speed = self.set_speed_level or 0
 
         if speed is not None:

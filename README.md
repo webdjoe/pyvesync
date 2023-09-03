@@ -94,6 +94,7 @@ pip install pyvesync
 5. Core 600S
 6. Vital 100S
 7. Vital 200S
+8. Everest Air
 
 ### Etekcity Bulbs
 
