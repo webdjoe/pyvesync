@@ -2,7 +2,7 @@
 
 pyvesync is a library to manage VeSync compatible [smart home devices](#supported-devices)
 
-**Note** Please check out the new [Discussions](https://github.com/webdjoe/pyvesync/discussions) section. This is the place for all questions and discussions that aren't issues directly related to the pyVeSync library. Any Home Assistant questions should go here, in addition to general device troubleshooting and general questions on the process to add new devices.
+**Note** Please check out the new [Discussions](https://github.com/webdjoe/pyvesync/discussions) section. This is the place for all questions and discussions that aren't issues directly related to the pyvesync library. Any Home Assistant questions should go here, in addition to device troubleshooting and general questions on the process to add new devices.
 
 ## Table of Contents <!-- omit in toc -->
 
@@ -643,7 +643,6 @@ They can be set through the `VeSyncAirFryer158.fryer_status` dataclass but shoul
 `VeSyncAirFryer158.resume()` - Resume air fryer when in `cookStop` or `preheatStop` state
 
 `VeSyncAirFryer158.end()` - End cooking or preheating and return air fryer to `standby` state
-
 
 ### Timer DataClass
 
