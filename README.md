@@ -331,13 +331,13 @@ Compatible levels for each model:
 - PUR131S [1, 2, 3]
 - Vital 100S/200S [1, 2, 3, 4]
 
-#### Levoit Purifier Core200S/300S/400S and Vital 100S/200S Properties
+#### Levoit Purifier Core200S/300S/400S, Vital 100S/200S Properties & Everest Air
 
 `VeSyncFan.child_lock` - Return the state of the child lock (True=On/False=off)
 
 `VeSyncAir.night_light` - Return the state of the night light (on/dim/off) **Not available on Vital 100S/200S**
 
-#### Levoit Purifier Core200S/300S/400S and Vital 100S/200S Methods
+#### Levoit Purifier Core200S/300S/400S, Vital 100S/200S Methods & Everest Air
 
 `VeSyncFan.child_lock_on()` Enable child lock
 
@@ -349,13 +349,13 @@ Compatible levels for each model:
 
 `VeSyncFan.set_night_light('on'|'dim'|'off')` - Set night light brightness
 
-`VeSyncFan.get_timer()` - Get any running timers, stores Timer DataClass in `VeSyncFan.timer`
+`VeSyncFan.get_timer()` - Get any running timers, stores Timer DataClass in `VeSyncFan.timer`. See [Timer Dataclass](#timer-dataclass)
 
 `VeSyncFan.set_timer(timer_duration=3000)` - Set a timer for the device, only turns device off. Timer DataClass stored in `VeSyncFan.timer`
 
 `VeSyncFan.clear_timer()` - Cancel any running timer
 
-#### Levoit Vital 100S/200S Properties and Methods
+#### Levoit Vital 100S/200S & Everest Air Properties and Methods
 
 The Levoit Vital 100S/200S has additional features not available on other models.
 
@@ -374,6 +374,23 @@ The Levoit Vital 100S/200S has additional features not available on other models
 `VeSyncFan.set_light_detection_on()` - Turn on light detection mode
 
 `VeSyncFan.set_light_detection_off()` - Turn off light detection mode
+
+#### Levoit Everest Air Properties & Methods
+
+`VeSyncFan.turbo_mode()` - Set turbo mode
+
+Additional properties in the `VeSyncFan['details']` dictionary:
+
+```python
+VeSyncFan['Details'] = {
+  'pm1': 0,  # air quality reading of particulates 1.0 microns
+  'pm10': 10,  # air quality reading of particulates 10 microns
+  'fan_rotate_angle': 45,  # angle of fan vents
+  'aq_percent': 45, # Air Quality percentage reading
+  'filter_open_state': False  # returns bool of filter open
+}
+
+```
 
 ### Lights API Methods & Properties
 

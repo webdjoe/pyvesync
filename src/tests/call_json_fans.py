@@ -73,6 +73,11 @@ class FanDefaults:
     warm_mist_level = 2
     air_quality = 3
     air_quality_value = 4
+    filter_open = 0
+    aq_percent = 75
+    pm1 = 10
+    pm10 = 5
+    rotate_angle = 45
 
 
 class FanDetails:
@@ -267,6 +272,50 @@ class FanDetails:
         }
     }, 200)
 
+    details_everest = ({
+        "traceId": "1691789977402",
+        "code": 0,
+        "msg": "request success",
+        "module": None,
+        "stacktrace": None,
+        "result": {
+            "traceId": Defaults.trace_id,
+            "code": 0,
+            "result": {
+                "fanRotateAngle": FanDefaults.rotate_angle,
+                "filterOpenState": FanDefaults.filter_open,
+                "powerSwitch": Defaults.bin_toggle,
+                "filterLifePercent": FanDefaults.filter_life,
+                "workMode": "auto",
+                "manualSpeedLevel": FanDefaults.fan_level,
+                "fanSpeedLevel": FanDefaults.fan_level,
+                "AQLevel": FanDefaults.air_quality,
+                "AQPercent": FanDefaults.aq_percent,
+                "PM25": FanDefaults.air_quality_value,
+                "PM1": FanDefaults.pm1,
+                "PM10": FanDefaults.pm10,
+                "screenState": Defaults.bin_toggle,
+                "childLockSwitch": Defaults.bin_toggle,
+                "screenSwitch": Defaults.bin_toggle,
+                "lightDetectionSwitch": Defaults.bin_toggle,
+                "environmentLightState": Defaults.bin_toggle,
+                "autoPreference": {
+                            "autoPreferenceType": "default",
+                            "roomSize": 0
+                },
+                "routine": {
+                    "routineType": "normal",
+                    "runSeconds": 0
+                },
+                "scheduleCount": 0,
+                "timerRemain": 0,
+                "efficientModeTimeRemain": 0,
+                "ecoModeRunTime": 0,
+                "errorCode": 0
+            }
+        }
+    }, 200)
+
 
 DETAILS_RESPONSES = {
     'LV-PUR131S': FanDetails.details_air,
@@ -281,7 +330,8 @@ DETAILS_RESPONSES = {
     'LUH-O451S-WUS': FanDetails.details_lv600s,
     'LAP-V201S-AASR': FanDetails.details_vital100s,
     'LAP-V102S-AASR': FanDetails.details_vital100s,
-    'LUH-M101S-WUS': FanDetails.details_oasismist1000S
+    'LUH-M101S-WUS': FanDetails.details_oasismist1000S,
+    'LAP-EL551S-AUS': FanDetails.details_everest,
 }
 
 FunctionResponses.default_factory = lambda: ({
