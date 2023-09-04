@@ -2,6 +2,8 @@
 
 pyvesync is a library to manage VeSync compatible [smart home devices](#supported-devices)
 
+**Note** Please check out the new [Discussions](https://github.com/webdjoe/pyvesync/discussions) section. This is the place for all questions and discussions that aren't issues directly related to the pyVeSync library. Any Home Assistant questions should go here, in addition to general device troubleshooting and general questions on the process to add new devices.
+
 ## Table of Contents <!-- omit in toc -->
 
 - [Installation](#installation)
@@ -29,9 +31,9 @@ pyvesync is a library to manage VeSync compatible [smart home devices](#supporte
   - [Standard Air Purifier Properties \& Methods](#standard-air-purifier-properties--methods)
     - [Air Purifier Properties](#air-purifier-properties)
     - [Air Purifier Methods](#air-purifier-methods)
-    - [Levoit Purifier Core200S/300S/400S and Vital 100S/200S Properties](#levoit-purifier-core200s300s400s-and-vital-100s200s-properties)
-    - [Levoit Purifier Core200S/300S/400S and Vital 100S/200S Methods](#levoit-purifier-core200s300s400s-and-vital-100s200s-methods)
-    - [Levoit Vital 100S/200S Properties and Methods](#levoit-vital-100s200s-properties-and-methods)
+    - [Levoit Purifier Core200S/300S/400S and Vital 100S/200S Properties](#levoit-purifier-core200s300s400s-vital-100s200s--everest-air-properties)
+    - [Levoit Purifier Core200S/300S/400S, Vital 100S/200S & Everest Air Methods](#levoit-purifier-core200s300s400s-vital-100s200s--everest-air-methods)
+    - [Levoit Vital 100S/200S Properties and Methods](#levoit-vital-100s200s--everest-air-properties-and-methods)
   - [Lights API Methods \& Properties](#lights-api-methods--properties)
     - [Brightness Light Bulb Method and Properties](#brightness-light-bulb-method-and-properties)
     - [Light Bulb Color Temperature Methods and Properties](#light-bulb-color-temperature-methods-and-properties)
@@ -331,13 +333,13 @@ Compatible levels for each model:
 - PUR131S [1, 2, 3]
 - Vital 100S/200S [1, 2, 3, 4]
 
-#### Levoit Purifier Core200S/300S/400S, Vital 100S/200S Properties & Everest Air
+#### Levoit Purifier Core200S/300S/400S, Vital 100S/200S & Everest Air Properties
 
 `VeSyncFan.child_lock` - Return the state of the child lock (True=On/False=off)
 
 `VeSyncAir.night_light` - Return the state of the night light (on/dim/off) **Not available on Vital 100S/200S**
 
-#### Levoit Purifier Core200S/300S/400S, Vital 100S/200S Methods & Everest Air
+#### Levoit Purifier Core200S/300S/400S, Vital 100S/200S & Everest Air Methods
 
 `VeSyncFan.child_lock_on()` Enable child lock
 
@@ -677,7 +679,6 @@ timer.end()
 # Resume timer - Does not update API - only Resumes locally
 timer.start()
 ```
-
 
 ### JSON Output API
 
@@ -1045,7 +1046,7 @@ After:
 }
 ```
 
-# Contributing
+## Contributing
 
 All [contributions](CONTRIBUTING.md) are welcome.
 

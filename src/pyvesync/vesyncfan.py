@@ -350,9 +350,10 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         Notes
         -----
         Timer object tracks the time remaining based on the last update. Timer
-        properties include `status`, `time_remaining`, `duration`, `action`, `paused` and
-        `done`. The methods `start()`, `end()` and `pause()` are available but should be called
-        through the purifier object to update through the API.
+        properties include `status`, `time_remaining`, `duration`, `action`,
+        `paused` and `done`. The methods `start()`, `end()` and `pause()`
+        are available but should be called through the purifier object
+        to update through the API.
 
         See Also
         --------
@@ -973,17 +974,15 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         """Turn on Turbo mode for compatible devices."""
         if 'turbo' in self.modes:
             return self.mode_toggle('turbo')
-        else:
-            logger.debug("Turbo mode not available for %s", self.device_name)
-            return False
+        logger.debug("Turbo mode not available for %s", self.device_name)
+        return False
 
     def pet_mode(self) -> bool:
         """Set Pet Mode for compatible devices."""
         if 'pet' in self.modes:
             return self.mode_toggle('pet')
-        else:
-            logger.debug("Pet mode not available for %s", self.device_name)
-            return False
+        logger.debug("Pet mode not available for %s", self.device_name)
+        return False
 
     def set_light_detection(self, toggle: bool) -> bool:
         """Enable/Disable Light Detection Feature."""
