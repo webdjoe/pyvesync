@@ -951,7 +951,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         if self.air_quality_feature is True:
             self.details['air_quality_value'] = dev_dict.get(
                 'PM25', 0)
-            self.details['air_quality'] = dev_dict.get('air_quality', 0)
+            self.details['air_quality'] = dev_dict.get('AQLevel', 0)
         if 'PM1' in dev_dict:
             self.details['pm1'] = dev_dict['PM1']
         if 'PM10' in dev_dict:
@@ -982,6 +982,11 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         if 'pet' in self.modes:
             return self.mode_toggle('pet')
         logger.debug("Pet mode not available for %s", self.device_name)
+        return False
+
+    def set_night_light(self, mode: str) -> bool:
+        """TD: Set night light."""
+        logger.debug("Night light feature not configured")
         return False
 
     def set_light_detection(self, toggle: bool) -> bool:
