@@ -52,8 +52,6 @@ class Helpers:
         }
         return headers
 
-
-
     @staticmethod
     def req_header_bypass() -> dict:
         """Build header for api requests on 'bypass' endpoint."""
