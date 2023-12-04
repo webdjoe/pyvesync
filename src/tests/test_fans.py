@@ -290,7 +290,7 @@ class TestHumidifiers(TestBase):
                     ]
     device_methods = {
         'LUH-A602S-WUSR': [['set_warm_level', {'warm_level': 3}]],
-
+        'LEH-S601S-WUS': [['set_drying_mode_enabled', { 'mode': False }]]
     }
 
     def test_details(self, dev_type, method):
