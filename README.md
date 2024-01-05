@@ -2,6 +2,8 @@
 
 pyvesync is a library to manage VeSync compatible [smart home devices](#supported-devices)
 
+**Note** Please check out the new [Discussions](https://github.com/webdjoe/pyvesync/discussions) section. This is the place for all questions and discussions that aren't issues directly related to the pyvesync library. Any Home Assistant questions should go here, in addition to device troubleshooting and general questions on the process to add new devices.
+
 ## Table of Contents <!-- omit in toc -->
 
 - [Installation](#installation)
@@ -29,9 +31,9 @@ pyvesync is a library to manage VeSync compatible [smart home devices](#supporte
   - [Standard Air Purifier Properties \& Methods](#standard-air-purifier-properties--methods)
     - [Air Purifier Properties](#air-purifier-properties)
     - [Air Purifier Methods](#air-purifier-methods)
-    - [Levoit Purifier Core200S/300S/400S and Vital 100S/200S Properties](#levoit-purifier-core200s300s400s-and-vital-100s200s-properties)
-    - [Levoit Purifier Core200S/300S/400S and Vital 100S/200S Methods](#levoit-purifier-core200s300s400s-and-vital-100s200s-methods)
-    - [Levoit Vital 100S/200S Properties and Methods](#levoit-vital-100s200s-properties-and-methods)
+    - [Levoit Purifier Core200S/300S/400S and Vital 100S/200S Properties](#levoit-purifier-core200s300s400s-vital-100s200s--everest-air-properties)
+    - [Levoit Purifier Core200S/300S/400S, Vital 100S/200S & Everest Air Methods](#levoit-purifier-core200s300s400s-vital-100s200s--everest-air-methods)
+    - [Levoit Vital 100S/200S Properties and Methods](#levoit-vital-100s200s--everest-air-properties-and-methods)
   - [Lights API Methods \& Properties](#lights-api-methods--properties)
     - [Brightness Light Bulb Method and Properties](#brightness-light-bulb-method-and-properties)
     - [Light Bulb Color Temperature Methods and Properties](#light-bulb-color-temperature-methods-and-properties)
@@ -94,6 +96,7 @@ pip install pyvesync
 5. Core 600S
 6. Vital 100S
 7. Vital 200S
+8. Everest Air
 
 ### Etekcity Bulbs
 
@@ -330,13 +333,13 @@ Compatible levels for each model:
 - PUR131S [1, 2, 3]
 - Vital 100S/200S [1, 2, 3, 4]
 
-#### Levoit Purifier Core200S/300S/400S and Vital 100S/200S Properties
+#### Levoit Purifier Core200S/300S/400S, Vital 100S/200S & Everest Air Properties
 
 `VeSyncFan.child_lock` - Return the state of the child lock (True=On/False=off)
 
 `VeSyncAir.night_light` - Return the state of the night light (on/dim/off) **Not available on Vital 100S/200S**
 
-#### Levoit Purifier Core200S/300S/400S and Vital 100S/200S Methods
+#### Levoit Purifier Core200S/300S/400S, Vital 100S/200S & Everest Air Methods
 
 `VeSyncFan.child_lock_on()` Enable child lock
 
@@ -348,13 +351,13 @@ Compatible levels for each model:
 
 `VeSyncFan.set_night_light('on'|'dim'|'off')` - Set night light brightness
 
-`VeSyncFan.get_timer()` - Get any running timers, stores Timer DataClass in `VeSyncFan.timer`
+`VeSyncFan.get_timer()` - Get any running timers, stores Timer DataClass in `VeSyncFan.timer`. See [Timer Dataclass](#timer-dataclass)
 
 `VeSyncFan.set_timer(timer_duration=3000)` - Set a timer for the device, only turns device off. Timer DataClass stored in `VeSyncFan.timer`
 
 `VeSyncFan.clear_timer()` - Cancel any running timer
 
-#### Levoit Vital 100S/200S Properties and Methods
+#### Levoit Vital 100S/200S & Everest Air Properties and Methods
 
 The Levoit Vital 100S/200S has additional features not available on other models.
 
@@ -373,6 +376,23 @@ The Levoit Vital 100S/200S has additional features not available on other models
 `VeSyncFan.set_light_detection_on()` - Turn on light detection mode
 
 `VeSyncFan.set_light_detection_off()` - Turn off light detection mode
+
+#### Levoit Everest Air Properties & Methods
+
+`VeSyncFan.turbo_mode()` - Set turbo mode
+
+Additional properties in the `VeSyncFan['details']` dictionary:
+
+```python
+VeSyncFan['Details'] = {
+  'pm1': 0,  # air quality reading of particulates 1.0 microns
+  'pm10': 10,  # air quality reading of particulates 10 microns
+  'fan_rotate_angle': 45,  # angle of fan vents
+  'aq_percent': 45, # Air Quality percentage reading
+  'filter_open_state': False  # returns bool of filter open
+}
+
+```
 
 ### Lights API Methods & Properties
 
@@ -624,7 +644,6 @@ They can be set through the `VeSyncAirFryer158.fryer_status` dataclass but shoul
 
 `VeSyncAirFryer158.end()` - End cooking or preheating and return air fryer to `standby` state
 
-
 ### Timer DataClass
 
 This is the a Timer DataClass that is used in the  `get_timer()` or `set_timer()` methods *only implemented for Levoit Core 200S and 300S Air Purifier*, will eventually integrate with remaining devices. This object is created when the device timer methods are called. **The `pause()`, `resume()` and `stop()` methods for this DataClass only impact the timer locally and do not update the API.**
@@ -659,7 +678,6 @@ timer.end()
 # Resume timer - Does not update API - only Resumes locally
 timer.start()
 ```
-
 
 ### JSON Output API
 
@@ -1027,7 +1045,7 @@ After:
 }
 ```
 
-# Contributing
+## Contributing
 
 All [contributions](CONTRIBUTING.md) are welcome.
 

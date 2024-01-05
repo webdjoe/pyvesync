@@ -6,7 +6,7 @@ import time
 import json
 import colorsys
 from dataclasses import dataclass, field, InitVar
-from typing import NamedTuple, Optional, Union
+from typing import NamedTuple, Optional, Union, Dict, Any
 import re
 import requests
 
@@ -51,7 +51,7 @@ class Helpers:
         return headers
 
     @staticmethod
-    def req_header_bypass() -> dict:
+    def req_header_bypass() -> Dict[str, str]:
         """Build header for api requests on 'bypass' endpoint."""
         return {
             'Content-Type': 'application/json; charset=UTF-8',
@@ -59,17 +59,17 @@ class Helpers:
             }
 
     @staticmethod
-    def req_body_base(manager) -> dict:
+    def req_body_base(manager) -> Dict[str, Any]:
         """Return universal keys for body of api requests."""
         return {'timeZone': manager.time_zone, 'acceptLanguage': 'en'}
 
     @staticmethod
-    def req_body_auth(manager) -> dict:
+    def req_body_auth(manager) -> Dict[str, Any]:
         """Keys for authenticating api requests."""
         return {'accountID': manager.account_id, 'token': manager.token}
 
     @staticmethod
-    def req_body_details() -> dict:
+    def req_body_details() -> Dict[str, Any]:
         """Detail keys for api requests."""
         return {
             'appVersion': APP_VERSION,
@@ -79,83 +79,57 @@ class Helpers:
         }
 
     @classmethod
-    def req_body(cls, manager, type_) -> dict:
+    def req_body(cls, manager, type_) -> Dict[str, Any]:
         """Builder for body of api requests."""
-        body = {}
+        body = cls.req_body_base(manager)
 
         if type_ == 'login':
-            body = {**cls.req_body_base(manager),
-                    **cls.req_body_details()}
-            body['email'] = manager.username
-            body['password'] = cls.hash_password(manager.password)
-            body['devToken'] = ''
-            body['userType'] = USER_TYPE
-            body['method'] = 'login'
-        elif type_ == 'devicedetail':
-            body = {
-                **cls.req_body_base(manager),
-                **cls.req_body_auth(manager),
-                **cls.req_body_details(),
-            }
-            body['method'] = 'devicedetail'
-            body['mobileId'] = MOBILE_ID
-        elif type_ == 'devicelist':
-            body = {
-                **cls.req_body_base(manager),
-                **cls.req_body_auth(manager),
-                **cls.req_body_details(),
-            }
+            body |= cls.req_body_details()  # type: ignore
+            body |= {
+                'email': manager.username,
+                'password': cls.hash_password(manager.password),
+                'devToken': '',
+                'userType': USER_TYPE,
+                'method': 'login'
+            }  # type: ignore
+            return body
+
+        body |= cls.req_body_auth(manager)  # type: ignore
+
+        if type_ == 'devicestatus':
+            return body
+
+        body |= cls.req_body_details()  # type: ignore
+
+        if type_ == 'devicelist':
             body['method'] = 'devices'
             body['pageNo'] = '1'
             body['pageSize'] = '100'
-        elif type_ == 'devicestatus':
-            body = {**cls.req_body_base(manager),
-                    **cls.req_body_auth(manager)}
+
+        elif type_ == 'devicedetail':
+            body['method'] = 'devicedetail'
+            body['mobileId'] = MOBILE_ID
+
         elif type_ == 'energy_week':
-            body = {
-                **cls.req_body_base(manager),
-                **cls.req_body_auth(manager),
-                **cls.req_body_details(),
-            }
             body['method'] = 'energyweek'
             body['mobileId'] = MOBILE_ID
+
         elif type_ == 'energy_month':
-            body = {
-                **cls.req_body_base(manager),
-                **cls.req_body_auth(manager),
-                **cls.req_body_details(),
-            }
             body['method'] = 'energymonth'
             body['mobileId'] = MOBILE_ID
+
         elif type_ == 'energy_year':
-            body = {
-                **cls.req_body_base(manager),
-                **cls.req_body_auth(manager),
-                **cls.req_body_details(),
-            }
             body['method'] = 'energyyear'
             body['mobileId'] = MOBILE_ID
+
         elif type_ == 'bypass':
-            body = {
-                **cls.req_body_base(manager),
-                **cls.req_body_auth(manager),
-                **cls.req_body_details(),
-            }
             body['method'] = 'bypass'
+
         elif type_ == 'bypassV2':
-            body = {
-                **cls.req_body_base(manager),
-                **cls.req_body_auth(manager),
-                **cls.req_body_details(),
-            }
             body['deviceRegion'] = DEFAULT_REGION
             body['method'] = 'bypassV2'
+
         elif type_ == 'bypass_config':
-            body = {
-                **cls.req_body_base(manager),
-                **cls.req_body_auth(manager),
-                **cls.req_body_details(),
-            }
             body['method'] = 'firmwareUpdateInfo'
 
         return body
