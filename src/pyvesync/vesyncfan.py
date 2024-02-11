@@ -58,6 +58,13 @@ humid_features: dict = {
             'features': [],
             'mist_modes': ['auto', 'sleep', 'manual'],
             'mist_levels': list(range(1, 10))
+    },
+    'Superior6000S': {
+            'module': 'VeSyncSuperior6000S',
+            'models': ['LEH-S601S-WUS'],
+            'features': [],
+            'mist_modes': ['auto', 'humidity', 'sleep', 'manual'],
+            'mist_levels': list(range(1, 10))
     }
 }
 
@@ -2010,13 +2017,437 @@ class VeSyncHumid200S(VeSyncHumid200300S):
         return False
 
 
+class VeSyncSuperior6000S(VeSyncBaseDevice):
+    """Superior 6000S Humidifier."""
+
+    def __init__(self, details, manager):
+        """Initialize Superior 6000S Humidifier class."""
+        super().__init__(details, manager)
+        self.config_dict = model_features(self.device_type)
+        self.mist_levels = self.config_dict.get('mist_levels')
+        self.mist_modes = self.config_dict.get('mist_modes')
+        self.connection_status = details.get('deviceProp', {}).get(
+            'connectionStatus', None)
+        self.details = {}
+        self.config = {}
+        self._api_modes = [
+            'getHumidifierStatus',
+            'setSwitch',
+            'setVirtualLevel',
+            'setTargetHumidity',
+            'setHumidityMode',
+            'setDisplay',
+            'setDryingMode',
+        ]
+
+    def build_api_dict(self, method: str) -> Tuple[Dict, Dict]:
+        """Build humidifier api call header and body.
+
+        Available methods are: 'getHumidifierStatus', 'setSwitch',
+        'setVirtualLevel', 'setTargetHumidity', 'setHumidityMode',
+        'setDisplay', 'setDryingMode'
+        """
+        if method not in self._api_modes:
+            logger.debug('Invalid mode - %s', method)
+            raise ValueError
+        head = Helpers.bypass_header()
+        body = Helpers.bypass_body_v2(self.manager)
+        body['cid'] = self.cid
+        body['configModule'] = self.config_module
+        body['payload'] = {
+            'method': method,
+            'source': 'APP'
+        }
+        return head, body
+
+    def build_humid_dict(self, dev_dict: Dict[str, str]) -> None:
+        """Build humidifier status dictionary."""
+        self.device_status = 'off' if dev_dict.get('powerSwitch', 0) == 0 else 'on'
+        self.mode = 'auto' if dev_dict.get('workMode', '') == 'autoPro' \
+            else dev_dict.get('workMode', '')
+        self.details['humidity'] = dev_dict.get('humidity', 0)
+        self.details['target_humidity'] = dev_dict.get('targetHumidity', None)
+        self.details['mist_virtual_level'] = dev_dict.get(
+            'virtualLevel', 0)
+        self.details['mist_level'] = dev_dict.get('mistLevel', 0)
+        self.details['water_lacks'] = dev_dict.get('waterLacksState', False)
+        self.details['water_tank_lifted'] = dev_dict.get(
+            'waterTankLifted', False)
+        self.details['filter_life_percentage'] = dev_dict.get('filterLifePercent', 0)
+        self.details['temperature'] = dev_dict.get('temperature', 0)
+        self.details['display'] = dev_dict.get('screenSwitch', None)
+        self.details['drying_mode'] = dev_dict.get('dryingMode', {})
+
+    def build_config_dict(self, _):
+        """Build configuration dict for humidifier."""
+
+    def get_details(self) -> None:
+        """Build Humidifier details dictionary."""
+        head = Helpers.bypass_header()
+        body = Helpers.bypass_body_v2(self.manager)
+        body['cid'] = self.cid
+        body['configModule'] = self.config_module
+        body['payload'] = {
+            'method': 'getHumidifierStatus',
+            'source': 'APP',
+            'data': {}
+        }
+
+        r, _ = Helpers.call_api(
+            '/cloud/v2/deviceManaged/bypassV2',
+            method='post',
+            headers=head,
+            json_object=body,
+        )
+        if r is None or not isinstance(r, dict):
+            logger.debug("Error getting status of %s ", self.device_name)
+            return
+        outer_result = r.get('result', {})
+        inner_result = None
+
+        if outer_result is not None:
+            inner_result = r.get('result', {}).get('result')
+        if inner_result is not None and Helpers.code_check(r):
+            if outer_result.get('code') == 0:
+                self.build_humid_dict(inner_result)
+            else:
+                logger.debug('error in inner result dict from humidifier')
+            if inner_result.get('configuration', {}):
+                self.build_config_dict(inner_result.get('configuration', {}))
+            else:
+                logger.debug('No configuration found in humidifier status')
+        else:
+            logger.debug('Error in humidifier response')
+
+    def update(self):
+        """Update humidifier details."""
+        self.get_details()
+
+    def toggle_switch(self, toggle: bool) -> bool:
+        """Toggle humidifier on/off."""
+        if not isinstance(toggle, bool):
+            logger.debug('Invalid toggle value for humidifier switch')
+            return False
+
+        head = Helpers.bypass_header()
+        body = Helpers.bypass_body_v2(self.manager)
+        body['cid'] = self.cid
+        body['configModule'] = self.config_module
+        body['payload'] = {
+            'data': {
+                'powerSwitch': int(toggle),
+                'switchIdx': 0
+            },
+            'method': 'setSwitch',
+            'source': 'APP'
+        }
+
+        r, _ = Helpers.call_api(
+            '/cloud/v2/deviceManaged/bypassV2',
+            method='post',
+            headers=head,
+            json_object=body,
+        )
+
+        if r is not None and Helpers.code_check(r):
+            if toggle:
+                self.device_status = 'on'
+            else:
+                self.device_status = 'off'
+
+            return True
+        logger.debug("Error toggling humidifier - %s", self.device_name)
+        return False
+
+    def turn_on(self) -> bool:
+        """Turn humidifier on."""
+        return self.toggle_switch(True)
+
+    def turn_off(self):
+        """Turn humidifier off."""
+        return self.toggle_switch(False)
+
+    def set_drying_mode_enabled(self, mode: bool) -> bool:
+        """enable/disable drying filters after turning off."""
+        if mode not in (True, False):
+            logger.debug(
+                'Invalid toggle passed to set_drying_mode_enabled - %s', mode
+            )
+            return False
+        head, body = self.build_api_dict('setDryingMode')
+        body['payload']['data'] = {
+            'autoDryingSwitch': int(mode)
+        }
+
+        r, _ = Helpers.call_api(
+            '/cloud/v2/deviceManaged/bypassV2',
+            method='post',
+            headers=head,
+            json_object=body,
+        )
+
+        if r is not None and Helpers.code_check(r):
+            return True
+        if isinstance(r, dict):
+            logger.debug('Error in set_drying_mode_enabled response')
+        else:
+            logger.debug(
+                'Error in set_drying_mode_enabled api return json for %s',
+                self.device_name
+            )
+        return False
+
+    def set_display_enabled(self, mode: bool) -> bool:
+        """Toggle display on/off."""
+        if not isinstance(mode, bool):
+            logger.debug("Mode must be True or False")
+            return False
+
+        head, body = self.build_api_dict('setDisplay')
+
+        body['payload']['data'] = {
+            'screenSwitch': int(mode)
+        }
+
+        r, _ = Helpers.call_api(
+            '/cloud/v2/deviceManaged/bypassV2',
+            method='post',
+            headers=head,
+            json_object=body,
+        )
+
+        if r is not None and Helpers.code_check(r):
+            return True
+        logger.debug("Error toggling display - %s", self.device_name)
+        return False
+
+    def turn_on_display(self) -> bool:
+        """Turn display on."""
+        return self.set_display_enabled(True)
+
+    def turn_off_display(self):
+        """Turn display off."""
+        return self.set_display_enabled(False)
+
+    def set_humidity(self, humidity: int) -> bool:
+        """Set target humidity for humidity mode."""
+        if humidity < 30 or humidity > 80:
+            logger.debug("Humidity value must be set between 30 and 80")
+            return False
+        head, body = self.build_api_dict('setTargetHumidity')
+
+        if not head and not body:
+            return False
+
+        body['payload']['data'] = {
+            'targetHumidity': humidity
+        }
+
+        r, _ = Helpers.call_api(
+            '/cloud/v2/deviceManaged/bypassV2',
+            method='post',
+            headers=head,
+            json_object=body,
+        )
+
+        if r is not None and Helpers.code_check(r):
+            return True
+        logger.debug('Error setting humidity')
+        return False
+
+    def set_humidity_mode(self, mode: str) -> bool:
+        """Set humidifier mode."""
+        if mode not in self.mist_modes:
+            logger.debug('Invalid humidity mode used - %s',
+                         mode)
+            logger.debug('Proper modes for this device are - %s',
+                         str(self.mist_modes))
+            return False
+        head, body = self.build_api_dict('setHumidityMode')
+        if not head and not body:
+            return False
+        body['payload']['data'] = {
+            'workMode': 'autoPro' if mode == 'auto' else mode
+        }
+
+        r, _ = Helpers.call_api(
+            '/cloud/v2/deviceManaged/bypassV2',
+            method='post',
+            headers=head,
+            json_object=body,
+        )
+
+        if r is not None and Helpers.code_check(r):
+            return True
+        logger.debug('Error setting humidity mode')
+        return False
+
+    def set_auto_mode(self) -> bool:
+        """Set humidity mode to auto."""
+        return self.set_humidity_mode('auto')
+
+    def set_manual_mode(self) -> bool:
+        """Set humidity mode to manual."""
+        return self.set_humidity_mode('manual')
+
+    def automatic_stop_on(self) -> bool:
+        """Set humidity mode to auto."""
+        return self.set_humidity_mode('auto')
+
+    def automatic_stop_off(self) -> bool:
+        """Set humidity mode to manual."""
+        return self.set_humidity_mode('manual')
+
+    def set_mist_level(self, level) -> bool:
+        """Set humidifier mist level with int between 0 - 9."""
+        try:
+            level = int(level)
+        except ValueError:
+            level = str(level)
+        if level not in self.mist_levels:
+            logger.debug('Humidifier mist level must be between 0 and 9')
+            return False
+
+        head, body = self.build_api_dict('setVirtualLevel')
+        if not head and not body:
+            return False
+
+        body['payload']['data'] = {
+            'levelIdx': 0,
+            'virtualLevel': level,
+            'levelType': 'mist'
+        }
+
+        r, _ = Helpers.call_api(
+            '/cloud/v2/deviceManaged/bypassV2',
+            method='post',
+            headers=head,
+            json_object=body,
+        )
+
+        if r is not None and Helpers.code_check(r):
+            return True
+        logger.debug('Error setting mist level')
+        return False
+
+    @property
+    def humidity_level(self):
+        """Get Humidity level."""
+        return self.details['humidity']
+
+    @property
+    def mist_level(self):
+        """Get current mist level."""
+        return self.details['mist_level']
+
+    @property
+    def mist_virtual_level(self):
+        """Get current mist virtual level."""
+        return self.details['mist_virtual_level']
+
+    @property
+    def water_lacks(self):
+        """If tank is empty return true."""
+        if 'water_lacks' in self.details:
+            return bool(self.details['water_lacks'])
+        return None
+
+    @property
+    def drying_mode_state(self):
+        """True if humidifier is currently drying the filters, false otherwise."""
+        state = self.details.get('drying_mode', {}).get('dryingState')
+        if state == 1:
+            return 'on'
+        if state == 2:
+            return 'off'
+        return None
+
+    @property
+    def drying_mode_seconds_remaining(self):
+        """If drying_mode_state is on, how many seconds are remaining."""
+        return self.details.get('drying_mode', {}).get('dryingRemain')
+
+    @property
+    def drying_mode_enabled(self):
+        """True if fan will stay on to dry the filters when humidifier is off, \
+        False otherwise."""
+        enabled = self.details.get('drying_mode', {}).get('autoDryingSwitch')
+        return None if enabled is None else bool(enabled)
+
+    @property
+    def drying_mode_level(self):
+        """Drying mode level 1 = low, 2 = high."""
+        level = self.details.get('drying_mode', {}).get('dryingLevel')
+        if level == 1:
+            return 'low'
+        if level == 2:
+            return 'high'
+        return None
+
+    @property
+    def temperature(self):
+        """Current temperature."""
+        return self.details['temperature']
+
+    @property
+    def target_humidity(self):
+        """The target humidity when in humidity mode."""
+        return self.details['target_humidity']
+
+    def display(self) -> None:
+        """Return formatted device info to stdout."""
+        super().display()
+        disp = [
+            ('Temperature', self.temperature, ''),
+            ('Humidity: ', self.humidity_level, 'percent'),
+            ('Target Humidity', self.target_humidity, 'percent'),
+            ('Mode: ', self.mode, ''),
+            ('Mist Virtual Level: ', self.details['mist_virtual_level'], ''),
+            ('Mist Level: ', self.details['mist_level'], ''),
+            ('Water Lacks: ', self.water_lacks, ''),
+            ('Water Tank Lifted: ', bool(self.details['water_tank_lifted']), ''),
+            ('Display On: ', bool(self.details['display']), ''),
+            ('Filter Life', self.details['filter_life_percentage'], 'percent'),
+            ('Drying Mode Enabled', self.drying_mode_enabled, ''),
+            ('Drying Mode State', self.drying_mode_state, ''),
+            ('Drying Mode Level', self.drying_mode_level, ''),
+            ('Drying Mode Time Remaining', self.drying_mode_seconds_remaining, 'seconds'),
+        ]
+        for line in disp:
+            print(f'{line[0]:.<30} {line[1]} {line[2]}')
+
+    def displayJSON(self) -> str:
+        """Return air purifier status and properties in JSON output."""
+        sup = super().displayJSON()
+        sup_val = json.loads(sup)
+        sup_val.update(
+            {
+                'Temperature': self.temperature,
+                'Humidity': self.humidity_level,
+                'Target Humidity': self.target_humidity,
+                'Mode': self.mode,
+                'Mist Virtual Level': self.mist_virtual_level,
+                'Mist Level': self.mist_level,
+                'Water Lacks': self.details['water_lacks'],
+                'Water Tank Lifted': bool(self.details['water_tank_lifted']),
+                'Display On': bool(self.details['display']),
+                'Filter Life': self.details['filter_life_percentage'],
+                'Drying Mode Enabled': self.drying_mode_enabled,
+                'Drying Mode State': self.drying_mode_state,
+                'Drying Mode Level': self.drying_mode_level,
+                'Drying Mode Time Remaining': self.drying_mode_seconds_remaining,
+            }
+        )
+        return json.dumps(sup_val, indent=4)
+
+
 class VeSyncHumid1000S(VeSyncHumid200300S):
     """Levoit OasisMist 1000S Specific class."""
 
     def __init__(self, details, manager):
         """Initialize levoit 1000S device class."""
         super().__init__(details, manager)
-        self.connection_status: str = details.get('deviceProp', {}).get(
+        self.connection_status = details.get('deviceProp', {}).get(
             'connectionStatus', None)
 
         self._api_modes = ['getHumidifierStatus', 'setAutoStopSwitch',

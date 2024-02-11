@@ -267,6 +267,45 @@ class FanDetails:
         }
     }, 200)
 
+    details_superior6000S = ({
+        "traceId": Defaults.trace_id,
+        "code": 0,
+        "msg": "request success",
+        "module": None,
+        "stacktrace": None,
+        "result": {
+            "traceId": Defaults.trace_id,
+            "code": 0,
+            "result": {
+            "powerSwitch": 1,
+            "humidity": 44,
+            "targetHumidity": 50,
+            "virtualLevel": 1,
+            "mistLevel": 1,
+            "workMode": "manual",
+            "waterLacksState": 0,
+            "waterTankLifted": 0,
+            "autoStopSwitch": 1,
+            "autoStopState": 0,
+            "screenSwitch": 1,
+            "screenState": 1,
+            "scheduleCount": 0,
+            "timerRemain": 0,
+            "errorCode": 0,
+            "dryingMode": {
+                "dryingLevel": 1,
+                "autoDryingSwitch": 1,
+                "dryingState": 2,
+                "dryingRemain": 7200
+            },
+            "autoPreference": 1,
+            "childLockSwitch": 0,
+            "filterLifePercent": 93,
+            "temperature": 662
+            }
+        }
+    }, 200)
+
 
 DETAILS_RESPONSES = {
     'LV-PUR131S': FanDetails.details_air,
@@ -281,7 +320,8 @@ DETAILS_RESPONSES = {
     'LUH-O451S-WUS': FanDetails.details_lv600s,
     'LAP-V201S-AASR': FanDetails.details_vital100s,
     'LAP-V102S-AASR': FanDetails.details_vital100s,
-    'LUH-M101S-WUS': FanDetails.details_oasismist1000S
+    'LUH-M101S-WUS': FanDetails.details_oasismist1000S,
+    'LEH-S601S-WUS': FanDetails.details_superior6000S
 }
 
 FunctionResponses.default_factory = lambda: ({
