@@ -120,7 +120,7 @@ air_features: dict = {
     'Vital200S': {
         'module': 'VeSyncVital',
         'models': ['LAP-V201S-AASR', 'LAP-V201S-WJP', 'LAP-V201S-WEU',
-                   'LAP-V201S-WUS', 'LAP-V201-AUSR'],
+                   'LAP-V201S-WUS', 'LAP-V201-AUSR', 'LAP-V201S-AUSR'],
         'modes': ['manual', 'auto', 'sleep', 'off', 'pet'],
         'features': ['air_quality'],
         'levels': list(range(1, 5))
