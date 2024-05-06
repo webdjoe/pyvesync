@@ -74,7 +74,7 @@ air_features: dict = {
         'module': 'VeSyncAirBypass',
         'models': ['Core200S', 'LAP-C201S-AUSR', 'LAP-C202S-WUSR'],
         'modes': ['sleep', 'off', 'manual'],
-        'features': [],
+        'features': ['reset_filter'],
         'levels': list(range(1, 4))
     },
     'Core300S': {
@@ -202,7 +202,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         modes = ['getPurifierStatus', 'setSwitch', 'setNightLight',
                  'setLevel', 'setPurifierMode', 'setDisplay',
                  'setChildLock', 'setIndicatorLight', 'getTimer',
-                 'addTimer', 'delTimer']
+                 'addTimer', 'delTimer', 'resetFilter']
         if method not in modes:
             logger.debug('Invalid mode - %s', method)
             return {}, {}
@@ -484,6 +484,30 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             logger.debug('Error toggling child lock')
         else:
             logger.debug('Error in api return json for %s', self.device_name)
+        return False
+
+    def reset_filter(self) -> bool:
+        """Reset filter to 100%."""
+        if 'reset_filter' not in self.features:
+            logger.debug("Filter reset not implemented for %s", self.device_type)
+            return False
+
+        head, body = self.build_api_dict('resetFilter')
+        if not head and not body:
+            return False
+
+        body['payload']['data'] = {}
+
+        r, _ = Helpers.call_api(
+            '/cloud/v2/deviceManaged/bypassV2',
+            method='post',
+            headers=head,
+            json_object=body,
+        )
+
+        if r is not None and Helpers.code_check(r):
+            return True
+        logger.debug('Error resetting filter')
         return False
 
     def mode_toggle(self, mode: str) -> bool:
