@@ -319,10 +319,12 @@ class VeSyncAirBypass(VeSyncBaseDevice):
 
         timer = timers[0]
         if self.timer is None:
-            self.timer = Timer(timer_duration=timer.get('duration', 0),
-                               action=timer.get('action'),
-                               id=timer.get('id'),
-                               remaining=timer.get('remaining'))
+            self.timer = Timer(
+                timer_duration=timer.get("duration", timer.get("total", 0)),
+                action=timer.get("action"),
+                id=timer.get("id"),
+                remaining=timer.get("remaining", timer.get("remain"))
+            )
         else:
             self.timer.update(time_remaining=timer.get('remaining'))
         logger.debug('Timer found: %s', str(self.timer))
