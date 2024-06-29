@@ -38,7 +38,8 @@ humid_features: dict = {
                    'LUH-A602S-WUS',
                    'LUH-A602S-WEUR',
                    'LUH-A602S-WEU',
-                   'LUH-A602S-WJP'],
+                   'LUH-A602S-WJP',
+                   'LUH-A602S-WUSC'],
         'features': ['warm_mist', 'nightlight'],
         'mist_modes': ['humidity', 'sleep', 'manual'],
         'mist_levels': list(range(1, 10)),
@@ -120,7 +121,8 @@ air_features: dict = {
     'Vital200S': {
         'module': 'VeSyncAirBaseV2',
         'models': ['LAP-V201S-AASR', 'LAP-V201S-WJP', 'LAP-V201S-WEU',
-                   'LAP-V201S-WUS', 'LAP-V201-AUSR', 'LAP-V201S-AUSR'],
+                   'LAP-V201S-WUS', 'LAP-V201-AUSR', 'LAP-V201S-AUSR',
+                   'LAP-V201S-AEUR'],
         'modes': ['manual', 'auto', 'sleep', 'off', 'pet'],
         'features': ['air_quality'],
         'levels': list(range(1, 5))
