@@ -211,6 +211,8 @@ class Helpers:
                     API_BASE_URL + api, json=json_object, headers=headers,
                     timeout=API_TIMEOUT
                 )
+            else:
+                raise ValueError(f"Unsupported method ${method}")
         except requests.exceptions.RequestException as e:
             logger.debug(e)
         except Exception as e:  # pylint: disable=broad-except
