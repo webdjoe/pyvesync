@@ -354,6 +354,8 @@ Compatible levels for each model:
 
 `VeSyncFan.clear_timer()` - Cancel any running timer
 
+`VeSyncFan.reset_filter()` - Reset filter to 100% **NOTE: Only available on Core200S**
+
 #### Levoit Vital 100S/200S Properties and Methods
 
 The Levoit Vital 100S/200S has additional features not available on other models.
