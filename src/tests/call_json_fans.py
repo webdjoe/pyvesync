@@ -32,17 +32,18 @@ METHOD_RESPONSES['DEV_TYPE']['set_status'] = status_response
 
 METHOD_RESPONSES['DEVTYPE'].default_factory = lambda: ({"code": 0, "msg": "success"}, 200)
 """
+
 from copy import deepcopy
 from pyvesync import vesyncfan, helpers
 from utils import Defaults, FunctionResponses
 
 HUMID_MODELS = []
 for model_type, model_dict in vesyncfan.humid_features.items():
-    HUMID_MODELS.append(model_dict['models'][0])
+    HUMID_MODELS.append(model_dict["models"][0])
 
 AIR_MODELS = []
 for model_type, model_dict in vesyncfan.air_features.items():
-    AIR_MODELS.append(model_dict['models'][0])
+    AIR_MODELS.append(model_dict["models"][0])
 
 FANS = HUMID_MODELS + AIR_MODELS
 FANS_NUM = len(FANS)
@@ -57,11 +58,7 @@ def INNER_RESULT(inner: dict) -> dict:
         "msg": "request success",
         "module": None,
         "stacktrace": None,
-        "result": {
-            "traceId": Defaults.trace_id,
-            "code": 0,
-            "result": inner
-        }
+        "result": {"traceId": Defaults.trace_id, "code": 0, "result": inner},
     }
 
 
@@ -73,33 +70,35 @@ class FanDefaults:
     warm_mist_level = 2
     air_quality = 3
     air_quality_value = 4
+    filter_open = 0
+    aq_percent = 75
+    pm1 = 10
+    pm10 = 5
+    rotate_angle = 45
 
 
 class FanDetails:
-    details_air = (
-        {
-            'code': 0,
-            'msg': None,
-            'deviceStatus': 'on',
-            'connectionStatus': 'online',
-            'activeTime': Defaults.active_time,
-            'deviceImg': None,
-            'deviceName': 'LV-PUR131S-NAME',
-            'filterLife': {
-                'change': False,
-                'useHour': None,
-                'percent': FanDefaults.filter_life,
-            },
-            'airQuality': 'excellent',
-            'screenStatus': 'on',
-            'mode': 'manual',
-            'level': FanDefaults.fan_level,
-            'schedule': None,
-            'timer': None,
-            'scheduleCount': 0,
+    details_air = ({
+        "code": 0,
+        "msg": None,
+        "deviceStatus": "on",
+        "connectionStatus": "online",
+        "activeTime": Defaults.active_time,
+        "deviceImg": None,
+        "deviceName": "LV-PUR131S-NAME",
+        "filterLife": {
+            "change": False,
+            "useHour": None,
+            "percent": FanDefaults.filter_life,
         },
-        200,
-    )
+        "airQuality": "excellent",
+        "screenStatus": "on",
+        "mode": "manual",
+        "level": FanDefaults.fan_level,
+        "schedule": None,
+        "timer": None,
+        "scheduleCount": 0,
+    }, 200)
 
     details_lv600s = ({
         "traceId": Defaults.trace_id,
@@ -125,10 +124,10 @@ class FanDetails:
                 "configuration": {
                     "auto_target_humidity": 50,
                     "display": False,
-                    "automatic_stop": True
-                }
-            }
-        }
+                    "automatic_stop": True,
+                },
+            },
+        },
     }, 200)
 
     details_classic200s300s = ({
@@ -153,10 +152,10 @@ class FanDetails:
                 "configuration": {
                     "auto_target_humidity": 50,
                     "display": False,
-                    "automatic_stop": True
-                }
-            }
-        }
+                    "automatic_stop": True,
+                },
+            },
+        },
     }, 200)
 
     details_oasismist1000S = ({
@@ -181,12 +180,13 @@ class FanDetails:
                 "screenState": 0,
                 "scheduleCount": 0,
                 "timerRemain": 0,
-                "errorCode": 0
-            }
-        }
+                "errorCode": 0,
+            },
+        },
     }, 200)
 
     details_core = ({
+
         "traceId": Defaults.trace_id,
         "code": 0,
         "msg": "request success",
@@ -205,18 +205,12 @@ class FanDetails:
                 "configuration": {
                     "display": True,
                     "display_forever": True,
-                    "auto_preference": {
-                        "type": "default",
-                        "room_size": 0
-                    }
+                    "auto_preference": {"type": "default", "room_size": 0},
                 },
-                "extension": {
-                    "schedule_count": 0,
-                    "timer_remain": 0
-                },
-                "device_error_code": 0
-            }
-        }
+                "extension": {"schedule_count": 0, "timer_remain": 0},
+                "device_error_code": 0,
+            },
+        },
     }, 200)
 
     details_vital100s = ({
@@ -241,10 +235,7 @@ class FanDetails:
                 "screenSwitch": Defaults.bin_toggle,
                 "lightDetectionSwitch": Defaults.bin_toggle,
                 "environmentLightState": Defaults.bin_toggle,
-                "autoPreference": {
-                            "autoPreferenceType": "default",
-                            "roomSize": 0
-                },
+                "autoPreference": {"autoPreferenceType": "default", "roomSize": 0},
                 "scheduleCount": 0,
                 "timerRemain": 0,
                 "efficientModeTimeRemain": 0,
@@ -260,11 +251,11 @@ class FanDetails:
                     "duringSleepMinutes": 480,
                     "afterWakeUpPowerSwitch": 1,
                     "afterWakeUpWorkMode": "auto",
-                    "afterWakeUpFanSpeedLevel": 1
+                    "afterWakeUpFanSpeedLevel": 1,
                 },
-                "errorCode": 0
-            }
-        }
+                "errorCode": 0,
+            },
+        },
     }, 200)
 
     details_superior6000S = ({
@@ -277,62 +268,101 @@ class FanDetails:
             "traceId": Defaults.trace_id,
             "code": 0,
             "result": {
-            "powerSwitch": 1,
-            "humidity": 44,
-            "targetHumidity": 50,
-            "virtualLevel": 1,
-            "mistLevel": 1,
-            "workMode": "manual",
-            "waterLacksState": 0,
-            "waterTankLifted": 0,
-            "autoStopSwitch": 1,
-            "autoStopState": 0,
-            "screenSwitch": 1,
-            "screenState": 1,
-            "scheduleCount": 0,
-            "timerRemain": 0,
-            "errorCode": 0,
-            "dryingMode": {
-                "dryingLevel": 1,
-                "autoDryingSwitch": 1,
-                "dryingState": 2,
-                "dryingRemain": 7200
+                "powerSwitch": 1,
+                "humidity": 44,
+                "targetHumidity": 50,
+                "virtualLevel": 1,
+                "mistLevel": 1,
+                "workMode": "manual",
+                "waterLacksState": 0,
+                "waterTankLifted": 0,
+                "autoStopSwitch": 1,
+                "autoStopState": 0,
+                "screenSwitch": 1,
+                "screenState": 1,
+                "scheduleCount": 0,
+                "timerRemain": 0,
+                "errorCode": 0,
+                "dryingMode": {
+                    "dryingLevel": 1,
+                    "autoDryingSwitch": 1,
+                    "dryingState": 2,
+                    "dryingRemain": 7200,
+                },
+                "autoPreference": 1,
+                "childLockSwitch": 0,
+                "filterLifePercent": 93,
+                "temperature": 662,
             },
-            "autoPreference": 1,
-            "childLockSwitch": 0,
-            "filterLifePercent": 93,
-            "temperature": 662
-            }
-        }
+        },
+    }, 200)
+
+    details_everest = ({
+        "traceId": "1691789977402",
+        "code": 0,
+        "msg": "request success",
+        "module": None,
+        "stacktrace": None,
+        "result": {
+            "traceId": Defaults.trace_id,
+            "code": 0,
+            "result": {
+                "fanRotateAngle": FanDefaults.rotate_angle,
+                "filterOpenState": FanDefaults.filter_open,
+                "powerSwitch": Defaults.bin_toggle,
+                "filterLifePercent": FanDefaults.filter_life,
+                "workMode": "auto",
+                "manualSpeedLevel": FanDefaults.fan_level,
+                "fanSpeedLevel": FanDefaults.fan_level,
+                "AQLevel": FanDefaults.air_quality,
+                "AQPercent": FanDefaults.aq_percent,
+                "PM25": FanDefaults.air_quality_value,
+                "PM1": FanDefaults.pm1,
+                "PM10": FanDefaults.pm10,
+                "screenState": Defaults.bin_toggle,
+                "childLockSwitch": Defaults.bin_toggle,
+                "screenSwitch": Defaults.bin_toggle,
+                "lightDetectionSwitch": Defaults.bin_toggle,
+                "environmentLightState": Defaults.bin_toggle,
+                "autoPreference": {"autoPreferenceType": "default", "roomSize": 0},
+                "routine": {"routineType": "normal", "runSeconds": 0},
+                "scheduleCount": 0,
+                "timerRemain": 0,
+                "efficientModeTimeRemain": 0,
+                "ecoModeRunTime": 0,
+                "errorCode": 0,
+            },
+        },
     }, 200)
 
 
 DETAILS_RESPONSES = {
-    'LV-PUR131S': FanDetails.details_air,
-    'Classic300S': FanDetails.details_classic200s300s,
-    'Classic200S': FanDetails.details_classic200s300s,
-    'Dual200S': FanDetails.details_classic200s300s,
-    'LUH-A602S-WUSR': FanDetails.details_lv600s,
-    'Core200S': FanDetails.details_core,
-    'Core300S': FanDetails.details_core,
-    'Core400S': FanDetails.details_core,
-    'Core600S': FanDetails.details_core,
-    'LUH-O451S-WUS': FanDetails.details_lv600s,
-    'LAP-V201S-AASR': FanDetails.details_vital100s,
-    'LAP-V102S-AASR': FanDetails.details_vital100s,
-    'LUH-M101S-WUS': FanDetails.details_oasismist1000S,
-    'LEH-S601S-WUS': FanDetails.details_superior6000S
+    "LV-PUR131S": FanDetails.details_air,
+    "Classic300S": FanDetails.details_classic200s300s,
+    "Classic200S": FanDetails.details_classic200s300s,
+    "Dual200S": FanDetails.details_classic200s300s,
+    "LUH-A602S-WUSR": FanDetails.details_lv600s,
+    "Core200S": FanDetails.details_core,
+    "Core300S": FanDetails.details_core,
+    "Core400S": FanDetails.details_core,
+    "Core600S": FanDetails.details_core,
+    "LUH-O451S-WUS": FanDetails.details_lv600s,
+    "LAP-V201S-AASR": FanDetails.details_vital100s,
+    "LAP-V102S-AASR": FanDetails.details_vital100s,
+    "LUH-M101S-WUS": FanDetails.details_oasismist1000S,
+    "LEH-S601S-WUS": FanDetails.details_superior6000S,
+    "LAP-EL551S-AUS": FanDetails.details_everest,
 }
 
-FunctionResponses.default_factory = lambda: ({
-    "traceId": Defaults.trace_id,
-    "code": 0,
-    "msg": "request success",
-    "result": {
+FunctionResponses.default_factory = lambda: (
+    {
         "traceId": Defaults.trace_id,
-        "code": 0
-    }
-}, 200)
+        "code": 0,
+        "msg": "request success",
+        "result": {"traceId": Defaults.trace_id, "code": 0},
+    },
+    200,
+)
 
 METHOD_RESPONSES = {k: deepcopy(FunctionResponses) for k in FANS}
 
@@ -341,9 +371,9 @@ METHOD_RESPONSES = {k: deepcopy(FunctionResponses) for k in FANS}
 # Timer Responses
 
 for k in AIR_MODELS:
-    METHOD_RESPONSES[k]['set_timer'] = (INNER_RESULT({'id': 1}), 200)
-    METHOD_RESPONSES[k]['get_timer'] = (INNER_RESULT({'id': 1,
-                                                      'remain': 100,
-                                                      'total': 100,
-                                                      'action': 'off'}), 200)
-FAN_TIMER = helpers.Timer(100, 'off')
+    METHOD_RESPONSES[k]["set_timer"] = (INNER_RESULT({"id": 1}), 200)
+    METHOD_RESPONSES[k]["get_timer"] = (
+        INNER_RESULT({"id": 1, "remain": 100, "total": 100, "action": "off"}),
+        200,
+    )
+FAN_TIMER = helpers.Timer(100, "off")
