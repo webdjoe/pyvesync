@@ -46,7 +46,7 @@ humid_features: dict = {
     },
     'OASISMIST': {
             'module': 'VeSyncHumid200300S',
-            'models': ['LUH-O451S-WUS', 'LUH-O451S-WEU'],
+            'models': ['LUH-O451S-WUS', 'LUH-O451S-WUSR', 'LUH-O451S-WEU'],
             'features': ['warm_mist'],
             'mist_modes': ['humidity', 'sleep', 'manual'],
             'mist_levels': list(range(1, 10)),
@@ -110,7 +110,7 @@ air_features: dict = {
         'features': ['air_quality']
     },
     'Vital100S': {
-        'module': 'VeSyncVital',
+        'module': 'VeSyncAirBaseV2',
         'models': ['LAP-V102S-AASR', 'LAP-V102S-WUS', 'LAP-V102S-WEU',
                    'LAP-V102S-AUSR', 'LAP-V102S-WJP'],
         'modes': ['manual', 'auto', 'sleep', 'off', 'pet'],
@@ -118,12 +118,20 @@ air_features: dict = {
         'levels': list(range(1, 5))
     },
     'Vital200S': {
-        'module': 'VeSyncVital',
+        'module': 'VeSyncAirBaseV2',
         'models': ['LAP-V201S-AASR', 'LAP-V201S-WJP', 'LAP-V201S-WEU',
                    'LAP-V201S-WUS', 'LAP-V201-AUSR', 'LAP-V201S-AUSR'],
         'modes': ['manual', 'auto', 'sleep', 'off', 'pet'],
         'features': ['air_quality'],
         'levels': list(range(1, 5))
+    },
+    'EverestAir': {
+        'module': 'VeSyncAirBaseV2',
+        'models': ['LAP-EL551S-AUS', 'LAP-EL551S-AEUR',
+                   'LAP-EL551S-WEU', 'LAP-EL551S-WUS'],
+        'modes': ['manual', 'auto', 'sleep', 'off', 'turbo'],
+        'features': ['air_quality', 'fan_rotate'],
+        'levels': list(range(1, 4))
     }
 }
 
@@ -163,15 +171,15 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         """Initialize air devices."""
         super().__init__(details, manager)
         self.enabled = True
-        self.config_dict = model_features(self.device_type)
-        self.features = self.config_dict.get('features', [])
-        if not isinstance(self.config_dict.get('modes'), list):
+        self._config_dict = model_features(self.device_type)
+        self._features = self._config_dict.get('features', [])
+        if not isinstance(self._config_dict.get('modes'), list):
             logger.error(
                 'Please set modes for %s in the configuration',
                 self.device_type)
             raise KeyError(f'Modes not set in configuration for {self.device_name}')
-        self.modes = self.config_dict['modes']
-        if 'air_quality' in self.features:
+        self.modes = self._config_dict['modes']
+        if 'air_quality' in self._features:
             self.air_quality_feature = True
         else:
             self.air_quality_feature = False
@@ -405,7 +413,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
     def change_fan_speed(self,
                          speed=None) -> bool:
         """Change fan speed based on levels in configuration dict."""
-        speeds: list = self.config_dict.get('levels', [])
+        speeds: list = self._config_dict.get('levels', [])
         current_speed = self.speed
 
         if speed is not None:
@@ -488,7 +496,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
 
     def reset_filter(self) -> bool:
         """Reset filter to 100%."""
-        if 'reset_filter' not in self.features:
+        if 'reset_filter' not in self._features:
             logger.debug("Filter reset not implemented for %s", self.device_type)
             return False
 
@@ -774,14 +782,29 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         return json.dumps(sup_val, indent=4)
 
 
-class VeSyncVital(VeSyncAirBypass):
-    """Levoit Vital 100S/200S Air Purifier Class."""
+class VeSyncAirBaseV2(VeSyncAirBypass):
+    """Levoit V2 Air Purifier Class."""
 
     def __init__(self, details: Dict[str, list], manager):
-        """Initialize the VeSync Vital 100S/200S Air Purifier Class."""
+        """Initialize the VeSync Base API V2 Air Purifier Class."""
         super().__init__(details, manager)
         self.set_speed_level: Optional[int] = None
         self.auto_prefences: List[str] = ['default', 'efficient', 'quiet']
+
+    def build_api_dict(self, method: str) -> Tuple[Dict, Dict]:
+        """Return default body for Bypass V2 API."""
+        header = Helpers.bypass_header()
+        body = Helpers.bypass_body_v2(self.manager)
+        body['cid'] = self.cid
+        body['deviceId'] = self.cid
+        body['configModule'] = self.config_module
+        body['configModel'] = self.config_module
+        body['payload'] = {
+            'method': method,
+            'source': 'APP',
+            'data': {}
+        }
+        return header, body
 
     @property
     def light_detection(self) -> bool:
@@ -799,7 +822,7 @@ class VeSyncVital(VeSyncAirBypass):
         return self.details['environment_light_state']
 
     def get_details(self) -> None:
-        """Build Levoit 100S Purifier details dictionary."""
+        """Build API V2 Purifier details dictionary."""
         head, body = self.build_api_dict('getPurifierStatus')
 
         r, _ = Helpers.call_api(
@@ -822,21 +845,6 @@ class VeSyncVital(VeSyncAirBypass):
             logger.debug('error in inner result dict from purifier')
         if inner_result.get('configuration', {}):
             self.build_config_dict(inner_result.get('configuration', {}))
-
-    def build_api_dict(self, method: str) -> Tuple[Dict, Dict]:
-        """Return default body for Levoit Vital 100S/200S API."""
-        header = Helpers.bypass_header()
-        body = Helpers.bypass_body_v2(self.manager)
-        body['cid'] = self.cid
-        body['deviceId'] = self.cid
-        body['configModule'] = self.config_module
-        body['configModel'] = self.config_module
-        body['payload'] = {
-            'method': method,
-            'source': 'APP',
-            'data': {}
-        }
-        return header, body
 
     def build_purifier_dict(self, dev_dict: dict) -> None:
         """Build Bypass purifier status dictionary."""
@@ -862,8 +870,18 @@ class VeSyncVital(VeSyncAirBypass):
         if self.air_quality_feature is True:
             self.details['air_quality_value'] = dev_dict.get(
                 'PM25', 0)
-            self.details['air_quality'] = dev_dict.get('air_quality', 0)
-        if dev_dict.get('timerRemain') is not None:
+            self.details['air_quality'] = dev_dict.get('AQLevel', 0)
+        if 'PM1' in dev_dict:
+            self.details['pm1'] = dev_dict['PM1']
+        if 'PM10' in dev_dict:
+            self.details['pm10'] = dev_dict['PM10']
+        if 'AQPercent' in dev_dict:
+            self.details['aq_percent'] = dev_dict['AQPercent']
+        if 'fanRotateAngle' in dev_dict:
+            self.details['fan_rotate_angle'] = dev_dict['fanRotateAngle']
+        if 'filterOpenState' in dev_dict:
+            self.details['filter_open_state'] = bool(dev_dict['filterOpenState'])
+        if dev_dict.get('timerRemain', 0) > 0:
             self.timer = Timer(dev_dict['timerRemain'], 'off')
         if isinstance(dev_dict.get('autoPreference'), dict):
             self.details['auto_preference_type'] = dev_dict.get(
@@ -871,9 +889,24 @@ class VeSyncVital(VeSyncAirBypass):
         else:
             self.details['auto_preference_type'] = None
 
+    def turbo_mode(self) -> bool:
+        """Turn on Turbo mode for compatible devices."""
+        if 'turbo' in self.modes:
+            return self.mode_toggle('turbo')
+        logger.debug("Turbo mode not available for %s", self.device_name)
+        return False
+
     def pet_mode(self) -> bool:
-        """Set Pet Mode for Levoit Vital 200S."""
-        return self.mode_toggle('pet')
+        """Set Pet Mode for compatible devices."""
+        if 'pet' in self.modes:
+            return self.mode_toggle('pet')
+        logger.debug("Pet mode not available for %s", self.device_name)
+        return False
+
+    def set_night_light(self, mode: str) -> bool:
+        """TODO: Set night light."""
+        logger.debug("Night light feature not configured")
+        return False
 
     def set_light_detection(self, toggle: bool) -> bool:
         """Enable/Disable Light Detection Feature."""
@@ -913,10 +946,7 @@ class VeSyncVital(VeSyncAirBypass):
             return False
 
         head, body = self.build_api_dict('setSwitch')
-        if toggle is True:
-            power = 1
-        else:
-            power = 0
+        power = int(toggle)
         body['payload']['data'] = {
                 'powerSwitch': power,
                 'switchIdx': 0
@@ -930,7 +960,7 @@ class VeSyncVital(VeSyncAirBypass):
         )
 
         if r is not None and Helpers.nested_code_check(r):
-            if toggle:
+            if toggle is True:
                 self.device_status = 'on'
             else:
                 self.device_status = 'off'
@@ -941,10 +971,7 @@ class VeSyncVital(VeSyncAirBypass):
 
     def set_child_lock(self, mode: bool) -> bool:
         """Levoit 100S/200S set Child Lock."""
-        if mode:
-            toggle_id = 1
-        else:
-            toggle_id = 0
+        toggle_id = int(mode)
         head, body = self.build_api_dict('setChildLock')
         body['payload']['data'] = {
             'childLockSwitch': toggle_id
@@ -966,10 +993,7 @@ class VeSyncVital(VeSyncAirBypass):
 
     def set_display(self, mode: bool) -> bool:
         """Levoit Vital 100S/200S Set Display on/off with True/False."""
-        if mode:
-            mode_id = 1
-        else:
-            mode_id = 0
+        mode_id = int(mode)
         head, body = self.build_api_dict('setDisplay')
         body['payload']['data'] = {
             'screenSwitch': mode_id
@@ -1105,7 +1129,7 @@ class VeSyncVital(VeSyncAirBypass):
             Speed to set based on levels in configuration dict, by default None
             If None, will cycle through levels in configuration dict
         """
-        speeds: list = self.config_dict.get('levels', [])
+        speeds: list = self._config_dict.get('levels', [])
         current_speed = self.set_speed_level or 0
 
         if speed is not None:
@@ -1216,6 +1240,15 @@ class VeSyncVital(VeSyncAirBypass):
             sup_val.update(
                 {'Air Quality Value': str(self.details.get('air_quality_value', ''))}
             )
+        everest_keys = {
+            'pm1': 'PM1',
+            'pm10': 'PM10',
+            'fan_rotate_angle': 'Fan Rotate Angle',
+            'filter_open_state': 'Filter Open State'
+        }
+        for key, value in everest_keys.items():
+            if key in self.details:
+                sup_val.update({value: str(self.details[key])})
         return json.dumps(sup_val, indent=4)
 
 
@@ -1491,18 +1524,18 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
         """Initialize 200S/300S Humidifier class."""
         super().__init__(details, manager)
         self.enabled = True
-        self.config_dict = model_features(self.device_type)
-        self.mist_levels = self.config_dict.get('mist_levels')
-        self.mist_modes = self.config_dict.get('mist_modes')
-        self.features = self.config_dict.get('features')
-        if 'warm_mist' in self.features:
-            self.warm_mist_levels = self.config_dict.get(
+        self._config_dict = model_features(self.device_type)
+        self.mist_levels = self._config_dict.get('mist_levels')
+        self.mist_modes = self._config_dict.get('mist_modes')
+        self._features = self._config_dict.get('features')
+        if 'warm_mist' in self._features:
+            self.warm_mist_levels = self._config_dict.get(
                 'warm_mist_levels', [])
             self.warm_mist_feature = True
         else:
             self.warm_mist_feature = False
             self.warm_mist_levels = []
-        if 'nightlight' in self.config_dict.get('features', []):
+        if 'nightlight' in self._config_dict.get('features', []):
             self.night_light = True
         else:
             self.night_light = False
@@ -2049,9 +2082,9 @@ class VeSyncSuperior6000S(VeSyncBaseDevice):
     def __init__(self, details, manager):
         """Initialize Superior 6000S Humidifier class."""
         super().__init__(details, manager)
-        self.config_dict = model_features(self.device_type)
-        self.mist_levels = self.config_dict.get('mist_levels')
-        self.mist_modes = self.config_dict.get('mist_modes')
+        self._config_dict = model_features(self.device_type)
+        self.mist_levels = self._config_dict.get('mist_levels')
+        self.mist_modes = self._config_dict.get('mist_modes')
         self.connection_status = details.get('deviceProp', {}).get(
             'connectionStatus', None)
         self.details = {}
