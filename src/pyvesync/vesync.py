@@ -74,11 +74,45 @@ def object_factory(dev_type, config, manager) -> Tuple[str, VeSyncBaseDevice]:
 
 
 class VeSync:  # pylint: disable=function-redefined
-    """VeSync API functions."""
+    """VeSync Manager Class."""
 
     def __init__(self, username, password, time_zone=DEFAULT_TZ,
                  debug=False, redact=True):
-        """Initialize VeSync class with username, password and time zone."""
+        """Initialize VeSync Manager.
+
+        This class is used as the manager for all VeSync objects, all methods and
+        API calls are performed from this class. Time zone, debug and redact are
+        optional. Time zone must be a string of an IANA time zone format. Once
+        class is instantiated, call `manager.login()` to log in to VeSync servers,
+        which returns `True` if successful. Once logged in, call `manager.update()`
+        to retrieve devices and update device details.
+
+        Parameters:
+        -----------
+            username : str
+                VeSync account username (usually email address)
+            password : str
+                VeSync account password
+            time_zone : str, optional
+                Time zone for device from IANA database, by default DEFAULT_TZ
+            debug : bool, optional
+                Enable debug logging, by default False
+            redact : bool, optional
+                Redact sensitive information in logs, by default True
+
+        Attributes
+        ----------
+            fans : list
+                List of VeSyncFan objects for humidifiers and air purifiers
+            outlets : list
+                List of VeSyncOutlet objects for smart plugs
+            switches : list
+                List of VeSyncSwitch objects for wall switches
+            bulbs : list
+                List of VeSyncBulb objects for smart bulbs
+            kitchen : list
+                List of VeSyncKitchen objects for smart kitchen appliances
+        """
         self.debug = debug
         if debug:  # pragma: no cover
             logger.setLevel(logging.DEBUG)
@@ -308,7 +342,15 @@ class VeSync:  # pylint: disable=function-redefined
         return proc_return
 
     def login(self) -> bool:
-        """Return True if log in request succeeds."""
+        """Log into VeSync server.
+
+        Username and password are provided when class is instantiated.
+
+        Returns
+        -------
+        bool
+            True if login successful, False if not
+        """
         user_check = isinstance(self.username, str) and len(self.username) > 0
         pass_check = isinstance(self.password, str) and len(self.password) > 0
         if user_check is False:
@@ -346,7 +388,16 @@ class VeSync:  # pylint: disable=function-redefined
         return False
 
     def update(self) -> None:
-        """Fetch updated information about devices."""
+        """Fetch updated information about devices.
+
+        Pulls devices list from VeSync and instantiates any new devices. Devices
+        are stored in the instance attributes `outlets`, `switches`, `fans`, and
+        `bulbs`. The `_device_list` attribute is a dictionary of these attributes.
+
+        Returns
+        -------
+        None
+        """
         if self.device_time_check():
 
             if not self.enabled:
