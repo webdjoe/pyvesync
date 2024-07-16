@@ -109,10 +109,10 @@ pip install pyvesync
 
 1. Dual 200S
 2. Classic 300S
-3. LUH-D301S-WEU Dual (200S)
 4. LV600S
-5. OasisMist LUS-O415S-WUS
-6. OasisMist LUH-M101S-WUS
+7. OasisMist 450S
+7. OasisMist 600S
+8. OasisMist 1000S
 
 Cosori Air Fryer
 
