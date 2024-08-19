@@ -134,6 +134,15 @@ air_features: dict = {
         'modes': ['manual', 'auto', 'sleep', 'off', 'turbo'],
         'features': ['air_quality', 'fan_rotate'],
         'levels': list(range(1, 4))
+    },
+    'SmartTowerFan': {
+        'module': 'VeSyncAirBaseV2',
+        'models': ['LTF-F422S-KEU', 'LTF-F422S-WUSR', 'LTF-F422_WJP', 'LTF-F422S-WUS'],
+        'modes': ['normal', 'auto', 'turbo', 'off'],
+        'set_mode_method': 'setTowerFanMode',
+        'get_status_method': 'getTowerFanStatus',
+        'features': ['fan_speed', 'timer'],
+        'levels': list(range(1, 13))
     }
 }
 
@@ -933,7 +942,12 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
 
     def get_details(self) -> None:
         """Build API V2 Purifier details dictionary."""
-        head, body = self.build_api_dict('getPurifierStatus')
+        head, body = self.build_api_dict(
+            self._config_dict.get(
+                'get_status_method',
+                'getPurifierStatus',
+            )
+        )
 
         r, _ = Helpers.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
@@ -1304,7 +1318,12 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         if mode == 'off':
             return self.turn_off()
 
-        head, body = self.build_api_dict('setPurifierMode')
+        head, body = self.build_api_dict(
+              self._config_dict.get(
+                  'set_mode_method',
+                  'setPurifierMode',
+              )
+        )
         if not head and not body:
             return False
 
