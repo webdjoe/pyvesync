@@ -138,7 +138,8 @@ air_features: dict = {
     'SmartTowerFan': {
         'module': 'VeSyncAirBaseV2',
         'models': ['LTF-F422S-KEU', 'LTF-F422S-WUSR', 'LTF-F422_WJP', 'LTF-F422S-WUS'],
-        'modes': ['normal', 'auto', 'turbo', 'off'],
+        'modes': ['manual', 'auto', 'sleep', 'turbo', 'off'],
+        'mode_remap': {'manual': 'normal', 'sleep': 'advancedSleep'},
         'set_mode_method': 'setTowerFanMode',
         'get_status_method': 'getTowerFanStatus',
         'features': ['fan_speed', 'timer'],
@@ -1309,6 +1310,8 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
                          mode)
             return False
 
+        mode = self._config_dict.get('mode_remap', {}).get(mode, mode.lower())
+
         # Call change_fan_speed if mode is set to manual
         if mode == 'manual':
             if self.speed is None or self.speed == 0:
@@ -1329,7 +1332,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
 
         body['deviceId'] = self.cid
         body['payload']['data'] = {
-            'workMode': mode.lower()
+            'workMode': mode
         }
 
         r, _ = Helpers.call_api(

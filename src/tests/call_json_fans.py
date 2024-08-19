@@ -335,6 +335,42 @@ class FanDetails:
         },
     }, 200)
 
+    details_towerfan42 = ({
+        "traceId": Defaults.trace_id,
+        "code": 0,
+        "msg": "request success",
+        "module": None,
+        "stacktrace": None,
+        "result": {
+            "traceId": Defaults.trace_id,
+            "code": 0,
+            "result": {
+                "powerSwitch": Defaults.bin_toggle,
+                "workMode": "turbo",
+                "manualSpeedLevel": 3,
+                "fanSpeedLevel": 12,
+                "screenState": Defaults.bin_toggle,
+                "screenSwitch": Defaults.bin_toggle,
+                "oscillationSwitch": Defaults.bin_toggle,
+                "oscillationState": Defaults.bin_toggle,
+                "muteSwitch": Defaults.bin_toggle,
+                "muteState": Defaults.bin_toggle,
+                "timerRemain": 0,
+                "temperature": 750,
+                "sleepPreference": {
+                  "sleepPreferenceType": "default",
+                  "oscillationSwitch": Defaults.bin_toggle,
+                  "initFanSpeedLevel": 0,
+                  "fallAsleepRemain": 0,
+                  "autoChangeFanLevelSwitch": Defaults.bin_toggle
+                },
+                "scheduleCount": 0,
+                "displayingType": 0,
+                "errorCode": 0,
+            }                
+        },
+    }, 200)
+
 
 DETAILS_RESPONSES = {
     "LV-PUR131S": FanDetails.details_air,
@@ -352,6 +388,7 @@ DETAILS_RESPONSES = {
     "LUH-M101S-WUS": FanDetails.details_oasismist1000S,
     "LEH-S601S-WUS": FanDetails.details_superior6000S,
     "LAP-EL551S-AUS": FanDetails.details_everest,
+    "LTF-F422S-KEU": FanDetails.details_towerfan42,
 }
 
 FunctionResponses.default_factory = lambda: (

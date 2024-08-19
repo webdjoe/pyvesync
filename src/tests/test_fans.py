@@ -329,7 +329,7 @@ class TestHumidifiers(TestBase):
         # Parse mock_api args tuple from arg, kwargs to kwargs
         all_kwargs = parse_args(self.mock_api)
 
-        # Assert request matches recored request or write new records
+        # Assert request matches recorded request or write new records
         assert_test(method_call, all_kwargs, dev_type,
                      self.write_api, self.overwrite)
 
