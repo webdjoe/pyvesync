@@ -142,7 +142,7 @@ air_features: dict = {
         'mode_remap': {'manual': 'normal', 'sleep': 'advancedSleep'},
         'set_mode_method': 'setTowerFanMode',
         'get_status_method': 'getTowerFanStatus',
-        'features': ['fan_speed', 'timer'],
+        'features': ['fan_speed'],
         'levels': list(range(1, 13))
     }
 }
