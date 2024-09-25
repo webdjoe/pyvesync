@@ -230,7 +230,7 @@ class TestAirPurifiers(TestBase):
 
         # Assert request matches recored request or write new records
         assert_test(method_call, all_kwargs, dev_type,
-                     self.write_api, self.overwrite)
+                    self.write_api, self.overwrite)
 
 
 class TestHumidifiers(TestBase):
