@@ -114,7 +114,7 @@ pip install pyvesync
 7. OasisMist 600S
 8. OasisMist 1000S
 
-Cosori Air Fryer
+### Cosori Air Fryer
 
 1. Cosori 3.7 and 5.8 Quart Air Fryer
 
