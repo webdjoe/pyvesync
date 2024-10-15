@@ -145,6 +145,14 @@ air_features: dict = {
         'modes': ['manual', 'auto', 'sleep', 'off', 'turbo'],
         'features': ['air_quality', 'fan_rotate'],
         'levels': list(range(1, 4))
+    },
+    'SmartTowerFan': {
+        'module': 'VeSyncTowerFan',
+        'models': ['LTF-F422S-KEU', 'LTF-F422S-WUSR', 'LTF-F422_WJP', 'LTF-F422S-WUS'],
+        'modes': ['normal', 'auto', 'advancedSleep', 'turbo', 'off'],
+        'set_mode_method': 'setTowerFanMode',
+        'features': ['fan_speed'],
+        'levels': list(range(1, 13))
     }
 }
 
@@ -1321,7 +1329,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
 
         body['deviceId'] = self.cid
         body['payload']['data'] = {
-            'workMode': mode.lower()
+            'workMode': mode
         }
 
         r, _ = Helpers.call_api(
@@ -1636,6 +1644,96 @@ class VeSyncAir131(VeSyncBaseDevice):
             }
         )
         return json.dumps(sup_val, indent=4)
+
+
+class VeSyncTowerFan(VeSyncAirBaseV2):
+    """Levoit Tower Fan Device Class."""
+
+    def __init__(self, details: Dict[str, list], manager):
+        """Initialize the VeSync Base API V2 Fan Class."""
+        super().__init__(details, manager)
+
+    def get_details(self) -> None:
+        """Build API V2 Fan details dictionary."""
+        head, body = self.build_api_dict('getTowerFanStatus')
+        r, _ = Helpers.call_api(
+            '/cloud/v2/deviceManaged/bypassV2',
+            method='post',
+            headers=head,
+            json_object=body,
+        )
+        if Helpers.nested_code_check(r) is False or not isinstance(r, dict):
+            logger.debug('Error getting purifier details')
+            self.connection_status = 'offline'
+            return
+
+        inner_result = r.get('result', {}).get('result')
+
+        if inner_result is not None:
+            self.build_purifier_dict(inner_result)
+        else:
+            self.connection_status = 'offline'
+            logger.debug('error in inner result dict from purifier')
+        if inner_result.get('configuration', {}):
+            self.build_config_dict(inner_result.get('configuration', {}))
+
+    def mode_toggle(self, mode: str) -> bool:
+        """Set Levoit Tower Fan purifier mode.
+
+        Parameters
+        ----------
+        mode : str
+            Mode to set purifier to, options are: auto, manual, sleep
+
+        Returns
+        -------
+        bool
+        """
+        if mode.lower() not in [x.lower() for x in self.modes]:
+            logger.debug('Invalid purifier mode used - %s',
+                         mode)
+            return False
+
+        if mode == 'off':
+            return self.turn_off()
+
+        head, body = self.build_api_dict('setTowerFanMode')
+        if not head and not body:
+            return False
+
+        body['deviceId'] = self.cid
+        body['payload']['data'] = {
+            'workMode': mode
+        }
+
+        r, _ = Helpers.call_api(
+            '/cloud/v2/deviceManaged/bypassV2',
+            method='post',
+            headers=head,
+            json_object=body,
+        )
+
+        if Helpers.code_check(r):
+            self.mode = mode
+            return True
+        logger.debug('Error setting purifier mode')
+        return False
+
+    def normal_mode(self):
+        """Set mode to normal."""
+        return self.mode_toggle('normal')
+
+    def manual_mode(self):
+        """Adapter to set mode to normal."""
+        return self.normal_mode()
+
+    def advanced_sleep_mode(self) -> bool:
+        """Set advanced sleep mode."""
+        return self.mode_toggle('advancedSleep')
+
+    def sleep_mode(self) -> bool:
+        """Adapter to set advanced sleep mode."""
+        return self.advanced_sleep_mode()
 
 
 class VeSyncHumid200300S(VeSyncBaseDevice):

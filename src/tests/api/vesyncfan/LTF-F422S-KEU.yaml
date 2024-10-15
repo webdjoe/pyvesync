@@ -1,0 +1,165 @@
+change_fan_speed:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 2.8.6
+    cid: LTF-F422S-KEU-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: LTF-F422S-KEU-CID
+    deviceRegion: US
+    method: bypassV2
+    payload:
+      data:
+        levelIdx: 0
+        levelType: wind
+        manualSpeedLevel: 3
+      method: setLevel
+      source: APP
+    phoneBrand: SM N9005
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
+manual_mode:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 2.8.6
+    cid: LTF-F422S-KEU-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: LTF-F422S-KEU-CID
+    deviceRegion: US
+    method: bypassV2
+    payload:
+      data:
+        workMode: normal
+      method: setTowerFanMode
+      source: APP
+    phoneBrand: SM N9005
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
+sleep_mode:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 2.8.6
+    cid: LTF-F422S-KEU-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: LTF-F422S-KEU-CID
+    deviceRegion: US
+    method: bypassV2
+    payload:
+      data:
+        workMode: advancedSleep
+      method: setTowerFanMode
+      source: APP
+    phoneBrand: SM N9005
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
+turn_off:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 2.8.6
+    cid: LTF-F422S-KEU-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: LTF-F422S-KEU-CID
+    deviceRegion: US
+    method: bypassV2
+    payload:
+      data:
+        powerSwitch: 0
+        switchIdx: 0
+      method: setSwitch
+      source: APP
+    phoneBrand: SM N9005
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
+turn_on:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 2.8.6
+    cid: LTF-F422S-KEU-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: LTF-F422S-KEU-CID
+    deviceRegion: US
+    method: bypassV2
+    payload:
+      data:
+        powerSwitch: 1
+        switchIdx: 0
+      method: setSwitch
+      source: APP
+    phoneBrand: SM N9005
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
+update:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 2.8.6
+    cid: LTF-F422S-KEU-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: LTF-F422S-KEU-CID
+    deviceRegion: US
+    method: bypassV2
+    payload:
+      data: {}
+      method: getTowerFanStatus
+      source: APP
+    phoneBrand: SM N9005
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
