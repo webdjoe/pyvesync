@@ -1,18 +1,53 @@
-"""Etekcity/Valceno Smart Light Bulbs."""
+"""Etekcity/Valceno Smart Light Bulbs.
 
+This module provides classes for the following Etekcity/Valceno smart lights:
+
+    1. ESL100: Dimmable Bulb
+    2. ESL100CW: Tunable White Bulb
+    3. XYD0001: RGB Bulb
+    4. ESL100MC: Multi-Color Bulb
+
+Attributes:
+    feature_dict (dict): Dictionary of bulb models and their supported features.
+        Defines the class to use for each bulb model and the list of features
+    bulb_modules (dict): Dictionary of bulb models as keys and their associated classes
+        as string values.
+
+Note:
+    The bulb module is built from the `feature_dict` dictionary and used by the
+    `vesync.object_factory` and tests to determine the class to instantiate for
+    each bulb model.
+
+Examples:
+    The following example shows the structure of the `feature_dict` dictionary:
+    ```python
+
+    feature_dict = {
+        'ESL100MC': { # device_type attribute
+            'module': 'VeSyncBulbESL100MC', # String name of the class to instantiate
+            'features': ['dimmable', 'rgb_shift'], # List of supported features
+            'color_model': 'rgb' # Color model used by the bulb (rgb, hsv, none)
+        }
+    }
+    ```
+
+"""
+from __future__ import annotations
 import logging
 import json
-from typing import Union, Dict, Optional, NamedTuple
+from typing import Union, Optional, NamedTuple, TYPE_CHECKING
 from abc import ABCMeta, abstractmethod
 from pyvesync.helpers import Helpers as helpers, Color
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 
 
+if TYPE_CHECKING:
+    from pyvesync import VeSync
+
 logger = logging.getLogger(__name__)
 
 NUMERIC_T = Optional[Union[int, float, str]]
 
-# Possible features - dimmable, color_temp, rgb_shift
 feature_dict: dict = {
     'ESL100':
         {
@@ -48,123 +83,202 @@ __all__: list = list(bulb_modules.values()) + ['bulb_modules']
 
 def pct_to_kelvin(pct: float, max_k: int = 6500, min_k: int = 2700) -> float:
     """Convert percent to kelvin."""
-    kelvin = ((max_k - min_k) * pct / 100) + min_k
-    return kelvin
+    return ((max_k - min_k) * pct / 100) + min_k
 
 
 class VeSyncBulb(VeSyncBaseDevice):
-    """Base class for VeSync Bulbs."""
+    """Base class for VeSync Bulbs.
+
+    Abstract base class to provide methods for controlling and
+    getting details of VeSync bulbs. Inherits from
+    [`VeSyncBaseDevice`][pyvesync.vesyncbasedevice.VeSyncBaseDevice].
+
+    Attributes:
+        brightness (int): Brightness of bulb (0-100).
+        color_temp_kelvin (int): White color temperature of bulb in Kelvin.
+        color_temp_pct (int): White color temperature of bulb in percent (0-100).
+        color_hue (float): Color hue of bulb (0-360).
+        color_saturation (float): Color saturation of bulb in percent (0-100).
+        color_value (float): Color value of bulb in percent (0-100).
+        color (Color): Color of bulb in the form of a dataclass with two namedtuple
+            attributes - `hsv` & `rgb`. See [pyvesync.helpers.Color][].
+    """
 
     __metaclass__ = ABCMeta
 
-    def __init__(self, details: Dict[str, Union[str, list]],
-                 manager):
+    def __init__(self, details: dict[str, str | list],
+                 manager: VeSync) -> None:
         """Initialize VeSync smart bulb base class."""
         super().__init__(details, manager)
-        self._brightness = int(0)
-        self._color_temp = int(0)
+        self._brightness = 0
+        self._color_temp = 0
         self._color_value = float(0)
         self._color_hue = float(0)
         self._color_saturation = float(0)
         self._color_mode: str = ''   # possible: white, color, hsv
-        self._color: Optional[Color] = None
-        self.features: Optional[list] = feature_dict.get(
+        self._color: Color | None = None
+        self.features: list | None = feature_dict.get(
             self.device_type, {}).get('features')
         if self.features is None:
             logger.error("No configuration set for - %s", self.device_name)
-            raise KeyError(f"No configuration set for {self.device_name}")
+            raise KeyError
         self._rgb_values = {
             'red': 0,
             'green': 0,
             'blue': 0
         }
-    # self.get_config()
-    # self.current_firm_version = self.config.get('currentFirmVersion', None)
-    # self.latest_firm_version = self.config.get('latestFirmVersion', None)
-    # self.firmware_url = self.config.get('firmwareUrl', None)
 
     @property
     def brightness(self) -> int:
-        """Return brightness of vesync bulb."""
+        """Return brightness of vesync bulb.
+
+        Returns:
+            int: Brightness of bulb (0-100).
+        """
         if self.dimmable_feature and self._brightness is not None:
             return self._brightness
         return 0
 
     @property
     def color_temp_kelvin(self) -> int:
-        """Return white color temperature of bulb in Kelvin."""
+        """Return white color temperature of bulb in Kelvin.
+
+        Converts the color temperature in percent to Kelvin using
+        the `pct_to_kelvin` function.
+
+        Returns:
+            int: White color temperature of bulb in Kelvin (2700 - 6500).
+
+        Notes:
+            This returns 0 for bulbs that do not have color temperature support.
+        """
         if self.color_temp_feature and self._color_temp is not None:
             return int(pct_to_kelvin(self._color_temp))
         return 0
 
     @property
     def color_temp_pct(self) -> int:
-        """Return white color temperature of bulb in percent (0-100)."""
+        """Return white color temperature of bulb in percent (0-100).
+
+        Subclasses that use this method, should calculate the color temeprature
+        in percent regardless of how the API returns the value.
+        """
         if self.color_temp_feature and self._color_temp is not None:
             return int(self._color_temp)
         return 0
 
     @property
     def color_hue(self) -> float:
-        """Return color hue of bulb. (from 0 to 360)."""
+        """Return color hue (HSV colorspace) of bulb.
+
+        Returns hue from the `color` attribute. (0-360)
+
+        Returns:
+            float: Color hue of bulb in HSV colorspace.
+
+        Notes:
+            This returns 0 for bulbs that do not have color support.
+        """
         if self.rgb_shift_feature and self._color is not None:
             return self._color.hsv.hue
         return 0
 
     @property
     def color_saturation(self) -> float:
-        """Return color saturation of bulb in percent (0-100)."""
+        """Return color saturation (HSV colorspace) of bulb in percent.
+
+        Return saturation from the `color` attribute (0-100).
+
+        Returns:
+            float: Color saturation of bulb in percent (0-100).
+
+        Notes:
+            This returns 0 for bulbs that do not have color
+        """
         if self.rgb_shift_feature and self._color is not None:
             return self._color.hsv.saturation
         return 0
 
     @property
     def color_value(self) -> float:
-        """Return color value of bulb in percent (0-100)."""
+        """Return color value (HSV colorspace) of bulb in percent.
+
+        Returns the color from from the `color` attribute (0-100).
+
+        Returns:
+            float: Color value of bulb in percent (0-100).
+
+        Notes:
+            This returns 0 for bulbs that do not have color support.
+        """
         if self.rgb_shift_feature and self._color is not None:
             return self._color.hsv.value
         return 0
 
     @property
-    def color(self) -> Optional[Color]:
-        """Return color of bulb in the form of a dataclass with two attributes.
+    # pylint: disable-next=differing-param-doc # DOCUMENTATION FOR SETTER
+    def color(self) -> Color | None:
+        # pylint: disable=differing-type-doc
+        """Set color property based on rgb or hsv values.
 
-        self.color.hsv -> (NamedTuple) Hue: float 0-360,
-            Saturation: float 0-100 and Value: float 0-100
-        self.color.rgb -> (NamedTuple) Red: float 0-255,
-            Green: float 0-255 and Blue: float 0-255
+        Pass either red, green, blue or hue, saturation, value.
+
+        Args:
+            red (float): Red value of RGB color, 0-255
+            green (float): Green value of RGB color, 0-255
+            blue (float): Blue value of RGB color, 0-255
+            hue (float): Hue value of HSV color, 0-360
+            saturation (float): Saturation value of HSV color, 0-100
+            value (float): Value (brightness) value of HSV color 0-100
+
+        Returns:
+            Color: Color dataclass with hsv and rgb named tuple attributes.
         """
         if self.rgb_shift_feature is True and self._color is not None:
             return self._color
         return None
 
     @color.setter
-    def color(self, red: Optional[float] = None,
-              green: Optional[float] = None,
-              blue: Optional[float] = None,
-              hue: Optional[float] = None,
-              saturation: Optional[float] = None,
-              value: Optional[float] = None) -> None:
+    def color(self, red: float | None = None,
+              green: float | None = None,
+              blue: float | None = None,
+              hue: float | None = None,
+              saturation: float | None = None,
+              value: float | None = None) -> None:
+        """Set color property based on rgb or hsv values."""
         self._color = Color(red=red, green=green, blue=blue,
                             hue=hue, saturation=saturation, value=value)
 
     @property
-    def color_hsv(self) -> Optional[NamedTuple]:
-        """Return color of bulb in hsv."""
+    def color_hsv(self) -> NamedTuple | None:
+        """Return color of bulb as [hsv named tuple][pyvesync.helpers.HSV].
+
+        Notes:
+            Returns `None` for bulbs that do not have color support.
+        """
         if self.rgb_shift_feature is True and self._color is not None:
             return self._color.hsv
         return None
 
     @property
-    def color_rgb(self) -> Optional[NamedTuple]:
-        """Return color of bulb in rgb."""
+    def color_rgb(self) -> NamedTuple | None:
+        """Return color of bulb as [rgb named tuple][pyvesync.helpers.RGB].
+
+        Notes:
+            Returns `None` for bulbs that do not have color support.
+        """
         if self.rgb_shift_feature is True and self._color is not None:
             return self._color.rgb
         return None
 
     @property
-    def color_mode(self) -> Optional[str]:
-        """Return color mode of bulb."""  # { white, hsv }
+    def color_mode(self) -> str | None:
+        """Return color mode of bulb. Possible values are none, hsv or rgb.
+
+        Notes:
+            This is a read-only property. Color mode is defined in
+            the [`feature_dict`][pyvesync.vesyncbulb.feature_dict].
+        """
         if self.rgb_shift_feature and self._color_mode is not None:
             return str(self._color_mode)
         return None
@@ -172,23 +286,25 @@ class VeSyncBulb(VeSyncBaseDevice):
     @property
     def dimmable_feature(self) -> bool:
         """Return true if dimmable bulb."""
-        if self.features is not None and 'dimmable' in self.features:
-            return True
-        return False
+        return (self.features is not None and 'dimmable' in self.features)
 
     @property
     def color_temp_feature(self) -> bool:
-        """Return true if bulb supports white color temperature changes."""
-        if self.features is not None and 'color_temp' in self.features:
-            return True
-        return False
+        """Checks if the device has the ability to change color temperature.
+
+        Returns:
+            bool: True if the device supports changing color temperature.
+        """
+        return (self.features is not None and 'color_temp' in self.features)
 
     @property
     def rgb_shift_feature(self) -> bool:
-        """Return True if bulb supports changing color (RGB)."""
-        if self.features is not None and 'rgb_shift' in self.features:
-            return True
-        return False
+        """Checks if the device is multicolor.
+
+        Returns:
+            bool: True if the device supports changing color.
+        """
+        return (self.features is not None and 'rgb_shift' in self.features)
 
     def _validate_rgb(self, red: NUMERIC_T = None,
                       green: NUMERIC_T = None,
@@ -204,116 +320,173 @@ class VeSyncBulb(VeSyncBaseDevice):
                      green=rgb_dict['green'],
                      blue=rgb_dict['blue'])
 
-    def _validate_hsv(self, hue: Optional[NUMERIC_T] = None,
-                      saturation: Optional[NUMERIC_T] = None,
-                      value: Optional[NUMERIC_T] = None) -> Color:
+    def _validate_hsv(self, hue: NUMERIC_T = None,
+                      saturation: NUMERIC_T = None,
+                      value: NUMERIC_T = None) -> Color:
         """Validate HSV Arguments."""
         hsv_dict = {'hue': hue, 'saturation': saturation, 'value': value}
         for clr, val in hsv_dict.items():
-            if val is None:
-                if self._color is not None:
-                    hsv_dict[clr] = getattr(self._color.hsv, clr)
+            if val is None and self._color is not None:
+                hsv_dict[clr] = getattr(self._color.hsv, clr)
 
         if hue is not None:
             valid_hue = self._validate_any(hue, 1, 360, 360)
+        elif self._color is not None:
+            valid_hue = self._color.hsv.hue
         else:
-            if self._color is not None:
-                valid_hue = self._color.hsv.hue
-            else:
-                logger.debug("No current hue value, setting to 0")
-                valid_hue = 360
+            logger.debug("No current hue value, setting to 0")
+            valid_hue = 360
         hsv_dict['hue'] = valid_hue
         for itm, val in {'saturation': saturation, 'value': value}.items():
             if val is not None:
                 valid_item = self._validate_any(val, 1, 100, 100)
+            elif self.color is not None:
+                valid_item = getattr(self.color.hsv, itm)
             else:
-                if self.color is not None:
-                    valid_item = getattr(self.color.hsv, itm)
-                else:
-                    logger.debug("No current %s value, setting to 0", itm)
-                    valid_item = 100
+                logger.debug("No current %s value, setting to 0", itm)
+                valid_item = 100
             hsv_dict[itm] = valid_item
         return Color(hue=hsv_dict['hue'], saturation=hsv_dict['saturation'],
                      value=hsv_dict['value'])
 
-    def _validate_brightness(self, brightness: Union[int, float, str],
+    def _validate_brightness(self, brightness: float | str,
                              start: int = 0, stop: int = 100) -> int:
         """Validate brightness value."""
         try:
             brightness_update: int = max(start, (min(stop, int(
                                                 round(float(brightness), 2)))))
         except (ValueError, TypeError):
-            if self._brightness is not None:
-                brightness_update = self.brightness
-            else:
-                brightness_update = 100
+            brightness_update = self.brightness if self.brightness is not None else 100
         return brightness_update
 
-    def _validate_color_temp(self, temp: int, start: int = 0, stop: int = 100):
+    def _validate_color_temp(self, temp: int, start: int = 0, stop: int = 100) -> int:
         """Validate color temperature."""
         try:
             temp_update = max(start, (min(stop, int(
                 round(float(temp), 0)))))
         except (ValueError, TypeError):
-            if self._color_temp is not None:
-                temp_update = self._color_temp
-            else:
-                temp_update = 100
+            temp_update = self._color_temp if self._color_temp is not None else 100
         return temp_update
 
     @staticmethod
-    def _validate_any(value: Union[int, float, str],
-                      start: Union[int, float] = 0,
-                      stop: Union[int, float] = 100,
-                      default: Union[int, float] = 100) -> float:
+    def _validate_any(value: NUMERIC_T,
+                      start: NUMERIC_T = 0,
+                      stop: NUMERIC_T = 100,
+                      default: float = 100) -> float:
         """Validate any value."""
         try:
-            value_update = max(float(start), (min(float(stop), round(float(value), 2))))
+            value_update = max(float(start), (min(float(stop), round(float(value), 2))))  # type: ignore[arg-type]  # noqa
         except (ValueError, TypeError):
             value_update = default
         return value_update
 
     @abstractmethod
     def set_status(self) -> bool:
-        """Set vesync bulb attributes(brightness, color_temp, etc)."""
+        """Set vesync bulb attributes(brightness, color_temp, etc).
+
+        This is a helper function that is called by the direct `set_*` methods,
+        such as `set_brightness`, `set_rgb`, `set_hsv`, etc.
+
+        Returns:
+            bool : True if successful, False otherwise.
+        """
 
     @abstractmethod
     def get_details(self) -> None:
-        """Get vesync bulb details."""
+        """Get vesync bulb details.
+
+        This is a legacy function to update devices, **updates should be
+        called by `update()`**
+
+        Returns:
+            None
+        """
 
     @abstractmethod
-    def _interpret_apicall_result(self, response) -> None:
+    def _interpret_apicall_result(self, response: dict) -> None:
         """Update bulb status from any api call response."""
 
     @abstractmethod
     def toggle(self, status: str) -> bool:
-        """Toggle vesync lightbulb."""
+        """Toggle mode of vesync lightbulb.
+
+        Helper function called by `turn_on()` and `turn_off()`.
+
+        Args:
+            status (str): 'on' or 'off'
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
 
     @abstractmethod
     def get_config(self) -> None:
-        """Call api to get configuration details and firmware."""
-        pass
+        """Call api to get configuration details and firmware.
 
-    def set_hsv(self, hue, saturation, value):
+        Populates the `self.config` attribute with the response.
+
+        Returns:
+            None
+
+        Note:
+            The configuration attribute `self.config` is structured as follows:
+            ```python
+            {
+                'current_firmware_version': '1.0.0',
+                'latest_firmware_version': '1.0.0',
+                'maxPower': '560',
+                'threshold': '1000',
+                'power_protection': 'on',
+                'energy_saving_status': 'on'
+            }
+            ```
+        """
+
+    def set_hsv(self,
+                hue: NUMERIC_T,
+                saturation: NUMERIC_T,
+                value: NUMERIC_T) -> bool | None:
         """Set HSV if supported by bulb.
 
-        Hue 0-360, Saturation 0-100, Value 0-100.
+        Args:
+            hue (NUMERIC_T): Hue 0-360
+            saturation (NUMERIC_T): Saturation 0-100
+            value (NUMERIC_T): Value 0-100
+
+        Returns:
+            bool: True if successful, False otherwise.
         """
         if self.rgb_shift_feature is False:
             logger.debug("HSV not supported by bulb")
             return False
+        return bool(hue and saturation and value)
 
-    def set_rgb(self, red: Optional[float] = None,
-                green: Optional[float] = None,
-                blue: Optional[float] = None) -> bool:
-        """Set RGB if supported by bulb. Red 0-255, Green 0-255, Blue 0-255."""
+    def set_rgb(self, red: NUMERIC_T = None,
+                green: NUMERIC_T = None,
+                blue: NUMERIC_T = None) -> bool:
+        """Set RGB if supported by bulb.
+
+        Args:
+            red (NUMERIC_T): Red 0-255
+            green (NUMERIC_T): green 0-255
+            blue (NUMERIC_T): blue 0-255
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
         if self.rgb_shift_feature is False:
             logger.debug("RGB not supported by bulb")
             return False
-        return True
+        return bool(red and green and blue)
 
     def turn_on(self) -> bool:
-        """Turn on vesync bulbs."""
+        """Turn on vesync bulbs.
+
+        Calls `toggle('on')`.
+
+        Returns:
+            bool : True if successful, False otherwise.
+        """
         if self.toggle('on'):
             self.device_status = 'on'
             return True
@@ -321,7 +494,13 @@ class VeSyncBulb(VeSyncBaseDevice):
         return False
 
     def turn_off(self) -> bool:
-        """Turn off vesync bulbs."""
+        """Turn off vesync bulbs.
+
+        Calls `toggle('off')`.
+
+        Returns:
+            bool : True if successful, False otherwise.
+        """
         if self.toggle('off'):
             self.device_status = 'off'
             return True
@@ -329,7 +508,12 @@ class VeSyncBulb(VeSyncBaseDevice):
         return False
 
     def update(self) -> None:
-        """Update bulb details."""
+        """Update bulb details.
+
+        Calls `get_details()` method to retrieve status from API and
+        update the bulb attributes. `get_details()` is overriden by subclasses
+        to hit the respective API endpoints.
+        """
         self.get_details()
 
     def display(self) -> None:
@@ -377,14 +561,14 @@ class VeSyncBulb(VeSyncBaseDevice):
         return json.dumps(sup_val, indent=4)
 
     @property
-    def color_value_rgb(self) -> Optional[NamedTuple]:
+    def color_value_rgb(self) -> NamedTuple | None:
         """Legacy Method .... Depreciated."""
         if self._color is not None:
             return self._color.rgb
         return None
 
     @property
-    def color_value_hsv(self) -> Optional[NamedTuple]:
+    def color_value_hsv(self) -> NamedTuple | None:
         """Legacy Method .... Depreciated."""
         if self._color is not None:
             return self._color.hsv
@@ -392,15 +576,49 @@ class VeSyncBulb(VeSyncBaseDevice):
 
 
 class VeSyncBulbESL100MC(VeSyncBulb):
-    """Etekcity ESL100 Multi Color Bulb."""
+    """Etekcity ESL100 Multi Color Bulb device instance.
 
-    def __init__(self, details: Dict[str, Union[str, list]], manager):
-        """Instantiate ESL100MC Multicolor Bulb."""
+    Inherits from [VeSyncBulb][pyvesync.vesyncbulb.VeSyncBulb]
+    and [VeSyncBaseDevice][pyvesync.vesyncbasedevice.VeSyncBaseDevice].
+
+    Attributes:
+        device_status (str): Status of bulb, either 'on' or 'off'.
+        connection_status (str): Connection status of bulb, either 'online' or 'offline'.
+        details (dict): Dictionary of bulb state details.
+        brightness (int): Brightness of bulb (0-100).
+        color_temp_kelvin (int): White color temperature of bulb in Kelvin.
+        color_temp_pct (int): White color temperature of bulb in percent (0-100).
+        color_hue (float): Color hue of bulb (0-360).
+        color_saturation (float): Color saturation of bulb in percent (0-100).
+        color_value (float): Color value of bulb in percent (0-100).
+        color (Color): Color of bulb in the form of a dataclass with
+            two named tuple attributes - `hsv` & `rgb`. See [pyvesync.helpers.Color][].
+
+    Notes:
+        The `self.details` dictionary is structured as follows:
+        ```python
+        >>> self.details
+        {
+            'brightness': 0,
+            'colorMode': 'color',
+            'red': 0,
+            'green': 0,
+            'blue': 0
+        }
+        ```
+    """
+
+    def __init__(self, details: dict[str, str | list], manager: VeSync) -> None:
+        """Instantiate ESL100MC Multicolor Bulb.
+
+        Args:
+            details (dict): Dictionary of bulb state details.
+            manager (VeSync): Manager class used to make API calls
+        """
         super().__init__(details, manager)
         self.details: dict = {}
 
     def get_details(self) -> None:
-        """Get ESL100MC Details."""
         head = helpers.bypass_header()
         body = helpers.bypass_body_v2(self.manager)
         body['cid'] = self.cid
@@ -430,43 +648,69 @@ class VeSyncBulbESL100MC(VeSyncBulb):
         self._interpret_apicall_result(inner_result)
         return
 
-    def _interpret_apicall_result(self, response: dict):
+    def _interpret_apicall_result(self, response: dict) -> None:
         """Build detail dictionary from response."""
         self._brightness = response.get('brightness', 0)
         self._color_mode = response.get('colorMode', '')
         self._color = Color(red=response.get('red', 0),
                             green=response.get('green', 0),
                             blue=response.get('blue', 0))
-        return True
 
     def set_brightness(self, brightness: int) -> bool:
-        """Set brightness of bulb."""
+        """Set brightness of bulb.
+
+        Calls the `set_status` method with the brightness value.
+
+        Args:
+            brightness (int): Brightness of bulb (0-100).
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
         return self.set_status(brightness=brightness)
 
-    def set_rgb_color(self, red: float, green: float, blue: float) -> bool:
-        """Set RGB Color of bulb."""
+    def set_rgb_color(self, red: NUMERIC_T, green: NUMERIC_T, blue: NUMERIC_T) -> bool:
+        """DEPRECIATED, USE `set_rgb()`."""
         return self.set_status(red=red, green=green, blue=blue)
 
-    def set_rgb(self, red: Optional[float] = None,
-                green: Optional[float] = None,
-                blue: Optional[float] = None) -> bool:
-        """Set RGB Color of bulb."""
+    def set_rgb(self, red: NUMERIC_T = None,
+                green: NUMERIC_T = None,
+                blue: NUMERIC_T = None) -> bool:
         return self.set_status(red=red, green=green, blue=blue)
 
-    def set_hsv(self, hue, saturation, value):
-        """Set HSV Color of bulb."""
+    def set_hsv(self,
+                hue: NUMERIC_T,
+                saturation: NUMERIC_T,
+                value: NUMERIC_T) -> bool | None:
         rgb = Color(hue=hue, saturation=saturation, value=value).rgb
         return self.set_status(red=rgb.red, green=rgb.green, blue=rgb.blue)
 
     def enable_white_mode(self) -> bool:
-        """Enable white mode on bulb."""
+        """Enable white mode on bulb.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
         return self.set_status(brightness=100)
 
-    def set_status(self, brightness: Optional[NUMERIC_T] = None,
-                   red: Optional[NUMERIC_T] = None,
-                   green: Optional[NUMERIC_T] = None,
-                   blue: Optional[NUMERIC_T] = None) -> bool:
-        """Set status of VeSync ESL100MC."""
+    def set_status(self, brightness: NUMERIC_T = None,
+                   red: NUMERIC_T = None,
+                   green: NUMERIC_T = None,
+                   blue: NUMERIC_T = None) -> bool:
+        """Set color of VeSync ESL100MC.
+
+        Brightness or RGB values must be provided. If RGB values are provided,
+        brightness is ignored.
+
+        Args:
+            brightness (int): Brightness of bulb (0-100).
+            red (int): Red value of RGB color, 0-255.
+            green (int): Green value of RGB color, 0-255.
+            blue (int): Blue value of RGB color, 0-255.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
         brightness_update = 100
         if red is not None and green is not None and blue is not None:
             new_color = self._validate_rgb(red, green, blue)
@@ -529,7 +773,6 @@ class VeSyncBulbESL100MC(VeSyncBulb):
         return True
 
     def toggle(self, status: str) -> bool:
-        """Toggle bulb status."""
         if status == 'on':
             turn_on = True
         elif status == 'off':
@@ -566,15 +809,28 @@ class VeSyncBulbESL100MC(VeSyncBulb):
 
 
 class VeSyncBulbESL100(VeSyncBulb):
-    """Object to hold VeSync ESL100 light bulb."""
+    """Object to hold VeSync ESL100 light bulb.
 
-    def __init__(self, details: dict, manager) -> None:
-        """Initialize Etekcity ESL100 Dimmable Bulb."""
+    This bulb only has the dimmable feature.
+
+    Attributes:
+        details (dict): Dictionary of bulb state details.
+        brightness (int): Brightness of bulb (0-100).
+        device_status (str): Status of bulb (on/off).
+        connection_status (str): Connection status of bulb (online/offline).
+    """
+
+    def __init__(self, details: dict, manager: VeSync) -> None:
+        """Initialize Etekcity ESL100 Dimmable Bulb.
+
+        Args:
+            details (dict): Dictionary of bulb state details.
+            manager (VeSync): Manager class used to make API calls
+        """
         super().__init__(details, manager)
         self.details: dict = {}
 
     def get_details(self) -> None:
-        """Get details of dimmable bulb."""
         body = helpers.req_body(self.manager, 'devicedetail')
         body['uuid'] = self.uuid
         r, _ = helpers.call_api(
@@ -592,7 +848,6 @@ class VeSyncBulbESL100(VeSyncBulb):
             logger.debug('Error getting %s details', self.device_name)
 
     def get_config(self) -> None:
-        """Get configuration of dimmable bulb."""
         body = helpers.req_body(self.manager, 'devicedetail')
         body['method'] = 'configurations'
         body['uuid'] = self.uuid
@@ -609,8 +864,7 @@ class VeSyncBulbESL100(VeSyncBulb):
         else:
             logger.debug('Error getting %s config info', self.device_name)
 
-    def toggle(self, status) -> bool:
-        """Toggle dimmable bulb."""
+    def toggle(self, status: str) -> bool:
         body = helpers.req_body(self.manager, 'devicestatus')
         body['uuid'] = self.uuid
         body['status'] = status
@@ -626,7 +880,14 @@ class VeSyncBulbESL100(VeSyncBulb):
         return False
 
     def set_brightness(self, brightness: int) -> bool:
-        """Set brightness of dimmable bulb."""
+        """Set brightness of dimmable bulb.
+
+        Args:
+            brightness (int): Brightness of bulb (0-100).
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
         if not self.dimmable_feature:
             logger.debug('%s is not dimmable', self.device_name)
             return False
@@ -658,12 +919,11 @@ class VeSyncBulbESL100(VeSyncBulb):
 class VeSyncBulbESL100CW(VeSyncBulb):
     """VeSync Tunable and Dimmable White Bulb."""
 
-    def __init__(self, details, manager):
+    def __init__(self, details: dict, manager: VeSync) -> None:
         """Initialize Etekcity Tunable white bulb."""
         super().__init__(details, manager)
 
     def get_details(self) -> None:
-        """Get details of tunable bulb."""
         body = helpers.req_body(self.manager, 'bypass')
         body['cid'] = self.cid
         body['jsonCmd'] = {'getLightStatus': 'get'}
@@ -693,14 +953,13 @@ class VeSyncBulbESL100CW(VeSyncBulb):
                 str(r.get('msg', '')),
             )
 
-    def _interpret_apicall_result(self, response) -> None:
+    def _interpret_apicall_result(self, response: dict) -> None:
         self.connection_status = 'online'
         self.device_status = response.get('action', 'off')
         self._brightness = response.get('brightness', 0)
         self._color_temp = response.get('colorTempe', 0)
 
     def get_config(self) -> None:
-        """Get configuration and firmware info of tunable bulb."""
         body = helpers.req_body(self.manager, 'bypass_config')
         body['uuid'] = self.uuid
 
@@ -716,8 +975,7 @@ class VeSyncBulbESL100CW(VeSyncBulb):
         else:
             logger.debug('Error getting %s config info', self.device_name)
 
-    def toggle(self, status) -> bool:
-        """Toggle tunable bulb."""
+    def toggle(self, status: str) -> bool:
         if status not in ('on', 'off'):
             logger.debug('Invalid status %s', status)
             return False
@@ -748,7 +1006,7 @@ class VeSyncBulbESL100CW(VeSyncBulb):
         body = helpers.req_body(self.manager, 'bypass')
         body['cid'] = self.cid
         body['configModule'] = self.config_module
-        light_dict: Dict[str, NUMERIC_T] = {
+        light_dict: dict[str, NUMERIC_T] = {
             'brightness': brightness_update}
         if self.device_status == 'off':
             light_dict['action'] = 'on'
@@ -814,12 +1072,11 @@ class VeSyncBulbESL100CW(VeSyncBulb):
 class VeSyncBulbValcenoA19MC(VeSyncBulb):
     """VeSync Multicolor Bulb."""
 
-    def __init__(self, details, manager):
+    def __init__(self, details: dict, manager: VeSync) -> None:
         """Initialize Multicolor bulb."""
         super().__init__(details, manager)
 
     def get_details(self) -> None:
-        """Get details of multicolor bulb."""
         body = helpers.req_body(self.manager, 'bypassV2')
         body['cid'] = self.cid
         body['configModule'] = self.config_module
@@ -839,7 +1096,7 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
             return
         self._interpret_apicall_result(r)
 
-    def _interpret_apicall_result(self, response) -> None:
+    def _interpret_apicall_result(self, response: dict) -> None:
         if response.get('result', {}).get('result') is not None:
             innerresult = response.get('result', {}).get('result')
             self.connection_status = 'online'
@@ -872,7 +1129,6 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
             )
 
     def get_config(self) -> None:
-        """Get configuration and firmware info of multicolor bulb."""
         body = helpers.req_body(self.manager, 'bypass')
         body['method'] = 'configurations'
         body['uuid'] = self.uuid
@@ -891,7 +1147,7 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
             logger.debug('  return code - %d with message %s',
                          r.get('code'), r.get('msg'))
 
-    def __build_config_dict(self, conf_dict: Dict[str, str]) -> None:
+    def __build_config_dict(self, conf_dict: dict[str, str]) -> None:
         """Build configuration dict for Multicolor bulb."""
         self.config['currentFirmVersion'] = (
             conf_dict.get('currentFirmVersion', ''))
@@ -909,7 +1165,6 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
             conf_dict.get('ownerShip', False))
 
     def toggle(self, status: str) -> bool:
-        """Toggle multicolor bulb."""
         body = helpers.req_body(self.manager, 'bypassV2')
         if status == 'off':
             status_bool = False
@@ -948,7 +1203,6 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
     def set_rgb(self, red: NUMERIC_T = None,
                 green: NUMERIC_T = None,
                 blue: NUMERIC_T = None) -> bool:
-        """Set RGB - red, green & blue 0-255."""
         new_color = Color(red=red, green=green, blue=blue).hsv
         return self.set_hsv(hue=new_color.hue,
                             saturation=new_color.saturation,
@@ -982,46 +1236,33 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
     def set_hsv(self, hue: NUMERIC_T = None,
                 saturation: NUMERIC_T = None,
                 value: NUMERIC_T = None) -> bool:
-        """Set HSV Values."""
-        arg_dict = {"hue": hue, "saturation": saturation, "value": value}
-        if hue is not None:
-            hue_update: NUMERIC_T = self._validate_any(hue, 0, 360, 360)
-        else:
-            hue_update = ""
-        if saturation is not None:
-            sat_update: NUMERIC_T = self._validate_any(saturation, 0, 100, 100)
-        else:
-            sat_update = ""
-        if value is not None:
-            value_update: NUMERIC_T = self._validate_any(value, 0, 100, 100)
-        else:
-            value_update = ""
         arg_dict = {
-            "hue": hue_update,
-            "saturation": sat_update,
-            "brightness": value_update
-        }
-        # the api expects the hsv Value in the brightness parameter
+            "hue": self._validate_any(hue, 0, 360, 360) if hue is not None else "",
+            "saturation": self._validate_any(
+                saturation, 0, 100, 100) if saturation is not None else "",
+            "brightness": self._validate_any(
+                value, 0, 100, 100) if value is not None else ""
+            }
 
+        # the api expects the hsv Value in the brightness parameter
         if self._color is not None:
             current_dict = {"hue": self.color_hue,
                             "saturation": self.color_saturation,
                             "brightness": self.color_value}
-            same_colors = True
-            for key, val in arg_dict.items():
-                if val != "":
-                    if val != current_dict[key]:
-                        same_colors = False
+            filtered_arg_dict = {k: v for k, v in arg_dict.items() if v != ""}
+            same_colors = all(current_dict.get(k) == v
+                              for k, v in filtered_arg_dict.items())
             if self.device_status == 'on' and same_colors:
                 logger.debug("Device already in requested state")
                 return True
-        for key, val in arg_dict.items():
-            if key == 'hue' and isinstance(val, float):
-                arg_dict[key] = int(round(val*27.77778, 0))
-            if key == "saturation" and isinstance(val, float):
-                arg_dict[key] = int(round(val*100, 0))
-            if key == "brightness" and isinstance(val, float):
-                arg_dict[key] = int(round(val, 0))
+        arg_dict = {
+            "hue": int(round(arg_dict["hue"]*27.77778, 0)) if isinstance(
+                arg_dict["hue"], float) else "",
+            "saturation": int(round(arg_dict["saturation"]*100, 0)) if isinstance(
+                arg_dict["saturation"], float) else "",
+            "brightness": int(round(arg_dict["brightness"], 0)) if isinstance(
+                arg_dict["brightness"], float) else ""
+        }
         arg_dict['colorMode'] = 'hsv'
         return self._set_status_api(arg_dict)
 
@@ -1029,37 +1270,29 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
         """Enable white color mode."""
         return self.set_status(color_mode='white')
 
-    def set_status(self,
+    def set_status(self,  # noqa: C901
+                   *,
                    brightness: NUMERIC_T = None,
                    color_temp: NUMERIC_T = None,
                    color_saturation: NUMERIC_T = None,
                    color_hue: NUMERIC_T = None,
-                   color_mode: Optional[str] = None,
+                   color_mode: str | None = None,
                    color_value: NUMERIC_T = None
                    ) -> bool:
         """Set multicolor bulb parameters.
 
-        No arguments turns bulb on.
+        No arguments turns bulb on. **Kwargs only**
 
-        Parameters
-        ----------
-        brightness : int, optional
-            brightness between 0 and 100, by default None
-        color_temp : int, optional
-            color temperature between 0 and 100, by default None
-        color_mode : str, optional
-            color mode hsv or white, by default None
-        color_hue : float, optional
-            color hue between 0 and 360, by default None
-        color_saturation : float, optional
-            color saturation between 0 and 100, by default None
-        color_value : float, optional
-            color value between 0 and 100, by default None
+        Args:
+            brightness (int, optional): brightness between 0 and 100
+            color_temp (int, optional): color temperature between 0 and 100
+            color_mode (int, optional): color mode hsv or white
+            color_hue (float, optional): color hue between 0 and 360
+            color_saturation (float, optional): color saturation between 0 and 100
+            color_value (int, optional): color value between 0 and 100
 
-        Returns
-        -------
-        bool
-            True if call was successful, False otherwise
+        Returns:
+            bool : True if call was successful, False otherwise
         """
         arg_list = ['brightness', 'color_temp', 'color_saturation',
                     'color_hue', 'color_mode', 'color_value']
@@ -1073,8 +1306,7 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
         # If any HSV color values are passed,
         # set HSV status & ignore other values
         # Set Color if hue, saturation or value is set
-        if color_hue is not None or color_value is not None or \
-                color_saturation is not None:
+        if any(var is not None for var in [color_hue, color_saturation, color_value]):
             return self.set_hsv(color_hue, color_saturation, color_value)
 
         # initiate variables
@@ -1091,38 +1323,31 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
         force_list = ['colorTemp', 'saturation', 'hue', 'colorMode', 'value']
         if brightness is not None:
             brightness_update = self._validate_brightness(brightness)
-
+            if self.device_status == 'on' and brightness_update == self._brightness:
+                logger.debug('Brightness already set to %s', brightness)
+                return True
             if all(locals().get(k) is None for k in force_list):
-
-                # Do nothing if brightness is passed and same as current
-                if self.device_status == 'on' and brightness_update == self._brightness:
-                    logger.debug('Brightness already set to %s', brightness)
-                    return True
                 request_dict['force'] = 0
             request_dict['brightness'] = int(brightness_update)
         else:
             brightness_update = None
         # Set White Temperature of Bulb in pct (1 - 100).
-        if color_temp is not None:
+        if color_temp is not None and \
+                self._validate_any(color_temp, 0, 100, 100):
             valid_color_temp = self._validate_any(color_temp, 0, 100, 100)
-            if valid_color_temp is not None:
-                request_dict['colorTemp'] = int(valid_color_temp)
-                request_dict['colorMode'] = 'white'
+            request_dict['colorTemp'] = int(valid_color_temp)
+            request_dict['colorMode'] = 'white'
 
-        # """Set Color Mode of Bulb (white / hsv)."""
+        # Set Color Mode of Bulb (white / hsv).
         if color_mode is not None:
-            if not isinstance(color_mode, str):
-                logger.error('Error: color_mode should be a string value')
-                return False
-            color_mode = color_mode.lower()
             possible_modes = {'white': 'white',
                               'color': 'hsv',
                               'hsv': 'hsv'}
-            if color_mode not in possible_modes:
-                logger.error(
-                    'Color mode specified is not acceptable '
-                    '(Try: "white"/"color"/"hsv")')
+            if not isinstance(color_mode, str) or \
+                    color_mode.lower() not in possible_modes:
+                logger.error('Error: invalid color_mode value')
                 return False
+            color_mode = color_mode.lower()
             request_dict['colorMode'] = possible_modes[color_mode]
         if self._set_status_api(request_dict) and \
                 brightness_update is not None:

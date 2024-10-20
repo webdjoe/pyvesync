@@ -1,6 +1,12 @@
 [MASTER]
 ignore=src/tests,
     tools/
+    docs/
+    site/
+
+load-plugins=
+    pylint.extensions.docparams,
+    pylint.extensions.mccabe
 
 [BASIC]
 good-names=i,j,k,x,r,e,v,_,b,dt,d
@@ -26,6 +32,7 @@ disable=
     format,
     abstract-method,
     arguments-differ,
+    broad-exception-caught, # FIXME
     cyclic-import,
     duplicate-code,
     global-statement,
@@ -43,11 +50,12 @@ disable=
     too-many-public-methods,
     too-many-return-statements,
     too-many-statements,
+    too-complex,  # FIXME
     wildcard-import,
     unused-wildcard-import,
     unnecessary-pass,
     unused-argument,
-    useless-super-delegation
+    useless-super-delegation,
 
 [REPORTS]
 #reports=no

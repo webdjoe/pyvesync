@@ -27,7 +27,26 @@ DEFAULT_ENER_UP_INT: int = 21600
 
 
 def object_factory(dev_type, config, manager) -> Tuple[str, VeSyncBaseDevice]:
-    """Get device type and instantiate class."""
+    """Get device type and instantiate class.
+
+    Pulls the device types from each module to determine the type of device and
+    instantiates the device object.
+
+    Args:
+        dev_type (str): Device model type returned from API
+        config (dict): Device configuration from `VeSync.get_devices()` API call
+        manager (VeSync): VeSync manager object
+
+    Returns:
+        Tuple[str, VeSyncBaseDevice]: Tuple of device type classification and
+        instantiated device object
+
+    Note:
+        Device types are pulled from the `*_mods` attribute of each device module.
+        See [pyvesync.vesyncbulb.bulb_mods], [pyvesync.vesyncfan.fan_mods],
+        [pyvesync.vesyncoutlet.outlet_mods], [pyvesync.vesyncswitch.switch_mods],
+        and [pyvesync.vesynckitchen.kitchen_mods] for more information.
+    """
     def fans(dev_type, config, manager):
         fan_cls = fan_mods.fan_modules[dev_type]  # noqa: F405
         fan_obj = getattr(fan_mods, fan_cls)
@@ -88,7 +107,6 @@ class VeSync:  # pylint: disable=function-redefined
         to retrieve devices and update device details.
 
         Parameters:
-        -----------
             username : str
                 VeSync account username (usually email address)
             password : str
@@ -100,8 +118,7 @@ class VeSync:  # pylint: disable=function-redefined
             redact : bool, optional
                 Redact sensitive information in logs, by default True
 
-        Attributes
-        ----------
+        Attributes:
             fans : list
                 List of VeSyncFan objects for humidifiers and air purifiers
             outlets : list
@@ -112,6 +129,14 @@ class VeSync:  # pylint: disable=function-redefined
                 List of VeSyncBulb objects for smart bulbs
             kitchen : list
                 List of VeSyncKitchen objects for smart kitchen appliances
+            dev_list : dict
+                Dictionary of device lists
+            token : str
+                VeSync API token
+            account_id : str
+                VeSync account ID
+            enabled : bool
+                True if logged in to VeSync, False if not
         """
         self.debug = debug
         if debug:  # pragma: no cover
@@ -277,7 +302,11 @@ class VeSync:  # pylint: disable=function-redefined
         return devices
 
     def process_devices(self, dev_list: list) -> bool:
-        """Instantiate Device Objects."""
+        """Instantiate Device Objects.
+
+        Internal method run by `get_devices()` to instantiate device objects.
+
+        """
         devices = VeSync.set_dev_id(dev_list)
 
         num_devices = 0
@@ -315,7 +344,10 @@ class VeSync:  # pylint: disable=function-redefined
         return True
 
     def get_devices(self) -> bool:
-        """Return tuple listing outlets, switches, and fans of devices."""
+        """Return tuple listing outlets, switches, and fans of devices.
+
+        This is an internal method called by `update()`
+        """
         if not self.enabled:
             return False
 
@@ -346,9 +378,7 @@ class VeSync:  # pylint: disable=function-redefined
 
         Username and password are provided when class is instantiated.
 
-        Returns
-        -------
-        bool
+        Returns:
             True if login successful, False if not
         """
         user_check = isinstance(self.username, str) and len(self.username) > 0
@@ -380,12 +410,10 @@ class VeSync:  # pylint: disable=function-redefined
 
     def device_time_check(self) -> bool:
         """Test if update interval has been exceeded."""
-        if (
+        return (
             self.last_update_ts is None
             or (time.time() - self.last_update_ts) > self.update_interval
-        ):
-            return True
-        return False
+        )
 
     def update(self) -> None:
         """Fetch updated information about devices.
@@ -393,10 +421,6 @@ class VeSync:  # pylint: disable=function-redefined
         Pulls devices list from VeSync and instantiates any new devices. Devices
         are stored in the instance attributes `outlets`, `switches`, `fans`, and
         `bulbs`. The `_device_list` attribute is a dictionary of these attributes.
-
-        Returns
-        -------
-        None
         """
         if self.device_time_check():
 
@@ -414,13 +438,13 @@ class VeSync:  # pylint: disable=function-redefined
             self.last_update_ts = time.time()
 
     def update_energy(self, bypass_check=False) -> None:
-        """Fetch updated energy information about devices."""
+        """Fetch updated energy information for outlet devices."""
         if self.outlets:
             for outlet in self.outlets:
                 outlet.update_energy(bypass_check)
 
     def update_all_devices(self) -> None:
-        """Run get_details() for each device."""
+        """Run `get_details()` for each device and update state."""
         devices = list(self._dev_list.keys())
         for dev in chain(*devices):
             dev.get_details()

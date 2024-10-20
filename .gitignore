@@ -30,3 +30,9 @@ tools/__init__.py
 tools/vesyncdevice.py
 pyvesync.und
 .venv
+
+
+mkdocs.yml
+requirements-docs.txt
+docs/
+site/
