@@ -1,16 +1,53 @@
 """Base class for all VeSync devices."""
-
+from __future__ import annotations
 import logging
 import json
-from typing import Optional, Union
+from typing import Optional, Union, TYPE_CHECKING
 from pyvesync.helpers import Helpers as helper
 logger = logging.getLogger(__name__)
 
+if TYPE_CHECKING:
+    from pyvesync import VeSync
+
 
 class VeSyncBaseDevice:
-    """Properties shared across all VeSync devices."""
+    """Properties shared across all VeSync devices.
 
-    def __init__(self, details: dict, manager):
+    Base class for all VeSync devices.
+
+    Parameters:
+        details (dict): Device details from API call.
+        manager (VeSync): Manager object for API calls.
+
+    Attributes:
+        device_name (str): Name of device.
+        device_image (str): URL for device image.
+        cid (str): Device ID.
+        connection_status (str): Connection status of device.
+        connection_type (str): Connection type of device.
+        device_type (str): Type of device.
+        type (str): Type of device.
+        uuid (str): UUID of device, not always present.
+        config_module (str): Configuration module of device.
+        mac_id (str): MAC ID of device.
+        mode (str): Mode of device.
+        speed (Union[str, int]): Speed of device.
+        extension (dict): Extension of device, not used.
+        current_firm_version (str): Current firmware version of device.
+        device_region (str): Region of device. (US, EU, etc.)
+        pid (str): Product ID of device, pulled by some devices on update.
+        sub_device_no (int): Sub-device number of device.
+        config (dict): Configuration of device, including firmware version
+        device_status (str): Status of device, on or off.
+
+    Methods:
+        is_on(): Return True if device is on.
+        firmware_update(): Return True if firmware update available.
+        display(): Print formatted device info to stdout.
+        displayJSON(): JSON API for device details.
+    """
+
+    def __init__(self, details: dict, manager: VeSync) -> None:
         """Initialize VeSync device base class."""
         self.manager = manager
         if 'cid' in details and details['cid'] is not None:
@@ -105,7 +142,22 @@ class VeSyncBaseDevice:
         self.pid = r.get('result', {}).get('pid')
 
     def display(self) -> None:
-        """Print formatted device info to stdout."""
+        """Print formatted device info to stdout.
+
+        Returns:
+            None
+
+        Example:
+        ```
+        Device Name:..................Living Room Lamp
+        Model:........................ESL100
+        Subdevice No:.................0
+        Status:.......................on
+        Online:.......................online
+        Type:.........................wifi
+        CID:..........................1234567890abcdef
+        ```
+        """
         disp = [
             ('Device Name:', self.device_name),
             ('Model: ', self.device_type),
@@ -122,7 +174,24 @@ class VeSyncBaseDevice:
             print(f'{line[0]:.<30} {line[1]}')
 
     def displayJSON(self) -> str:  # pylint: disable=invalid-name
-        """JSON API for device details."""
+        """JSON API for device details.
+
+        Returns:
+            str: JSON formatted string of device details.
+
+        Example:
+        ```
+        {
+            "Device Name": "Living Room Lamp",
+            "Model": "ESL100",
+            "Subdevice No": "0",
+            "Status": "on",
+            "Online": "online",
+            "Type": "wifi",
+            "CID": "1234567890abcdef"
+        }
+        ```
+        """
         return json.dumps(
             {
                 'Device Name': self.device_name,

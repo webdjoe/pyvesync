@@ -1,14 +1,17 @@
 """Helper functions for VeSync API."""
-
+from __future__ import annotations
 import hashlib
 import logging
 import time
 import json
 import colorsys
 from dataclasses import dataclass, field, InitVar
-from typing import Any, Dict, NamedTuple, Optional, Union
+from typing import Any, NamedTuple, Optional, Union, TYPE_CHECKING
 import re
 import requests
+
+if TYPE_CHECKING:
+    from pyvesync.vesync import VeSync
 
 
 logger = logging.getLogger(__name__)
@@ -31,16 +34,39 @@ MOBILE_ID = '1234567890123456'
 USER_TYPE = '1'
 BYPASS_APP_V = "VeSync 3.0.51"
 
+BYPASS_HEADER_UA = 'okhttp/3.12.1'
+
 NUMERIC = Optional[Union[int, float, str]]
+
+REQUEST_T = dict[str, Any]
 
 
 class Helpers:
     """VeSync Helper Functions."""
 
     @staticmethod
-    def req_headers(manager) -> Dict[str, str]:
-        """Build header for api requests."""
-        headers = {
+    def req_headers(manager: VeSync) -> dict[str, str]:
+        """Build header for legacy api GET requests.
+
+        Args:
+            manager (VeSyncManager): Instance of VeSyncManager.
+
+        Returns:
+            dict: Header dictionary for api requests.
+
+        Examples:
+            >>> req_headers(manager)
+            {
+                'accept-language': 'en',
+                'accountId': manager.account_id,
+                'appVersion': APP_VERSION,
+                'content-type': 'application/json',
+                'tk': manager.token,
+                'tz': manager.time_zone,
+            }
+
+        """
+        return {
             'accept-language': 'en',
             'accountId': manager.account_id,
             'appVersion': APP_VERSION,
@@ -48,29 +74,80 @@ class Helpers:
             'tk': manager.token,
             'tz': manager.time_zone,
         }
-        return headers
 
     @staticmethod
-    def req_header_bypass() -> Dict[str, str]:
-        """Build header for api requests on 'bypass' endpoint."""
+    def req_header_bypass() -> dict[str, str]:
+        """Build header for api requests on 'bypass' endpoint.
+
+        Returns:
+            dict: Header dictionary for api requests.
+
+        Examples:
+            >>> req_header_bypass()
+            {
+                'Content-Type': 'application/json; charset=UTF-8',
+                'User-Agent': BYPASS_HEADER_UA,
+            }
+        """
         return {
             'Content-Type': 'application/json; charset=UTF-8',
-            'User-Agent': 'okhttp/3.12.1',
+            'User-Agent': BYPASS_HEADER_UA,
             }
 
     @staticmethod
-    def req_body_base(manager) -> Dict[str, str]:
-        """Return universal keys for body of api requests."""
+    def req_body_base(manager) -> dict[str, str]:
+        """Return universal keys for body of api requests.
+
+        Args:
+            manager (VeSyncManager): Instance of VeSyncManager.
+
+        Returns:
+            dict: Body dictionary for api requests.
+
+        Examples:
+            >>> req_body_base(manager)
+            {
+                'timeZone': manager.time_zone,
+                'acceptLanguage': 'en',
+            }
+        """
         return {'timeZone': manager.time_zone, 'acceptLanguage': 'en'}
 
     @staticmethod
-    def req_body_auth(manager) -> Dict[str, str]:
-        """Keys for authenticating api requests."""
+    def req_body_auth(manager) -> REQUEST_T:
+        """Keys for authenticating api requests.
+
+        Args:
+            manager (VeSyncManager): Instance of VeSyncManager.
+
+        Returns:
+            dict: Authentication keys for api requests.
+
+        Examples:
+            >>> req_body_auth(manager)
+            {
+                'accountID': manager.account_id,
+                'token': manager.token,
+            }
+        """
         return {'accountID': manager.account_id, 'token': manager.token}
 
     @staticmethod
-    def req_body_details() -> Dict[str, str]:
-        """Detail keys for api requests."""
+    def req_body_details() -> REQUEST_T:
+        """Detail keys for api requests.
+
+        Returns:
+            dict: Detail keys for api requests.
+
+        Examples:
+            >>> req_body_details()
+            {
+                'appVersion': APP_VERSION,
+                'phoneBrand': PHONE_BRAND,
+                'phoneOS': PHONE_OS,
+                'traceId': str(int(time.time())),
+            }
+        """
         return {
             'appVersion': APP_VERSION,
             'phoneBrand': PHONE_BRAND,
@@ -79,27 +156,49 @@ class Helpers:
         }
 
     @classmethod
-    def req_body(cls, manager, type_) -> Dict[str, Any]:
-        """Builder for body of api requests."""
-        body = cls.req_body_base(manager)
+    def req_body(cls, manager: VeSync, type_: str) -> REQUEST_T:
+        """Builder for body of api requests.
+
+        Args:
+            manager (VeSyncManager): Instance of VeSyncManager.
+            type_ (str): Type of request to build body for.
+
+        Returns:
+            dict: Body dictionary for api requests.
+
+        Note:
+            The body dictionary will be built based on the type of request.
+            The type of requests include:
+            - login
+            - devicestatus
+            - devicelist
+            - devicedetail
+            - energy_week
+            - energy_month
+            - energy_year
+            - bypass
+            - bypassV2
+            - bypass_config
+        """
+        body: REQUEST_T = cls.req_body_base(manager)
 
         if type_ == 'login':
-            body |= cls.req_body_details()  # type: ignore
+            body |= cls.req_body_details()
             body |= {
                 'email': manager.username,
                 'password': cls.hash_password(manager.password),
                 'devToken': '',
                 'userType': USER_TYPE,
                 'method': 'login'
-            }  # type: ignore
+            }
             return body
 
-        body |= cls.req_body_auth(manager)  # type: ignore
+        body |= cls.req_body_auth(manager)
 
         if type_ == 'devicestatus':
             return body
 
-        body |= cls.req_body_details()  # type: ignore
+        body |= cls.req_body_details()
 
         if type_ == 'devicelist':
             body['method'] = 'devices'
@@ -151,40 +250,79 @@ class Helpers:
 
     @classmethod
     def redactor(cls, stringvalue: str) -> str:
-        """Redact sensitive strings from debug output."""
+        """Redact sensitive strings from debug output.
+
+        This method searches for specific sensitive keys in the input string and replaces
+        their values with '##_REDACTED_##'. The keys that are redacted include:
+
+        - token
+        - password
+        - email
+        - tk
+        - accountId
+        - authKey
+        - uuid
+        - cid
+
+        Args:
+            stringvalue (str): The input string potentially containing sensitive information.
+
+        Returns:
+            str: The redacted string with sensitive information replaced by '##_REDACTED_##'.
+        """
         if cls.shouldredact:
-            stringvalue = re.sub(r''.join((
-                                          '(?i)',
-                                          '((?<=token": ")|',
-                                          '(?<=password": ")|',
-                                          '(?<=email": ")|',
-                                          '(?<=tk": ")|',
-                                          '(?<=accountId": ")|',
-                                          '(?<=authKey": ")|',
-                                          '(?<=uuid": ")|',
-                                          '(?<=cid": "))',
-                                          '[^"]+')
-                                          ),
-                                 '##_REDACTED_##', stringvalue)
+            stringvalue = re.sub(
+                (
+                    r'(?i)'
+                    r'((?<=token": ")|'
+                    r'(?<=password": ")|'
+                    r'(?<=email": ")|'
+                    r'(?<=tk": ")|'
+                    r'(?<=accountId": ")|'
+                    r'(?<=authKey": ")|'
+                    r'(?<=uuid": ")|'
+                    r'(?<=cid": "))'
+                    r'[^"]+'
+                ),
+                '##_REDACTED_##',
+                stringvalue,
+            )
         return stringvalue
 
     @staticmethod
     def nested_code_check(response: dict) -> bool:
-        """Return true if all code values are 0."""
+        """Return true if all code values are 0.
+
+        Args:
+            response (dict): API response.
+
+        Returns:
+            bool: True if all code values are 0, False otherwise.
+        """
         if isinstance(response, dict):
             for key, value in response.items():
-                if key == 'code':
-                    if value != 0:
-                        return False
-                elif isinstance(value, dict):
-                    if not Helpers.nested_code_check(value):
-                        return False
+                if (key == 'code' and value != 0) or \
+                        (isinstance(value, dict) and \
+                            not Helpers.nested_code_check(value)):
+                    return False
         return True
 
     @staticmethod
     def call_api(api: str, method: str, json_object:  Optional[dict] = None,
                  headers: Optional[dict] = None) -> tuple:
-        """Make API calls by passing endpoint, header and body."""
+        """Make API calls by passing endpoint, header and body.
+
+        api argument is appended to https://smartapi.vesync.com url
+
+        Args:
+            api (str): Endpoint to call with https://smartapi.vesync.com.
+            method (str): HTTP method to use.
+            json_object (dict): JSON object to send in body.
+            headers (dict): Headers to send with request.
+
+        Returns:
+            tuple: Response and status code.
+        """
         response = None
         status_code = None
 
@@ -240,7 +378,27 @@ class Helpers:
 
     @staticmethod
     def build_details_dict(r: dict) -> dict:
-        """Build details dictionary from API response."""
+        """Build details dictionary from API response.
+
+        Args:
+            r (dict): API response.
+
+        Returns:
+            dict: Details dictionary.
+
+        Examples:
+            >>> build_details_dict(r)
+            {
+                'active_time': 1234,
+                'energy': 168,
+                'night_light_status': 'on',
+                'night_light_brightness': 50,
+                'night_light_automode': 'on',
+                'power': 1,
+                'voltage': 120,
+            }
+
+        """
         return {
             'active_time': r.get('activeTime', 0),
             'energy': r.get('energy', 0),
@@ -253,7 +411,17 @@ class Helpers:
 
     @staticmethod
     def build_energy_dict(r: dict) -> dict:
-        """Build energy dictionary from API response."""
+        """Build energy dictionary from API response.
+
+        Note:
+            For use with **Etekcity** outlets only
+
+        Args:
+            r (dict): API response.
+
+        Returns:
+            dict: Energy dictionary.
+        """
         return {
             'energy_consumption_of_today': r.get(
                     'energyConsumptionOfToday', 0),
@@ -266,7 +434,33 @@ class Helpers:
 
     @staticmethod
     def build_config_dict(r: dict) -> dict:
-        """Build configuration dictionary from API response."""
+        """Build configuration dictionary from API response.
+
+        Contains firmware version, max power, threshold,
+        power protection status, and energy saving status.
+
+        Note:
+            Energy and power stats only available for **Etekcity**
+            outlets.
+
+        Args:
+            r (dict): API response.
+
+        Returns:
+            dict: Configuration dictionary.
+
+        Examples:
+            >>> build_config_dict(r)
+            {
+                'current_firmware_version': '1.2.3',
+                'latest_firmware_version': '1.2.4',
+                'max_power': 1000,
+                'threshold': 500,
+                'power_protection': 'on',
+                'energy_saving_status': 'on',
+            }
+
+        """
         if r.get('threshold') is not None:
             threshold = r.get('threshold')
         else:
@@ -281,9 +475,33 @@ class Helpers:
         }
 
     @classmethod
-    def bypass_body_v2(cls, manager):
-        """Build body dict for bypass calls."""
-        bdy = {}
+    def bypass_body_v2(cls, manager) -> dict:
+        """Build body dict for second version of bypass api calls.
+
+        Args:
+            manager (VeSyncManager): Instance of VeSyncManager.
+
+        Returns:
+            dict: Body dictionary for bypass api calls.
+
+        Examples:
+            >>> bypass_body_v2(manager)
+            {
+                'timeZone': manager.time_zone,
+                'acceptLanguage': 'en',
+                'accountID': manager.account_id,
+                'token': manager.token,
+                'appVersion': APP_VERSION,
+                'phoneBrand': PHONE_BRAND,
+                'phoneOS': PHONE_OS,
+                'traceId': str(int(time.time())),
+                'method': 'bypassV2',
+                'debugMode': False,
+                'deviceRegion': DEFAULT_REGION,
+            }
+
+        """
+        bdy: dict[str, Union[str, bool]] = {}
         bdy.update(
             **cls.req_body(manager, "bypass")
         )
@@ -293,8 +511,20 @@ class Helpers:
         return bdy
 
     @staticmethod
-    def bypass_header():
-        """Build bypass header dict."""
+    def bypass_header() -> dict:
+        """Build bypass header dict.
+
+        Returns:
+            dict: Header dictionary for bypass api calls.
+
+        Examples:
+            >>> bypass_header()
+            {
+                'Content-Type': 'application/json; charset=UTF-8',
+                'User-Agent': BYPASS_HEADER_UA,
+            }
+
+        """
         return {
             'Content-Type': 'application/json; charset=UTF-8',
             'User-Agent': 'okhttp/3.12.1',
@@ -302,7 +532,18 @@ class Helpers:
 
     @staticmethod
     def named_tuple_to_str(named_tuple: NamedTuple) -> str:
-        """Convert named tuple to string."""
+        """Convert named tuple to string.
+
+        Args:
+            named_tuple (namedtuple): Named tuple to convert to string.
+
+        Returns:
+            str: String representation of named tuple.
+
+        Examples:
+            >>> named_tuple_to_str(HSV(100, 50, 75))
+            'hue: 100, saturation: 50, value: 75, '
+        """
         tuple_str = ''
         for key, val in named_tuple._asdict().items():
             tuple_str += f'{key}: {val}, '
@@ -310,16 +551,30 @@ class Helpers:
 
 
 class HSV(NamedTuple):
-    """HSV color space."""
+    """HSV color space named tuple.
 
+    Used as an attribute in the `pyvesync.helpers.Color` dataclass.
+
+    Attributes:
+        hue (float): The hue component of the color, typically in the range [0, 360).
+        saturation (float): The saturation component of the color, typically in the range [0, 1].
+        value (float): The value (brightness) component of the color, typically in the range [0, 1].
+    """
     hue: float
     saturation: float
     value: float
 
 
 class RGB(NamedTuple):
-    """RGB color space."""
+    """RGB color space named tuple.
 
+    Used as an attribute in the :obj:`pyvesync.helpers.Color` dataclass.
+
+    Attributes:
+        red (float): The red component of the RGB color.
+        green (float): The green component of the RGB color.
+        blue (float): The blue component of the RGB color.
+    """
     red: float
     green: float
     blue: float
@@ -327,21 +582,29 @@ class RGB(NamedTuple):
 
 @dataclass
 class Color:
-    """Dataclass for color values.
+    """
+    Dataclass for color values.
 
     For HSV, pass hue as value in degrees 0-360, saturation and value as values
-    between 0 and 100.
+    between 0 and 100. For RGB, pass red, green and blue as values between 0 and 255. This
+    dataclass provides validation and conversion methods for both HSV and RGB color spaces.
 
-    For RGB, pass red, green and blue as values between 0 and 255.
+    Notes:
+        To instantiate pass kw arguments for colors with *either* **hue, saturation and value** *or*
+        **red, green and blue**. RGB will take precedence if both are provided. Once instantiated,
+        the named tuples `hsv` and `rgb` will be available as attributes.
 
-    To instantiate pass kw arguments for colors hue, saturation and value or
-    red, green and blue.
+    Args:
+        red (int): Red value of RGB color, 0-255
+        green (int): Green value of RGB color, 0-255
+        blue (int): Blue value of RGB color, 0-255
+        hue (int): Hue value of HSV color, 0-360
+        saturation (int): Saturation value of HSV color, 0-100
+        value (int): Value (brightness) value of HSV color, 0-100
 
-    Instance attributes are:
-    hsv (nameduple) : hue (0-360), saturation (0-100), value (0-100)
-
-    rgb (namedtuple) : red (0-255), green (0-255), blue
-
+    Attributes:
+        hsv (namedtuple): hue (0-360), saturation (0-100), value (0-100) see [`HSV dataclass`][pyvesync.helpers.HSV]
+        rgb (namedtuple): red (0-255), green (0-255), blue (0-255) see [`RGB dataclass`][pyvesync.helpers.RGB]
     """
 
     red: InitVar[NUMERIC] = field(default=None, repr=False, compare=False)
@@ -366,8 +629,8 @@ class Color:
             logger.error('No color values provided')
 
     @staticmethod
-    def min_max(value: Union[int, float, str], min_val: float,
-                max_val: float, default: float) -> float:
+    def _min_max(value: Union[int, float, str], min_val: float,
+                 max_val: float, default: float) -> float:
         """Check if value is within min and max values."""
         try:
             val = max(min_val, (min(max_val, round(float(value), 2))))
@@ -380,9 +643,9 @@ class Color:
                   s: Union[int, float, str],
                   v: Union[int, float, str]) -> tuple:
         """Check if HSV values are valid."""
-        valid_hue = float(cls.min_max(h, 0, 360, 360))
-        valid_saturation = float(cls.min_max(s, 0, 100, 100))
-        valid_value = float(cls.min_max(v, 0, 100, 100))
+        valid_hue = float(cls._min_max(h, 0, 360, 360))
+        valid_saturation = float(cls._min_max(s, 0, 100, 100))
+        valid_value = float(cls._min_max(v, 0, 100, 100))
         return (
             valid_hue,
             valid_saturation,
@@ -394,7 +657,7 @@ class Color:
         """Check if RGB values are valid."""
         rgb = []
         for val in (r, g, b):
-            valid_val = cls.min_max(val, 0, 255, 255)
+            valid_val = cls._min_max(val, 0, 255, 255)
             rgb.append(valid_val)
         return rgb
 
@@ -428,45 +691,27 @@ class Color:
 
 @dataclass
 class Timer:
-    """Dataclass for timers.
+    """
+    Dataclass to hold state of timers.
 
-    Parameters
-    ----------
-    timer_duration : int
-        Length of timer in seconds
-    action : str
-        Action to perform when timer is done
-    id: int
-        ID of timer, defaults to 1
+    Note:
+        This should be used by VeSync device instances to manage internal status,
+        does not interact with the VeSync API.
 
-    Attributes
-    ----------
-    update_time : int
-        Timestamp of last update
+    Args:
+        timer_duration (int): Length of timer in seconds
+        action (str): Action to perform when timer is done
+        id (int): ID of timer, defaults to 1
+        remaining (int): Time remaining on timer in seconds, defaults to None
+        update_time (int): Last updated unix timestamp in seconds, defaults to None
 
-    Properties
-    ----------
-    status : str
-        Status of timer, one of 'active', 'paused', 'done'
-    time_remaining : int
-        Time remaining on timer in seconds
-    running : bool
-        True if timer is running
-    paused : bool
-        True if timer is paused
-    done : bool
-        True if timer is done
-
-    Methods
-    -------
-    start()
-        Restarts paused timer
-    end()
-        Ends timer
-    pause()
-        Pauses timer
-    update(time_remaining: Optional[int] = None, status: Optional[str] = None)
-        Updates timer with new time remaining and/or status
+    Attributes:
+        update_time (str): Timestamp of last update
+        status (str): Status of timer, one of 'active', 'paused', 'done'
+        time_remaining (int): Time remaining on timer in seconds
+        running (bool): True if timer is running
+        paused (bool): True if timer is paused
+        done (bool): True if timer is done
     """
 
     timer_duration: int
@@ -577,16 +822,14 @@ class Timer:
 
         Accepts only KW args
 
-        Parameters
-        ----------
-        time_remaining : int
-            Time remaining on timer in seconds
-        status : str
-            Status of timer, can be active, paused, or done
+        Parameters:
+            time_remaining : int
+                Time remaining on timer in seconds
+            status : str
+                Status of timer, can be active, paused, or done
 
-        Returns
-        -------
-        None
+        Returns:
+            None
         """
         if time_remaining is not None:
             self.time_remaining = time_remaining

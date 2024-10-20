@@ -1,6 +1,12 @@
 [MASTER]
 ignore=src/tests,
     tools/
+    docs/
+    site/
+
+load-plugins=
+    pylint.extensions.docparams,
+    pylint.extensions.mccabe
 
 [BASIC]
 good-names=i,j,k,x,r,e,v,_,b,dt,d

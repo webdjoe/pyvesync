@@ -70,7 +70,11 @@ Install the latest version from pip:
 pip install pyvesync
 ```
 
+<!--SUPPORTED DEVICES START-->
+
 ## Supported Devices
+
+<!--SUPPORTED OUTLETS START-->
 
 ### Etekcity Outlets
 
@@ -80,10 +84,16 @@ pip install pyvesync
 4. Voltson Smart WiFi Outlet - Rectangle (15A model ESW15-USA)
 5. Two Plug Outdoor Outlet (ESO15-TB) (Each plug is a separate `VeSyncOutlet` object, energy readings are for both plugs combined)
 
+<!--SUPPORTED OUTLETS END-->
+
+<!--SUPPORTED SWITCHES START-->
+
 ### Wall Switches
 
 1. Etekcity Smart WiFi Light Switch (model ESWL01)
 2. Etekcity Wifi Dimmer Switch (ESD16)
+
+<!--SUPPORTED SWITCHES END-->
 
 ### Levoit Air Purifiers
 
@@ -103,20 +113,26 @@ pip install pyvesync
 
 ### Valceno Bulbs
 
-1. Multicolor Bulb (XYD0001)
+1. Valceno Multicolor Bulb (XYD0001)
 
 ### Levoit Humidifiers
 
 1. Dual 200S
 2. Classic 300S
-4. LV600S
-7. OasisMist 450S
-7. OasisMist 600S
-8. OasisMist 1000S
+3. LV600S
+4. OasisMist 450S
+5. OasisMist 600S
+6. OasisMist 1000S
 
-Cosori Air Fryer
+### Cosori Air Fryer
 
 1. Cosori 3.7 and 5.8 Quart Air Fryer
+
+### Fans
+
+1. 42 in. Tower Fan
+
+<!--SUPPORTED DEVICES END-->
 
 ## Usage
 
