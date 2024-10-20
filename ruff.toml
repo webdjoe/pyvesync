@@ -34,11 +34,27 @@ indent-width = 4
 
 [lint]
 select = ["ALL"]
-ignore = []
+ignore = ["T201",  # PRINT statement - IGNORE
+          "COM812",  # Missing trailing comma - IGNORE
+          "TRY003",  # Avoid specifying long messages outside the exception class - TODO: Add exception classes
+          "TRY301",  # raise within try - TODO: Fix this
+          "BLE001",  # Broad Exceptions are not allowed - TODO: Fix this
+          "EM102",  # Exception must not use an f-string literal, assign to variable first - TODO: add exception classes
+          "I001",  # Import sort - TODO: Fix this
+          "EM101",  # Exception must not use a string literal, assign to variable first - TODO: add exception classes
+          "FBT001",  # type hint positional argument - bool is not allowed - IGNORE
+          "FBT003", # Bool positional argument - IGNORE
+          "TD002",  # Todo error - IGNORE
+          "TD003",  # Todo error - IGNORE
+          "FIX002",  # Fixme error - IGNORE
+          ]
+# Todo: Add exception classes EM102, BLE001, EM101
+# Todo: Fix import sorting issue I001
 unfixable = ["B"]
 
 [lint.per-file-ignores]
 "vesync.py" = ["F403"]
+"vesyncbulb.py" = ["PLR2004"]
 
 [lint.pep8-naming]
 extend-ignore-names = ["displayJSON"]
@@ -48,6 +64,7 @@ convention = "google"
 
 [lint.pylint]
 max-public-methods = 30
+max-args = 6
 
 [format]
 quote-style =  "preserve"

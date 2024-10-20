@@ -324,9 +324,6 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         Args:
             dev_dict (dict): Dictionary of device details from API
 
-        Returns:
-            None
-
         Examples:
             >>> dev_dict = {
             ...     'enabled': True,
@@ -382,9 +379,6 @@ class VeSyncAirBypass(VeSyncBaseDevice):
 
         Args:
             conf_dict (dict): Dictionary of device configuration
-
-        Returns:
-            None
         """
         self.config['display'] = conf_dict.get('display', False)
         self.config['display_forever'] = conf_dict.get('display_forever',
@@ -1026,9 +1020,6 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         """Print formatted device info to stdout.
 
         Builds on the `display()` method from the `VeSyncBaseDevice` class.
-
-        Returns:
-            None
 
         See Also:
             [pyvesync.VeSyncBaseDevice.display][`VeSyncBaseDevice.display`]

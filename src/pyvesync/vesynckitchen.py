@@ -170,7 +170,7 @@ class FryerStatus:
         """Return if heating."""
         return self.cook_status == 'heating' and self.remaining_time > 0
 
-    def status_request(self, json_cmd: dict):
+    def status_request(self, json_cmd: dict) -> None:  # pylint: disable=R1260
         """Set status from jsonCmd of API call."""
         self.last_timestamp = None
         if not isinstance(json_cmd, dict):

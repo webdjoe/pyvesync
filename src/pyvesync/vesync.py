@@ -344,8 +344,10 @@ class VeSync:  # pylint: disable=function-redefined
         return True
 
     def get_devices(self) -> bool:
-        """Return tuple listing outlets, switches, and fans of devices. This is an internal method
-        called by `update()`"""
+        """Return tuple listing outlets, switches, and fans of devices.
+
+        This is an internal method called by `update()`
+        """
         if not self.enabled:
             return False
 
@@ -408,12 +410,10 @@ class VeSync:  # pylint: disable=function-redefined
 
     def device_time_check(self) -> bool:
         """Test if update interval has been exceeded."""
-        if (
+        return (
             self.last_update_ts is None
             or (time.time() - self.last_update_ts) > self.update_interval
-        ):
-            return True
-        return False
+        )
 
     def update(self) -> None:
         """Fetch updated information about devices.
@@ -421,9 +421,6 @@ class VeSync:  # pylint: disable=function-redefined
         Pulls devices list from VeSync and instantiates any new devices. Devices
         are stored in the instance attributes `outlets`, `switches`, `fans`, and
         `bulbs`. The `_device_list` attribute is a dictionary of these attributes.
-
-        Returns:
-            None
         """
         if self.device_time_check():
 

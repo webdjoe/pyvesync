@@ -2,8 +2,8 @@
 from __future__ import annotations
 import logging
 import json
-from typing import Optional, Union, TYPE_CHECKING
-from pyvesync.helpers import Helpers as helper
+from typing import TYPE_CHECKING
+from pyvesync.helpers import Helpers as helper  # noqa: N813
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
@@ -51,24 +51,24 @@ class VeSyncBaseDevice:
         """Initialize VeSync device base class."""
         self.manager = manager
         if 'cid' in details and details['cid'] is not None:
-            self.device_name: str = details.get('deviceName', None)
-            self.device_image: Optional[str] = details.get('deviceImg', None)
-            self.cid: str = details.get('cid', None)
-            self.connection_status: str = details.get('connectionStatus', None)
-            self.connection_type: Optional[str] = details.get(
-                'connectionType', None)
-            self.device_type: str = details.get('deviceType', None)
-            self.type: str = details.get('type', None)
-            self.uuid: Optional[str] = details.get('uuid', None)
-            self.config_module: str = details.get(
-                'configModule', None)
-            self.mac_id: Optional[str] = details.get('macID', None)
-            self.mode: Optional[str] = details.get('mode', None)
-            self.speed: Union[str, int, None] = details.get('speed', None)
-            self.extension = details.get('extension', None)
+            self.device_name: str = details['deviceName']
+            self.device_image: str | None = details.get('deviceImg')
+            self.cid: str = details['cid']
+            self.connection_status: str = details['connectionStatus']
+            self.connection_type: str | None = details.get(
+                'connectionType')
+            self.device_type: str = details['deviceType']
+            self.type: str | None = details.get('type')
+            self.uuid: str | None = details.get('uuid')
+            self.config_module: str = details['configModule']
+            self.mac_id: str | None = details.get('macID')
+            self.mode: str | None = details.get('mode')
+            self.speed: int | None = details.get('speed') if details.get(
+                'speed') != '' else None
+            self.extension = details.get('extension')
             self.current_firm_version = details.get(
-                    'currentFirmVersion', None)
-            self.device_region: Optional[str] = details.get('deviceRegion', None)
+                    'currentFirmVersion')
+            self.device_region: str | None = details.get('deviceRegion')
             self.pid = None
             self.sub_device_no = details.get('subDeviceNo', 0)
             self.config: dict = {}
@@ -77,32 +77,34 @@ class VeSyncBaseDevice:
                 self.speed = ext.get('fanSpeedLevel')
                 self.mode = ext.get('mode')
             if self.connection_status != 'online':
-                self.device_status = 'off'
+                self.device_status: str | None = 'off'
             else:
-                self.device_status = details.get('deviceStatus', None)
+                self.device_status = details.get('deviceStatus')
 
         else:
             logger.error('No cid found for %s', self.__class__.__name__)
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         """Use device CID and subdevice number to test equality."""
+        if not isinstance(other, VeSyncBaseDevice):
+            return NotImplemented
         return bool(other.cid == self.cid
                     and other.sub_device_no == self.sub_device_no)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """Use CID and sub-device number to make device hash."""
         if isinstance(self.sub_device_no, int) and self.sub_device_no > 0:
             return hash(self.cid + str(self.sub_device_no))
         return hash(self.cid)
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Use device info for string represtation of class."""
         return f'Device Name: {self.device_name}, \
                  Device Type: {self.device_type},\
                  SubDevice No.: {self.sub_device_no},\
                  Status: {self.device_status}'
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Representation of device details."""
         return f'DevClass: {self.__class__.__name__},\
                 Name:{self.device_name}, Device No: {self.sub_device_no},\
@@ -111,9 +113,7 @@ class VeSyncBaseDevice:
     @property
     def is_on(self) -> bool:
         """Return true if device is on."""
-        if self.device_status == 'on':
-            return True
-        return False
+        return (self.device_status == 'on')
 
     @property
     def firmware_update(self) -> bool:
@@ -143,9 +143,6 @@ class VeSyncBaseDevice:
 
     def display(self) -> None:
         """Print formatted device info to stdout.
-
-        Returns:
-            None
 
         Example:
         ```

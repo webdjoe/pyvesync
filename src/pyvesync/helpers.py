@@ -6,7 +6,7 @@ import time
 import json
 import colorsys
 from dataclasses import dataclass, field, InitVar
-from typing import Any, NamedTuple, Optional, Union, TYPE_CHECKING
+from typing import Any, NamedTuple, Union, TYPE_CHECKING
 import re
 import requests
 
@@ -36,7 +36,7 @@ BYPASS_APP_V = "VeSync 3.0.51"
 
 BYPASS_HEADER_UA = 'okhttp/3.12.1'
 
-NUMERIC = Optional[Union[int, float, str]]
+NUMERIC = Union[int, float, str, None]
 
 REQUEST_T = dict[str, Any]
 
@@ -95,7 +95,7 @@ class Helpers:
             }
 
     @staticmethod
-    def req_body_base(manager) -> dict[str, str]:
+    def req_body_base(manager: VeSync) -> dict[str, str]:
         """Return universal keys for body of api requests.
 
         Args:
@@ -114,7 +114,7 @@ class Helpers:
         return {'timeZone': manager.time_zone, 'acceptLanguage': 'en'}
 
     @staticmethod
-    def req_body_auth(manager) -> REQUEST_T:
+    def req_body_auth(manager: VeSync) -> REQUEST_T:
         """Keys for authenticating api requests.
 
         Args:
@@ -156,7 +156,7 @@ class Helpers:
         }
 
     @classmethod
-    def req_body(cls, manager: VeSync, type_: str) -> REQUEST_T:
+    def req_body(cls, manager: VeSync, type_: str) -> REQUEST_T:  # noqa: C901
         """Builder for body of api requests.
 
         Args:
@@ -234,17 +234,15 @@ class Helpers:
         return body
 
     @staticmethod
-    def calculate_hex(hex_string) -> float:
+    def calculate_hex(hex_string: str) -> float:
         """Credit for conversion to itsnotlupus/vesync_wsproxy."""
         hex_conv = hex_string.split(':')
-        converted_hex = (int(hex_conv[0], 16) + int(hex_conv[1], 16)) / 8192
-
-        return converted_hex
+        return (int(hex_conv[0], 16) + int(hex_conv[1], 16)) / 8192
 
     @staticmethod
-    def hash_password(string) -> str:
+    def hash_password(string: str) -> str:
         """Encode password."""
-        return hashlib.md5(string.encode('utf-8')).hexdigest()
+        return hashlib.md5(string.encode('utf-8')).hexdigest()  # noqa: S324
 
     shouldredact = True
 
@@ -265,10 +263,12 @@ class Helpers:
         - cid
 
         Args:
-            stringvalue (str): The input string potentially containing sensitive information.
+            stringvalue (str): The input string potentially containing
+                sensitive information.
 
         Returns:
-            str: The redacted string with sensitive information replaced by '##_REDACTED_##'.
+            str: The redacted string with sensitive information replaced
+                by '##_REDACTED_##'.
         """
         if cls.shouldredact:
             stringvalue = re.sub(
@@ -302,14 +302,14 @@ class Helpers:
         if isinstance(response, dict):
             for key, value in response.items():
                 if (key == 'code' and value != 0) or \
-                        (isinstance(value, dict) and \
+                        (isinstance(value, dict) and
                             not Helpers.nested_code_check(value)):
                     return False
         return True
 
     @staticmethod
-    def call_api(api: str, method: str, json_object:  Optional[dict] = None,
-                 headers: Optional[dict] = None) -> tuple:
+    def call_api(api: str, method: str, json_object:  dict | None = None,
+                 headers: dict | None = None) -> tuple:
         """Make API calls by passing endpoint, header and body.
 
         api argument is appended to https://smartapi.vesync.com url
@@ -353,7 +353,7 @@ class Helpers:
                 raise NameError(f'Invalid method {method}')
         except requests.exceptions.RequestException as e:
             logger.debug(e)
-        except Exception as e:  # pylint: disable=broad-except
+        except Exception as e:
             logger.debug(e)
         else:
             if r.status_code == 200:
@@ -372,9 +372,7 @@ class Helpers:
         if r is None:
             logger.error('No response from API')
             return False
-        if isinstance(r, dict) and r.get('code') == 0:
-            return True
-        return False
+        return (isinstance(r, dict) and r.get('code') == 0)
 
     @staticmethod
     def build_details_dict(r: dict) -> dict:
@@ -402,9 +400,9 @@ class Helpers:
         return {
             'active_time': r.get('activeTime', 0),
             'energy': r.get('energy', 0),
-            'night_light_status': r.get('nightLightStatus', None),
-            'night_light_brightness': r.get('nightLightBrightness', None),
-            'night_light_automode': r.get('nightLightAutomode', None),
+            'night_light_status': r.get('nightLightStatus'),
+            'night_light_brightness': r.get('nightLightBrightness'),
+            'night_light_automode': r.get('nightLightAutomode'),
             'power': r.get('power', 0),
             'voltage': r.get('voltage', 0),
         }
@@ -475,7 +473,7 @@ class Helpers:
         }
 
     @classmethod
-    def bypass_body_v2(cls, manager) -> dict:
+    def bypass_body_v2(cls, manager: VeSync) -> dict:
         """Build body dict for second version of bypass api calls.
 
         Args:
@@ -501,7 +499,7 @@ class Helpers:
             }
 
         """
-        bdy: dict[str, Union[str, bool]] = {}
+        bdy: dict[str, str | bool] = {}
         bdy.update(
             **cls.req_body(manager, "bypass")
         )
@@ -557,9 +555,12 @@ class HSV(NamedTuple):
 
     Attributes:
         hue (float): The hue component of the color, typically in the range [0, 360).
-        saturation (float): The saturation component of the color, typically in the range [0, 1].
-        value (float): The value (brightness) component of the color, typically in the range [0, 1].
+        saturation (float): The saturation component of the color,
+            typically in the range [0, 1].
+        value (float): The value (brightness) component of the color,
+            typically in the range [0, 1].
     """
+
     hue: float
     saturation: float
     value: float
@@ -575,6 +576,7 @@ class RGB(NamedTuple):
         green (float): The green component of the RGB color.
         blue (float): The blue component of the RGB color.
     """
+
     red: float
     green: float
     blue: float
@@ -582,17 +584,17 @@ class RGB(NamedTuple):
 
 @dataclass
 class Color:
-    """
-    Dataclass for color values.
+    """Dataclass for color values.
 
     For HSV, pass hue as value in degrees 0-360, saturation and value as values
     between 0 and 100. For RGB, pass red, green and blue as values between 0 and 255. This
-    dataclass provides validation and conversion methods for both HSV and RGB color spaces.
+    dataclass provides validation and conversion methods for both HSV and RGB color spaces
 
     Notes:
-        To instantiate pass kw arguments for colors with *either* **hue, saturation and value** *or*
-        **red, green and blue**. RGB will take precedence if both are provided. Once instantiated,
-        the named tuples `hsv` and `rgb` will be available as attributes.
+        To instantiate pass kw arguments for colors with *either* **hue, saturation and
+        value** *or* **red, green and blue**. RGB will take precedence if both are
+        provided. Once instantiated, the named tuples `hsv` and `rgb` will be
+        available as attributes.
 
     Args:
         red (int): Red value of RGB color, 0-255
@@ -603,8 +605,10 @@ class Color:
         value (int): Value (brightness) value of HSV color, 0-100
 
     Attributes:
-        hsv (namedtuple): hue (0-360), saturation (0-100), value (0-100) see [`HSV dataclass`][pyvesync.helpers.HSV]
-        rgb (namedtuple): red (0-255), green (0-255), blue (0-255) see [`RGB dataclass`][pyvesync.helpers.RGB]
+        hsv (namedtuple): hue (0-360), saturation (0-100), value (0-100)
+            see [`HSV dataclass`][pyvesync.helpers.HSV]
+        rgb (namedtuple): red (0-255), green (0-255), blue (0-255)
+            see [`RGB dataclass`][pyvesync.helpers.RGB]
     """
 
     red: InitVar[NUMERIC] = field(default=None, repr=False, compare=False)
@@ -617,19 +621,25 @@ class Color:
     hsv: HSV = field(init=False)
     rgb: RGB = field(init=False)
 
-    def __post_init__(self, red, green, blue, hue, saturation, value):
+    def __post_init__(self,
+                      red: NUMERIC,
+                      green: NUMERIC,
+                      blue: NUMERIC,
+                      hue: NUMERIC,
+                      saturation: NUMERIC,
+                      value: NUMERIC) -> None:
         """Check HSV or RGB Values and create named tuples."""
-        if any(x is not None for x in [hue, saturation, value]):
-            self.hsv = HSV(*self.valid_hsv(hue, saturation, value))
-            self.rgb = self.hsv_to_rgb(hue, saturation, value)
-        elif any(x is not None for x in [red, green, blue]):
-            self.rgb = RGB(*self.valid_rgb(red, green, blue))
-            self.hsv = self.rgb_to_hsv(red, green, blue)
+        if None not in [hue, saturation, value]:
+            self.hsv = HSV(*self.valid_hsv(hue, saturation, value))  # type: ignore[arg-type] # noqa
+            self.rgb = self.hsv_to_rgb(hue, saturation, value)  # type: ignore[arg-type]  # noqa
+        elif None not in [red, green, blue]:
+            self.rgb = RGB(*self.valid_rgb(red, green, blue))  # type: ignore[arg-type]
+            self.hsv = self.rgb_to_hsv(red, green, blue)  # type: ignore[arg-type]
         else:
             logger.error('No color values provided')
 
     @staticmethod
-    def _min_max(value: Union[int, float, str], min_val: float,
+    def _min_max(value: float | str, min_val: float,
                  max_val: float, default: float) -> float:
         """Check if value is within min and max values."""
         try:
@@ -639,9 +649,9 @@ class Color:
         return val
 
     @classmethod
-    def valid_hsv(cls, h: Union[int, float, str],
-                  s: Union[int, float, str],
-                  v: Union[int, float, str]) -> tuple:
+    def valid_hsv(cls, h: float | str,
+                  s: float | str,
+                  v: float | str) -> tuple:
         """Check if HSV values are valid."""
         valid_hue = float(cls._min_max(h, 0, 360, 360))
         valid_saturation = float(cls._min_max(s, 0, 100, 100))
@@ -662,7 +672,7 @@ class Color:
         return rgb
 
     @staticmethod
-    def hsv_to_rgb(hue, saturation, value) -> RGB:
+    def hsv_to_rgb(hue: float, saturation: float, value: float) -> RGB:
         """Convert HSV to RGB."""
         return RGB(
             *tuple(round(i * 255, 0) for i in colorsys.hsv_to_rgb(
@@ -673,7 +683,7 @@ class Color:
         )
 
     @staticmethod
-    def rgb_to_hsv(red, green, blue) -> HSV:
+    def rgb_to_hsv(red: float, green: float, blue: float) -> HSV:
         """Convert RGB to HSV."""
         hsv_tuple = colorsys.rgb_to_hsv(
                 red / 255,
@@ -691,8 +701,7 @@ class Color:
 
 @dataclass
 class Timer:
-    """
-    Dataclass to hold state of timers.
+    """Dataclass to hold state of timers.
 
     Note:
         This should be used by VeSync device instances to manage internal status,
@@ -717,12 +726,12 @@ class Timer:
     timer_duration: int
     action: str
     id: int = 1
-    remaining: InitVar[Optional[int]] = None
+    remaining: InitVar[int | None] = None
     _status: str = 'active'
     _remain: int = 0
-    update_time: Optional[int] = int(time.time())
+    update_time: int | None = int(time.time())
 
-    def __post_init__(self, remaining) -> None:
+    def __post_init__(self, remaining: int | None) -> None:
         """Set remaining time if provided."""
         if remaining is not None:
             self._remain = remaining
@@ -738,10 +747,12 @@ class Timer:
     def status(self, status: str) -> None:
         """Set status of timer."""
         if status not in ['active', 'paused', 'done']:
-            raise ValueError(f'Invalid status {status}')
+            logger.error('Invalid status %s', status)
+            raise ValueError
         self._internal_update()
         if status == 'done' or self._status == 'done':
-            return self.end()
+            self.end()
+            return
         if self.status == 'paused' and status == 'active':
             self.update_time = int(time.time())
         if self.status == 'active' and status == 'paused':
@@ -765,7 +776,8 @@ class Timer:
     def time_remaining(self, remaining: int) -> None:
         """Set time remaining in seconds."""
         if remaining <= 0:
-            return self.end()
+            self.end()
+            return
         self._internal_update()
         if self._status == 'done':
             self._remain = 0
@@ -789,9 +801,7 @@ class Timer:
     @property
     def running(self) -> bool:
         """Check if timer is active."""
-        if self.time_remaining > 0 and self.status == 'active':
-            return True
-        return False
+        return (self.time_remaining > 0 and self.status == 'active')
 
     @property
     def paused(self) -> bool:
@@ -816,8 +826,8 @@ class Timer:
         self.update_time = int(time.time())
         self.status = 'active'
 
-    def update(self, *, time_remaining: Optional[int] = None,
-               status: Optional[str] = None) -> None:
+    def update(self, *, time_remaining: int | None = None,
+               status: str | None = None) -> None:
         """Update timer.
 
         Accepts only KW args
@@ -827,9 +837,6 @@ class Timer:
                 Time remaining on timer in seconds
             status : str
                 Status of timer, can be active, paused, or done
-
-        Returns:
-            None
         """
         if time_remaining is not None:
             self.time_remaining = time_remaining
