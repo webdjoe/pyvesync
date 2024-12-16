@@ -60,7 +60,7 @@ humid_features: dict = {
                        'LUH-O601S-WUS',
                        'LUH-O601S-KUS'],
             'features': ['warm_mist'],
-            'mist_modes': ['humidity', 'sleep', 'manual'],
+            'mist_modes': ['auto', 'humidity', 'sleep', 'manual'],
             'mist_levels': list(range(1, 10)),
             'warm_mist_levels': list(range(4))
     },
