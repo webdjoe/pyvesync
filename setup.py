@@ -25,14 +25,17 @@ setup(
         'Intended Audience :: Developers',
         'Intended Audience :: End Users/Desktop',
         'Natural Language :: English',
-        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
+        'Topic :: Home Automation',
     ],
     keywords=['iot', 'vesync', 'levoit', 'etekcity', 'cosori', 'valceno'],
     packages=find_packages('src', exclude=['tests', 'test*']),
     package_dir={'': 'src'},
     install_requires=['requests>=2.20.0'],
     extras_require={
-        'dev': ['pytest', 'pytest-cov', 'yaml', 'tox']
+        'dev': ['pytest', 'pytest-cov', 'pyyaml', 'tox']
     },
     python_requires='>=3.9',
 )
