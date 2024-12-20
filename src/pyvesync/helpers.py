@@ -273,18 +273,20 @@ class Helpers:
         if cls.shouldredact:
             stringvalue = re.sub(
                 (
-                    r'(?i)'
-                    r'((?<=token": ")|'
-                    r'(?<=password": ")|'
-                    r'(?<=email": ")|'
-                    r'(?<=tk": ")|'
-                    r'(?<=accountId": ")|'
-                    r'(?<=authKey": ")|'
-                    r'(?<=uuid": ")|'
-                    r'(?<=cid": "))'
-                    r'[^"]+'
+                    r"(?i)"
+                    r'((?<=token":\s")|'
+                    r'(?<=password":\s")|'
+                    r'(?<=email":\s")|'
+                    r'(?<=tk":\s")|'
+                    r'(?<=accountId":\s")|'
+                    r'(?<=authKey":\s")|'
+                    r'(?<=uuid":\s")|'
+                    r'(?<=cid":\s")|'
+                    r"(?<=token\s)|"
+                    r"(?<=account_id\s))"
+                    r'[^"\s]+'
                 ),
-                '##_REDACTED_##',
+                "##_REDACTED_##",
                 stringvalue,
             )
         return stringvalue
