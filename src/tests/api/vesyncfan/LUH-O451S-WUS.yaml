@@ -63,7 +63,7 @@ set_auto_mode:
     method: bypassV2
     payload:
       data:
-        mode: humidity
+        mode: auto
       method: setHumidityMode
       source: APP
     phoneBrand: SM N9005
