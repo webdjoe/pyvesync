@@ -10,7 +10,7 @@ from pyvesync.helpers import Helpers, Timer
 humid_features: dict = {
     'Classic300S': {
         'module': 'VeSyncHumid200300S',
-        'models': ['Classic300S', 'LUH-A601S-WUSB'],
+        'models': ['Classic300S', 'LUH-A601S-WUSB', 'LUH-A601S-AUSW'],
         'features': ['nightlight'],
         'mist_modes': ['auto', 'sleep', 'manual'],
         'mist_levels': list(range(1, 10))
