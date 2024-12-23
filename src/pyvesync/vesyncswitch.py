@@ -1,4 +1,24 @@
-"""Classes for VeSync Switch Devices."""
+"""Classes for VeSync Switch Devices.
+
+This module provides classes for VeSync Switch Devices:
+
+    1. VeSyncSwitch: Abstract Base class for VeSync Switch Devices.
+    2. VeSyncWallSwitch: Class for VeSync Wall Switch Devices ESWL01 and ESWL03.
+    3. VeSyncDimmerSwitch: Class for VeSync Dimmer Switch Devices ESWD16.
+
+
+Attributes:
+    feature_dict (dict): Dictionary of switch models and their supported features.
+        Defines the class to use for each switch model and the list of features
+    switch_modules (dict): Dictionary of switch models as keys and their associated
+        classes as string values.
+
+Note:
+    The switch device is built from the `feature_dict` dictionary and used by the
+    `vesync.object_factory` during initial call to pyvesync.vesync.update() and
+    determines the class to instantiate for each switch model. These classes should
+    not be instantiated manually.
+"""
 
 import logging
 import json
@@ -9,6 +29,8 @@ from pyvesync.helpers import Helpers as helpers
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 
 logger = logging.getLogger(__name__)
+
+# --8<-- [start:feature_dict]
 
 feature_dict: Dict[str, Dict[str, Union[list, str]]] = {
     'ESWL01': {
@@ -25,6 +47,8 @@ feature_dict: Dict[str, Dict[str, Union[list, str]]] = {
     }
 }
 
+# --8<-- [end:feature_dict]
+
 switch_modules: dict = {k: v['module']
                         for k, v in feature_dict.items()}
 
@@ -32,7 +56,16 @@ __all__: list = list(switch_modules.values()) + ['switch_modules']
 
 
 class VeSyncSwitch(VeSyncBaseDevice):
-    """Etekcity Switch Base Class."""
+    """Etekcity Switch Base Class.
+
+    Abstract Base Class for Etekcity Switch Devices, inherting from
+    pyvesync.vesyncbasedevice.VeSyncBaseDevice. Should not be instantiated directly,
+    subclassed by VeSyncWallSwitch and VeSyncDimmerSwitch.
+
+    Attributes:
+        features (list): List of features supported by the switch device.
+        details (dict): Dictionary of switch device details.
+    """
 
     __metaclasss__ = ABCMeta
 
