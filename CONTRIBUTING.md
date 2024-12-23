@@ -1,4 +1,6 @@
-# Setting up the Development Environment
+# Contributing to the pyvesync Library
+
+## Setting up the Development Environment
 
 1. Git clone the repository
 
@@ -33,7 +35,7 @@ If the above steps were executed successfully, you should now have:
 Any change in the code will now be directly reflected and can be tested. To deactivate the python venv, simply
 run `deactivate`.
 
-# Testing Python with Tox
+## Testing Python with Tox
 
 Install tox, navigate to the pyvesync repository which contains the tox.ini file, and run tox as follows:
 
@@ -48,12 +50,12 @@ tox -e lint # flake8 & pydocstrings
 tox -e mypy # type checkings
 ```
 
-Tests are run based off of the API calls recorded in the [api](src/tests/api) directory. Please read the [Test Readme](src/tests/README.md) for further details on the structure of the tests. 
+Tests are run based off of the API calls recorded in the [api](src/tests/api) directory. Please read the [Test Readme](src/tests/README.md) for further details on the structure of the tests.
 
 
 # Ensure new devices are Integrated in Tests
 
-If you integrate a new device, please read the [testing README](tests/README.md) to ensure that your device is tested.
+If you integrate a new device, please read the [testing README](src/tests/README.md) to ensure that your device is tested.
 
 ## Testing with pytest and Writing API to YAML
 

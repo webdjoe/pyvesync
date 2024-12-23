@@ -10,8 +10,8 @@ This module provides classes for VeSync Switch Devices:
 Attributes:
     feature_dict (dict): Dictionary of switch models and their supported features.
         Defines the class to use for each switch model and the list of features
-    switch_modules (dict): Dictionary of switch models as keys and their associated classes
-        as string values.
+    switch_modules (dict): Dictionary of switch models as keys and their associated
+        classes as string values.
 
 Note:
     The switch device is built from the `feature_dict` dictionary and used by the
