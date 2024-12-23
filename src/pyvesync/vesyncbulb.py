@@ -16,7 +16,7 @@ Attributes:
 Note:
     The bulb module is built from the `feature_dict` dictionary and used by the
     `vesync.object_factory` and tests to determine the class to instantiate for
-    each bulb model.
+    each bulb model. These classes should not be instantiated manually.
 
 Examples:
     The following example shows the structure of the `feature_dict` dictionary:
@@ -48,6 +48,8 @@ logger = logging.getLogger(__name__)
 
 NUMERIC_T = Optional[Union[int, float, str]]
 
+# --8<-- [start:feature_dict]
+
 feature_dict: dict = {
     'ESL100':
         {
@@ -75,10 +77,11 @@ feature_dict: dict = {
         }
 }
 
+# --8<-- [end:feature_dict]
 
 bulb_modules: dict = {k: v['module'] for k, v in feature_dict.items()}
 
-__all__: list = list(bulb_modules.values()) + ['bulb_modules']
+__all__: list = list(bulb_modules.values()) + ["bulb_modules", "VeSyncBulb"]
 
 
 def pct_to_kelvin(pct: float, max_k: int = 6500, min_k: int = 2700) -> float:
@@ -91,7 +94,8 @@ class VeSyncBulb(VeSyncBaseDevice):
 
     Abstract base class to provide methods for controlling and
     getting details of VeSync bulbs. Inherits from
-    [`VeSyncBaseDevice`][pyvesync.vesyncbasedevice.VeSyncBaseDevice].
+    [`VeSyncBaseDevice`][pyvesync.vesyncbasedevice.VeSyncBaseDevice]. This class
+    should not be used directly for devices, but rather subclassed for each.
 
     Attributes:
         brightness (int): Brightness of bulb (0-100).
@@ -539,7 +543,26 @@ class VeSyncBulb(VeSyncBaseDevice):
                     print(f'{line[0]:.<30} {line[1]} {line[2]}')
 
     def displayJSON(self) -> str:
-        """Return bulb device info in JSON format."""
+        """Return bulb device info in JSON format.
+
+        Returns:
+            str: JSON formatted string of bulb details.
+
+        Example:
+            ```json
+            {
+                "deviceName": "Bulb",
+                "deviceStatus": "on",
+                "connectionStatus": "online",
+                "Brightness": "100%",
+                "WhiteTemperaturePct": "100%",
+                "WhiteTemperatureKelvin": "6500K",
+                "ColorHSV": "{"hue": 0, "saturation": 0, "value": 0}",
+                "ColorRGB": "{"red": 0, "green": 0, "blue": 0}",
+                "ColorMode": "hsv"
+            }
+            ```
+        """
         sup = super().displayJSON()
         sup_val = json.loads(sup)
         if self.connection_status == 'online':
@@ -595,17 +618,16 @@ class VeSyncBulbESL100MC(VeSyncBulb):
             two named tuple attributes - `hsv` & `rgb`. See [pyvesync.helpers.Color][].
 
     Notes:
-        The `self.details` dictionary is structured as follows:
+        The details dictionary contains the device information retreived by the
+        `update()` method:
         ```python
-        >>> self.details
-        {
-            'brightness': 0,
-            'colorMode': 'color',
-            'red': 0,
-            'green': 0,
-            'blue': 0
+        details = {
+            'brightness': 50,
+            'colorMode': 'rgb',
+            'color' : Color(red=0, green=0, blue=0)
         }
         ```
+        See pyvesync.helpers.Color for more information on the Color dataclass.
     """
 
     def __init__(self, details: dict[str, str | list], manager: VeSync) -> None:
@@ -613,7 +635,7 @@ class VeSyncBulbESL100MC(VeSyncBulb):
 
         Args:
             details (dict): Dictionary of bulb state details.
-            manager (VeSync): Manager class used to make API calls
+            manager (VeSync): Manager class used to make API calls.
         """
         super().__init__(details, manager)
         self.details: dict = {}
@@ -811,7 +833,8 @@ class VeSyncBulbESL100MC(VeSyncBulb):
 class VeSyncBulbESL100(VeSyncBulb):
     """Object to hold VeSync ESL100 light bulb.
 
-    This bulb only has the dimmable feature.
+    This bulb only has the dimmable feature. Inherits from pyvesync.vesyncbulb.VeSyncBulb
+    and pyvesync.vesyncbasedevice.VeSyncBaseDevice.
 
     Attributes:
         details (dict): Dictionary of bulb state details.

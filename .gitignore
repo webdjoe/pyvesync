@@ -36,3 +36,4 @@ mkdocs.yml
 requirements-docs.txt
 docs/
 site/
+overrides/
