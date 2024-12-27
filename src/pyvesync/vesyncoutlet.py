@@ -21,6 +21,8 @@ outlet_config = {
         'module': 'VeSyncOutlet15A'},
     'ESO15-TB': {
         'module': 'VeSyncOutdoorPlug'},
+    'BSDOG01': {
+        'module': 'VeSyncOutletBSDGO1'},
 }
 
 outlet_modules = {k: v['module'] for k, v in outlet_config.items()}
@@ -739,3 +741,68 @@ class VeSyncOutdoorPlug(VeSyncOutlet):
     def turn_off(self) -> bool:
         """Turn outdoor outlet off and return True if successful."""
         return bool(self.toggle('off'))
+
+
+class VeSyncOutletBSDGO1(VeSyncOutlet):
+    """VeSync BSDGO1 smart plug."""
+
+    def __init__(self, details, manager):
+        """Initialize BSDGO1 smart plug class."""
+        super().__init__(details, manager)
+
+    def get_details(self) -> None:
+        """Get BSDGO1 device details."""
+        body = Helpers.req_body(self.manager, 'bypassV2')
+        body['cid'] = self.cid
+        body['configModule'] = self.config_module
+        body['payload'] = {
+            'method': 'getProperty',
+            'source': 'APP',
+            'data': {}
+        }
+
+        r, _ = Helpers.call_api(
+            '/cloud/v2/deviceManaged/bypassV2',
+            'post',
+            headers=Helpers.req_header_bypass(),
+            json_object=body,
+        )
+
+        if Helpers.code_check(r):
+            self.device_status = 'on' if r.get('result', {}).get(
+                'powerSwitch_1') == 1 else 'off'
+        else:
+            logger.debug('Error getting %s details', self.device_name)
+
+    def turn_on(self) -> bool:
+        """Turn BSDGO1 outlet on."""
+        return self._set_power(True)
+
+    def turn_off(self) -> bool:
+        """Turn BSDGO1 outlet off."""
+        return self._set_power(False)
+
+    def _set_power(self, power: bool) -> bool:
+        """Set power state of BSDGO1 outlet."""
+        body = Helpers.req_body(self.manager, 'bypassV2')
+        body['cid'] = self.cid
+        body['configModule'] = self.config_module
+        body['payload'] = {
+            'data': {'powerSwitch_1': 1 if power else 0},
+            'method': 'setProperty',
+            'source': 'APP'
+        }
+
+        r, _ = Helpers.call_api(
+            '/cloud/v2/deviceManaged/bypassV2',
+            'post',
+            headers=Helpers.req_header_bypass(),
+            json_object=body,
+        )
+
+        if Helpers.code_check(r):
+            self.device_status = 'on' if power else 'off'
+            return True
+        logger.warning('Error turning %s %s', self.device_name, 
+                      'on' if power else 'off')
+        return False

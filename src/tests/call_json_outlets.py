@@ -129,6 +129,16 @@ class OutletDetails:
         200,
     )
 
+    bsdgo1_details = {
+        "code": 0,
+        "msg": "request success",
+        "result": {
+            "powerSwitch_1": 1,
+            "traceId": "1735308365651",
+            "code": 0
+        }
+    }
+
 
 DETAILS_RESPONSES = {
     'wifi-switch-1.3': OutletDetails.details_7a,
@@ -136,6 +146,7 @@ DETAILS_RESPONSES = {
     'ESW01-EU': OutletDetails.details_10a,
     'ESW15-USA': OutletDetails.details_15a,
     'ESO15-TB': OutletDetails.details_outdoor,
+    'BSDOG01': OutletDetails.bsdgo1_details
 }
 
 ENERGY_HISTORY = (
