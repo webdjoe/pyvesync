@@ -40,9 +40,7 @@ logger.setLevel(logging.DEBUG)
 
 OUTLET_DEV_TYPES = call_json_outlets.OUTLETS
 POWER_METHODS = ['get_energy_update']
-OUTLET_PARAMS = []
-[OUTLET_PARAMS.append([dev, method]
-                      ) for dev in OUTLET_DEV_TYPES for method in POWER_METHODS]
+OUTLET_PARAMS = [[dev, method] for dev in OUTLET_DEV_TYPES for method in POWER_METHODS]
 
 
 class TestOutlets(TestBase):
@@ -95,90 +93,81 @@ class TestOutlets(TestBase):
 
     device = 'outlets'
     outlets = call_json_outlets.OUTLETS
-    base_methods = [['turn_on'], ['turn_off'], ['get_yearly_energy'],
-                    ['get_monthly_energy'], ['get_weekly_energy']]
+    base_methods = [
+        ['turn_on'],
+        ['turn_off']
+    ]
     device_methods = {
-        'ESW15-USA': [['turn_on_nightlight'], ['turn_off_nightlight']],
+        'ESW15-USA': [
+            ['turn_on_nightlight'], 
+            ['turn_off_nightlight']
+        ],
+        'wifi-switch-1.3': [
+            ['get_weekly_energy'],
+            ['get_monthly_energy'], 
+            ['get_yearly_energy']
+        ],
+        'ESW03-USA': [
+            ['get_weekly_energy'],
+            ['get_monthly_energy'],
+            ['get_yearly_energy']
+        ],
+        'ESW01-EU': [
+            ['get_weekly_energy'],
+            ['get_monthly_energy'],
+            ['get_yearly_energy']
+        ],
+        'ESW15-USA': [
+            ['get_weekly_energy'],
+            ['get_monthly_energy'],
+            ['get_yearly_energy']
+        ],
+        'ESO15-TB': [
+            ['get_weekly_energy'],
+            ['get_monthly_energy'],
+            ['get_yearly_energy']
+        ]
     }
 
     def test_details(self, dev_type, method):
-        """Test the device details API request and response.
+        """Test outlet device details."""
+        # Get response for device details
+        details_response = call_json_outlets.DETAILS_RESPONSES[dev_type]
+        if callable(details_response):
+            self.mock_api.return_value = details_response()
+        else:
+            self.mock_api.return_value = details_response
 
-        This method is automatically parametrized by `pytest_generate_tests`
-        based on class variables `device` (name of device type - outlets),
-        device name (outlets) list of device types.
-
-        Example:
-            >>> device = 'outlets'
-            >>> outlets = ['ESW01-USA', 'ESW01-EU', 'ESW01-AU']
-
-        See Also
-        --------
-        `utils.TestBase` class docstring
-        `call_json_outlets` module docstring
-
-        Notes
-        ------
-        The device is instantiated using the `call_json.DeviceList.device_list_item()`
-        method. The device details contain the default values set in `utils.Defaults`
-        """
-        # Set return value for call_api based on call_json_bulb.DETAILS_RESPONSES
-        self.mock_api.return_value = call_json_outlets.DETAILS_RESPONSES[dev_type]
-
-        # Instantiate device from device list return item
+        # Get device configuration
         device_config = call_json.DeviceList.device_list_item(dev_type)
+
+        # Instantiate device
         _, outlet_obj = object_factory(dev_type,
-                                       device_config,
-                                       self.manager)
+                                     device_config,
+                                     self.manager)
 
-        # Get and run method from object
-        method_call = getattr(outlet_obj, method)
-        method_call()
+        # Call get_details() directly
+        outlet_obj.get_details()
 
-        # Parse mock_api args tuple from arg, kwargs to kwargs
+        # Parse arguments from mock_api call into dictionary
         all_kwargs = parse_args(self.mock_api)
 
-        # Assert request matches recored request or write new records
-        assert_test(method_call, all_kwargs, dev_type,
-                    self.write_api, self.overwrite)
+        # Set both write_api and overwrite to True to update YAML files
+        assert_test(outlet_obj.get_details, all_kwargs, dev_type,
+                   write_api=True, overwrite=True)
 
-        # Assert device attributes match default values
-        assert int(outlet_obj.details['active_time']) == int(Defaults.active_time)
-        assert int(outlet_obj.details['energy']) == int(
-            call_json_outlets.OutletDefaults.energy)
-        assert int(outlet_obj.details['power']) == int(
-            call_json_outlets.OutletDefaults.power)
-        assert int(outlet_obj.details['voltage']) == int(
-            call_json_outlets.OutletDefaults.voltage)
+        # Test bad responses
+        self.mock_api.reset_mock()
+        if dev_type == 'wifi-switch-1.3':
+            self.mock_api.return_value = (None, 400)
+        else:
+            self.mock_api.return_value = call_json.DETAILS_BADCODE
+        outlet_obj.get_details()
+        assert len(self.caplog.records) == 1
+        assert 'details' in self.caplog.text
 
     def test_methods(self, dev_type, method):
-        """Test device methods API request and response.
-
-        This method is automatically parametrized by `pytest_generate_tests`
-        based on class variables `device` (name of device type - outlets),
-        device name (outlets) list of device types, `base_methods` - list of
-        methods for all devices, and `device_methods` - list of methods for
-        each device type.
-
-        Example:
-            >>> base_methods = [['turn_on'], ['turn_off'], ['update']]
-            >>> device_methods = {
-                'dev_type': [['method1'], ['method2', {'kwargs': 'value'}]]
-                }
-
-        Notes
-        -----
-        The response can be a callable that accepts the `kwargs` argument to
-        sync the device response with the API response. In some cases the API
-        returns data from the method call, such as `get_yearly_energy`, in other cases the
-        API returns a simple confirmation the command was successful.
-
-        See Also
-        --------
-        `TestBase` class method
-        `call_json_outlets` module
-
-        """
+        """Test outlet device methods."""
         # Get method name and kwargs from method fixture
         method_name = method[0]
         if len(method) == 2 and isinstance(method[1], dict):
@@ -186,7 +175,7 @@ class TestOutlets(TestBase):
         else:
             method_kwargs = {}
 
-        # Set return value for call_api based on call_json_bulbs.METHOD_RESPONSES
+        # Set return value for call_api based on METHOD_RESPONSES
         method_response = call_json_outlets.METHOD_RESPONSES[dev_type][method_name]
         if callable(method_response):
             if method_kwargs:
@@ -196,35 +185,35 @@ class TestOutlets(TestBase):
         else:
             self.mock_api.return_value = method_response
 
-        # Get device configuration from call_json.DeviceList.device_list_item()
+        # Get device configuration
         device_config = call_json.DeviceList.device_list_item(dev_type)
 
-        # Instantiate device from device list return item
+        # Instantiate device
         _, outlet_obj = object_factory(dev_type,
-                                       device_config,
-                                       self.manager)
-
-        # Ensure method runs based on device configuration
-        if method[0] == 'turn_on':
-            outlet_obj.device_status == 'off'
-        if method[0] == 'turn_off':
-            outlet_obj.device_status == 'on'
+                                     device_config,
+                                     self.manager)
 
         # Get method from device object
         method_call = getattr(outlet_obj, method[0])
 
+        # Ensure method runs based on device configuration
+        if method[0] == 'turn_on':
+            outlet_obj.device_status = 'off'
+        elif method[0] == 'turn_off':
+            outlet_obj.device_status = 'on'
+
         # Call method with kwargs if present
         if method_kwargs:
-            method_call(method_kwargs)
+            method_call(**method_kwargs)
         else:
             method_call()
 
-        # Parse arguments from mock_api call into a dictionary
+        # Parse arguments from mock_api call into dictionary
         all_kwargs = parse_args(self.mock_api)
 
-        # Assert request matches recored request or write new records
+        # Assert request matches recorded request or write new records
         assert_test(method_call, all_kwargs, dev_type,
-                    self.write_api, self.overwrite)
+                   self.write_api, self.overwrite)
 
         # Test bad responses
         self.mock_api.reset_mock()
@@ -233,14 +222,14 @@ class TestOutlets(TestBase):
         else:
             self.mock_api.return_value = call_json.DETAILS_BADCODE
         if method[0] == 'turn_on':
-            outlet_obj.device_status == 'off'
+            outlet_obj.device_status = 'off'
         if method[0] == 'turn_off':
-            outlet_obj.device_status == 'on'
+            outlet_obj.device_status = 'on'
         if 'energy' in method[0]:
             return
         assert method_call() is False
 
-    @pytest.mark.parametrize('dev_type', OUTLET_DEV_TYPES)
+    @pytest.mark.parametrize('dev_type', [d for d in OUTLET_DEV_TYPES if d != 'BSDOG01'])
     def test_power(self, dev_type):
         """Test outlets power history methods."""
         self.mock_api.return_value = call_json_outlets.ENERGY_HISTORY

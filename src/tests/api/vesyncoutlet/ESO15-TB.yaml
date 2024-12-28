@@ -1,3 +1,25 @@
+get_details:
+  headers:
+    accept-language: en
+    accountId: sample_id
+    appVersion: 2.8.6
+    content-type: application/json
+    tk: sample_tk
+    tz: America/New_York
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 2.8.6
+    method: devicedetail
+    mobileId: '1234567890123456'
+    phoneBrand: SM N9005
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+    uuid: ESO15-TB-UUID
+  method: post
+  url: /outdoorsocket15a/v1/device/devicedetail
 get_monthly_energy:
   headers:
     accept-language: en
