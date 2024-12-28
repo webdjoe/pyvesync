@@ -803,6 +803,6 @@ class VeSyncOutletBSDGO1(VeSyncOutlet):
         if Helpers.code_check(r):
             self.device_status = 'on' if power else 'off'
             return True
-        logger.warning('Error turning %s %s', self.device_name, 
+        logger.warning('Error turning %s %s', self.device_name,
                       'on' if power else 'off')
         return False
