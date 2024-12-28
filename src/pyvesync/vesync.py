@@ -445,6 +445,6 @@ class VeSync:  # pylint: disable=function-redefined
 
     def update_all_devices(self) -> None:
         """Run `get_details()` for each device and update state."""
-        devices = list(self._dev_list.keys())
+        devices = list(self._dev_list.values())
         for dev in chain(*devices):
-            dev.get_details()
+            dev.update()
