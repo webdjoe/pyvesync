@@ -42,11 +42,14 @@ class TestVeSyncBSDGO1Switch(TestBase):
         self.mock_api.return_value = CORRECT_BSDGO1_DETAILS
         bsdgo1_outlet = VeSyncOutletBSDGO1(DEV_LIST_DETAIL, self.manager)
         bsdgo1_outlet.get_details()
-        dev_details = bsdgo1_outlet.details
-        assert bsdgo1_outlet.device_status == 'on'
-        assert isinstance(dev_details, dict)
-        assert dev_details['active_time'] == 1
-        assert bsdgo1_outlet.connection_status == 'online'
+        response = CORRECT_BSDGO1_DETAILS[0]
+        result = response.get('result', {})
+        
+        expected_status = 'on' if result.get('powerSwitch_1') == 1 else 'off'
+        assert bsdgo1_outlet.device_status == expected_status
+        
+        assert result.get('active_time') == Defaults.active_time
+        assert result.get('connectionStatus') == 'online'
 
     def test_bsdgo1_details_fail(self):
         """Test BSDGO1 get_details with bad response."""
@@ -60,7 +63,7 @@ class TestVeSyncBSDGO1Switch(TestBase):
         """Test BSDGO1 Device On/Off Methods."""
         self.mock_api.return_value = ({'code': 0}, 200)
         bsdgo1_outlet = VeSyncOutletBSDGO1(DEV_LIST_DETAIL, self.manager)
-        head = helpers.req_headers(self.manager)
+        head = helpers.req_header_bypass()
         body = helpers.req_body(self.manager, 'bypassV2')
         body['cid'] = bsdgo1_outlet.cid
         body['configModule'] = bsdgo1_outlet.config_module

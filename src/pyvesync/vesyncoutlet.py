@@ -575,7 +575,6 @@ class VeSyncOutlet15A(VeSyncOutlet):
         if Helpers.code_check(response):
             self.device_status = 'off'
             return True
-
         logger.warning('Error turning %s off', self.device_name)
         return False
 
@@ -735,11 +734,11 @@ class VeSyncOutdoorPlug(VeSyncOutlet):
         return False
 
     def turn_on(self) -> bool:
-        """Turn outdoor outlet on and return True if successful."""
+        """Turn on outlet."""
         return bool(self.toggle('on'))
 
     def turn_off(self) -> bool:
-        """Turn outdoor outlet off and return True if successful."""
+        """Turn off outlet."""
         return bool(self.toggle('off'))
 
 
@@ -803,6 +802,5 @@ class VeSyncOutletBSDGO1(VeSyncOutlet):
         if Helpers.code_check(r):
             self.device_status = 'on' if power else 'off'
             return True
-        logger.warning('Error turning %s %s', self.device_name,
-                      'on' if power else 'off')
+        logger.warning('Error turning %s %s', self.device_name, 'on' if power else 'off')
         return False

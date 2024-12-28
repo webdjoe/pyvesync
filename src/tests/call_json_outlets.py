@@ -36,10 +36,11 @@ If changing default response for all devices, change the default factory of the 
 default dict but make sure to use `deepcopy` to avoid unintended side effects.
 """
 from copy import deepcopy
+from collections import defaultdict
 from utils import FunctionResponses, Defaults
-from pyvesync import vesyncoutlet
+from pyvesync.vesyncoutlet import outlet_modules
 
-OUTLETS = vesyncoutlet.outlet_modules.keys()
+OUTLETS = outlet_modules.keys()
 OUTLETS_NUM = len(OUTLETS)
 
 # OUTLETS = ['wifi-switch-1.3', 'ESW03-USA', 'ESW01-EU', 'ESW15-USA', 'ESO15-TB']
@@ -129,15 +130,17 @@ class OutletDetails:
         200,
     )
 
-    bsdgo1_details = {
+    bsdgo1_details = ({
         "code": 0,
         "msg": "request success",
         "result": {
             "powerSwitch_1": 1,
             "traceId": "1735308365651",
+            "active_time": Defaults.active_time,
+            "connectionStatus": "online",
             "code": 0
         }
-    }
+    }, 200)
 
 
 DETAILS_RESPONSES = {
@@ -171,3 +174,13 @@ for k in METHOD_RESPONSES:
     METHOD_RESPONSES[k]['get_weekly_energy'] = ENERGY_HISTORY
     METHOD_RESPONSES[k]['get_monthly_energy'] = ENERGY_HISTORY
     METHOD_RESPONSES[k]['get_yearly_energy'] = ENERGY_HISTORY
+
+# Add BSDGO1 specific responses
+METHOD_RESPONSES['BSDOG01'] = defaultdict(lambda: ({
+    "code": 0,
+    "msg": "request success",
+    "result": {
+        "traceId": Defaults.trace_id,
+        "code": 0
+    }
+}, 200))
