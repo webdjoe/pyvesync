@@ -185,8 +185,33 @@ class TestOutlets(TestBase):
         assert 'details' in self.caplog.text
 
     def test_methods(self, dev_type, method):
-        """Test outlet device methods."""
-        # Get method name and kwargs from method fixture
+        """Test device methods API request and response.
+
+        This method is automatically parametrized by `pytest_generate_tests`
+        based on class variables `device` (name of device type - outlets),
+        device name (outlets) list of device types, `base_methods` - list of
+        methods for all devices, and `device_methods` - list of methods for
+        each device type.
+
+        Example:
+            >>> base_methods = [['turn_on'], ['turn_off'], ['update']]
+            >>> device_methods = {
+                'dev_type': [['method1'], ['method2', {'kwargs': 'value'}]]
+                }
+
+        Notes
+        -----
+        The response can be a callable that accepts the `kwargs` argument to
+        sync the device response with the API response. In some cases the API
+        returns data from the method call, such as `get_yearly_energy`, in other cases the
+        API returns a simple confirmation the command was successful.
+
+        See Also
+        --------
+        `TestBase` class method
+        `call_json_outlets` module
+
+        """        # Get method name and kwargs from method fixture
         method_name = method[0]
         if len(method) == 2 and isinstance(method[1], dict):
             method_kwargs = method[1]
