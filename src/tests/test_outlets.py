@@ -130,8 +130,26 @@ class TestOutlets(TestBase):
     }
 
     def test_details(self, dev_type, method):
-        """Test outlet device details."""
-        # Get response for device details
+        """Test the device details API request and response.
+
+        This method is automatically parametrized by `pytest_generate_tests`
+        based on class variables `device` (name of device type - outlets),
+        device name (outlets) list of device types.
+
+        Example:
+            >>> device = 'outlets'
+            >>> outlets = ['ESW01-USA', 'ESW01-EU', 'ESW01-AU']
+
+        See Also
+        --------
+        `utils.TestBase` class docstring
+        `call_json_outlets` module docstring
+
+        Notes
+        ------
+        The device is instantiated using the `call_json.DeviceList.device_list_item()`
+        method. The device details contain the default values set in `utils.Defaults`
+        """        # Get response for device details
         details_response = call_json_outlets.DETAILS_RESPONSES[dev_type]
         if callable(details_response):
             self.mock_api.return_value = details_response()
