@@ -120,7 +120,8 @@ air_features: dict = {
         'module': 'VeSyncAir131',
         'models': ['LV-PUR131S', 'LV-RH131S'],
         'modes': ['manual', 'auto', 'sleep', 'off'],
-        'features': ['air_quality']
+        'features': ['air_quality'],
+        'levels': list(range(1, 3))
     },
     'Vital100S': {
         'module': 'VeSyncAirBaseV2',
