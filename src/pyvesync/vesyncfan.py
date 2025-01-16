@@ -1988,6 +1988,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
     def build_humid_dict(self, dev_dict: Dict[str, str]) -> None:
         """Build humidifier status dictionary."""
         self.enabled = dev_dict.get('enabled')
+        self.device_status = 'on' if self.enabled else 'off'
         self.details['humidity'] = dev_dict.get('humidity', 0)
         self.details['mist_virtual_level'] = dev_dict.get(
             'mist_virtual_level', 0)
