@@ -373,6 +373,8 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             self.details['air_quality_value'] = dev_dict.get(
                 'air_quality_value', 0)
             self.details['air_quality'] = dev_dict.get('air_quality', 0)
+        self.current_firm_version = r.get('currentFirmVersion', self.current_firm_version)
+
 
     def build_config_dict(self, conf_dict: Dict[str, str]) -> None:
         """Build configuration dict for Bypass purifier.
@@ -1598,6 +1600,7 @@ class VeSyncAir131(VeSyncBaseDevice):
             self.mode = r.get('mode', self.mode)
             self.details['level'] = r.get('level', 0)
             self.details['air_quality'] = r.get('airQuality', 'unknown')
+            self.current_firm_version = r.get('currentFirmVersion', self.current_firm_version)
         else:
             logger.debug('Error getting %s details', self.device_name)
 
@@ -2539,6 +2542,8 @@ class VeSyncSuperior6000S(VeSyncBaseDevice):
         self.details['temperature'] = dev_dict.get('temperature', 0)
         self.details['display'] = dev_dict.get('screenSwitch', None)
         self.details['drying_mode'] = dev_dict.get('dryingMode', {})
+        self.current_firm_version = r.get('currentFirmVersion', self.current_firm_version)
+
 
     def build_config_dict(self, _):
         """Build configuration dict for humidifier."""
