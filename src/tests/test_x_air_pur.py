@@ -18,7 +18,7 @@ CORRECT_DETAILS = call_json_fans.DETAILS_RESPONSES[LVPUR131S]
 BAD_LIST = call_json.DETAILS_BADCODE
 
 
-class TestVesyncAirPurifier(TestBase):
+class TestVeSyncAirPurifier(TestBase):
     """Air purifier tests."""
 
     def test_airpur_conf(self):

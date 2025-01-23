@@ -41,13 +41,13 @@ class TestVeSyncBSDGO1Switch(TestBase):
         """Test BSDGO1 get_details()."""
         self.mock_api.return_value = CORRECT_BSDGO1_DETAILS
         bsdgo1_outlet = VeSyncOutletBSDGO1(DEV_LIST_DETAIL, self.manager)
-        bsdgo1_outlet.get_details()
+        assert bsdgo1_outlet.get_details()
         response = CORRECT_BSDGO1_DETAILS[0]
         result = response.get('result', {})
-        
+
         expected_status = 'on' if result.get('powerSwitch_1') == 1 else 'off'
         assert bsdgo1_outlet.device_status == expected_status
-        
+
         assert result.get('active_time') == Defaults.active_time
         assert result.get('connectionStatus') == 'online'
 
@@ -55,52 +55,46 @@ class TestVeSyncBSDGO1Switch(TestBase):
         """Test BSDGO1 get_details with bad response."""
         self.mock_api.return_value = BAD_BSDGO1_LIST
         bsdgo1_outlet = VeSyncOutletBSDGO1(DEV_LIST_DETAIL, self.manager)
-        bsdgo1_outlet.get_details()
+        assert bsdgo1_outlet.get_details()==False
         assert len(self.caplog.records) == 1
-        assert 'details' in self.caplog.text
+        assert 'FAILED' in self.caplog.text
 
     def test_bsdgo1_onoff(self):
         """Test BSDGO1 Device On/Off Methods."""
-        self.mock_api.return_value = ({'code': 0}, 200)
+        self.mock_api.return_value = ({'code': 0, 'msg': 'success', 'result': {'code': 0}}, 200)
         bsdgo1_outlet = VeSyncOutletBSDGO1(DEV_LIST_DETAIL, self.manager)
         head = helpers.req_header_bypass()
         body = helpers.req_body(self.manager, 'bypassV2')
         body['cid'] = bsdgo1_outlet.cid
         body['configModule'] = bsdgo1_outlet.config_module
-        
+
         # Test turn_on
         body['payload'] = {
-            'data': {'powerSwitch_1': 1},
             'method': 'setProperty',
-            'source': 'APP'
+            'source': 'APP',
+            'data': {'powerSwitch_1': 1}
         }
-        on = bsdgo1_outlet.turn_on()
+        assert bsdgo1_outlet.turn_on()
         self.mock_api.assert_called_with(
             '/cloud/v2/deviceManaged/bypassV2',
             'post',
-            headers=head,
-            json_object=body
+            body,
+            head
         )
-        assert on
-        
+
         # Test turn_off
-        body['payload'] = {
-            'data': {'powerSwitch_1': 0},
-            'method': 'setProperty',
-            'source': 'APP'
-        }
-        off = bsdgo1_outlet.turn_off()
+        body['payload']['data']['powerSwitch_1'] = 0
+        assert bsdgo1_outlet.turn_off()
         self.mock_api.assert_called_with(
             '/cloud/v2/deviceManaged/bypassV2',
             'post',
-            headers=head,
-            json_object=body
+            body,
+            head
         )
-        assert off
 
     def test_bsdgo1_onoff_fail(self):
         """Test BSDGO1 On/Off Fail with bad response."""
         self.mock_api.return_value = BAD_BSDGO1_LIST
         bsdgo1_outlet = VeSyncOutletBSDGO1(DEV_LIST_DETAIL, self.manager)
         assert not bsdgo1_outlet.turn_on()
-        assert not bsdgo1_outlet.turn_off() 
+        assert not bsdgo1_outlet.turn_off()

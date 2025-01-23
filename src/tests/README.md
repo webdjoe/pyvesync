@@ -75,7 +75,7 @@ Each device module has it's own `call_json` file. The structure of the files mai
 
 The `DETAILS_RESPONSES` dictionary contains the device type as the key and references the `DeviceDetails` class attribute as the value. The `DETAILS_RESPONSES` dictionary is used to lookup the appropriate response for each device type.
 
-The responses for device methods are also defined in the `call_json_DEVICE` module. The METHOD_RESPONSES dictionary uses a defaultdict imported from `utils.py` with a simple `{"code": 0, "message": ""}` as the default value. The `METHOD_RESPONSES` dictionary is created with keys of device type and values as the defaultdict object. From here the method responses can be added to the defaultdict object for specific scenarios.
+The responses for device methods are also defined in the `call_json_DEVICE` module. The METHOD_RESPONSES dictionary uses a defaultdict imported from `utils.py` with a simple `{"code": 0, "msg": "", "result": {}, }` as the default value. The `METHOD_RESPONSES` dictionary is created with keys of device type and values as the defaultdict object. From here the method responses can be added to the defaultdict object for specific scenarios.
 
 ```python
 from utils import FunctionResponses 
@@ -83,7 +83,7 @@ from copy import deepcopy
 
 device_types = ['dev1', 'dev2']
 
-# defaultdict with default value - ({"code": 0, "msg": None}, 200)
+# defaultdict with default value - ({"code": 0, "msg": None, "result": {}}, 200)
 method_response = FunctionResponses 
 
 # Use deepcopy to build the device response dictionary used to test the get_details() method

@@ -9,7 +9,7 @@ from pyvesync import VeSync
 from pyvesync.helpers import Helpers
 
 
-class TestVesync(unittest.TestCase):
+class TestVeSync(unittest.TestCase):
     """Test VeSync object initialization."""
 
     def setUp(self):

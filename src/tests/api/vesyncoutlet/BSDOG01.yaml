@@ -1,8 +1,5 @@
 get_details:
-  headers:
-    Content-Type: application/json; charset=UTF-8
-    User-Agent: okhttp/3.12.1
-  json_object:
+  data:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 2.8.6
@@ -18,7 +15,10 @@ get_details:
     phoneOS: Android
     timeZone: America/New_York
     token: sample_tk
-    traceId: TRACE_ID
+    traceId: '1737642941'
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
   method: post
   url: /cloud/v2/deviceManaged/bypassV2
 turn_off:

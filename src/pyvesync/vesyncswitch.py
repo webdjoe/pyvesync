@@ -191,7 +191,7 @@ class VeSyncWallSwitch(VeSyncSwitch):
 
 
 class VeSyncDimmerSwitch(VeSyncSwitch):
-    """Vesync Dimmer Switch Class with RGB Faceplate."""
+    """VeSync Dimmer Switch Class with RGB Faceplate."""
 
     def __init__(self, details, manager):
         """Initilize dimmer switch class."""

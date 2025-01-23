@@ -20,7 +20,7 @@ BAD_LIST = call_json.DETAILS_BADCODE
 DEFAULTS = call_json.Defaults
 
 
-class TestVesyncWallSwitch(object):
+class TestVeSyncWallSwitch(object):
     @pytest.fixture()
     def api_mock(self, caplog):
         self.mock_api_call = patch('pyvesync.helpers.Helpers.call_api')

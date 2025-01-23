@@ -10,10 +10,10 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='pyvesync',
-    version='2.1.15',
+    version='2.1.16',
     description='pyvesync is a library to manage Etekcity\
                  Devices, Cosori Air Fryers and Levoit Air \
-                     Purifiers run on the VeSync app.',
+                 Purifiers run on the VeSync app.',
     long_description=long_description,
     long_description_content_type='text/markdown',
     url='https://github.com/webdjoe/pyvesync',

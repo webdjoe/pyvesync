@@ -25,6 +25,7 @@ BAD_DEV_LIST = {
         'list': [{'NoConfigKeys': None}],
     },
     'code': 0,
+    'msg': 'success',
 }
 
 
@@ -131,6 +132,7 @@ class TestDeviceList(object):
         device_list = (
             {
                 'code': 0,
+                'msg': 'success',
                 'NOTresult': {
                     'NOTlist': [
                         {

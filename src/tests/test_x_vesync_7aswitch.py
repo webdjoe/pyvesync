@@ -29,7 +29,7 @@ CALL_LIST = [
 ]
 
 
-class TestVesync7ASwitch(TestBase):
+class TestVeSync7ASwitch(TestBase):
     """Test 7A outlet API."""
 
     def test_7aswitch_conf(self):
@@ -112,7 +112,7 @@ class TestVesync7ASwitch(TestBase):
         self.mock_api.assert_called_with(
             '/v1/device/' + vswitch7a.cid + '/energy/week',
             'get',
-            headers=helpers.req_headers(self.manager),
+            helpers.req_headers(self.manager),
         )
         energy_dict = vswitch7a.energy['week']
         assert energy_dict['energy_consumption_of_today'] == 1
@@ -129,7 +129,7 @@ class TestVesync7ASwitch(TestBase):
         self.mock_api.assert_called_with(
             '/v1/device/' + vswitch7a.cid + '/energy/month',
             'get',
-            headers=helpers.req_headers(self.manager),
+            helpers.req_headers(self.manager),
         )
         energy_dict = vswitch7a.energy['month']
         assert energy_dict['energy_consumption_of_today'] == 1
@@ -146,7 +146,7 @@ class TestVesync7ASwitch(TestBase):
         self.mock_api.assert_called_with(
             '/v1/device/' + vswitch7a.cid + '/energy/year',
             'get',
-            headers=helpers.req_headers(self.manager),
+            helpers.req_headers(self.manager),
         )
         energy_dict = vswitch7a.energy['year']
         assert energy_dict['energy_consumption_of_today'] == 1
@@ -157,17 +157,17 @@ class TestVesync7ASwitch(TestBase):
 
     def test_history_fail(self):
         """Test handling of energy update failure."""
-        bad_history = {'code': 1}
+        bad_history = {'code': 1, 'msg': 'FAILED'}
         self.mock_api.return_value = (bad_history, 200)
         vswitch7a = VeSyncOutlet7A(DEV_LIST_DETAIL, self.manager)
         vswitch7a.update_energy()
         assert len(self.caplog.records) == 1
-        assert 'weekly' in self.caplog.text
+        assert 'week' in self.caplog.text
         self.caplog.clear()
         vswitch7a.get_monthly_energy()
         assert len(self.caplog.records) == 1
-        assert 'monthly' in self.caplog.text
+        assert 'month' in self.caplog.text
         self.caplog.clear()
         vswitch7a.get_yearly_energy()
         assert len(self.caplog.records) == 1
-        assert 'yearly' in self.caplog.text
+        assert 'year' in self.caplog.text

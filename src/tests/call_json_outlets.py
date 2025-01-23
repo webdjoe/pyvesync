@@ -48,8 +48,8 @@ OUTLETS_NUM = len(OUTLETS)
 
 class OutletDefaults:
     voltage = 1  # volts
-    energy = 1  # kilowatt
-    power = 1  # kilowatt-hours
+    energy = 1  # kilowatt-hours
+    power = 1  # kilowatt
     round_7a_voltage = '1000:1000'  # 1 volt
     round_7a_power = '1000:1000'  # 1 watt
 
@@ -142,6 +142,21 @@ class OutletDetails:
         }
     }, 200)
 
+    wysmtod16a_details = ({
+        "code": 0,
+        "msg": "request success",
+        "result": {
+            "code": 0,
+            "traceId": "1735308365651",
+            "result": {
+                "code": 0,
+                "properties": {
+                    "powerSwitch_1": 1,
+                }
+            }
+        }
+    }, 200)
+
 
 DETAILS_RESPONSES = {
     'wifi-switch-1.3': OutletDetails.details_7a,
@@ -149,12 +164,14 @@ DETAILS_RESPONSES = {
     'ESW01-EU': OutletDetails.details_10a,
     'ESW15-USA': OutletDetails.details_15a,
     'ESO15-TB': OutletDetails.details_outdoor,
-    'BSDOG01': OutletDetails.bsdgo1_details
+    'BSDOG01': OutletDetails.bsdgo1_details,
+    'WYSMTOD16A': OutletDetails.wysmtod16a_details,
 }
 
 ENERGY_HISTORY = (
     {
         'code': 0,
+        'msg': 'request success',
         'energyConsumptionOfToday': 1,
         'costPerKWH': 1,
         'maxEnergy': 1,
@@ -177,6 +194,16 @@ for k in METHOD_RESPONSES:
 
 # Add BSDGO1 specific responses
 METHOD_RESPONSES['BSDOG01'] = defaultdict(lambda: ({
+    "code": 0,
+    "msg": "request success",
+    "result": {
+        "traceId": Defaults.trace_id,
+        "code": 0
+    }
+}, 200))
+
+# Add WYSMTOD16A specific responses
+METHOD_RESPONSES['WYSMTOD16A'] = defaultdict(lambda: ({
     "code": 0,
     "msg": "request success",
     "result": {

@@ -26,7 +26,7 @@ CORRECT_10A_DETAILS = call_json_outlets.DETAILS_RESPONSES[DEV_TYPE_US]
 BAD_10A_LIST = call_json.DETAILS_BADCODE
 
 
-class TestVesync10ASwitch(TestBase):
+class TestVeSync10ASwitch(TestBase):
     """Test class for 10A outlets."""
 
     @pytest.mark.parametrize(
@@ -80,13 +80,19 @@ class TestVesync10ASwitch(TestBase):
         body['uuid'] = out.uuid
         on = out.turn_on()
         self.mock_api.assert_called_with(
-            '/10a/v1/device/devicestatus', 'put', headers=head, json_object=body
+            '/10a/v1/device/devicestatus',
+            'put',
+            body,
+            head
         )
         assert on
         off = out.turn_off()
         body['status'] = 'off'
         self.mock_api.assert_called_with(
-            '/10a/v1/device/devicestatus', 'put', headers=head, json_object=body
+            '/10a/v1/device/devicestatus',
+            'put',
+            body,
+            head
         )
         assert off
 
@@ -107,8 +113,8 @@ class TestVesync10ASwitch(TestBase):
         self.mock_api.assert_called_with(
             '/10a/v1/device/energyweek',
             'post',
-            headers=helpers.req_headers(self.manager),
-            json_object=body,
+            body,
+            helpers.req_headers(self.manager),
         )
         energy_dict = out.energy['week']
         assert energy_dict['energy_consumption_of_today'] == 1
@@ -128,8 +134,8 @@ class TestVesync10ASwitch(TestBase):
         self.mock_api.assert_called_with(
             '/10a/v1/device/energymonth',
             'post',
-            headers=helpers.req_headers(self.manager),
-            json_object=body,
+            body,
+            helpers.req_headers(self.manager),
         )
         energy_dict = out.energy['month']
         assert energy_dict['energy_consumption_of_today'] == 1
@@ -149,8 +155,8 @@ class TestVesync10ASwitch(TestBase):
         self.mock_api.assert_called_with(
             '/10a/v1/device/energyyear',
             'post',
-            headers=helpers.req_headers(self.manager),
-            json_object=body,
+            body,
+            helpers.req_headers(self.manager),
         )
         energy_dict = out.energy['year']
         assert energy_dict['energy_consumption_of_today'] == 1
@@ -162,17 +168,17 @@ class TestVesync10ASwitch(TestBase):
 
     def test_history_fail(self):
         """Test 15A energy failure."""
-        bad_history = {'code': 1}
+        bad_history = {'code': 1, 'msg': 'FAILED'}
         self.mock_api.return_value = (bad_history, 200)
         out = VeSyncOutlet10A(DEV_LIST_DETAIL_US, self.manager)
         out.update_energy()
         assert len(self.caplog.records) == 1
-        assert 'weekly' in self.caplog.text
+        assert 'week' in self.caplog.text
         self.caplog.clear()
         out.get_monthly_energy()
         assert len(self.caplog.records) == 1
-        assert 'monthly' in self.caplog.text
+        assert 'month' in self.caplog.text
         self.caplog.clear()
         out.get_yearly_energy()
         assert len(self.caplog.records) == 1
-        assert 'yearly' in self.caplog.text
+        assert 'year' in self.caplog.text

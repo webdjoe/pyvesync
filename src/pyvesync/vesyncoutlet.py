@@ -31,6 +31,10 @@ outlet_modules = {k: v['module'] for k, v in outlet_config.items()}
 
 __all__ = list(outlet_modules.values()) + ['outlet_modules']
 
+ENERGY_WEEK  = 'week'
+ENERGY_MONTH = 'month'
+ENERGY_YEAR  = 'year'
+PERIOD_2_DAYS = {ENERGY_WEEK: 7, ENERGY_MONTH: 30, ENERGY_YEAR: 365}
 
 class VeSyncOutlet(VeSyncBaseDevice):
     """Base class for Etekcity Outlets."""
@@ -38,7 +42,7 @@ class VeSyncOutlet(VeSyncBaseDevice):
     __metaclass__ = ABCMeta
 
     def __init__(self, details, manager):
-        """Initilize VeSync Outlet base class."""
+        """Initialise VeSync Outlet base class."""
         super().__init__(details, manager)
 
         self.details = {}
@@ -62,16 +66,20 @@ class VeSyncOutlet(VeSyncBaseDevice):
         """Build details dictionary."""
 
     @abstractmethod
+    def get_energy(self, period) -> dict:
+        """Build energy history dictionary."""
+
     def get_weekly_energy(self) -> dict:
         """Build weekly energy history dictionary."""
+        return self.get_energy(ENERGY_WEEK)
 
-    @abstractmethod
     def get_monthly_energy(self) -> dict:
         """Build Monthly Energy History Dictionary."""
+        return self.get_energy(ENERGY_MONTH)
 
-    @abstractmethod
     def get_yearly_energy(self) -> dict:
         """Build Yearly Energy Dictionary."""
+        return self.get_energy(ENERGY_YEAR)
 
     @abstractmethod
     def get_config(self) -> dict:
@@ -85,10 +93,12 @@ class VeSyncOutlet(VeSyncBaseDevice):
         """Build weekly, monthly and yearly dictionaries."""
         if bypass_check or (not bypass_check and self.update_time_check):
             self.update_energy_ts = time.time()
-            self.get_weekly_energy()
-            if 'week' in self.energy:
+            if not self.get_weekly_energy() is None:
                 self.get_monthly_energy()
                 self.get_yearly_energy()
+            else:
+                self.energy[ENERGY_MONTH] = {}
+                self.energy[ENERGY_YEAR] = {}
             if not bypass_check:
                 self.update_energy_ts = time.time()
 
@@ -105,44 +115,48 @@ class VeSyncOutlet(VeSyncBaseDevice):
     @property
     def power(self) -> float:
         """Return current power in watts."""
-        return float(self.details.get('power', 0))
+        P = self.details.get('power', 0)
+        return float(P)
 
     @property
     def voltage(self) -> float:
         """Return current voltage."""
-        return float(self.details.get('voltage', 0))
+        U = self.details.get('voltage', 0)
+        return float(U)
 
+    @property
     def current(self) -> float:
-        i = float(self.details.get('current', 0))
-        if (i == 0):
+        I = float(self.details.get('current', 0))
+
+        if (I == 0):
             if (self.voltage != 0):
                 return self.power / self.voltage
-        return i
+        return I
 
     @property
     def monthly_energy_total(self) -> float:
         """Return total energy usage over the month."""
-        return self.energy.get('month', {}).get('total_energy', 0)
+        return self.energy.get(ENERGY_MONTH, {}).get('total_energy', 0)
 
     @property
     def weekly_energy_total(self) -> float:
         """Return total energy usage over the week."""
-        return self.energy.get('week', {}).get('total_energy', 0)
+        return self.energy.get(ENERGY_WEEK, {}).get('total_energy', 0)
 
     @property
     def yearly_energy_total(self) -> float:
         """Return total energy usage over the year."""
-        return self.energy.get('year', {}).get('total_energy', 0)
+        return self.energy.get(ENERGY_YEAR, {}).get('total_energy', 0)
 
     def display(self) -> None:
         """Return formatted device info to stdout."""
         super().display()
         disp = [
-            ('Active Time : ', self.active_time, ' minutes'),
+            ('Active Time : ', self.active_time, ' min'),
             ('Energy: ', self.energy_today, ' kWh'),
-            ('Power: ', self.power, ' Watts'),
-            ('Voltage: ', self.voltage, ' Volts'),
-            ('Current: ', self.current, ' Volts'),
+            ('Power: ', self.power, ' W'),
+            ('Voltage: ', self.voltage, ' V'),
+            ('Current: ', self.current, ' A'),
             ('Energy Week: ', self.weekly_energy_total, ' kWh'),
             ('Energy Month: ', self.monthly_energy_total, ' kWh'),
             ('Energy Year: ', self.yearly_energy_total, ' kWh'),
@@ -150,7 +164,7 @@ class VeSyncOutlet(VeSyncBaseDevice):
         for line in disp:
             print(f'{line[0]:.<30} {line[1]} {line[2]}')
 
-    def displayJSON(self) -> None:
+    def displayJSON(self) -> dict:
         """Return JSON details for outlet."""
         sup = super().displayJSON()
         sup_val = json.loads(sup)
@@ -181,18 +195,12 @@ class VeSyncOutlet(VeSyncBaseDevice):
         """Turn outdoor outlet off and return True if successful."""
         return self.turn('off')
 
-    def get_body_v2(self) -> dict:
-        body = Helpers.req_body(self.manager, ('bypassV2'))
-        body['cid'] = self.cid
-        body['configModule'] = self.config_module
-        return body
-
 
 class VeSyncOutlet7A(VeSyncOutlet):
     """Etekcity 7A Round Outlet Class."""
 
     def __init__(self, details, manager):
-        """Initilize Etekcity 7A round outlet class."""
+        """Initialize Etekcity 7A round outlet class."""
         super().__init__(details, manager)
         self.det_keys = ['deviceStatus', 'activeTime', 'energy', 'power', 'voltage']
         self.energy_keys = ['energyConsumptionOfToday', 'maxEnergy', 'totalEnergy']
@@ -215,11 +223,11 @@ class VeSyncOutlet7A(VeSyncOutlet):
             self.details['voltage'] = self.parse_energy_detail(voltage)
             return True
 
-        logger.error('Unable to get %s details', self.device_name)
+        logger.error(f'Failed to get {self.device_name} details')
         return False
 
     @staticmethod
-    def parse_energy_detail(energy):
+    def parse_energy_detail(energy) -> float:
         """Parse energy details to be compatible with new and old firmware."""
         try:
             if isinstance(energy, str) and ':' in energy:
@@ -236,27 +244,15 @@ class VeSyncOutlet7A(VeSyncOutlet):
         r, _ = Helpers.call_api(
             f'/v1/device/{self.cid}/energy/{period}',
             'get',
-            headers=Helpers.req_headers(self.manager),
+            Helpers.req_headers(self.manager),
         )
 
         if r is not None and all(x in r for x in self.energy_keys):
             self.energy[period] = Helpers.build_energy_dict(r)
         else:
             self.energy[period] = None
-            logger.error(f'Unable to get {self.device_name} {period}ly data!')
+            logger.error(f'Unable to get {self.device_name} energy-data for {period}!')
         return self.energy[period]
-
-    def get_weekly_energy(self) -> dict:
-        """Get 7A outlet weekly energy info and buld weekly energy dict."""
-        return self.get_energy('week')
-
-    def get_monthly_energy(self) -> dict:
-        """Get 7A outlet monthly energy info and buld monthly energy dict."""
-        return self.get_energy('month')
-
-    def get_yearly_energy(self) -> dict:
-        """Get 7A outlet yearly energy info and build yearly energy dict."""
-        return self.get_energy('year')
 
     def turn(self, status) -> bool:
         _, status_code = Helpers.call_api(
@@ -313,15 +309,15 @@ class VeSyncOutlet10A(VeSyncOutlet):
             self.connection_status = r.get('connectionStatus', self.connection_status)
             self.details = Helpers.build_details_dict(r)
             return True
-        
-        logger.debug(f'Unable to get {self.device_name} details')
+
+        logger.debug(f'Failed to get {self.device_name} details')
         return False
 
     def get_config(self) -> dict:
         """Get 10A outlet configuration info."""
         body = Helpers.req_body(self.manager, 'devicedetail')
-        body['method'] = 'configurations'
         body['uuid'] = self.uuid
+        body['method'] = 'configurations'
 
         r, _ = Helpers.call_api(
             '/10a/v1/device/configurations',
@@ -339,7 +335,7 @@ class VeSyncOutlet10A(VeSyncOutlet):
 
     def get_energy(self, period) -> dict:
         """Get 10A outlet energy for period info and populate energy dict."""
-        body = Helpers.req_body(self.manager, 'energy_week')
+        body = Helpers.req_body(self.manager, f'energy_{period}')
         body['uuid'] = self.uuid
 
         response, _ = Helpers.call_api(
@@ -352,21 +348,9 @@ class VeSyncOutlet10A(VeSyncOutlet):
         if Helpers.code_check(response):
             self.energy[period] = Helpers.build_energy_dict(response)
         else:
-            self.energy[period] = {}
-            logger.debug(f'Unable to get {self.device_name} {period}ly data')
-            return self.energy[period]
-
-    def get_weekly_energy(self) -> dict:
-        """Get 10A outlet weekly energy info and populate energy dict."""
-        return self.get_energy('week')
-
-    def get_monthly_energy(self) -> dict:
-        """Get 10A outlet monthly energy info and populate energy dict."""
-        return self.get_energy('month')
-
-    def get_yearly_energy(self) -> dict:
-        """Get 10A outlet yearly energy info and populate energy dict."""
-        return self.get_energy('year')
+            self.energy[period] = None
+            logger.error(f'Unable to get {self.device_name} energy-data for {period}!')
+        return self.energy[period]
 
     def turn(self, status) -> bool:
         """Turn 10A outlet off - return True if successful."""
@@ -421,7 +405,6 @@ class VeSyncOutlet15A(VeSyncOutlet):
         )
 
         if Helpers.code_check(r) and all(k in r for k in attr_list):
-
             self.device_status = r.get('deviceStatus')
             self.connection_status = r.get('connectionStatus')
             self.nightlight_status = r.get('nightLightStatus')
@@ -429,7 +412,7 @@ class VeSyncOutlet15A(VeSyncOutlet):
             self.details = Helpers.build_details_dict(r)
             return True
 
-        logger.error('Unable to get %s details', self.device_name)
+        logger.error(f'Failed to get {self.device_name} details')
         return False
 
     def get_config(self) -> dict:
@@ -467,21 +450,9 @@ class VeSyncOutlet15A(VeSyncOutlet):
         if Helpers.code_check(response):
             self.energy[period] = Helpers.build_energy_dict(response)
         else:
-            self.energy[period] = {}
-            logger.error('Unable to get %s {period}ly data', self.device_name)
+            self.energy[period] = None
+            logger.error(f'Unable to get {self.device_name} energy-data for {period}!')
         return self.energy[period]
-
-    def get_weekly_energy(self) -> dict:
-        """Get 15A outlet weekly energy info and populate energy dict."""
-        return self.get_energy('week')
-
-    def get_monthly_energy(self) -> dict:
-        """Get 15A outlet monthly energy info and populate energy dict."""
-        return self.get_energy('month')
-
-    def get_yearly_energy(self) -> dict:
-        """Get 15A outlet yearly energy info and populate energy dict."""
-        return self.get_energy('year')
 
     def turn(self, status) -> bool:
         body = Helpers.req_body(self.manager, 'devicestatus')
@@ -554,7 +525,7 @@ class VeSyncOutdoorPlug(VeSyncOutlet):
             if sub_device_list and dev_no <= len(sub_device_list):
                 self.device_status = sub_device_list[(dev_no + -1)].get('subDeviceStatus')
                 return True
-        logger.debug(f'Unable to get {self.device_name} details!')
+        logger.debug(f'Failed to get {self.device_name} details!')
         return False
 
     def get_config(self) -> dict:
@@ -577,7 +548,7 @@ class VeSyncOutdoorPlug(VeSyncOutlet):
             logger.error(f'Error getting {self.device_name} config info!')
         return self.config
 
-    def get_energy(self, period):
+    def get_energy(self, period) -> dict:
         body = Helpers.req_body(self.manager, f'energy_{period}')
         body['uuid'] = self.uuid
 
@@ -591,21 +562,9 @@ class VeSyncOutdoorPlug(VeSyncOutlet):
         if Helpers.code_check(response):
             self.energy[period] = Helpers.build_energy_dict(response)
         else:
-            self.energy[period] = {}
-            logger.error(f'Unable to get {self.device_name} {period}ly data!')
+            self.energy[period] = None
+            logger.error(f'Unable to get {self.device_name} energy-data for {period}!')
         return self.energy[period]
-
-    def get_weekly_energy(self) -> dict:
-        """Get outdoor outlet weekly energy info and populate energy dict."""
-        return self.get_energy('week')
-
-    def get_monthly_energy(self) -> dict:
-        """Get outdoor outlet monthly energy info and populate energy dict."""
-        return self.get_energy('month')
-
-    def get_yearly_energy(self) -> dict:
-        """Get outdoor outlet yearly energy info and populate energy dict."""
-        return self.get_energy('year')
 
     def turn(self, status) -> bool:
         """Toggle power for outdoor outlet."""
@@ -628,7 +587,41 @@ class VeSyncOutdoorPlug(VeSyncOutlet):
         return False
 
 
-class VeSyncOutletBSDGO1(VeSyncOutlet):
+class VeSyncOutletV2(VeSyncOutlet):
+    """VeSync bypassV2 smart plug."""
+
+    def __init__(self, details, manager):
+        """Initialize bypassV2 smart plug class."""
+        super().__init__(details, manager)
+
+    def get_body_v2(self) -> dict:
+        body = Helpers.req_body(self.manager, ('bypassV2'))
+        body['cid'] = self.cid
+        body['configModule'] = self.config_module
+        return body
+
+    def get_response(self, body, rel_path = '/cloud/v2/deviceManaged/bypassV2') -> dict:
+        response, _ = Helpers.call_api(
+            rel_path,
+            'post',
+            body,
+            Helpers.req_header_bypass(),
+        )
+        if Helpers.code_check(response):
+            code = response['result']
+            if (code['code'] == 0):
+                return code, None
+            logger.error(f'Failed {self.device_name}::{body["payload"]["method"]} - wrong argument')
+            return None, (code['code'], 'wrong argument')
+
+        err_code = response['code']
+        err_msg  = response['msg']
+        if (err_code != -11300030):
+            logger.error(f'Failed {self.device_name}::{body["payload"]["method"]} - {err_msg} ({err_code})')
+        return None, (err_code, err_msg)
+
+
+class VeSyncOutletBSDGO1(VeSyncOutletV2):
     """VeSync BSDGO1 smart plug."""
 
     def __init__(self, details, manager):
@@ -644,9 +637,9 @@ class VeSyncOutletBSDGO1(VeSyncOutlet):
             'data': {}
         }
 
-        data, error = self._get_response(body)
-        if data:
-            self.device_status = 'on' if data.get('powerSwitch_1') == 1 else 'off'
+        code, error = self.get_response(body)
+        if (error is None):
+            self.device_status = 'on' if code.get('powerSwitch_1') == 1 else 'off'
             return True
         return False
 
@@ -659,26 +652,25 @@ class VeSyncOutletBSDGO1(VeSyncOutlet):
             'source': 'APP'
         }
 
-        data, error = self._get_response(body)
+        code, error = self.get_response(body)
 
         if error is None:
             self.device_status = status
             return True
-        logger.warning(f'Error turning {self.device_name} {status}')
         return False
 
 
-class VeSyncOutletWYSMTOD16A(VeSyncOutlet):
+class VeSyncOutletWYSMTOD16A(VeSyncOutletV2):
     """Class to hold GreenSun outdoor outlets."""
     PROPERTIES = (
-        'powerSwitch_1',         # int
-        'realTimeCurrent',       # double
-        'realTimeVoltage',       # double
-        'realTimePower',         # double
-        'electricalEnergy',      # double
-        'protectionStatus',      # string
-        'voltageUpperThreshold', # double
+        'powerSwitch_1',         # int:    device status
+        'realTimeCurrent',       # double: actual current
+        'realTimeVoltage',       # double: actual voltage
+        'realTimePower',         # double: actual power
+        'electricalEnergy',      # double: today's energy consumption
+        'protectionStatus',      # string: protection status
         'currentUpperThreshold', # double
+        'voltageUpperThreshold', # double
         'powerUpperThreshold',   # double
         'scheduleNum',           # int
         'powerSave',             # dict {'enable' -> int, 'triggerUpperThreshold': double}
@@ -686,77 +678,47 @@ class VeSyncOutletWYSMTOD16A(VeSyncOutlet):
         'inchings',              # list
         'aways',                 # list
     )
+    UPDATE_PROPERTIES = ('powerSwitch_1', 'realTimeCurrent', 'realTimeVoltage', 'realTimePower', 'electricalEnergy')
+
     def __init__(self, details, manager):
         """Initialize GreenSun's WYSMTOD16A plug class."""
         super().__init__(details, manager)
 
-    def _get_response(self, body, rel_path = '/cloud/v2/deviceManaged/bypassV2') -> dict:
-        response, _ = Helpers.call_api(
-            rel_path,
-            'post',
-            body,
-            Helpers.req_headers(self.manager),
-        )
-        if Helpers.code_check(response):
-            code = response['result']
-            if (code['code'] == 0):
-                return code.get('result', {}), None
-            logger.error(f'Calling {self.device_name}::{body["payload"]["method"]} - wrong argument')
-            return None, (code['code'], 'wrong argument')
-
-        err_code = response['code']
-        err_msg  = response['msg']
-        if (err_code != -11300030):
-            logger.error(f'Calling {self.device_name}::{body["payload"]["method"]} - E_{(err_code & 0xFFFFFFFF):08X}: {err_msg}')
-        return None, (err_code, err_msg)
-
     def get_details(self) -> bool:
         """Get details for this plug."""
-        properties =['powerSwitch_1', 'realTimeVoltage', 'realTimePower', 'realTimeCurrent']
-        data = self.get_properties(properties)
+        properties = self.get_properties(VeSyncOutletWYSMTOD16A.UPDATE_PROPERTIES)
 
-        if (data):
-            self.device_status = 'on' if data.get('powerSwitch_1', False) else 'off'
-            self.details['voltage'] = data.get('realTimeVoltage', 0)
-            self.details['power']   = data.get('realTimePower', 0)
-            self.details['current'] = data.get('realTimeCurrent', 0)
+        if (properties):
+            self.device_status = 'on' if properties.get('powerSwitch_1', False) else 'off'
+            self.details['voltage'] = properties.get('realTimeVoltage', 0)
+            self.details['power']   = properties.get('realTimePower', 0)
+            self.details['current'] = properties.get('realTimeCurrent', 0)
+            self.details['energy'] = properties.get('electricalEnergy', 0)
             return True
         self.device_status = 'offline'
         return False
 
-    def get_energy(self, days):
-        till_day = datetime.today()
-        from_day = till_day - timedelta(days=days)
+    def get_energy(self, period) -> dict:
+        today = datetime.today()
+        from_day = today - timedelta(days=PERIOD_2_DAYS[period])
+        till_day = today
+
         body = self.get_body_v2()
         body['payload'] = {
             'method': 'getEnergyHistory',
             'source': 'APP',
             'data': {
-                'fromDay': int(from_day.timestamp()),
-                'toDay'  : int(till_day.timestamp()),
-#                'id'       : 0,
+                'fromDay': from_day.timestamp(),
+                'toDay'  : till_day.timestamp()
             }
         }
-        data, error = self._get_response(body)
+        code, error = self.get_response(body)
 
-        PERIODS = {7: 'week', 30: 'month', 365: 'year'}
-        period = PERIODS.get(days, days)
-        self.energy[period] = {}
-        if (data):
-            self.energy[period] = Helpers.build_energy_dict(data)
+        if (error is None):
+            self.energy[period] = Helpers.build_energy_dict(code['result'])
+        else:
+            self.energy[period] = None
         return self.energy[period]
-
-    def get_weekly_energy(self) -> dict:
-        """Get outdoor outlet weekly energy info and populate energy dict."""
-        return self.get_energy(7)
-
-    def get_monthly_energy(self) -> dict:
-        """Get outdoor outlet monthly energy info and populate energy dict."""
-        return self.get_energy(30)
-
-    def get_yearly_energy(self) -> dict:
-        """Get outdoor outlet yearly energy info and populate energy dict."""
-        return self.get_energy(365)
 
     def turn(self, status) -> bool:
         """switch power for outdoor outlet."""
@@ -770,8 +732,8 @@ class VeSyncOutletWYSMTOD16A(VeSyncOutlet):
             },
         }
 
-        data, error = self._get_response(body)
-        if (data):
+        code, error = self.get_response(body)
+        if (error is None):
             self.device_status = status
             return True
         return False
@@ -784,7 +746,5 @@ class VeSyncOutletWYSMTOD16A(VeSyncOutlet):
             'source': 'APP',
             'data': { 'properties': properties },
         }
-        data, error = self._get_response(body)
-        if (data):
-            return data
-        return None
+        code, error = self.get_response(body)
+        return None if (error) else code['result']['properties']
