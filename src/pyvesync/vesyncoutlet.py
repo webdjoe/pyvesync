@@ -747,4 +747,6 @@ class VeSyncOutletWYSMTOD16A(VeSyncOutletV2):
             'data': { 'properties': properties },
         }
         code, error = self.get_response(body)
-        return None if (error) else code['result']['properties']
+        if (error is None):
+            return code['result']
+        return None

@@ -9,7 +9,7 @@ get_details:
     phoneOS: Android
     timeZone: America/New_York
     token: sample_tk
-    traceId: '1737642941'
+    traceId: '1737702361'
     uuid: ESW15-USA-UUID
   headers:
     accept-language: en

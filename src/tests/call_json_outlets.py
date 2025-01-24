@@ -150,9 +150,7 @@ class OutletDetails:
             "traceId": "1735308365651",
             "result": {
                 "code": 0,
-                "properties": {
-                    "powerSwitch_1": 1,
-                }
+                "powerSwitch_1": 1,
             }
         }
     }, 200)

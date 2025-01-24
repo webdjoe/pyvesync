@@ -40,8 +40,7 @@ class TestVeSyncWYSMTOD16ASwitch(TestBase):
         wysmtod16a_outlet = VeSyncOutletWYSMTOD16A(DEV_LIST_DETAIL, self.manager)
         assert wysmtod16a_outlet.get_details() == True
         response = CORRECT_WYSMTOD16A_DETAILS[0]
-        result = response.get('result', {}).get('result', {})
-        properties = result.get('properties')
+        properties = response.get('result', {}).get('result', {})
         expected_status = 'on' if properties.get('powerSwitch_1') == 1 else 'off'
         assert wysmtod16a_outlet.device_status == expected_status
 
