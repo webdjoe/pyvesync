@@ -42,7 +42,7 @@ class VeSyncOutlet(VeSyncBaseDevice):
     __metaclass__ = ABCMeta
 
     def __init__(self, details, manager):
-        """Initialise VeSync Outlet base class."""
+        """Initialize VeSync Outlet base class."""
         super().__init__(details, manager)
 
         self.details = {}
@@ -60,6 +60,18 @@ class VeSyncOutlet(VeSyncBaseDevice):
                 > self._energy_update_interval):
             return True
         return False
+
+    @abstractmethod
+    def turn(self, status) -> bool:
+        """Get configuration and firmware details."""
+
+    def turn_on(self) -> bool:
+        """Turn outdoor outlet on and return True if successful."""
+        return self.turn('on')
+
+    def turn_off(self) -> bool:
+        """Turn outdoor outlet off and return True if successful."""
+        return self.turn('off')
 
     @abstractmethod
     def get_details(self) -> bool:
@@ -182,18 +194,6 @@ class VeSyncOutlet(VeSyncBaseDevice):
         )
 
         return json.dumps(sup_val, indent=4)
-
-    @abstractmethod
-    def turn(self, status) -> bool:
-        """Get configuration and firmware details."""
-
-    def turn_on(self) -> bool:
-        """Turn outdoor outlet on and return True if successful."""
-        return self.turn('on')
-
-    def turn_off(self) -> bool:
-        """Turn outdoor outlet off and return True if successful."""
-        return self.turn('off')
 
 
 class VeSyncOutlet7A(VeSyncOutlet):
@@ -698,27 +698,27 @@ class VeSyncOutletWYSMTOD16A(VeSyncOutletV2):
         self.device_status = 'offline'
         return False
 
-    def get_energy(self, period) -> dict:
-        today = datetime.today()
-        from_day = today - timedelta(days=PERIOD_2_DAYS[period])
-        till_day = today
-
-        body = self.get_body_v2()
-        body['payload'] = {
-            'method': 'getEnergyHistory',
-            'source': 'APP',
-            'data': {
-                'fromDay': from_day.timestamp(),
-                'toDay'  : till_day.timestamp()
-            }
-        }
-        code, error = self.get_response(body)
-
-        if (error is None):
-            self.energy[period] = Helpers.build_energy_dict(code['result'])
-        else:
-            self.energy[period] = None
-        return self.energy[period]
+#    def get_energy(self, period) -> dict:
+#        today = datetime.today()
+#        from_day = today - timedelta(days=PERIOD_2_DAYS[period])
+#        till_day = today
+#
+#        body = self.get_body_v2()
+#        body['payload'] = {
+#            'method': 'getEnergyHistory',
+#            'source': 'APP',
+#            'data': {
+#                'fromDay': from_day.timestamp(),
+#                'toDay'  : till_day.timestamp()
+#            }
+#        }
+#        code, error = self.get_response(body)
+#
+#        if (error is None):
+#            self.energy[period] = Helpers.build_energy_dict(code['result'])
+#        else:
+#            self.energy[period] = None
+#        return self.energy[period]
 
     def turn(self, status) -> bool:
         """switch power for outdoor outlet."""
