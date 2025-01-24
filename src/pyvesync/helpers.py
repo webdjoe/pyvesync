@@ -5,7 +5,7 @@ import logging
 import time
 import json
 import colorsys
-from dataclasses import dataclass, field, InitVar
+from dataclasses import dataclass, field, InitVar, asdict
 from typing import Any, NamedTuple, Union, TYPE_CHECKING
 import re
 import requests
@@ -70,6 +70,38 @@ class Helpers:
             'accept-language': 'en',
             'accountId': manager.account_id,
             'appVersion': APP_VERSION,
+            'content-type': 'application/json',
+            'tk': manager.token,
+            'tz': manager.time_zone,
+        }
+
+    @staticmethod
+    def req_cloud_v2_managed_headers(manager: VeSync) -> dict[str, str]:
+        """Build header for cloud v2 api GET requests.
+
+        Args:
+            manager (VeSyncManager): Instance of VeSyncManager.
+
+        Returns:
+            dict: Header dictionary for api requests.
+
+        Examples:
+            >>> req_cloud_v2_managed_headers(manager)
+            {
+                'accept-language': 'en',
+                'accountid': manager.account_id,
+                'user-agent': USER_AGENT,
+                'content-type': 'application/json',
+                'tk': manager.token,
+                'tz': manager.time_zone,
+                'traceId': str(int(time.time())),
+            }
+
+        """
+        return {
+            'accept-language': 'en',
+            'accountid': manager.account_id,
+            'user-agent': USER_AGENT,
             'content-type': 'application/json',
             'tk': manager.token,
             'tz': manager.time_zone,
@@ -852,3 +884,63 @@ class Timer:
             return
         self.status = 'paused'
         self.update_time = None
+
+
+@dataclass
+class FirmwareUpdateInfo:
+    """Dataclass to hold firmware update status."""
+    current_version: str
+    plugin_name: str | None = None
+    latest_version: str | None = None
+    release_notes: str | None = None
+    upgrade_level: str | None = None
+    is_main_fw: bool = True
+
+
+@dataclass
+class FirmwareUpdates:
+    """A class to manage firmware updates.
+
+    Args:
+        firmware_update_list (list[dict]): A list of dictionaries containing firmware
+        update information from API.
+        firmware_updates (list[FirmwareUpdateInfo]): A list of FirmwareUpdateInfo objects,
+        initialized in __post_init__.
+
+    Properties:
+        update_available -> bool:
+            Returns True if there is any firmware update available, otherwise False.
+        updates -> list[FirmwareUpdateInfo]:
+            Returns a list of firmware updates where the latest version is different from
+            the current version.
+
+    Methods:
+        update_list(update_list: list[dict]) -> None:
+            Updates the firmware_updates attribute with a new list of FirmwareUpdateInfo
+            objects.
+    """
+    firmware_update_list: InitVar[list[dict]]
+    firmware_updates: list[FirmwareUpdateInfo] = field(init=False, default_factory=list)
+
+    def __post_init__(self, firmware_update_list: list[dict]) -> None:
+        """Create list of FirmwareUpdateInfo objects."""
+        self.firmware_updates = [FirmwareUpdateInfo(**update)
+                                 for update in firmware_update_list]
+
+    @property
+    def update_available(self) -> bool:
+        """Return True if firmware update is available."""
+        return any(update.latest_version != update.current_version
+                   for update in self.firmware_updates)
+
+    @property
+    def updates(self) -> list[FirmwareUpdateInfo]:
+        """Return list of firmware updates."""
+        updates = [update for update in self.firmware_updates
+                   if update.latest_version != update.current_version]
+        return [asdict(update) for update in updates]
+
+    def update_list(self, update_list: list[dict]) -> None:
+        """Update firmware update list."""
+        self.firmware_updates = [FirmwareUpdateInfo(**update)
+                                 for update in update_list]

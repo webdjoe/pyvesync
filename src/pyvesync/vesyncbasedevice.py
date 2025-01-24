@@ -4,6 +4,7 @@ import logging
 import json
 from typing import TYPE_CHECKING
 from pyvesync.helpers import Helpers as helper  # noqa: N813
+from pyvesync.helpers import FirmwareUpdates
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
@@ -39,6 +40,7 @@ class VeSyncBaseDevice:
         sub_device_no (int): Sub-device number of device.
         config (dict): Configuration of device, including firmware version
         device_status (str): Status of device, on or off.
+        firmware_updates (FirmwareUpdates): Firmware updates dataclass.
 
     Methods:
         is_on(): Return True if device is on.
@@ -68,6 +70,7 @@ class VeSyncBaseDevice:
             self.extension = details.get('extension')
             self.current_firm_version = details.get(
                     'currentFirmVersion')
+            self.firmware_updates: FirmwareUpdates | None = None
             self.device_region: str | None = details.get('deviceRegion')
             self.pid = None
             self.sub_device_no = details.get('subDeviceNo', 0)

@@ -448,3 +448,45 @@ class VeSync:  # pylint: disable=function-redefined
         devices = list(self._dev_list.values())
         for dev in chain(*devices):
             dev.update()
+
+    def get_firmware_updates(self) -> None:
+        """Get firmware updates for devices."""
+        if not self.enabled:
+            logger.error('Not logged in to VeSync')
+            return
+        devices = list(chain(*self._dev_list.values()))
+        if not devices:
+            logger.error('No devices found, try updating devices')
+            return
+
+        endpoint = '/cloud/v2/deviceManaged/getFirmwareUpdateInfoList'
+        headers = Helpers.req_cloud_v2_managed_headers(self)
+        body = Helpers.req_body(self, "firmware_update")
+        body.update({
+            "userCountryCode": self.country_code,
+            "timeZone": self.time_zone,
+            "method": "getFirmwareUpdateInfoList",
+            "cidList": [dev.cid for dev in devices],
+            'macIDList': []
+        })
+        resp, _ = Helpers.call_api(endpoint, 'post', json_object=body, headers=headers)
+        if not isinstance(resp, dict) or resp.get("code") != 0:
+            logger.error('Error fetching firmware updates')
+            return
+        if resp.get("result", {}).get("cidFwInfoList") is None:
+            logger.error('Error in firmware update response')
+            return
+        fw_list = resp["result"]["cidFwInfoList"]
+        if not fw_list:
+            logger.error('No firmware updates found')
+            return
+        for fw in fw_list:
+            fw_cid = fw.get('deviceCid')
+            dev_fw_list = fw.get('firmUpdateInfos')
+            if fw_cid is None or not dev_fw_list:
+                continue
+            for dev in devices:
+                if dev.cid == fw_cid:
+                    logger.debug("Firmware info found for %s", dev.device_name)
+                    dev.firmware_updates = helpermodule.FirmwareUpdates(dev_fw_list)
+                    break
