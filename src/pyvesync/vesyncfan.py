@@ -1573,7 +1573,19 @@ class VeSyncAir131(VeSyncBaseDevice):
     def __init__(self, details, manager):
         """Initilize air purifier class."""
         super().__init__(details, manager)
-
+        self.enabled = True
+        self._config_dict = model_features(self.device_type)
+        self._features = self._config_dict.get('features', [])
+        if not isinstance(self._config_dict.get('modes'), list):
+            logger.error(
+                'Please set modes for %s in the configuration',
+                self.device_type)
+            raise KeyError(f'Modes not set in configuration for {self.device_name}')
+        self.modes = self._config_dict['modes']
+        if 'air_quality' in self._features:
+            self.air_quality_feature = True
+        else:
+            self.air_quality_feature = False
         self.details = {}
 
     def get_details(self) -> None:
