@@ -4,6 +4,7 @@ import logging
 import json
 from typing import TYPE_CHECKING
 from pyvesync.helpers import Helpers as helper  # noqa: N813
+
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:

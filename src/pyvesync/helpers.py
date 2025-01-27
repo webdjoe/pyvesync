@@ -354,9 +354,9 @@ class Helpers:
             else:
                 raise NameError(f'Invalid method {method}')
         except requests.exceptions.RequestException as e:
-            logger.debug(e)
+            logger.error(e)
         except Exception as e:
-            logger.debug(e)
+            logger.error(e)
         else:
             if r.status_code == 200:
                 status_code = 200
@@ -365,7 +365,7 @@ class Helpers:
                     logger.debug("API response: \n\n  %s \n ",
                                  Helpers.redactor(json.dumps(response, indent=2)))
             else:
-                logger.debug('Unable to fetch %s%s', API_BASE_URL, api)
+                logger.error('Unable to fetch %s%s', API_BASE_URL, api)
         return response, status_code
 
     @staticmethod

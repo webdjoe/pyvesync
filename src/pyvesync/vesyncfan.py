@@ -2,10 +2,12 @@
 
 import json
 import logging
+import sys
 from typing import Any, Dict, List, Tuple, Union, Optional
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 from pyvesync.helpers import Helpers, Timer
 
+module_fan = sys.modules[__name__]
 
 humid_features: dict = {
     'Classic300S': {
@@ -202,8 +204,13 @@ fan_modules: dict = model_dict()
 
 __all__: list = list(fan_classes) + ['fan_modules']
 
+class VeSyncFan(VeSyncBaseDevice):
+    def __init__(self, details: Dict[str, list], manager):
+        """Initialize VeSync Air Purifier Bypass Base Class."""
+        super().__init__(details, manager)
+        self.enabled = True
 
-class VeSyncAirBypass(VeSyncBaseDevice):
+class VeSyncAirBypass(VeSyncFan):
     """Initialize air purifier devices.
 
     Instantiated by VeSync manager object. Inherits from
@@ -243,7 +250,6 @@ class VeSyncAirBypass(VeSyncBaseDevice):
     def __init__(self, details: Dict[str, list], manager):
         """Initialize VeSync Air Purifier Bypass Base Class."""
         super().__init__(details, manager)
-        self.enabled = True
         self._config_dict = model_features(self.device_type)
         self._features = self._config_dict.get('features', [])
         if not isinstance(self._config_dict.get('modes'), list):
@@ -1920,13 +1926,12 @@ class VeSyncTowerFan(VeSyncAirBaseV2):
         return self.advanced_sleep_mode()
 
 
-class VeSyncHumid200300S(VeSyncBaseDevice):
+class VeSyncHumid200300S(VeSyncFan):
     """200S/300S Humidifier Class."""
 
     def __init__(self, details, manager):
         """Initialize 200S/300S Humidifier class."""
         super().__init__(details, manager)
-        self.enabled = True
         self._config_dict = model_features(self.device_type)
         self.mist_levels = self._config_dict.get('mist_levels')
         self.mist_modes = self._config_dict.get('mist_modes')
@@ -2480,7 +2485,7 @@ class VeSyncHumid200S(VeSyncHumid200300S):
         return False
 
 
-class VeSyncSuperior6000S(VeSyncBaseDevice):
+class VeSyncSuperior6000S(VeSyncFan):
     """Superior 6000S Humidifier."""
 
     def __init__(self, details, manager):
@@ -3170,3 +3175,12 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
         else:
             logger.debug('Error in api return json for %s', self.device_name)
         return False
+
+
+def factory(module: str, details: dict, manager) -> VeSyncFan:
+    try:
+        definition = fan_modules[module]
+        fan = getattr(module_fan, definition)
+        return fan(details, manager)
+    except:
+        return None

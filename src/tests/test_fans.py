@@ -27,7 +27,6 @@ See Also
 """
 
 import logging
-from pyvesync.vesync import object_factory
 from utils import TestBase, assert_test, parse_args, Defaults
 import call_json
 import call_json_fans
@@ -140,9 +139,11 @@ class TestAirPurifiers(TestBase):
 
         # Instantiate device from device list return item
         device_config = call_json.DeviceList.device_list_item(dev_type)
-        _, fan_obj = object_factory(dev_type,
-                                    device_config,
-                                    self.manager)
+
+        # Instantiate device from device list return item
+        fan_obj = self.manager.object_factory(dev_type, device_config)
+
+        # Get method from device object
         method_call = getattr(fan_obj, method)
         method_call()
 
@@ -201,9 +202,7 @@ class TestAirPurifiers(TestBase):
         device_config = call_json.DeviceList.device_list_item(dev_type)
 
         # Instantiate device from device list return item
-        _, fan_obj = object_factory(dev_type,
-                                    device_config,
-                                    self.manager)
+        fan_obj = self.manager.object_factory(dev_type, device_config)
 
         # Get method from device object
         method_call = getattr(fan_obj, method[0])
@@ -320,9 +319,11 @@ class TestHumidifiers(TestBase):
 
         # Instantiate device from device list return item
         device_config = call_json.DeviceList.device_list_item(dev_type)
-        _, fan_obj = object_factory(dev_type,
-                                    device_config,
-                                    self.manager)
+
+        # Instantiate device from device list return item
+        fan_obj = self.manager.object_factory(dev_type, device_config)
+
+        # Get method from device object
         method_call = getattr(fan_obj, method)
         method_call()
 
@@ -382,9 +383,7 @@ class TestHumidifiers(TestBase):
         device_config = call_json.DeviceList.device_list_item(dev_type)
 
         # Instantiate device from device list return item
-        _, fan_obj = object_factory(dev_type,
-                                    device_config,
-                                    self.manager)
+        fan_obj = self.manager.object_factory(dev_type, device_config,)
 
         # Get method from device object
         method_call = getattr(fan_obj, method[0])

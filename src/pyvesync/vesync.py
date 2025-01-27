@@ -5,18 +5,33 @@ import re
 import time
 from itertools import chain
 from typing import Tuple
-from pyvesync.helpers import Helpers
-import pyvesync.helpers as helpermodule
+from pyvesync.helpers import Helpers, logger as helper_logger
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
-from pyvesync.vesyncbulb import *   # noqa: F403, F401
-import pyvesync.vesyncbulb as bulb_mods
-from pyvesync.vesyncfan import *   # noqa: F403, F401
-import pyvesync.vesyncfan as fan_mods
-from pyvesync.vesyncoutlet import *   # noqa: F403, F401
-import pyvesync.vesyncoutlet as outlet_mods
-from pyvesync.vesyncswitch import *   # noqa: F403, F401
-import pyvesync.vesynckitchen as kitchen_mods
-import pyvesync.vesyncswitch as switch_mods
+from pyvesync.vesyncbulb import (
+    bulb_modules,
+    factory as bulb_factory,
+    logger as bulb_logger
+)
+from pyvesync.vesyncfan import (
+    fan_modules,
+    factory as fan_factory,
+    logger as fan_logger
+)
+from pyvesync.vesynckitchen import (
+    kitchen_modules,
+    factory as kitchen_factory,
+    logger as kitchen_logger
+)
+from pyvesync.vesyncoutlet import (
+    outlet_modules,
+    factory as outlet_factory,
+    logger as outlet_logger
+)
+from pyvesync.vesyncswitch import (
+    switch_modules,
+    factory as switch_factory,
+    logger as switch_logger
+)
 
 logger = logging.getLogger(__name__)
 
@@ -24,72 +39,6 @@ API_RATE_LIMIT: int = 30
 DEFAULT_TZ: str = 'America/New_York'
 
 DEFAULT_ENER_UP_INT: int = 21600
-
-
-def object_factory(dev_type, config, manager) -> Tuple[str, VeSyncBaseDevice]:
-    """Get device type and instantiate class.
-
-    Pulls the device types from each module to determine the type of device and
-    instantiates the device object.
-
-    Args:
-        dev_type (str): Device model type returned from API
-        config (dict): Device configuration from `VeSync.get_devices()` API call
-        manager (VeSync): VeSync manager object
-
-    Returns:
-        Tuple[str, VeSyncBaseDevice]: Tuple of device type classification and
-        instantiated device object
-
-    Note:
-        Device types are pulled from the `*_mods` attribute of each device module.
-        See [pyvesync.vesyncbulb.bulb_mods], [pyvesync.vesyncfan.fan_mods],
-        [pyvesync.vesyncoutlet.outlet_mods], [pyvesync.vesyncswitch.switch_mods],
-        and [pyvesync.vesynckitchen.kitchen_mods] for more information.
-    """
-    def fans(dev_type, config, manager):
-        fan_cls = fan_mods.fan_modules[dev_type]  # noqa: F405
-        fan_obj = getattr(fan_mods, fan_cls)
-        return 'fans', fan_obj(config, manager)
-
-    def outlets(dev_type, config, manager):
-        outlet_cls = outlet_mods.outlet_modules[dev_type]  # noqa: F405
-        outlet_obj = getattr(outlet_mods, outlet_cls)
-        return 'outlets', outlet_obj(config, manager)
-
-    def switches(dev_type, config, manager):
-        switch_cls = switch_mods.switch_modules[dev_type]  # noqa: F405
-        switch_obj = getattr(switch_mods, switch_cls)
-        return 'switches', switch_obj(config, manager)
-
-    def bulbs(dev_type, config, manager):
-        bulb_cls = bulb_mods.bulb_modules[dev_type]  # noqa: F405
-        bulb_obj = getattr(bulb_mods, bulb_cls)
-        return 'bulbs', bulb_obj(config, manager)
-
-    def kitchen(dev_type, config, manager):
-        kitchen_cls = kitchen_mods.kitchen_modules[dev_type]
-        kitchen_obj = getattr(kitchen_mods, kitchen_cls)
-        return 'kitchen', kitchen_obj(config, manager)
-
-    if dev_type in fan_mods.fan_modules:  # type: ignore  # noqa: F405
-        type_str, dev_obj = fans(dev_type, config, manager)
-    elif dev_type in outlet_mods.outlet_modules:  # type: ignore  # noqa: F405
-        type_str, dev_obj = outlets(dev_type, config, manager)
-    elif dev_type in switch_mods.switch_modules:  # type: ignore  # noqa: F405
-        type_str, dev_obj = switches(dev_type, config, manager)
-    elif dev_type in bulb_mods.bulb_modules:  # type: ignore  # noqa: F405
-        type_str, dev_obj = bulbs(dev_type, config, manager)
-    elif dev_type in kitchen_mods.kitchen_modules:
-        type_str, dev_obj = kitchen(dev_type, config, manager)
-    else:
-        logger.debug('Unknown device named %s model %s',
-                     config.get('deviceName', ''),
-                     config.get('deviceType', '')
-                     )
-        type_str = 'unknown'
-        dev_obj = None
-    return type_str, dev_obj
 
 
 class VeSync:  # pylint: disable=function-redefined
@@ -141,12 +90,12 @@ class VeSync:  # pylint: disable=function-redefined
         self.debug = debug
         if debug:  # pragma: no cover
             logger.setLevel(logging.DEBUG)
-            bulb_mods.logger.setLevel(logging.DEBUG)
-            switch_mods.logger.setLevel(logging.DEBUG)
-            outlet_mods.logger.setLevel(logging.DEBUG)
-            fan_mods.logger.setLevel(logging.DEBUG)
-            helpermodule.logger.setLevel(logging.DEBUG)
-            kitchen_mods.logger.setLevel(logging.DEBUG)
+            bulb_logger.setLevel(logging.DEBUG)
+            fan_logger.setLevel(logging.DEBUG)
+            helper_logger.setLevel(logging.DEBUG)
+            kitchen_logger.setLevel(logging.DEBUG)
+            switch_logger.setLevel(logging.DEBUG)
+            outlet_logger.setLevel(logging.DEBUG)
         self._redact = redact
         if redact:
             self.redact = redact
@@ -198,19 +147,15 @@ class VeSync:  # pylint: disable=function-redefined
     @debug.setter
     def debug(self, new_flag: bool) -> None:
         """Set debug flag."""
-        log_modules = [bulb_mods,
-                       switch_mods,
-                       outlet_mods,
-                       fan_mods,
-                       helpermodule]
-        if new_flag:
-            logger.setLevel(logging.DEBUG)
-            for m in log_modules:
-                m.logger.setLevel(logging.DEBUG)
-        elif new_flag is False:
-            logger.setLevel(logging.WARNING)
-            for m in log_modules:
-                m.logger.setLevel(logging.WARNING)
+        level = logging.DEBUG if new_flag else logging.WARNING
+
+        logger.setLevel(level)
+        bulb_logger.setLevel(level)
+        fan_logger.setLevel(level)
+        helper_logger.setLevel(level)
+        outlet_logger.setLevel(level)
+        switch_logger.setLevel(level)
+
         self._debug = new_flag
 
     @property
@@ -301,6 +246,55 @@ class VeSync:  # pylint: disable=function-redefined
                             devices) if j not in dev_rem]
         return devices
 
+
+    def object_factory(self, dev_type: str, details: dict) -> Tuple[str, VeSyncBaseDevice]:
+        """Get device type and instantiate class.
+
+        Pulls the device types from each module to determine the type of device and
+        instantiates the device object.
+
+        Args:
+            dev_type (str): Device model type returned from API
+            config (dict): Device configuration from `VeSync.get_devices()` API call
+            manager (VeSync): VeSync manager object
+
+        Returns:
+            VeSyncBaseDevice: instantiated device object
+
+        Note:
+            Each device type implements a factory for the supported device types.
+            the newly created device instance is added to the appropriate list.
+        """
+        if dev_type in fan_modules:  # type: ignore  # noqa: F405
+            dev_obj = fan_factory(dev_type, details, self)
+            if dev_obj:
+                self.fans.append(dev_obj)
+        elif dev_type in outlet_modules:  # type: ignore  # noqa: F405
+            dev_obj = outlet_factory(dev_type, details, self)
+            if dev_obj:
+                self.outlets.append(dev_obj)
+        elif dev_type in switch_modules:  # type: ignore  # noqa: F405
+            dev_obj = switch_factory(dev_type, details, self)
+            if dev_obj:
+                self.switches.append(dev_obj)
+        elif dev_type in bulb_modules:  # type: ignore  # noqa: F405
+            dev_obj = bulb_factory(dev_type, details, self)
+            if dev_obj:
+                self.bulbs.append(dev_obj)
+        elif dev_type in kitchen_modules:
+            dev_obj = kitchen_factory(dev_type, details, self)
+            if dev_obj:
+                self.kitchen.append(dev_obj)
+        else:
+            dev_obj = None
+
+        if (dev_obj is None):
+            logger.debug('Unknown device named %s model %s',
+                        details.get('deviceName', ''),
+                        details.get('deviceType', '')
+                        )
+        return dev_obj
+
     def process_devices(self, dev_list: list) -> bool:
         """Instantiate Device Objects.
 
@@ -333,9 +327,7 @@ class VeSync:  # pylint: disable=function-redefined
                 continue
             dev_type = dev.get('deviceType')
             try:
-                device_str, device_obj = object_factory(dev_type, dev, self)
-                device_list = getattr(self, device_str)
-                device_list.append(device_obj)
+                device_obj = self.object_factory(dev_type, dev)
             except AttributeError as err:
                 logger.debug('Error - %s', err)
                 logger.debug('%s device not added', dev_type)

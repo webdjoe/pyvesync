@@ -61,12 +61,12 @@ class TestDeviceList(object):
         assert call_p2['headers'] == head
         assert self.vesync_obj.enabled
 
-    @patch('pyvesync.vesync.VeSyncOutlet7A')
-    @patch('pyvesync.vesync.VeSyncOutlet15A')
-    @patch('pyvesync.vesync.VeSyncOutlet10A')
-    @patch('pyvesync.vesync.VeSyncWallSwitch')
-    @patch('pyvesync.vesync.VeSyncDimmerSwitch')
-    @patch('pyvesync.vesync.VeSyncAir131')
+    @patch('pyvesync.vesyncoutlet.VeSyncOutlet7A')
+    @patch('pyvesync.vesyncoutlet.VeSyncOutlet15A')
+    @patch('pyvesync.vesyncoutlet.VeSyncOutlet10A')
+    @patch('pyvesync.vesyncswitch.VeSyncWallSwitch')
+    @patch('pyvesync.vesyncswitch.VeSyncDimmerSwitch')
+    @patch('pyvesync.vesyncfan.VeSyncAir131')
     def test_getdevs_vsfact(
         self, air_patch, wsdim_patch, ws_patch, out10a_patch, out15a_patch, out7a_patch, api_mock
     ):
@@ -181,7 +181,7 @@ class TestDeviceList(object):
 
         unknown_dev['devType'] = 'UNKNOWN-DEVTYPE'
 
-        pyvesync.vesync.object_factory('unknown_device', unknown_dev, self.vesync_obj)
+        assert self.vesync_obj.object_factory('unknown_device', unknown_dev) is None
 
         assert len(caplog.records) == 1
         assert 'Unknown' in caplog.text
@@ -199,7 +199,7 @@ class TestDeviceList(object):
         time_check = self.vesync_obj.device_time_check()
         assert time_check is True
 
-    @patch('pyvesync.vesync.VeSyncOutlet7A', autospec=True)
+    @patch('pyvesync.vesyncoutlet.VeSyncOutlet7A', autospec=True)
     def test_remove_device(self, outlet_patch, caplog, api_mock):
         """Test remove device test."""
         device = copy.deepcopy(json_vals.DeviceList.LIST_CONF_7A)
@@ -226,7 +226,7 @@ class TestDeviceList(object):
         assert len(caplog.records) == 2
         assert 'cid' in caplog.text
 
-    @patch('pyvesync.vesync.VeSyncOutdoorPlug', autospec=True)
+    @patch('pyvesync.vesyncoutlet.VeSyncOutdoorPlug', autospec=True)
     def test_add_dev_test(self, outdoor_patch, caplog, api_mock):
         """Test add_device_test to return if device found in existing conf."""
         outdoor_inst = VeSyncOutdoorPlug(
@@ -274,13 +274,13 @@ class TestDeviceList(object):
 
         assert len(caplog.records) == 0
 
-    @patch('pyvesync.vesync.VeSyncOutlet7A', autospec=True)
-    @patch('pyvesync.vesync.VeSyncOutlet15A', autospec=True)
-    @patch('pyvesync.vesync.VeSyncOutlet10A', autospec=True)
-    @patch('pyvesync.vesync.VeSyncOutdoorPlug', autospec=True)
-    @patch('pyvesync.vesync.VeSyncBulbESL100', autospec=True)
-    @patch('pyvesync.vesync.VeSyncWallSwitch', autospec=True)
-    @patch('pyvesync.vesync.VeSyncAir131', autospec=True)
+    @patch('pyvesync.vesyncoutlet.VeSyncOutlet7A', autospec=True)
+    @patch('pyvesync.vesyncoutlet.VeSyncOutlet15A', autospec=True)
+    @patch('pyvesync.vesyncoutlet.VeSyncOutlet10A', autospec=True)
+    @patch('pyvesync.vesyncoutlet.VeSyncOutdoorPlug', autospec=True)
+    @patch('pyvesync.vesyncbulb.VeSyncBulbESL100', autospec=True)
+    @patch('pyvesync.vesyncswitch.VeSyncWallSwitch', autospec=True)
+    @patch('pyvesync.vesyncfan.VeSyncAir131', autospec=True)
     def test_resolve_updates(
         self,
         air_patch,

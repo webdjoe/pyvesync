@@ -15,7 +15,7 @@ Attributes:
 
 Note:
     The bulb module is built from the `feature_dict` dictionary and used by the
-    `vesync.object_factory` and tests to determine the class to instantiate for
+    `pyvesync_bulb.factory` and tests to determine the class to instantiate for
     each bulb model. These classes should not be instantiated manually.
 
 Examples:
@@ -35,6 +35,7 @@ Examples:
 from __future__ import annotations
 import logging
 import json
+import sys
 from typing import Union, Optional, NamedTuple, TYPE_CHECKING
 from abc import ABCMeta, abstractmethod
 from pyvesync.helpers import Helpers as helpers, Color
@@ -45,6 +46,8 @@ if TYPE_CHECKING:
     from pyvesync import VeSync
 
 logger = logging.getLogger(__name__)
+
+module_bulb = sys.modules[__name__]
 
 NUMERIC_T = Optional[Union[int, float, str]]
 
@@ -1414,3 +1417,12 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
         self.connection_status = 'offline'
         logger.debug('%s offline', self.device_name)
         return False
+
+
+def factory(module: str, details: dict, manager) -> VeSyncBulb:
+    try:
+        definition = bulb_modules[module]
+        bulb = getattr(module_bulb, definition)
+        return bulb(details, manager)
+    except:
+        return None

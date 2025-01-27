@@ -1,23 +1,22 @@
 *.DS_Store
-build/*
 .mypy_cache
-build
-dist/*
+build/
+dist/
 src/pyvesync.egg-info/*
+src/tests/api/*
+src/tests/test1.py
+src/tests/junit/
 *.vscode
 **/*.pyc
 .coverage
 htmlcov/
 .pytest_cache
 *__pycache__
-cov_html/*
 cov_html/
 test/*
 test/
 /venv/
 .idea/
-src/tests/test1.py
-/src/tests/junit/
 /.tox/
 .tox/.tmp/
 .tox/dist/
@@ -28,7 +27,6 @@ test.py
 *.und
 tools/__init__.py
 tools/vesyncdevice.py
-pyvesync.und
 .venv
 
 

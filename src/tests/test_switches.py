@@ -27,7 +27,6 @@ See Also
 """
 
 import logging
-from pyvesync.vesync import object_factory
 from utils import TestBase, assert_test, parse_args, Defaults
 import call_json
 import call_json_switches
@@ -129,9 +128,11 @@ class TestSwitches(TestBase):
 
         # Instantiate device from device list return item
         device_config = call_json.DeviceList.device_list_item(dev_type)
-        _, switch_obj = object_factory(dev_type,
-                                       device_config,
-                                       self.manager)
+
+        # Instantiate device from device list return item
+        switch_obj = self.manager.object_factory(dev_type, device_config)
+
+        # Get method from device object
         method_call = getattr(switch_obj, method)
         method_call()
 
@@ -202,9 +203,7 @@ class TestSwitches(TestBase):
         device_config = call_json.DeviceList.device_list_item(dev_type)
 
         # Instantiate device from device list return item
-        _, switch_obj = object_factory(dev_type,
-                                       device_config,
-                                       self.manager)
+        switch_obj = self.manager.object_factory(dev_type, device_config)
 
         # Get method from device object
         method_call = getattr(switch_obj, method[0])

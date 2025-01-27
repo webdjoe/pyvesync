@@ -22,6 +22,7 @@ Note:
 
 import logging
 import json
+import sys
 from abc import ABCMeta, abstractmethod
 from typing import Dict, Union, Optional
 
@@ -29,6 +30,8 @@ from pyvesync.helpers import Helpers as helpers
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 
 logger = logging.getLogger(__name__)
+
+module_switch = sys.modules[__name__]
 
 # --8<-- [start:feature_dict]
 
@@ -410,3 +413,12 @@ class VeSyncDimmerSwitch(VeSyncSwitch):
             self.config = helpers.build_config_dict(r)
         else:
             logger.warning('Unable to get %s config info', self.device_name)
+
+
+def factory(module: str, details: dict, manager) -> VeSyncSwitch:
+    try:
+        definition = switch_modules[module]
+        switch = getattr(module_switch, definition)
+        return switch(details, manager)
+    except:
+        return None

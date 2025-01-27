@@ -28,7 +28,6 @@ See Also
 
 import logging
 import math
-from pyvesync.vesync import object_factory
 from pyvesync.vesyncbulb import pct_to_kelvin
 from utils import TestBase, assert_test, parse_args, Defaults
 import call_json
@@ -142,9 +141,9 @@ class TestBulbs(TestBase):
 
         # Instantiate device from device list return item
         device_config = call_json.DeviceList.device_list_item(dev_type)
-        _, bulb_obj = object_factory(dev_type,
-                                     device_config,
-                                     self.manager)
+
+        # Instantiate device from device list return item
+        bulb_obj = self.manager.object_factory(dev_type, device_config,)
         method_call = getattr(bulb_obj, method)
         method_call()
 
@@ -212,9 +211,7 @@ class TestBulbs(TestBase):
         device_config = call_json.DeviceList.device_list_item(dev_type)
 
         # Instantiate device from device list return item
-        _, bulb_obj = object_factory(dev_type,
-                                     device_config,
-                                     self.manager)
+        bulb_obj = self.manager.object_factory(dev_type, device_config, )
 
         # Get method from device object
         method_call = getattr(bulb_obj, method[0])

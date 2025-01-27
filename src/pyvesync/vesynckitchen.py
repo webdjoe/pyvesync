@@ -2,6 +2,7 @@
 import json
 import logging
 import time
+import sys
 from functools import wraps
 from typing import Optional, Union, Set
 from dataclasses import dataclass
@@ -10,6 +11,7 @@ from pyvesync.helpers import Helpers as helpers
 
 logger = logging.getLogger(__name__)
 
+module_kitchen = sys.modules[__name__]
 
 kitchen_features: dict = {
     'Cosori3758L': {
@@ -269,21 +271,26 @@ class FryerStatus:
         if self.cook_status in ['cooking', 'cookStop', 'cookEnd']:
             self.clear_preheat()
 
-
-class VeSyncAirFryer158(VeSyncBaseDevice):
-    """Cosori Air Fryer Class."""
+class VeSyncKitchen(VeSyncBaseDevice):
 
     def __init__(self, details, manager):
         """Init the VeSync Air Fryer 158 class."""
         super().__init__(details, manager)
         self.fryer_status = FryerStatus()
+        self.refresh_interval = 0
+        self.last_update = int(time.time())
+
+class VeSyncAirFryer158(VeSyncKitchen):
+    """Cosori Air Fryer Class."""
+
+    def __init__(self, details, manager):
+        """Init the VeSync Air Fryer 158 class."""
+        super().__init__(details, manager)
 
         if self.pid is None:
             self.get_pid()
         self.fryer_status.temp_unit = self.get_temp_unit()
         self.ready_start = self.get_remote_cook_mode()
-        self.last_update = int(time.time())
-        self.refresh_interval = 0
 
     def get_body(self, method:  Optional[str] = None) -> dict:
         """Return body of api calls."""
@@ -653,3 +660,12 @@ class VeSyncAirFryer158(VeSyncBaseDevice):
                 status_dict.update(preheat_dict)
             sup_dict.update(status_dict)
         return json.dumps(sup_dict, indent=4)
+
+
+def factory(module: str, details: dict, manager) -> VeSyncKitchen:
+    try:
+        definition = kitchen_modules[module]
+        kitchen = getattr(module_kitchen, definition)
+        return kitchen(details, manager)
+    except:
+        return None

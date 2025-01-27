@@ -28,11 +28,9 @@ See Also
 
 import pytest
 import logging
-from pyvesync.vesync import object_factory
 from utils import TestBase, assert_test, parse_args
 import call_json
 import call_json_outlets
-from utils import Defaults
 
 
 logger = logging.getLogger(__name__)
@@ -160,9 +158,7 @@ class TestOutlets(TestBase):
         device_config = call_json.DeviceList.device_list_item(dev_type)
 
         # Instantiate device
-        _, outlet_obj = object_factory(dev_type,
-                                     device_config,
-                                     self.manager)
+        outlet_obj = self.manager.object_factory(dev_type, device_config)
 
         # Call get_details() directly
         assert outlet_obj.get_details() == True
@@ -233,9 +229,7 @@ class TestOutlets(TestBase):
         device_config = call_json.DeviceList.device_list_item(dev_type)
 
         # Instantiate device
-        _, outlet_obj = object_factory(dev_type,
-                                     device_config,
-                                     self.manager)
+        outlet_obj = self.manager.object_factory(dev_type, device_config)
 
         # Get method from device object
         method_call = getattr(outlet_obj, method[0])
@@ -280,8 +274,12 @@ class TestOutlets(TestBase):
     def test_energy(self, dev_type):
         """Test outlets power history methods."""
         self.mock_api.return_value = call_json_outlets.ENERGY_HISTORY
+
+        # Get device configuration
         device_config = call_json.DeviceList.device_list_item(dev_type)
-        _, outlet_obj = object_factory(dev_type, device_config, self.manager)
+
+        # Instantiate device
+        outlet_obj = self.manager.object_factory(dev_type, device_config)
         outlet_obj.update_energy()
         assert self.mock_api.call_count == 3
         assert list(outlet_obj.energy.keys()) == ['week', 'month', 'year']
