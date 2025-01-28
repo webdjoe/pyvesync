@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=61.2", "wheel", "pytest", "pytest-cov", "pyyaml", "tox"]
+
+[project]
+name = "pyvesync"
+version = "2.1.17"
+authors = [
+  {name="Joe Trabulsy", email="webdjoe@gmail.com"},
+  {name="Mark Perdue", email="webdjoe@gmail.com"},
+]
+description = "pyvesync is a library to manage Etekcity Devices, Cosori Air Fryers and Levoit Air Purifiers run on the VeSync app."
+readme = "README.md"
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+#license = "MIT"
+#license-files = "LICEN[CS]E.*"
+keywords = ["iot", "vesync", "levoit", "etekcity", "cosori", "valceno", "greensun"]
+
+[project.urls]
+Homepage = "https://github.com/webdjoe/pyvesync"
+Issues = "https://github.com/webdjoe/pyvesync/issues"
