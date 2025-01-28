@@ -143,7 +143,7 @@ class TestBulbs(TestBase):
         device_config = call_json.DeviceList.device_list_item(dev_type)
 
         # Instantiate device from device list return item
-        bulb_obj = self.manager.object_factory(dev_type, device_config,)
+        bulb_obj = self.manager.object_factory(dev_type, device_config)
         method_call = getattr(bulb_obj, method)
         method_call()
 
@@ -211,7 +211,7 @@ class TestBulbs(TestBase):
         device_config = call_json.DeviceList.device_list_item(dev_type)
 
         # Instantiate device from device list return item
-        bulb_obj = self.manager.object_factory(dev_type, device_config, )
+        bulb_obj = self.manager.object_factory(dev_type, device_config)
 
         # Get method from device object
         method_call = getattr(bulb_obj, method[0])

@@ -246,8 +246,13 @@ class VeSync:  # pylint: disable=function-redefined
                             devices) if j not in dev_rem]
         return devices
 
+    def _generic_factory(self, dev_type: str, details: dict,factory, devices):
+        device = factory(dev_type, details, self)
+        if device:
+            devices.append(device)
+        return device
 
-    def object_factory(self, dev_type: str, details: dict) -> Tuple[str, VeSyncBaseDevice]:
+    def object_factory(self, dev_type: str, details: dict) -> VeSyncBaseDevice:
         """Get device type and instantiate class.
 
         Pulls the device types from each module to determine the type of device and
@@ -266,30 +271,21 @@ class VeSync:  # pylint: disable=function-redefined
             the newly created device instance is added to the appropriate list.
         """
         if dev_type in fan_modules:  # type: ignore  # noqa: F405
-            dev_obj = fan_factory(dev_type, details, self)
-            if dev_obj:
-                self.fans.append(dev_obj)
+            dev_obj = self._generic_factory(dev_type, details, fan_factory, self.fans)
         elif dev_type in outlet_modules:  # type: ignore  # noqa: F405
-            dev_obj = outlet_factory(dev_type, details, self)
-            if dev_obj:
-                self.outlets.append(dev_obj)
+            dev_obj = self._generic_factory(dev_type, details, outlet_factory, self.outlets)
         elif dev_type in switch_modules:  # type: ignore  # noqa: F405
-            dev_obj = switch_factory(dev_type, details, self)
-            if dev_obj:
-                self.switches.append(dev_obj)
+            dev_obj = self._generic_factory(dev_type, details, switch_factory, self.switches)
         elif dev_type in bulb_modules:  # type: ignore  # noqa: F405
-            dev_obj = bulb_factory(dev_type, details, self)
-            if dev_obj:
-                self.bulbs.append(dev_obj)
+            dev_obj = self._generic_factory(dev_type, details, bulb_factory, self.bulbs)
         elif dev_type in kitchen_modules:
-            dev_obj = kitchen_factory(dev_type, details, self)
-            if dev_obj:
-                self.kitchen.append(dev_obj)
+            dev_obj = self._generic_factory(dev_type, details, kitchen_factory, self.kitchen)
         else:
             dev_obj = None
 
         if (dev_obj is None):
-            logger.debug('Unknown device named %s model %s',
+            logger.debug('Unknown device %s named %s model %s',
+                        dev_type,
                         details.get('deviceName', ''),
                         details.get('deviceType', '')
                         )

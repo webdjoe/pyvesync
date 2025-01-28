@@ -67,9 +67,17 @@ class VeSyncOutlet(VeSyncBaseDevice):
             return True
         return False
 
-    @property
-    def has_energy_period(self) -> bool:
-        return self.energy_period
+    @abstractmethod
+    def turn(self, status) -> bool:
+        """Get configuration and firmware details."""
+
+    def turn_on(self) -> bool:
+        """Turn outdoor outlet on and return True if successful."""
+        return self.turn('on')
+
+    def turn_off(self) -> bool:
+        """Turn outdoor outlet off and return True if successful."""
+        return self.turn('off')
 
     @abstractmethod
     def get_details(self) -> bool:
@@ -193,17 +201,9 @@ class VeSyncOutlet(VeSyncBaseDevice):
 
         return json.dumps(sup_val, indent=4)
 
-    @abstractmethod
-    def turn(self, status) -> bool:
-        """Get configuration and firmware details."""
-
-    def turn_on(self) -> bool:
-        """Turn outdoor outlet on and return True if successful."""
-        return self.turn('on')
-
-    def turn_off(self) -> bool:
-        """Turn outdoor outlet off and return True if successful."""
-        return self.turn('off')
+    @property
+    def has_energy_period(self) -> bool:
+        return self.energy_period
 
 
 class VeSyncOutlet7A(VeSyncOutlet):
