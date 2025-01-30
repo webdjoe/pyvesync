@@ -272,6 +272,7 @@ class FryerStatus:
             self.clear_preheat()
 
 class VeSyncKitchen(VeSyncBaseDevice):
+    """ (Abstract) base class for all kitchen devices."""
 
     def __init__(self, details, manager):
         """Init the VeSync Air Fryer 158 class."""
@@ -636,6 +637,26 @@ class VeSyncAirFryer158(VeSyncKitchen):
         self.fryer_status.status_request(json_cmd)
         self.update()
         return True
+
+    def display(self) -> None:
+        """Return formatted device info to stdout."""
+        super().display()
+        disp = [
+            ('cook_status', self.cook_status, ''),
+            ('temp_unit', self.temp_unit, ''),
+            ('RGB Light', self._rgb_status, ''),
+        ]
+        if self.cook_status not in ['standby', 'cookEnd', 'preheatEnd']:
+            disp.append(('preheat', self.preheat, ''))
+            disp.append(('current_temp', self.current_temp, self.temp_unit))
+            disp.append(('cook_set_temp', self.cook_set_temp, self.temp_unit))
+            disp.append(('cook_set_time', self.cook_set_time, ''))
+            disp.append(('cook_last_time', self.cook_last_time, ''))
+            if self.preheat is True:
+                disp.append(('preheat_last_time', self.preheat_last_time, ''))
+                disp.append(('preheat_set_time', self.preheat_set_time, ''))
+        for line in disp:
+            print(f"{line[0]+': ':.<30} {' '.join(line[1:])}")
 
     def displayJSON(self) -> str:
         """Display JSON of device details."""

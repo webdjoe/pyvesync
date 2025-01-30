@@ -3,7 +3,6 @@
 # pylint: skip-file
 # flake8: noqa
 from .vesync import VeSync
-
 import logging
 
 __version__ = '2.1.17'

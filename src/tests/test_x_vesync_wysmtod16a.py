@@ -71,8 +71,8 @@ class TestVeSyncWYSMTOD16ASwitch(TestBase):
         self.mock_api.assert_called_with(
             '/cloud/v2/deviceManaged/bypassV2',
             'post',
-            body,
-            head,
+            headers=head,
+            json_object=body,
         )
         assert on
 
@@ -86,8 +86,8 @@ class TestVeSyncWYSMTOD16ASwitch(TestBase):
         self.mock_api.assert_called_with(
             '/cloud/v2/deviceManaged/bypassV2',
             'post',
-            body,
-            head
+            headers=head,
+            json_object=body,
         )
         assert off
 

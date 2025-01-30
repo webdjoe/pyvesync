@@ -7,31 +7,11 @@ from itertools import chain
 from typing import Tuple
 from pyvesync.helpers import Helpers, logger as helper_logger
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
-from pyvesync.vesyncbulb import (
-    bulb_modules,
-    factory as bulb_factory,
-    logger as bulb_logger
-)
-from pyvesync.vesyncfan import (
-    fan_modules,
-    factory as fan_factory,
-    logger as fan_logger
-)
-from pyvesync.vesynckitchen import (
-    kitchen_modules,
-    factory as kitchen_factory,
-    logger as kitchen_logger
-)
-from pyvesync.vesyncoutlet import (
-    outlet_modules,
-    factory as outlet_factory,
-    logger as outlet_logger
-)
-from pyvesync.vesyncswitch import (
-    switch_modules,
-    factory as switch_factory,
-    logger as switch_logger
-)
+from pyvesync.vesyncbulb import factory as bulb_factory, logger as bulb_logger
+from pyvesync.vesyncfan import factory as fan_factory, logger as fan_logger
+from pyvesync.vesynckitchen import factory as kitchen_factory, logger as kitchen_logger
+from pyvesync.vesyncoutlet import factory as outlet_factory, logger as outlet_logger
+from pyvesync.vesyncswitch import factory as switch_factory, logger as switch_logger
 
 logger = logging.getLogger(__name__)
 
@@ -246,7 +226,7 @@ class VeSync:  # pylint: disable=function-redefined
                             devices) if j not in dev_rem]
         return devices
 
-    def _generic_factory(self, dev_type: str, details: dict,factory, devices):
+    def _generic_factory(self, dev_type: str, details: dict, factory, devices: list):
         device = factory(dev_type, details, self)
         if device:
             devices.append(device)
@@ -264,25 +244,21 @@ class VeSync:  # pylint: disable=function-redefined
             manager (VeSync): VeSync manager object
 
         Returns:
-            VeSyncBaseDevice: instantiated device object
+            VeSyncBaseDevice: instantiated device object or None for unsupported devices.
 
         Note:
             Each device type implements a factory for the supported device types.
             the newly created device instance is added to the appropriate list.
         """
-        if dev_type in fan_modules:  # type: ignore  # noqa: F405
-            dev_obj = self._generic_factory(dev_type, details, fan_factory, self.fans)
-        elif dev_type in outlet_modules:  # type: ignore  # noqa: F405
+        dev_obj = self._generic_factory(dev_type, details, fan_factory, self.fans)
+        if dev_obj is None:
             dev_obj = self._generic_factory(dev_type, details, outlet_factory, self.outlets)
-        elif dev_type in switch_modules:  # type: ignore  # noqa: F405
+        if dev_obj is None:
             dev_obj = self._generic_factory(dev_type, details, switch_factory, self.switches)
-        elif dev_type in bulb_modules:  # type: ignore  # noqa: F405
+        if dev_obj is None:
             dev_obj = self._generic_factory(dev_type, details, bulb_factory, self.bulbs)
-        elif dev_type in kitchen_modules:
+        if dev_obj is None:
             dev_obj = self._generic_factory(dev_type, details, kitchen_factory, self.kitchen)
-        else:
-            dev_obj = None
-
         if (dev_obj is None):
             logger.debug('Unknown device %s named %s model %s',
                         dev_type,

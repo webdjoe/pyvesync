@@ -155,7 +155,6 @@ class OutletDetails:
         }
     }, 200)
 
-
 DETAILS_RESPONSES = {
     'wifi-switch-1.3': OutletDetails.details_7a,
     'ESW03-USA': OutletDetails.details_10a,

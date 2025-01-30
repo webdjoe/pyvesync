@@ -1034,25 +1034,22 @@ class VeSyncAirBypass(VeSyncFan):
         """
         super().display()
         disp = [
-            ('Mode: ', self.mode, ''),
-            ('Filter Life: ', self.details['filter_life'], 'percent'),
-            ('Fan Level: ', self.speed, ''),
-            ('Display: ', self.details['display'], ''),
-            ('Child Lock: ', self.details['child_lock'], ''),
-            ('Night Light: ', self.details['night_light'], ''),
-            ('Display Config: ', self.config['display'], ''),
-            ('Display_Forever Config: ',
-             self.config['display_forever'], '')
+            ('Mode', self.mode, ''),
+            ('Filter Life', self.details['filter_life'], '%'),
+            ('Fan Level', self.speed, ''),
+            ('Display', self.details['display'], ''),
+            ('Child Lock', self.details['child_lock'], ''),
+            ('Night Light', self.details['night_light'], ''),
+            ('Display Config', self.config['display'], ''),
+            ('Display_Forever Config', self.config['display_forever'], '')
         ]
         if self.air_quality_feature:
             disp.extend([
-                ('Air Quality Level: ',
-                    self.details.get('air_quality', ''), ''),
-                ('Air Quality Value: ',
-                    self.details.get('air_quality_value', ''), 'ug/m3')
-                ])
+                ('Air Quality Level', self.details.get('air_quality', ''), ''),
+                ('Air Quality Value', self.details.get('air_quality_value', ''), 'ug/m3')
+            ])
         for line in disp:
-            print(f'{line[0]:.<30} {line[1]} {line[2]}')
+            print(f"{line[0]+': ':.<30} {' '.join(line[1:])}")
 
     def displayJSON(self) -> str:  # noqa: N802
         """Return air purifier status and properties in JSON output.
@@ -1538,7 +1535,11 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         return False
 
     def displayJSON(self) -> str:
-        """Return air purifier status and properties in JSON output."""
+        """Return air purifier status and properties in JSON output.
+
+        Returns:
+            str : JSON formatted string of air purifier details
+        """
         sup = super().displayJSON()
         sup_val = json.loads(sup)
         sup_val.update(
@@ -1579,7 +1580,19 @@ class VeSyncAir131(VeSyncBaseDevice):
     def __init__(self, details, manager):
         """Initilize air purifier class."""
         super().__init__(details, manager)
-
+        self.enabled = True
+        self._config_dict = model_features(self.device_type)
+        self._features = self._config_dict.get('features', [])
+        if not isinstance(self._config_dict.get('modes'), list):
+            logger.error(
+                'Please set modes for %s in the configuration',
+                self.device_type)
+            raise KeyError(f'Modes not set in configuration for {self.device_name}')
+        self.modes = self._config_dict['modes']
+        if 'air_quality' in self._features:
+            self.air_quality_feature = True
+        else:
+            self.air_quality_feature = False
         self.details = {}
 
     def get_details(self) -> None:
@@ -1811,15 +1824,15 @@ class VeSyncAir131(VeSyncBaseDevice):
         """Return formatted device info to stdout."""
         super().display()
         disp = [
-            ('Active Time : ', self.active_time, ' minutes'),
-            ('Fan Level: ', self.fan_level, ''),
-            ('Air Quality: ', self.air_quality, ''),
-            ('Mode: ', self.mode, ''),
-            ('Screen Status: ', self.screen_status, ''),
-            ('Filter Life: ', json.dumps(self.filter_life), ' percent')
+            ('Active Time', str(self.active_time), 'min'),
+            ('Fan Level', str(self.fan_level), ''),
+            ('Air Quality', self.air_quality, ''),
+            ('Mode', self.mode, ''),
+            ('Screen Status', self.screen_status, ''),
+            ('Filter Life', json.dumps(self.filter_life), '%')
             ]
         for line in disp:
-            print(f'{line[0]:.<30} {line[1]} {line[2]}')
+            print(f"{line[0]+': ':.<30} {' '.join(line[1:])}")
 
     def displayJSON(self) -> str:
         """Return air purifier status and properties in JSON output."""
@@ -1994,6 +2007,7 @@ class VeSyncHumid200300S(VeSyncFan):
         """Build humidifier status dictionary."""
         self.enabled = dev_dict.get('enabled')
         self.device_status = 'on' if self.enabled else 'off'
+        self.mode = dev_dict.get('mode', None)
         self.details['humidity'] = dev_dict.get('humidity', 0)
         self.details['mist_virtual_level'] = dev_dict.get(
             'mist_virtual_level', 0)
@@ -2393,30 +2407,25 @@ class VeSyncHumid200300S(VeSyncFan):
         """Return formatted device info to stdout."""
         super().display()
         disp = [
-            ('Mode: ', self.details['mode'], ''),
-            ('Humidity: ', self.details['humidity'], 'percent'),
-            ('Mist Virtual Level: ', self.details['mist_virtual_level'], ''),
-            ('Mist Level: ', self.details['mist_level'], ''),
-            ('Water Lacks: ', self.details['water_lacks'], ''),
-            ('Humidity High: ', self.details['humidity_high'], ''),
-            ('Water Tank Lifted: ', self.details['water_tank_lifted'], ''),
-            ('Display: ', self.details['display'], ''),
-            ('Automatic Stop Reach Target: ',
-                self.details['automatic_stop_reach_target'], ''),
-            ('Auto Target Humidity: ',
-                self.config['auto_target_humidity'], 'percent'),
-            ('Automatic Stop: ', self.config['automatic_stop'], ''),
+            ('Mode', self.details['mode'], ''),
+            ('Humidity', self.details['humidity'], '%'),
+            ('Mist Virtual Level', self.details['mist_virtual_level'], ''),
+            ('Mist Level', self.details['mist_level'], ''),
+            ('Water Lacks', self.details['water_lacks'], ''),
+            ('Humidity High', self.details['humidity_high'], ''),
+            ('Water Tank Lifted', self.details['water_tank_lifted'], ''),
+            ('Display', self.details['display'], ''),
+            ('Automatic Stop Reach Target', self.details['automatic_stop_reach_target'], ''),
+            ('Auto Target Humidity', self.config['auto_target_humidity'], '%'),
+            ('Automatic Stop', self.config['automatic_stop'], ''),
         ]
         if self.night_light:
-            disp.append(('Night Light Brightness: ',
-                         self.details.get('night_light_brightness', ''), 'percent'))
+            disp.append(('Night Light Brightness', self.details.get('night_light_brightness', ''), '%'))
         if self.warm_mist_feature:
-            disp.append(('Warm mist enabled: ',
-                         self.details.get('warm_mist_enabled', ''), ''))
-            disp.append(('Warm mist level: ',
-                         self.details.get('warm_mist_level', ''), ''))
+            disp.append(('Warm mist enabled', self.details.get('warm_mist_enabled', ''), ''))
+            disp.append(('Warm mist level', self.details.get('warm_mist_level', ''), ''))
         for line in disp:
-            print(f'{line[0]:.<30} {line[1]} {line[2]}')
+            print(f"{line[0] + ': ':.<30} {' '.join(line[1:])}")
 
     def displayJSON(self) -> str:
         """Return air purifier status and properties in JSON output."""
@@ -2876,22 +2885,22 @@ class VeSyncSuperior6000S(VeSyncFan):
         super().display()
         disp = [
             ('Temperature', self.temperature, ''),
-            ('Humidity: ', self.humidity_level, 'percent'),
-            ('Target Humidity', self.target_humidity, 'percent'),
-            ('Mode: ', self.mode, ''),
-            ('Mist Virtual Level: ', self.details['mist_virtual_level'], ''),
-            ('Mist Level: ', self.details['mist_level'], ''),
-            ('Water Lacks: ', self.water_lacks, ''),
-            ('Water Tank Lifted: ', bool(self.details['water_tank_lifted']), ''),
-            ('Display On: ', bool(self.details['display']), ''),
-            ('Filter Life', self.details['filter_life_percentage'], 'percent'),
+            ('Humidity', self.humidity_level, '%'),
+            ('Target Humidity', self.target_humidity, '%'),
+            ('Mode', self.mode, ''),
+            ('Mist Virtual Level', self.details['mist_virtual_level'], ''),
+            ('Mist Level', self.details['mist_level'], ''),
+            ('Water Lacks', self.water_lacks, ''),
+            ('Water Tank Lifted', bool(self.details['water_tank_lifted']), ''),
+            ('Display On', bool(self.details['display']), ''),
+            ('Filter Life', self.details['filter_life_percentage'], '%'),
             ('Drying Mode Enabled', self.drying_mode_enabled, ''),
             ('Drying Mode State', self.drying_mode_state, ''),
             ('Drying Mode Level', self.drying_mode_level, ''),
-            ('Drying Mode Time Remaining', self.drying_mode_seconds_remaining, 'seconds'),
+            ('Drying Mode Time Remaining', self.drying_mode_seconds_remaining, 'sec'),
         ]
         for line in disp:
-            print(f'{line[0]:.<30} {line[1]} {line[2]}')
+            print(f"{line[0]+': ':.<30} {' '.join(line[1:])}")
 
     def displayJSON(self) -> str:
         """Return air purifier status and properties in JSON output."""

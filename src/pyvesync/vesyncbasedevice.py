@@ -100,16 +100,18 @@ class VeSyncBaseDevice:
 
     def __str__(self) -> str:
         """Use device info for string represtation of class."""
-        return f'Device Name: {self.device_name}, \
-                 Device Type: {self.device_type},\
-                 SubDevice No.: {self.sub_device_no},\
-                 Status: {self.device_status}'
+        return f'Device Name: {self.device_name}, ' + \
+               f'Device Type: {self.device_type}, ' + \
+               f'SubDevice No.: {self.sub_device_no}, ' + \
+               f'Status: {self.device_status}'
 
     def __repr__(self) -> str:
         """Representation of device details."""
-        return f'DevClass: {self.__class__.__name__},\
-                Name:{self.device_name}, Device No: {self.sub_device_no},\
-                DevStatus: {self.device_status}, CID: {self.cid}'
+        return f'DevClass: {self.__class__.__name__}, ' + \
+               f'Name:{self.device_name}, ' + \
+               f'Device No: {self.sub_device_no}, ' + \
+               f'DevStatus: {self.device_status}, ' + \
+               f'CID: {self.cid}'
 
     @property
     def is_on(self) -> bool:
@@ -157,19 +159,19 @@ class VeSyncBaseDevice:
         ```
         """
         disp = [
-            ('Device Name:', self.device_name),
-            ('Model: ', self.device_type),
-            ('Subdevice No: ', str(self.sub_device_no)),
-            ('Status: ', self.device_status),
-            ('Online: ', self.connection_status),
-            ('Type: ', self.type),
-            ('CID: ', self.cid),
+            ('Device Name', self.device_name),
+            ('Model', self.device_type),
+            ('Subdevice No', str(self.sub_device_no)),
+            ('Status', self.device_status),
+            ('Connection', self.connection_status),
+            ('Type', self.type),
+            ('CID', self.cid),
         ]
         if self.uuid is not None:
-            disp.append(('UUID: ', self.uuid))
+            disp.append(('UUID', self.uuid))
 
         for line in disp:
-            print(f'{line[0]:.<30} {line[1]}')
+            print(f"{line[0]+': ':.<30} {line[1]}")
 
     def displayJSON(self) -> str:  # pylint: disable=invalid-name
         """JSON API for device details.

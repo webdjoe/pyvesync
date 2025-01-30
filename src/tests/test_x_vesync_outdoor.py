@@ -62,7 +62,7 @@ class TestVeSyncOutdoorPlug(TestBase):
 
     def test_outdoor_outlet_onoff(self):
         """Test Outdoor Outlet Device On/Off Methods."""
-        self.mock_api.return_value = ({'code': 0, 'msg': 'success', 'result': {'code':0}}, 200)
+        self.mock_api.return_value = ({'code': 0}, 200)
         outdoor_outlet = VeSyncOutdoorPlug(DEV_LIST_DETAIL, self.manager)
         head = helpers.req_headers(self.manager)
         body = helpers.req_body(self.manager, 'devicestatus')
@@ -73,20 +73,20 @@ class TestVeSyncOutdoorPlug(TestBase):
         on = outdoor_outlet.turn_on()
         self.mock_api.assert_called_with(
             '/outdoorsocket15a/v1/device/devicestatus', 'put',
-            body, head
+            headers=head, json_object=body
         )
         assert on
         off = outdoor_outlet.turn_off()
         body['status'] = 'off'
         self.mock_api.assert_called_with(
             '/outdoorsocket15a/v1/device/devicestatus', 'put',
-            body, head
+            headers=head, json_object=body
         )
         assert off
 
     def test_outdoor_outlet_onoff_fail(self):
         """Test outdoor outlet On/Off Fail with Code>0."""
-        self.mock_api.return_value = ({'code': 1, 'msg': 'success', 'result': {}}, 400)
+        self.mock_api.return_value = ({'code': 1}, 400)
         outdoor_outlet = VeSyncOutdoorPlug(DEV_LIST_DETAIL, self.manager)
         assert not outdoor_outlet.turn_on()
         assert not outdoor_outlet.turn_off()
@@ -101,7 +101,8 @@ class TestVeSyncOutdoorPlug(TestBase):
         self.mock_api.assert_called_with(
             '/outdoorsocket15a/v1/device/energyweek',
             'post',
-            body, helpers.req_headers(self.manager)
+            headers=helpers.req_headers(self.manager),
+            json_object=body,
         )
         energy_dict = outdoor_outlet.energy['week']
         assert energy_dict['energy_consumption_of_today'] == 1
@@ -121,8 +122,8 @@ class TestVeSyncOutdoorPlug(TestBase):
         self.mock_api.assert_called_with(
             '/outdoorsocket15a/v1/device/energymonth',
             'post',
-            body,
-            helpers.req_headers(self.manager)
+            headers=helpers.req_headers(self.manager),
+            json_object=body,
         )
         energy_dict = outdoor_outlet.energy['month']
         assert energy_dict['energy_consumption_of_today'] == 1
@@ -142,8 +143,8 @@ class TestVeSyncOutdoorPlug(TestBase):
         self.mock_api.assert_called_with(
             '/outdoorsocket15a/v1/device/energyyear',
             'post',
-            body,
-            helpers.req_headers(self.manager)
+            headers=helpers.req_headers(self.manager),
+            json_object=body,
         )
         energy_dict = outdoor_outlet.energy['year']
         assert energy_dict['energy_consumption_of_today'] == 1

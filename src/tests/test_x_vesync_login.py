@@ -57,7 +57,7 @@ class TestLogin(object):
     @pytest.mark.parametrize('email, password, testid', login_bad_call)
     def test_bad_login(self, api_mock, email, password, testid):
         """Test failed login."""
-        full_return = ({'code': 455, 'msg': 'failed', 'result': {}}, 200)
+        full_return = ({'code': 455}, 200)
         self.mock_api.return_value = full_return
         vesync_obj = VeSync(email, password)
         assert vesync_obj.login() is False
@@ -71,7 +71,7 @@ class TestLogin(object):
     def test_good_login(self, api_mock):
         """Test successful login."""
         full_return = (
-            {'code': 0, 'msg': 'success', 'result': {'accountID': 'sam_actid', 'token': 'sam_token'}},
+            {'code': 0, 'result': {'accountID': 'sam_actid', 'token': 'sam_token'}},
             200,
         )
         self.mock_api.return_value = full_return

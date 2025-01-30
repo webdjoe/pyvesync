@@ -529,21 +529,17 @@ class VeSyncBulb(VeSyncBaseDevice):
         if self.connection_status == 'online':
             disp = []  # initiate list
             if self.dimmable_feature:
-                disp.append(('Brightness: ', str(self.brightness), '%'))
+                disp.append(('Brightness', str(self.brightness), '%'))
             if self.color_temp_feature:
-                disp.append(('White Temperature Pct: ',
-                             str(self.color_temp_pct), '%'))
-                disp.append(('White Temperature Kelvin: ',
-                             str(self.color_temp_kelvin), 'K'))
+                disp.append(('White Temperature Pct', str(self.color_temp_pct), '%'))
+                disp.append(('White Temperature Kelvin', str(self.color_temp_kelvin), 'K'))
             if self.rgb_shift_feature and self.color is not None:
-                disp.append(('ColorHSV: ', helpers.named_tuple_to_str(
-                    self.color.hsv), ''))
-                disp.append(('ColorRGB: ', helpers.named_tuple_to_str(
-                    self.color.rgb), ''))
-                disp.append(('ColorMode: ', str(self.color_mode), ''))
+                disp.append(('ColorHSV', helpers.named_tuple_to_str(self.color.hsv), ''))
+                disp.append(('ColorRGB', helpers.named_tuple_to_str(self.color.rgb), ''))
+                disp.append(('ColorMode', str(self.color_mode), ''))
             if len(disp) > 0:
                 for line in disp:
-                    print(f'{line[0]:.<30} {line[1]} {line[2]}')
+                    print(f"{line[0]+': ':.<30} {' '.join(line[1:])}")
 
     def displayJSON(self) -> str:
         """Return bulb device info in JSON format.

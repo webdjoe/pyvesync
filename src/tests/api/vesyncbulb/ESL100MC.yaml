@@ -1,0 +1,169 @@
+enable_white_mode:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 2.8.6
+    cid: ESL100MC-CID
+    configModule: ConfigModule
+    debugMode: false
+    deviceRegion: US
+    method: bypassV2
+    payload:
+      data:
+        action: 'on'
+        blue: 0
+        brightness: 100
+        colorMode: white
+        green: 0
+        red: 0
+        speed: 0
+      method: setLightStatus
+      source: APP
+    phoneBrand: SM N9005
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
+set_brightness:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 2.8.6
+    cid: ESL100MC-CID
+    configModule: ConfigModule
+    debugMode: false
+    deviceRegion: US
+    method: bypassV2
+    payload:
+      data:
+        action: 'on'
+        blue: 0
+        brightness: 50
+        colorMode: white
+        green: 0
+        red: 0
+        speed: 0
+      method: setLightStatus
+      source: APP
+    phoneBrand: SM N9005
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
+set_rgb:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 2.8.6
+    cid: ESL100MC-CID
+    configModule: ConfigModule
+    debugMode: false
+    deviceRegion: US
+    method: bypassV2
+    payload:
+      data:
+        action: 'on'
+        blue: 255
+        brightness: 100
+        colorMode: color
+        green: 200
+        red: 50
+        speed: 0
+      method: setLightStatus
+      source: APP
+    phoneBrand: SM N9005
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
+turn_off:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 2.8.6
+    cid: ESL100MC-CID
+    configModule: ConfigModule
+    debugMode: false
+    deviceRegion: US
+    method: bypassV2
+    payload:
+      data:
+        enabled: false
+        id: 0
+      method: setSwitch
+      source: APP
+    phoneBrand: SM N9005
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
+turn_on:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 2.8.6
+    cid: ESL100MC-CID
+    configModule: ConfigModule
+    debugMode: false
+    deviceRegion: US
+    method: bypassV2
+    payload:
+      data:
+        enabled: true
+        id: 0
+      method: setSwitch
+      source: APP
+    phoneBrand: SM N9005
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
+update:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 2.8.6
+    cid: ESL100MC-CID
+    configModule: ConfigModule
+    debugMode: false
+    deviceRegion: US
+    method: bypassV2
+    payload:
+      data: {}
+      method: getLightStatus
+      source: APP
+    phoneBrand: SM N9005
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2

@@ -247,12 +247,6 @@ class TestOutlets(TestBase):
         all_kwargs = parse_args(self.mock_api)
 
         # Assert request matches recorded request or write new records
-        if ('data' in all_kwargs):
-            if ('headers' in all_kwargs):
-                all_kwargs['json_object'] = all_kwargs['data']
-            else:
-                all_kwargs['headers'] = all_kwargs['data']
-            del all_kwargs['data']
         assert_test(method_call, all_kwargs, dev_type,
                    self.write_api, self.overwrite)
 

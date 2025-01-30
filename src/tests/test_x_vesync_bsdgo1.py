@@ -78,8 +78,8 @@ class TestVeSyncBSDGO1Switch(TestBase):
         self.mock_api.assert_called_with(
             '/cloud/v2/deviceManaged/bypassV2',
             'post',
-            body,
-            head
+            headers=head,
+            json_object=body,
         )
 
         # Test turn_off
@@ -88,8 +88,8 @@ class TestVeSyncBSDGO1Switch(TestBase):
         self.mock_api.assert_called_with(
             '/cloud/v2/deviceManaged/bypassV2',
             'post',
-            body,
-            head
+            headers=head,
+            json_object=body,
         )
 
     def test_bsdgo1_onoff_fail(self):

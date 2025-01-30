@@ -83,7 +83,7 @@ class TestVeSync15ASwitch(utils.TestBase):
 
     def test_15a_onoff(self):
         """Test 15A Device On/Off Methods"""
-        self.mock_api.return_value = ({'code': 0, 'msg': 'SUCCESS'}, 200)
+        self.mock_api.return_value = ({'code': 0}, 200)
         vswitch15a = VeSyncOutlet15A(DEV_LIST_DETAIL, self.manager)
         head = helpers.req_headers(self.manager)
         body = helpers.req_body(self.manager, 'devicestatus')
@@ -92,23 +92,17 @@ class TestVeSync15ASwitch(utils.TestBase):
         body['uuid'] = vswitch15a.uuid
         assert vswitch15a.turn_on()
         self.mock_api.assert_called_with(
-            '/15a/v1/device/devicestatus',
-            'put',
-            body,
-            head
+            '/15a/v1/device/devicestatus', 'put', headers=head, json_object=body
         )
         assert vswitch15a.turn_off()
         body['status'] = 'off'
         self.mock_api.assert_called_with(
-            '/15a/v1/device/devicestatus',
-            'put',
-            body,
-            head
+            '/15a/v1/device/devicestatus', 'put', headers=head, json_object=body
         )
 
     def test_15a_onoff_fail(self):
         """Test 15A On/Off Fail with Code>0"""
-        self.mock_api.return_value = ({'code': 1, 'msg': 'FAILED'}, 400)
+        self.mock_api.return_value = ({'code': 1}, 400)
         vswitch15a = VeSyncOutlet15A(DEV_LIST_DETAIL, self.manager)
         assert not vswitch15a.turn_on()
         assert not vswitch15a.turn_off()
@@ -123,8 +117,8 @@ class TestVeSync15ASwitch(utils.TestBase):
         self.mock_api.assert_called_with(
             '/15a/v1/device/energyweek',
             'post',
-            body,
-            helpers.req_headers(self.manager),
+            headers=helpers.req_headers(self.manager),
+            json_object=body,
         )
         energy_dict = vswitch15a.energy['week']
         assert energy_dict['energy_consumption_of_today'] == 1
@@ -144,8 +138,8 @@ class TestVeSync15ASwitch(utils.TestBase):
         self.mock_api.assert_called_with(
             '/15a/v1/device/energymonth',
             'post',
-            body,
-            helpers.req_headers(self.manager),
+            headers=helpers.req_headers(self.manager),
+            json_object=body,
         )
         energy_dict = vswitch15a.energy['month']
         assert energy_dict['energy_consumption_of_today'] == 1
@@ -165,8 +159,8 @@ class TestVeSync15ASwitch(utils.TestBase):
         self.mock_api.assert_called_with(
             '/15a/v1/device/energyyear',
             'post',
-            body,
-            helpers.req_headers(self.manager),
+            headers=helpers.req_headers(self.manager),
+            json_object=body,
         )
         energy_dict = vswitch15a.energy['year']
         assert energy_dict['energy_consumption_of_today'] == 1

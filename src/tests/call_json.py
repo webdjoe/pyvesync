@@ -546,31 +546,31 @@ class DeviceList:
             200
         )
 
-    FAN_TEST = ({'code': 0, 'msg': 'success', 'result': {'list': [LIST_CONF_600S, LIST_CONF_LV131S,
+    FAN_TEST = ({'code': 0, 'result': {'list': [LIST_CONF_600S, LIST_CONF_LV131S,
                                                 LIST_CONF_DUAL200S]}}, 200)
 
-    DEVLIST_ALL = ({'code': 0, 'msg': 'success', 'result': {'list': FULL_DEV_LIST}}, 200)
+    DEVLIST_ALL = ({'code': 0, 'result': {'list': FULL_DEV_LIST}}, 200)
 
-    DEVLIST_7A = ({'code': 0, 'msg': 'success', 'result': {'list': [LIST_CONF_7A]}}, 200)
+    DEVLIST_7A = ({'code': 0, 'result': {'list': [LIST_CONF_7A]}}, 200)
 
-    DEVLIST_15A = ({'code': 0, 'msg': 'success', 'result': {'list': [LIST_CONF_15A]}}, 200)
+    DEVLIST_15A = ({'code': 0, 'result': {'list': [LIST_CONF_15A]}}, 200)
 
-    DEVLIST_10AEU = ({'code': 0, 'msg': 'success', 'result': {'list': [LIST_CONF_10AEU]}}, 200)
+    DEVLIST_10AEU = ({'code': 0, 'result': {'list': [LIST_CONF_10AEU]}}, 200)
 
-    DEVLIST_10AUS = ({'code': 0, 'msg': 'success', 'result': {'list': [LIST_CONF_10AUS]}}, 200)
+    DEVLIST_10AUS = ({'code': 0, 'result': {'list': [LIST_CONF_10AUS]}}, 200)
 
-    DEVLIST_WS = ({'code': 0, 'msg': 'success', 'result': {'list': [LIST_CONF_WS]}}, 200)
+    DEVLIST_WS = ({'code': 0, 'result': {'list': [LIST_CONF_WS]}}, 200)
 
-    DEVLIST_DIMMER = ({'code': 0, 'msg': 'success', 'result': {'list': [LIST_CONF_DIMMER]}}, 200)
+    DEVLIST_DIMMER = ({'code': 0, 'result': {'list': [LIST_CONF_DIMMER]}}, 200)
 
-    DEVLIST_AIR = ({'code': 0, 'msg': 'success', 'result': {'list': [LIST_CONF_AIR]}}, 200)
+    DEVLIST_AIR = ({'code': 0, 'result': {'list': [LIST_CONF_AIR]}}, 200)
 
-    DEVLIST_ESL100 = ({'code': 0, 'msg': 'success', 'result': {'list': [LIST_CONF_ESL100]}}, 200)
+    DEVLIST_ESL100 = ({'code': 0, 'result': {'list': [LIST_CONF_ESL100]}}, 200)
 
-    DEVLIST_DUAL200S = ({'code': 0,'msg': 'success', 'result': {'list': [LIST_CONF_DUAL200S]}}, 200)
+    DEVLIST_DUAL200S = ({'code': 0, 'result': {'list': [LIST_CONF_DUAL200S]}}, 200)
 
     DEVLIST_OUTDOOR = (
-        {'code': 0, 'msg': 'success', 'result': {'list': [LIST_CONF_OUTDOOR_1, LIST_CONF_OUTDOOR_2]}},
+        {'code': 0, 'msg': 'request success', 'result': {'list': [LIST_CONF_OUTDOOR_1, LIST_CONF_OUTDOOR_2]}},
         200,
     )
 
