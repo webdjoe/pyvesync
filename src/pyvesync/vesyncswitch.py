@@ -61,7 +61,7 @@ __all__: list = list(switch_modules.values()) + ['switch_modules']
 class VeSyncSwitch(VeSyncBaseDevice):
     """Etekcity Switch Base Class.
 
-    Abstract Base Class for Etekcity Switch Devices, inherting from
+    Abstract Base Class for Etekcity Switch Devices, inheriting from
     pyvesync.vesyncbasedevice.VeSyncBaseDevice. Should not be instantiated directly,
     subclassed by VeSyncWallSwitch and VeSyncDimmerSwitch.
 
