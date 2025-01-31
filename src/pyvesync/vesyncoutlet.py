@@ -7,7 +7,7 @@ import sys
 from abc import ABCMeta, abstractmethod
 from datetime import datetime, timedelta
 from pyvesync.helpers import Helpers
-from pyvesync.vesyncbasedevice import VeSyncBaseDevice, STATUS_ON, STATUS_OFF, STATUS_AUTO, STATUS_MANUAL
+from pyvesync.vesyncbasedevice import VeSyncBaseDevice, STATUS_ON, STATUS_OFF, MODE_AUTO, MODE_MANUAL
 
 logger = logging.getLogger(__name__)
 
@@ -26,8 +26,8 @@ outlet_config = {
         'module': 'VeSyncOutdoorPlug'},
     'BSDOG01': {
         'module': 'VeSyncOutletBSDGO1'},
-    'WHOGPLUG': {
-        'module': 'VeSyncOutletWHOGPLUG'},
+#    'WHOGPLUG': {
+#        'module': 'VeSyncOutletWHOGPLUG'},
     'WYSMTOD16A': { # GreenSun outdoor Plug IP44 16A & Power-Metering
         'module': 'VeSyncOutletWYSMTOD16A'},
 }
@@ -41,7 +41,7 @@ ENERGY_MONTH = 'month'
 ENERGY_YEAR  = 'year'
 PERIOD_2_DAYS = {ENERGY_WEEK: 7, ENERGY_MONTH: 30, ENERGY_YEAR: 365}
 
-class VeSyncOutlet(VeSyncBaseDevice):
+class   VeSyncOutlet(VeSyncBaseDevice):
     """Base class for Etekcity Outlets."""
 
     __metaclass__ = ABCMeta
@@ -504,11 +504,11 @@ class VeSyncOutlet15A(VeSyncOutlet):
 
     def turn_on_nightlight(self) -> bool:
         """Turn on nightlight."""
-        return self.toggle_nightlight(STATUS_AUTO)
+        return self.toggle_nightlight(MODE_AUTO)
 
     def turn_off_nightlight(self) -> bool:
         """Turn Off Nightlight."""
-        return self.toggle_nightlight(STATUS_MANUAL)
+        return self.toggle_nightlight(MODE_MANUAL)
 
 
 class VeSyncOutdoorPlug(VeSyncOutlet):
@@ -640,6 +640,10 @@ class VeSyncOutletV2(VeSyncOutlet):
 class VeSyncOutletBSDGO1(VeSyncOutletV2):
     """VeSync BSDGO1 smart plug."""
 
+    def __init__(self, details, manager):
+        """Initialize bypassV2 smart plug class."""
+        super().__init__(details, manager)
+
     def get_details(self) -> bool:
         """Get BSDGO1 device details."""
         body = self.get_body_v2()
@@ -673,6 +677,10 @@ class VeSyncOutletBSDGO1(VeSyncOutletV2):
 
 
 class VeSyncOutletWHOGPLUG(VeSyncOutletV2):
+
+    def __init__(self, details, manager):
+        """Initialize bypassV2 smart plug class."""
+        super().__init__(details, manager)
 
     def get_details(self) -> bool:
         """Get WHOGPLUG device details."""
@@ -718,7 +726,7 @@ class VeSyncOutletWYSMTOD16A(VeSyncOutletV2):
 
     def __init__(self, details, manager):
         """Initialize WHOGPLUG class."""
-        super().__init__(details, manager, False)
+        super().__init__(details, manager)
         self.connection_status = 'online' # assume online -> workaround.
 
     """Class to hold GreenSun outdoor outlets."""

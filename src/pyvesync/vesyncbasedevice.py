@@ -12,8 +12,15 @@ if TYPE_CHECKING:
 
 STATUS_ON = 'on'
 STATUS_OFF = 'off'
-STATUS_AUTO = 'auto'
-STATUS_MANUAL = 'manual'
+MODE_ADVANCED_SLEEP = 'advancedSleep'
+MODE_AUTO = 'auto'
+MODE_DIM = 'dim'
+MODE_HUMIDITY = 'humidity'
+MODE_MANUAL = 'manual'
+MODE_NORMAL = 'normal'
+MODE_PET = 'pet'
+MODE_SLEEP = 'sleep'
+MODE_TURBO = 'turbo'
 
 class VeSyncBaseDevice:
     """Properties shared across all VeSync devices.
@@ -82,7 +89,7 @@ class VeSyncBaseDevice:
                 self.speed = ext.get('fanSpeedLevel')
                 self.mode = ext.get('mode')
             if self.connection_status != 'online':
-                self.device_status: str | None = 'off'
+                self.device_status: str | None = STATUS_OFF
             else:
                 self.device_status = details.get('deviceStatus')
 
@@ -120,7 +127,7 @@ class VeSyncBaseDevice:
     @property
     def is_on(self) -> bool:
         """Return true if device is on."""
-        return (self.device_status == 'on')
+        return (self.device_status == STATUS_ON)
 
     @property
     def firmware_update(self) -> bool:
