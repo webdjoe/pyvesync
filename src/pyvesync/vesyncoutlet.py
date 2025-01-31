@@ -5,9 +5,9 @@ import time
 import json
 import sys
 from abc import ABCMeta, abstractmethod
-#from datetime import datetime, timedelta
+from datetime import datetime, timedelta
 from pyvesync.helpers import Helpers
-from pyvesync.vesyncbasedevice import VeSyncBaseDevice
+from pyvesync.vesyncbasedevice import VeSyncBaseDevice, STATUS_ON, STATUS_OFF, STATUS_AUTO, STATUS_MANUAL
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ outlet_config = {
     'BSDOG01': {
         'module': 'VeSyncOutletBSDGO1'},
     'WHOGPLUG': {
-        'module': VeSyncOutletWHOGPLUG'},
+        'module': 'VeSyncOutletWHOGPLUG'},
     'WYSMTOD16A': { # GreenSun outdoor Plug IP44 16A & Power-Metering
         'module': 'VeSyncOutletWYSMTOD16A'},
 }
@@ -73,11 +73,11 @@ class VeSyncOutlet(VeSyncBaseDevice):
 
     def turn_on(self) -> bool:
         """Turn outdoor outlet on and return True if successful."""
-        return self.turn('on')
+        return self.turn(STATUS_ON)
 
     def turn_off(self) -> bool:
         """Turn outdoor outlet off and return True if successful."""
-        return self.turn('off')
+        return self.turn(STATUS_OFF)
 
     @abstractmethod
     def get_details(self) -> bool:
@@ -391,7 +391,7 @@ class VeSyncOutlet15A(VeSyncOutlet):
     def __init__(self, details, manager):
         """Initialize 15A rectangular outlets."""
         super().__init__(details, manager)
-        self.nightlight_status = 'off'
+        self.nightlight_status = STATUS_OFF
         self.nightlight_brightness = 0
 
     def get_details(self) -> bool:
@@ -504,11 +504,11 @@ class VeSyncOutlet15A(VeSyncOutlet):
 
     def turn_on_nightlight(self) -> bool:
         """Turn on nightlight."""
-        return self.toggle_nightlight('auto')
+        return self.toggle_nightlight(STATUS_AUTO)
 
     def turn_off_nightlight(self) -> bool:
         """Turn Off Nightlight."""
-        return self.toggle_nightlight('manual')
+        return self.toggle_nightlight(STATUS_MANUAL)
 
 
 class VeSyncOutdoorPlug(VeSyncOutlet):
@@ -651,7 +651,7 @@ class VeSyncOutletBSDGO1(VeSyncOutletV2):
 
         code, error = self.get_response(body)
         if (error is None):
-            self.device_status = 'on' if code.get('powerSwitch_1') == 1 else 'off'
+            self.device_status = STATUS_ON if code.get('powerSwitch_1') == 1 else STATUS_OFF
             return True
         return False
 
@@ -659,7 +659,7 @@ class VeSyncOutletBSDGO1(VeSyncOutletV2):
         """Set power state of BSDGO1 outlet."""
         body = self.get_body_v2()
         body['payload'] = {
-            'data': {'powerSwitch_1': 1 if (status=='on') else 0},
+            'data': {'powerSwitch_1': 1 if (status==STATUS_ON) else 0},
             'method': 'setProperty',
             'source': 'APP'
         }
@@ -686,7 +686,7 @@ class VeSyncOutletWHOGPLUG(VeSyncOutletV2):
 
         code, error = self.get_response(body)
         if (error is None):
-            self.device_status = 'on' if code.get('poweenabled') else 'off'
+            self.device_status = STATUS_ON if code.get('poweenabled') else STATUS_OFF
             self.details['voltage'] = code.get('voltage', 0)
             self.details['current'] = code.get('current', 0)
             self.details['power'] = code.get('power', 0)
@@ -703,7 +703,7 @@ class VeSyncOutletWHOGPLUG(VeSyncOutletV2):
             'method': 'setProperty',
             'source': 'APP',
             'subDeviceNo': 0,
-            'data': {'powerSwitch_1': 1 if status=='on' else 0},
+            'data': {'powerSwitch_1': 1 if status==STATUS_ON else 0},
         }
 
         code, error = self.get_response(body)
@@ -745,7 +745,7 @@ class VeSyncOutletWYSMTOD16A(VeSyncOutletV2):
         properties = self.get_properties(VeSyncOutletWYSMTOD16A.UPDATE_PROPERTIES)
 
         if (properties):
-            self.device_status = 'on' if properties.get('powerSwitch_1', False) else 'off'
+            self.device_status = STATUS_ON if properties.get('powerSwitch_1', False) else STATUS_OFF
             self.details['voltage'] = properties.get('realTimeVoltage', 0)
             self.details['current'] = properties.get('realTimeCurrent', 0)
             self.details['power']   = properties.get('realTimePower', 0)
@@ -755,29 +755,29 @@ class VeSyncOutletWYSMTOD16A(VeSyncOutletV2):
         self.connection_status = 'offline'
         return False
 
-#    def get_energy(self, period) -> dict:
-#        today = datetime.today()
-#        from_day = today - timedelta(days=PERIOD_2_DAYS[period])
-#        till_day = today
-#
-#        body = self.get_body_v2()
-#        body['payload'] = {
-#            'method': 'getEnergyHistory',
-#            'source': 'APP',
-#            'subDeviceNo': 0,  # \ which is
-#            'id': 0,           # / required?
-#            'data': {
-#                'fromDay': from_day.timestamp(),
-#                'toDay'  : till_day.timestamp()
-#            }
-#        }
-#        code, error = self.get_response(body)
-#
-#        if (error is None):
-#            self.energy[period] = Helpers.build_energy_dict(code['result'])
-#        else:
-#            self.energy[period] = None
-#        return self.energy[period]
+    def get_energy(self, period) -> dict:
+        today = datetime.today()
+        from_day = today - timedelta(days=PERIOD_2_DAYS[period])
+        till_day = today
+
+        body = self.get_body_v2()
+        body['subDeviceNo'] = 0 # required?
+        body['payload'] = {
+            'method': 'getEnergyHistory',
+            'source': 'APP',
+            'subDeviceNo': 0,
+            'data': {
+                'fromDay': from_day.timestamp(),
+                'toDay'  : till_day.timestamp()
+            }
+        }
+        code, error = self.get_response(body)
+
+        if (error is None):
+            self.energy[period] = Helpers.build_energy_dict(code['result'])
+        else:
+            self.energy[period] = None
+        return self.energy[period]
 
     def turn(self, status) -> bool:
         """switch power for outdoor outlet."""
@@ -786,7 +786,7 @@ class VeSyncOutletWYSMTOD16A(VeSyncOutletV2):
             'method': 'setSwitch',
             'source': 'APP',
             'data': {
-                'enabled': True if (status=='on') else False,
+                'enabled': True if (status==STATUS_ON) else False,
                 'id': 0,
             },
         }

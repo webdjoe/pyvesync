@@ -10,6 +10,10 @@ logger = logging.getLogger(__name__)
 if TYPE_CHECKING:
     from pyvesync import VeSync
 
+STATUS_ON = 'on'
+STATUS_OFF = 'off'
+STATUS_AUTO = 'auto'
+STATUS_MANUAL = 'manual'
 
 class VeSyncBaseDevice:
     """Properties shared across all VeSync devices.
