@@ -3,12 +3,12 @@ from __future__ import annotations
 import hashlib
 import logging
 import time
-import json
 import colorsys
 from dataclasses import dataclass, field, InitVar
 from typing import Any, NamedTuple, Union, TYPE_CHECKING
 import re
 import requests
+from pyvesync.logs import LibraryLogger
 
 if TYPE_CHECKING:
     from pyvesync.vesync import VeSync
@@ -68,10 +68,10 @@ class Helpers:
         """
         return {
             'accept-language': 'en',
-            'accountId': manager.account_id,
+            'accountId': manager.account_id,  # type: ignore[dict-item]
             'appVersion': APP_VERSION,
             'content-type': 'application/json',
-            'tk': manager.token,
+            'tk': manager.token,  # type: ignore[dict-item]
             'tz': manager.time_zone,
         }
 
@@ -329,13 +329,6 @@ class Helpers:
         status_code = None
 
         try:
-            logger.debug("=======call_api=============================")
-            logger.debug("[%s] calling '%s' api", method, api)
-            logger.debug("API call URL: \n  %s%s", API_BASE_URL, api)
-            logger.debug("API call headers: \n  %s",
-                         Helpers.redactor(json.dumps(headers, indent=2)))
-            logger.debug("API call json: \n  %s",
-                         Helpers.redactor(json.dumps(json_object, indent=2)))
             if method.lower() == 'get':
                 r = requests.get(
                     API_BASE_URL + api, json=json_object, headers=headers,
@@ -353,19 +346,31 @@ class Helpers:
                 )
             else:
                 raise NameError(f'Invalid method {method}')
-        except requests.exceptions.RequestException as e:
-            logger.debug(e)
         except Exception as e:
-            logger.debug(e)
+            LibraryLogger.log_api_exception(
+                logger,
+                exception=e,
+                request_dict={
+                    "method": method,
+                    "endpoint": api,
+                    "headers": headers,
+                    "body": json_object,
+                },
+            )
         else:
             if r.status_code == 200:
                 status_code = 200
-                if r.content:
+                if LibraryLogger.is_json(r.text):
                     response = r.json()
-                    logger.debug("API response: \n\n  %s \n ",
-                                 Helpers.redactor(json.dumps(response, indent=2)))
-            else:
-                logger.debug('Unable to fetch %s%s', API_BASE_URL, api)
+                    LibraryLogger.log_api_call(logger, r)
+                    return response, status_code
+            LibraryLogger.log_api_exception(logger, request_dict={
+                "method": method,
+                "endpoint": api,
+                "status_code": r.status_code,
+                "headers": headers,
+                "body": json_object,
+            })
         return response, status_code
 
     @staticmethod
