@@ -2806,6 +2806,12 @@ class VeSyncSuperior6000S(VeSyncBaseDevice):
         """Get Humidity level."""
         return self.details['humidity']
 
+    # Duplicate for compatibility
+    @property
+    def humidity(self) -> int:
+        """Get Humidity level."""
+        return self.details['humidity']
+
     @property
     def mist_level(self) -> int:
         """Get current mist level."""
