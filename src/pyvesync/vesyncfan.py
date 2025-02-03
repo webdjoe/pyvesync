@@ -2878,7 +2878,7 @@ class VeSyncSuperior6000S(VeSyncBaseDevice):
     @property
     def auto_humidity(self):
         """Auto target humidity."""
-        return self.config['target_humidity']
+        return self.details['target_humidity']
 
     @property
     def target_humidity(self):
