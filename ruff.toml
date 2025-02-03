@@ -49,7 +49,8 @@ ignore = ["T201",  # PRINT statement - IGNORE
           "FIX002",  # Fixme error - IGNORE
           "FA102",  # type compatibility warning - IGNORE
           "FBT002",
-          "ANN401"
+          "ANN401",
+          "TC004"
           ]
 # Todo: Add exception classes EM102, BLE001, EM101
 # Todo: Fix import sorting issue I001

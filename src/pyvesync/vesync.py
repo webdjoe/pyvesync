@@ -4,7 +4,7 @@ import logging
 import re
 import time
 from itertools import chain
-from typing import Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING, Optional
 from pyvesync.helpers import Helpers
 import pyvesync.vesyncbulb as bulb_mods
 import pyvesync.vesyncfan as fan_mods
@@ -14,7 +14,7 @@ import pyvesync.vesyncswitch as switch_mods
 from pyvesync.logs import LibraryLogger
 
 if TYPE_CHECKING:
-    from pyvesync.vesyncbasedevice import VeSyncBaseDevice
+    from pyvesync.vesyncbasedevice import VeSyncBaseDevice  # ignore=F401
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ DEFAULT_ENER_UP_INT: int = 21600
 
 def object_factory(dev_model: str,
                    config: dict,
-                   manager: VeSync) -> tuple[str, VeSyncBaseDevice | None]:
+                   manager: 'VeSync') -> tuple[str, Optional['VeSyncBaseDevice']]:
     """Get device type and instantiate class.
 
     Pulls the device types from each module to determine the type of device and

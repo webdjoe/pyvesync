@@ -288,8 +288,8 @@ class LibraryLogger:
 
         headers = cls.api_printer(request_dict.get("headers"))
         if headers:
-            parts.append(f"Request Headers: {os.linesep} {json.dumps(
-                request_dict['headers'], indent=2)}")
+            parts.append(f"Request Headers: {os.linesep}"
+                         f"{json.dumps(request_dict['headers'], indent=2)}")
         request_body = cls.api_printer(request_dict.get('body'))
         if request_body is not None:
             parts.append(f"Request Body: {os.linesep} {request_body}")
