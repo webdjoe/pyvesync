@@ -1,4 +1,5 @@
 get_details:
+  api: /15a/v1/device/devicedetail
   headers:
     accept-language: en
     accountId: sample_id
@@ -19,8 +20,8 @@ get_details:
     traceId: TRACE_ID
     uuid: ESW15-USA-UUID
   method: post
-  url: /15a/v1/device/devicedetail
 get_monthly_energy:
+  api: /15a/v1/device/energymonth
   headers:
     accept-language: en
     accountId: sample_id
@@ -41,8 +42,8 @@ get_monthly_energy:
     traceId: TRACE_ID
     uuid: ESW15-USA-UUID
   method: post
-  url: /15a/v1/device/energymonth
 get_weekly_energy:
+  api: /15a/v1/device/energyweek
   headers:
     accept-language: en
     accountId: sample_id
@@ -63,8 +64,8 @@ get_weekly_energy:
     traceId: TRACE_ID
     uuid: ESW15-USA-UUID
   method: post
-  url: /15a/v1/device/energyweek
 get_yearly_energy:
+  api: /15a/v1/device/energyyear
   headers:
     accept-language: en
     accountId: sample_id
@@ -85,8 +86,8 @@ get_yearly_energy:
     traceId: TRACE_ID
     uuid: ESW15-USA-UUID
   method: post
-  url: /15a/v1/device/energyyear
 turn_off:
+  api: /15a/v1/device/devicestatus
   headers:
     accept-language: en
     accountId: sample_id
@@ -102,8 +103,8 @@ turn_off:
     token: sample_tk
     uuid: ESW15-USA-UUID
   method: put
-  url: /15a/v1/device/devicestatus
 turn_off_nightlight:
+  api: /15a/v1/device/nightlightstatus
   headers:
     accept-language: en
     accountId: sample_id
@@ -119,8 +120,8 @@ turn_off_nightlight:
     token: sample_tk
     uuid: ESW15-USA-UUID
   method: put
-  url: /15a/v1/device/nightlightstatus
 turn_on:
+  api: /15a/v1/device/devicestatus
   headers:
     accept-language: en
     accountId: sample_id
@@ -136,8 +137,8 @@ turn_on:
     token: sample_tk
     uuid: ESW15-USA-UUID
   method: put
-  url: /15a/v1/device/devicestatus
 turn_on_nightlight:
+  api: /15a/v1/device/nightlightstatus
   headers:
     accept-language: en
     accountId: sample_id
@@ -153,8 +154,8 @@ turn_on_nightlight:
     token: sample_tk
     uuid: ESW15-USA-UUID
   method: put
-  url: /15a/v1/device/nightlightstatus
 update:
+  api: /15a/v1/device/devicedetail
   headers:
     accept-language: en
     accountId: sample_id
@@ -175,4 +176,3 @@ update:
     traceId: TRACE_ID
     uuid: ESW15-USA-UUID
   method: post
-  url: /15a/v1/device/devicedetail

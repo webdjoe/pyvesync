@@ -15,7 +15,7 @@ get_devices:
     token: sample_tk
     traceId: TRACE_ID
   method: post
-  url: /cloud/v1/deviceManaged/devices
+  api: /cloud/v1/deviceManaged/devices
 login:
   json_object:
     acceptLanguage: en
@@ -30,4 +30,4 @@ login:
     traceId: TRACE_ID
     userType: '1'
   method: post
-  url: /cloud/v1/user/login
+  api: /cloud/v1/user/login

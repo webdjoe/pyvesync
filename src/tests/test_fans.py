@@ -111,7 +111,7 @@ class TestAirPurifiers(TestBase):
                      ['set_timer', {'timer_duration': 100}], ['clear_timer']],
 
     }
-
+        
     def test_details(self, dev_type, method):
         """Test the device details API request and response.
 
@@ -141,7 +141,7 @@ class TestAirPurifiers(TestBase):
         device_config = call_json.DeviceList.device_list_item(dev_type)
 
         # Instantiate device from device list return item
-        fan_obj = self.manager.object_factory(dev_type, device_config)
+        fan_obj = self.manager.object_factory(device_config)
 
         # Get method from device object
         method_call = getattr(fan_obj, method)
@@ -202,7 +202,7 @@ class TestAirPurifiers(TestBase):
         device_config = call_json.DeviceList.device_list_item(dev_type)
 
         # Instantiate device from device list return item
-        fan_obj = self.manager.object_factory(dev_type, device_config)
+        fan_obj = self.manager.object_factory(device_config)
 
         # Get method from device object
         method_call = getattr(fan_obj, method[0])
@@ -227,9 +227,8 @@ class TestAirPurifiers(TestBase):
         # Parse arguments from mock_api call into a dictionary
         all_kwargs = parse_args(self.mock_api)
 
-        # Assert request matches recored request or write new records
-        assert_test(method_call, all_kwargs, dev_type,
-                    self.write_api, self.overwrite)
+        # Assert request matches recorded request or write new records
+        assert_test(method_call, all_kwargs, dev_type, self.write_api, self.overwrite)
 
 
 class TestHumidifiers(TestBase):
@@ -321,7 +320,7 @@ class TestHumidifiers(TestBase):
         device_config = call_json.DeviceList.device_list_item(dev_type)
 
         # Instantiate device from device list return item
-        fan_obj = self.manager.object_factory(dev_type, device_config)
+        fan_obj = self.manager.object_factory(device_config)
 
         # Get method from device object
         method_call = getattr(fan_obj, method)
@@ -331,8 +330,7 @@ class TestHumidifiers(TestBase):
         all_kwargs = parse_args(self.mock_api)
 
         # Assert request matches recorded request or write new records
-        assert_test(method_call, all_kwargs, dev_type,
-                     self.write_api, self.overwrite)
+        assert_test(method_call, all_kwargs, dev_type, self.write_api, self.overwrite)
 
     def test_methods(self, dev_type, method):
         """Test device methods API request and response.
@@ -383,7 +381,7 @@ class TestHumidifiers(TestBase):
         device_config = call_json.DeviceList.device_list_item(dev_type)
 
         # Instantiate device from device list return item
-        fan_obj = self.manager.object_factory(dev_type, device_config,)
+        fan_obj = self.manager.object_factory(device_config,)
 
         # Get method from device object
         method_call = getattr(fan_obj, method[0])
@@ -403,6 +401,5 @@ class TestHumidifiers(TestBase):
         # Parse arguments from mock_api call into a dictionary
         all_kwargs = parse_args(self.mock_api)
 
-        # Assert request matches recored request or write new records
-        assert_test(method_call, all_kwargs, dev_type,
-                     self.write_api, self.overwrite)
+        # Assert request matches recorded request or write new records
+        assert_test(method_call, all_kwargs, dev_type, self.write_api, self.overwrite)

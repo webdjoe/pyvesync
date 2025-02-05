@@ -3,15 +3,15 @@
 import logging
 import re
 import time
-from itertools import chain
-from typing import Tuple
-from pyvesync.helpers import Helpers, logger as helper_logger
-from pyvesync.vesyncbasedevice import VeSyncBaseDevice
-from pyvesync.vesyncbulb import factory as bulb_factory, logger as bulb_logger
-from pyvesync.vesyncfan import factory as fan_factory, logger as fan_logger
-from pyvesync.vesynckitchen import factory as kitchen_factory, logger as kitchen_logger
-from pyvesync.vesyncoutlet import factory as outlet_factory, logger as outlet_logger
-from pyvesync.vesyncswitch import factory as switch_factory, logger as switch_logger
+from typing import List, Optional
+
+from .helpers import Helpers, EDeviceFamily, logger as helper_logger
+from .vesyncbasedevice import VeSyncBaseDevice
+from .vesyncbulb import factory as bulb_factory, logger as bulb_logger
+from .vesyncfan import factory as fan_factory, logger as fan_logger
+from .vesynckitchen import factory as kitchen_factory, logger as kitchen_logger
+from .vesyncoutlet import factory as outlet_factory, logger as outlet_logger
+from .vesyncswitch import factory as switch_factory, logger as switch_logger
 
 logger = logging.getLogger(__name__)
 
@@ -20,10 +20,27 @@ DEFAULT_TZ: str = 'America/New_York'
 
 DEFAULT_ENER_UP_INT: int = 21600
 
+FACTORIES = (bulb_factory, fan_factory, kitchen_factory, outlet_factory, switch_factory)
+
 
 class VeSync:  # pylint: disable=function-redefined
     """VeSync Manager Class."""
 
+    _debug: bool
+    _redact:bool
+    username: str
+    password: str
+    token: Optional[str] = None
+    account_id: Optional[str] = None
+    country_code: Optional[str] = None
+    enabled: float = False
+    update_interval: int = API_RATE_LIMIT
+    last_update_ts: Optional[float] = None
+    in_process: bool = False
+    _energy_update_interval: int = DEFAULT_ENER_UP_INT
+    _energy_check: bool = True
+    time_zone: str = DEFAULT_TZ
+ 
     def __init__(self, username, password, time_zone=DEFAULT_TZ,
                  debug=False, redact=True):
         """Initialize VeSync Manager.
@@ -68,56 +85,19 @@ class VeSync:  # pylint: disable=function-redefined
                 True if logged in to VeSync, False if not
         """
         self.debug = debug
-        if debug:  # pragma: no cover
-            logger.setLevel(logging.DEBUG)
-            bulb_logger.setLevel(logging.DEBUG)
-            fan_logger.setLevel(logging.DEBUG)
-            helper_logger.setLevel(logging.DEBUG)
-            kitchen_logger.setLevel(logging.DEBUG)
-            switch_logger.setLevel(logging.DEBUG)
-            outlet_logger.setLevel(logging.DEBUG)
-        self._redact = redact
-        if redact:
-            self.redact = redact
+        self.redact = redact
         self.username = username
         self.password = password
-        self.token = None
-        self.account_id = None
-        self.country_code = None
-        self.devices = None
-        self.enabled = False
-        self.update_interval = API_RATE_LIMIT
-        self.last_update_ts = None
-        self.in_process = False
-        self._energy_update_interval = DEFAULT_ENER_UP_INT
-        self._energy_check = True
-        self._dev_list = {}
-        self.outlets = []
-        self.switches = []
-        self.fans = []
-        self.bulbs = []
-        self.scales = []
-        self.kitchen = []
-
-        self._dev_list = {
-            'fans': self.fans,
-            'outlets': self.outlets,
-            'switches': self.switches,
-            'bulbs': self.bulbs,
-            'kitchen': self.kitchen
-        }
+        self._device_list: list[VeSyncBaseDevice] = []
 
         if isinstance(time_zone, str) and time_zone:
             reg_test = r'[^a-zA-Z/_]'
             if bool(re.search(reg_test, time_zone)):
-                self.time_zone = DEFAULT_TZ
-                logger.debug('Invalid characters in time zone - %s',
-                             time_zone)
+                logger.warning('Invalid characters in time zone %s - using default!', time_zone)
             else:
                 self.time_zone = time_zone
         else:
-            self.time_zone = DEFAULT_TZ
-            logger.debug('Time zone is not a string')
+            logger.warning('Time zone is not a string - using default!')
 
     @property
     def debug(self) -> bool:
@@ -127,6 +107,7 @@ class VeSync:  # pylint: disable=function-redefined
     @debug.setter
     def debug(self, new_flag: bool) -> None:
         """Set debug flag."""
+        self._debug = new_flag
         level = logging.DEBUG if new_flag else logging.WARNING
 
         logger.setLevel(level)
@@ -135,8 +116,7 @@ class VeSync:  # pylint: disable=function-redefined
         helper_logger.setLevel(level)
         outlet_logger.setLevel(level)
         switch_logger.setLevel(level)
-
-        self._debug = new_flag
+        kitchen_logger.setLevel(logging.DEBUG)
 
     @property
     def redact(self) -> bool:
@@ -147,9 +127,9 @@ class VeSync:  # pylint: disable=function-redefined
     def redact(self, new_flag: bool) -> None:
         """Set debug flag."""
         if new_flag:
-            Helpers.shouldredact = True
+            Helpers.should_redact = True
         elif new_flag is False:
-            Helpers.shouldredact = False
+            Helpers.should_redact = False
         self._redact = new_flag
 
     @property
@@ -186,23 +166,21 @@ class VeSync:  # pylint: disable=function-redefined
     def add_dev_test(self, new_dev: dict) -> bool:
         """Test if new device should be added - True = Add."""
         if 'cid' in new_dev:
-            for _, v in self._dev_list.items():
-                for dev in v:
-                    if (
-                        dev.cid == new_dev.get('cid')
-                        and new_dev.get('subDeviceNo', 0) == dev.sub_device_no
-                    ):
-                        return False
+            for dev in self._device_list:
+                if (
+                    dev.cid == new_dev.get('cid')
+                    and new_dev.get('subDeviceNo', 0) == dev.sub_device_no
+                ):
+                    return False
         return True
 
     def remove_old_devices(self, devices: list) -> bool:
         """Remove devices not found in device list return."""
-        for k, v in self._dev_list.items():
-            before = len(v)
-            v[:] = [x for x in v if self.remove_dev_test(x, devices)]
-            after = len(v)
-            if before != after:
-                logger.debug('%s %s removed', str((before - after)), k)
+        before = len(self._device_list)
+        self._device_list = [x for x in self._device_list if self.remove_dev_test(x, devices)]
+        after = len(self._device_list)
+        if before != after:
+            logger.debug('%s devices removed', str((before - after)))
         return True
 
     @staticmethod
@@ -226,13 +204,7 @@ class VeSync:  # pylint: disable=function-redefined
                             devices) if j not in dev_rem]
         return devices
 
-    def _generic_factory(self, dev_type: str, details: dict, factory, devices: list):
-        device = factory(dev_type, details, self)
-        if device:
-            devices.append(device)
-        return device
-
-    def object_factory(self, dev_type: str, details: dict) -> VeSyncBaseDevice:
+    def object_factory(self, details: dict) -> VeSyncBaseDevice:
         """Get device type and instantiate class.
 
         Pulls the device types from each module to determine the type of device and
@@ -241,31 +213,29 @@ class VeSync:  # pylint: disable=function-redefined
         Args:
             dev_type (str): Device model type returned from API
             config (dict): Device configuration from `VeSync.get_devices()` API call
-            manager (VeSync): VeSync manager object
 
         Returns:
             VeSyncBaseDevice: instantiated device object or None for unsupported devices.
 
         Note:
             Each device type implements a factory for the supported device types.
-            the newly created device instance is added to the appropriate list.
+            the newly created device instance is added to the device list.
         """
-        dev_obj = self._generic_factory(dev_type, details, fan_factory, self.fans)
-        if dev_obj is None:
-            dev_obj = self._generic_factory(dev_type, details, outlet_factory, self.outlets)
-        if dev_obj is None:
-            dev_obj = self._generic_factory(dev_type, details, switch_factory, self.switches)
-        if dev_obj is None:
-            dev_obj = self._generic_factory(dev_type, details, bulb_factory, self.bulbs)
-        if dev_obj is None:
-            dev_obj = self._generic_factory(dev_type, details, kitchen_factory, self.kitchen)
-        if (dev_obj is None):
-            logger.debug('Unknown device %s named %s model %s',
-                        dev_type,
-                        details.get('deviceName', ''),
-                        details.get('deviceType', '')
-                        )
-        return dev_obj
+        dev_type = details.get('deviceType')
+        dev_name = details.get('deviceName', '#MISS#')
+        for factory in FACTORIES:
+            try:
+                device = factory(dev_type, details, self)
+                if device:
+                    self._device_list.append(device)
+                    break
+            except AttributeError as err:
+                logger.debug('Error - %s: device %s(%s) not added', err, dev_name, dev_type)
+
+        if (device is None):
+            logger.debug('Unknown device %s (%s) - not added!', dev_type, dev_name)
+
+        return device
 
     def process_devices(self, dev_list: list) -> bool:
         """Instantiate Device Objects.
@@ -275,12 +245,7 @@ class VeSync:  # pylint: disable=function-redefined
         """
         devices = VeSync.set_dev_id(dev_list)
 
-        num_devices = 0
-        for _, v in self._dev_list.items():
-            if isinstance(v, list):
-                num_devices += len(v)
-            else:
-                num_devices += 1
+        num_devices = len(self._device_list)
 
         if not devices:
             logger.warning('No devices found in api return')
@@ -291,19 +256,13 @@ class VeSync:  # pylint: disable=function-redefined
             self.remove_old_devices(devices)
 
         devices[:] = [x for x in devices if self.add_dev_test(x)]
-
+        self._device_list = []
         detail_keys = ['deviceType', 'deviceName', 'deviceStatus']
-        for dev in devices:
-            if not all(k in dev for k in detail_keys):
+        for dev_details in devices:
+            if not all(k in dev_details for k in detail_keys):
                 logger.debug('Error adding device')
                 continue
-            dev_type = dev.get('deviceType')
-            try:
-                device_obj = self.object_factory(dev_type, dev)
-            except AttributeError as err:
-                logger.debug('Error - %s', err)
-                logger.debug('%s device not added', dev_type)
-                continue
+            self.object_factory(dev_details)
 
         return True
 
@@ -316,17 +275,18 @@ class VeSync:  # pylint: disable=function-redefined
             return False
 
         self.in_process = True
+
         proc_return = False
-        response, _ = Helpers.call_api(
-            '/cloud/v1/deviceManaged/devices',
-            'post',
+        body = Helpers.req_body_devices(self)
+        r = Helpers.call_api('/cloud/v1/deviceManaged/devices',
+            method='post',
             headers=Helpers.req_header_bypass(),
-            json_object=Helpers.req_body(self, 'devicelist'),
+            json_object=body
         )
 
-        if response and Helpers.code_check(response):
-            if 'result' in response and 'list' in response['result']:
-                device_list = response['result']['list']
+        if r and Helpers.code_check(r):
+            if 'result' in r and 'list' in r['result']:
+                device_list = r['result']['list']
                 proc_return = self.process_devices(device_list)
             else:
                 logger.error('Device list in response not found')
@@ -354,15 +314,15 @@ class VeSync:  # pylint: disable=function-redefined
             logger.error('Password invalid')
             return False
 
-        response, _ = Helpers.call_api(
-            '/cloud/v1/user/login', 'post',
-            json_object=Helpers.req_body(self, 'login')
+        r = Helpers.call_api('/cloud/v1/user/login',
+            'post',
+            json_object=Helpers.req_body_login(self)
         )
 
-        if Helpers.code_check(response) and 'result' in response:
-            self.token = response.get('result').get('token')
-            self.account_id = response.get('result').get('accountID')
-            self.country_code = response.get('result').get('countryCode')
+        if Helpers.code_check(r) and 'result' in r:
+            self.token = r.get('result').get('token')
+            self.account_id = r.get('result').get('accountID')
+            self.country_code = r.get('result').get('countryCode')
             self.enabled = True
             logger.debug('Login successful')
             logger.debug('token %s', self.token)
@@ -391,24 +351,50 @@ class VeSync:  # pylint: disable=function-redefined
             if not self.enabled:
                 logger.error('Not logged in to VeSync')
                 return
+
             self.get_devices()
 
-            devices = list(self._dev_list.values())
-
             logger.debug('Start updating the device details one by one')
-            for device in chain(*devices):
-                device.update()
+            self.update_all_devices()
 
             self.last_update_ts = time.time()
 
     def update_energy(self, bypass_check=False) -> None:
         """Fetch updated energy information for outlet devices."""
-        if self.outlets:
-            for outlet in self.outlets:
-                outlet.update_energy(bypass_check)
+        for outlet in self.outlets:
+            outlet.update_energy(bypass_check)
 
     def update_all_devices(self) -> None:
         """Run `get_details()` for each device and update state."""
-        devices = list(self._dev_list.values())
-        for dev in chain(*devices):
+        for dev in self._device_list:
             dev.update()
+
+    @property
+    def bulbs(self) -> List[VeSyncBaseDevice]:
+        '''Returns a list of all registered bulbs'''
+        return [dev for dev in self._device_list if dev.device_family == EDeviceFamily.BULB]
+
+    @property
+    def fans(self) -> List[VeSyncBaseDevice]:
+        '''Returns a list of all registered fans'''
+        return [dev for dev in self._device_list if dev.device_family == EDeviceFamily.FAN]
+
+    @property
+    def kitchen(self) -> List[VeSyncBaseDevice]:
+        '''Returns a list of all registered kitchen devices'''
+        return [dev for dev in self._device_list if dev.device_family == EDeviceFamily.KITCHEN]
+
+    @property
+    def outlets(self) -> List[VeSyncBaseDevice]:
+        '''Returns a list of all registered outlets'''
+        return [dev for dev in self._device_list if dev.device_family == EDeviceFamily.OUTLET]
+
+    @property
+    def switches(self) -> List[VeSyncBaseDevice]:
+        '''Returns a list of all registered switches'''
+        return [dev for dev in self._device_list if dev.device_family == EDeviceFamily.SWITCH]
+
+    @property
+    def device_list(self) -> List[VeSyncBaseDevice]:
+        '''Returns a list of all registered devices'''
+        return [dev for dev in self._device_list]

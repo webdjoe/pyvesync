@@ -2,13 +2,12 @@
 from __future__ import annotations
 import logging
 import json
-from typing import TYPE_CHECKING
-from pyvesync.helpers import Helpers as helper  # noqa: N813
+from typing import Optional
+from abc import ABCMeta, abstractmethod
+
+from .helpers import Helpers, EDeviceFamily
 
 logger = logging.getLogger(__name__)
-
-if TYPE_CHECKING:
-    from pyvesync import VeSync
 
 STATUS_ON = 'on'
 STATUS_OFF = 'off'
@@ -58,43 +57,66 @@ class VeSyncBaseDevice:
         display(): Print formatted device info to stdout.
         displayJSON(): JSON API for device details.
     """
+    manager = None # VeSync
+    cid: str = None
+    config: dict = {}
+    config_module: str = None
+    connection_status: str = None
+    connection_type: Optional[str] = None
+    current_firm_version: str = None
+    device_family: EDeviceFamily = EDeviceFamily.NOT_SUPPORTED
+    device_name: str = None
+    device_image: str = None
+    device_region: Optional[str] = None
+    device_status: Optional[str] = None
+    device_type: str = None
+    extension = None
+    mac_id: Optional[str] = None
+    mode: Optional[str] = None
+    pid = None
+    speed: Optional[int] = None
+    sub_device_no: int = 0
+    type: Optional[str] = None
+    uuid: Optional[str] = None
+    speed: Optional[str] = None
+    
+    __metaclass__ = ABCMeta
 
-    def __init__(self, details: dict, manager: VeSync) -> None:
+    def __init__(self, details: dict, manager, device_family: EDeviceFamily) -> None:
         """Initialize VeSync device base class."""
         self.manager = manager
         if 'cid' in details and details['cid'] is not None:
-            self.device_name: str = details['deviceName']
-            self.device_image: str | None = details.get('deviceImg')
-            self.cid: str = details['cid']
-            self.connection_status: str = details['connectionStatus']
-            self.connection_type: str | None = details.get(
-                'connectionType')
-            self.device_type: str = details['deviceType']
-            self.type: str | None = details.get('type')
-            self.uuid: str | None = details.get('uuid')
-            self.config_module: str = details['configModule']
-            self.mac_id: str | None = details.get('macID')
-            self.mode: str | None = details.get('mode')
-            self.speed: int | None = details.get('speed') if details.get(
-                'speed') != '' else None
+            self.device_name = details['deviceName']
+            self.device_image = details.get('deviceImg')
+            self.cid = details['cid']
+            self.connection_status = details['connectionStatus']
+            self.connection_type = details.get('connectionType')
+            self.device_type = details['deviceType']
+            self.type = details.get('type')
+            self.uuid = details.get('uuid')
+            self.config_module = details['configModule']
+            self.mac_id = details.get('macID')
+            self.mode = details.get('mode')
+            self.speed = details.get('speed') if details.get('speed') != '' else None
             self.extension = details.get('extension')
-            self.current_firm_version = details.get(
-                    'currentFirmVersion')
-            self.device_region: str | None = details.get('deviceRegion')
+            self.current_firm_version = details.get('currentFirmVersion')
+            self.device_region = details.get('deviceRegion')
             self.pid = None
             self.sub_device_no = details.get('subDeviceNo', 0)
-            self.config: dict = {}
             if isinstance(details.get('extension'), dict):
                 ext = details['extension']
                 self.speed = ext.get('fanSpeedLevel')
                 self.mode = ext.get('mode')
             if self.connection_status != 'online':
-                self.device_status: str | None = STATUS_OFF
+                self.device_status = STATUS_OFF
             else:
                 self.device_status = details.get('deviceStatus')
 
+            self.device_family = device_family
+
         else:
             logger.error('No cid found for %s', self.__class__.__name__)
+        self.details = {}
 
     def __eq__(self, other: object) -> bool:
         """Use device CID and subdevice number to test equality."""
@@ -141,15 +163,21 @@ class VeSyncBaseDevice:
             logger.debug('Call device.get_config() to get firmware versions')
         return False
 
+    def call_api_v1(self, api, body):
+        r = Helpers.call_api(f'/cloud/v1/deviceManaged/{api}',
+            method='post',
+            headers=Helpers.req_header_bypass(self.manager),
+            json_object=body
+        )
+        return r
+
     def get_pid(self) -> None:
         """Get managed device configuration."""
-        body = helper.req_body(self.manager, 'devicedetail')
+        body = Helpers.req_body_device_detail(self.manager)
         body['configModule'] = self.config_module
         body['region'] = self.device_region
         body['method'] = 'configInfo'
-        r, _ = helper.call_api('/cloud/v1/deviceManaged/configInfo',
-                               'post',
-                               json_object=body)
+        r = self.call_api_v1('configInfo', body)
         if not isinstance(r, dict) or r.get('code') != 0 or r.get('result') is None:
             logger.error('Error getting config info for %s', self.device_name)
             return
@@ -214,3 +242,24 @@ class VeSyncBaseDevice:
                 'CID': self.cid,
             },
             indent=4)
+
+    @abstractmethod
+    def turn(self, status: str) -> bool:
+        """Turn on/off vesync lightbulb.
+
+        Helper function called by `turn_on()` and `turn_off()`.
+
+        Args:
+            status (str): 'on' or 'off'
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+
+    def turn_on(self) -> bool:
+        """Turn on device and return True if successful."""
+        return self.turn(STATUS_ON)
+
+    def turn_off(self) -> bool:
+        """Turn off devivce and return True if successful."""
+        return self.turn(STATUS_OFF)

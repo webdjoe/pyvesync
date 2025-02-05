@@ -1,4 +1,5 @@
 get_details:
+  api: /v1/device/wifi-switch-1.3-CID/detail
   headers:
     accept-language: en
     accountId: sample_id
@@ -7,8 +8,8 @@ get_details:
     tk: sample_tk
     tz: America/New_York
   method: get
-  url: /v1/device/wifi-switch-1.3-CID/detail
 get_monthly_energy:
+  api: /v1/device/wifi-switch-1.3-CID/energy/month
   headers:
     accept-language: en
     accountId: sample_id
@@ -17,8 +18,8 @@ get_monthly_energy:
     tk: sample_tk
     tz: America/New_York
   method: get
-  url: /v1/device/wifi-switch-1.3-CID/energy/month
 get_weekly_energy:
+  api: /v1/device/wifi-switch-1.3-CID/energy/week
   headers:
     accept-language: en
     accountId: sample_id
@@ -27,8 +28,8 @@ get_weekly_energy:
     tk: sample_tk
     tz: America/New_York
   method: get
-  url: /v1/device/wifi-switch-1.3-CID/energy/week
 get_yearly_energy:
+  api: /v1/device/wifi-switch-1.3-CID/energy/year
   headers:
     accept-language: en
     accountId: sample_id
@@ -37,8 +38,8 @@ get_yearly_energy:
     tk: sample_tk
     tz: America/New_York
   method: get
-  url: /v1/device/wifi-switch-1.3-CID/energy/year
 turn_off:
+  api: /v1/wifi-switch-1.3/wifi-switch-1.3-CID/status/off
   headers:
     accept-language: en
     accountId: sample_id
@@ -47,8 +48,8 @@ turn_off:
     tk: sample_tk
     tz: America/New_York
   method: put
-  url: /v1/wifi-switch-1.3/wifi-switch-1.3-CID/status/off
 turn_on:
+  api: /v1/wifi-switch-1.3/wifi-switch-1.3-CID/status/on
   headers:
     accept-language: en
     accountId: sample_id
@@ -57,8 +58,8 @@ turn_on:
     tk: sample_tk
     tz: America/New_York
   method: put
-  url: /v1/wifi-switch-1.3/wifi-switch-1.3-CID/status/on
 update:
+  api: /v1/device/wifi-switch-1.3-CID/detail
   headers:
     accept-language: en
     accountId: sample_id
@@ -67,4 +68,3 @@ update:
     tk: sample_tk
     tz: America/New_York
   method: get
-  url: /v1/device/wifi-switch-1.3-CID/detail

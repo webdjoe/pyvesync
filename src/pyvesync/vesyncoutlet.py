@@ -6,8 +6,12 @@ import json
 import sys
 from abc import ABCMeta, abstractmethod
 from datetime import datetime, timedelta
-from pyvesync.helpers import Helpers
-from pyvesync.vesyncbasedevice import VeSyncBaseDevice, STATUS_ON, STATUS_OFF, MODE_AUTO, MODE_MANUAL
+from .helpers import (
+    Helpers, EDeviceFamily, 
+    ENERGY_WEEK, ENERGY_MONTH, ENERGY_YEAR, PERIOD_2_DAYS,
+    ERR_REQ_TIMEOUTS
+)
+from .vesyncbasedevice import VeSyncBaseDevice, STATUS_ON, STATUS_OFF, MODE_AUTO, MODE_MANUAL
 
 logger = logging.getLogger(__name__)
 
@@ -36,21 +40,20 @@ outlet_modules = {k: v['module'] for k, v in outlet_config.items()}
 
 __all__ = list(outlet_modules.values()) + ['outlet_modules']
 
-ENERGY_WEEK  = 'week'
-ENERGY_MONTH = 'month'
-ENERGY_YEAR  = 'year'
-PERIOD_2_DAYS = {ENERGY_WEEK: 7, ENERGY_MONTH: 30, ENERGY_YEAR: 365}
-
 class   VeSyncOutlet(VeSyncBaseDevice):
     """Base class for Etekcity Outlets."""
+
+    energy: dict = {}
+    update_energy_ts: float = 0
+    _energy_update_interval: float = 0
+    energy_period: bool = True
+    device_family = EDeviceFamily.OUTLET
 
     __metaclass__ = ABCMeta
 
     def __init__(self, details, manager, energy_period = True):
         """Initialize VeSync Outlet base class."""
-        super().__init__(details, manager)
-
-        self.details = {}
+        super().__init__(details, manager, EDeviceFamily.OUTLET)
         self.energy = {}
         self.update_energy_ts = None
         self._energy_update_interval = manager.energy_update_interval
@@ -66,18 +69,6 @@ class   VeSyncOutlet(VeSyncBaseDevice):
                 > self._energy_update_interval):
             return True
         return False
-
-    @abstractmethod
-    def turn(self, status) -> bool:
-        """Get configuration and firmware details."""
-
-    def turn_on(self) -> bool:
-        """Turn outdoor outlet on and return True if successful."""
-        return self.turn(STATUS_ON)
-
-    def turn_off(self) -> bool:
-        """Turn outdoor outlet off and return True if successful."""
-        return self.turn(STATUS_OFF)
 
     @abstractmethod
     def get_details(self) -> bool:
@@ -208,19 +199,16 @@ class   VeSyncOutlet(VeSyncBaseDevice):
 
 class VeSyncOutlet7A(VeSyncOutlet):
     """Etekcity 7A Round Outlet Class."""
+    det_keys = ['deviceStatus', 'activeTime', 'energy', 'power', 'voltage']
+    energy_keys = ['energyConsumptionOfToday', 'maxEnergy', 'totalEnergy']
 
     def __init__(self, details, manager):
         """Initialize Etekcity 7A round outlet class."""
         super().__init__(details, manager)
-        self.det_keys = ['deviceStatus', 'activeTime',
-                         'energy', 'power', 'voltage']
-        self.energy_keys = ['energyConsumptionOfToday',
-                            'maxEnergy', 'totalEnergy']
 
     def get_details(self) -> bool:
         """Get 7A outlet details."""
-        r, _ = Helpers.call_api(
-            f'/v1/device/{self.cid}/detail',
+        r = Helpers.call_api(f'/v1/device/{self.cid}/detail',
             'get',
             headers=Helpers.req_headers(self.manager),
         )
@@ -253,8 +241,7 @@ class VeSyncOutlet7A(VeSyncOutlet):
 
     def get_energy(self, period) -> dict:
         """Get 7A outlet energy for period info and buld weekly energy dict."""
-        r, _ = Helpers.call_api(
-            f'/v1/device/{self.cid}/energy/{period}',
+        r = Helpers.call_api(f'/v1/device/{self.cid}/energy/{period}',
             'get',
             headers=Helpers.req_headers(self.manager),
         )
@@ -267,24 +254,22 @@ class VeSyncOutlet7A(VeSyncOutlet):
         return self.energy[period]
 
     def turn(self, status) -> bool:
-        """Toggle 7A outlet status- return True if successful."""
-        _, status_code = Helpers.call_api(
-            f'/v1/wifi-switch-1.3/{self.cid}/status/{status}',
+        """Turn 7A outlet on/off - return True if successful."""
+        r = Helpers.call_api(f'/v1/wifi-switch-1.3/{self.cid}/status/{status}',
             'put',
             headers=Helpers.req_headers(self.manager),
         )
 
-        if status_code is not None and status_code == 200:
-            self.device_status = status
-            return True
+        if r is None:
+            logger.error(f'Error turning {self.device_name} {status}!')
+            return False
+        self.device_status = status
+        return True
 
-        logger.error(f'Error turning {self.device_name} {status}!')
-        return False
 
     def get_config(self) -> dict:
         """Get 7A outlet configuration info."""
-        r, _ = Helpers.call_api(
-            f'/v1/device/{self.cid}/configurations',
+        r = Helpers.call_api(f'/v1/device/{self.cid}/configurations',
             'get',
             headers=Helpers.req_headers(self.manager),
         )
@@ -304,17 +289,20 @@ class VeSyncOutlet10A(VeSyncOutlet):
         """Initialize 10A outlet class."""
         super().__init__(details, manager)
 
-    def get_details(self) -> bool:
-        """Get 10A outlet details."""
-        body = Helpers.req_body(self.manager, 'devicedetail')
-        body['uuid'] = self.uuid
-
-        r, _ = Helpers.call_api(
-            '/10a/v1/device/devicedetail',
-            'post',
+    def call_api(self, api, method, body):
+        r = Helpers.call_api(f'/10a/v1/device/{api}',
+            method=method,
             headers=Helpers.req_headers(self.manager),
             json_object=body,
         )
+        return r
+
+    def get_details(self) -> bool:
+        """Get 10A outlet details."""
+        body = Helpers.req_body_device_detail(self.manager)
+        body['uuid'] = self.uuid
+
+        r = self.call_api('devicedetail', 'post', body)
 
         if Helpers.code_check(r):
             self.device_status = r.get('deviceStatus', self.device_status)
@@ -328,16 +316,11 @@ class VeSyncOutlet10A(VeSyncOutlet):
 
     def get_config(self) -> dict:
         """Get 10A outlet configuration info."""
-        body = Helpers.req_body(self.manager, 'devicedetail')
+        body = Helpers.req_body_device_detail(self.manager)
         body['uuid'] = self.uuid
         body['method'] = 'configurations'
 
-        r, _ = Helpers.call_api(
-            '/10a/v1/device/configurations',
-            'post',
-            headers=Helpers.req_headers(self.manager),
-            json_object=body,
-        )
+        r = self.call_api('configurations', 'post', body)
 
         if Helpers.code_check(r):
             self.config = Helpers.build_config_dict(r)
@@ -348,37 +331,27 @@ class VeSyncOutlet10A(VeSyncOutlet):
 
     def get_energy(self, period) -> dict:
         """Get 10A outlet energy for period info and populate energy dict."""
-        body = Helpers.req_body(self.manager, f'energy_{period}')
+        body = Helpers.req_body_energy(self.manager, period)
         body['uuid'] = self.uuid
 
-        response, _ = Helpers.call_api(
-            f'/10a/v1/device/energy{period}',
-            'post',
-            headers=Helpers.req_headers(self.manager),
-            json_object=body,
-        )
+        r = self.call_api(f'energy{period}', 'post', body)
 
-        if Helpers.code_check(response):
-            self.energy[period] = Helpers.build_energy_dict(response)
+        if Helpers.code_check(r):
+            self.energy[period] = Helpers.build_energy_dict(r)
         else:
             self.energy[period] = None
             logger.error(f'Unable to get {self.device_name} energy-data for {period}!')
         return self.energy[period]
 
     def turn(self, status) -> bool:
-        """Toggle 10A outlet status - return True if successful."""
-        body = Helpers.req_body(self.manager, 'devicestatus')
+        """Turn 10A outlet on/off - return True if successful."""
+        body = Helpers.req_body_status(self.manager)
         body['uuid'] = self.uuid
         body['status'] = status
 
-        response, _ = Helpers.call_api(
-            '/10a/v1/device/devicestatus',
-            'put',
-            headers=Helpers.req_headers(self.manager),
-            json_object=body,
-        )
+        r = self.call_api('devicestatus', 'put', body)
 
-        if Helpers.code_check(response):
+        if Helpers.code_check(r):
             self.device_status = status
             return True
         logger.warning(f'Error turning {self.device_name} {status}!')
@@ -388,23 +361,28 @@ class VeSyncOutlet10A(VeSyncOutlet):
 class VeSyncOutlet15A(VeSyncOutlet):
     """Class for Etekcity 15A Rectangular Outlets."""
 
+    nightlight_status: str = None
+    nightlight_brightness: float = 0
+
     def __init__(self, details, manager):
         """Initialize 15A rectangular outlets."""
         super().__init__(details, manager)
         self.nightlight_status = STATUS_OFF
         self.nightlight_brightness = 0
 
-    def get_details(self) -> bool:
-        """Get 15A outlet details."""
-        body = Helpers.req_body(self.manager, 'devicedetail')
-        body['uuid'] = self.uuid
-
-        r, _ = Helpers.call_api(
-            '/15a/v1/device/devicedetail',
-            'post',
+    def call_api(self, api, method, body):
+        r = Helpers.call_api(f'/15a/v1/device/{api}',
+            method=method,
             headers=Helpers.req_headers(self.manager),
             json_object=body,
         )
+        return r
+    def get_details(self) -> bool:
+        """Get 15A outlet details."""
+        body = Helpers.req_body_device_detail(self.manager)
+        body['uuid'] = self.uuid
+
+        r = self.call_api('devicedetail', 'post', body)
 
         attr_list = (
             'deviceStatus',
@@ -430,16 +408,11 @@ class VeSyncOutlet15A(VeSyncOutlet):
 
     def get_config(self) -> dict:
         """Get 15A outlet configuration info."""
-        body = Helpers.req_body(self.manager, 'devicedetail')
+        body = Helpers.req_body_device_detail(self.manager)
         body['method'] = 'configurations'
         body['uuid'] = self.uuid
 
-        r, _ = Helpers.call_api(
-            '/15a/v1/device/configurations',
-            'post',
-            headers=Helpers.req_headers(self.manager),
-            json_object=body,
-        )
+        r = self.call_api('configurations', 'post', body)
 
         if Helpers.code_check(r):
             self.config = Helpers.build_config_dict(r)
@@ -450,65 +423,50 @@ class VeSyncOutlet15A(VeSyncOutlet):
 
     def get_energy(self, period) -> dict:
         """Get 15A outlet energy for period info and populate energy dict."""
-        body = Helpers.req_body(self.manager, f'energy_{period}')
+        body = Helpers.req_body_energy(self.manager, period)
         body['uuid'] = self.uuid
 
-        response, _ = Helpers.call_api(
-            f'/15a/v1/device/energy{period}',
-            'post',
-            headers=Helpers.req_headers(self.manager),
-            json_object=body,
-        )
+        r = self.call_api(f'energy{period}', 'post', body)
 
-        if Helpers.code_check(response):
-            self.energy[period] = Helpers.build_energy_dict(response)
+        if Helpers.code_check(r):
+            self.energy[period] = Helpers.build_energy_dict(r)
         else:
             self.energy[period] = None
             logger.error(f'Unable to get {self.device_name} energy-data for {period}!')
         return self.energy[period]
 
     def turn(self, status) -> bool:
-        """Toggle 15A outlet status - return True if successful."""
-        body = Helpers.req_body(self.manager, 'devicestatus')
+        """Turn 15A outlet on/off - return True if successful."""
+        body = Helpers.req_body_status(self.manager)
         body['uuid'] = self.uuid
         body['status'] = status
 
-        response, _ = Helpers.call_api(
-            '/15a/v1/device/devicestatus',
-            'put',
-            headers=Helpers.req_headers(self.manager),
-            json_object=body,
-        )
+        r = self.call_api('devicestatus', 'put', body)
 
-        if Helpers.code_check(response):
+        if Helpers.code_check(r):
             self.device_status = status
             return True
         logger.warning(f'Error turning {self.device_name} {status}!')
         return False
 
-    def toggle_nightlight(self, mode) -> bool:
-        body = Helpers.req_body(self.manager, 'devicestatus')
+    def turn_nightlight(self, mode) -> bool:
+        body = Helpers.req_body_status(self.manager)
         body['uuid'] = self.uuid
         body['mode'] = mode
-        response, _ = Helpers.call_api(
-            '/15a/v1/device/nightlightstatus',
-            'put',
-            headers=Helpers.req_headers(self.manager),
-            json_object=body,
-        )
+        r = self.call_api('nightlightstatus', 'put', body)
 
-        if Helpers.code_check(response):
+        if Helpers.code_check(r):
             return True
         logger.debug(f'Error turning {self.device_name} to {mode} nightlight!')
         return False
 
     def turn_on_nightlight(self) -> bool:
         """Turn on nightlight."""
-        return self.toggle_nightlight(MODE_AUTO)
+        return self.turn_nightlight(MODE_AUTO)
 
     def turn_off_nightlight(self) -> bool:
-        """Turn Off Nightlight."""
-        return self.toggle_nightlight(MODE_MANUAL)
+        """Turn off Nightlight."""
+        return self.turn_nightlight(MODE_MANUAL)
 
 
 class VeSyncOutdoorPlug(VeSyncOutlet):
@@ -518,16 +476,18 @@ class VeSyncOutdoorPlug(VeSyncOutlet):
         """Initialize Etekcity Outdoor Plug class."""
         super().__init__(details, manager)
 
-    def get_details(self) -> bool:
-        """Get details for outdoor outlet."""
-        body = Helpers.req_body(self.manager, 'devicedetail')
-        body['uuid'] = self.uuid
-        r, _ = Helpers.call_api(
-            '/outdoorsocket15a/v1/device/devicedetail',
-            'post',
+    def call_api(self, api, method, body):
+        r = Helpers.call_api(f'/outdoorsocket15a/v1/device/{api}',
+            method=method,
             headers=Helpers.req_headers(self.manager),
             json_object=body,
         )
+        return r
+    def get_details(self) -> bool:
+        """Get details for outdoor outlet."""
+        body = Helpers.req_body_device_detail(self.manager)
+        body['uuid'] = self.uuid
+        r = self.call_api('devicedetail', 'post', body)
 
         if Helpers.code_check(r):
             self.details = Helpers.build_details_dict(r)
@@ -543,16 +503,11 @@ class VeSyncOutdoorPlug(VeSyncOutlet):
 
     def get_config(self) -> dict:
         """Get configuration info for outdoor outlet."""
-        body = Helpers.req_body(self.manager, 'devicedetail')
+        body = Helpers.req_body_device_detail(self.manager)
         body['method'] = 'configurations'
         body['uuid'] = self.uuid
 
-        r, _ = Helpers.call_api(
-            '/outdoorsocket15a/v1/device/configurations',
-            'post',
-            headers=Helpers.req_headers(self.manager),
-            json_object=body,
-        )
+        r = self.call_api('configurations', 'post', body)
 
         if Helpers.code_check(r):
             self.config = Helpers.build_config_dict(r)
@@ -563,38 +518,28 @@ class VeSyncOutdoorPlug(VeSyncOutlet):
 
     def get_energy(self, period) -> dict:
         """Get outdoor outlet energy for period info and populate energy dict."""
-        body = Helpers.req_body(self.manager, f'energy_{period}')
+        body = Helpers.req_body_energy(self.manager, period)
         body['uuid'] = self.uuid
 
-        response, _ = Helpers.call_api(
-            f'/outdoorsocket15a/v1/device/energy{period}',
-            'post',
-            headers=Helpers.req_headers(self.manager),
-            json_object=body,
-        )
+        r = self.call_api(f'energy{period}', 'post', body)
 
-        if Helpers.code_check(response):
-            self.energy[period] = Helpers.build_energy_dict(response)
+        if Helpers.code_check(r):
+            self.energy[period] = Helpers.build_energy_dict(r)
         else:
             self.energy[period] = None
             logger.error(f'Unable to get {self.device_name} energy-data for {period}!')
         return self.energy[period]
 
     def turn(self, status) -> bool:
-        """Toggle power for outdoor outlet."""
-        body = Helpers.req_body(self.manager, 'devicestatus')
+        """Turn outdoor outlet on/off."""
+        body = Helpers.req_body_status(self.manager)
         body['uuid'] = self.uuid
         body['status'] = status
         body['switchNo'] = self.sub_device_no
 
-        response, _ = Helpers.call_api(
-            '/outdoorsocket15a/v1/device/devicestatus',
-            'put',
-            headers=Helpers.req_headers(self.manager),
-            json_object=body,
-        )
+        r = self.call_api('devicestatus', 'put', body)
 
-        if Helpers.code_check(response):
+        if Helpers.code_check(r):
             self.device_status = status
             return True
         logger.warning(f'Error turning {self.device_name} {status}')
@@ -609,18 +554,16 @@ class VeSyncOutletV2(VeSyncOutlet):
         super().__init__(details, manager, False)
 
     def get_body_v2(self) -> dict:
-        body = Helpers.req_body(self.manager, ('bypassV2'))
-        body['cid'] = self.cid
-        body['configModule'] = self.config_module
+        body = {
+            **Helpers.req_body_bypass_v2(self.manager),
+            'cid': self.cid,
+            'configModule': self.config_module
+        }
         return body
 
-    def get_response(self, body, rel_path = '/cloud/v2/deviceManaged/bypassV2') -> dict:
-        response, _ = Helpers.call_api(
-            rel_path,
-            'post',
-            json_object=body,
-            headers=Helpers.req_header_bypass(),
-        )
+    def get_response(self, body) -> dict:
+        response = Helpers.post_device_managed_v2(body)
+
         if Helpers.code_check(response):
             code = response['result']
             if (code['code'] == 0):
@@ -630,7 +573,7 @@ class VeSyncOutletV2(VeSyncOutlet):
         if response:
             err_code = response['code']
             err_msg  = response['msg']
-            if (err_code != -11300030):
+            if (err_code not in ERR_REQ_TIMEOUTS):
                 logger.error(f'Failed {self.device_name}::{body["payload"]["method"]} - {err_msg} ({err_code})')
             return None, (err_code, err_msg)
         self.connection_status = 'offline'

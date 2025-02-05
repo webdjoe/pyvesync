@@ -130,7 +130,7 @@ class TestSwitches(TestBase):
         device_config = call_json.DeviceList.device_list_item(dev_type)
 
         # Instantiate device from device list return item
-        switch_obj = self.manager.object_factory(dev_type, device_config)
+        switch_obj = self.manager.object_factory(device_config)
 
         # Get method from device object
         method_call = getattr(switch_obj, method)
@@ -203,7 +203,7 @@ class TestSwitches(TestBase):
         device_config = call_json.DeviceList.device_list_item(dev_type)
 
         # Instantiate device from device list return item
-        switch_obj = self.manager.object_factory(dev_type, device_config)
+        switch_obj = self.manager.object_factory(device_config)
 
         # Get method from device object
         method_call = getattr(switch_obj, method[0])
@@ -224,8 +224,7 @@ class TestSwitches(TestBase):
         all_kwargs = parse_args(self.mock_api)
 
         # Assert request matches recored request or write new records
-        assert_test(method_call, all_kwargs, dev_type,
-                    self.write_api, self.overwrite)
+        assert_test(method_call, all_kwargs, dev_type, self.write_api, self.overwrite)
 
         self.mock_api.reset_mock()
         self.mock_api.return_value = call_json.DETAILS_BADCODE

@@ -14,7 +14,7 @@ change_fan_speed:
     token: sample_tk
     uuid: LV-PUR131S-UUID
   method: put
-  url: /131airPurifier/v1/device/updateSpeed
+  api: /131airPurifier/v1/device/updateSpeed
 manual_mode:
   headers:
     accept-language: en
@@ -32,7 +32,7 @@ manual_mode:
     token: sample_tk
     uuid: LV-PUR131S-UUID
   method: put
-  url: /131airPurifier/v1/device/updateMode
+  api: /131airPurifier/v1/device/updateMode
 sleep_mode:
   headers:
     accept-language: en
@@ -49,7 +49,7 @@ sleep_mode:
     token: sample_tk
     uuid: LV-PUR131S-UUID
   method: put
-  url: /131airPurifier/v1/device/updateMode
+  api: /131airPurifier/v1/device/updateMode
 turn_off:
   headers:
     accept-language: en
@@ -66,7 +66,7 @@ turn_off:
     token: sample_tk
     uuid: LV-PUR131S-UUID
   method: put
-  url: /131airPurifier/v1/device/deviceStatus
+  api: /131airPurifier/v1/device/deviceStatus
 turn_on:
   headers:
     accept-language: en
@@ -83,7 +83,7 @@ turn_on:
     token: sample_tk
     uuid: LV-PUR131S-UUID
   method: put
-  url: /131airPurifier/v1/device/deviceStatus
+  api: /131airPurifier/v1/device/deviceStatus
 update:
   headers:
     accept-language: en
@@ -105,4 +105,4 @@ update:
     traceId: TRACE_ID
     uuid: LV-PUR131S-UUID
   method: post
-  url: /131airPurifier/v1/device/deviceDetail
+  api: /131airPurifier/v1/device/deviceDetail

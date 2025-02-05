@@ -39,7 +39,7 @@ class TestVeSyncWYSMTOD16ASwitch(TestBase):
         self.mock_api.return_value = CORRECT_WYSMTOD16A_DETAILS
         wysmtod16a_outlet = VeSyncOutletWYSMTOD16A(DEV_LIST_DETAIL, self.manager)
         assert wysmtod16a_outlet.get_details() == True
-        response = CORRECT_WYSMTOD16A_DETAILS[0]
+        response = CORRECT_WYSMTOD16A_DETAILS
         properties = response.get('result', {}).get('result', {})
         expected_status = 'on' if properties.get('powerSwitch_1') == 1 else 'off'
         assert wysmtod16a_outlet.device_status == expected_status
@@ -54,27 +54,26 @@ class TestVeSyncWYSMTOD16ASwitch(TestBase):
 
     def test_wysmtod16a_onoff(self):
         """Test WYSMTOD16A Device On/Off Methods."""
-        self.mock_api.return_value = ({'code': 0, 'msg': 'success', 'result': {'code': 0}}, 200)
+        self.mock_api.return_value = {'code': 0, 'msg': 'success', 'result': {'code': 0}}
         wysmtod16a_outlet = VeSyncOutletWYSMTOD16A(DEV_LIST_DETAIL, self.manager)
         head = helpers.req_header_bypass()
-        body = helpers.req_body(self.manager, 'bypassV2')
-        body['cid'] = wysmtod16a_outlet.cid
-        body['configModule'] = wysmtod16a_outlet.config_module
-
-        # Test turn_on
-        body['payload'] = {
-            'method': 'setSwitch',
-            'source': 'APP',
-            'data': {'enabled': True, 'id': 0},
+        body = {
+            **helpers.req_body_bypass_v2(self.manager),
+            'cid': wysmtod16a_outlet.cid,
+            'configModule': wysmtod16a_outlet.config_module,
+            'payload': {
+                'method': 'setSwitch',
+                'source': 'APP',
+                'data': {'enabled': True, 'id': 0},
+            }
         }
-        on = wysmtod16a_outlet.turn_on()
+        assert wysmtod16a_outlet.turn_on()
         self.mock_api.assert_called_with(
-            '/cloud/v2/deviceManaged/bypassV2',
-            'post',
+            api='/cloud/v2/deviceManaged/bypassV2',
+            method='post',
             headers=head,
             json_object=body,
         )
-        assert on
 
         # Test turn_off
         body['payload'] = {
@@ -82,14 +81,13 @@ class TestVeSyncWYSMTOD16ASwitch(TestBase):
             'source': 'APP',
             'data': {'enabled': False, 'id': 0},
         }
-        off = wysmtod16a_outlet.turn_off()
+        assert wysmtod16a_outlet.turn_off()
         self.mock_api.assert_called_with(
-            '/cloud/v2/deviceManaged/bypassV2',
-            'post',
+            api='/cloud/v2/deviceManaged/bypassV2',
+            method='post',
             headers=head,
             json_object=body,
         )
-        assert off
 
     def test_wysmtod16a_onoff_fail(self):
         """Test WYSMTOD16A On/Off Fail with bad response."""

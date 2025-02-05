@@ -9,7 +9,7 @@ values are the responses.  The responses are tuples of (response, status)
 
 METHOD_RESPONSES variable is a defaultdict of responses from the API. This is
 the FunctionResponse variable from the utils module in the tests dir.
-The default response is a tuple with the value ({"code": 0, "msg": "success"}, 200).
+The default response is a tuple with the value {"code": 0, "msg": "success"}.
 
 The values of METHOD_RESPONSES can be a function that takes a single argument or
 a static value. The value is checked if callable at runtime and if so, it is called
@@ -17,20 +17,20 @@ with the provided argument. If not callable, the value is returned as is.
 
 METHOD_RESPONSES = {
     'DEV_TYPE': defaultdict(
-        lambda: ({"code": 0, "msg": "success"}, 200))
+        lambda: {"code": 0, "msg": "success"})
     )
 }
 
 # For a function to handle the response
 def status_response(request_body=None):
     # do work with request_body
-    return request_body, 200
+    return request_body
 
 METHOD_RESPONSES['DEV_TYPE']['set_status'] = status_response
 
 # To change the default value for a device type
 
-METHOD_RESPONSES['DEVTYPE'].default_factory = lambda: ({"code": 0, "msg": "success"}, 200)
+METHOD_RESPONSES['DEVTYPE'].default_factory = lambda: {"code": 0, "msg": "success"}
 """
 
 from copy import deepcopy
@@ -78,7 +78,7 @@ class FanDefaults:
 
 
 class FanDetails:
-    details_air = ({
+    details_air = {
         "code": 0,
         "msg": None,
         "deviceStatus": "on",
@@ -98,9 +98,9 @@ class FanDetails:
         "schedule": None,
         "timer": None,
         "scheduleCount": 0,
-    }, 200)
+    }
 
-    details_lv600s = ({
+    details_lv600s = {
         "traceId": Defaults.trace_id,
         "code": 0,
         "msg": "请求成功",
@@ -128,9 +128,9 @@ class FanDetails:
                 },
             },
         },
-    }, 200)
+    }
 
-    details_classic200s300s = ({
+    details_classic200s300s = {
         "traceId": Defaults.trace_id,
         "code": 0,
         "msg": "请求成功",
@@ -156,9 +156,9 @@ class FanDetails:
                 },
             },
         },
-    }, 200)
+    }
 
-    details_oasismist1000S = ({
+    details_oasismist1000S = {
         "traceId": Defaults.trace_id,
         "code": 0,
         "msg": "request success",
@@ -183,9 +183,9 @@ class FanDetails:
                 "errorCode": 0,
             },
         },
-    }, 200)
+    }
 
-    details_core = ({
+    details_core = {
 
         "traceId": Defaults.trace_id,
         "code": 0,
@@ -211,9 +211,9 @@ class FanDetails:
                 "device_error_code": 0,
             },
         },
-    }, 200)
+    }
 
-    details_vital100s = ({
+    details_vital100s = {
         "traceId": Defaults.trace_id,
         "code": 0,
         "msg": "request success",
@@ -223,18 +223,18 @@ class FanDetails:
             "traceId": Defaults.trace_id,
             "code": 0,
             "result": {
-                "powerSwitch": Defaults.bin_toggle,
+                "powerSwitch": Defaults.bin_turn,
                 "filterLifePercent": FanDefaults.filter_life,
                 "workMode": "manual",
                 "manualSpeedLevel": FanDefaults.fan_level,
                 "fanSpeedLevel": FanDefaults.fan_level,
                 "AQLevel": FanDefaults.air_quality,
                 "PM25": FanDefaults.air_quality_value,
-                "screenState": Defaults.bin_toggle,
-                "childLockSwitch": Defaults.bin_toggle,
-                "screenSwitch": Defaults.bin_toggle,
-                "lightDetectionSwitch": Defaults.bin_toggle,
-                "environmentLightState": Defaults.bin_toggle,
+                "screenState": Defaults.bin_turn,
+                "childLockSwitch": Defaults.bin_turn,
+                "screenSwitch": Defaults.bin_turn,
+                "lightDetectionSwitch": Defaults.bin_turn,
+                "environmentLightState": Defaults.bin_turn,
                 "autoPreference": {"autoPreferenceType": "default", "roomSize": 0},
                 "scheduleCount": 0,
                 "timerRemain": 0,
@@ -256,9 +256,9 @@ class FanDetails:
                 "errorCode": 0,
             },
         },
-    }, 200)
+    }
 
-    details_superior6000S = ({
+    details_superior6000S = {
         "traceId": Defaults.trace_id,
         "code": 0,
         "msg": "request success",
@@ -295,9 +295,9 @@ class FanDetails:
                 "temperature": 662,
             },
         },
-    }, 200)
+    }
 
-    details_everest = ({
+    details_everest = {
         "traceId": "1691789977402",
         "code": 0,
         "msg": "request success",
@@ -309,7 +309,7 @@ class FanDetails:
             "result": {
                 "fanRotateAngle": FanDefaults.rotate_angle,
                 "filterOpenState": FanDefaults.filter_open,
-                "powerSwitch": Defaults.bin_toggle,
+                "powerSwitch": Defaults.bin_turn,
                 "filterLifePercent": FanDefaults.filter_life,
                 "workMode": "auto",
                 "manualSpeedLevel": FanDefaults.fan_level,
@@ -319,11 +319,11 @@ class FanDetails:
                 "PM25": FanDefaults.air_quality_value,
                 "PM1": FanDefaults.pm1,
                 "PM10": FanDefaults.pm10,
-                "screenState": Defaults.bin_toggle,
-                "childLockSwitch": Defaults.bin_toggle,
-                "screenSwitch": Defaults.bin_toggle,
-                "lightDetectionSwitch": Defaults.bin_toggle,
-                "environmentLightState": Defaults.bin_toggle,
+                "screenState": Defaults.bin_turn,
+                "childLockSwitch": Defaults.bin_turn,
+                "screenSwitch": Defaults.bin_turn,
+                "lightDetectionSwitch": Defaults.bin_turn,
+                "environmentLightState": Defaults.bin_turn,
                 "autoPreference": {"autoPreferenceType": "default", "roomSize": 0},
                 "routine": {"routineType": "normal", "runSeconds": 0},
                 "scheduleCount": 0,
@@ -333,9 +333,9 @@ class FanDetails:
                 "errorCode": 0,
             },
         },
-    }, 200)
+    }
 
-    details_towerfan42 = ({
+    details_towerfan42 = {
         "traceId": Defaults.trace_id,
         "code": 0,
         "msg": "request success",
@@ -345,31 +345,31 @@ class FanDetails:
             "traceId": Defaults.trace_id,
             "code": 0,
             "result": {
-                "powerSwitch": Defaults.bin_toggle,
+                "powerSwitch": Defaults.bin_turn,
                 "workMode": "turbo",
                 "manualSpeedLevel": 3,
                 "fanSpeedLevel": 12,
-                "screenState": Defaults.bin_toggle,
-                "screenSwitch": Defaults.bin_toggle,
-                "oscillationSwitch": Defaults.bin_toggle,
-                "oscillationState": Defaults.bin_toggle,
-                "muteSwitch": Defaults.bin_toggle,
-                "muteState": Defaults.bin_toggle,
+                "screenState": Defaults.bin_turn,
+                "screenSwitch": Defaults.bin_turn,
+                "oscillationSwitch": Defaults.bin_turn,
+                "oscillationState": Defaults.bin_turn,
+                "muteSwitch": Defaults.bin_turn,
+                "muteState": Defaults.bin_turn,
                 "timerRemain": 0,
                 "temperature": 750,
                 "sleepPreference": {
                   "sleepPreferenceType": "default",
-                  "oscillationSwitch": Defaults.bin_toggle,
+                  "oscillationSwitch": Defaults.bin_turn,
                   "initFanSpeedLevel": 0,
                   "fallAsleepRemain": 0,
-                  "autoChangeFanLevelSwitch": Defaults.bin_toggle
+                  "autoChangeFanLevelSwitch": Defaults.bin_turn
                 },
                 "scheduleCount": 0,
                 "displayingType": 0,
                 "errorCode": 0,
             }                
-        },
-    }, 200)
+        }
+    }
 
 
 DETAILS_RESPONSES = {
@@ -392,15 +392,12 @@ DETAILS_RESPONSES = {
     "LTF-F422S-KEU": FanDetails.details_towerfan42,
 }
 
-FunctionResponses.default_factory = lambda: (
-    {
-        "traceId": Defaults.trace_id,
-        "code": 0,
-        "msg": "request success",
-        "result": {"traceId": Defaults.trace_id, "code": 0},
-    },
-    200,
-)
+FunctionResponses.default_factory = lambda: {
+    "traceId": Defaults.trace_id,
+    "code": 0,
+    "msg": "request success",
+    "result": {"traceId": Defaults.trace_id, "code": 0},
+}
 
 METHOD_RESPONSES = {k: deepcopy(FunctionResponses) for k in FANS}
 
@@ -409,9 +406,6 @@ METHOD_RESPONSES = {k: deepcopy(FunctionResponses) for k in FANS}
 # Timer Responses
 
 for k in AIR_MODELS:
-    METHOD_RESPONSES[k]["set_timer"] = (INNER_RESULT({"id": 1}), 200)
-    METHOD_RESPONSES[k]["get_timer"] = (
-        INNER_RESULT({"id": 1, "remain": 100, "total": 100, "action": "off"}),
-        200,
-    )
+    METHOD_RESPONSES[k]["set_timer"] = INNER_RESULT({"id": 1})
+    METHOD_RESPONSES[k]["get_timer"] = INNER_RESULT({"id": 1, "remain": 100, "total": 100, "action": "off"})
 FAN_TIMER = helpers.Timer(100, "off")

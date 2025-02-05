@@ -83,18 +83,18 @@ from copy import deepcopy
 
 device_types = ['dev1', 'dev2']
 
-# defaultdict with default value - ({"code": 0, "msg": None, "result": {}}, 200)
+# defaultdict with default value - {"code": 0, "msg": None, "result": {}}
 method_response = FunctionResponses 
 
 # Use deepcopy to build the device response dictionary used to test the get_details() method
 device_responses = {dev_type: deepcopy(method_response) for dev_type in device_types}
 
 # Define response for specific device & method
-# All response must be tuples with (json response, 200)
-device_responses['dev1']['special_method'] = ({'response': 'special response', 'msg': 'special method'}, 200)
+# All response must be tuples with json response
+device_responses['dev1']['special_method'] = {'response': 'special response', 'msg': 'special method'}
 
 # The default factory can be change for a single device type since deepcopy is used.
-device_responses['dev2'].default_factory = lambda: ({'new_code': 0, 'msg': 'success', {'payload': {}}}, 200)
+device_responses['dev2'].default_factory = lambda: {'new_code': 0, 'msg': 'success', {'payload': {}}}
 
 ```
 
@@ -134,7 +134,7 @@ def valceno_set_status_response(kwargs=None):
             default_resp['result']['result']['saturation'] = kwargs['saturation'] * 100
         if kwargs.get('value') is not None:
             default_resp['result']['result']['value'] = kwargs['value']
-    return default_resp, 200
+    return default_resp
 
 
 XYD0001_RESP = {
@@ -172,7 +172,7 @@ turn_off:
     token: sample_tk
     uuid: ESO15-TB-UUID
   method: put
-  url: /outdoorsocket15a/v1/device/devicestatus
+  api: /outdoorsocket15a/v1/device/devicestatus
 ```
 
 ### **`utils.py`** - utility functions and default value factory for tests.

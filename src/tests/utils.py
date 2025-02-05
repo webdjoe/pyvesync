@@ -25,9 +25,9 @@ import pyvesync.helpers as vs_helpers
 
 logger = logging.getLogger(__name__)
 
-FunctionResponses: defaultdict = defaultdict(lambda: ({"code": 0, "msg": None}, 200))
+FunctionResponses: defaultdict = defaultdict(lambda: {"code": 0, "msg": None})
 
-CALL_API_ARGS = ['url', 'method', 'data', 'headers']
+CALL_API_ARGS = ['api', 'method', 'data', 'headers']
 
 ID_KEYS = ['CID', 'UUID', 'MACID']
 
@@ -68,9 +68,9 @@ class Defaults:
     color = Color(red=50, green=100, blue=225)
     brightness = 100
     color_temp = 100
-    bool_toggle = True
-    str_toggle = 'on'
-    bin_toggle = 1
+    bool_turn = True
+    str_turn = 'on'
+    bin_turn = 1
 
     @staticmethod
     def name(dev_type: str = 'NA'):
@@ -377,8 +377,7 @@ class TestBase:
         self.mock_api_call.stop()
 
 
-def assert_test(test_func, all_kwargs, dev_type=None,
-                 write_api=False, overwrite=False):
+def assert_test(test_func, all_kwargs, dev_type=None, write_api=False, overwrite=False):
     """Test pyvesync API calls against existing API.
 
     Set `write_api=True` to True to write API call data to YAML file. 

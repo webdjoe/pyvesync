@@ -158,7 +158,7 @@ class TestOutlets(TestBase):
         device_config = call_json.DeviceList.device_list_item(dev_type)
 
         # Instantiate device
-        outlet_obj = self.manager.object_factory(dev_type, device_config)
+        outlet_obj = self.manager.object_factory(device_config)
 
         # Call get_details() directly
         assert outlet_obj.get_details() == True
@@ -168,13 +168,12 @@ class TestOutlets(TestBase):
 
         # Set both write_api and overwrite to True to update YAML files
         assert outlet_obj.get_details() == True
-        assert_test(outlet_obj.get_details, all_kwargs, dev_type,
-                   write_api=True, overwrite=True)
+        assert_test(outlet_obj.get_details, all_kwargs, dev_type, write_api=True, overwrite=True)
 
         # Test bad responses
         self.mock_api.reset_mock()
         if dev_type == 'wifi-switch-1.3':
-            self.mock_api.return_value = (None, 400)
+            self.mock_api.return_value = None
         else:
             self.mock_api.return_value = call_json.DETAILS_BADCODE
         assert outlet_obj.get_details() == False
@@ -229,7 +228,7 @@ class TestOutlets(TestBase):
         device_config = call_json.DeviceList.device_list_item(dev_type)
 
         # Instantiate device
-        outlet_obj = self.manager.object_factory(dev_type, device_config)
+        outlet_obj = self.manager.object_factory(device_config)
 
         # Get method from device object
         method_call = getattr(outlet_obj, method[0])
@@ -247,13 +246,12 @@ class TestOutlets(TestBase):
         all_kwargs = parse_args(self.mock_api)
 
         # Assert request matches recorded request or write new records
-        assert_test(method_call, all_kwargs, dev_type,
-                   self.write_api, self.overwrite)
+        assert_test(method_call, all_kwargs, dev_type, self.write_api, self.overwrite)
 
         # Test bad responses
         self.mock_api.reset_mock()
         if dev_type == 'wifi-switch-1.3':
-            self.mock_api.return_value = (None, 400)
+            self.mock_api.return_value = None
         else:
             self.mock_api.return_value = call_json.DETAILS_BADCODE
         if method[0] == 'turn_on':
@@ -273,14 +271,14 @@ class TestOutlets(TestBase):
         device_config = call_json.DeviceList.device_list_item(dev_type)
 
         # Instantiate device
-        outlet_obj = self.manager.object_factory(dev_type, device_config)
+        outlet_obj = self.manager.object_factory(device_config)
         outlet_obj.update_energy()
         assert self.mock_api.call_count == 3
         assert list(outlet_obj.energy.keys()) == ['week', 'month', 'year']
         self.mock_api.reset_mock()
         outlet_obj.energy = {}
         if dev_type == 'wifi-switch-1.3':
-            self.mock_api.return_value = (None, 400)
+            self.mock_api.return_value = None
         else:
             self.mock_api.return_value = call_json.DETAILS_BADCODE
         outlet_obj.update_energy()

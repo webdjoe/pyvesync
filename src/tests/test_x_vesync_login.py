@@ -57,12 +57,11 @@ class TestLogin(object):
     @pytest.mark.parametrize('email, password, testid', login_bad_call)
     def test_bad_login(self, api_mock, email, password, testid):
         """Test failed login."""
-        full_return = ({'code': 455}, 200)
-        self.mock_api.return_value = full_return
+        self.mock_api.return_value = {'code': 455}
         vesync_obj = VeSync(email, password)
         assert vesync_obj.login() is False
         if testid == 'correct':
-            jd = helpers.req_body(vesync_obj, 'login')
+            jd = helpers.req_body_login(vesync_obj)
             self.mock_api.assert_called_with('/cloud/v1/user/login', 'post',
                                              json_object=jd)
         else:
@@ -70,14 +69,11 @@ class TestLogin(object):
 
     def test_good_login(self, api_mock):
         """Test successful login."""
-        full_return = (
-            {'code': 0, 'result': {'accountID': 'sam_actid', 'token': 'sam_token'}},
-            200,
-        )
+        full_return = {'code': 0, 'result': {'accountID': 'sam_actid', 'token': 'sam_token'}}
         self.mock_api.return_value = full_return
         vesync_obj = VeSync('sam@mail.com', 'pass')
         assert vesync_obj.login() is True
-        jd = helpers.req_body(vesync_obj, 'login')
+        jd = helpers.req_body_login(vesync_obj)
         self.mock_api.assert_called_with('/cloud/v1/user/login', 'post', json_object=jd)
         assert vesync_obj.token == 'sam_token'
         assert vesync_obj.account_id == 'sam_actid'

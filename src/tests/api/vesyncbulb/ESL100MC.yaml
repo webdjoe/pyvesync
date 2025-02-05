@@ -28,7 +28,7 @@ enable_white_mode:
     token: sample_tk
     traceId: TRACE_ID
   method: post
-  url: /cloud/v2/deviceManaged/bypassV2
+  api: /cloud/v2/deviceManaged/bypassV2
 set_brightness:
   headers:
     Content-Type: application/json; charset=UTF-8
@@ -59,7 +59,7 @@ set_brightness:
     token: sample_tk
     traceId: TRACE_ID
   method: post
-  url: /cloud/v2/deviceManaged/bypassV2
+  api: /cloud/v2/deviceManaged/bypassV2
 set_rgb:
   headers:
     Content-Type: application/json; charset=UTF-8
@@ -90,7 +90,7 @@ set_rgb:
     token: sample_tk
     traceId: TRACE_ID
   method: post
-  url: /cloud/v2/deviceManaged/bypassV2
+  api: /cloud/v2/deviceManaged/bypassV2
 turn_off:
   headers:
     Content-Type: application/json; charset=UTF-8
@@ -116,7 +116,7 @@ turn_off:
     token: sample_tk
     traceId: TRACE_ID
   method: post
-  url: /cloud/v2/deviceManaged/bypassV2
+  api: /cloud/v2/deviceManaged/bypassV2
 turn_on:
   headers:
     Content-Type: application/json; charset=UTF-8
@@ -142,7 +142,7 @@ turn_on:
     token: sample_tk
     traceId: TRACE_ID
   method: post
-  url: /cloud/v2/deviceManaged/bypassV2
+  api: /cloud/v2/deviceManaged/bypassV2
 update:
   headers:
     Content-Type: application/json; charset=UTF-8
@@ -166,4 +166,4 @@ update:
     token: sample_tk
     traceId: TRACE_ID
   method: post
-  url: /cloud/v2/deviceManaged/bypassV2
+  api: /cloud/v2/deviceManaged/bypassV2

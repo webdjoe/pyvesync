@@ -67,7 +67,7 @@ class TestVeSync7ASwitch(TestBase):
             'power': '1A:1A',
             'voltage': '1A:1A',
         }
-        self.mock_api.return_value = (bad_7a_details, 200)
+        self.mock_api.return_value = bad_7a_details
         vswitch7a = VeSyncOutlet7A(DEV_LIST_DETAIL, self.manager)
         vswitch7a.get_details()
         assert len(self.caplog.records) == 1
@@ -76,14 +76,14 @@ class TestVeSync7ASwitch(TestBase):
     def test_7a_no_details(self):
         """Test 7A outlet details response with unknown keys."""
         bad_7a_details = {'wrongdetails': 'on'}
-        self.mock_api.return_value = (bad_7a_details, 200)
+        self.mock_api.return_value = bad_7a_details
         vswitch7a = VeSyncOutlet7A(DEV_LIST_DETAIL, self.manager)
         vswitch7a.get_details()
         assert len(self.caplog.records) == 1
 
     def test_7a_onoff(self):
         """Test 7A outlet on/off methods."""
-        self.mock_api.return_value = ('response', 200)
+        self.mock_api.return_value = 'response'
         vswitch7a = VeSyncOutlet7A(DEV_LIST_DETAIL, self.manager)
         on = vswitch7a.turn_on()
         head = helpers.req_headers(self.manager)
@@ -99,7 +99,7 @@ class TestVeSync7ASwitch(TestBase):
 
     def test_7a_onoff_fail(self):
         """Test 7A outlet on/off methods that fail."""
-        self.mock_api.return_value = ('response', 400)
+        self.mock_api.return_value = None
         vswitch7a = VeSyncOutlet7A(DEV_LIST_DETAIL, self.manager)
         assert not vswitch7a.turn_on()
         assert not vswitch7a.turn_off()
@@ -158,7 +158,7 @@ class TestVeSync7ASwitch(TestBase):
     def test_history_fail(self):
         """Test handling of energy update failure."""
         bad_history = {'code': 1, 'msg': 'FAILED'}
-        self.mock_api.return_value = (bad_history, 200)
+        self.mock_api.return_value = bad_history
         vswitch7a = VeSyncOutlet7A(DEV_LIST_DETAIL, self.manager)
         vswitch7a.update_energy()
         assert len(self.caplog.records) == 1

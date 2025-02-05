@@ -22,7 +22,7 @@ set_brightness:
     token: sample_tk
     traceId: TRACE_ID
   method: post
-  url: /cloud/v1/deviceManaged/bypass
+  api: /cloud/v1/deviceManaged/bypass
 set_color_temp:
   headers:
     accept-language: en
@@ -46,7 +46,7 @@ set_color_temp:
     token: sample_tk
     traceId: TRACE_ID
   method: post
-  url: /cloud/v1/deviceManaged/bypass
+  api: /cloud/v1/deviceManaged/bypass
 turn_off:
   headers:
     accept-language: en
@@ -71,7 +71,7 @@ turn_off:
     token: sample_tk
     traceId: TRACE_ID
   method: post
-  url: /cloud/v1/deviceManaged/bypass
+  api: /cloud/v1/deviceManaged/bypass
 turn_on:
   headers:
     accept-language: en
@@ -96,7 +96,7 @@ turn_on:
     token: sample_tk
     traceId: TRACE_ID
   method: post
-  url: /cloud/v1/deviceManaged/bypass
+  api: /cloud/v1/deviceManaged/bypass
 update:
   headers:
     accept-language: en
@@ -120,4 +120,4 @@ update:
     token: sample_tk
     traceId: TRACE_ID
   method: post
-  url: /cloud/v1/deviceManaged/bypass
+  api: /cloud/v1/deviceManaged/bypass

@@ -109,23 +109,20 @@ DEFAULT_BODY = {
 }
 
 
-LOGIN_RET_BODY = (
-    {
-        'traceId': Defaults.trace_id,
-        'msg': '',
-        'result': {
-            'accountID': Defaults.account_id,
-            'avatarIcon': '',
-            'acceptLanguage': 'en',
-            'gdprStatus': True,
-            'nickName': 'nick',
-            'userType': '1',
-            'token': Defaults.token,
-        },
-        'code': 0,
+LOGIN_RET_BODY = {
+    'traceId': Defaults.trace_id,
+    'msg': '',
+    'result': {
+        'accountID': Defaults.account_id,
+        'avatarIcon': '',
+        'acceptLanguage': 'en',
+        'gdprStatus': True,
+        'nickName': 'nick',
+        'userType': '1',
+        'token': Defaults.token,
     },
-    200,
-)
+    'code': 0,
+}
 
 
 def login_call_body(email, password):
@@ -222,7 +219,7 @@ class DeviceList:
         for model in full_model_list:
             response_base['result']['list'].append(cls.device_list_item(model))
             response_base['result']['total'] += 1
-        return response_base, 200
+        return response_base
 
     LIST_CONF_7A = {
         'deviceType': 'wifi-switch-1.3',
@@ -280,7 +277,7 @@ class DeviceList:
         'extension': None,
         'macID': None,
         'type': 'wifi-switch',
-        'deviceName': 'Name 10A Outlet',
+        'deviceName': 'Name 10A Outlet/EU',
         'connectionType': 'wifi',
         'uuid': 'UUID',
         'speed': None,
@@ -297,7 +294,7 @@ class DeviceList:
         'extension': None,
         'macID': None,
         'type': 'wifi-switch',
-        'deviceName': 'Name 10A Outlet',
+        'deviceName': 'Name 10A Outlet/US',
         'connectionType': 'wifi',
         'uuid': 'UUID',
         'speed': None,
@@ -311,7 +308,7 @@ class DeviceList:
 
     LIST_CONF_OUTDOOR_1 = {
         'deviceRegion': 'US',
-        'deviceName': 'Outdoor Socket B',
+        'deviceName': 'Outdoor Socket A',
         'cid': 'OUTDOOR-CID',
         'deviceStatus': 'on',
         'connectionStatus': 'online',
@@ -529,50 +526,43 @@ class DeviceList:
         LIST_CONF_ESL100CW,
         LIST_CONF_ESL100MC,
         LIST_CONF_VALCENO
-
     ]
 
     @classmethod
     def DEVICE_LIST_RETURN(cls, dev_conf: dict) -> tuple:
         """Test the fan."""
-        return (
-            {
+        return {
                 'code': 0,
                 'result':
                     {
                         'list': [dev_conf]
                     }
-            },
-            200
-        )
+            }
 
-    FAN_TEST = ({'code': 0, 'result': {'list': [LIST_CONF_600S, LIST_CONF_LV131S,
-                                                LIST_CONF_DUAL200S]}}, 200)
+    FAN_TEST = {'code': 0, 'result': {'list': [LIST_CONF_600S, LIST_CONF_LV131S,
+                                                LIST_CONF_DUAL200S]}}
 
-    DEVLIST_ALL = ({'code': 0, 'result': {'list': FULL_DEV_LIST}}, 200)
+    DEVLIST_ALL = {'code': 0, 'result': {'list': FULL_DEV_LIST}}
 
-    DEVLIST_7A = ({'code': 0, 'result': {'list': [LIST_CONF_7A]}}, 200)
+    DEVLIST_7A = {'code': 0, 'result': {'list': [LIST_CONF_7A]}}
 
-    DEVLIST_15A = ({'code': 0, 'result': {'list': [LIST_CONF_15A]}}, 200)
+    DEVLIST_15A = {'code': 0, 'result': {'list': [LIST_CONF_15A]}}
 
-    DEVLIST_10AEU = ({'code': 0, 'result': {'list': [LIST_CONF_10AEU]}}, 200)
+    DEVLIST_10AEU = {'code': 0, 'result': {'list': [LIST_CONF_10AEU]}}
 
-    DEVLIST_10AUS = ({'code': 0, 'result': {'list': [LIST_CONF_10AUS]}}, 200)
+    DEVLIST_10AUS = {'code': 0, 'result': {'list': [LIST_CONF_10AUS]}}
 
-    DEVLIST_WS = ({'code': 0, 'result': {'list': [LIST_CONF_WS]}}, 200)
+    DEVLIST_WS = {'code': 0, 'result': {'list': [LIST_CONF_WS]}}
 
-    DEVLIST_DIMMER = ({'code': 0, 'result': {'list': [LIST_CONF_DIMMER]}}, 200)
+    DEVLIST_DIMMER = {'code': 0, 'result': {'list': [LIST_CONF_DIMMER]}}
 
-    DEVLIST_AIR = ({'code': 0, 'result': {'list': [LIST_CONF_AIR]}}, 200)
+    DEVLIST_AIR = {'code': 0, 'result': {'list': [LIST_CONF_AIR]}}
 
-    DEVLIST_ESL100 = ({'code': 0, 'result': {'list': [LIST_CONF_ESL100]}}, 200)
+    DEVLIST_ESL100 = {'code': 0, 'result': {'list': [LIST_CONF_ESL100]}}
 
-    DEVLIST_DUAL200S = ({'code': 0, 'result': {'list': [LIST_CONF_DUAL200S]}}, 200)
+    DEVLIST_DUAL200S = {'code': 0, 'result': {'list': [LIST_CONF_DUAL200S]}}
 
-    DEVLIST_OUTDOOR = (
-        {'code': 0, 'msg': 'request success', 'result': {'list': [LIST_CONF_OUTDOOR_1, LIST_CONF_OUTDOOR_2]}},
-        200,
-    )
+    DEVLIST_OUTDOOR = {'code': 0, 'msg': 'request success', 'result': {'list': [LIST_CONF_OUTDOOR_1, LIST_CONF_OUTDOOR_2]}}
 
 
 class DeviceDetails:
@@ -611,27 +601,24 @@ def get_devices_body():
     """Build device body dictionary."""
     body = DEFAULT_BODY
     body['method'] = 'devices'
-    return body, 200
+    return body
 
 
 def get_details_body():
     body = DEFAULT_BODY
     body['method'] = 'deviceDetail'
-    return body, 200
+    return body
 
 
-DETAILS_BADCODE = (
-    {
-        'code': 1,
-        'msg' : 'FAILED',
-        'deviceImg': '',
-        'activeTime': 1,
-        'energy': 1,
-        'power': '1',
-        'voltage': '1',
-    },
-    200,
-)
+DETAILS_BADCODE = {
+    'code': 1,
+    'msg' : 'FAILED',
+    'deviceImg': '',
+    'activeTime': 1,
+    'energy': 1,
+    'power': '1',
+    'voltage': '1',
+}
 
 STATUS_BODY = {
     'accountID': Defaults.account_id,
@@ -644,10 +631,10 @@ STATUS_BODY = {
 def off_body():
     body = STATUS_BODY
     body['status'] = 'off'
-    return body, 200
+    return body
 
 
 def on_body():
     body = STATUS_BODY
     body['status'] = 'on'
-    return body, 200
+    return body

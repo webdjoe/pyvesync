@@ -14,7 +14,7 @@ turn_off:
     token: sample_tk
     uuid: ESWL01-UUID
   method: put
-  url: /inwallswitch/v1/device/devicestatus
+  api: /inwallswitch/v1/device/devicestatus
 turn_on:
   headers:
     accept-language: en
@@ -31,7 +31,7 @@ turn_on:
     token: sample_tk
     uuid: ESWL01-UUID
   method: put
-  url: /inwallswitch/v1/device/devicestatus
+  api: /inwallswitch/v1/device/devicestatus
 update:
   headers:
     accept-language: en
@@ -53,4 +53,4 @@ update:
     traceId: TRACE_ID
     uuid: ESWL01-UUID
   method: post
-  url: /inwallswitch/v1/device/devicedetail
+  api: /inwallswitch/v1/device/devicedetail

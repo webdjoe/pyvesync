@@ -143,7 +143,7 @@ class TestBulbs(TestBase):
         device_config = call_json.DeviceList.device_list_item(dev_type)
 
         # Instantiate device from device list return item
-        bulb_obj = self.manager.object_factory(dev_type, device_config)
+        bulb_obj = self.manager.object_factory(device_config)
         method_call = getattr(bulb_obj, method)
         method_call()
 
@@ -151,8 +151,7 @@ class TestBulbs(TestBase):
         all_kwargs = parse_args(self.mock_api)
 
         # Assert request matches recored request or write new records
-        assert_test(method_call, all_kwargs, dev_type,
-                    self.write_api, self.overwrite)
+        assert_test(method_call, all_kwargs, dev_type, self.write_api, self.overwrite)
 
         # Assert device details match expected values
         assert bulb_obj.brightness == Defaults.brightness
@@ -211,16 +210,13 @@ class TestBulbs(TestBase):
         device_config = call_json.DeviceList.device_list_item(dev_type)
 
         # Instantiate device from device list return item
-        bulb_obj = self.manager.object_factory(dev_type, device_config)
+        bulb_obj = self.manager.object_factory(device_config)
 
         # Get method from device object
         method_call = getattr(bulb_obj, method[0])
 
         # Ensure method runs based on device configuration
-        if method[0] == 'turn_on':
-            bulb_obj.device_status = 'off'
-        elif method[0] == 'turn_off':
-            bulb_obj.device_status = 'on'
+        bulb_obj.device_status = 'offline'
 
         # Call method with kwargs if defined
         if method_kwargs:
@@ -232,8 +228,7 @@ class TestBulbs(TestBase):
         all_kwargs = parse_args(self.mock_api)
 
         # Assert request matches recored request or write new records
-        assert_test(method_call, all_kwargs, dev_type,
-                     self.write_api, self.overwrite)
+        assert_test(method_call, all_kwargs, dev_type, self.write_api, self.overwrite)
 
     def _assert_color(self, bulb_obj):
         assert math.isclose(bulb_obj.color_rgb.red, DEFAULT_COLOR.rgb.red, rel_tol=1)

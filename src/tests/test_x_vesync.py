@@ -105,10 +105,10 @@ class TestVeSync(unittest.TestCase):
                 },
                 'code': 0,
             }
-            mocked_post.return_value = (d, 200)
+            mocked_post.return_value = d
 
             data = self.vesync_1.login()
-            body = Helpers.req_body(self.vesync_1, 'login')
+            body = Helpers.req_body_login(self.vesync_1)
             body['email'] = self.vesync_1.username
             body['password'] = Helpers.hash_password(self.vesync_1.password)
             mocked_post.assert_called_with('/cloud/v1/user/login', 'post',
@@ -127,7 +127,7 @@ class TestApiFunc:
 
         mock_return = Helpers.call_api('/call/location', method='get')
 
-        assert mock_return == ({'code': 0}, 200)
+        assert mock_return == {'code': 0}
 
     @patch('pyvesync.helpers.requests.post', autospec=True)
     def test_api_post(self, post_mock):
@@ -137,7 +137,7 @@ class TestApiFunc:
 
         mock_return = Helpers.call_api('/call/location', method='post')
 
-        assert mock_return == ({'code': 0}, 200)
+        assert mock_return == {'code': 0}
 
     @patch('pyvesync.helpers.requests.put', autospec=True)
     def test_api_put(self, put_mock):
@@ -147,7 +147,7 @@ class TestApiFunc:
 
         mock_return = Helpers.call_api('/call/location', method='put')
 
-        assert mock_return == ({'code': 0}, 200)
+        assert mock_return == {'code': 0}
 
     @patch('pyvesync.helpers.requests.get', autospec=True)
     def test_api_bad_response(self, api_mock):
@@ -155,7 +155,7 @@ class TestApiFunc:
         api_mock.side_effect = MagicMock(status_code=400)
         mock_return = Helpers.call_api('/test/bad-response', method='get')
         print(api_mock.call_args_list)
-        assert mock_return == (None, None)
+        assert mock_return == None
 
 
 if __name__ == '__main__':

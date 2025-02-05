@@ -26,7 +26,7 @@ change_fan_speed:
     token: sample_tk
     traceId: TRACE_ID
   method: post
-  url: /cloud/v2/deviceManaged/bypassV2
+  api: /cloud/v2/deviceManaged/bypassV2
 manual_mode:
   headers:
     Content-Type: application/json; charset=UTF-8
@@ -55,7 +55,7 @@ manual_mode:
     token: sample_tk
     traceId: TRACE_ID
   method: post
-  url: /cloud/v2/deviceManaged/bypassV2
+  api: /cloud/v2/deviceManaged/bypassV2
 sleep_mode:
   headers:
     Content-Type: application/json; charset=UTF-8
@@ -82,7 +82,7 @@ sleep_mode:
     token: sample_tk
     traceId: TRACE_ID
   method: post
-  url: /cloud/v2/deviceManaged/bypassV2
+  api: /cloud/v2/deviceManaged/bypassV2
 turn_off:
   headers:
     Content-Type: application/json; charset=UTF-8
@@ -110,7 +110,7 @@ turn_off:
     token: sample_tk
     traceId: TRACE_ID
   method: post
-  url: /cloud/v2/deviceManaged/bypassV2
+  api: /cloud/v2/deviceManaged/bypassV2
 turn_on:
   headers:
     Content-Type: application/json; charset=UTF-8
@@ -138,7 +138,7 @@ turn_on:
     token: sample_tk
     traceId: TRACE_ID
   method: post
-  url: /cloud/v2/deviceManaged/bypassV2
+  api: /cloud/v2/deviceManaged/bypassV2
 update:
   headers:
     Content-Type: application/json; charset=UTF-8
@@ -164,4 +164,4 @@ update:
     token: sample_tk
     traceId: TRACE_ID
   method: post
-  url: /cloud/v2/deviceManaged/bypassV2
+  api: /cloud/v2/deviceManaged/bypassV2

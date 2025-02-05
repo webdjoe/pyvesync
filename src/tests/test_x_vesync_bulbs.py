@@ -61,20 +61,20 @@ class TestVeSyncBulbESL100(TestBase):
 
     def test_esl100_no_details(self):
         """Test no device details for disconnected bulb."""
-        self.mock_api.return_value = ({'code': 5}, 200)
+        self.mock_api.return_value = {'code': 5}
         bulb = VeSyncBulbESL100(DEV_LIST_DETAIL, self.manager)
         bulb.update()
         assert len(self.caplog.records) == 1
 
     def test_esl100_onoff(self):
-        """Test power toggle for ESL100 bulb."""
-        self.mock_api.return_value = ({'code': 0}, 200)
+        """Test power turn for ESL100 bulb."""
+        self.mock_api.return_value = {'code': 0}
         bulb = VeSyncBulbESL100(DEV_LIST_DETAIL, self.manager)
         assert bulb.turn_off()
         assert bulb.turn_on()
 
     def test_brightness(self):
-        self.mock_api.return_value = ({'code': 0}, 200)
+        self.mock_api.return_value = {'code': 0}
         bulb = VeSyncBulbESL100(DEV_LIST_DETAIL, self.manager)
         assert bulb.set_brightness(50)
         assert bulb.turn_off()
@@ -82,7 +82,7 @@ class TestVeSyncBulbESL100(TestBase):
         assert bulb.device_status == 'on'
 
     def test_invalid_brightness(self):
-        self.mock_api.return_value = ({'code': 0}, 200)
+        self.mock_api.return_value = {'code': 0}
         bulb = VeSyncBulbESL100(DEV_LIST_DETAIL, self.manager)
         assert bulb.set_brightness(5000)
         assert bulb.brightness == 100
@@ -127,8 +127,8 @@ class TestVeSyncBulbESL100CW(TestBase):
         assert bulb.connection_status == 'online'
 
     def test_esl100cw_onoff(self):
-        """Test power toggle for ESL100 bulb."""
-        self.mock_api.return_value = ({'code': 0}, 200)
+        """Test power turn for ESL100 bulb."""
+        self.mock_api.return_value = {'code': 0}
         bulb = VeSyncBulbESL100CW(DEV_LIST_DETAIL_CW, self.manager)
         assert bulb.turn_off()
         assert bulb.device_status == 'off'
@@ -136,7 +136,7 @@ class TestVeSyncBulbESL100CW(TestBase):
         assert bulb.device_status == 'on'
 
     def test_brightness(self):
-        self.mock_api.return_value = ({'code': 0}, 200)
+        self.mock_api.return_value = {'code': 0}
         bulb = VeSyncBulbESL100CW(DEV_LIST_DETAIL_CW, self.manager)
         assert bulb.set_brightness(50)
         assert bulb.brightness == 50
@@ -145,13 +145,13 @@ class TestVeSyncBulbESL100CW(TestBase):
         assert bulb.device_status == 'on'
 
     def test_invalid_brightness(self):
-        self.mock_api.return_value = ({'code': 0}, 200)
+        self.mock_api.return_value = {'code': 0}
         bulb = VeSyncBulbESL100CW(DEV_LIST_DETAIL_CW, self.manager)
         assert bulb.set_brightness(5000)
         assert bulb.brightness == 100
 
     def test_color_temp(self):
-        self.mock_api.return_value = ({'code': 0}, 200)
+        self.mock_api.return_value = {'code': 0}
         bulb = VeSyncBulbESL100CW(DEV_LIST_DETAIL_CW, self.manager)
         assert bulb.set_color_temp(50)
         assert bulb.color_temp_pct == 50
@@ -190,8 +190,8 @@ class TestVeSyncBulbESL100MC(TestBase):
         assert bulb.connection_status == 'online'
 
     def test_esl100mc_onoff(self):
-        """Test power toggle for ESL100 bulb."""
-        self.mock_api.return_value = ({'code': 0}, 200)
+        """Test power turn for ESL100 bulb."""
+        self.mock_api.return_value = {'code': 0}
         bulb = VeSyncBulbESL100MC(DEV_LIST_DETAIL_MC, self.manager)
         assert bulb.turn_off()
         assert bulb.device_status == 'off'
@@ -199,7 +199,7 @@ class TestVeSyncBulbESL100MC(TestBase):
         assert bulb.device_status == 'on'
 
     def test_brightness(self):
-        self.mock_api.return_value = ({'code': 0}, 200)
+        self.mock_api.return_value = {'code': 0}
         bulb = VeSyncBulbESL100MC(DEV_LIST_DETAIL_MC, self.manager)
         assert bulb.set_brightness(50)
         assert bulb.brightness == 50
@@ -208,13 +208,13 @@ class TestVeSyncBulbESL100MC(TestBase):
         assert bulb.device_status == 'on'
 
     def test_invalid_brightness(self):
-        self.mock_api.return_value = ({'code': 0}, 200)
+        self.mock_api.return_value = {'code': 0}
         bulb = VeSyncBulbESL100MC(DEV_LIST_DETAIL_MC, self.manager)
         assert bulb.set_brightness(5000)
         assert bulb.brightness == 100
 
     def test_color(self):
-        self.mock_api.return_value = ({'code': 0}, 200)
+        self.mock_api.return_value = {'code': 0}
         bulb = VeSyncBulbESL100MC(DEV_LIST_DETAIL_MC, self.manager)
         assert bulb.set_rgb(50, 100, 150)
         assert bulb.color_rgb == namedtuple('rgb', 'red green blue')(50, 100, 150)
@@ -253,8 +253,8 @@ class TestVeSyncBulbValceno(TestBase):
         assert bulb.connection_status == 'online'
 
     def test_valceno_onoff(self):
-        """Test power toggle for Valceno MC bulb."""
-        self.mock_api.return_value = ({'code': 0}, 200)
+        """Test power turn for Valceno MC bulb."""
+        self.mock_api.return_value = {'code': 0}
         bulb = VeSyncBulbValcenoA19MC(DEV_LIST_DETAIL_VALCENO, self.manager)
         assert bulb.turn_off()
         assert bulb.device_status == 'off'
@@ -263,7 +263,7 @@ class TestVeSyncBulbValceno(TestBase):
 
     def test_brightness(self):
         """Test brightness on Valceno."""
-        self.mock_api.return_value = ({'code': 0}, 200)
+        self.mock_api.return_value = {'code': 0}
         bulb = VeSyncBulbValcenoA19MC(DEV_LIST_DETAIL_VALCENO, self.manager)
         assert bulb.set_brightness(50)
         assert bulb.brightness == 50
@@ -273,14 +273,14 @@ class TestVeSyncBulbValceno(TestBase):
 
     def test_invalid_brightness(self):
         """Test invalid brightness on Valceno."""
-        self.mock_api.return_value = ({'code': 0}, 200)
+        self.mock_api.return_value = {'code': 0}
         bulb = VeSyncBulbValcenoA19MC(DEV_LIST_DETAIL_VALCENO, self.manager)
         assert bulb.set_brightness(5000)
         assert bulb.brightness == 100
         
     def test_invalid_saturation(self):
         """Test invalid saturation on Valceno."""
-        self.mock_api.return_value = ({'code': 0}, 200)
+        self.mock_api.return_value = {'code': 0}
         bulb = VeSyncBulbValcenoA19MC(DEV_LIST_DETAIL_VALCENO, self.manager)
         assert bulb.set_color_saturation(5000)
         body_dict = {
@@ -302,7 +302,7 @@ class TestVeSyncBulbValceno(TestBase):
 
     def test_color(self):
         """Test set color on Valceno."""
-        self.mock_api.return_value = ({
+        self.mock_api.return_value = {
             'code': 0,
             'msg': '',
             'result': {
@@ -316,14 +316,14 @@ class TestVeSyncBulbValceno(TestBase):
                     'value': 59
                 }
             }
-        }, 200)
+        }
         bulb = VeSyncBulbValcenoA19MC(DEV_LIST_DETAIL_VALCENO, self.manager)
         assert bulb.set_rgb(50, 100, 150)
         assert bulb.color_rgb == RGB(50, 100, 150)
 
     def test_hue(self):
         """Test hue on Valceno MC Bulb."""
-        self.mock_api.return_value = ({'code': 0}, 200)
+        self.mock_api.return_value = {'code': 0}
         bulb = VeSyncBulbValcenoA19MC(DEV_LIST_DETAIL_VALCENO, self.manager)
         bulb.set_color_hue(230.5)
         body_dict = {
