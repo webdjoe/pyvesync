@@ -141,6 +141,9 @@ class VeSyncBaseDevice:
             return
         self.pid = r.get('result', {}).get('pid')
 
+    def update(self) -> None:
+        """Update device details."""
+
     def display(self) -> None:
         """Print formatted device info to stdout.
 

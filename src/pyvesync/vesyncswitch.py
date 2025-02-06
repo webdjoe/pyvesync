@@ -23,16 +23,19 @@ Note:
 import logging
 import json
 from abc import ABCMeta, abstractmethod
-from typing import Dict, Union, Optional
+from typing import TYPE_CHECKING
 
 from pyvesync.helpers import Helpers as helpers
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
+
+if TYPE_CHECKING:
+    from pyvesync import VeSync
 
 logger = logging.getLogger(__name__)
 
 # --8<-- [start:feature_dict]
 
-feature_dict: Dict[str, Dict[str, Union[list, str]]] = {
+feature_dict: dict[str, dict[str, list | str]] = {
     'ESWL01': {
         'module': 'VeSyncWallSwitch',
         'features': []
@@ -52,7 +55,7 @@ feature_dict: Dict[str, Dict[str, Union[list, str]]] = {
 switch_modules: dict = {k: v['module']
                         for k, v in feature_dict.items()}
 
-__all__: list = list(switch_modules.values()) + ['switch_modules']
+__all__: list = [*switch_modules.values(), 'switch_modules']
 
 
 class VeSyncSwitch(VeSyncBaseDevice):
@@ -69,14 +72,14 @@ class VeSyncSwitch(VeSyncBaseDevice):
 
     __metaclasss__ = ABCMeta
 
-    def __init__(self, details, manager):
+    def __init__(self, details: dict, manager: 'VeSync') -> None:
         """Initialize Switch Base Class."""
         super().__init__(details, manager)
-        self.features = feature_dict.get(self.device_type, {}).get('features')
+        self.features = feature_dict.get(self.device_type, {}).get('features', [])
         if self.features is None:
             logger.error('% device configuration not set', self.device_name)
             raise KeyError(f'Device configuration not set {self.device_name}')
-        self.details = {}
+        self.details: dict = {}
 
     def is_dimmable(self) -> bool:
         """Return True if switch is dimmable."""
@@ -111,7 +114,7 @@ class VeSyncSwitch(VeSyncBaseDevice):
 class VeSyncWallSwitch(VeSyncSwitch):
     """Etekcity standard wall switch class."""
 
-    def __init__(self, details, manager):
+    def __init__(self, details: dict, manager: 'VeSync') -> None:
         """Initialize standard etekcity wall switch class."""
         super().__init__(details, manager)
 
@@ -193,7 +196,7 @@ class VeSyncWallSwitch(VeSyncSwitch):
 class VeSyncDimmerSwitch(VeSyncSwitch):
     """Vesync Dimmer Switch Class with RGB Faceplate."""
 
-    def __init__(self, details, manager):
+    def __init__(self, details: dict, manager: 'VeSync') -> None:
         """Initilize dimmer switch class."""
         super().__init__(details, manager)
         self._brightness = 0
@@ -307,9 +310,9 @@ class VeSyncDimmerSwitch(VeSyncSwitch):
         return self.indicator_light_toggle('off')
 
     def rgb_color_status(self, status: str,
-                         red: Optional[int] = None,
-                         blue: Optional[int] = None,
-                         green: Optional[int] = None) -> bool:
+                         red: int | None = None,
+                         blue: int | None = None,
+                         green: int | None = None) -> bool:
         """Set faceplate RGB color."""
         body = helpers.req_body(self.manager, 'devicestatus')
         body['status'] = status
@@ -325,7 +328,8 @@ class VeSyncDimmerSwitch(VeSyncSwitch):
 
         if r is not None and helpers.code_check(r):
             self._rgb_status = status
-            if body.get('rgbValue') is not None:
+            if body.get('rgbValue') is not None and \
+                    red is not None and blue is not None and green is not None:
                 self._rgb_value = {'red': red, 'blue': blue, 'green': green}
             return True
         logger.warning('Error turning %s off', self.device_name)
