@@ -159,7 +159,7 @@ turn_off:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York

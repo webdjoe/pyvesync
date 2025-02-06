@@ -34,8 +34,8 @@ class TestVeSync(unittest.TestCase):
 
     def test_imports(self):
         """Test that __all__ contains only names that are actually exported."""
-        modules = ['pyvesync.vesyncfan',
-                   'pyvesync.vesyncbulb',
+        modules = ['pyvesync.vesyncbulb',
+                   'pyvesync.vesyncfan',
                    'pyvesync.vesyncoutlet',
                    'pyvesync.vesyncswitch']
         for mod in modules:
@@ -44,7 +44,7 @@ class TestVeSync(unittest.TestCase):
             missing = set(n for n in import_mod.__all__
                           if getattr(import_mod, n, None) is None)
             self.assertFalse(
-                missing, msg="__all__ contains unresolved names: %s" % (
+                missing, msg="%s.__all__ contains unresolved names: %s" % (mod, 
                     ", ".join(missing),))
 
     def test_username(self):
@@ -108,7 +108,7 @@ class TestVeSync(unittest.TestCase):
             mocked_post.return_value = d
 
             data = self.vesync_1.login()
-            body = Helpers.req_body_login(self.vesync_1)
+            body = self.vesync_1.req_body_login()
             body['email'] = self.vesync_1.username
             body['password'] = Helpers.hash_password(self.vesync_1.password)
             mocked_post.assert_called_with('/cloud/v1/user/login', 'post',

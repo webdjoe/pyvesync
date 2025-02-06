@@ -61,7 +61,7 @@ class TestLogin(object):
         vesync_obj = VeSync(email, password)
         assert vesync_obj.login() is False
         if testid == 'correct':
-            jd = helpers.req_body_login(vesync_obj)
+            jd = vesync_obj.req_body_login()
             self.mock_api.assert_called_with('/cloud/v1/user/login', 'post',
                                              json_object=jd)
         else:
@@ -73,7 +73,7 @@ class TestLogin(object):
         self.mock_api.return_value = full_return
         vesync_obj = VeSync('sam@mail.com', 'pass')
         assert vesync_obj.login() is True
-        jd = helpers.req_body_login(vesync_obj)
+        jd = vesync_obj.req_body_login()
         self.mock_api.assert_called_with('/cloud/v1/user/login', 'post', json_object=jd)
         assert vesync_obj.token == 'sam_token'
         assert vesync_obj.account_id == 'sam_actid'

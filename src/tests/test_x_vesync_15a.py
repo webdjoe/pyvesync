@@ -85,8 +85,8 @@ class TestVeSync15ASwitch(utils.TestBase):
         """Test 15A Device On/Off Methods"""
         self.mock_api.return_value = {'code': 0}
         vswitch15a = VeSyncOutlet15A(DEV_LIST_DETAIL, self.manager)
-        head = helpers.req_headers(self.manager)
-        body = helpers.req_body_status(self.manager)
+        head = self.manager.req_headers()
+        body = self.manager.req_body_status()
 
         body['status'] = 'on'
         body['uuid'] = vswitch15a.uuid
@@ -118,12 +118,12 @@ class TestVeSync15ASwitch(utils.TestBase):
         self.mock_api.return_value = ENERGY_HISTORY
         vswitch15a = VeSyncOutlet15A(DEV_LIST_DETAIL, self.manager)
         vswitch15a.get_weekly_energy()
-        body = helpers.req_body_energy_week(self.manager)
+        body = self.manager.req_body_energy_week()
         body['uuid'] = vswitch15a.uuid
         self.mock_api.assert_called_with(
             '/15a/v1/device/energyweek',
             method='post',
-            headers=helpers.req_headers(self.manager),
+            headers=self.manager.req_headers(),
             json_object=body,
         )
         energy_dict = vswitch15a.energy['week']
@@ -139,12 +139,12 @@ class TestVeSync15ASwitch(utils.TestBase):
         self.mock_api.return_value = ENERGY_HISTORY
         vswitch15a = VeSyncOutlet15A(DEV_LIST_DETAIL, self.manager)
         vswitch15a.get_monthly_energy()
-        body = helpers.req_body_energy_month(self.manager)
+        body = self.manager.req_body_energy_month()
         body['uuid'] = vswitch15a.uuid
         self.mock_api.assert_called_with(
             '/15a/v1/device/energymonth',
             method='post',
-            headers=helpers.req_headers(self.manager),
+            headers=self.manager.req_headers(),
             json_object=body,
         )
         energy_dict = vswitch15a.energy['month']
@@ -160,12 +160,12 @@ class TestVeSync15ASwitch(utils.TestBase):
         self.mock_api.return_value = ENERGY_HISTORY
         vswitch15a = VeSyncOutlet15A(DEV_LIST_DETAIL, self.manager)
         vswitch15a.get_yearly_energy()
-        body = helpers.req_body_energy_year(self.manager)
+        body = self.manager.req_body_energy_year()
         body['uuid'] = vswitch15a.uuid
         self.mock_api.assert_called_with(
             '/15a/v1/device/energyyear',
             method='post',
-            headers=helpers.req_headers(self.manager),
+            headers=self.manager.req_headers(),
             json_object=body,
         )
         energy_dict = vswitch15a.energy['year']

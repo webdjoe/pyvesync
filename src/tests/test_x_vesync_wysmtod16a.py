@@ -56,9 +56,9 @@ class TestVeSyncWYSMTOD16ASwitch(TestBase):
         """Test WYSMTOD16A Device On/Off Methods."""
         self.mock_api.return_value = {'code': 0, 'msg': 'success', 'result': {'code': 0}}
         wysmtod16a_outlet = VeSyncOutletWYSMTOD16A(DEV_LIST_DETAIL, self.manager)
-        head = helpers.req_header_bypass()
+        head = self.manager.req_header_bypass()
         body = {
-            **helpers.req_body_bypass_v2(self.manager),
+            **self.manager.req_body_bypass_v2(),
             'cid': wysmtod16a_outlet.cid,
             'configModule': wysmtod16a_outlet.config_module,
             'payload': {

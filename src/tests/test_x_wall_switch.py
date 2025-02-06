@@ -72,8 +72,8 @@ class TestVeSyncWallSwitch(object):
         """Test 15A Device On/Off Methods"""
         self.mock_api.return_value = {'code': 0}
         wswitch = VeSyncWallSwitch(DEV_LIST_DETAIL, self.vesync_obj)
-        head = helpers.req_headers(self.vesync_obj)
-        body = helpers.req_body_status(self.vesync_obj)
+        head = self.vesync_obj.req_headers()
+        body = self.vesync_obj.req_body_status()
 
         body['status'] = 'on'
         body['uuid'] = wswitch.uuid

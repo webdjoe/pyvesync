@@ -5,7 +5,7 @@ change_fan_speed:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: LTF-F422S-KEU-CID
     configModel: ConfigModule
     configModule: ConfigModule
@@ -34,7 +34,7 @@ manual_mode:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: LTF-F422S-KEU-CID
     configModel: ConfigModule
     configModule: ConfigModule
@@ -61,7 +61,7 @@ sleep_mode:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: LTF-F422S-KEU-CID
     configModel: ConfigModule
     configModule: ConfigModule
@@ -88,7 +88,7 @@ turn_off:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: LTF-F422S-KEU-CID
     configModel: ConfigModule
     configModule: ConfigModule
@@ -116,7 +116,7 @@ turn_on:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: LTF-F422S-KEU-CID
     configModel: ConfigModule
     configModule: ConfigModule
@@ -144,7 +144,7 @@ update:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: LTF-F422S-KEU-CID
     configModel: ConfigModule
     configModule: ConfigModule

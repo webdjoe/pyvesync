@@ -18,7 +18,7 @@ import yaml
 from collections import defaultdict, namedtuple
 from unittest.mock import patch
 from requests.structures import CaseInsensitiveDict
-from pyvesync.vesync import VeSync
+from pyvesync.vesync import VeSync, APP_VERSION, PHONE_BRAND, PHONE_OS
 from pyvesync.helpers import Color
 import pyvesync.helpers as vs_helpers
 
@@ -162,9 +162,9 @@ API_DEFAULTS = CaseInsensitiveDict({
     'token': Defaults.token,
     'timeZone': vs_helpers.DEFAULT_TZ,
     'acceptLanguage': 'en',
-    'appVersion': vs_helpers.APP_VERSION,
-    'phoneBrand': vs_helpers.PHONE_BRAND,
-    'phoneOS': vs_helpers.PHONE_OS,
+    'appVersion': APP_VERSION,
+    'phoneBrand': PHONE_BRAND,
+    'phoneOS': PHONE_OS,
     'userType': vs_helpers.USER_TYPE,
     "tk": Defaults.token,
     "traceId": "TRACE_ID",

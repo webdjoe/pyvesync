@@ -2,14 +2,14 @@ set_brightness:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: ESL100CW-CID
     configModule: ConfigModule
     jsonCmd:
@@ -27,14 +27,14 @@ set_color_temp:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: ESL100CW-CID
     jsonCmd:
       light:
@@ -51,14 +51,14 @@ turn_off:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: ESL100CW-CID
     configModule: ConfigModule
     jsonCmd:
@@ -76,14 +76,14 @@ turn_on:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: ESL100CW-CID
     configModule: ConfigModule
     jsonCmd:
@@ -101,14 +101,14 @@ update:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: ESL100CW-CID
     configModule: ConfigModule
     jsonCmd:

@@ -2,7 +2,7 @@ get_details:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
@@ -12,7 +12,7 @@ get_monthly_energy:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
@@ -22,7 +22,7 @@ get_weekly_energy:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
@@ -32,7 +32,7 @@ get_yearly_energy:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
@@ -42,7 +42,7 @@ turn_off:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
@@ -52,7 +52,7 @@ turn_on:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
@@ -62,7 +62,7 @@ update:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York

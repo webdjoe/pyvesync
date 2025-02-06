@@ -7,45 +7,26 @@ from functools import wraps
 from typing import Optional, Union, Set
 from dataclasses import dataclass
 from .vesyncbasedevice import VeSyncBaseDevice
-from .helpers import Helpers, EDeviceFamily, ERR_REQ_TIMEOUTS
+from .helpers import Helpers, EConfig, EDeviceFamily, ERR_REQ_TIMEOUTS, DEVICE_CONFIGS_T, build_model_dict
 
 logger = logging.getLogger(__name__)
 
 module_kitchen = sys.modules[__name__]
 
-kitchen_features: dict = {
+# --8<-- [start:kitchen_configs]
+kitchen_configs: DEVICE_CONFIGS_T = {
     'Cosori3758L': {
-        'module': 'VeSyncAirFryer158',
-        'models': ['CS137-AF/CS158-AF', 'CS158-AF', 'CS137-AF', 'CS358-AF'],
-        'features': [],
+        EConfig.CLASS: 'VeSyncAirFryer158',
+        EConfig.MODELS: ['CS137-AF/CS158-AF', 'CS158-AF', 'CS137-AF', 'CS358-AF'],
+        EConfig.FEATURES: [],
     }
 }
+# --8<-- [end:kitchen_configs]
 
+kitchen_classes = build_model_dict(kitchen_configs, EConfig.CLASS)
+kitchen_features = build_model_dict(kitchen_configs, EConfig.FEATURES)
 
-def model_dict() -> dict:
-    """Build purifier and humidifier model dictionary."""
-    model_modules = {}
-    for dev_dict in kitchen_features.values():
-        for model in dev_dict['models']:
-            model_modules[model] = dev_dict['module']
-    return model_modules
-
-
-def model_features(dev_type: str) -> dict:
-    """Get features from device type."""
-    for dev_dict in kitchen_features.values():
-        if dev_type in dev_dict['models']:
-            return dev_dict
-    raise ValueError('Device not configured')
-
-
-kitchen_classes: Set[str] = {v['module'] for k, v in kitchen_features.items()}
-
-
-kitchen_modules: dict = model_dict()
-
-
-__all__ = list(kitchen_classes)
+__all__ = list(kitchen_classes.values()) + ['kitchen_classes', 'kitchen_classes', 'FryerStatus', 'VeSyncKitchen']
 
 
 # Status refresh interval in seconds
@@ -282,7 +263,7 @@ class VeSyncKitchen(VeSyncBaseDevice):
 
     def __init__(self, details, manager):
         """Init the VeSync Air Fryer 158 class."""
-        super().__init__(details, manager, EDeviceFamily.KITCHEN)
+        super().__init__(details, manager, kitchen_features, EDeviceFamily.KITCHEN)
         self.fryer_status = FryerStatus()
         self.refresh_interval = 0
         self.last_update = int(time.time())
@@ -305,7 +286,7 @@ class VeSyncAirFryer158(VeSyncKitchen):
     def get_body(self, method:  Optional[str] = None) -> dict:
         """Return body of api calls."""
         body = {
-            **Helpers.req_body_bypass_v1(self.manager),
+            **self.manager.req_body_bypass_v1(),
             'cid': self.cid,
             'userCountryCode': self.manager.country_code,
             'debugMode': False
@@ -331,7 +312,7 @@ class VeSyncAirFryer158(VeSyncKitchen):
         """Get Air Fryer Configuration."""
         body = self.get_body('configurationsV2')
 
-        r = Helpers.post_device_managed_v2(body)
+        r = self.manager.post_device_managed_v2(body)
         if not isinstance(r, dict) \
                 or r.get('code') != 0 \
                 or not isinstance(r.get('result'), dict):
@@ -690,8 +671,8 @@ class VeSyncAirFryer158(VeSyncKitchen):
 
 def factory(module: str, details: dict, manager) -> VeSyncKitchen:
     try:
-        definition = kitchen_modules[module]
-        kitchen = getattr(module_kitchen, definition)
+        class_name = kitchen_classes[module]
+        kitchen = getattr(module_kitchen, class_name)
         return kitchen(details, manager)
     except:
         return None

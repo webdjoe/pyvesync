@@ -5,7 +5,7 @@ enable_white_mode:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: ESL100MC-CID
     configModule: ConfigModule
     debugMode: false
@@ -36,7 +36,7 @@ set_brightness:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: ESL100MC-CID
     configModule: ConfigModule
     debugMode: false
@@ -67,7 +67,7 @@ set_rgb:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: ESL100MC-CID
     configModule: ConfigModule
     debugMode: false
@@ -98,7 +98,7 @@ turn_off:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: ESL100MC-CID
     configModule: ConfigModule
     debugMode: false
@@ -124,7 +124,7 @@ turn_on:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: ESL100MC-CID
     configModule: ConfigModule
     debugMode: false
@@ -150,7 +150,7 @@ update:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: ESL100MC-CID
     configModule: ConfigModule
     debugMode: false

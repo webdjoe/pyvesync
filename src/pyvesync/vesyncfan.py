@@ -9,208 +9,187 @@ from pyvesync.vesyncbasedevice import (
     VeSyncBaseDevice, STATUS_ON, STATUS_OFF, MODE_ADVANCED_SLEEP, MODE_AUTO,
     MODE_DIM, MODE_HUMIDITY, MODE_MANUAL, MODE_NORMAL, MODE_PET, MODE_SLEEP, MODE_TURBO,
 )
-from .helpers import Helpers, Timer, EDeviceFamily, ERR_REQ_TIMEOUTS
+from .helpers import Helpers, EConfig, Timer, EDeviceFamily, ERR_REQ_TIMEOUTS, build_model_dict
 
 module_fan = sys.modules[__name__]
 
-humid_features: dict = {
+# --8<-- [start:humid_configs]
+humid_configs: dict = {
     'Classic300S': {
-        'module': 'VeSyncHumid200300S',
-        'models': ['Classic300S', 'LUH-A601S-WUSB', 'LUH-A601S-AUSW'],
-        'features': ['nightlight'],
-        'mist_modes': [MODE_AUTO, MODE_SLEEP, MODE_MANUAL],
-        'mist_levels': list(range(1, 10))
+        EConfig.CLASS: 'VeSyncHumid200300S',
+        EConfig.MODELS: ['Classic300S', 'LUH-A601S-WUSB', 'LUH-A601S-AUSW'],
+        EConfig.FEATURES: ['nightlight'],
+        EConfig.MIST_MODES: [MODE_AUTO, MODE_SLEEP, MODE_MANUAL],
+        EConfig.MIST_LEVELS: list(range(1, 10))
     },
     'Classic200S': {
-        'module': 'VeSyncHumid200S',
-        'models': ['Classic200S'],
-        'features': [],
-        'mist_modes': [MODE_AUTO, MODE_MANUAL],
-        'mist_levels': list(range(1, 10))
+        EConfig.CLASS: 'VeSyncHumid200S',
+        EConfig.MODELS: ['Classic200S'],
+        EConfig.FEATURES: [],
+        EConfig.MIST_MODES: [MODE_AUTO, MODE_MANUAL],
+        EConfig.MIST_LEVELS: list(range(1, 10))
     },
     'Dual200S': {
-        'module': 'VeSyncHumid200300S',
-        'models': ['Dual200S', 'LUH-D301S-WUSR', 'LUH-D301S-WJP',
+        EConfig.CLASS: 'VeSyncHumid200300S',
+        EConfig.MODELS: ['Dual200S', 'LUH-D301S-WUSR', 'LUH-D301S-WJP',
                    'LUH-D301S-WEU'],
-        'features': [],
-        'mist_modes': [MODE_AUTO, MODE_MANUAL],
-        'mist_levels': list(range(1, 3))
+        EConfig.FEATURES: [],
+        EConfig.MIST_MODES: [MODE_AUTO, MODE_MANUAL],
+        EConfig.MIST_LEVELS: list(range(1, 3))
     },
     'LV600S': {
-        'module': 'VeSyncHumid200300S',
-        'models': ['LUH-A602S-WUSR', 'LUH-A602S-WUS', 'LUH-A602S-WEUR',
+        EConfig.CLASS: 'VeSyncHumid200300S',
+        EConfig.MODELS: ['LUH-A602S-WUSR', 'LUH-A602S-WUS', 'LUH-A602S-WEUR',
                    'LUH-A602S-WEU', 'LUH-A602S-WJP', 'LUH-A602S-WUSC'],
-        'features': ['warm_mist', 'nightlight'],
-        'mist_modes': [MODE_HUMIDITY, MODE_SLEEP, MODE_MANUAL],
-        'mist_levels': list(range(1, 10)),
-        'warm_mist_levels': [0, 1, 2, 3]
+        EConfig.FEATURES: ['warm_mist', 'nightlight'],
+        EConfig.MIST_MODES: [MODE_HUMIDITY, MODE_SLEEP, MODE_MANUAL],
+        EConfig.MIST_LEVELS: list(range(1, 10)),
+        EConfig.MIST_LEVELS_WARM: list(range(0, 4))
     },
     'OASISMISTEU': {
-            'module': 'VeSyncHumid200300S',
-            'models': ['LUH-O451S-WEU'],
-            'features': ['warm_mist', 'nightlight'],
-            'mist_modes': [MODE_AUTO, MODE_MANUAL],
-            'mist_levels': list(range(1, 10)),
-            'warm_mist_levels': list(range(4))
+        EConfig.CLASS: 'VeSyncHumid200300S',
+        EConfig.MODELS: ['LUH-O451S-WEU'],
+        EConfig.FEATURES: ['warm_mist', 'nightlight'],
+        EConfig.MIST_MODES: [MODE_AUTO, MODE_MANUAL],
+        EConfig.MIST_LEVELS: list(range(1, 10)),
+        EConfig.MIST_LEVELS_WARM: list(range(0, 4))
     },
     'OASISMIST': {
-            'module': 'VeSyncHumid200300S',
-            'models': ['LUH-O451S-WUS', 'LUH-O451S-WUSR', 'LUH-O601S-WUS',
-                       'LUH-O601S-KUS'],
-            'features': ['warm_mist'],
-            'mist_modes': [MODE_AUTO, MODE_HUMIDITY, MODE_SLEEP, MODE_MANUAL],
-            'mist_levels': list(range(1, 10)),
-            'warm_mist_levels': list(range(4)),
+        EConfig.CLASS: 'VeSyncHumid200300S',
+        EConfig.MODELS: ['LUH-O451S-WUS', 'LUH-O451S-WUSR', 'LUH-O601S-WUS',
+                    'LUH-O601S-KUS'],
+        EConfig.FEATURES: ['warm_mist'],
+        EConfig.MIST_MODES: [MODE_AUTO, MODE_HUMIDITY, MODE_SLEEP, MODE_MANUAL],
+        EConfig.MIST_LEVELS: list(range(1, 10)),
+        EConfig.MIST_LEVELS_WARM: list(range(0, 4)),
     },
     'OASISMIST1000S': {
-            'module': 'VeSyncHumid1000S',
-            'models': ['LUH-M101S-WUS'],
-            'features': [],
-            'mist_modes': [MODE_AUTO, MODE_SLEEP, MODE_MANUAL],
-            'mist_levels': list(range(1, 10))
+        EConfig.CLASS: 'VeSyncHumid1000S',
+        EConfig.MODELS: ['LUH-M101S-WUS'],
+        EConfig.FEATURES: [],
+        EConfig.MIST_MODES: [MODE_AUTO, MODE_SLEEP, MODE_MANUAL],
+        EConfig.MIST_LEVELS: list(range(1, 10))
     },
     'Superior6000S': {
-            'module': 'VeSyncSuperior6000S',
-            'models': ['LEH-S601S-WUS', 'LEH-S601S-WUSR'],
-            'features': [],
-            'mist_modes': [MODE_AUTO, MODE_HUMIDITY, MODE_SLEEP, MODE_MANUAL],
-            'mist_levels': list(range(1, 10))
+        EConfig.CLASS: 'VeSyncSuperior6000S',
+        EConfig.MODELS: ['LEH-S601S-WUS', 'LEH-S601S-WUSR'],
+        EConfig.FEATURES: [],
+        EConfig.MIST_MODES: [MODE_AUTO, MODE_HUMIDITY, MODE_SLEEP, MODE_MANUAL],
+        EConfig.MIST_LEVELS: list(range(1, 10))
     }
 }
+# --8<-- [end:humid_configs]
 
 
-air_features: dict = {
+# --8<-- [start:air_configs]
+air_configs: dict = {
     'Core200S': {
-        'module': 'VeSyncAirBypass',
-        'models': ['Core200S', 'LAP-C201S-AUSR', 'LAP-C202S-WUSR'],
-        'modes': [MODE_SLEEP, STATUS_OFF, MODE_MANUAL],
-        'features': ['reset_filter'],
-        'levels': list(range(1, 4))
+        EConfig.CLASS: 'VeSyncAirBypass',
+        EConfig.MODELS: ['Core200S', 'LAP-C201S-AUSR', 'LAP-C202S-WUSR'],
+        EConfig.MODES: [MODE_SLEEP, STATUS_OFF, MODE_MANUAL],
+        EConfig.FEATURES: ['reset_filter'],
+        EConfig.LEVELS: list(range(1, 4))
     },
     'Core300S': {
-        'module': 'VeSyncAirBypass',
-        'models': ['Core300S', 'LAP-C301S-WJP', 'LAP-C302S-WUSB', 'LAP-C301S-WAAA'],
-        'modes': [MODE_SLEEP, STATUS_OFF, MODE_AUTO, MODE_MANUAL],
-        'features': ['air_quality'],
-        'levels': list(range(1, 5))
+        EConfig.CLASS: 'VeSyncAirBypass',
+        EConfig.MODELS: ['Core300S', 'LAP-C301S-WJP', 'LAP-C302S-WUSB', 'LAP-C301S-WAAA'],
+        EConfig.MODES: [MODE_SLEEP, STATUS_OFF, MODE_AUTO, MODE_MANUAL],
+        EConfig.FEATURES: ['air_quality'],
+        EConfig.LEVELS: list(range(1, 5))
     },
     'Core400S': {
-        'module': 'VeSyncAirBypass',
-        'models': ['Core400S', 'LAP-C401S-WJP', 'LAP-C401S-WUSR',
+        EConfig.CLASS: 'VeSyncAirBypass',
+        EConfig.MODELS: ['Core400S', 'LAP-C401S-WJP', 'LAP-C401S-WUSR',
                    'LAP-C401S-WAAA'],
-        'modes': [MODE_SLEEP, STATUS_OFF, MODE_AUTO, MODE_MANUAL],
-        'features': ['air_quality'],
-        'levels': list(range(1, 5))
+        EConfig.MODES: [MODE_SLEEP, STATUS_OFF, MODE_AUTO, MODE_MANUAL],
+        EConfig.FEATURES: ['air_quality'],
+        EConfig.LEVELS: list(range(1, 5))
     },
     'Core600S': {
-        'module': 'VeSyncAirBypass',
-        'models': ['Core600S', 'LAP-C601S-WUS', 'LAP-C601S-WUSR',
+        EConfig.CLASS: 'VeSyncAirBypass',
+        EConfig.MODELS: ['Core600S', 'LAP-C601S-WUS', 'LAP-C601S-WUSR',
                    'LAP-C601S-WEU'],
-        'modes': [MODE_SLEEP, STATUS_OFF, MODE_AUTO, MODE_MANUAL],
-        'features': ['air_quality'],
-        'levels': list(range(1, 5))
+        EConfig.MODES: [MODE_SLEEP, STATUS_OFF, MODE_AUTO, MODE_MANUAL],
+        EConfig.FEATURES: ['air_quality'],
+        EConfig.LEVELS: list(range(1, 5))
     },
     'LV-PUR131S': {
-        'module': 'VeSyncAir131',
-        'models': ['LV-PUR131S', 'LV-RH131S'],
-        'modes': [MODE_MANUAL, MODE_AUTO, MODE_SLEEP, STATUS_OFF],
-        'features': ['air_quality'],
-        'levels': list(range(1, 3))
+        EConfig.CLASS: 'VeSyncAir131',
+        EConfig.MODELS: ['LV-PUR131S', 'LV-RH131S'],
+        EConfig.MODES: [MODE_MANUAL, MODE_AUTO, MODE_SLEEP, STATUS_OFF],
+        EConfig.FEATURES: ['air_quality'],
+        EConfig.LEVELS: list(range(1, 3))
     },
     'Vital100S': {
-        'module': 'VeSyncAirBaseV2',
-        'models': ['LAP-V102S-AASR', 'LAP-V102S-WUS', 'LAP-V102S-WEU',
+        EConfig.CLASS: 'VeSyncAirBaseV2',
+        EConfig.MODELS: ['LAP-V102S-AASR', 'LAP-V102S-WUS', 'LAP-V102S-WEU',
                    'LAP-V102S-AUSR', 'LAP-V102S-WJP'],
-        'modes': [MODE_MANUAL, MODE_AUTO, MODE_SLEEP, STATUS_OFF, MODE_PET],
-        'features': ['air_quality'],
-        'levels': list(range(1, 5))
+        EConfig.MODES: [MODE_MANUAL, MODE_AUTO, MODE_SLEEP, STATUS_OFF, MODE_PET],
+        EConfig.FEATURES: ['air_quality'],
+        EConfig.LEVELS: list(range(1, 5))
     },
     'Vital200S': {
-        'module': 'VeSyncAirBaseV2',
-        'models': ['LAP-V201S-AASR', 'LAP-V201S-WJP', 'LAP-V201S-WEU',
+        EConfig.CLASS: 'VeSyncAirBaseV2',
+        EConfig.MODELS: ['LAP-V201S-AASR', 'LAP-V201S-WJP', 'LAP-V201S-WEU',
                    'LAP-V201S-WUS', 'LAP-V201-AUSR', 'LAP-V201S-AUSR',
                    'LAP-V201S-AEUR'],
-        'modes': [MODE_MANUAL, MODE_AUTO, MODE_SLEEP, STATUS_OFF, MODE_PET],
-        'features': ['air_quality'],
-        'levels': list(range(1, 5))
+        EConfig.MODES: [MODE_MANUAL, MODE_AUTO, MODE_SLEEP, STATUS_OFF, MODE_PET],
+        EConfig.FEATURES: ['air_quality'],
+        EConfig.LEVELS: list(range(1, 5))
     },
     'EverestAir': {
-        'module': 'VeSyncAirBaseV2',
-        'models': ['LAP-EL551S-AUS', 'LAP-EL551S-AEUR', 'LAP-EL551S-WEU',
+        EConfig.CLASS: 'VeSyncAirBaseV2',
+        EConfig.MODELS: ['LAP-EL551S-AUS', 'LAP-EL551S-AEUR', 'LAP-EL551S-WEU',
                    'LAP-EL551S-WUS'],
-        'modes': [MODE_MANUAL, MODE_AUTO, MODE_SLEEP, STATUS_OFF, MODE_TURBO],
-        'features': ['air_quality', 'fan_rotate'],
-        'levels': list(range(1, 4))
+        EConfig.MODES: [MODE_MANUAL, MODE_AUTO, MODE_SLEEP, STATUS_OFF, MODE_TURBO],
+        EConfig.FEATURES: ['air_quality', 'fan_rotate'],
+        EConfig.LEVELS: list(range(1, 4))
     },
     'SmartTowerFan': {
-        'module': 'VeSyncTowerFan',
-        'models': ['LTF-F422S-KEU', 'LTF-F422S-WUSR', 'LTF-F422_WJP',
-                   'LTF-F422S-WUS'],
-        'modes': [MODE_NORMAL, MODE_AUTO, MODE_ADVANCED_SLEEP, MODE_TURBO, STATUS_OFF],
-        'set_mode_method': 'setTowerFanMode',
-        'features': ['fan_speed'],
-        'levels': list(range(1, 13))
+        EConfig.CLASS: 'VeSyncTowerFan',
+        EConfig.MODELS: ['LTF-F422S-KEU', 'LTF-F422S-WUSR', 'LTF-F422_WJP', 'LTF-F422S-WUS'],
+        EConfig.MODES: [MODE_NORMAL, MODE_AUTO, MODE_ADVANCED_SLEEP, MODE_TURBO, STATUS_OFF],
+        EConfig.FEATURES: ['fan_speed'],
+        EConfig.LEVELS: list(range(1, 13))
     }
 }
+# --8<-- [end:air_configs]
 
 
 logger = logging.getLogger(__name__)
 
+fan_configs           = {**air_configs, **humid_configs}
+fan_classes           = build_model_dict(fan_configs, EConfig.CLASS)
+fan_features          = build_model_dict(fan_configs, EConfig.FEATURES)
+fan_modes             = build_model_dict(fan_configs, EConfig.MODES)
+fan_levels            = build_model_dict(fan_configs, EConfig.LEVELS)
+fan_mist_levels       = build_model_dict(fan_configs, EConfig.MIST_LEVELS)
+fan_mist_modes        = build_model_dict(fan_configs, EConfig.MIST_MODES)
+fan_mist_levels_warm  = build_model_dict(fan_configs, EConfig.MIST_LEVELS_WARM)
 
-def model_dict() -> dict:
-    """Build purifier and humidifier model dictionary.
-
-    Internal function to build a dictionary of device models and their associated
-    classes. Used by the `vesync.object_factory` to determine the class to instantiate.
-    """
-    model_modules = {}
-    for dev_dict in {**air_features, **humid_features}.values():
-        for model in dev_dict['models']:
-            model_modules[model] = dev_dict['module']
-    return model_modules
-
-
-def model_features(dev_type: str) -> dict:
-    """Get features from device type.
-
-    Used by classes to determine the features of the device.
-
-    Parameters:
-        dev_type (str): Device model type
-
-    Returns:
-        dict: Device dictionary
-
-    Raises:
-        ValueError: Device not configured in `air_features` or `humid_features`
-    """
-    for dev_dict in {**air_features, **humid_features}.values():
-        if dev_type in dev_dict['models']:
-            return dev_dict
-    raise ValueError('Device not configured')
-
-
-fan_classes: set = {v['module']
-                    for k, v in {**air_features, **humid_features}.items()}
-
-fan_modules: dict = model_dict()
-
-__all__: list = list(fan_classes) + ['fan_modules']
+__all__: list = list(fan_classes.values()) + [
+    'fan_classes', 'fan_configs', 'fan_features', 'fan_modes', 'fan_levels',
+    'fan_levels', 'fan_mist_levels', 'fan_mist_modes', 'fan_mist_levels_warm', 'VeSyncFan'
+]
 
 class VeSyncFan(VeSyncBaseDevice):
 
     device_family = EDeviceFamily.FAN
     enabled: bool = False
+    modes: list
+    levels: list
 
     def __init__(self, details: Dict[str, list], manager):
         """Initialize VeSync Air Purifier Bypass Base Class."""
-        super().__init__(details, manager, EDeviceFamily.FAN)
+        super().__init__(details, manager, fan_features, EDeviceFamily.FAN)
+        self.modes = fan_modes.get(self.device_type)
+        self.levels = fan_levels.get(self.device_type)
         self.enabled = True
 
     def build_api_dict(self, method: str, config: list[str], data: dict = None) -> Dict:
         """Build humidifier api call header and body."""
         body = {
-            **Helpers.req_body_bypass_v2(self.manager),
+            **self.manager.req_body_bypass_v2(),
             'cid': self.cid,
         }
         for value in config:
@@ -261,8 +240,6 @@ class VeSyncAirBypass(VeSyncFan):
         }
     ```
     """
-    _config_dict: dict = {}
-    _features: list = []
     modes: list = []
     air_quality_feature: bool = False
     timer: Optional[Timer] = None
@@ -274,18 +251,7 @@ class VeSyncAirBypass(VeSyncFan):
     def __init__(self, details: Dict[str, list], manager):
         """Initialize VeSync Air Purifier Bypass Base Class."""
         super().__init__(details, manager)
-        self._config_dict = model_features(self.device_type)
-        self._features = self._config_dict.get('features', [])
-        if not isinstance(self._config_dict.get('modes'), list):
-            logger.error(
-                'Please set modes for %s in the configuration',
-                self.device_type)
-            raise KeyError(f'Modes not set in configuration for {self.device_name}')
-        self.modes = self._config_dict['modes']
-        if 'air_quality' in self._features:
-            self.air_quality_feature = True
-        else:
-            self.air_quality_feature = False
+        self.air_quality_feature = self.supports('air_quality')
         self.details: Dict[str, Any] = {
             'filter_life': 0,
             'mode': MODE_MANUAL,
@@ -354,8 +320,7 @@ class VeSyncAirBypass(VeSyncFan):
         self.details['display_forever'] = dev_dict.get('display_forever',
                                                        False)
         if self.air_quality_feature is True:
-            self.details['air_quality_value'] = dev_dict.get(
-                'air_quality_value', 0)
+            self.details['air_quality_value'] = dev_dict.get('air_quality_value', 0)
             self.details['air_quality'] = dev_dict.get('air_quality', 0)
 
     def build_config_dict(self, conf_dict: Dict[str, str]) -> None:
@@ -373,29 +338,29 @@ class VeSyncAirBypass(VeSyncFan):
     def get_details(self) -> None:
         """Build Bypass Purifier details dictionary."""
         body = self.build_api_dict('getPurifierStatus', data={})
-        r = Helpers.post_device_managed_v2(body)
+        r = self.manager.post_device_managed_v2(body)
         if not isinstance(r, dict):
             logger.debug('Error in purifier response')
             return
         if not isinstance(r.get('result'), dict):
             logger.debug('Error in purifier response')
             return
-        outer_result = r.get('result', {})
-        inner_result = None
 
-        if outer_result:
-            inner_result = r.get('result', {}).get('result')
-        if inner_result is not None and Helpers.code_check(r):
-            if outer_result.get('code') == 0:
-                self.build_purifier_dict(inner_result)
+        if Helpers.code_check(r):
+            outer_result = r.get('result', {})
+            if outer_result:
+                inner_result = r.get('result', {}).get('result')
+                if inner_result is not None:
+                    if outer_result.get('code') == 0:
+                        self.build_purifier_dict(inner_result)
+                    else:
+                        logger.debug('error in inner result dict from purifier')
+                    if inner_result.get('configuration', {}):
+                        self.build_config_dict(inner_result.get('configuration', {}))
+                    else:
+                        logger.debug('No configuration found in purifier status')
             else:
-                logger.debug('error in inner result dict from purifier')
-            if inner_result.get('configuration', {}):
-                self.build_config_dict(inner_result.get('configuration', {}))
-            else:
-                logger.debug('No configuration found in purifier status')
-        else:
-            logger.debug('Error in purifier response')
+                logger.debug('Error in purifier response')
 
     def update(self):
         """Update Purifier details."""
@@ -424,7 +389,7 @@ class VeSyncAirBypass(VeSyncFan):
 
         """
         body = self.build_api_dict('getTimer', data={})
-        r = Helpers.post_device_managed_v2(body)
+        r = self.manager.post_device_managed_v2(body)
         if not isinstance(r, dict):
             logger.debug('Error in purifier response')
             return None
@@ -471,7 +436,7 @@ class VeSyncAirBypass(VeSyncFan):
             'action': STATUS_OFF,
         }
         body = self.build_api_dict('addTimer', data=data)
-        r = Helpers.post_device_managed_v2(body)
+        r = self.manager.post_device_managed_v2(body)
 
         if r.get('code') != 0:
             logger.debug('Error in purifier response, code %s', r.get('code', 'unknown'))
@@ -506,15 +471,14 @@ class VeSyncAirBypass(VeSyncFan):
             logger.debug("Timer doesn't have an ID, can't clear")
 
         body = self.build_api_dict('delTimer', data={'id': self.timer.id})
-        r = Helpers.post_device_managed_v2(body)
+        r = self.manager.post_device_managed_v2(body)
         if r.get('code') != 0:
             logger.debug('Error in purifier response, code %s', r.get('code', 'unknown'))
             return False
         logger.debug("Timer cleared")
         return True
 
-    def change_fan_speed(self,
-                         speed=None) -> bool:
+    def change_fan_speed(self, speed=None) -> bool:
         """Change fan speed based on levels in configuration dict.
 
         If no value is passed, the next speed in the list is selected.
@@ -525,21 +489,20 @@ class VeSyncAirBypass(VeSyncFan):
         Returns:
             bool : True if speed is set, False if not
         """
-        speeds: list = self._config_dict.get('levels', [])
         current_speed = self.speed
 
         if speed is not None:
-            if speed not in speeds:
+            if speed not in self.levels:
                 logger.debug("%s is invalid speed - valid speeds are %s",
-                             speed, str(speeds))
+                             speed, str(self.levels))
                 return False
             new_speed = speed
         else:
-            if current_speed == speeds[-1]:
-                new_speed = speeds[0]
+            if current_speed == self.levels[-1]:
+                new_speed = self.levels[0]
             else:
-                current_index = speeds.index(current_speed)
-                new_speed = speeds[current_index + 1]
+                current_index = self.levels.index(current_speed)
+                new_speed = self.levels[current_index + 1]
 
         data = {
             'id': 0,
@@ -548,9 +511,9 @@ class VeSyncAirBypass(VeSyncFan):
             'mode': MODE_MANUAL,
         }
         body = self.build_api_dict('setLevel', data=data)
-        r = Helpers.post_device_managed_v2(body)
+        r = self.manager.post_device_managed_v2(body)
 
-        if r is not None and Helpers.code_check(r):
+        if Helpers.code_check(r):
             self.speed = new_speed
             return True
         logger.debug('Error changing %s speed', self.device_name)
@@ -586,9 +549,9 @@ class VeSyncAirBypass(VeSyncFan):
             return False
 
         body = self.build_api_dict('setChildLock', data={'child_lock': mode})
-        r = Helpers.post_device_managed_v2(body)
+        r = self.manager.post_device_managed_v2(body)
 
-        if r is not None and Helpers.code_check(r):
+        if Helpers.code_check(r):
             self.details['child_lock'] = mode
             return True
         if isinstance(r, dict):
@@ -603,14 +566,14 @@ class VeSyncAirBypass(VeSyncFan):
         Returns:
             bool : True if filter is reset, False if not
         """
-        if 'reset_filter' not in self._features:
+        if self.supports('reset_filter'):
             logger.debug("Filter reset not implemented for %s", self.device_type)
             return False
 
         body = self.build_api_dict('resetFilter', data={})
-        r = Helpers.post_device_managed_v2(body)
+        r = self.manager.post_device_managed_v2(body)
 
-        if r is not None and Helpers.code_check(r):
+        if Helpers.code_check(r):
             return True
         logger.debug('Error resetting filter')
         return False
@@ -645,7 +608,7 @@ class VeSyncAirBypass(VeSyncFan):
                 'mode': mode.lower()
             }
             body = self.build_api_dict('setPurifierMode', data=data)
-        r = Helpers.post_device_managed_v2(body)
+        r = self.manager.post_device_managed_v2(body)
 
         if Helpers.code_check(r):
             if mode.lower() == MODE_MANUAL:
@@ -716,9 +679,9 @@ class VeSyncAirBypass(VeSyncFan):
             return False
 
         body = self.build_api_dict('setSwitch', data={'enabled': turn, 'id': 0})
-        r = Helpers.post_device_managed_v2(body)
+        r = self.manager.post_device_managed_v2(body)
 
-        if r is not None and Helpers.code_check(r):
+        if Helpers.code_check(r):
             self.device_status = status
             return True
         logger.debug("Error toggling purifier - %s",
@@ -741,8 +704,8 @@ class VeSyncAirBypass(VeSyncFan):
             return False
 
         body = self.build_api_dict('setDisplay', data={'state': mode})
-        r = Helpers.post_device_managed_v2(body)
-        if r is not None and Helpers.code_check(r):
+        r = self.manager.post_device_managed_v2(body)
+        if Helpers.code_check(r):
             return True
         logger.debug("Error toggling purifier display - %s",
                      self.device_name)
@@ -784,8 +747,8 @@ class VeSyncAirBypass(VeSyncFan):
                          mode)
             return False
         body = self.build_api_dict('setNightLight', data={'night_light': mode.lower()})
-        r = Helpers.post_device_managed_v2(body)
-        if r is not None and Helpers.code_check(r):
+        r = self.manager.post_device_managed_v2(body)
+        if Helpers.code_check(r):
             self.details['night_light'] = mode.lower()
             return True
         logger.debug('Error setting nightlight mode')
@@ -963,7 +926,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
     def get_details(self) -> None:
         """Build API V2 Purifier details dictionary."""
         body = self.build_api_dict('getPurifierStatus', data={})
-        r = Helpers.post_device_managed_v2(body)
+        r = self.manager.post_device_managed_v2(body)
         if Helpers.nested_code_check(r) is False or not isinstance(r, dict):
             logger.debug('Error getting purifier details')
             self.connection_status = 'offline'
@@ -1048,7 +1011,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
             return True
 
         body = self.build_api_dict('setLightDetection', data={'lightDetectionSwitch': turn_id})
-        r = Helpers.post_device_managed_v2(body)
+        r = self.manager.post_device_managed_v2(body)
         if r is not None and Helpers.nested_code_check(r):
             self.details['light_detection'] = turn
             return True
@@ -1077,7 +1040,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
             }
         body = self.build_api_dict('setSwitch', data=data)
         body['deviceId'] = self.cid
-        r = Helpers.post_device_managed_v2(body)
+        r = self.manager.post_device_managed_v2(body)
         if r is not None and Helpers.nested_code_check(r):
             self.device_status = status
             return True
@@ -1097,7 +1060,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         turn_id = int(mode)
 
         body = self.build_api_dict('setChildLock', data={'childLockSwitch': turn_id})
-        r = Helpers.post_device_managed_v2(body)
+        r = self.manager.post_device_managed_v2(body)
         if r is not None and Helpers.nested_code_check(r):
             self.details['child_lock'] = mode
             return True
@@ -1110,7 +1073,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         mode_id = int(mode)
 
         body = self.build_api_dict('setDisplay', data={'screenSwitch': mode_id})
-        r = Helpers.post_device_managed_v2(body)
+        r = self.manager.post_device_managed_v2(body)
         if r is not None and Helpers.nested_code_check(r):
             self.details['screen_switch'] = mode
             return True
@@ -1152,7 +1115,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         body = self.build_api_dict('addTimerV2', data=data)
         body['payload']['subDeviceNo'] = 0
 
-        r = Helpers.post_device_managed_v2(body)
+        r = self.manager.post_device_managed_v2(body)
 
         if r is not None and Helpers.nested_code_check(r):
             self.timer = Timer(timer_duration, action)
@@ -1165,7 +1128,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         """Clear running timer."""
         body = self.build_api_dict('delTimerV2', data={'id': 1, "subDeviceNo": 0})
         body['payload']['subDeviceNo'] = 0
-        r = Helpers.post_device_managed_v2(body)
+        r = self.manager.post_device_managed_v2(body)
         if r is not None and Helpers.nested_code_check(r):
             self.timer = None
             return True
@@ -1194,8 +1157,8 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
             'roomSize': room_size,
         }
         body = self.build_api_dict('setAutoPreference', data=data)
-        r = Helpers.post_device_managed_v2(body)
-        if r is not None and Helpers.code_check(r):
+        r = self.manager.post_device_managed_v2(body)
+        if Helpers.code_check(r):
             self.details['auto_preference'] = preference
             return True
 
@@ -1211,21 +1174,20 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         Parameters:
             speed (int | None): Speed to set based on levels in configuration dict
         """
-        speeds: list = self._config_dict.get('levels', [])
         current_speed = self.set_speed_level or 0
 
         if speed is not None:
-            if speed not in speeds:
+            if speed not in self.levels:
                 logger.debug("%s is invalid speed - valid speeds are %s",
-                             speed, str(speeds))
+                             speed, str(self.levels))
                 return False
             new_speed = speed
         else:
-            if current_speed in [speeds[-1], 0]:
-                new_speed = speeds[0]
+            if current_speed in [self.levels[-1], 0]:
+                new_speed = self.levels[0]
             else:
-                current_index = speeds.index(current_speed)
-                new_speed = speeds[current_index + 1]
+                current_index = self.levels.index(current_speed)
+                new_speed = self.levels[current_index + 1]
 
         data= {
             'levelIdx': 0,
@@ -1234,8 +1196,8 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         }
         body = self.build_api_dict('setLevel', data=data)
         body['deviceId'] = self.cid
-        r = Helpers.post_device_managed_v2(body)
-        if r is not None and Helpers.code_check(r):
+        r = self.manager.post_device_managed_v2(body)
+        if Helpers.code_check(r):
             self.set_speed_level = new_speed
             self.mode = MODE_MANUAL
             return True
@@ -1266,7 +1228,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
             return self.turn_off()
 
         body = self.build_api_dict('setPurifierMode', data={'workMode': mode})
-        r = Helpers.post_device_managed_v2(body)
+        r = self.manager.post_device_managed_v2(body)
         if Helpers.code_check(r):
             self.mode = mode
             return True
@@ -1327,7 +1289,7 @@ class VeSyncTowerFan(VeSyncAirBaseV2):
     def get_details(self) -> None:
         """Build API V2 Fan details dictionary."""
         body = self.build_api_dict('getTowerFanStatus', data={})
-        r = Helpers.post_device_managed_v2(body)
+        r = self.manager.post_device_managed_v2(body)
         if Helpers.nested_code_check(r) is False or not isinstance(r, dict):
             logger.debug('Error getting purifier details')
             self.connection_status = 'offline'
@@ -1362,7 +1324,7 @@ class VeSyncTowerFan(VeSyncAirBaseV2):
             return self.turn_off()
 
         body = self.build_api_dict('setTowerFanMode', data={'workMode': mode})
-        r = Helpers.post_device_managed_v2(body)
+        r = self.manager.post_device_managed_v2(body)
         if Helpers.code_check(r):
             self.mode = mode
             return True
@@ -1393,35 +1355,24 @@ class VeSyncAir131(VeSyncFan):
         """Initilize air purifier class."""
         super().__init__(details, manager)
         self.enabled = True
-        self._config_dict = model_features(self.device_type)
-        self._features = self._config_dict.get('features', [])
-        if not isinstance(self._config_dict.get('modes'), list):
-            logger.error(
-                'Please set modes for %s in the configuration',
-                self.device_type)
-            raise KeyError(f'Modes not set in configuration for {self.device_name}')
-        self.modes = self._config_dict['modes']
-        if 'air_quality' in self._features:
-            self.air_quality_feature = True
-        else:
-            self.air_quality_feature = False
+        self.air_quality_feature = self.supports('air_quality')
 
     def call_api(self, api, method, body):
         r = Helpers.call_api(f'/131airPurifier/v1/device/{api}',
             method=method,
-            headers=Helpers.req_headers(self.manager),
+            headers=self.manager.req_headers(),
             json_object=body,
         )
         return r
 
     def get_details(self) -> None:
         """Build Air Purifier details dictionary."""
-        body = Helpers.req_body_device_detail(self.manager)
+        body = self.manager.req_body_device_detail()
         body['uuid'] = self.uuid
 
         r = self.call_api('deviceDetail', 'post', body)
 
-        if r is not None and Helpers.code_check(r):
+        if Helpers.code_check(r):
             self.device_status = r.get('deviceStatus', 'unknown')
             self.connection_status = r.get('connectionStatus', 'unknown')
             self.details['active_time'] = r.get('activeTime', 0)
@@ -1435,13 +1386,13 @@ class VeSyncAir131(VeSyncFan):
 
     def get_config(self) -> None:
         """Get configuration info for air purifier."""
-        body = Helpers.req_body_device_detail(self.manager)
+        body = self.manager.req_body_device_detail()
         body['method'] = 'configurations'
         body['uuid'] = self.uuid
 
         r = self.call_api('configurations', 'post', body)
 
-        if r is not None and Helpers.code_check(r):
+        if Helpers.code_check(r):
             self.config = Helpers.build_config_dict(r)
         else:
             logger.debug('Unable to get config info for %s',
@@ -1488,11 +1439,11 @@ class VeSyncAir131(VeSyncFan):
         if status.lower() not in [STATUS_ON, STATUS_OFF]:
             logger.debug('Invalid display status - %s', status)
             return False
-        body = Helpers.req_body_status(self.manager)
+        body = self.manager.req_body_status()
         body['status'] = status.lower()
 
         r = self.call_api('updateScreen', 'put', body)
-        if r is not None and Helpers.code_check(r):
+        if Helpers.code_check(r):
             self.details['screen_status'] = status.lower()
             return True
         logger.debug('Error toggling display for %s', self.device_name)
@@ -1501,13 +1452,13 @@ class VeSyncAir131(VeSyncFan):
     def turn(self, status: str) -> bool:
         """Turn Air Purifier on/off."""
         if self.device_status != status:
-            body = Helpers.req_body_status(self.manager)
+            body = self.manager.req_body_status()
             body['uuid'] = self.uuid
             body['status'] = status
 
             r = self.call_api('deviceStatus', 'put', body)
 
-            if r is not None and Helpers.code_check(r):
+            if Helpers.code_check(r):
                 self.device_status = status
                 return True
             logger.debug('Error turning %s on', self.device_name)
@@ -1546,7 +1497,7 @@ class VeSyncAir131(VeSyncFan):
             )
             return False
 
-        body = Helpers.req_body_status(self.manager)
+        body = self.manager.req_body_status()
         body['uuid'] = self.uuid
         if speed is not None:
             if speed == level:
@@ -1562,7 +1513,7 @@ class VeSyncAir131(VeSyncFan):
 
         r = self.call_api('updateSpeed', 'put', body)
 
-        if r is not None and Helpers.code_check(r):
+        if Helpers.code_check(r):
             self.details['level'] = body['level']
             return True
         logger.debug('Error changing %s speed', self.device_name)
@@ -1570,7 +1521,7 @@ class VeSyncAir131(VeSyncFan):
 
     def mode_turn(self, mode: str) -> bool:
         """Set mode to manual, auto or sleep."""
-        body = Helpers.req_body_status(self.manager)
+        body = self.manager.req_body_status()
         body['uuid'] = self.uuid
         if mode != self.mode and mode in [MODE_SLEEP, MODE_AUTO, MODE_MANUAL]:
             body['mode'] = mode
@@ -1579,7 +1530,7 @@ class VeSyncAir131(VeSyncFan):
 
             r = self.call_api('updateMode', 'put', body)
 
-            if r is not None and Helpers.code_check(r):
+            if Helpers.code_check(r):
                 self.mode = mode
                 return True
 
@@ -1638,20 +1589,11 @@ class VeSyncHumid200300S(VeSyncFan):
     def __init__(self, details, manager):
         """Initialize 200S/300S Humidifier class."""
         super().__init__(details, manager)
-        self._config_dict = model_features(self.device_type)
-        self.mist_levels = self._config_dict.get('mist_levels')
-        self.mist_modes = self._config_dict.get('mist_modes')
-        self._features = self._config_dict.get('features')
-        if 'warm_mist' in self._features:
-            self.warm_mist_levels = self._config_dict.get('warm_mist_levels', [])
-            self.warm_mist_feature = True
-        else:
-            self.warm_mist_levels = []
-            self.warm_mist_feature = False
-        if 'nightlight' in self._config_dict.get('features', []):
-            self.night_light = True
-        else:
-            self.night_light = False
+        self.mist_levels = fan_mist_levels.get(self.device_type)
+        self.mist_modes = fan_mist_modes.get(self.device_type)
+        self.warm_mist_feature = self.supports('warm_mist')
+        self.warm_mist_levels = fan_mist_levels_warm.get(self.device_type, [])
+        self.night_light = self.supports('nightlight')
         self.details = {
             MODE_HUMIDITY: 0,
             'mist_virtual_level': 0,
@@ -1712,27 +1654,26 @@ class VeSyncHumid200300S(VeSyncFan):
     def get_details(self) -> None:
         """Build 200S/300S Humidifier details dictionary."""
         body = self.build_api_dict('getHumidifierStatus', data={})
-        r = Helpers.post_device_managed_v2(body)
+        r = self.manager.post_device_managed_v2(body)
 
         if r is None or not isinstance(r, dict):
             logger.debug("Error getting status of %s ", self.device_name)
             return
-        outer_result = r.get('result', {})
-        inner_result = None
-
-        if outer_result is not None:
-            inner_result = r.get('result', {}).get('result')
-        if inner_result is not None and Helpers.code_check(r):
-            if outer_result.get('code') == 0:
-                self.build_humid_dict(inner_result)
-            else:
-                logger.debug('error in inner result dict from humidifier')
-            if inner_result.get('configuration', {}):
-                self.build_config_dict(inner_result.get('configuration', {}))
-            else:
-                logger.debug('No configuration found in humidifier status')
-        else:
-            logger.debug('Error in humidifier response')
+        if Helpers.code_check(r):
+            outer_result = r.get('result', {})
+            if outer_result is not None:
+                inner_result = r.get('result', {}).get('result')
+                if inner_result is not None:
+                    if outer_result.get('code') == 0:
+                        self.build_humid_dict(inner_result)
+                    else:
+                        logger.debug('error in inner result dict from humidifier')
+                    if inner_result.get('configuration', {}):
+                        self.build_config_dict(inner_result.get('configuration', {}))
+                    else:
+                        logger.debug('No configuration found in humidifier status')
+            return
+        logger.debug('Error in humidifier response')
 
     def update(self):
         """Update 200S/300S Humidifier details."""
@@ -1746,9 +1687,9 @@ class VeSyncHumid200300S(VeSyncFan):
         turn = (status == STATUS_ON)
 
         body = self.build_api_dict('setSwitch', data={'enabled': turn, 'id': 0})
-        r = Helpers.post_device_managed_v2(body)
+        r = self.manager.post_device_managed_v2(body)
 
-        if r is not None and Helpers.code_check(r):
+        if Helpers.code_check(r):
             self.device_status = status
             return True
         logger.debug("Error toggling 300S humidifier - %s", self.device_name)
@@ -1770,8 +1711,8 @@ class VeSyncHumid200300S(VeSyncFan):
             return False
 
         body = self.build_api_dict('setAutomaticStop', data={'enabled': mode})
-        r = Helpers.post_device_managed_v2(body)
-        if r is not None and Helpers.code_check(r):
+        r = self.manager.post_device_managed_v2(body)
+        if Helpers.code_check(r):
             return True
         if isinstance(r, dict):
             logger.debug('Error toggling automatic stop')
@@ -1786,8 +1727,8 @@ class VeSyncHumid200300S(VeSyncFan):
             return False
 
         body = self.build_api_dict('setDisplay', data={'state': mode})
-        r = Helpers.post_device_managed_v2(body)
-        if r is not None and Helpers.code_check(r):
+        r = self.manager.post_device_managed_v2(body)
+        if Helpers.code_check(r):
             return True
         logger.debug("Error toggling 300S display - %s", self.device_name)
         return False
@@ -1807,8 +1748,8 @@ class VeSyncHumid200300S(VeSyncFan):
             return False
 
         body = self.build_api_dict('setTargetHumidity', data={'target_humidity': humidity})
-        r = Helpers.post_device_managed_v2(body)
-        if r is not None and Helpers.code_check(r):
+        r = self.manager.post_device_managed_v2(body)
+        if Helpers.code_check(r):
             return True
         logger.debug('Error setting humidity')
         return False
@@ -1824,8 +1765,8 @@ class VeSyncHumid200300S(VeSyncFan):
             return False
 
         body = self.build_api_dict('setNightLightBrightness', data={'night_light_brightness': brightness})
-        r = Helpers.post_device_managed_v2(body)
-        if r is not None and Helpers.code_check(r):
+        r = self.manager.post_device_managed_v2(body)
+        if Helpers.code_check(r):
             return True
         logger.debug('Error setting humidity')
         return False
@@ -1840,8 +1781,8 @@ class VeSyncHumid200300S(VeSyncFan):
             return False
 
         body = self.build_api_dict('setHumidityMode', data={'mode': mode.lower()})
-        r = Helpers.post_device_managed_v2(body)
-        if r is not None and Helpers.code_check(r):
+        r = self.manager.post_device_managed_v2(body)
+        if Helpers.code_check(r):
             return True
         logger.debug('Error setting humidity mode')
         return False
@@ -1868,8 +1809,8 @@ class VeSyncHumid200300S(VeSyncFan):
             'id': 0,
         }
         body = self.build_api_dict('setLevel', data=data)
-        r = Helpers.post_device_managed_v2(body)
-        if r is not None and Helpers.code_check(r):
+        r = self.manager.post_device_managed_v2(body)
+        if Helpers.code_check(r):
             return True
         logger.debug('Error setting warm')
         return False
@@ -1908,8 +1849,8 @@ class VeSyncHumid200300S(VeSyncFan):
             'type': 'mist'
         }
         body = self.build_api_dict('setVirtualLevel', data=data)
-        r = Helpers.post_device_managed_v2(body)
-        if r is not None and Helpers.code_check(r):
+        r = self.manager.post_device_managed_v2(body)
+        if Helpers.code_check(r):
             return True
         logger.debug('Error setting mist level')
         return False
@@ -2022,8 +1963,8 @@ class VeSyncHumid200S(VeSyncHumid200300S):
             'id': 0
         }
         body = self.build_api_dict('setIndicatorLightSwitch', data=data)
-        r = Helpers.post_device_managed_v2(body)
-        if r is not None and Helpers.code_check(r):
+        r = self.manager.post_device_managed_v2(body)
+        if Helpers.code_check(r):
             return True
         logger.debug("Error toggling 200S display - %s", self.device_name)
         return False
@@ -2040,9 +1981,8 @@ class VeSyncSuperior6000S(VeSyncFan):
     def __init__(self, details, manager):
         """Initialize Superior 6000S Humidifier class."""
         super().__init__(details, manager)
-        self._config_dict = model_features(self.device_type)
-        self.mist_levels = self._config_dict.get('mist_levels')
-        self.mist_modes = self._config_dict.get('mist_modes')
+        self.mist_levels = fan_mist_levels.get(self.device_type, [])
+        self.mist_modes = fan_mist_modes.get(self.device_type, [])
         self.connection_status = details.get('deviceProp', {}).get('connectionStatus')
 
     def build_api_dict(self, method: str, config: list[str] = ['configModule'], data: dict = None):
@@ -2073,9 +2013,9 @@ class VeSyncSuperior6000S(VeSyncFan):
     def get_details(self) -> None:
         """Build Humidifier details dictionary."""
         body = self.build_api_dict('getHumidifierStatus', data={})
-        r = Helpers.post_device_managed_v2(body)
+        r = self.manager.post_device_managed_v2(body)
 
-        if r is None or not isinstance(r, dict):
+        if not Helpers.code_check(r):
             logger.debug("Error getting status of %s ", self.device_name)
             return
         outer_result = r.get('result', {})
@@ -2083,7 +2023,7 @@ class VeSyncSuperior6000S(VeSyncFan):
 
         if outer_result is not None:
             inner_result = r.get('result', {}).get('result')
-        if inner_result is not None and Helpers.code_check(r):
+        if inner_result is not None:
             if outer_result.get('code') == 0:
                 self.build_humid_dict(inner_result)
             else:
@@ -2107,9 +2047,9 @@ class VeSyncSuperior6000S(VeSyncFan):
         turn = (status == STATUS_ON)
 
         body = self.build_api_dict('setSwitch', data={'powerSwitch': int(turn), 'switchIdx': 0})
-        r = Helpers.post_device_managed_v2(body)
+        r = self.manager.post_device_managed_v2(body)
 
-        if r is not None and Helpers.code_check(r):
+        if Helpers.code_check(r):
             self.device_status = status
             return True
         logger.debug("Error toggling humidifier - %s", self.device_name)
@@ -2124,8 +2064,8 @@ class VeSyncSuperior6000S(VeSyncFan):
             return False
 
         body = self.build_api_dict('setDryingMode', data={'autoDryingSwitch': int(mode)})
-        r = Helpers.post_device_managed_v2(body)
-        if r is not None and Helpers.code_check(r):
+        r = self.manager.post_device_managed_v2(body)
+        if Helpers.code_check(r):
             return True
         if isinstance(r, dict):
             logger.debug('Error in set_drying_mode_enabled response')
@@ -2143,8 +2083,8 @@ class VeSyncSuperior6000S(VeSyncFan):
             return False
 
         body = self.build_api_dict('setDisplay', data={'screenSwitch': int(mode)})
-        r = Helpers.post_device_managed_v2(body)
-        if r is not None and Helpers.code_check(r):
+        r = self.manager.post_device_managed_v2(body)
+        if Helpers.code_check(r):
             return True
         logger.debug("Error toggling display - %s", self.device_name)
         return False
@@ -2164,8 +2104,8 @@ class VeSyncSuperior6000S(VeSyncFan):
             return False
 
         body = self.build_api_dict('setTargetHumidity', data={'targetHumidity': humidity})
-        r = Helpers.post_device_managed_v2(body)
-        if r is not None and Helpers.code_check(r):
+        r = self.manager.post_device_managed_v2(body)
+        if Helpers.code_check(r):
             return True
         logger.debug('Error setting humidity')
         return False
@@ -2180,9 +2120,9 @@ class VeSyncSuperior6000S(VeSyncFan):
             return False
         data = {'workMode': 'autoPro' if mode == MODE_AUTO else mode}
         body = self.build_api_dict('setHumidityMode', data=data)
-        r = Helpers.post_device_managed_v2(body)
+        r = self.manager.post_device_managed_v2(body)
 
-        if r is not None and Helpers.code_check(r):
+        if Helpers.code_check(r):
             return True
         logger.debug('Error setting humidity mode')
         return False
@@ -2219,8 +2159,8 @@ class VeSyncSuperior6000S(VeSyncFan):
             'levelType': 'mist'
         }
         body = self.build_api_dict('setVirtualLevel', data=data)
-        r = Helpers.post_device_managed_v2(body)
-        if r is not None and Helpers.code_check(r):
+        r = self.manager.post_device_managed_v2(body)
+        if Helpers.code_check(r):
             return True
         logger.debug('Error setting mist level')
         return False
@@ -2351,31 +2291,25 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
     def __init__(self, details, manager):
         """Initialize levoit 1000S device class."""
         super().__init__(details, manager)
-        self.connection_status = details.get('deviceProp', {}).get(
-            'connectionStatus', None)
+        self.connection_status = details.get('deviceProp', {}).get('connectionStatus', None)
 
     def build_humid_dict(self, dev_dict: Dict[str, str]) -> None:
         """Build humidifier status dictionary."""
         super().build_humid_dict(dev_dict)
         self.device_status = STATUS_OFF if dev_dict.get('powerSwitch', 0) == 0 else STATUS_ON
-        self.details['mist_virtual_level'] = dev_dict.get(
-            'virtualLevel', 0)
+        self.details['mist_virtual_level'] = dev_dict.get( 'virtualLevel', 0)
         self.details['mist_level'] = dev_dict.get('mistLevel', 0)
         self.details['mode'] = dev_dict.get('workMode', MODE_MANUAL)
         self.details['water_lacks'] = bool(dev_dict.get('waterLacksState', 0))
         self.details['humidity_high'] = bool(int(dev_dict.get('targetHumidity', 0)) <
                                              int(dev_dict.get(MODE_HUMIDITY, 0)))
-        self.details['water_tank_lifted'] = bool(dev_dict.get(
-            'waterTankLifted', 0))
-        self.details['automatic_stop_reach_target'] = bool(dev_dict.get(
-            'autoStopState', 1
-        ))
+        self.details['water_tank_lifted'] = bool(dev_dict.get('waterTankLifted', 0))
+        self.details['automatic_stop_reach_target'] = bool(dev_dict.get('autoStopState', 1))
         self.details['display'] = bool(dev_dict['screenState'])
 
     def build_config_dict(self, conf_dict):
         """Build configuration dict for humidifier."""
-        self.config['auto_target_humidity'] = conf_dict.get(
-            'targetHumidity', 0)
+        self.config['auto_target_humidity'] = conf_dict.get('targetHumidity', 0)
         self.config['display'] = bool(conf_dict.get('screenSwitch', 0))
         self.config['automatic_stop'] = bool(conf_dict.get('autoStopSwitch', 1))
 
@@ -2386,29 +2320,29 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
     def get_details(self) -> None:
         """Build Humidifier details dictionary."""
         body = self.build_api_dict('getHumidifierStatus', data={})
-        r = Helpers.post_device_managed_v2(body)
+        r = self.manager.post_device_managed_v2(body)
 
-        if r is None or not isinstance(r, dict):
+        if not Helpers.code_check(r):
             logger.debug("Error getting status of %s ", self.device_name)
             return
-        outer_result = r.get('result', {})
-        inner_result = None
-
-        if outer_result is not None:
-            inner_result = r.get('result', {}).get('result')
-        if inner_result is not None and Helpers.code_check(r):
-            if outer_result.get('code') == 0:
-                self.connection_status = 'online'
-                self.build_humid_dict(inner_result)
-                self.build_config_dict(inner_result)
-            else:
-                logger.debug('error in inner result dict from humidifier')
-        elif r.get('code') in ERR_REQ_TIMEOUTS:
+        if r.get('code') in ERR_REQ_TIMEOUTS:
             logger.debug('%s device offline', self.device_name)
             self.connection_status = 'offline'
             self.device_status = STATUS_OFF
-        else:
-            logger.debug('Error in humidifier response')
+            return
+
+        outer_result = r.get('result', {})
+        if outer_result is not None:
+            inner_result = r.get('result', {}).get('result')
+            if inner_result is not None:
+                if outer_result.get('code') == 0:
+                    self.connection_status = 'online'
+                    self.build_humid_dict(inner_result)
+                    self.build_config_dict(inner_result)
+                else:
+                    logger.debug('error in inner result dict from humidifier')
+            return
+        logger.debug('Error in humidifier response')
 
     def set_display(self, mode: bool) -> bool:
         """Turn display on/off."""
@@ -2417,8 +2351,8 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
             return False
 
         body = self.build_api_dict('setDisplay', data={'screenSwitch': int(mode)})
-        r = Helpers.post_device_managed_v2(body)
-        if r is not None and Helpers.code_check(r):
+        r = self.manager.post_device_managed_v2(body)
+        if Helpers.code_check(r):
             return True
         logger.debug("Error toggling purifier display - %s",
                      self.device_name)
@@ -2434,8 +2368,8 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
             return False
 
         body = self.build_api_dict('setHumidityMode', data={'workMode': mode.lower()})
-        r = Helpers.post_device_managed_v2(body)
-        if r is not None and Helpers.code_check(r):
+        r = self.manager.post_device_managed_v2(body)
+        if Helpers.code_check(r):
             return True
         logger.debug('Error setting humidity mode')
         return False
@@ -2460,8 +2394,8 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
             'levelType': 'mist'
         }
         body = self.build_api_dict('setVirtualLevel', data=data)
-        r = Helpers.post_device_managed_v2(body)
-        if r is not None and Helpers.code_check(r):
+        r = self.manager.post_device_managed_v2(body)
+        if Helpers.code_check(r):
             return True
         logger.debug('Error setting mist level')
         return False
@@ -2478,9 +2412,9 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
             'switchIdx': 0
         }
         body = self.build_api_dict('setSwitch', data=data)
-        r = Helpers.post_device_managed_v2(body)
+        r = self.manager.post_device_managed_v2(body)
 
-        if r is not None and Helpers.code_check(r):
+        if Helpers.code_check(r):
             self.device_status = status
             return True
         logger.debug("Error toggling humidifier - %s", self.device_name)
@@ -2493,8 +2427,8 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
             return False
 
         body = self.build_api_dict('setTargetHumidity', data={'targetHumidity': humidity})
-        r = Helpers.post_device_managed_v2(body)
-        if r is not None and Helpers.code_check(r):
+        r = self.manager.post_device_managed_v2(body)
+        if Helpers.code_check(r):
             return True
         logger.debug('Error setting humidity')
         return False
@@ -2507,8 +2441,8 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
             return False
 
         body = self.build_api_dict('setAutoStopSwitch', data={'autoStopSwitch': int(mode)})
-        r = Helpers.post_device_managed_v2(body)
-        if r is not None and Helpers.code_check(r):
+        r = self.manager.post_device_managed_v2(body)
+        if Helpers.code_check(r):
             return True
         if isinstance(r, dict):
             logger.debug('Error toggling automatic stop')
@@ -2519,8 +2453,8 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
 
 def factory(module: str, details: dict, manager) -> VeSyncFan:
     try:
-        definition = fan_modules[module]
-        fan = getattr(module_fan, definition)
+        class_name = fan_classes[module]
+        fan = getattr(module_fan, class_name)
         return fan(details, manager)
     except:
         return None

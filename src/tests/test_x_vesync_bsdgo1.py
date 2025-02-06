@@ -63,9 +63,9 @@ class TestVeSyncBSDGO1Switch(TestBase):
         """Test BSDGO1 Device On/Off Methods."""
         self.mock_api.return_value = {'code': 0, 'msg': 'success', 'result': {'code': 0}}
         bsdgo1_outlet = VeSyncOutletBSDGO1(DEV_LIST_DETAIL, self.manager)
-        head = helpers.req_header_bypass()
+        head = VeSync.req_header_bypass()
         body = {
-            **helpers.req_body_bypass_v2(self.manager),
+            **self.manager.req_body_bypass_v2(),
             'cid': bsdgo1_outlet.cid,
             'configModule': bsdgo1_outlet.config_module,
             'payload': {

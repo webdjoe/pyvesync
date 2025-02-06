@@ -16,7 +16,7 @@ from copy import deepcopy
 from pyvesync import vesyncswitch
 from utils import FunctionResponses, Defaults
 
-SWITCHES = vesyncswitch.switch_modules.keys()
+SWITCHES = vesyncswitch.switch_classes.keys()
 SWITCHES_NUM = len(SWITCHES)
 
 

@@ -5,7 +5,7 @@ auto_mode:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: Core300S-CID
     configModule: ConfigModule
     debugMode: false
@@ -30,7 +30,7 @@ change_fan_speed:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: Core300S-CID
     configModule: ConfigModule
     debugMode: false
@@ -58,7 +58,7 @@ clear_timer:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: Core300S-CID
     configModule: ConfigModule
     debugMode: false
@@ -82,7 +82,7 @@ manual_mode:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: Core300S-CID
     configModule: ConfigModule
     debugMode: false
@@ -109,7 +109,7 @@ set_timer:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: Core300S-CID
     configModule: ConfigModule
     debugMode: false
@@ -135,7 +135,7 @@ sleep_mode:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: Core300S-CID
     configModule: ConfigModule
     debugMode: false
@@ -160,7 +160,7 @@ turn_off:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: Core300S-CID
     configModule: ConfigModule
     debugMode: false
@@ -186,7 +186,7 @@ turn_off_display:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: Core300S-CID
     configModule: ConfigModule
     debugMode: false
@@ -211,7 +211,7 @@ turn_on:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: Core300S-CID
     configModule: ConfigModule
     debugMode: false
@@ -237,7 +237,7 @@ turn_on_display:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: Core300S-CID
     configModule: ConfigModule
     debugMode: false
@@ -262,7 +262,7 @@ update:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: Core300S-CID
     configModule: ConfigModule
     debugMode: false

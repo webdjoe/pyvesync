@@ -6,7 +6,7 @@ get_details:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: BSDOG01-CID
     configModule: ConfigModule
     debugMode: false
@@ -29,7 +29,7 @@ turn_off:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: BSDOG01-CID
     configModule: ConfigModule
     debugMode: false
@@ -54,7 +54,7 @@ turn_on:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: BSDOG01-CID
     configModule: ConfigModule
     debugMode: false
@@ -79,7 +79,7 @@ update:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: BSDOG01-CID
     configModule: ConfigModule
     debugMode: false

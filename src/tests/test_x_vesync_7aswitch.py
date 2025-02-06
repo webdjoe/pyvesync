@@ -86,7 +86,7 @@ class TestVeSync7ASwitch(TestBase):
         self.mock_api.return_value = 'response'
         vswitch7a = VeSyncOutlet7A(DEV_LIST_DETAIL, self.manager)
         on = vswitch7a.turn_on()
-        head = helpers.req_headers(self.manager)
+        head = self.manager.req_headers()
         self.mock_api.assert_called_with(
             '/v1/wifi-switch-1.3/' + vswitch7a.cid + '/status/on', 'put', headers=head
         )
@@ -112,7 +112,7 @@ class TestVeSync7ASwitch(TestBase):
         self.mock_api.assert_called_with(
             '/v1/device/' + vswitch7a.cid + '/energy/week',
             'get',
-            headers=helpers.req_headers(self.manager),
+            headers=self.manager.req_headers(),
         )
         energy_dict = vswitch7a.energy['week']
         assert energy_dict['energy_consumption_of_today'] == 1
@@ -129,7 +129,7 @@ class TestVeSync7ASwitch(TestBase):
         self.mock_api.assert_called_with(
             '/v1/device/' + vswitch7a.cid + '/energy/month',
             'get',
-            headers=helpers.req_headers(self.manager),
+            headers=self.manager.req_headers(),
         )
         energy_dict = vswitch7a.energy['month']
         assert energy_dict['energy_consumption_of_today'] == 1
@@ -146,7 +146,7 @@ class TestVeSync7ASwitch(TestBase):
         self.mock_api.assert_called_with(
             '/v1/device/' + vswitch7a.cid + '/energy/year',
             'get',
-            headers=helpers.req_headers(self.manager),
+            headers=self.manager.req_headers(),
         )
         energy_dict = vswitch7a.energy['year']
         assert energy_dict['energy_consumption_of_today'] == 1

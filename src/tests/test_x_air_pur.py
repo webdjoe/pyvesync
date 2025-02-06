@@ -63,8 +63,8 @@ class TestVeSyncAirPurifier(TestBase):
         """Test Air Purifier Device On/Off Methods."""
         self.mock_api.return_value = {'code': 0}
         fan = VeSyncAir131(DEV_LIST_DETAIL, self.manager)
-        head = helpers.req_headers(self.manager)
-        body = helpers.req_body_status(self.manager)
+        head = self.manager.req_headers()
+        body = self.manager.req_body_status()
         fan.device_status = 'off'
         body['status'] = 'on'
         body['uuid'] = fan.uuid

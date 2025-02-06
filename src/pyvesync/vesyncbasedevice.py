@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 
 STATUS_ON = 'on'
 STATUS_OFF = 'off'
+
 MODE_ADVANCED_SLEEP = 'advancedSleep'
 MODE_AUTO = 'auto'
 MODE_DIM = 'dim'
@@ -82,9 +83,10 @@ class VeSyncBaseDevice:
     
     __metaclass__ = ABCMeta
 
-    def __init__(self, details: dict, manager, device_family: EDeviceFamily) -> None:
+    def __init__(self, details: dict, manager, features: dict[str, list[str]], device_family: EDeviceFamily) -> None:
         """Initialize VeSync device base class."""
         self.manager = manager
+
         if 'cid' in details and details['cid'] is not None:
             self.device_name = details['deviceName']
             self.device_image = details.get('deviceImg')
@@ -112,6 +114,7 @@ class VeSyncBaseDevice:
             else:
                 self.device_status = details.get('deviceStatus')
 
+            self.features = features.get(self.device_type)
             self.device_family = device_family
 
         else:
@@ -163,17 +166,21 @@ class VeSyncBaseDevice:
             logger.debug('Call device.get_config() to get firmware versions')
         return False
 
+    def supports(self, feature: str) -> bool:
+        """Returns True if the device supports the given feature"""
+        return feature in self.features
+
     def call_api_v1(self, api, body):
         r = Helpers.call_api(f'/cloud/v1/deviceManaged/{api}',
             method='post',
-            headers=Helpers.req_header_bypass(self.manager),
+            headers=self.manager.req_header_bypass(),
             json_object=body
         )
         return r
 
     def get_pid(self) -> None:
         """Get managed device configuration."""
-        body = Helpers.req_body_device_detail(self.manager)
+        body = self.manager.req_body_device_detail()
         body['configModule'] = self.config_module
         body['region'] = self.device_region
         body['method'] = 'configInfo'

@@ -73,8 +73,8 @@ class TestVeSync10ASwitch(TestBase):
         """Test 10A Device On/Off Methods."""
         self.mock_api.return_value = {'code': 0}
         out = VeSyncOutlet10A(DEV_LIST_DETAIL_EU, self.manager)
-        head = helpers.req_headers(self.manager)
-        body = helpers.req_body_status(self.manager)
+        head = self.manager.req_headers()
+        body = self.manager.req_body_status()
 
         body['status'] = 'on'
         body['uuid'] = out.uuid
@@ -108,12 +108,12 @@ class TestVeSync10ASwitch(TestBase):
         self.mock_api.return_value = ENERGY_HISTORY
         out = VeSyncOutlet10A(DEV_LIST_DETAIL_EU, self.manager)
         out.get_weekly_energy()
-        body = helpers.req_body_energy_week(self.manager)
+        body = self.manager.req_body_energy_week()
         body['uuid'] = out.uuid
         self.mock_api.assert_called_with(
             '/10a/v1/device/energyweek',
             method='post',
-            headers=helpers.req_headers(self.manager),
+            headers=self.manager.req_headers(),
             json_object=body,
         )
         energy_dict = out.energy['week']
@@ -129,12 +129,12 @@ class TestVeSync10ASwitch(TestBase):
         self.mock_api.return_value = ENERGY_HISTORY
         out = VeSyncOutlet10A(DEV_LIST_DETAIL_EU, self.manager)
         out.get_monthly_energy()
-        body = helpers.req_body_energy_month(self.manager)
+        body = self.manager.req_body_energy_month()
         body['uuid'] = out.uuid
         self.mock_api.assert_called_with(
             '/10a/v1/device/energymonth',
             method='post',
-            headers=helpers.req_headers(self.manager),
+            headers=self.manager.req_headers(),
             json_object=body,
         )
         energy_dict = out.energy['month']
@@ -150,12 +150,12 @@ class TestVeSync10ASwitch(TestBase):
         self.mock_api.return_value = ENERGY_HISTORY
         out = VeSyncOutlet10A(DEV_LIST_DETAIL_US, self.manager)
         out.get_yearly_energy()
-        body = helpers.req_body_energy_year(self.manager)
+        body = self.manager.req_body_energy_year()
         body['uuid'] = out.uuid
         self.mock_api.assert_called_with(
             '/10a/v1/device/energyyear',
             method='post',
-            headers=helpers.req_headers(self.manager),
+            headers=self.manager.req_headers(),
             json_object=body,
         )
         energy_dict = out.energy['year']

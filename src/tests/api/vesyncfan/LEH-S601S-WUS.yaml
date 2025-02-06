@@ -5,7 +5,7 @@ automatic_stop_off:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: LEH-S601S-WUS-CID
     configModule: ConfigModule
     debugMode: false
@@ -30,7 +30,7 @@ automatic_stop_on:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: LEH-S601S-WUS-CID
     configModule: ConfigModule
     debugMode: false
@@ -55,7 +55,7 @@ set_auto_mode:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: LEH-S601S-WUS-CID
     configModule: ConfigModule
     debugMode: false
@@ -80,7 +80,7 @@ set_drying_mode_enabled:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: LEH-S601S-WUS-CID
     configModule: ConfigModule
     debugMode: false
@@ -105,7 +105,7 @@ set_humidity:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: LEH-S601S-WUS-CID
     configModule: ConfigModule
     debugMode: false
@@ -130,7 +130,7 @@ set_manual_mode:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: LEH-S601S-WUS-CID
     configModule: ConfigModule
     debugMode: false
@@ -155,7 +155,7 @@ set_mist_level:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: LEH-S601S-WUS-CID
     configModule: ConfigModule
     debugMode: false
@@ -182,7 +182,7 @@ turn_off:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: LEH-S601S-WUS-CID
     configModule: ConfigModule
     debugMode: false
@@ -208,7 +208,7 @@ turn_off_display:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: LEH-S601S-WUS-CID
     configModule: ConfigModule
     debugMode: false
@@ -233,7 +233,7 @@ turn_on:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: LEH-S601S-WUS-CID
     configModule: ConfigModule
     debugMode: false
@@ -259,7 +259,7 @@ turn_on_display:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: LEH-S601S-WUS-CID
     configModule: ConfigModule
     debugMode: false
@@ -284,7 +284,7 @@ update:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: LEH-S601S-WUS-CID
     configModule: ConfigModule
     debugMode: false

@@ -38,11 +38,11 @@ from pyvesync import vesyncfan, helpers
 from utils import Defaults, FunctionResponses
 
 HUMID_MODELS = []
-for model_type, model_dict in vesyncfan.humid_features.items():
+for model_type, model_dict in vesyncfan.humid_configs.items():
     HUMID_MODELS.append(model_dict["models"][0])
 
 AIR_MODELS = []
-for model_type, model_dict in vesyncfan.air_features.items():
+for model_type, model_dict in vesyncfan.air_configs.items():
     AIR_MODELS.append(model_dict["models"][0])
 
 FANS = HUMID_MODELS + AIR_MODELS

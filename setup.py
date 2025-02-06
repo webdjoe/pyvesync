@@ -1,4 +1,10 @@
-"""pyvesync setup script."""
+"""
+pyvesync setup script.
+
+HowTo:
+unit tests (with coverage): ´pytest --cov´
+build wheel: ´python -m build´
+"""
 
 from os import path
 from setuptools import setup, find_packages

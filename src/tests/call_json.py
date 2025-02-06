@@ -1,18 +1,14 @@
 import copy
 import pyvesync.helpers as helpers
+from pyvesync.vesync import APP_VERSION, PHONE_BRAND, PHONE_OS
+
 from utils import Defaults
 import call_json_switches
 import call_json_outlets
 import call_json_bulbs
 import call_json_fans
 
-API_BASE_URL = helpers.API_BASE_URL
-API_RATE_LIMIT = helpers.API_RATE_LIMIT
-API_TIMEOUT = helpers.API_TIMEOUT
 DEFAULT_TZ = helpers.DEFAULT_TZ
-APP_VERSION = helpers.APP_VERSION
-PHONE_BRAND = helpers.PHONE_BRAND
-PHONE_OS = helpers.PHONE_OS
 MOBILE_ID = helpers.MOBILE_ID
 USER_TYPE = helpers.USER_TYPE
 

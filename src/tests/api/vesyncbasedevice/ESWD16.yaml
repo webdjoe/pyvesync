@@ -2,7 +2,7 @@ indicator_light_on:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
@@ -19,7 +19,7 @@ rgb_color_on:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
@@ -36,7 +36,7 @@ rgb_color_set:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
@@ -57,7 +57,7 @@ set_brightness:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
@@ -74,7 +74,7 @@ turn_off:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
@@ -91,7 +91,7 @@ turn_on:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
@@ -108,14 +108,14 @@ update:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     method: devicedetail
     mobileId: '1234567890123456'
     phoneBrand: SM N9005

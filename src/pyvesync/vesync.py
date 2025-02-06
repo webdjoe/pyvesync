@@ -5,7 +5,12 @@ import re
 import time
 from typing import List, Optional
 
-from .helpers import Helpers, EDeviceFamily, logger as helper_logger
+from .helpers import (
+    Helpers, EDeviceFamily, 
+    logger as helper_logger, REQUEST_T,
+    ENERGY_WEEK, ENERGY_MONTH, ENERGY_YEAR, 
+    USER_TYPE, MOBILE_ID, DEFAULT_REGION
+)
 from .vesyncbasedevice import VeSyncBaseDevice
 from .vesyncbulb import factory as bulb_factory, logger as bulb_logger
 from .vesyncfan import factory as fan_factory, logger as fan_logger
@@ -15,7 +20,15 @@ from .vesyncswitch import factory as switch_factory, logger as switch_logger
 
 logger = logging.getLogger(__name__)
 
+APP_VERSION = '4.3.40'
+
+BYPASS_HEADER_UA = 'okhttp/3.12.1'
+
 API_RATE_LIMIT: int = 30
+
+PHONE_BRAND = 'SM N9005'
+PHONE_OS = 'Android'
+
 DEFAULT_TZ: str = 'America/New_York'
 
 DEFAULT_ENER_UP_INT: int = 21600
@@ -25,6 +38,16 @@ FACTORIES = (bulb_factory, fan_factory, kitchen_factory, outlet_factory, switch_
 
 class VeSync:  # pylint: disable=function-redefined
     """VeSync Manager Class."""
+
+    API_LOGIN       = 'login'
+    API_CONFIG      = 'configurations'
+    API_DEVICE_LIST = 'devices'
+    API_DETAIL      = 'devicedetail'
+    API_STATUS      = 'devicestatus'
+    API_ENERGY      = 'energy'
+    API_BYPASS_V1   = 'bypass'
+    API_BYPASS_V2   = 'bypassV2'
+    API_FIRMWARE    = 'firmwareUpdateInfo'
 
     _debug: bool
     _redact:bool
@@ -40,7 +63,7 @@ class VeSync:  # pylint: disable=function-redefined
     _energy_update_interval: int = DEFAULT_ENER_UP_INT
     _energy_check: bool = True
     time_zone: str = DEFAULT_TZ
- 
+
     def __init__(self, username, password, time_zone=DEFAULT_TZ,
                  debug=False, redact=True):
         """Initialize VeSync Manager.
@@ -76,7 +99,7 @@ class VeSync:  # pylint: disable=function-redefined
             kitchen : list
                 List of VeSyncKitchen objects for smart kitchen appliances
             dev_list : dict
-                Dictionary of device lists
+                List of VeSyncBaseDevice obejcts (all devices)
             token : str
                 VeSync API token
             account_id : str
@@ -277,14 +300,13 @@ class VeSync:  # pylint: disable=function-redefined
         self.in_process = True
 
         proc_return = False
-        body = Helpers.req_body_devices(self)
         r = Helpers.call_api('/cloud/v1/deviceManaged/devices',
             method='post',
-            headers=Helpers.req_header_bypass(),
-            json_object=body
+            headers=VeSync.req_header_bypass(),
+            json_object=self.req_body_devices()
         )
 
-        if r and Helpers.code_check(r):
+        if Helpers.code_check(r):
             if 'result' in r and 'list' in r['result']:
                 device_list = r['result']['list']
                 proc_return = self.process_devices(device_list)
@@ -316,7 +338,7 @@ class VeSync:  # pylint: disable=function-redefined
 
         r = Helpers.call_api('/cloud/v1/user/login',
             'post',
-            json_object=Helpers.req_body_login(self)
+            json_object=self.req_body_login()
         )
 
         if Helpers.code_check(r) and 'result' in r:
@@ -398,3 +420,280 @@ class VeSync:  # pylint: disable=function-redefined
     def device_list(self) -> List[VeSyncBaseDevice]:
         '''Returns a list of all registered devices'''
         return [dev for dev in self._device_list]
+
+    def req_headers(self) -> REQUEST_T:
+        """Build header for legacy api GET requests.
+
+        Args:
+            manager (VeSyncManager): Instance of VeSyncManager.
+
+        Returns:
+            dict: Header dictionary for api requests.
+
+        Examples:
+            >>> req_headers(manager)
+            {
+                'accept-language': 'en',
+                'accountId': manager.account_id,
+                'appVersion': APP_VERSION,
+                'content-type': 'application/json',
+                'tk': manager.token,
+                'tz': manager.time_zone,
+            }
+
+        """
+        return {
+            'accept-language': 'en',
+            'accountId': self.account_id,
+            'appVersion': APP_VERSION,
+            'content-type': 'application/json',
+            'tk': self.token,
+            'tz': self.time_zone,
+        }
+
+    @staticmethod
+    def req_header_bypass() -> REQUEST_T:
+        """Build header for api requests on 'bypass' endpoint.
+
+        Returns:
+            dict: Header dictionary for api requests.
+
+        Examples:
+            >>> req_header_bypass()
+            {
+                'Content-Type': 'application/json; charset=UTF-8',
+                'User-Agent': BYPASS_HEADER_UA,
+            }
+        """
+        return {
+            'Content-Type': 'application/json; charset=UTF-8',
+            'User-Agent': BYPASS_HEADER_UA,
+        }
+
+    def post_device_managed_v1(self, body):
+        response = Helpers.call_api(
+            api='/cloud/v1/deviceManaged/bypass',
+            method='post',
+            headers=self.req_headers(),
+            json_object=body
+        )
+        return response
+
+    def post_device_managed_v2(self, body):
+        return Helpers.call_api(
+            api='/cloud/v2/deviceManaged/bypassV2',
+            method='post',
+            headers=VeSync.req_header_bypass(),
+            json_object=body
+        )
+
+    def req_body_details(self, method: str, args: Optional[dict] = None) -> REQUEST_T:
+        """Detail keys for api requests.
+
+        Returns:
+            dict: Detail keys for api requests.
+
+        Examples:
+            >>> req_body_details('dummy')
+            {
+                'appVersion': APP_VERSION,
+                'phoneBrand': PHONE_BRAND,
+                'phoneOS': PHONE_OS,
+                'traceId': str(int(time.time())),
+                'method': 'dummy'
+            }
+        """
+        details = {
+            'appVersion': APP_VERSION,
+            'phoneBrand': PHONE_BRAND,
+            'phoneOS': PHONE_OS,
+            'traceId': str(int(time.time())),
+            'method': method
+        }
+        if ((not args is None) 
+            and (type(args) is dict)
+            and (len(args))
+        ):
+            details |= args
+        return details
+
+    def req_body_base(self) -> REQUEST_T:
+        """Return universal keys for body of api requests.
+
+        Args:
+            manager (VeSyncManager): Instance of VeSyncManager.
+
+        Returns:
+            dict: Body dictionary for api requests.
+
+        Examples:
+            >>> req_body_base(manager)
+            {
+                'timeZone': manager.time_zone,
+                'acceptLanguage': 'en',
+            }
+        """
+        return {
+            'timeZone': self.time_zone,
+            'acceptLanguage': 'en'
+        }
+
+    def req_body_auth(self) -> REQUEST_T:
+        """Keys for authenticating api requests.
+
+        Args:
+            manager (VeSyncManager): Instance of VeSyncManager.
+
+        Returns:
+            dict: Authentication keys for api requests.
+
+        Examples:
+            >>> req_body_auth(manager)
+            {
+                'accountID': manager.account_id,
+                'token': manager.token,
+            }
+        """
+        return {
+            'accountID': self.account_id,
+            'token': self.token
+        }
+
+    def req_body_login(self) -> REQUEST_T:
+        return {
+            **self.req_body_base(),
+            **self.req_body_details(VeSync.API_LOGIN),
+            'email': self.username,
+            'password': Helpers.hash_password(self.password),
+            'devToken': '',
+            'userType': USER_TYPE,
+        }
+    
+    def req_body_status(self, args: Optional[dict] = None) -> REQUEST_T:
+        body: REQUEST_T = {
+            **self.req_body_base(),
+            **self.req_body_auth()
+        }
+        if ((not args is None) 
+            and (type(args) is dict)
+            and (len(args))
+        ):
+            body |= args
+        return body
+
+    def req_body_devices(self, args: Optional[dict] = None) -> REQUEST_T:
+        devices: REQUEST_T = {
+            **self.req_body_status(),
+            **self.req_body_details(VeSync.API_DEVICE_LIST, args),
+            'pageNo': '1',
+            'pageSize': '100'
+        }
+        return devices
+
+    def req_body_device_detail(self) -> REQUEST_T:
+        return {
+            **self.req_body_status(),
+            **self.req_body_details(VeSync.API_DETAIL),
+            'mobileId': MOBILE_ID
+        }
+
+    def req_body_device_configuration(self) -> REQUEST_T:
+        return {
+            **self.req_body_status(),
+            **self.req_body_details(VeSync.API_CONFIG),
+            'mobileId': MOBILE_ID
+        }
+
+    def req_body_energy(self, period: str) -> REQUEST_T:
+        return {
+            **self.req_body_status(),
+            **self.req_body_details(f'energy{period}'),
+            'mobileId': MOBILE_ID
+        }
+
+    def req_body_energy_week(self) -> REQUEST_T:
+        return self.req_body_energy(ENERGY_WEEK)
+
+    def req_body_energy_month(self) -> REQUEST_T:
+        return self.req_body_energy(ENERGY_MONTH)
+
+    def req_body_energy_year(self) -> REQUEST_T:
+        return self.req_body_energy(ENERGY_YEAR)
+
+    def req_body_bypass_v1(self, args: Optional[dict] = None) -> REQUEST_T:
+        return {
+            **self.req_body_base(),
+            **self.req_body_auth(),
+            **self.req_body_details(VeSync.API_BYPASS_V1, args)
+        }
+
+    def req_body_bypass_v2(self, args: Optional[dict] = None) -> REQUEST_T:
+        return {
+            **self.req_body_base(),
+            **self.req_body_auth(),
+            **self.req_body_details(VeSync.API_BYPASS_V2, args),
+            'deviceRegion': DEFAULT_REGION,
+            'debugMode': False
+        }
+
+    def req_body_firmware(self, args: Optional[dict] = None) -> REQUEST_T:
+        return {
+            **self.req_body_base(),
+            **self.req_body_auth(),
+            **self.req_body_details(VeSync.API_FIRMWARE, args),
+        }
+
+    def req_body(self, api: str) -> REQUEST_T:
+        """Builder for body of api requests.
+
+        Args:
+            manager (VeSync): Instance of VeSync.
+            method (str): Type of request to build body for.
+
+        Returns:
+            dict: Body dictionary for api requests.
+
+        Note:
+            The body dictionary will be built based on the request's method.
+            Known api are:
+            - login
+            - devicelist
+            - devicedetail
+            - devicestatus
+            - configurations
+            - energy_week
+            - energy_month
+            - energy_year
+            - bypass
+            - bypassV2
+            - firmwareUpdateInfo
+        """
+        if (api == VeSync.API_LOGIN):
+            return self.req_body_login()
+        if (api == VeSync.API_DEVICE_LIST):
+            return self.req_body_devices()
+        if (api == VeSync.API_DETAIL):
+            return self.req_body_device_detail()
+        if (api == VeSync.API_CONFIG):
+            return self.req_body_device_configuration()
+        if (api == VeSync.API_STATUS):
+            return self.req_body_status()
+        if (api == f'{VeSync.API_ENERGY}_{ENERGY_WEEK}'):
+            return self.req_body_energy_week()
+        if (api == f'{VeSync.API_ENERGY}_{ENERGY_MONTH}'):
+            return self.req_body_energy_month()
+        if (api == f'{VeSync.API_ENERGY}_{ENERGY_YEAR}'):
+            return self.req_body_energy_year()
+        if (api == VeSync.API_BYPASS_V1):
+            return self.req_body_bypass_v1()
+        if (api == VeSync.API_BYPASS_V2):
+            return self.req_body_bypass_v2()
+        if (api == VeSync.API_FIRMWARE):
+            return self.req_body_firmware()
+
+        logger.warning(f'pyvesync: building request-body for unknown method "{api}"!')
+        return {
+            **self.req_body_base(),
+            **self.req_body_auth(),
+            **self.req_body_details(api),
+        }

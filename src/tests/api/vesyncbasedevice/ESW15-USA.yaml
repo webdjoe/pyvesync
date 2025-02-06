@@ -2,14 +2,14 @@ get_details:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     method: devicedetail
     mobileId: '1234567890123456'
     phoneBrand: SM N9005
@@ -24,14 +24,14 @@ get_monthly_energy:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     method: energymonth
     mobileId: '1234567890123456'
     phoneBrand: SM N9005
@@ -46,14 +46,14 @@ get_weekly_energy:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     method: energyweek
     mobileId: '1234567890123456'
     phoneBrand: SM N9005
@@ -68,14 +68,14 @@ get_yearly_energy:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     method: energyyear
     mobileId: '1234567890123456'
     phoneBrand: SM N9005
@@ -90,7 +90,7 @@ turn_off:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
@@ -107,7 +107,7 @@ turn_off_nightlight:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
@@ -124,7 +124,7 @@ turn_on:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
@@ -141,7 +141,7 @@ turn_on_nightlight:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
@@ -158,14 +158,14 @@ update:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     method: devicedetail
     mobileId: '1234567890123456'
     phoneBrand: SM N9005

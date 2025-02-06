@@ -38,9 +38,9 @@ default dict but make sure to use `deepcopy` to avoid unintended side effects.
 from copy import deepcopy
 from collections import defaultdict
 from utils import FunctionResponses, Defaults
-from pyvesync.vesyncoutlet import outlet_modules
+from pyvesync.vesyncoutlet import outlet_classes
 
-OUTLETS = outlet_modules.keys()
+OUTLETS = outlet_classes.keys()
 OUTLETS_NUM = len(OUTLETS)
 
 # OUTLETS = ['wifi-switch-1.3', 'ESW03-USA', 'ESW01-EU', 'ESW15-USA', 'ESO15-TB']
