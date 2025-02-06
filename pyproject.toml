@@ -24,6 +24,9 @@ dependencies = [
     "requests>=2.20.0"
 ]
 
+[project.urls]
+"Home Page" = "https://github.com/webdjoe/pyvesync"
+
 [project.optional-dependencies]
 dev = [
     "pytest",
@@ -36,6 +39,13 @@ dev = [
 where = ["src"]
 exclude = ["tests", "test*"]
 
+[tool.pytest.ini_options]
+testpaths = ["src/tests"]
+norecursedirs = ["*.egg-info", ".git", ".tox", "dist", "build", "venv"]
+pythonpath = "src"
+log_level = "DEBUG"
+log_cli_level = "DEBUG"
+log_cli = true
 
 [tool.pylint.MAIN]
 persistent = false
