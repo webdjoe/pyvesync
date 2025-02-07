@@ -923,6 +923,15 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         """Return true if light is detected."""
         return self.details['environment_light_state']
 
+    @property
+    def fan_level(self):
+        """Get current fan level."""
+        try:
+            speed = int(self.set_speed_level)
+        except ValueError:
+            speed = self.set_speed_level
+        return speed
+
     def get_details(self) -> None:
         """Build API V2 Purifier details dictionary."""
         body = self.build_api_dict('getPurifierStatus', data={})
@@ -2170,6 +2179,12 @@ class VeSyncSuperior6000S(VeSyncFan):
         """Get Humidity level."""
         return self.details[MODE_HUMIDITY]
 
+    # Duplicate for compatibility
+    @property
+    def humidity(self):
+        """Get Humidity level."""
+        return self.details['humidity']
+
     @property
     def mist_level(self):
         """Get current mist level."""
@@ -2231,7 +2246,7 @@ class VeSyncSuperior6000S(VeSyncFan):
     @property
     def auto_humidity(self):
         """Auto target humidity."""
-        return self.config['target_humidity']
+        return self.details['target_humidity']
 
     @property
     def target_humidity(self):
