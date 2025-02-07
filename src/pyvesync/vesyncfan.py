@@ -1135,6 +1135,15 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         """Return true if light is detected."""
         return self.details['environment_light_state']
 
+    @property
+    def fan_level(self):
+        """Get current fan level."""
+        try:
+            speed = int(self.set_speed_level)
+        except ValueError:
+            speed = self.set_speed_level
+        return speed
+
     def get_details(self) -> None:
         """Build API V2 Purifier details dictionary."""
         head, body = self.build_api_dict('getPurifierStatus')
