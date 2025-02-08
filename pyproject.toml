@@ -47,6 +47,8 @@ log_level = "DEBUG"
 log_cli_level = "DEBUG"
 log_cli = true
 
+
+
 [tool.pylint.MAIN]
 persistent = false
 ignore-paths = ["^test\\.*$"]

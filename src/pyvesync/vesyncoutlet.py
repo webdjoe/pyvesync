@@ -257,7 +257,6 @@ class VeSyncOutlet7A(VeSyncOutlet):
             'put',
             headers=Helpers.req_headers(self.manager),
         )
-
         if status_code is not None and status_code == 200:
             self.device_status = 'on'
 

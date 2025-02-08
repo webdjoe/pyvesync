@@ -8,7 +8,8 @@ from dataclasses import dataclass, field, InitVar
 from typing import Any, NamedTuple, Union, TYPE_CHECKING
 import re
 import requests
-from pyvesync.logs import LibraryLogger
+from pyvesync.logs import LibraryLogger, VeSyncRateLimitError
+from pyvesync.const import RATE_LIMIT_CODES
 
 if TYPE_CHECKING:
     from pyvesync.vesync import VeSync
@@ -360,21 +361,34 @@ class Helpers:
         else:
             if r.status_code == 200:
                 status_code = 200
+                LibraryLogger.log_api_call(logger, r)
                 if LibraryLogger.is_json(r.text):
                     response = r.json()
-                    LibraryLogger.log_api_call(logger, r)
+                    if response.get('code') in RATE_LIMIT_CODES:
+                        LibraryLogger.log_api_exception(logger, request_dict={
+                            "method": method,
+                            "endpoint": api,
+                            "status_code": r.status_code,
+                            "headers": headers,
+                            "body": json_object,
+                            "response": response
+                        })
+                        raise VeSyncRateLimitError
                     return response, status_code
+                response = r.text
+                return response, status_code
             LibraryLogger.log_api_exception(logger, request_dict={
                 "method": method,
                 "endpoint": api,
                 "status_code": r.status_code,
                 "headers": headers,
                 "body": json_object,
+                "response": r.text
             })
         return response, status_code
 
     @staticmethod
-    def code_check(r: dict) -> bool:
+    def code_check(r: dict | None) -> bool:
         """Test if code == 0 for successful API call."""
         if r is None:
             logger.error('No response from API')

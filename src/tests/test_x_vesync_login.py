@@ -6,6 +6,7 @@ from unittest.mock import patch
 import pyvesync
 from pyvesync.vesync import VeSync
 from pyvesync.helpers import Helpers as helpers
+from pyvesync.logs import VesyncLoginError
 
 login_test_vals = [
     ('sam@mail.com', 'pass', 'America/New_York', 'full corret'),
@@ -60,7 +61,8 @@ class TestLogin(object):
         full_return = ({'code': 455}, 200)
         self.mock_api.return_value = full_return
         vesync_obj = VeSync(email, password)
-        assert vesync_obj.login() is False
+        with pytest.raises(VesyncLoginError):
+            vesync_obj.login()
         if testid == 'correct':
             jd = helpers.req_body(vesync_obj, 'login')
             self.mock_api.assert_called_with('/cloud/v1/user/login', 'post',
