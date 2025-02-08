@@ -11,7 +11,7 @@ import pyvesync.vesyncfan as fan_mods
 import pyvesync.vesyncoutlet as outlet_mods
 import pyvesync.vesynckitchen as kitchen_mods
 import pyvesync.vesyncswitch as switch_mods
-from pyvesync.logs import LibraryLogger
+from pyvesync.logs import LibraryLogger, VesyncLoginError
 
 if TYPE_CHECKING:
     from pyvesync.vesyncbasedevice import VeSyncBaseDevice  # ignore=F401
@@ -352,33 +352,31 @@ class VeSync:  # pylint: disable=function-redefined
 
         Returns:
             True if login successful, False if not
+
+        Raises:
+            VesyncLoginError: If login fails
         """
-        user_check = isinstance(self.username, str) and len(self.username) > 0
-        pass_check = isinstance(self.password, str) and len(self.password) > 0
-        if user_check is False:
-            logger.error('Username invalid')
-            return False
-        if pass_check is False:
-            logger.error('Password invalid')
-            return False
+        if not isinstance(self.username, str) or len(self.username) == 0 \
+                or not isinstance(self.password, str) or len(self.password) == 0:
+            raise VesyncLoginError('Invalid username or password')
 
         response, _ = Helpers.call_api(
             '/cloud/v1/user/login', 'post',
             json_object=Helpers.req_body(self, 'login')
         )
 
-        if Helpers.code_check(response) and 'result' in response:
-            self.token = response.get('result').get('token')
-            self.account_id = response.get('result').get('accountID')
-            self.country_code = response.get('result').get('countryCode')
+        if isinstance(response, dict) and response.get('code') == 0:
+            self.token = response.get('result', {}).get('token')
+            self.account_id = response.get('result', {}).get('accountID')
+            self.country_code = response.get('result', {}).get('countryCode')
             self.enabled = True
             logger.debug('Login successful')
-            logger.debug('token %s', self.token)
-            logger.debug('account_id %s', self.account_id)
-
             return True
-        logger.error('Error logging in with username and password')
-        return False
+        if isinstance(response, dict) and isinstance(response.get('msg'), str):
+            message = response['msg']
+        else:
+            message = 'Unknown error logging in'
+        raise VesyncLoginError(message)
 
     def device_time_check(self) -> bool:
         """Test if update interval has been exceeded."""
