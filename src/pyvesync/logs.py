@@ -308,14 +308,6 @@ class VeSyncRateLimitError(VeSyncError):
         super().__init__("VeSync API rate limit exceeded")
 
 
-class DeviceAPIError(VeSyncError):
-    """Exception raised for VeSync device API errors."""
-
-    def __init__(self, message: str) -> None:
-        """Initialize the exception with a message."""
-        super().__init__(message)
-
-
 class VeSyncAPIResponseError(VeSyncError):
     """Exception raised for malformed VeSync API responses."""
 
