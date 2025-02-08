@@ -2253,7 +2253,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
 
         if r is not None and Helpers.code_check(r):
             return True
-        logger.debug('Error setting humidity')
+        logger.debug('Error setting night light brightness')
         return False
 
     def set_humidity_mode(self, mode: str) -> bool:
