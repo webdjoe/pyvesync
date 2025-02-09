@@ -53,7 +53,11 @@ switch_configs: DEVICE_CONFIGS_T = {
 switch_classes = {k: v[EConfig.CLASS] for k, v in switch_configs.items()}
 switch_features = {k: v[EConfig.FEATURES] for k, v in switch_configs.items()}
 
-__all__: list = list(switch_classes.values()) + ['switch_classes', 'switch_features', 'VeSyncSwitch']
+__all__: list = [
+    *switch_classes.values(),
+    'switch_classes', 'switch_features', 'VeSyncSwitch'
+]
+
 
 class VeSyncSwitch(VeSyncBaseDevice):
     """Etekcity Switch Base Class.
@@ -68,7 +72,6 @@ class VeSyncSwitch(VeSyncBaseDevice):
     """
 
     device_family = EDeviceFamily.SWITCH
-    features: dict = {}
 
     __metaclasss__ = ABCMeta
 
@@ -93,10 +96,6 @@ class VeSyncSwitch(VeSyncBaseDevice):
         """Get active time of switch."""
         return self.details.get('active_time', 0)
 
-    def update(self) -> None:
-        """Update device details."""
-        self.get_details()
-
     def _get_body_detail(self) -> REQUEST_T:
         return {
             **self.manager.req_body_device_detail(),
@@ -116,10 +115,11 @@ class VeSyncSwitch(VeSyncBaseDevice):
             body |= values
         return body
 
-    def _get_result(self, body:dict, path: str, method: str) -> dict:
+    def _get_result(self, body: dict, path: str, method: str) -> Optional[REQUEST_T]:
         headers = self.manager.req_headers()
         r = Helpers.call_api(path, method, headers=headers, json_object=body)
         return r
+
 
 class VeSyncWallSwitch(VeSyncSwitch):
     """Etekcity standard wall switch class."""
@@ -130,12 +130,14 @@ class VeSyncWallSwitch(VeSyncSwitch):
         r = self._get_result(body, '/inwallswitch/v1/device/devicedetail', 'post')
 
         if Helpers.code_check(r):
-            self.device_status = r.get('deviceStatus', self.device_status)
-            self.details['active_time'] = r.get('activeTime', 0)
-            self.connection_status = r.get(
-                'connectionStatus', self.connection_status)
-        else:
-            logger.debug('Error getting %s details', self.device_name)
+            if (r is not None):
+                self.device_status = r.get('deviceStatus', self.device_status)
+                self.details['active_time'] = r.get('activeTime', 0)
+                self.connection_status = r.get(
+                    'connectionStatus', self.connection_status
+                )
+                return
+        logger.debug('Error getting %s details', self.device_name)
 
     def get_config(self) -> None:
         """Get switch device configuration info."""
@@ -143,9 +145,10 @@ class VeSyncWallSwitch(VeSyncSwitch):
         r = self._get_result(body, '/inwallswitch/v1/device/configurations', 'post')
 
         if Helpers.code_check(r):
-            self.config = Helpers.build_config_dict(r)
-        else:
-            logger.warning('Unable to get %s config info', self.device_name)
+            if (r is not None):
+                self.config = Helpers.build_config_dict(r)
+                return
+        logger.warning('Unable to get %s config info', self.device_name)
 
     def turn(self, status: str) -> bool:
         """Turn switch device on/off."""
@@ -201,13 +204,14 @@ class VeSyncDimmerSwitch(VeSyncSwitch):
         r = self._get_result(body, '/dimmer/v1/device/devicedetail', 'post')
 
         if Helpers.code_check(r):
-            self.device_status = r.get('deviceStatus', self.device_status)
-            self.details['active_time'] = r.get('activeTime', 0)
-            self.connection_status = r.get('connectionStatus', self.connection_status)
-            self._brightness = r.get('brightness')
-            self._rgb_status = r.get('rgbStatus')
-            self._rgb_value = r.get('rgbValue')
-            self._indicator_light = r.get('indicatorlightStatus')
+            if (r is not None):
+                self.device_status = r.get('deviceStatus', self.device_status)
+                self.details['active_time'] = r.get('activeTime', 0)
+                self.connection_status = r.get('connectionStatus', self.connection_status)
+                self._brightness = r.get('brightness', 0)
+                self._rgb_status = r.get('rgbStatus', '')
+                self._rgb_value = r.get('rgbValue', {'red': 0, 'green': 0, 'blue': 0})
+                self._indicator_light = r.get('indicatorlightStatus', '')
         else:
             logger.debug('Error getting %s details', self.device_name)
 
@@ -217,9 +221,10 @@ class VeSyncDimmerSwitch(VeSyncSwitch):
         r = self._get_result(body, '/dimmer/v1/device/configurations', 'post')
 
         if Helpers.code_check(r):
-            self.config = Helpers.build_config_dict(r)
-        else:
-            logger.warning('Unable to get %s config info', self.device_name)
+            if r is not None:
+                self.config = Helpers.build_config_dict(r)
+                return
+        logger.warning('Unable to get %s config info', self.device_name)
 
     def turn(self, status: str) -> bool:
         """Turn switch on/off."""
@@ -273,7 +278,11 @@ class VeSyncDimmerSwitch(VeSyncSwitch):
         if Helpers.code_check(r):
             self._rgb_status = status
             if body.get('rgbValue') is not None:
-                self._rgb_value = {'red': red, 'blue': blue, 'green': green}
+                r = int(0 if red is None else red)
+                g = int(0 if green is None else green)
+                b = int(0 if blue is None else blue)
+                rgb = {'red': r, 'green': g, 'blue': b}
+                self._rgb_value = rgb
             return True
         logger.warning('Error setting %s RGB %s', self.device_name, status)
         return False
@@ -324,9 +333,9 @@ class VeSyncDimmerSwitch(VeSyncSwitch):
         """Return formatted device info to stdout."""
         super().display()
         disp = [
-            ('Indicator Light', self.active_time, 'min'),
-            ('Brightness', self._brightness, '%'),
-            ('RGB Light', self._rgb_status, ''),
+            ('Indicator Light', str(self.active_time), 'min'),
+            ('Brightness', str(self._brightness), '%'),
+            ('RGB Light', str(self._rgb_status), ''),
         ]
         for line in disp:
             print(f"{line[0]+': ':.<30} {' '.join(line[1:])}")
@@ -345,10 +354,11 @@ class VeSyncDimmerSwitch(VeSyncSwitch):
         return json.dumps(sup_val, indent=4)
 
 
-def factory(module: str, details: dict, manager) -> VeSyncSwitch:
+def factory(module: str, details: dict, manager) -> Optional[VeSyncSwitch]:
+    """Create VeSync switch instance from the given module name."""
     try:
         class_name = switch_classes[module]
         switch = getattr(module_switch, class_name)
         return switch(details, manager)
-    except:
+    except Exception:
         return None

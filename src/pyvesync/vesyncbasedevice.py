@@ -2,7 +2,7 @@
 from __future__ import annotations
 import logging
 import json
-from typing import Optional
+from typing import Optional, Any
 from abc import ABCMeta, abstractmethod
 
 from .helpers import Helpers, EDeviceFamily
@@ -21,6 +21,7 @@ MODE_NORMAL = 'normal'
 MODE_PET = 'pet'
 MODE_SLEEP = 'sleep'
 MODE_TURBO = 'turbo'
+
 
 class VeSyncBaseDevice:
     """Properties shared across all VeSync devices.
@@ -58,32 +59,40 @@ class VeSyncBaseDevice:
         display(): Print formatted device info to stdout.
         displayJSON(): JSON API for device details.
     """
-    manager = None # VeSync
-    cid: str = None
+
+    manager: Any
+    cid: str
     config: dict = {}
-    config_module: str = None
-    connection_status: str = None
+    config_module: str
+    connection_status: str
     connection_type: Optional[str] = None
-    current_firm_version: str = None
+    current_firm_version: Optional[str] = None
     device_family: EDeviceFamily = EDeviceFamily.NOT_SUPPORTED
-    device_name: str = None
-    device_image: str = None
+    device_name: str
+    device_image: Optional[str] = None
     device_region: Optional[str] = None
     device_status: Optional[str] = None
-    device_type: str = None
-    extension = None
+    device_type: str
+    extension: Optional[Any] = None
     mac_id: Optional[str] = None
     mode: Optional[str] = None
     pid = None
-    speed: Optional[int] = None
-    sub_device_no: int = 0
+    sub_device_no: int
     type: Optional[str] = None
     uuid: Optional[str] = None
     speed: Optional[str] = None
-    
+    features: list[str]
+    details: dict[str, Any]
+
     __metaclass__ = ABCMeta
 
-    def __init__(self, details: dict, manager, features: dict[str, list[str]], device_family: EDeviceFamily) -> None:
+    def __init__(
+            self,
+            details: dict,
+            manager: Any,
+            features: dict[str, list[str]],
+            device_family: EDeviceFamily
+    ) -> None:
         """Initialize VeSync device base class."""
         self.manager = manager
 
@@ -103,7 +112,6 @@ class VeSyncBaseDevice:
             self.extension = details.get('extension')
             self.current_firm_version = details.get('currentFirmVersion')
             self.device_region = details.get('deviceRegion')
-            self.pid = None
             self.sub_device_no = details.get('subDeviceNo', 0)
             if isinstance(details.get('extension'), dict):
                 ext = details['extension']
@@ -114,10 +122,11 @@ class VeSyncBaseDevice:
             else:
                 self.device_status = details.get('deviceStatus')
 
-            self.features = features.get(self.device_type)
+            self.features = features.get(self.device_type, [])
             self.device_family = device_family
 
         else:
+            self.features = []
             logger.error('No cid found for %s', self.__class__.__name__)
         self.details = {}
 
@@ -167,11 +176,16 @@ class VeSyncBaseDevice:
         return False
 
     def supports(self, feature: str) -> bool:
-        """Returns True if the device supports the given feature"""
+        """Return True if the device supports the given feature."""
         return feature in self.features
 
-    def call_api_v1(self, api, body):
-        r = Helpers.call_api(f'/cloud/v1/deviceManaged/{api}',
+    def call_api_v1(self, api: str, body: dict[str, Any]):
+        """Call mannaged devices.
+        Returns:
+            dict: Response.
+        """
+        r = Helpers.call_api(
+            f'/cloud/v1/deviceManaged/{api}',
             method='post',
             headers=self.manager.req_header_bypass(),
             json_object=body
@@ -219,7 +233,7 @@ class VeSyncBaseDevice:
         for line in disp:
             print(f"{line[0]+': ':.<30} {line[1]}")
 
-    def displayJSON(self) -> str:  # pylint: disable=invalid-name
+    def displayJSON(self) -> str:
         """JSON API for device details.
 
         Returns:
@@ -249,6 +263,19 @@ class VeSyncBaseDevice:
                 'CID': self.cid,
             },
             indent=4)
+
+    def update(self) -> None:
+        """Update device details."""
+        self.get_details()
+
+    @abstractmethod
+    def get_details(self) -> None:
+        """Update device details."""
+
+    @abstractmethod
+    def update_energy(self, bypass_check=False) -> None:
+        """Update the device's history data."""
+        pass
 
     @abstractmethod
     def turn(self, status: str) -> bool:

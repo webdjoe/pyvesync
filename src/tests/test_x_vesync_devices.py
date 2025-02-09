@@ -228,27 +228,15 @@ class TestDeviceList(object):
 
     def test_display_func(self, caplog, api_mock):
         """Test display function outputs text."""
-        self.vesync_obj.device_list.append(
-            VeSyncOutdoorPlug(json_vals.DeviceList.device_list_item('ESO15-TB', 0), self.vesync_obj)
-        )
-        self.vesync_obj.device_list.append(
-            VeSyncOutlet10A(json_vals.DeviceList.device_list_item('ESW01-EU'), self.vesync_obj)
-        )
-        self.vesync_obj.device_list.append(
-            VeSyncOutlet15A(json_vals.DeviceList.device_list_item('ESW15-USA'), self.vesync_obj)
-        )
-        self.vesync_obj.device_list.append(
-            VeSyncOutlet7A(json_vals.DeviceList.LIST_CONF_7A, self.vesync_obj)
-        )
-        self.vesync_obj.device_list.append(
-            VeSyncWallSwitch(json_vals.DeviceList.LIST_CONF_WS, self.vesync_obj)
-        )
-        self.vesync_obj.device_list.append(
-            VeSyncAir131(json_vals.DeviceList.LIST_CONF_AIR, self.vesync_obj)
-        )
-        self.vesync_obj.device_list.append(
+        self.vesync_obj._device_list += [
+            VeSyncOutdoorPlug(json_vals.DeviceList.device_list_item('ESO15-TB', 0), self.vesync_obj),
+            VeSyncOutlet10A(json_vals.DeviceList.device_list_item('ESW01-EU'), self.vesync_obj),
+            VeSyncOutlet15A(json_vals.DeviceList.device_list_item('ESW15-USA'), self.vesync_obj),
+            VeSyncOutlet7A(json_vals.DeviceList.LIST_CONF_7A, self.vesync_obj),
+            VeSyncWallSwitch(json_vals.DeviceList.LIST_CONF_WS, self.vesync_obj),
+            VeSyncAir131(json_vals.DeviceList.LIST_CONF_AIR, self.vesync_obj),
             VeSyncBulbESL100(json_vals.DeviceList.LIST_CONF_ESL100, self.vesync_obj)
-        )
+        ]
 
         dev_list = [
             self.vesync_obj.outlets,

@@ -38,7 +38,10 @@ import sys
 from typing import Union, Optional, NamedTuple
 from abc import ABCMeta, abstractmethod
 from enum import Enum
-from .helpers import Helpers, EConfig, Color, EDeviceFamily, ERR_DEV_OFFLINE, ERR_REQ_TIMEOUTS
+from .helpers import (
+    Helpers, EConfig, Color, EDeviceFamily,
+    ERR_DEV_OFFLINE, ERR_REQ_TIMEOUTS
+)
 from .vesyncbasedevice import VeSyncBaseDevice, STATUS_ON, STATUS_OFF
 
 logger = logging.getLogger(__name__)
@@ -47,12 +50,25 @@ module_bulb = sys.modules[__name__]
 
 NUMERIC_T = Optional[Union[int, float, str]]
 
+
 class ColorMode(str, Enum):
+    """Enumeration of known color modes."""
+
     NONE = ''
     WHITE = 'white'
     COLOR = 'color'
     HSV = 'hsv'
     RGB = 'rgb'
+
+    @classmethod
+    def get(cls, name: str) -> ColorMode:
+        """Return the color mode for the given name."""
+        try:
+            return cls[name]
+        except Exception:
+            logger.error("No ColorMode for - %s", name)
+            return ColorMode.NONE
+
 
 # --8<-- [start:bulb_configs]
 bulb_configs: dict = {
@@ -83,12 +99,13 @@ bulb_classes = {k: v[EConfig.CLASS] for k, v in bulb_configs.items()}
 bulb_features = {k: v[EConfig.FEATURES] for k, v in bulb_configs.items()}
 bulb_color_modes = {k: v[EConfig.COLOR_MODEL] for k, v in bulb_configs.items()}
 
-__all__: list = list(bulb_classes.values()) + ['bulb_classes', 'bulb_color_modes', 'VeSyncBulb']
+__all__: list = [*bulb_classes.values(), 'bulb_classes', 'bulb_color_modes', 'VeSyncBulb']
 
 
 def pct_to_kelvin(pct: float, max_k: int = 6500, min_k: int = 2700) -> float:
     """Convert percent to kelvin."""
     return ((max_k - min_k) * pct / 100) + min_k
+
 
 class VeSyncBulb(VeSyncBaseDevice):
     """Base class for VeSync Bulbs.
@@ -116,7 +133,7 @@ class VeSyncBulb(VeSyncBaseDevice):
     _color_value: float = 0
     _color_hue: float = 0
     _color_saturation: float = 0
-    _color_mode: ColorMode.NONE
+    _color_mode: ColorMode = ColorMode.NONE
     _color: Optional[Color] = None
     features: list[str] = []
     _rgb_values: dict[str, int] = {
@@ -128,7 +145,7 @@ class VeSyncBulb(VeSyncBaseDevice):
     def __init__(self, details: dict[str, str | list], manager) -> None:
         """Initialize VeSync smart bulb base class."""
         super().__init__(details, manager, bulb_features, EDeviceFamily.BULB)
-        self._color_mode = bulb_color_modes.get(self.device_type)
+        self._color_mode = bulb_color_modes.get(self.device_type, ColorMode.NONE)
         if self.features is None:
             logger.error("No configuration set for - %s", self.device_type)
             raise KeyError
@@ -471,15 +488,6 @@ class VeSyncBulb(VeSyncBaseDevice):
             return False
         return bool(red and green and blue)
 
-    def update(self) -> None:
-        """Update bulb details.
-
-        Calls `get_details()` method to retrieve status from API and
-        update the bulb attributes. `get_details()` is overridden by subclasses
-        to hit the respective API endpoints.
-        """
-        self.get_details()
-
     def display(self) -> None:
         """Return formatted bulb info to stdout."""
         super().display()
@@ -488,12 +496,16 @@ class VeSyncBulb(VeSyncBaseDevice):
             if self.dimmable_feature:
                 disp.append(('Brightness', str(self.brightness), '%'))
             if self.color_temp_feature:
-                disp.append(('White Temperature Pct', str(self.color_temp_pct), '%'))
-                disp.append(('White Temperature Kelvin', str(self.color_temp_kelvin), 'K'))
+                disp += [
+                    ('White Temperature Pct', str(self.color_temp_pct), '%'),
+                    ('White Temperature Kelvin', str(self.color_temp_kelvin), 'K')
+                ]
             if self.rgb_shift_feature and self.color is not None:
-                disp.append(('ColorHSV', Helpers.named_tuple_to_str(self.color.hsv), ''))
-                disp.append(('ColorRGB', Helpers.named_tuple_to_str(self.color.rgb), ''))
-                disp.append(('ColorMode', str(self.color_mode), ''))
+                disp += [
+                    ('ColorHSV', Helpers.named_tuple_to_str(self.color.hsv), ''),
+                    ('ColorRGB', Helpers.named_tuple_to_str(self.color.rgb), ''),
+                    ('ColorMode', str(self.color_mode), '')
+                ]
             if len(disp) > 0:
                 for line in disp:
                     print(f"{line[0]+': ':.<30} {' '.join(line[1:])}")
@@ -551,7 +563,8 @@ class VeSyncBulb(VeSyncBaseDevice):
             return self._color.hsv
         return None
 
-    def build_api_dict(self, method, data):
+    def build_api_dict(self, method: str, data):
+        """Build the body for the api request for the given method"""
         return {
             **self.manager.req_body_bypass_v2(),
             'cid': self.cid,
@@ -562,6 +575,7 @@ class VeSyncBulb(VeSyncBaseDevice):
                 'data': data
             }
         }
+
 
 class VeSyncBulbESL100MC(VeSyncBulb):
     """Etekcity ESL100 Multi Color Bulb device instance.
@@ -696,7 +710,11 @@ class VeSyncBulbESL100MC(VeSyncBulb):
             if brightness is not None:
                 brightness_update = int(self._validate_brightness(brightness))
                 # Do nothing if brightness is passed and same as current
-                if self.device_status == STATUS_ON and brightness_update == self._brightness:
+                if (
+                    (self.device_status == STATUS_ON)
+                    and
+                    (brightness_update == self._brightness)
+                ):
                     logger.debug('Brightness already set to %s', brightness)
                     return True
                 color_mode = 'white'
@@ -737,7 +755,7 @@ class VeSyncBulbESL100MC(VeSyncBulb):
         else:
             logger.debug("Status must be on or off")
             return False
-        body = self.build_api_dict('setSwitch', {'id': 0,'enabled': turn_on})
+        body = self.build_api_dict('setSwitch', {'id': 0, 'enabled': turn_on})
         r = self.manager.post_device_managed_v2(body)
         if not isinstance(r, dict) or r.get('code') != 0:
             logger.debug("Error in setting %s %s", self.device_name, status)
@@ -768,8 +786,10 @@ class VeSyncBulbESL100(VeSyncBulb):
         """
         super().__init__(details, manager)
 
-    def call_api(self, api, method, body):
-        r = Helpers.call_api(f'/SmartBulb/v1/device/{api}',
+    def call_api(self, api: str, method: str, body):
+        """Call the given method of the api with the spezified body."""
+        r = Helpers.call_api(
+            f'/SmartBulb/v1/device/{api}',
             method=method,
             headers=self.manager.req_headers(),
             json_object=body
@@ -848,7 +868,9 @@ class VeSyncBulbESL100CW(VeSyncBulb):
     def __init__(self, details: dict, manager) -> None:
         """Initialize Etekcity Tunable white bulb."""
         super().__init__(details, manager)
+
     def get_details(self) -> None:
+        """Return the body for the api call."""
         body = {
             **self.manager.req_body_bypass_v1(),
             'cid': self.cid,
@@ -872,7 +894,6 @@ class VeSyncBulbESL100CW(VeSyncBulb):
                     str(r.get('msg', '')),
                 )
         logger.debug('Error calling %s', self.device_name)
-        return
 
     def _interpret_api_call_result(self, response: dict) -> None:
         self.connection_status = 'online'
@@ -881,9 +902,9 @@ class VeSyncBulbESL100CW(VeSyncBulb):
         self._color_temp = response.get('colorTempe', 0)
 
     def get_config(self) -> None:
-        body = Helpers.req_body_firmware(self.manager, {'uuid': self.uuid})
+        body = self.manager.req_body_firmware({'uuid': self.uuid})
 
-        r = self.call_api_v1('configurations', 'post', body)
+        r = self.call_api_v1('configurations', body)
 
         if Helpers.code_check(r):
             self.config = Helpers.build_config_dict(r)
@@ -1005,8 +1026,8 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
                 color_mode = innerresult.get('colorMode')
                 try:
                     self._color_mode = ColorMode(color_mode)
-                except:
-                    logger.warning("Unknown ColorMode '%s' - using 'color'!", color_mode)
+                except Exception:
+                    logger.warning("Unknown ColorMode '%s' - using 'color'!")
                     self._color_mode = ColorMode.COLOR
                 hue = float(round(innerresult.get('hue')/27.777777, 2))
                 sat = float(innerresult.get('saturation')/100)
@@ -1033,7 +1054,7 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
             **self.manager.req_body('configurations'),
             'uuid': self.uuid
         }
-        r = self.call_api_v1('configurations', 'post', body)
+        r = self.call_api_v1('configurations', body)
         if Helpers.code_check(r):
             if r.get('result') is not None:
                 result = r.get('result')
@@ -1072,7 +1093,7 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
         if status == self.device_status:
             logger.debug("Device already in requested state")
             return True
-        body = self.build_api_dict('setSwitch', {'id': 0,'enabled': status_bool})
+        body = self.build_api_dict('setSwitch', {'id': 0, 'enabled': status_bool})
         r = self.manager.post_device_managed_v2(body)
         if Helpers.code_check(r):
             self.device_status = status
@@ -1263,10 +1284,11 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
         return False
 
 
-def factory(module: str, details: dict, manager) -> VeSyncBulb:
+def factory(module: str, details: dict, manager) -> Optional[VeSyncBulb]:
+    """Create VeSync bulb instance from the given module/model name."""
     try:
         class_name = bulb_classes[module]
         bulb = getattr(module_bulb, class_name)
         return bulb(details, manager)
-    except:
+    except Exception:
         return None

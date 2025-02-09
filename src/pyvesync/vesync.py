@@ -3,14 +3,15 @@
 import logging
 import re
 import time
-from typing import List, Optional
+from typing import List, Optional, Any,  Callable, Sequence
 
 from .helpers import (
-    Helpers, EDeviceFamily, 
+    Helpers, EDeviceFamily,
     logger as helper_logger, REQUEST_T,
-    ENERGY_WEEK, ENERGY_MONTH, ENERGY_YEAR, 
+    ENERGY_WEEK, ENERGY_MONTH, ENERGY_YEAR,
     USER_TYPE, MOBILE_ID, DEFAULT_REGION
 )
+from .logs import LibraryLogger
 from .vesyncbasedevice import VeSyncBaseDevice
 from .vesyncbulb import factory as bulb_factory, logger as bulb_logger
 from .vesyncfan import factory as fan_factory, logger as fan_logger
@@ -33,24 +34,26 @@ DEFAULT_TZ: str = 'America/New_York'
 
 DEFAULT_ENER_UP_INT: int = 21600
 
-FACTORIES = (bulb_factory, fan_factory, kitchen_factory, outlet_factory, switch_factory)
+FACTORIES: Sequence[Callable] = [
+    bulb_factory, fan_factory, kitchen_factory, outlet_factory, switch_factory
+]
 
 
 class VeSync:  # pylint: disable=function-redefined
     """VeSync Manager Class."""
 
-    API_LOGIN       = 'login'
-    API_CONFIG      = 'configurations'
+    API_LOGIN = 'login'
+    API_CONFIG = 'configurations'
     API_DEVICE_LIST = 'devices'
-    API_DETAIL      = 'devicedetail'
-    API_STATUS      = 'devicestatus'
-    API_ENERGY      = 'energy'
-    API_BYPASS_V1   = 'bypass'
-    API_BYPASS_V2   = 'bypassV2'
-    API_FIRMWARE    = 'firmwareUpdateInfo'
+    API_DETAIL = 'devicedetail'
+    API_STATUS = 'devicestatus'
+    API_ENERGY = 'energy'
+    API_BYPASS_V1 = 'bypass'
+    API_BYPASS_V2 = 'bypassV2'
+    API_FIRMWARE = 'firmwareUpdateInfo'
 
     _debug: bool
-    _redact:bool
+    _redact: bool
     username: str
     password: str
     token: Optional[str] = None
@@ -64,8 +67,11 @@ class VeSync:  # pylint: disable=function-redefined
     _energy_check: bool = True
     time_zone: str = DEFAULT_TZ
 
-    def __init__(self, username, password, time_zone=DEFAULT_TZ,
-                 debug=False, redact=True):
+    def __init__(
+            self,
+            username, password,
+            time_zone=DEFAULT_TZ, debug=False, redact=True
+    ) -> None:
         """Initialize VeSync Manager.
 
         This class is used as the manager for all VeSync objects, all methods and
@@ -99,7 +105,7 @@ class VeSync:  # pylint: disable=function-redefined
             kitchen : list
                 List of VeSyncKitchen objects for smart kitchen appliances
             dev_list : dict
-                List of VeSyncBaseDevice obejcts (all devices)
+                List of VeSyncBaseDevice objects (all devices)
             token : str
                 VeSync API token
             account_id : str
@@ -116,7 +122,10 @@ class VeSync:  # pylint: disable=function-redefined
         if isinstance(time_zone, str) and time_zone:
             reg_test = r'[^a-zA-Z/_]'
             if bool(re.search(reg_test, time_zone)):
-                logger.warning('Invalid characters in time zone %s - using default!', time_zone)
+                logger.warning(
+                    'Invalid characters in time zone %s - using default!',
+                    time_zone
+                )
             else:
                 self.time_zone = time_zone
         else:
@@ -130,16 +139,11 @@ class VeSync:  # pylint: disable=function-redefined
     @debug.setter
     def debug(self, new_flag: bool) -> None:
         """Set debug flag."""
+        if new_flag:
+            LibraryLogger.configure_logger(logging.DEBUG)
+        else:
+            LibraryLogger.configure_logger(logging.WARNING)
         self._debug = new_flag
-        level = logging.DEBUG if new_flag else logging.WARNING
-
-        logger.setLevel(level)
-        bulb_logger.setLevel(level)
-        fan_logger.setLevel(level)
-        helper_logger.setLevel(level)
-        outlet_logger.setLevel(level)
-        switch_logger.setLevel(level)
-        kitchen_logger.setLevel(logging.DEBUG)
 
     @property
     def redact(self) -> bool:
@@ -150,9 +154,9 @@ class VeSync:  # pylint: disable=function-redefined
     def redact(self, new_flag: bool) -> None:
         """Set debug flag."""
         if new_flag:
-            Helpers.should_redact = True
+            LibraryLogger.shouldredact = True
         elif new_flag is False:
-            Helpers.should_redact = False
+            LibraryLogger.shouldredact = False
         self._redact = new_flag
 
     @property
@@ -200,7 +204,11 @@ class VeSync:  # pylint: disable=function-redefined
     def remove_old_devices(self, devices: list) -> bool:
         """Remove devices not found in device list return."""
         before = len(self._device_list)
-        self._device_list = [x for x in self._device_list if self.remove_dev_test(x, devices)]
+        self._device_list = [
+            x
+            for x in self._device_list
+            if self.remove_dev_test(x, devices)
+        ]
         after = len(self._device_list)
         if before != after:
             logger.debug('%s devices removed', str((before - after)))
@@ -234,8 +242,7 @@ class VeSync:  # pylint: disable=function-redefined
         instantiates the device object.
 
         Args:
-            dev_type (str): Device model type returned from API
-            config (dict): Device configuration from `VeSync.get_devices()` API call
+            details (dict): Device configuration from `VeSync.get_devices()` API call
 
         Returns:
             VeSyncBaseDevice: instantiated device object or None for unsupported devices.
@@ -253,7 +260,10 @@ class VeSync:  # pylint: disable=function-redefined
                     self._device_list.append(device)
                     break
             except AttributeError as err:
-                logger.debug('Error - %s: device %s(%s) not added', err, dev_name, dev_type)
+                logger.debug(
+                    'Error - %s: device %s(%s) not added',
+                    err, dev_name, dev_type
+                )
 
         if (device is None):
             logger.debug('Unknown device %s (%s) - not added!', dev_type, dev_name)
@@ -268,7 +278,7 @@ class VeSync:  # pylint: disable=function-redefined
         """
         devices = VeSync.set_dev_id(dev_list)
 
-        num_devices = len(self._device_list)
+        num_devices = len(devices)
 
         if not devices:
             logger.warning('No devices found in api return')
@@ -300,18 +310,26 @@ class VeSync:  # pylint: disable=function-redefined
         self.in_process = True
 
         proc_return = False
-        r = Helpers.call_api('/cloud/v1/deviceManaged/devices',
+        r = Helpers.call_api(
+            '/cloud/v1/deviceManaged/devices',
             method='post',
             headers=VeSync.req_header_bypass(),
             json_object=self.req_body_devices()
         )
 
         if Helpers.code_check(r):
-            if 'result' in r and 'list' in r['result']:
-                device_list = r['result']['list']
-                proc_return = self.process_devices(device_list)
+            if (r is not None):
+                if ('result' in r):
+                    result = r['result']
+                    if ('list' in result):
+                        device_list = result['list']
+                        proc_return = self.process_devices(device_list)
+                    else:
+                        logger.error('Device list in response not found')
+                else:
+                    logger.error('Device list in response not found')
             else:
-                logger.error('Device list in response not found')
+                logger.error('Result in response not found')
         else:
             logger.warning('Error retrieving device list')
 
@@ -336,21 +354,24 @@ class VeSync:  # pylint: disable=function-redefined
             logger.error('Password invalid')
             return False
 
-        r = Helpers.call_api('/cloud/v1/user/login',
+        r = Helpers.call_api(
+            '/cloud/v1/user/login',
             'post',
             json_object=self.req_body_login()
         )
 
-        if Helpers.code_check(r) and 'result' in r:
-            self.token = r.get('result').get('token')
-            self.account_id = r.get('result').get('accountID')
-            self.country_code = r.get('result').get('countryCode')
-            self.enabled = True
-            logger.debug('Login successful')
-            logger.debug('token %s', self.token)
-            logger.debug('account_id %s', self.account_id)
-
-            return True
+        if Helpers.code_check(r):
+            if (r is not None):
+                if ('result' in r):
+                    result: dict[str, Any] = r.get('result', {})
+                    self.token = result.get('token')
+                    self.account_id = result.get('accountID')
+                    self.country_code = result.get('countryCode')
+                    self.enabled = True
+                    logger.debug('Login successful')
+                    logger.debug('token %s', self.token)
+                    logger.debug('account_id %s', self.account_id)
+                    return True
         logger.error('Error logging in with username and password')
         return False
 
@@ -381,7 +402,7 @@ class VeSync:  # pylint: disable=function-redefined
 
             self.last_update_ts = time.time()
 
-    def update_energy(self, bypass_check=False) -> None:
+    def update_energy(self, bypass_check: bool = False) -> None:
         """Fetch updated energy information for outlet devices."""
         for outlet in self.outlets:
             outlet.update_energy(bypass_check)
@@ -393,39 +414,56 @@ class VeSync:  # pylint: disable=function-redefined
 
     @property
     def bulbs(self) -> List[VeSyncBaseDevice]:
-        '''Returns a list of all registered bulbs'''
-        return [dev for dev in self._device_list if dev.device_family == EDeviceFamily.BULB]
+        """Returns a list of all registered bulbs."""
+        return [
+            dev
+            for dev in self._device_list
+            if dev.device_family == EDeviceFamily.BULB
+        ]
 
     @property
     def fans(self) -> List[VeSyncBaseDevice]:
-        '''Returns a list of all registered fans'''
-        return [dev for dev in self._device_list if dev.device_family == EDeviceFamily.FAN]
+        """Returns a list of all registered fans."""
+        return [
+            dev
+            for dev in self._device_list
+            if dev.device_family == EDeviceFamily.FAN
+        ]
 
     @property
     def kitchen(self) -> List[VeSyncBaseDevice]:
-        '''Returns a list of all registered kitchen devices'''
-        return [dev for dev in self._device_list if dev.device_family == EDeviceFamily.KITCHEN]
+        """Returns a list of all registered kitchen devices."""
+        return [
+            dev
+            for dev in self._device_list
+            if dev.device_family == EDeviceFamily.KITCHEN
+        ]
 
     @property
     def outlets(self) -> List[VeSyncBaseDevice]:
-        '''Returns a list of all registered outlets'''
-        return [dev for dev in self._device_list if dev.device_family == EDeviceFamily.OUTLET]
+        """Returns a list of all registered outlets."""
+        return [
+            dev
+            for dev in self._device_list
+            if dev.device_family == EDeviceFamily.OUTLET
+        ]
 
     @property
     def switches(self) -> List[VeSyncBaseDevice]:
-        '''Returns a list of all registered switches'''
-        return [dev for dev in self._device_list if dev.device_family == EDeviceFamily.SWITCH]
+        """Returns a list of all registered switches."""
+        return [
+            dev
+            for dev in self._device_list
+            if dev.device_family == EDeviceFamily.SWITCH
+        ]
 
     @property
     def device_list(self) -> List[VeSyncBaseDevice]:
-        '''Returns a list of all registered devices'''
-        return [dev for dev in self._device_list]
+        """Returns a list of all registered devices."""
+        return self._device_list.copy()
 
     def req_headers(self) -> REQUEST_T:
         """Build header for legacy api GET requests.
-
-        Args:
-            manager (VeSyncManager): Instance of VeSyncManager.
 
         Returns:
             dict: Header dictionary for api requests.
@@ -471,6 +509,7 @@ class VeSync:  # pylint: disable=function-redefined
         }
 
     def post_device_managed_v1(self, body):
+        """Return the response for a bypass V^ request with the given body."""
         response = Helpers.call_api(
             api='/cloud/v1/deviceManaged/bypass',
             method='post',
@@ -480,6 +519,7 @@ class VeSync:  # pylint: disable=function-redefined
         return response
 
     def post_device_managed_v2(self, body):
+        """Return the response for a bypass V2 request with the given body."""
         return Helpers.call_api(
             api='/cloud/v2/deviceManaged/bypassV2',
             method='post',
@@ -510,18 +550,12 @@ class VeSync:  # pylint: disable=function-redefined
             'traceId': str(int(time.time())),
             'method': method
         }
-        if ((not args is None) 
-            and (type(args) is dict)
-            and (len(args))
-        ):
+        if isinstance(args, dict):
             details |= args
         return details
 
     def req_body_base(self) -> REQUEST_T:
         """Return universal keys for body of api requests.
-
-        Args:
-            manager (VeSyncManager): Instance of VeSyncManager.
 
         Returns:
             dict: Body dictionary for api requests.
@@ -541,9 +575,6 @@ class VeSync:  # pylint: disable=function-redefined
     def req_body_auth(self) -> REQUEST_T:
         """Keys for authenticating api requests.
 
-        Args:
-            manager (VeSyncManager): Instance of VeSyncManager.
-
         Returns:
             dict: Authentication keys for api requests.
 
@@ -560,6 +591,7 @@ class VeSync:  # pylint: disable=function-redefined
         }
 
     def req_body_login(self) -> REQUEST_T:
+        """Return the body for the login request."""
         return {
             **self.req_body_base(),
             **self.req_body_details(VeSync.API_LOGIN),
@@ -568,20 +600,19 @@ class VeSync:  # pylint: disable=function-redefined
             'devToken': '',
             'userType': USER_TYPE,
         }
-    
+
     def req_body_status(self, args: Optional[dict] = None) -> REQUEST_T:
+        """Return the body for the status request."""
         body: REQUEST_T = {
             **self.req_body_base(),
             **self.req_body_auth()
         }
-        if ((not args is None) 
-            and (type(args) is dict)
-            and (len(args))
-        ):
+        if (isinstance(args, dict)):
             body |= args
         return body
 
     def req_body_devices(self, args: Optional[dict] = None) -> REQUEST_T:
+        """Return the body for the device list request."""
         devices: REQUEST_T = {
             **self.req_body_status(),
             **self.req_body_details(VeSync.API_DEVICE_LIST, args),
@@ -591,6 +622,7 @@ class VeSync:  # pylint: disable=function-redefined
         return devices
 
     def req_body_device_detail(self) -> REQUEST_T:
+        """Return the body for the device detail request."""
         return {
             **self.req_body_status(),
             **self.req_body_details(VeSync.API_DETAIL),
@@ -598,6 +630,7 @@ class VeSync:  # pylint: disable=function-redefined
         }
 
     def req_body_device_configuration(self) -> REQUEST_T:
+        """Return the body for the device configuration request."""
         return {
             **self.req_body_status(),
             **self.req_body_details(VeSync.API_CONFIG),
@@ -605,6 +638,7 @@ class VeSync:  # pylint: disable=function-redefined
         }
 
     def req_body_energy(self, period: str) -> REQUEST_T:
+        """Return the body for the energy request."""
         return {
             **self.req_body_status(),
             **self.req_body_details(f'energy{period}'),
@@ -612,15 +646,19 @@ class VeSync:  # pylint: disable=function-redefined
         }
 
     def req_body_energy_week(self) -> REQUEST_T:
+        """Return the body for the weekly energy request."""
         return self.req_body_energy(ENERGY_WEEK)
 
     def req_body_energy_month(self) -> REQUEST_T:
+        """Return the body for the monthly energy request."""
         return self.req_body_energy(ENERGY_MONTH)
 
     def req_body_energy_year(self) -> REQUEST_T:
+        """Return the body for the yearly energy request."""
         return self.req_body_energy(ENERGY_YEAR)
 
     def req_body_bypass_v1(self, args: Optional[dict] = None) -> REQUEST_T:
+        """Return teh body for the bypass V1 request."""
         return {
             **self.req_body_base(),
             **self.req_body_auth(),
@@ -628,6 +666,7 @@ class VeSync:  # pylint: disable=function-redefined
         }
 
     def req_body_bypass_v2(self, args: Optional[dict] = None) -> REQUEST_T:
+        """Return teh body for the bypass V2 request."""
         return {
             **self.req_body_base(),
             **self.req_body_auth(),
@@ -637,6 +676,7 @@ class VeSync:  # pylint: disable=function-redefined
         }
 
     def req_body_firmware(self, args: Optional[dict] = None) -> REQUEST_T:
+        """Return the body for the firmware request."""
         return {
             **self.req_body_base(),
             **self.req_body_auth(),
@@ -647,8 +687,7 @@ class VeSync:  # pylint: disable=function-redefined
         """Builder for body of api requests.
 
         Args:
-            manager (VeSync): Instance of VeSync.
-            method (str): Type of request to build body for.
+            api (str): path of the api request.
 
         Returns:
             dict: Body dictionary for api requests.
@@ -691,7 +730,7 @@ class VeSync:  # pylint: disable=function-redefined
         if (api == VeSync.API_FIRMWARE):
             return self.req_body_firmware()
 
-        logger.warning(f'pyvesync: building request-body for unknown method "{api}"!')
+        logger.warning('pyvesync: building request-body for unknown method "%s"!', api)
         return {
             **self.req_body_base(),
             **self.req_body_auth(),

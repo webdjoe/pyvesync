@@ -4,10 +4,14 @@ import logging
 import time
 import sys
 from functools import wraps
-from typing import Optional, Union, Set
+from typing import Optional, Union
 from dataclasses import dataclass
 from .vesyncbasedevice import VeSyncBaseDevice
-from .helpers import Helpers, EConfig, EDeviceFamily, ERR_REQ_TIMEOUTS, DEVICE_CONFIGS_T, build_model_dict
+from .helpers import (
+    Helpers, EConfig, EDeviceFamily,
+    ERR_REQ_TIMEOUTS, DEVICE_CONFIGS_T,
+    build_model_dict
+)
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +30,10 @@ kitchen_configs: DEVICE_CONFIGS_T = {
 kitchen_classes = build_model_dict(kitchen_configs, EConfig.CLASS)
 kitchen_features = build_model_dict(kitchen_configs, EConfig.FEATURES)
 
-__all__ = list(kitchen_classes.values()) + ['kitchen_classes', 'kitchen_classes', 'FryerStatus', 'VeSyncKitchen']
+__all__: list = [
+    *kitchen_classes.values(),
+    'kitchen_classes', 'kitchen_classes', 'FryerStatus', 'VeSyncKitchen'
+]
 
 
 # Status refresh interval in seconds
@@ -67,7 +74,7 @@ class FryerStatus:
 
     ready_start: bool = False
     preheat: bool = False
-    cook_status: Optional[str] = None
+    cook_status: str = ''
     current_temp: Optional[int] = None
     cook_set_temp: Optional[int] = None
     cook_set_time: Optional[int] = None
@@ -75,7 +82,7 @@ class FryerStatus:
     last_timestamp: Optional[int] = None
     preheat_set_time: Optional[int] = None
     preheat_last_time: Optional[int] = None
-    _temp_unit: Optional[str] = None
+    _temp_unit: str = '°C'
 
     @property
     def is_resumable(self) -> bool:
@@ -88,7 +95,7 @@ class FryerStatus:
         return False
 
     @property
-    def temp_unit(self) -> Optional[str]:
+    def temp_unit(self) -> str:
         """Return temperature unit."""
         return self._temp_unit
 
@@ -96,10 +103,11 @@ class FryerStatus:
     def temp_unit(self, temp_unit: str):
         """Set temperature unit."""
         if temp_unit.lower() in ['f', 'fahrenheit']:
-            self._temp_unit = 'fahrenheit'
+            self._temp_unit = '°F'
         elif temp_unit.lower() in ['c', 'celsius']:
-            self._temp_unit = 'celsius'
+            self._temp_unit = '°C'
         else:
+            self._temp_unit = '°C'
             raise ValueError(f'Invalid temperature unit - {temp_unit}')
 
     @property
@@ -213,7 +221,7 @@ class FryerStatus:
         """Set status of Air Fryer Based on API Response."""
         self.last_timestamp = None
         self.preheat = False
-        self.cook_status = return_status.get('cookStatus')
+        self.cook_status = return_status.get('cookStatus', '')
         if self.cook_status == 'standby':
             self.set_standby()
             return
@@ -254,10 +262,10 @@ class FryerStatus:
 
 
 class VeSyncKitchen(VeSyncBaseDevice):
-    """ (Abstract) base class for all kitchen devices."""
+    """(Abstract) base class for all kitchen devices."""
 
     device_family = EDeviceFamily.KITCHEN
-    fryer_status: FryerStatus = None
+    fryer_status: FryerStatus
     last_update: int = 0
     refresh_interval: float = 0
 
@@ -285,8 +293,9 @@ class VeSyncAirFryer158(VeSyncKitchen):
 
     def get_body(self, method:  Optional[str] = None) -> dict:
         """Return body of api calls."""
+        inner = self.manager.req_body_bypass_v1()
         body = {
-            **self.manager.req_body_bypass_v1(),
+            **inner,
             'cid': self.cid,
             'userCountryCode': self.manager.country_code,
             'debugMode': False
@@ -332,7 +341,7 @@ class VeSyncAirFryer158(VeSyncKitchen):
         return r.get('result', {}).get('readyStart', False)
 
     @property
-    def temp_unit(self) -> Optional[str]:
+    def temp_unit(self) -> str:
         """Return temp unit."""
         return self.fryer_status.temp_unit
 
@@ -376,7 +385,7 @@ class VeSyncAirFryer158(VeSyncKitchen):
         return None
 
     @property
-    def cook_status(self) -> Optional[str]:
+    def cook_status(self) -> str:
         """Return the cook status."""
         return self.fryer_status.cook_status
 
@@ -480,7 +489,7 @@ class VeSyncAirFryer158(VeSyncKitchen):
 
     def _validate_temp(self, set_temp: int) -> bool:
         """Temperature validation."""
-        if self.fryer_status.temp_unit == 'fahrenheight':
+        if self.fryer_status.temp_unit == 'fahrenheit':
             if set_temp < 200 or set_temp > 400:
                 logger.debug('Invalid temperature %s for %s', set_temp, self.device_name)
                 return False
@@ -550,10 +559,6 @@ class VeSyncAirFryer158(VeSyncKitchen):
             return False
         return self._set_cook(status='cooking')
 
-    def update(self):
-        """Update the device details."""
-        self.get_details()
-
     @staticmethod
     def fryer_code_check(code: Union[str, int]) -> Optional[str]:
         """Return the code description."""
@@ -614,7 +619,7 @@ class VeSyncAirFryer158(VeSyncKitchen):
             return False
 
         if r.get('code') != 0 and r.get('code') is not None:
-            debug_msg = self.fryer_code_check(r.get('code'))
+            debug_msg = self.fryer_code_check(r.get('code', ''))
             logger.debug('Failed to set status for %s \n Code: %s and message: %s \n'
                          ' %s', self.device_name, r.get("code"),
                          r.get("msg"), debug_msg)
@@ -630,17 +635,20 @@ class VeSyncAirFryer158(VeSyncKitchen):
         disp = [
             ('cook_status', self.cook_status, ''),
             ('temp_unit', self.temp_unit, ''),
-            ('RGB Light', self._rgb_status, ''),
         ]
         if self.cook_status not in ['standby', 'cookEnd', 'preheatEnd']:
-            disp.append(('preheat', self.preheat, ''))
-            disp.append(('current_temp', self.current_temp, self.temp_unit))
-            disp.append(('cook_set_temp', self.cook_set_temp, self.temp_unit))
-            disp.append(('cook_set_time', self.cook_set_time, ''))
-            disp.append(('cook_last_time', self.cook_last_time, ''))
+            disp += [
+                ('preheat', str(self.preheat), ''),
+                ('current_temp', str(self.current_temp), self.temp_unit),
+                ('cook_set_temp', str(self.cook_set_temp), self.temp_unit),
+                ('cook_set_time', str(self.cook_set_time), ''),
+                ('cook_last_time', str(self.cook_last_time), ''),
+            ]
             if self.preheat is True:
-                disp.append(('preheat_last_time', self.preheat_last_time, ''))
-                disp.append(('preheat_set_time', self.preheat_set_time, ''))
+                disp += [
+                    ('preheat_last_time', str(self.preheat_last_time), ''),
+                    ('preheat_set_time', str(self.preheat_set_time), ''),
+                ]
         for line in disp:
             print(f"{line[0]+': ':.<30} {' '.join(line[1:])}")
 
@@ -669,10 +677,11 @@ class VeSyncAirFryer158(VeSyncKitchen):
         return json.dumps(sup_dict, indent=4)
 
 
-def factory(module: str, details: dict, manager) -> VeSyncKitchen:
+def factory(module: str, details: dict, manager) -> Optional[VeSyncKitchen]:
+    """Create VeSync kitchen device instance from the given module/model name."""
     try:
         class_name = kitchen_classes[module]
         kitchen = getattr(module_kitchen, class_name)
         return kitchen(details, manager)
-    except:
+    except Exception:
         return None

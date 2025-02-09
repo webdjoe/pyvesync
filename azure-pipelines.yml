@@ -17,8 +17,8 @@ jobs:
   steps:
   - task: UsePythonVersion@0
     inputs:
-      versionSpec: '3.9'
-    displayName: 'Use Python 3.9'
+      versionSpec: '3.10'
+    displayName: 'Use Python 3.10'
   - script: |
       python -m pip install --upgrade pip
       pip install -r requirements.txt
@@ -43,11 +43,11 @@ jobs:
   strategy:
     matrix:
       Python39:
-        python.version: '3.9'
-      Python310:
         python.version: '3.10'
-      Python311:
+      Python310:
         python.version: '3.11'
+      Python311:
+        python.version: '3.12'
 
 
   steps:

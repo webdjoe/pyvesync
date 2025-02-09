@@ -8,8 +8,9 @@ import colorsys
 from dataclasses import dataclass, field, InitVar
 from typing import Any, NamedTuple, Union, Optional
 import re
-import requests
 from enum import Enum
+import requests
+from .logs import LibraryLogger
 
 logger = logging.getLogger(__name__)
 
@@ -30,17 +31,20 @@ NUMERIC = Union[int, float, str, None]
 DEVICE_CONFIGS_T = dict[str, dict[Enum, Union[list[Any], str]]]
 REQUEST_T = dict[str, Any]
 
-ENERGY_WEEK: str  = 'week'
+ENERGY_WEEK: str = 'week'
 ENERGY_MONTH: str = 'month'
-ENERGY_YEAR: str  = 'year'
-PERIOD_2_DAYS: list[str] = {ENERGY_WEEK: 7, ENERGY_MONTH: 30, ENERGY_YEAR: 365}
+ENERGY_YEAR: str = 'year'
+PERIOD_2_DAYS: dict[str, int] = {ENERGY_WEEK: 7, ENERGY_MONTH: 30, ENERGY_YEAR: 365}
 
-ERR_DEV_OFFLINE: int   = -11300027 # device offline
-ERR_REQ_TIMEOUT_1: int = -11300030 # request timeout
-ERR_REQ_TIMEOUT_2: int = -11302030 # request timeout
-ERR_REQ_TIMEOUTS: list[int] = (ERR_REQ_TIMEOUT_1, ERR_REQ_TIMEOUT_2)
+ERR_DEV_OFFLINE: int = -11300027    # device offline
+ERR_REQ_TIMEOUT_1: int = -11300030  # request timeout
+ERR_REQ_TIMEOUT_2: int = -11302030  # request timeout
+ERR_REQ_TIMEOUTS: list[int] = [ERR_REQ_TIMEOUT_1, ERR_REQ_TIMEOUT_2]
+
 
 class EDeviceFamily(str, Enum):
+    """Enumeration of supported VeSync devices families."""
+
     BULB = 'bulb'
     FAN = 'fan'
     KITCHEN = 'kitchen'
@@ -48,20 +52,26 @@ class EDeviceFamily(str, Enum):
     SWITCH = 'switch'
     NOT_SUPPORTED = 'not supported'
 
-class EConfig(str, Enum):
-    CLASS            = 'module'
-    COLOR_MODEL      = 'color_model'
-    FEATURES         = 'features'
-    LEVELS           = 'levels'
-    MIST_LEVELS      = 'mist_levels'
-    MIST_MODES       = 'mist_modes'
-    MIST_LEVELS_WARM = 'warm_mist_levels'
-    MODELS           = 'models'
-    MODES            = 'modes'
 
-def build_model_dict(configurations, key):
+class EConfig(str, Enum):
+    """Enumeration of supported devices configuration keys."""
+
+    CLASS = 'module'
+    COLOR_MODEL = 'color_model'
+    FEATURES = 'features'
+    LEVELS = 'levels'
+    MIST_LEVELS = 'mist_levels'
+    MIST_MODES = 'mist_modes'
+    MIST_LEVELS_WARM = 'warm_mist_levels'
+    MODELS = 'models'
+    MODES = 'modes'
+
+
+def build_model_dict(configurations, key) -> dict[str, str]:
+    """Build a dict for the give model name to a corresponding class name."""
     return {k: v.get(key) for v in configurations.values() for k in v[EConfig.MODELS]}
-    
+
+
 class Helpers:
     """VeSync Helper Functions."""
 
@@ -142,7 +152,12 @@ class Helpers:
         return True
 
     @staticmethod
-    def call_api(api: str, method: str, headers: Optional[REQUEST_T] = None, json_object: Optional[REQUEST_T] = None) -> REQUEST_T | None:
+    def call_api(
+        api: str,
+        method: str,
+        headers: Optional[REQUEST_T] = None,
+        json_object: Optional[REQUEST_T] = None
+    ) -> REQUEST_T | None:
         """Make API calls by passing endpoint, header and body.
 
         api argument is appended to https://smartapi.vesync.com url
@@ -159,34 +174,51 @@ class Helpers:
         response = None
 
         try:
+            header = Helpers.redactor(json.dumps(headers, indent=2))
+            body = Helpers.redactor(json.dumps(json_object, indent=2))
             logger.debug("=======call_api=============================")
             logger.debug("[%s] calling '%s' api", method, api)
             logger.debug("API call URL: %s%s", API_BASE_URL, api)
-            logger.debug("API call headers:\n  %s", Helpers.redactor(json.dumps(headers, indent=2)))
-            logger.debug("API call json:\n  %s", Helpers.redactor(json.dumps(json_object, indent=2)))
+            logger.debug("API call headers:\n  %s", header)
+            logger.debug("API call json:\n  %s", body)
             try:
                 call = getattr(requests, method.lower())
                 r = call(
                     API_BASE_URL + api, json=json_object, headers=headers,
                     timeout=API_TIMEOUT
                 )
-            except:
-                raise NameError(f'Invalid method {method}')
+            except Exception as ex:
+                raise NameError(f'Invalid method {method} - {ex}') from ex
         except requests.exceptions.RequestException as e:
             logger.debug(e)
         except Exception as e:
-            logger.debug(e)
+            LibraryLogger.log_api_exception(
+                logger,
+                exception=e,
+                request_dict={
+                    "method": method,
+                    "endpoint": api,
+                    "headers": headers,
+                    "body": json_object,
+                },
+            )
         else:
             if r.status_code == 200:
-                if r.content:
+                if LibraryLogger.is_json(r.text):
                     response = r.json()
-                    logger.debug("API response:\n  %s \n", Helpers.redactor(json.dumps(response, indent=2)))
-            else:
-                logger.debug('Unable to fetch %s%s', API_BASE_URL, api)
+                    LibraryLogger.log_api_call(logger, r)
+                    return response, status_code
+            LibraryLogger.log_api_exception(logger, request_dict={
+                "method": method,
+                "endpoint": api,
+                "status_code": r.status_code,
+                "headers": headers,
+                "body": json_object,
+            })
         return response
 
     @staticmethod
-    def code_check(r: REQUEST_T) -> bool:
+    def code_check(r: Optional[REQUEST_T]) -> bool:
         """Test if code == 0 for successful API call."""
         if r is None:
             logger.error('No response from API')
