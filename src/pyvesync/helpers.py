@@ -6,7 +6,6 @@ import time
 import colorsys
 from dataclasses import dataclass, field, InitVar
 from typing import Any, NamedTuple, Union, TYPE_CHECKING
-import re
 import requests
 from pyvesync.logs import LibraryLogger, VeSyncRateLimitError
 from pyvesync.const import RATE_LIMIT_CODES
@@ -244,53 +243,6 @@ class Helpers:
     def hash_password(string: str) -> str:
         """Encode password."""
         return hashlib.md5(string.encode('utf-8')).hexdigest()  # noqa: S324
-
-    shouldredact = True
-
-    @classmethod
-    def redactor(cls, stringvalue: str) -> str:
-        """Redact sensitive strings from debug output.
-
-        This method searches for specific sensitive keys in the input string and replaces
-        their values with '##_REDACTED_##'. The keys that are redacted include:
-
-        - token
-        - password
-        - email
-        - tk
-        - accountId
-        - authKey
-        - uuid
-        - cid
-
-        Args:
-            stringvalue (str): The input string potentially containing
-                sensitive information.
-
-        Returns:
-            str: The redacted string with sensitive information replaced
-                by '##_REDACTED_##'.
-        """
-        if cls.shouldredact:
-            stringvalue = re.sub(
-                (
-                    r"(?i)"
-                    r'((?<=token":\s")|'
-                    r'(?<=password":\s")|'
-                    r'(?<=email":\s")|'
-                    r'(?<=tk":\s")|'
-                    r'(?<=accountId":\s")|'
-                    r'(?<=authKey":\s")|'
-                    r'(?<=uuid":\s")|'
-                    r'(?<=cid":\s")|'
-                    r"(?<=token\s)|"
-                    r"(?<=account_id\s))"
-                    r'[^"\s]+'
-                ),
-                "##_REDACTED_##",
-                stringvalue,
-            )
-        return stringvalue
 
     @staticmethod
     def nested_code_check(response: dict) -> bool:

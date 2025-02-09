@@ -209,32 +209,29 @@ class TestDeviceList(object):
 
         new_list = [device]
         self.vesync_obj.outlets = [outlet_test]
-        device_exists = pyvesync.vesync.VeSync.remove_old_devices(
-            self.vesync_obj, new_list
-        )
+        self.vesync_obj._remove_stale_devices(new_list)  # pylint: disable=protected-access
 
-        assert device_exists
+        assert self.vesync_obj.outlets == [outlet_test]
 
-        del device['cid']
+        device['cid'] = '7A-CID2'
 
-        device_exists = pyvesync.vesync.VeSync.remove_dev_test(outlet_test, new_list)
+        self.vesync_obj._remove_stale_devices([device])  # pylint: disable=protected-access
 
-        assert device_exists is False
+        assert not self.vesync_obj.outlets
 
         assert len(caplog.records) == 2
-        assert 'cid' in caplog.text
 
     @patch('pyvesync.vesyncoutlet.VeSyncOutdoorPlug', autospec=True)
     def test_add_dev_test(self, outdoor_patch, caplog, api_mock):
-        """Test add_device_test to return if device found in existing conf."""
+        """Test that new devices will not be added to instance."""
         outdoor_inst = VeSyncOutdoorPlug(
             json_vals.DeviceList.LIST_CONF_OUTDOOR_2, self.vesync_obj
         )
         self.vesync_obj.outlets = [outdoor_inst]
 
-        add_test = self.vesync_obj.add_dev_test(json_vals.DeviceList.LIST_CONF_OUTDOOR_1)
+        add_test = self.vesync_obj._find_new_devices([json_vals.DeviceList.LIST_CONF_OUTDOOR_1])
 
-        assert add_test
+        assert not add_test
 
     def test_display_func(self, caplog, api_mock):
         """Test display function outputs text."""

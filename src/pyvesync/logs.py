@@ -21,6 +21,7 @@ import json
 import os
 import re
 from textwrap import indent
+from warnings import warn
 from collections.abc import MutableMapping
 from urllib.parse import urlparse
 from requests import RequestException, Response
@@ -314,3 +315,15 @@ class VeSyncAPIResponseError(VeSyncError):
     def __init__(self) -> None:
         """Initialize the exception with a message."""
         super().__init__("VeSync API response error")
+
+
+def depreciated(old_name: str, new_name: str | None = None) -> None:
+    """Warn about deprecated features or changes in the library.
+
+    Args:
+        old_name (str): The deprecation message to display.
+        new_name (str, optional): The new feature or change to use instead.
+    """
+    message = f"{old_name} is deprecated{'' if new_name is None else f' in favor of \
+        {new_name}'} and will be removed in a future release"
+    warn(f"Deprecation Warning: {message}", DeprecationWarning, stacklevel=2)
