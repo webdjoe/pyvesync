@@ -366,7 +366,6 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         self.details['display'] = dev_dict.get('display', False)
         self.details['child_lock'] = dev_dict.get('child_lock', False)
         self.details['night_light'] = dev_dict.get('night_light', 'off')
-        self.details['display'] = dev_dict.get('display', False)
         self.details['display_forever'] = dev_dict.get('display_forever',
                                                        False)
         if self.air_quality_feature is True:
