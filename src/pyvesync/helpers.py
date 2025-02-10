@@ -3,235 +3,40 @@ from __future__ import annotations
 import hashlib
 import logging
 import time
-import json
 import colorsys
 from dataclasses import dataclass, field, InitVar
-from typing import Any, NamedTuple, Union, TYPE_CHECKING
+from typing import Any, NamedTuple, Union, Optional
 import re
+from enum import Enum
 import requests
-
-if TYPE_CHECKING:
-    from pyvesync.vesync import VeSync
+from .vesync_enums import EConfig
+from .logs import LibraryLogger, VeSyncRateLimitError
+from .const import ERR_RATE_LIMITS
 
 
 logger = logging.getLogger(__name__)
 
-API_BASE_URL = 'https://smartapi.vesync.com'
-API_RATE_LIMIT = 30
+# Base api for all device requests-
+API_BASE_URL: str = 'https://smartapi.vesync.com'
+
 # If device is out of reach, the cloud api sends a timeout response after 7 seconds,
 # using 8 here so there is time enough to catch that message
 API_TIMEOUT = 8
-USER_AGENT = ("VeSync/3.2.39 (com.etekcity.vesyncPlatform;"
-              " build:5; iOS 15.5.0) Alamofire/5.2.1")
-
-DEFAULT_TZ = 'America/New_York'
-DEFAULT_REGION = 'US'
-
-APP_VERSION = '2.8.6'
-PHONE_BRAND = 'SM N9005'
-PHONE_OS = 'Android'
-MOBILE_ID = '1234567890123456'
-USER_TYPE = '1'
-BYPASS_APP_V = "VeSync 3.0.51"
-
-BYPASS_HEADER_UA = 'okhttp/3.12.1'
 
 NUMERIC = Union[int, float, str, None]
+
+DEVICE_CONFIGS_T = dict[str, dict[Enum, Union[list[Any], str]]]
 
 REQUEST_T = dict[str, Any]
 
 
+def build_model_dict(configurations, key) -> dict[str, str]:
+    """Build a dict for the give model name to a corresponding class name."""
+    return {k: v.get(key) for v in configurations.values() for k in v[EConfig.MODELS]}
+
+
 class Helpers:
     """VeSync Helper Functions."""
-
-    @staticmethod
-    def req_headers(manager: VeSync) -> dict[str, str]:
-        """Build header for legacy api GET requests.
-
-        Args:
-            manager (VeSyncManager): Instance of VeSyncManager.
-
-        Returns:
-            dict: Header dictionary for api requests.
-
-        Examples:
-            >>> req_headers(manager)
-            {
-                'accept-language': 'en',
-                'accountId': manager.account_id,
-                'appVersion': APP_VERSION,
-                'content-type': 'application/json',
-                'tk': manager.token,
-                'tz': manager.time_zone,
-            }
-
-        """
-        return {
-            'accept-language': 'en',
-            'accountId': manager.account_id,
-            'appVersion': APP_VERSION,
-            'content-type': 'application/json',
-            'tk': manager.token,
-            'tz': manager.time_zone,
-        }
-
-    @staticmethod
-    def req_header_bypass() -> dict[str, str]:
-        """Build header for api requests on 'bypass' endpoint.
-
-        Returns:
-            dict: Header dictionary for api requests.
-
-        Examples:
-            >>> req_header_bypass()
-            {
-                'Content-Type': 'application/json; charset=UTF-8',
-                'User-Agent': BYPASS_HEADER_UA,
-            }
-        """
-        return {
-            'Content-Type': 'application/json; charset=UTF-8',
-            'User-Agent': BYPASS_HEADER_UA,
-            }
-
-    @staticmethod
-    def req_body_base(manager: VeSync) -> dict[str, str]:
-        """Return universal keys for body of api requests.
-
-        Args:
-            manager (VeSyncManager): Instance of VeSyncManager.
-
-        Returns:
-            dict: Body dictionary for api requests.
-
-        Examples:
-            >>> req_body_base(manager)
-            {
-                'timeZone': manager.time_zone,
-                'acceptLanguage': 'en',
-            }
-        """
-        return {'timeZone': manager.time_zone, 'acceptLanguage': 'en'}
-
-    @staticmethod
-    def req_body_auth(manager: VeSync) -> REQUEST_T:
-        """Keys for authenticating api requests.
-
-        Args:
-            manager (VeSyncManager): Instance of VeSyncManager.
-
-        Returns:
-            dict: Authentication keys for api requests.
-
-        Examples:
-            >>> req_body_auth(manager)
-            {
-                'accountID': manager.account_id,
-                'token': manager.token,
-            }
-        """
-        return {'accountID': manager.account_id, 'token': manager.token}
-
-    @staticmethod
-    def req_body_details() -> REQUEST_T:
-        """Detail keys for api requests.
-
-        Returns:
-            dict: Detail keys for api requests.
-
-        Examples:
-            >>> req_body_details()
-            {
-                'appVersion': APP_VERSION,
-                'phoneBrand': PHONE_BRAND,
-                'phoneOS': PHONE_OS,
-                'traceId': str(int(time.time())),
-            }
-        """
-        return {
-            'appVersion': APP_VERSION,
-            'phoneBrand': PHONE_BRAND,
-            'phoneOS': PHONE_OS,
-            'traceId': str(int(time.time())),
-        }
-
-    @classmethod
-    def req_body(cls, manager: VeSync, type_: str) -> REQUEST_T:  # noqa: C901
-        """Builder for body of api requests.
-
-        Args:
-            manager (VeSyncManager): Instance of VeSyncManager.
-            type_ (str): Type of request to build body for.
-
-        Returns:
-            dict: Body dictionary for api requests.
-
-        Note:
-            The body dictionary will be built based on the type of request.
-            The type of requests include:
-            - login
-            - devicestatus
-            - devicelist
-            - devicedetail
-            - energy_week
-            - energy_month
-            - energy_year
-            - bypass
-            - bypassV2
-            - bypass_config
-        """
-        body: REQUEST_T = cls.req_body_base(manager)
-
-        if type_ == 'login':
-            body |= cls.req_body_details()
-            body |= {
-                'email': manager.username,
-                'password': cls.hash_password(manager.password),
-                'devToken': '',
-                'userType': USER_TYPE,
-                'method': 'login'
-            }
-            return body
-
-        body |= cls.req_body_auth(manager)
-
-        if type_ == 'devicestatus':
-            return body
-
-        body |= cls.req_body_details()
-
-        if type_ == 'devicelist':
-            body['method'] = 'devices'
-            body['pageNo'] = '1'
-            body['pageSize'] = '100'
-
-        elif type_ == 'devicedetail':
-            body['method'] = 'devicedetail'
-            body['mobileId'] = MOBILE_ID
-
-        elif type_ == 'energy_week':
-            body['method'] = 'energyweek'
-            body['mobileId'] = MOBILE_ID
-
-        elif type_ == 'energy_month':
-            body['method'] = 'energymonth'
-            body['mobileId'] = MOBILE_ID
-
-        elif type_ == 'energy_year':
-            body['method'] = 'energyyear'
-            body['mobileId'] = MOBILE_ID
-
-        elif type_ == 'bypass':
-            body['method'] = 'bypass'
-
-        elif type_ == 'bypassV2':
-            body['deviceRegion'] = DEFAULT_REGION
-            body['method'] = 'bypassV2'
-
-        elif type_ == 'bypass_config':
-            body['method'] = 'firmwareUpdateInfo'
-
-        return body
 
     @staticmethod
     def calculate_hex(hex_string: str) -> float:
@@ -244,10 +49,10 @@ class Helpers:
         """Encode password."""
         return hashlib.md5(string.encode('utf-8')).hexdigest()  # noqa: S324
 
-    shouldredact = True
+    should_redact = True
 
     @classmethod
-    def redactor(cls, stringvalue: str) -> str:
+    def redactor(cls, value: str) -> str:
         """Redact sensitive strings from debug output.
 
         This method searches for specific sensitive keys in the input string and replaces
@@ -263,15 +68,15 @@ class Helpers:
         - cid
 
         Args:
-            stringvalue (str): The input string potentially containing
+            value (str): The input string potentially containing
                 sensitive information.
 
         Returns:
             str: The redacted string with sensitive information replaced
                 by '##_REDACTED_##'.
         """
-        if cls.shouldredact:
-            stringvalue = re.sub(
+        if cls.should_redact:
+            value = re.sub(
                 (
                     r"(?i)"
                     r'((?<=token":\s")|'
@@ -287,12 +92,12 @@ class Helpers:
                     r'[^"\s]+'
                 ),
                 "##_REDACTED_##",
-                stringvalue,
+                value,
             )
-        return stringvalue
+        return value
 
     @staticmethod
-    def nested_code_check(response: dict) -> bool:
+    def nested_code_check(response: REQUEST_T) -> bool:
         """Return true if all code values are 0.
 
         Args:
@@ -310,8 +115,12 @@ class Helpers:
         return True
 
     @staticmethod
-    def call_api(api: str, method: str, json_object:  dict | None = None,
-                 headers: dict | None = None) -> tuple:
+    def call_api(
+        api: str,
+        method: str,
+        headers: Optional[REQUEST_T] = None,
+        json_object: Optional[REQUEST_T] = None
+    ) -> REQUEST_T | None:
         """Make API calls by passing endpoint, header and body.
 
         api argument is appended to https://smartapi.vesync.com url
@@ -323,53 +132,57 @@ class Helpers:
             headers (dict): Headers to send with request.
 
         Returns:
-            tuple: Response and status code.
+            dict: Response.
         """
         response = None
-        status_code = None
 
         try:
-            logger.debug("=======call_api=============================")
-            logger.debug("[%s] calling '%s' api", method, api)
-            logger.debug("API call URL: \n  %s%s", API_BASE_URL, api)
-            logger.debug("API call headers: \n  %s",
-                         Helpers.redactor(json.dumps(headers, indent=2)))
-            logger.debug("API call json: \n  %s",
-                         Helpers.redactor(json.dumps(json_object, indent=2)))
-            if method.lower() == 'get':
-                r = requests.get(
-                    API_BASE_URL + api, json=json_object, headers=headers,
-                    timeout=API_TIMEOUT
-                )
-            elif method.lower() == 'post':
-                r = requests.post(
-                    API_BASE_URL + api, json=json_object, headers=headers,
-                    timeout=API_TIMEOUT
-                )
-            elif method.lower() == 'put':
-                r = requests.put(
-                    API_BASE_URL + api, json=json_object, headers=headers,
-                    timeout=API_TIMEOUT
-                )
-            else:
-                raise NameError(f'Invalid method {method}')
-        except requests.exceptions.RequestException as e:
-            logger.debug(e)
+            call = getattr(requests, method.lower())
+            r = call(
+                API_BASE_URL + api, json=json_object, headers=headers,
+                timeout=API_TIMEOUT
+            )
         except Exception as e:
-            logger.debug(e)
+            LibraryLogger.log_api_exception(
+                logger,
+                exception=e,
+                request_dict={
+                    "method": method,
+                    "endpoint": api,
+                    "headers": headers,
+                    "body": json_object,
+                },
+            )
         else:
             if r.status_code == 200:
-                status_code = 200
-                if r.content:
+                LibraryLogger.log_api_call(logger, r)
+                if LibraryLogger.is_json(r.text):
                     response = r.json()
-                    logger.debug("API response: \n\n  %s \n ",
-                                 Helpers.redactor(json.dumps(response, indent=2)))
-            else:
-                logger.debug('Unable to fetch %s%s', API_BASE_URL, api)
-        return response, status_code
+                    if response.get('code') in ERR_RATE_LIMITS:
+                        LibraryLogger.log_api_exception(logger, request_dict={
+                            "method": method,
+                            "endpoint": api,
+                            "status_code": r.status_code,
+                            "headers": headers,
+                            "body": json_object,
+                            "response": response
+                        })
+                        raise VeSyncRateLimitError
+                    return response
+                response = r.text
+                return response
+            LibraryLogger.log_api_exception(logger, request_dict={
+                "method": method,
+                "endpoint": api,
+                "status_code": r.status_code,
+                "headers": headers,
+                "body": json_object,
+                "response": r.text
+            })
+        return response
 
     @staticmethod
-    def code_check(r: dict) -> bool:
+    def code_check(r: Optional[REQUEST_T]) -> bool:
         """Test if code == 0 for successful API call."""
         if r is None:
             logger.error('No response from API')
@@ -377,7 +190,7 @@ class Helpers:
         return (isinstance(r, dict) and r.get('code') == 0)
 
     @staticmethod
-    def build_details_dict(r: dict) -> dict:
+    def build_details_dict(r: REQUEST_T) -> REQUEST_T:
         """Build details dictionary from API response.
 
         Args:
@@ -410,7 +223,7 @@ class Helpers:
         }
 
     @staticmethod
-    def build_energy_dict(r: dict) -> dict:
+    def build_energy_dict(r: REQUEST_T) -> REQUEST_T:
         """Build energy dictionary from API response.
 
         Note:
@@ -433,7 +246,7 @@ class Helpers:
         }
 
     @staticmethod
-    def build_config_dict(r: dict) -> dict:
+    def build_config_dict(r: REQUEST_T) -> REQUEST_T:
         """Build configuration dictionary from API response.
 
         Contains firmware version, max power, threshold,
@@ -472,62 +285,6 @@ class Helpers:
             'threshold': threshold,
             'power_protection': r.get('powerProtectionStatus'),
             'energy_saving_status': r.get('energySavingStatus'),
-        }
-
-    @classmethod
-    def bypass_body_v2(cls, manager: VeSync) -> dict:
-        """Build body dict for second version of bypass api calls.
-
-        Args:
-            manager (VeSyncManager): Instance of VeSyncManager.
-
-        Returns:
-            dict: Body dictionary for bypass api calls.
-
-        Examples:
-            >>> bypass_body_v2(manager)
-            {
-                'timeZone': manager.time_zone,
-                'acceptLanguage': 'en',
-                'accountID': manager.account_id,
-                'token': manager.token,
-                'appVersion': APP_VERSION,
-                'phoneBrand': PHONE_BRAND,
-                'phoneOS': PHONE_OS,
-                'traceId': str(int(time.time())),
-                'method': 'bypassV2',
-                'debugMode': False,
-                'deviceRegion': DEFAULT_REGION,
-            }
-
-        """
-        bdy: dict[str, str | bool] = {}
-        bdy.update(
-            **cls.req_body(manager, "bypass")
-        )
-        bdy['method'] = 'bypassV2'
-        bdy['debugMode'] = False
-        bdy['deviceRegion'] = DEFAULT_REGION
-        return bdy
-
-    @staticmethod
-    def bypass_header() -> dict:
-        """Build bypass header dict.
-
-        Returns:
-            dict: Header dictionary for bypass api calls.
-
-        Examples:
-            >>> bypass_header()
-            {
-                'Content-Type': 'application/json; charset=UTF-8',
-                'User-Agent': BYPASS_HEADER_UA,
-            }
-
-        """
-        return {
-            'Content-Type': 'application/json; charset=UTF-8',
-            'User-Agent': 'okhttp/3.12.1',
         }
 
     @staticmethod
@@ -617,8 +374,7 @@ class Color:
     green: InitVar[NUMERIC] = field(default=None, repr=False, compare=False)
     blue: InitVar[NUMERIC] = field(default=None, repr=False, compare=False)
     hue: InitVar[NUMERIC] = field(default=None, repr=False, compare=False)
-    saturation: InitVar[NUMERIC] = field(default=None, repr=False,
-                                         compare=False)
+    saturation: InitVar[NUMERIC] = field(default=None, repr=False, compare=False)
     value: InitVar[NUMERIC] = field(default=None, repr=False, compare=False)
     hsv: HSV = field(init=False)
     rgb: RGB = field(init=False)

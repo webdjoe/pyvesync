@@ -28,11 +28,9 @@ See Also
 
 import pytest
 import logging
-from pyvesync.vesync import object_factory
 from utils import TestBase, assert_test, parse_args
 import call_json
 import call_json_outlets
-from utils import Defaults
 
 
 logger = logging.getLogger(__name__)
@@ -99,12 +97,12 @@ class TestOutlets(TestBase):
     ]
     device_methods = {
         'ESW15-USA': [
-            ['turn_on_nightlight'], 
+            ['turn_on_nightlight'],
             ['turn_off_nightlight']
         ],
         'wifi-switch-1.3': [
             ['get_weekly_energy'],
-            ['get_monthly_energy'], 
+            ['get_monthly_energy'],
             ['get_yearly_energy']
         ],
         'ESW03-USA': [
@@ -160,29 +158,27 @@ class TestOutlets(TestBase):
         device_config = call_json.DeviceList.device_list_item(dev_type)
 
         # Instantiate device
-        _, outlet_obj = object_factory(dev_type,
-                                     device_config,
-                                     self.manager)
+        outlet_obj = self.manager.object_factory(device_config)
 
         # Call get_details() directly
-        outlet_obj.get_details()
+        assert outlet_obj.get_details() == True
 
         # Parse arguments from mock_api call into dictionary
         all_kwargs = parse_args(self.mock_api)
 
         # Set both write_api and overwrite to True to update YAML files
-        assert_test(outlet_obj.get_details, all_kwargs, dev_type,
-                   write_api=True, overwrite=True)
+        assert outlet_obj.get_details() == True
+        assert_test(outlet_obj.get_details, all_kwargs, dev_type, write_api=True, overwrite=True)
 
         # Test bad responses
         self.mock_api.reset_mock()
         if dev_type == 'wifi-switch-1.3':
-            self.mock_api.return_value = (None, 400)
+            self.mock_api.return_value = None
         else:
             self.mock_api.return_value = call_json.DETAILS_BADCODE
-        outlet_obj.get_details()
+        assert outlet_obj.get_details() == False
         assert len(self.caplog.records) == 1
-        assert 'details' in self.caplog.text
+        assert 'Failed' in self.caplog.text
 
     def test_methods(self, dev_type, method):
         """Test device methods API request and response.
@@ -232,18 +228,13 @@ class TestOutlets(TestBase):
         device_config = call_json.DeviceList.device_list_item(dev_type)
 
         # Instantiate device
-        _, outlet_obj = object_factory(dev_type,
-                                     device_config,
-                                     self.manager)
+        outlet_obj = self.manager.object_factory(device_config)
 
         # Get method from device object
         method_call = getattr(outlet_obj, method[0])
 
         # Ensure method runs based on device configuration
-        if method[0] == 'turn_on':
-            outlet_obj.device_status = 'off'
-        elif method[0] == 'turn_off':
-            outlet_obj.device_status = 'on'
+        outlet_obj.device_status = 'offline'
 
         # Call method with kwargs if present
         if method_kwargs:
@@ -255,13 +246,12 @@ class TestOutlets(TestBase):
         all_kwargs = parse_args(self.mock_api)
 
         # Assert request matches recorded request or write new records
-        assert_test(method_call, all_kwargs, dev_type,
-                   self.write_api, self.overwrite)
+        assert_test(method_call, all_kwargs, dev_type, self.write_api, self.overwrite)
 
         # Test bad responses
         self.mock_api.reset_mock()
         if dev_type == 'wifi-switch-1.3':
-            self.mock_api.return_value = (None, 400)
+            self.mock_api.return_value = None
         else:
             self.mock_api.return_value = call_json.DETAILS_BADCODE
         if method[0] == 'turn_on':
@@ -272,23 +262,27 @@ class TestOutlets(TestBase):
             return
         assert method_call() is False
 
-    @pytest.mark.parametrize('dev_type', [d for d in OUTLET_DEV_TYPES if d != 'BSDOG01'])
-    def test_power(self, dev_type):
+    @pytest.mark.parametrize('dev_type', [d for d in OUTLET_DEV_TYPES if (d != 'BSDOG01') and (d != 'WYSMTOD16A')])
+    def test_energy(self, dev_type):
         """Test outlets power history methods."""
         self.mock_api.return_value = call_json_outlets.ENERGY_HISTORY
+
+        # Get device configuration
         device_config = call_json.DeviceList.device_list_item(dev_type)
-        _, outlet_obj = object_factory(dev_type, device_config, self.manager)
+
+        # Instantiate device
+        outlet_obj = self.manager.object_factory(device_config)
         outlet_obj.update_energy()
         assert self.mock_api.call_count == 3
         assert list(outlet_obj.energy.keys()) == ['week', 'month', 'year']
         self.mock_api.reset_mock()
         outlet_obj.energy = {}
         if dev_type == 'wifi-switch-1.3':
-            self.mock_api.return_value = (None, 400)
+            self.mock_api.return_value = None
         else:
             self.mock_api.return_value = call_json.DETAILS_BADCODE
         outlet_obj.update_energy()
-        self.mock_api.call_count == 0
+        assert self.mock_api.call_count == 0
         outlet_obj.update_energy(bypass_check=True)
         self.mock_api.assert_called_once()
         assert 'Unable to get' in self.caplog.records[-1].message

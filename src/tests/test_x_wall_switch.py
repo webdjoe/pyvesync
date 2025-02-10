@@ -20,7 +20,7 @@ BAD_LIST = call_json.DETAILS_BADCODE
 DEFAULTS = call_json.Defaults
 
 
-class TestVesyncWallSwitch(object):
+class TestVeSyncWallSwitch(object):
     @pytest.fixture()
     def api_mock(self, caplog):
         self.mock_api_call = patch('pyvesync.helpers.Helpers.call_api')
@@ -70,10 +70,10 @@ class TestVesyncWallSwitch(object):
 
     def test_ws_onoff(self, caplog, api_mock):
         """Test 15A Device On/Off Methods"""
-        self.mock_api.return_value = ({'code': 0}, 200)
+        self.mock_api.return_value = {'code': 0}
         wswitch = VeSyncWallSwitch(DEV_LIST_DETAIL, self.vesync_obj)
-        head = helpers.req_headers(self.vesync_obj)
-        body = helpers.req_body(self.vesync_obj, 'devicestatus')
+        head = self.vesync_obj.req_headers()
+        body = self.vesync_obj.req_body_status()
 
         body['status'] = 'on'
         body['uuid'] = wswitch.uuid
@@ -91,7 +91,7 @@ class TestVesyncWallSwitch(object):
 
     def test_ws_onoff_fail(self, api_mock):
         """Test ws On/Off Fail with Code>0"""
-        self.mock_api.return_value = ({'code': 1}, 400)
+        self.mock_api.return_value = {'code': 1}
         vswitch15a = VeSyncWallSwitch(DEV_LIST_DETAIL, self.vesync_obj)
         assert not vswitch15a.turn_on()
         assert not vswitch15a.turn_off()

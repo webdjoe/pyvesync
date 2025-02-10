@@ -2,48 +2,36 @@
 import json
 import logging
 import time
+import sys
 from functools import wraps
-from typing import Optional, Union, Set
+from typing import Optional, Union
 from dataclasses import dataclass
-from pyvesync.vesyncbasedevice import VeSyncBaseDevice
-from pyvesync.helpers import Helpers as helpers
+from .const import ERR_REQ_TIMEOUTS
+from .vesyncbasedevice import VeSyncBaseDevice
+from .vesync_enums import EConfig, EDeviceFamily
+from .helpers import Helpers, DEVICE_CONFIGS_T, build_model_dict
 
 logger = logging.getLogger(__name__)
 
+module_kitchen = sys.modules[__name__]
 
-kitchen_features: dict = {
+# --8<-- [start:kitchen_configs]
+kitchen_configs: DEVICE_CONFIGS_T = {
     'Cosori3758L': {
-        'module': 'VeSyncAirFryer158',
-        'models': ['CS137-AF/CS158-AF', 'CS158-AF', 'CS137-AF', 'CS358-AF'],
-        'features': [],
+        EConfig.CLASS: 'VeSyncAirFryer158',
+        EConfig.MODELS: ['CS137-AF/CS158-AF', 'CS158-AF', 'CS137-AF', 'CS358-AF'],
+        EConfig.FEATURES: [],
     }
 }
+# --8<-- [end:kitchen_configs]
 
+kitchen_classes = build_model_dict(kitchen_configs, EConfig.CLASS)
+kitchen_features = build_model_dict(kitchen_configs, EConfig.FEATURES)
 
-def model_dict() -> dict:
-    """Build purifier and humidifier model dictionary."""
-    model_modules = {}
-    for dev_dict in kitchen_features.values():
-        for model in dev_dict['models']:
-            model_modules[model] = dev_dict['module']
-    return model_modules
-
-
-def model_features(dev_type: str) -> dict:
-    """Get features from device type."""
-    for dev_dict in kitchen_features.values():
-        if dev_type in dev_dict['models']:
-            return dev_dict
-    raise ValueError('Device not configured')
-
-
-kitchen_classes: Set[str] = {v['module'] for k, v in kitchen_features.items()}
-
-
-kitchen_modules: dict = model_dict()
-
-
-__all__ = list(kitchen_classes)
+__all__: list = [
+    *kitchen_classes.values(),
+    'kitchen_classes', 'kitchen_classes', 'FryerStatus', 'VeSyncKitchen'
+]
 
 
 # Status refresh interval in seconds
@@ -84,7 +72,7 @@ class FryerStatus:
 
     ready_start: bool = False
     preheat: bool = False
-    cook_status: Optional[str] = None
+    cook_status: str = ''
     current_temp: Optional[int] = None
     cook_set_temp: Optional[int] = None
     cook_set_time: Optional[int] = None
@@ -92,7 +80,7 @@ class FryerStatus:
     last_timestamp: Optional[int] = None
     preheat_set_time: Optional[int] = None
     preheat_last_time: Optional[int] = None
-    _temp_unit: Optional[str] = None
+    _temp_unit: str = '°C'
 
     @property
     def is_resumable(self) -> bool:
@@ -105,7 +93,7 @@ class FryerStatus:
         return False
 
     @property
-    def temp_unit(self) -> Optional[str]:
+    def temp_unit(self) -> str:
         """Return temperature unit."""
         return self._temp_unit
 
@@ -113,10 +101,11 @@ class FryerStatus:
     def temp_unit(self, temp_unit: str):
         """Set temperature unit."""
         if temp_unit.lower() in ['f', 'fahrenheit']:
-            self._temp_unit = 'fahrenheit'
+            self._temp_unit = '°F'
         elif temp_unit.lower() in ['c', 'celsius']:
-            self._temp_unit = 'celsius'
+            self._temp_unit = '°C'
         else:
+            self._temp_unit = '°C'
             raise ValueError(f'Invalid temperature unit - {temp_unit}')
 
     @property
@@ -230,7 +219,7 @@ class FryerStatus:
         """Set status of Air Fryer Based on API Response."""
         self.last_timestamp = None
         self.preheat = False
-        self.cook_status = return_status.get('cookStatus')
+        self.cook_status = return_status.get('cookStatus', '')
         if self.cook_status == 'standby':
             self.set_standby()
             return
@@ -270,25 +259,41 @@ class FryerStatus:
             self.clear_preheat()
 
 
-class VeSyncAirFryer158(VeSyncBaseDevice):
+class VeSyncKitchen(VeSyncBaseDevice):
+    """(Abstract) base class for all kitchen devices."""
+
+    device_family = EDeviceFamily.KITCHEN
+    fryer_status: FryerStatus
+    last_update: int = 0
+    refresh_interval: float = 0
+
+    def __init__(self, details, manager):
+        """Init the VeSync Air Fryer 158 class."""
+        super().__init__(details, manager, kitchen_features, EDeviceFamily.KITCHEN)
+        self.fryer_status = FryerStatus()
+        self.refresh_interval = 0
+        self.last_update = int(time.time())
+
+
+class VeSyncAirFryer158(VeSyncKitchen):
     """Cosori Air Fryer Class."""
+
+    ready_start: bool = False
 
     def __init__(self, details, manager):
         """Init the VeSync Air Fryer 158 class."""
         super().__init__(details, manager)
-        self.fryer_status = FryerStatus()
 
         if self.pid is None:
             self.get_pid()
         self.fryer_status.temp_unit = self.get_temp_unit()
         self.ready_start = self.get_remote_cook_mode()
-        self.last_update = int(time.time())
-        self.refresh_interval = 0
 
     def get_body(self, method:  Optional[str] = None) -> dict:
         """Return body of api calls."""
+        inner = self.manager.req_body_bypass_v1()
         body = {
-            **helpers.req_body(self.manager, 'bypass'),
+            **inner,
             'cid': self.cid,
             'userCountryCode': self.manager.country_code,
             'debugMode': False
@@ -314,9 +319,9 @@ class VeSyncAirFryer158(VeSyncBaseDevice):
         """Get Air Fryer Configuration."""
         body = self.get_body('configurationsV2')
 
-        r, _ = helpers.call_api('/cloud/v2/deviceManaged/configurationsV2', 'post',
-                                json_object=body)
-        if not isinstance(r, dict) or r.get('code') != 0 \
+        r = self.manager.post_device_managed_v2(body)
+        if not isinstance(r, dict) \
+                or r.get('code') != 0 \
                 or not isinstance(r.get('result'), dict):
             logger.debug('Failed to get config for %s', self.device_name)
             return
@@ -327,16 +332,14 @@ class VeSyncAirFryer158(VeSyncBaseDevice):
     def get_remote_cook_mode(self):
         """Get the cook mode."""
         body = self.get_body('getRemoteCookMode158')
-        r, _ = helpers.call_api('/cloud/v1/deviceManaged/getRemoteCookMode158',
-                                'post',
-                                json_object=body)
+        r = self.call_api_v1('getRemoteCookMode158', body)
         if not isinstance(r, dict) or r.get('code') != 0 \
                 or not isinstance(r.get('result'), dict):
             return False
         return r.get('result', {}).get('readyStart', False)
 
     @property
-    def temp_unit(self) -> Optional[str]:
+    def temp_unit(self) -> str:
         """Return temp unit."""
         return self.fryer_status.temp_unit
 
@@ -380,7 +383,7 @@ class VeSyncAirFryer158(VeSyncBaseDevice):
         return None
 
     @property
-    def cook_status(self) -> Optional[str]:
+    def cook_status(self) -> str:
         """Return the cook status."""
         return self.fryer_status.cook_status
 
@@ -407,23 +410,22 @@ class VeSyncAirFryer158(VeSyncBaseDevice):
     def get_details(self):
         """Get Air Fryer Status and Details."""
         cmd = {'getStatus': 'status'}
-        req_body = self.get_status_body(cmd)
-        url = '/cloud/v1/deviceManaged/bypass'
-        resp, _ = helpers.call_api(url, 'post', json_object=req_body)
+        body = self.get_status_body(cmd)
+        r = Helpers.call_api('/cloud/v1/deviceManaged/bypass', 'post', json_object=body)
 
-        if resp is None:
+        if r is None:
             logger.debug('Failed to get details for %s', self.device_name)
             return False
-        if resp.get('code') == -11300030:
+        if r.get('code') in ERR_REQ_TIMEOUTS:
             logger.debug('%s is offline', self.device_name)
             self.fryer_status.set_standby()
             self.fryer_status.cook_status = 'offline'
             return False
-        if resp.get('code') != 0:
+        if r.get('code') != 0:
             logger.debug('Failed to get details for %s \n with code: %s and message: %s',
-                         self.device_name, str(resp.get("code", 0)), resp.get("msg", ''))
+                         self.device_name, str(r.get("code", 0)), r.get("msg", ''))
             return False
-        return_status = resp.get('result', {}).get('returnStatus')
+        return_status = r.get('result', {}).get('returnStatus')
         if return_status is None:
             return False
         self.fryer_status.status_response(return_status)
@@ -485,7 +487,7 @@ class VeSyncAirFryer158(VeSyncBaseDevice):
 
     def _validate_temp(self, set_temp: int) -> bool:
         """Temperature validation."""
-        if self.fryer_status.temp_unit == 'fahrenheight':
+        if self.fryer_status.temp_unit == 'fahrenheit':
             if set_temp < 200 or set_temp > 400:
                 logger.debug('Invalid temperature %s for %s', set_temp, self.device_name)
                 return False
@@ -555,10 +557,6 @@ class VeSyncAirFryer158(VeSyncBaseDevice):
             return False
         return self._set_cook(status='cooking')
 
-    def update(self):
-        """Update the device details."""
-        self.get_details()
-
     @staticmethod
     def fryer_code_check(code: Union[str, int]) -> Optional[str]:
         """Return the code description."""
@@ -612,23 +610,45 @@ class VeSyncAirFryer158(VeSyncBaseDevice):
     def _status_api(self, json_cmd: dict):
         """Set API status with jsonCmd."""
         body = self.get_status_body(json_cmd)
-        url = '/cloud/v1/deviceManaged/bypass'
-        resp, _ = helpers.call_api(url, 'post', json_object=body)
-        if resp is None:
+        r = Helpers.call_api('/cloud/v1/deviceManaged/bypass', 'post', json_object=body)
+        if r is None:
             logger.debug('Failed to set status for %s - No response from API',
                          self.device_name)
             return False
 
-        if resp.get('code') != 0 and resp.get('code') is not None:
-            debug_msg = self.fryer_code_check(resp.get('code'))
+        if r.get('code') != 0 and r.get('code') is not None:
+            debug_msg = self.fryer_code_check(r.get('code', ''))
             logger.debug('Failed to set status for %s \n Code: %s and message: %s \n'
-                         ' %s', self.device_name, resp.get("code"),
-                         resp.get("msg"), debug_msg)
+                         ' %s', self.device_name, r.get("code"),
+                         r.get("msg"), debug_msg)
             return False
         self.last_update = int(time.time())
         self.fryer_status.status_request(json_cmd)
         self.update()
         return True
+
+    def display(self) -> None:
+        """Return formatted device info to stdout."""
+        super().display()
+        disp = [
+            ('cook_status', self.cook_status, ''),
+            ('temp_unit', self.temp_unit, ''),
+        ]
+        if self.cook_status not in ['standby', 'cookEnd', 'preheatEnd']:
+            disp += [
+                ('preheat', str(self.preheat), ''),
+                ('current_temp', str(self.current_temp), self.temp_unit),
+                ('cook_set_temp', str(self.cook_set_temp), self.temp_unit),
+                ('cook_set_time', str(self.cook_set_time), ''),
+                ('cook_last_time', str(self.cook_last_time), ''),
+            ]
+            if self.preheat is True:
+                disp += [
+                    ('preheat_last_time', str(self.preheat_last_time), ''),
+                    ('preheat_set_time', str(self.preheat_set_time), ''),
+                ]
+        for line in disp:
+            print(f"{line[0]+': ':.<30} {' '.join(line[1:])}")
 
     def displayJSON(self) -> str:
         """Display JSON of device details."""
@@ -653,3 +673,13 @@ class VeSyncAirFryer158(VeSyncBaseDevice):
                 status_dict.update(preheat_dict)
             sup_dict.update(status_dict)
         return json.dumps(sup_dict, indent=4)
+
+
+def factory(module: str, details: dict, manager) -> Optional[VeSyncKitchen]:
+    """Create VeSync kitchen device instance from the given module/model name."""
+    try:
+        class_name = kitchen_classes[module]
+        kitchen = getattr(module_kitchen, class_name)
+        return kitchen(details, manager)
+    except Exception:
+        return None

@@ -2,14 +2,14 @@ set_brightness:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: ESL100CW-CID
     configModule: ConfigModule
     jsonCmd:
@@ -22,19 +22,19 @@ set_brightness:
     token: sample_tk
     traceId: TRACE_ID
   method: post
-  url: /cloud/v1/deviceManaged/bypass
+  api: /cloud/v1/deviceManaged/bypass
 set_color_temp:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: ESL100CW-CID
     jsonCmd:
       light:
@@ -46,19 +46,19 @@ set_color_temp:
     token: sample_tk
     traceId: TRACE_ID
   method: post
-  url: /cloud/v1/deviceManaged/bypass
+  api: /cloud/v1/deviceManaged/bypass
 turn_off:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: ESL100CW-CID
     configModule: ConfigModule
     jsonCmd:
@@ -71,19 +71,19 @@ turn_off:
     token: sample_tk
     traceId: TRACE_ID
   method: post
-  url: /cloud/v1/deviceManaged/bypass
+  api: /cloud/v1/deviceManaged/bypass
 turn_on:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: ESL100CW-CID
     configModule: ConfigModule
     jsonCmd:
@@ -96,19 +96,19 @@ turn_on:
     token: sample_tk
     traceId: TRACE_ID
   method: post
-  url: /cloud/v1/deviceManaged/bypass
+  api: /cloud/v1/deviceManaged/bypass
 update:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: ESL100CW-CID
     configModule: ConfigModule
     jsonCmd:
@@ -120,4 +120,4 @@ update:
     token: sample_tk
     traceId: TRACE_ID
   method: post
-  url: /cloud/v1/deviceManaged/bypass
+  api: /cloud/v1/deviceManaged/bypass

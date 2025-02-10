@@ -5,9 +5,10 @@ enable_white_mode:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: XYD0001-CID
     configModule: ConfigModule
+    debugMode: false
     deviceRegion: US
     method: bypassV2
     payload:
@@ -27,7 +28,7 @@ enable_white_mode:
     token: sample_tk
     traceId: TRACE_ID
   method: post
-  url: /cloud/v2/deviceManaged/bypassV2
+  api: /cloud/v2/deviceManaged/bypassV2
 set_brightness:
   headers:
     Content-Type: application/json; charset=UTF-8
@@ -35,9 +36,10 @@ set_brightness:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: XYD0001-CID
     configModule: ConfigModule
+    debugMode: false
     deviceRegion: US
     method: bypassV2
     payload:
@@ -57,7 +59,7 @@ set_brightness:
     token: sample_tk
     traceId: TRACE_ID
   method: post
-  url: /cloud/v2/deviceManaged/bypassV2
+  api: /cloud/v2/deviceManaged/bypassV2
 set_color_temp:
   headers:
     Content-Type: application/json; charset=UTF-8
@@ -65,9 +67,10 @@ set_color_temp:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: XYD0001-CID
     configModule: ConfigModule
+    debugMode: false
     deviceRegion: US
     method: bypassV2
     payload:
@@ -87,7 +90,7 @@ set_color_temp:
     token: sample_tk
     traceId: TRACE_ID
   method: post
-  url: /cloud/v2/deviceManaged/bypassV2
+  api: /cloud/v2/deviceManaged/bypassV2
 set_hsv:
   headers:
     Content-Type: application/json; charset=UTF-8
@@ -95,9 +98,10 @@ set_hsv:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: XYD0001-CID
     configModule: ConfigModule
+    debugMode: false
     deviceRegion: US
     method: bypassV2
     payload:
@@ -117,7 +121,7 @@ set_hsv:
     token: sample_tk
     traceId: TRACE_ID
   method: post
-  url: /cloud/v2/deviceManaged/bypassV2
+  api: /cloud/v2/deviceManaged/bypassV2
 turn_off:
   headers:
     Content-Type: application/json; charset=UTF-8
@@ -125,9 +129,10 @@ turn_off:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: XYD0001-CID
     configModule: ConfigModule
+    debugMode: false
     deviceRegion: US
     method: bypassV2
     payload:
@@ -142,7 +147,7 @@ turn_off:
     token: sample_tk
     traceId: TRACE_ID
   method: post
-  url: /cloud/v2/deviceManaged/bypassV2
+  api: /cloud/v2/deviceManaged/bypassV2
 turn_on:
   headers:
     Content-Type: application/json; charset=UTF-8
@@ -150,9 +155,10 @@ turn_on:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: XYD0001-CID
     configModule: ConfigModule
+    debugMode: false
     deviceRegion: US
     method: bypassV2
     payload:
@@ -167,7 +173,7 @@ turn_on:
     token: sample_tk
     traceId: TRACE_ID
   method: post
-  url: /cloud/v2/deviceManaged/bypassV2
+  api: /cloud/v2/deviceManaged/bypassV2
 update:
   headers:
     Content-Type: application/json; charset=UTF-8
@@ -175,9 +181,10 @@ update:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: XYD0001-CID
     configModule: ConfigModule
+    debugMode: false
     deviceRegion: US
     method: bypassV2
     payload:
@@ -190,4 +197,4 @@ update:
     token: sample_tk
     traceId: TRACE_ID
   method: post
-  url: /cloud/v2/deviceManaged/bypassV2
+  api: /cloud/v2/deviceManaged/bypassV2

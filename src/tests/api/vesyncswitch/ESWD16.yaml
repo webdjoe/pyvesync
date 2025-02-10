@@ -2,7 +2,7 @@ indicator_light_on:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
@@ -14,12 +14,12 @@ indicator_light_on:
     token: sample_tk
     uuid: ESWD16-UUID
   method: put
-  url: /dimmer/v1/device/indicatorlightstatus
+  api: /dimmer/v1/device/indicatorlightstatus
 rgb_color_on:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
@@ -31,12 +31,12 @@ rgb_color_on:
     token: sample_tk
     uuid: ESWD16-UUID
   method: put
-  url: /dimmer/v1/device/devicergbstatus
+  api: /dimmer/v1/device/devicergbstatus
 rgb_color_set:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
@@ -52,12 +52,12 @@ rgb_color_set:
     token: sample_tk
     uuid: ESWD16-UUID
   method: put
-  url: /dimmer/v1/device/devicergbstatus
+  api: /dimmer/v1/device/devicergbstatus
 set_brightness:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
@@ -69,12 +69,12 @@ set_brightness:
     token: sample_tk
     uuid: ESWD16-UUID
   method: put
-  url: /dimmer/v1/device/updatebrightness
+  api: /dimmer/v1/device/updatebrightness
 turn_off:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
@@ -86,12 +86,12 @@ turn_off:
     token: sample_tk
     uuid: ESWD16-UUID
   method: put
-  url: /dimmer/v1/device/devicestatus
+  api: /dimmer/v1/device/devicestatus
 turn_on:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
@@ -103,19 +103,19 @@ turn_on:
     token: sample_tk
     uuid: ESWD16-UUID
   method: put
-  url: /dimmer/v1/device/devicestatus
+  api: /dimmer/v1/device/devicestatus
 update:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     method: devicedetail
     mobileId: '1234567890123456'
     phoneBrand: SM N9005
@@ -125,4 +125,4 @@ update:
     traceId: TRACE_ID
     uuid: ESWD16-UUID
   method: post
-  url: /dimmer/v1/device/devicedetail
+  api: /dimmer/v1/device/devicedetail

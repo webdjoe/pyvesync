@@ -2,6 +2,7 @@
 
 import unittest
 import importlib
+import json
 from unittest import mock
 from unittest.mock import patch, Mock, MagicMock
 
@@ -9,7 +10,7 @@ from pyvesync import VeSync
 from pyvesync.helpers import Helpers
 
 
-class TestVesync(unittest.TestCase):
+class TestVeSync(unittest.TestCase):
     """Test VeSync object initialization."""
 
     def setUp(self):
@@ -34,8 +35,8 @@ class TestVesync(unittest.TestCase):
 
     def test_imports(self):
         """Test that __all__ contains only names that are actually exported."""
-        modules = ['pyvesync.vesyncfan',
-                   'pyvesync.vesyncbulb',
+        modules = ['pyvesync.vesyncbulb',
+                   'pyvesync.vesyncfan',
                    'pyvesync.vesyncoutlet',
                    'pyvesync.vesyncswitch']
         for mod in modules:
@@ -44,7 +45,7 @@ class TestVesync(unittest.TestCase):
             missing = set(n for n in import_mod.__all__
                           if getattr(import_mod, n, None) is None)
             self.assertFalse(
-                missing, msg="__all__ contains unresolved names: %s" % (
+                missing, msg="%s.__all__ contains unresolved names: %s" % (mod,
                     ", ".join(missing),))
 
     def test_username(self):
@@ -105,10 +106,10 @@ class TestVesync(unittest.TestCase):
                 },
                 'code': 0,
             }
-            mocked_post.return_value = (d, 200)
+            mocked_post.return_value = d
 
             data = self.vesync_1.login()
-            body = Helpers.req_body(self.vesync_1, 'login')
+            body = self.vesync_1.req_body_login()
             body['email'] = self.vesync_1.username
             body['password'] = Helpers.hash_password(self.vesync_1.password)
             mocked_post.assert_called_with('/cloud/v1/user/login', 'post',
@@ -123,39 +124,52 @@ class TestApiFunc:
     def test_api_get(self, get_mock):
         """Test get api call."""
         get_mock.return_value = Mock(ok=True, status_code=200)
-        get_mock.return_value.json.return_value = {'code': 0}
+        get_mock.return_value.json.return_value = {"code": 0}
+        get_mock.return_value.status_code = 200
+        get_mock.return_value.method = "GET"
+        get_mock.return_value.text = '{"code": 0}'
+        get_mock.return_value.request.url = "https://smartapi.vesync.com/call/location"
 
-        mock_return = Helpers.call_api('/call/location', method='get')
+        mock_return = Helpers.call_api("/call/location", method='get')
 
-        assert mock_return == ({'code': 0}, 200)
+        assert mock_return == {'code': 0}
 
     @patch('pyvesync.helpers.requests.post', autospec=True)
     def test_api_post(self, post_mock):
         """Test post api call."""
         post_mock.return_value = Mock(ok=True, status_code=200)
-        post_mock.return_value.json.return_value = {'code': 0}
+        post_mock.return_value.json.return_value = {"code": 0}
+        post_mock.return_value.status_code = 200
+        post_mock.return_value.method = "GET"
+        post_mock.return_value.text = '{"code": 0}'
+        post_mock.return_value.request.url = "https://smartapi.vesync.com/call/location"
 
         mock_return = Helpers.call_api('/call/location', method='post')
 
-        assert mock_return == ({'code': 0}, 200)
+        assert mock_return == {'code': 0}
 
     @patch('pyvesync.helpers.requests.put', autospec=True)
     def test_api_put(self, put_mock):
         """Test put api call."""
         put_mock.return_value = Mock(ok=True, status_code=200)
-        put_mock.return_value.json.return_value = {'code': 0}
+        put_mock.return_value.json.return_value = {"code": 0}
+        put_mock.return_value.method = "GET"
+        put_mock.return_value.text = '{"code": 0}'
+        put_mock.return_value.request.url = "https://smartapi.vesync.com/call/location"
 
         mock_return = Helpers.call_api('/call/location', method='put')
 
-        assert mock_return == ({'code': 0}, 200)
+        assert mock_return == {'code': 0}
 
     @patch('pyvesync.helpers.requests.get', autospec=True)
     def test_api_bad_response(self, api_mock):
         """Test bad API response handling."""
         api_mock.side_effect = MagicMock(status_code=400)
+        api_mock.return_value.method = "GET"
+        api_mock.return_value.request.url = "https://smartapi.vesync.com/test/bad-response"
         mock_return = Helpers.call_api('/test/bad-response', method='get')
         print(api_mock.call_args_list)
-        assert mock_return == (None, None)
+        assert mock_return == None
 
 
 if __name__ == '__main__':

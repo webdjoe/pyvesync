@@ -50,7 +50,7 @@ class TestVeSyncSwitch(utils.TestBase):
         assert vswitch15a.energy_today == 1
 
 
-class TestVesync15ASwitch(utils.TestBase):
+class TestVeSync15ASwitch(utils.TestBase):
 
     def test_15aswitch_conf(self):
         """Tests that 15A Outlet is instantiated properly"""
@@ -76,35 +76,39 @@ class TestVesync15ASwitch(utils.TestBase):
     def test_15a_no_details(self):
         """Test 15A details return with no details and code=0"""
         bad_15a_details = {'code': 0, 'deviceStatus': 'on'}
-        self.mock_api.return_value = (bad_15a_details, 200)
+        self.mock_api.return_value = bad_15a_details
         vswitch15a = VeSyncOutlet15A(DEV_LIST_DETAIL, self.manager)
         vswitch15a.get_details()
         assert len(self.caplog.records) == 1
 
     def test_15a_onoff(self):
         """Test 15A Device On/Off Methods"""
-        self.mock_api.return_value = ({'code': 0}, 200)
+        self.mock_api.return_value = {'code': 0}
         vswitch15a = VeSyncOutlet15A(DEV_LIST_DETAIL, self.manager)
-        head = helpers.req_headers(self.manager)
-        body = helpers.req_body(self.manager, 'devicestatus')
+        head = self.manager.req_headers()
+        body = self.manager.req_body_status()
 
         body['status'] = 'on'
         body['uuid'] = vswitch15a.uuid
-        on = vswitch15a.turn_on()
+        assert vswitch15a.turn_on()
         self.mock_api.assert_called_with(
-            '/15a/v1/device/devicestatus', 'put', headers=head, json_object=body
+            '/15a/v1/device/devicestatus', 
+            method='put',
+            headers=head,
+            json_object=body
         )
-        assert on
-        off = vswitch15a.turn_off()
+        assert vswitch15a.turn_off()
         body['status'] = 'off'
         self.mock_api.assert_called_with(
-            '/15a/v1/device/devicestatus', 'put', headers=head, json_object=body
+            '/15a/v1/device/devicestatus',
+            method='put',
+            headers=head,
+            json_object=body
         )
-        assert off
 
     def test_15a_onoff_fail(self):
         """Test 15A On/Off Fail with Code>0"""
-        self.mock_api.return_value = ({'code': 1}, 400)
+        self.mock_api.return_value = {'code': 1}
         vswitch15a = VeSyncOutlet15A(DEV_LIST_DETAIL, self.manager)
         assert not vswitch15a.turn_on()
         assert not vswitch15a.turn_off()
@@ -114,12 +118,12 @@ class TestVesync15ASwitch(utils.TestBase):
         self.mock_api.return_value = ENERGY_HISTORY
         vswitch15a = VeSyncOutlet15A(DEV_LIST_DETAIL, self.manager)
         vswitch15a.get_weekly_energy()
-        body = helpers.req_body(self.manager, 'energy_week')
+        body = self.manager.req_body_energy_week()
         body['uuid'] = vswitch15a.uuid
         self.mock_api.assert_called_with(
             '/15a/v1/device/energyweek',
-            'post',
-            headers=helpers.req_headers(self.manager),
+            method='post',
+            headers=self.manager.req_headers(),
             json_object=body,
         )
         energy_dict = vswitch15a.energy['week']
@@ -135,12 +139,12 @@ class TestVesync15ASwitch(utils.TestBase):
         self.mock_api.return_value = ENERGY_HISTORY
         vswitch15a = VeSyncOutlet15A(DEV_LIST_DETAIL, self.manager)
         vswitch15a.get_monthly_energy()
-        body = helpers.req_body(self.manager, 'energy_month')
+        body = self.manager.req_body_energy_month()
         body['uuid'] = vswitch15a.uuid
         self.mock_api.assert_called_with(
             '/15a/v1/device/energymonth',
-            'post',
-            headers=helpers.req_headers(self.manager),
+            method='post',
+            headers=self.manager.req_headers(),
             json_object=body,
         )
         energy_dict = vswitch15a.energy['month']
@@ -156,12 +160,12 @@ class TestVesync15ASwitch(utils.TestBase):
         self.mock_api.return_value = ENERGY_HISTORY
         vswitch15a = VeSyncOutlet15A(DEV_LIST_DETAIL, self.manager)
         vswitch15a.get_yearly_energy()
-        body = helpers.req_body(self.manager, 'energy_year')
+        body = self.manager.req_body_energy_year()
         body['uuid'] = vswitch15a.uuid
         self.mock_api.assert_called_with(
             '/15a/v1/device/energyyear',
-            'post',
-            headers=helpers.req_headers(self.manager),
+            method='post',
+            headers=self.manager.req_headers(),
             json_object=body,
         )
         energy_dict = vswitch15a.energy['year']
@@ -174,17 +178,17 @@ class TestVesync15ASwitch(utils.TestBase):
 
     def test_history_fail(self):
         """Test 15A energy failure"""
-        bad_history = {'code': 1}
-        self.mock_api.return_value = (bad_history, 200)
+        bad_history = {'code': 1, 'msg': 'FAILLED'}
+        self.mock_api.return_value = bad_history
         vswitch15a = VeSyncOutlet15A(DEV_LIST_DETAIL, self.manager)
         vswitch15a.update_energy()
         assert len(self.caplog.records) == 1
-        assert 'weekly' in self.caplog.text
+        assert 'week' in self.caplog.text
         self.caplog.clear()
         vswitch15a.get_monthly_energy()
         assert len(self.caplog.records) == 1
-        assert 'monthly' in self.caplog.text
+        assert 'month' in self.caplog.text
         self.caplog.clear()
         vswitch15a.get_yearly_energy()
         assert len(self.caplog.records) == 1
-        assert 'yearly' in self.caplog.text
+        assert 'year' in self.caplog.text

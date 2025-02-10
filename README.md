@@ -12,6 +12,8 @@ pyvesync is a library to manage VeSync compatible [smart home devices](#supporte
   - [Etekcity Bulbs](#etekcity-bulbs)
   - [Valceno Bulbs](#valceno-bulbs)
   - [Levoit Humidifiers](#levoit-humidifiers)
+  - [Cosori Air Fryer](#cosori-air-fryer)
+  - [Fans](#fans)
 - [Usage](#usage)
 - [Configuration](#configuration)
   - [Time Zones](#time-zones)
@@ -29,9 +31,10 @@ pyvesync is a library to manage VeSync compatible [smart home devices](#supporte
   - [Standard Air Purifier Properties \& Methods](#standard-air-purifier-properties--methods)
     - [Air Purifier Properties](#air-purifier-properties)
     - [Air Purifier Methods](#air-purifier-methods)
-    - [Levoit Purifier Core200S/300S/400S and Vital 100S/200S Properties](#levoit-purifier-core200s300s400s-vital-100s200s--everest-air-properties)
-    - [Levoit Purifier Core200S/300S/400S, Vital 100S/200S & Everest Air Methods](#levoit-purifier-core200s300s400s-vital-100s200s--everest-air-methods)
-    - [Levoit Vital 100S/200S Properties and Methods](#levoit-vital-100s200s--everest-air-properties-and-methods)
+    - [Levoit Purifier Core200S/300S/400S, Vital 100S/200S \& Everest Air Properties](#levoit-purifier-core200s300s400s-vital-100s200s--everest-air-properties)
+    - [Levoit Purifier Core200S/300S/400S, Vital 100S/200S \& Everest Air Methods](#levoit-purifier-core200s300s400s-vital-100s200s--everest-air-methods)
+    - [Levoit Vital 100S/200S \& Everest Air Properties and Methods](#levoit-vital-100s200s--everest-air-properties-and-methods)
+    - [Levoit Everest Air Properties \& Methods](#levoit-everest-air-properties--methods)
   - [Lights API Methods \& Properties](#lights-api-methods--properties)
     - [Brightness Light Bulb Method and Properties](#brightness-light-bulb-method-and-properties)
     - [Light Bulb Color Temperature Methods and Properties](#light-bulb-color-temperature-methods-and-properties)
@@ -61,6 +64,8 @@ pyvesync is a library to manage VeSync compatible [smart home devices](#supporte
 - [Debug mode](#debug-mode)
 - [Redact mode](#redact-mode)
 - [Feature Requests](#feature-requests)
+- [Device Requests](#device-requests)
+- [Contributing](#contributing)
 
 ## Installation
 
@@ -83,6 +88,7 @@ pip install pyvesync
 3. Voltson Smart Wifi Outlet - Round (10A model ESW03-USA)
 4. Voltson Smart WiFi Outlet - Rectangle (15A model ESW15-USA)
 5. Two Plug Outdoor Outlet (ESO15-TB) (Each plug is a separate `VeSyncOutlet` object, energy readings are for both plugs combined)
+6. GreenSun Smart WiFi Outdoor Outlet - Round (16A model WYSMTOD16A_UN)
 
 <!--SUPPORTED OUTLETS END-->
 
@@ -148,7 +154,7 @@ manager.login()
 # Get/Update Devices from server - populate device lists
 manager.update()
 
-my_switch = manager.outlets[0]
+my_switch = manager.switches[0]
 # Turn on the first switch
 my_switch.turn_on()
 # Turn off the first switch
@@ -170,21 +176,23 @@ Devices are stored in the respective lists in the instantiated `VeSync` class:
 manager.login()
 manager.update()
 
-manager.outlets = [VeSyncOutletObjects]
-manager.switches = [VeSyncSwitchObjects]
-manager.fans = [VeSyncFanObjects]
-manager.bulbs = [VeSyncBulbObjects]
+manager.device_list = [VeSyncDevice]
+manager.outlets = [VeSyncOutlet]
+manager.switches = [VeSyncSwitch]
+manager.fans = [VeSyncFan]
+manager.bulbs = [VeSyncBulb]
+manager.kitchen = [VeSyncKitchen]
 
 # Get device (outlet, etc.) by device name
 dev_name = "My Device"
-for device in manager.outlets:
+for device in manager.device_list:
   if device.device_name == dev_name:
     my_device = device
     device.display()
 
 # Turn on switch by switch name
 switch_name = "My Switch"
-for switch in manager.switches:
+for switch in manager.device_list:
   if switch.device_name == switch_name:
     switch.turn_on()
 ```
@@ -277,11 +285,11 @@ These properties and methods are available for all devices.
 
 `VeSyncOutlet.voltage` - Return current voltage reading
 
-`VesyncOutlet.weekly_energy_total` - Return total energy reading for the past week in kWh, starts 12:01AM Sunday morning
+`VeSyncOutlet.weekly_energy_total` - Return total energy reading for the past week in kWh, starts 12:01AM Sunday morning
 
-`VesyncOutlet.monthly_energy_total` - Return total energy reading for the past month in kWh
+`VeSyncOutlet.monthly_energy_total` - Return total energy reading for the past month in kWh
 
-`VesyncOutlet.yearly_energy_total` - Return total energy reading for the past year in kWh
+`VeSyncOutlet.yearly_energy_total` - Return total energy reading for the past year in kWh
 
 #### Model ESW15-USA 15A/1800W Methods (Have a night light)
 
@@ -885,16 +893,16 @@ This output only applies to dimmable switch.  The standard switch has the defaul
 
 ## Notes
 
-More detailed data is available within the `VesyncOutlet` by inspecting the `VesyncOutlet.energy` dictionary.
+More detailed data is available within the `VeSyncOutlet` by inspecting the `VeSyncOutlet.energy` dictionary.
 
-The `VesyncOutlet.energy` object includes 3 nested dictionaries `week`, `month`, and `year` that contain detailed weekly, monthly and yearly data
+The `VeSyncOutlet.energy` object includes 3 nested dictionaries `week`, `month`, and `year` that contain detailed weekly, monthly and yearly data
 
 ```python
-VesyncOutlet.energy['week']['energy_consumption_of_today']
-VesyncOutlet.energy['week']['cost_per_kwh']
-VesyncOutlet.energy['week']['max_energy']
-VesyncOutlet.energy['week']['total_energy']
-VesyncOutlet.energy['week']['data'] # which itself is a list of values
+VeSyncOutlet.energy['week']['energy_consumption_of_today']
+VeSyncOutlet.energy['week']['cost_per_kwh']
+VeSyncOutlet.energy['week']['max_energy']
+VeSyncOutlet.energy['week']['total_energy']
+VeSyncOutlet.energy['week']['data'] # which itself is a list of values
 ```
 
 ## Debug mode
@@ -907,7 +915,7 @@ import pyvesync.vesync as vs
 manager = vs.VeSync('user', 'pass', debug=True)
 manager.login()
 manager.update()
-# Prints device list returned from Vesync
+# Prints device list returned from VeSync
 ```
 
 ## Redact mode
@@ -921,7 +929,7 @@ import pyvesync.vesync as vs
 manager = vs.VeSync('user', 'pass', debug=True, redact=True)
 manager.login()
 manager.update()
-# Prints device list returned from Vesync
+# Prints device list returned from VeSync
 ```
 
 ## Feature Requests
@@ -968,13 +976,13 @@ def test_device():
         logger.debug("Unable to login")
         return
 
-    # Pull and update devices
+    # Pull and update the list of devices
     manager.update()
 
     fan = None
-    logger.debug(str(manager.fans))
+    logger.debug(str(manager.device_list))
 
-    for dev in manager.fans:
+    for dev in manager.device_list:
         # Print all device info
         logger.debug(dev.device_name + "\n")
         logger.debug(dev.display())
@@ -986,7 +994,7 @@ def test_device():
 
     if fan == None:
         logger.debug("Device not found")
-        logger.debug("Devices found - \n %s", str(manager._dev_list))
+        logger.debug("Devices found - \n %s", str(manager._device_list))
         return
 
 

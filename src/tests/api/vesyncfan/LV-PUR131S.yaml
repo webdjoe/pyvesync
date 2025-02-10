@@ -2,7 +2,7 @@ change_fan_speed:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
@@ -14,12 +14,12 @@ change_fan_speed:
     token: sample_tk
     uuid: LV-PUR131S-UUID
   method: put
-  url: /131airPurifier/v1/device/updateSpeed
+  api: /131airPurifier/v1/device/updateSpeed
 manual_mode:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
@@ -32,12 +32,12 @@ manual_mode:
     token: sample_tk
     uuid: LV-PUR131S-UUID
   method: put
-  url: /131airPurifier/v1/device/updateMode
+  api: /131airPurifier/v1/device/updateMode
 sleep_mode:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
@@ -49,12 +49,12 @@ sleep_mode:
     token: sample_tk
     uuid: LV-PUR131S-UUID
   method: put
-  url: /131airPurifier/v1/device/updateMode
+  api: /131airPurifier/v1/device/updateMode
 turn_off:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
@@ -66,12 +66,12 @@ turn_off:
     token: sample_tk
     uuid: LV-PUR131S-UUID
   method: put
-  url: /131airPurifier/v1/device/deviceStatus
+  api: /131airPurifier/v1/device/deviceStatus
 turn_on:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
@@ -83,19 +83,19 @@ turn_on:
     token: sample_tk
     uuid: LV-PUR131S-UUID
   method: put
-  url: /131airPurifier/v1/device/deviceStatus
+  api: /131airPurifier/v1/device/deviceStatus
 update:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     method: devicedetail
     mobileId: '1234567890123456'
     phoneBrand: SM N9005
@@ -105,4 +105,4 @@ update:
     traceId: TRACE_ID
     uuid: LV-PUR131S-UUID
   method: post
-  url: /131airPurifier/v1/device/deviceDetail
+  api: /131airPurifier/v1/device/deviceDetail

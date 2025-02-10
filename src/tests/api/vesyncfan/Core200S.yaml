@@ -5,7 +5,7 @@ change_fan_speed:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: Core200S-CID
     configModule: ConfigModule
     debugMode: false
@@ -25,7 +25,7 @@ change_fan_speed:
     token: sample_tk
     traceId: TRACE_ID
   method: post
-  url: /cloud/v2/deviceManaged/bypassV2
+  api: /cloud/v2/deviceManaged/bypassV2
 clear_timer:
   headers:
     Content-Type: application/json; charset=UTF-8
@@ -33,7 +33,7 @@ clear_timer:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: Core200S-CID
     configModule: ConfigModule
     debugMode: false
@@ -49,7 +49,7 @@ clear_timer:
     token: sample_tk
     traceId: TRACE_ID
   method: post
-  url: /cloud/v2/deviceManaged/bypassV2
+  api: /cloud/v2/deviceManaged/bypassV2
 manual_mode:
   headers:
     Content-Type: application/json; charset=UTF-8
@@ -57,7 +57,7 @@ manual_mode:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: Core200S-CID
     configModule: ConfigModule
     debugMode: false
@@ -76,7 +76,7 @@ manual_mode:
     token: sample_tk
     traceId: TRACE_ID
   method: post
-  url: /cloud/v2/deviceManaged/bypassV2
+  api: /cloud/v2/deviceManaged/bypassV2
 set_timer:
   headers:
     Content-Type: application/json; charset=UTF-8
@@ -84,7 +84,7 @@ set_timer:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: Core200S-CID
     configModule: ConfigModule
     debugMode: false
@@ -102,7 +102,7 @@ set_timer:
     token: sample_tk
     traceId: TRACE_ID
   method: post
-  url: /cloud/v2/deviceManaged/bypassV2
+  api: /cloud/v2/deviceManaged/bypassV2
 sleep_mode:
   headers:
     Content-Type: application/json; charset=UTF-8
@@ -110,7 +110,7 @@ sleep_mode:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: Core200S-CID
     configModule: ConfigModule
     debugMode: false
@@ -127,7 +127,7 @@ sleep_mode:
     token: sample_tk
     traceId: TRACE_ID
   method: post
-  url: /cloud/v2/deviceManaged/bypassV2
+  api: /cloud/v2/deviceManaged/bypassV2
 turn_off:
   headers:
     Content-Type: application/json; charset=UTF-8
@@ -135,7 +135,7 @@ turn_off:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: Core200S-CID
     configModule: ConfigModule
     debugMode: false
@@ -153,7 +153,7 @@ turn_off:
     token: sample_tk
     traceId: TRACE_ID
   method: post
-  url: /cloud/v2/deviceManaged/bypassV2
+  api: /cloud/v2/deviceManaged/bypassV2
 turn_off_display:
   headers:
     Content-Type: application/json; charset=UTF-8
@@ -161,7 +161,7 @@ turn_off_display:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: Core200S-CID
     configModule: ConfigModule
     debugMode: false
@@ -178,7 +178,7 @@ turn_off_display:
     token: sample_tk
     traceId: TRACE_ID
   method: post
-  url: /cloud/v2/deviceManaged/bypassV2
+  api: /cloud/v2/deviceManaged/bypassV2
 turn_on:
   headers:
     Content-Type: application/json; charset=UTF-8
@@ -186,7 +186,7 @@ turn_on:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: Core200S-CID
     configModule: ConfigModule
     debugMode: false
@@ -204,7 +204,7 @@ turn_on:
     token: sample_tk
     traceId: TRACE_ID
   method: post
-  url: /cloud/v2/deviceManaged/bypassV2
+  api: /cloud/v2/deviceManaged/bypassV2
 turn_on_display:
   headers:
     Content-Type: application/json; charset=UTF-8
@@ -212,7 +212,7 @@ turn_on_display:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: Core200S-CID
     configModule: ConfigModule
     debugMode: false
@@ -229,7 +229,7 @@ turn_on_display:
     token: sample_tk
     traceId: TRACE_ID
   method: post
-  url: /cloud/v2/deviceManaged/bypassV2
+  api: /cloud/v2/deviceManaged/bypassV2
 update:
   headers:
     Content-Type: application/json; charset=UTF-8
@@ -237,7 +237,7 @@ update:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: Core200S-CID
     configModule: ConfigModule
     debugMode: false
@@ -253,4 +253,4 @@ update:
     token: sample_tk
     traceId: TRACE_ID
   method: post
-  url: /cloud/v2/deviceManaged/bypassV2
+  api: /cloud/v2/deviceManaged/bypassV2

@@ -1,15 +1,16 @@
 get_details:
+  api: /outdoorsocket15a/v1/device/devicedetail
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     method: devicedetail
     mobileId: '1234567890123456'
     phoneBrand: SM N9005
@@ -19,19 +20,19 @@ get_details:
     traceId: TRACE_ID
     uuid: ESO15-TB-UUID
   method: post
-  url: /outdoorsocket15a/v1/device/devicedetail
 get_monthly_energy:
+  api: /outdoorsocket15a/v1/device/energymonth
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     method: energymonth
     mobileId: '1234567890123456'
     phoneBrand: SM N9005
@@ -41,19 +42,19 @@ get_monthly_energy:
     traceId: TRACE_ID
     uuid: ESO15-TB-UUID
   method: post
-  url: /outdoorsocket15a/v1/device/energymonth
 get_weekly_energy:
+  api: /outdoorsocket15a/v1/device/energyweek
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     method: energyweek
     mobileId: '1234567890123456'
     phoneBrand: SM N9005
@@ -63,19 +64,19 @@ get_weekly_energy:
     traceId: TRACE_ID
     uuid: ESO15-TB-UUID
   method: post
-  url: /outdoorsocket15a/v1/device/energyweek
 get_yearly_energy:
+  api: /outdoorsocket15a/v1/device/energyyear
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     method: energyyear
     mobileId: '1234567890123456'
     phoneBrand: SM N9005
@@ -85,12 +86,12 @@ get_yearly_energy:
     traceId: TRACE_ID
     uuid: ESO15-TB-UUID
   method: post
-  url: /outdoorsocket15a/v1/device/energyyear
 turn_off:
+  api: /outdoorsocket15a/v1/device/devicestatus
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
@@ -103,12 +104,12 @@ turn_off:
     token: sample_tk
     uuid: ESO15-TB-UUID
   method: put
-  url: /outdoorsocket15a/v1/device/devicestatus
 turn_on:
+  api: /outdoorsocket15a/v1/device/devicestatus
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
@@ -121,19 +122,19 @@ turn_on:
     token: sample_tk
     uuid: ESO15-TB-UUID
   method: put
-  url: /outdoorsocket15a/v1/device/devicestatus
 update:
+  api: /outdoorsocket15a/v1/device/devicedetail
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     method: devicedetail
     mobileId: '1234567890123456'
     phoneBrand: SM N9005
@@ -143,4 +144,3 @@ update:
     traceId: TRACE_ID
     uuid: ESO15-TB-UUID
   method: post
-  url: /outdoorsocket15a/v1/device/devicedetail

@@ -18,16 +18,17 @@ import yaml
 from collections import defaultdict, namedtuple
 from unittest.mock import patch
 from requests.structures import CaseInsensitiveDict
-from pyvesync.vesync import VeSync
+from pyvesync.vesync import VeSync, APP_VERSION, PHONE_BRAND, PHONE_OS
 from pyvesync.helpers import Color
 import pyvesync.helpers as vs_helpers
+from pyvesync.const import *
 
 
 logger = logging.getLogger(__name__)
 
-FunctionResponses: defaultdict = defaultdict(lambda: ({"code": 0, "msg": None}, 200))
+FunctionResponses: defaultdict = defaultdict(lambda: {"code": 0, "msg": None})
 
-CALL_API_ARGS = ['url', 'method', 'data', 'headers']
+CALL_API_ARGS = ['api', 'method', 'data', 'headers']
 
 ID_KEYS = ['CID', 'UUID', 'MACID']
 
@@ -68,9 +69,9 @@ class Defaults:
     color = Color(red=50, green=100, blue=225)
     brightness = 100
     color_temp = 100
-    bool_toggle = True
-    str_toggle = 'on'
-    bin_toggle = 1
+    bool_turn = True
+    str_turn = 'on'
+    bin_turn = 1
 
     @staticmethod
     def name(dev_type: str = 'NA'):
@@ -160,12 +161,12 @@ def parse_args(mock_api):
 API_DEFAULTS = CaseInsensitiveDict({
     'accountID': Defaults.account_id,
     'token': Defaults.token,
-    'timeZone': vs_helpers.DEFAULT_TZ,
+    'timeZone': DEFAULT_TZ,
     'acceptLanguage': 'en',
-    'appVersion': vs_helpers.APP_VERSION,
-    'phoneBrand': vs_helpers.PHONE_BRAND,
-    'phoneOS': vs_helpers.PHONE_OS,
-    'userType': vs_helpers.USER_TYPE,
+    'appVersion': APP_VERSION,
+    'phoneBrand': PHONE_BRAND,
+    'phoneOS': PHONE_OS,
+    'userType': USER_TYPE,
     "tk": Defaults.token,
     "traceId": "TRACE_ID",
     'verifyEmail': 'EMAIL',
@@ -377,11 +378,10 @@ class TestBase:
         self.mock_api_call.stop()
 
 
-def assert_test(test_func, all_kwargs, dev_type=None,
-                 write_api=False, overwrite=False):
+def assert_test(test_func, all_kwargs, dev_type=None, write_api=False, overwrite=False):
     """Test pyvesync API calls against existing API.
 
-    Set `write_api=True` to True to write API call data to YAML file. 
+    Set `write_api=True` to True to write API call data to YAML file.
     This will not overwrite existing data unless overwrite is True.
     The overwrite argument is only used when API changes, defaults
     to false for development testing. `overwrite=True` and `write_api=True`

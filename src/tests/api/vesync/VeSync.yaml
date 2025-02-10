@@ -5,7 +5,7 @@ get_devices:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     method: devices
     pageNo: '1'
     pageSize: '100'
@@ -15,11 +15,11 @@ get_devices:
     token: sample_tk
     traceId: TRACE_ID
   method: post
-  url: /cloud/v1/deviceManaged/devices
+  api: /cloud/v1/deviceManaged/devices
 login:
   json_object:
     acceptLanguage: en
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     devToken: ''
     email: EMAIL
     method: login
@@ -30,4 +30,4 @@ login:
     traceId: TRACE_ID
     userType: '1'
   method: post
-  url: /cloud/v1/user/login
+  api: /cloud/v1/user/login

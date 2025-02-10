@@ -1,13 +1,15 @@
 get_details:
+  api: /cloud/v2/deviceManaged/bypassV2
   headers:
     Content-Type: application/json; charset=UTF-8
     User-Agent: okhttp/3.12.1
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: BSDOG01-CID
     configModule: ConfigModule
+    debugMode: false
     deviceRegion: US
     method: bypassV2
     payload:
@@ -20,17 +22,18 @@ get_details:
     token: sample_tk
     traceId: TRACE_ID
   method: post
-  url: /cloud/v2/deviceManaged/bypassV2
 turn_off:
+  api: /cloud/v2/deviceManaged/bypassV2
   headers:
     Content-Type: application/json; charset=UTF-8
     User-Agent: okhttp/3.12.1
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: BSDOG01-CID
     configModule: ConfigModule
+    debugMode: false
     deviceRegion: US
     method: bypassV2
     payload:
@@ -44,17 +47,18 @@ turn_off:
     token: sample_tk
     traceId: TRACE_ID
   method: post
-  url: /cloud/v2/deviceManaged/bypassV2
 turn_on:
+  api: /cloud/v2/deviceManaged/bypassV2
   headers:
     Content-Type: application/json; charset=UTF-8
     User-Agent: okhttp/3.12.1
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: BSDOG01-CID
     configModule: ConfigModule
+    debugMode: false
     deviceRegion: US
     method: bypassV2
     payload:
@@ -68,17 +72,18 @@ turn_on:
     token: sample_tk
     traceId: TRACE_ID
   method: post
-  url: /cloud/v2/deviceManaged/bypassV2
 update:
+  api: /cloud/v2/deviceManaged/bypassV2
   headers:
     Content-Type: application/json; charset=UTF-8
     User-Agent: okhttp/3.12.1
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 4.3.40
     cid: BSDOG01-CID
     configModule: ConfigModule
+    debugMode: false
     deviceRegion: US
     method: bypassV2
     payload:
@@ -91,4 +96,3 @@ update:
     token: sample_tk
     traceId: TRACE_ID
   method: post
-  url: /cloud/v2/deviceManaged/bypassV2

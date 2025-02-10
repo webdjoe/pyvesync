@@ -29,7 +29,7 @@ CALL_LIST = [
 ]
 
 
-class TestVesync7ASwitch(TestBase):
+class TestVeSync7ASwitch(TestBase):
     """Test 7A outlet API."""
 
     def test_7aswitch_conf(self):
@@ -67,7 +67,7 @@ class TestVesync7ASwitch(TestBase):
             'power': '1A:1A',
             'voltage': '1A:1A',
         }
-        self.mock_api.return_value = (bad_7a_details, 200)
+        self.mock_api.return_value = bad_7a_details
         vswitch7a = VeSyncOutlet7A(DEV_LIST_DETAIL, self.manager)
         vswitch7a.get_details()
         assert len(self.caplog.records) == 1
@@ -76,17 +76,17 @@ class TestVesync7ASwitch(TestBase):
     def test_7a_no_details(self):
         """Test 7A outlet details response with unknown keys."""
         bad_7a_details = {'wrongdetails': 'on'}
-        self.mock_api.return_value = (bad_7a_details, 200)
+        self.mock_api.return_value = bad_7a_details
         vswitch7a = VeSyncOutlet7A(DEV_LIST_DETAIL, self.manager)
         vswitch7a.get_details()
         assert len(self.caplog.records) == 1
 
     def test_7a_onoff(self):
         """Test 7A outlet on/off methods."""
-        self.mock_api.return_value = ('response', 200)
+        self.mock_api.return_value = 'response'
         vswitch7a = VeSyncOutlet7A(DEV_LIST_DETAIL, self.manager)
         on = vswitch7a.turn_on()
-        head = helpers.req_headers(self.manager)
+        head = self.manager.req_headers()
         self.mock_api.assert_called_with(
             '/v1/wifi-switch-1.3/' + vswitch7a.cid + '/status/on', 'put', headers=head
         )
@@ -99,7 +99,7 @@ class TestVesync7ASwitch(TestBase):
 
     def test_7a_onoff_fail(self):
         """Test 7A outlet on/off methods that fail."""
-        self.mock_api.return_value = ('response', 400)
+        self.mock_api.return_value = None
         vswitch7a = VeSyncOutlet7A(DEV_LIST_DETAIL, self.manager)
         assert not vswitch7a.turn_on()
         assert not vswitch7a.turn_off()
@@ -112,7 +112,7 @@ class TestVesync7ASwitch(TestBase):
         self.mock_api.assert_called_with(
             '/v1/device/' + vswitch7a.cid + '/energy/week',
             'get',
-            headers=helpers.req_headers(self.manager),
+            headers=self.manager.req_headers(),
         )
         energy_dict = vswitch7a.energy['week']
         assert energy_dict['energy_consumption_of_today'] == 1
@@ -129,7 +129,7 @@ class TestVesync7ASwitch(TestBase):
         self.mock_api.assert_called_with(
             '/v1/device/' + vswitch7a.cid + '/energy/month',
             'get',
-            headers=helpers.req_headers(self.manager),
+            headers=self.manager.req_headers(),
         )
         energy_dict = vswitch7a.energy['month']
         assert energy_dict['energy_consumption_of_today'] == 1
@@ -146,7 +146,7 @@ class TestVesync7ASwitch(TestBase):
         self.mock_api.assert_called_with(
             '/v1/device/' + vswitch7a.cid + '/energy/year',
             'get',
-            headers=helpers.req_headers(self.manager),
+            headers=self.manager.req_headers(),
         )
         energy_dict = vswitch7a.energy['year']
         assert energy_dict['energy_consumption_of_today'] == 1
@@ -157,17 +157,17 @@ class TestVesync7ASwitch(TestBase):
 
     def test_history_fail(self):
         """Test handling of energy update failure."""
-        bad_history = {'code': 1}
-        self.mock_api.return_value = (bad_history, 200)
+        bad_history = {'code': 1, 'msg': 'FAILED'}
+        self.mock_api.return_value = bad_history
         vswitch7a = VeSyncOutlet7A(DEV_LIST_DETAIL, self.manager)
         vswitch7a.update_energy()
         assert len(self.caplog.records) == 1
-        assert 'weekly' in self.caplog.text
+        assert 'week' in self.caplog.text
         self.caplog.clear()
         vswitch7a.get_monthly_energy()
         assert len(self.caplog.records) == 1
-        assert 'monthly' in self.caplog.text
+        assert 'month' in self.caplog.text
         self.caplog.clear()
         vswitch7a.get_yearly_energy()
         assert len(self.caplog.records) == 1
-        assert 'yearly' in self.caplog.text
+        assert 'year' in self.caplog.text
