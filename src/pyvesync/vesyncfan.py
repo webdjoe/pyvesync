@@ -1,10 +1,12 @@
 """VeSync API for controling fans and purifiers."""
 
-import json
 import logging
 from typing import Any, TYPE_CHECKING
+import orjson
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 from pyvesync.helpers import Helpers, Timer
+from pyvesync.logs import LibraryLogger
+from pyvesync.errors import ErrorCodes
 
 if TYPE_CHECKING:
     from pyvesync import VeSync
@@ -203,7 +205,7 @@ fan_classes: set = {v['module']
 
 fan_modules: dict = model_dict()
 
-__all__: list = [*fan_classes, 'fan_modules']
+__all__: list = [*fan_classes, 'fan_modules']  # noqa: PLE0604
 
 
 class VeSyncAirBypass(VeSyncBaseDevice):
@@ -389,7 +391,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         self.config['display_forever'] = conf_dict.get('display_forever',
                                                        False)
 
-    def get_details(self) -> None:
+    async def get_details(self) -> None:
         """Build Bypass Purifier details dictionary."""
         head = Helpers.bypass_header()
         body = Helpers.bypass_body_v2(self.manager)
@@ -401,40 +403,33 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             'data': {}
         }
 
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
-        if not isinstance(r, dict):
-            logger.debug('Error in purifier response')
+        r = Helpers.process_api_response(logger, "get_details", self, r_bytes)
+        if r is None:
             return
-        if not isinstance(r.get('result'), dict):
-            logger.debug('Error in purifier response')
+        if not isinstance(r.get('result', {}).get("result"), dict):
+            LibraryLogger.log_api_response_parse_error(
+                logger,
+                self.device_name,
+                self.device_type,
+                "get_details",
+                "Result not found in response"
+            )
             return
-        outer_result = r.get('result', {})
-        inner_result = None
+        inner_result = r.get('result', {}).get('result')
+        if inner_result is not None:
+            self.build_purifier_dict(inner_result)
 
-        if outer_result:
-            inner_result = r.get('result', {}).get('result')
-        if inner_result is not None and Helpers.code_check(r):
-            if outer_result.get('code') == 0:
-                self.build_purifier_dict(inner_result)
-            else:
-                logger.debug('error in inner result dict from purifier')
-            if inner_result.get('configuration', {}):
-                self.build_config_dict(inner_result.get('configuration', {}))
-            else:
-                logger.debug('No configuration found in purifier status')
-        else:
-            logger.debug('Error in purifier response')
-
-    def update(self) -> None:
+    async def update(self) -> None:
         """Update Purifier details."""
-        self.get_details()
+        await self.get_details()
 
-    def get_timer(self) -> Timer | None:
+    async def get_timer(self) -> Timer | None:
         """Retrieve running timer from purifier.
 
         Returns Timer object if timer is running, None if no timer is running.
@@ -461,29 +456,31 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         if not head and not body:
             return None
 
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
-        if not isinstance(r, dict):
-            logger.debug('Error in purifier response')
-            return None
-        if r.get('code') != 0:
-            logger.debug('Error in purifier response, code %s', r.get('code', 'unknown'))
-            return None
-        if r.get('result', {}).get('code') != 0:
-            logger.debug('Error in purifier result response, code %s',
-                         r.get('result', {}).get('code', 'unknown'))
-            return None
-        timers = r.get('result', {}).get('result', {}).get('timers', [])
-        if not isinstance(timers, list) or len(timers) < 1:
-            self.timer = None
-            logger.debug('No timer found')
+        r = Helpers.process_api_response(logger, "get_timer", self, r_bytes)
+        if r is None:
             return None
 
-        timer = timers[0]
+        timer_list = r.get('result', {}).get('result', {}).get('timers')
+        if not isinstance(timer_list, list):
+            LibraryLogger.log_api_response_parse_error(
+                logger,
+                self.device_name,
+                self.device_type,
+                "get_timer",
+                "Timer list not found in response"
+            )
+            return None
+        if not timer_list:
+            logger.debug("No timers found")
+            return None
+
+        timer = timer_list[0]
         if self.timer is None:
             self.timer = Timer(
                 timer_duration=timer.get("duration", timer.get("total", 0)),
@@ -496,7 +493,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         logger.debug('Timer found: %s', str(self.timer))
         return self.timer
 
-    def set_timer(self, timer_duration: int) -> bool:
+    async def set_timer(self, timer_duration: int) -> bool:
         """Set timer for Purifier.
 
         Args:
@@ -517,21 +514,30 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             'action': 'off',
         }
 
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
+        r = Helpers.process_api_response(logger, "set_timer", self, r_bytes)
+        if r is None:
+            return False
 
-        if r.get('code') != 0:
-            logger.debug('Error in purifier response, code %s', r.get('code', 'unknown'))
+        result = r.get('result', {})
+        if result.get('code') != 0:
+            result_code = result.get('code')
+            error_info = ErrorCodes.get_error_info(result_code)
+            if error_info.device_online is False:
+                self.device_status = 'off'
+                self.connection_status = 'offline'
+            LibraryLogger.log_api_response_parse_error(
+                logger, self.device_name, self.device_type,
+                "set_timer", error_info.error_message
+            )
             return False
-        if r.get('result', {}).get('code') != 0:
-            logger.debug('Error in purifier result response, code %s',
-                         r.get('result', {}).get('code', 'unknown'))
-            return False
-        timer_id = r.get('result', {}).get('result', {}).get('id')
+
+        timer_id = result.get('result', {}).get('id')
         if timer_id is not None:
             self.timer = Timer(timer_duration=timer_duration,
                                action='off',
@@ -541,7 +547,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
                                action='off')
         return True
 
-    def clear_timer(self) -> bool:
+    async def clear_timer(self) -> bool:
         """Clear timer.
 
         Returns True if no error is returned from API call.
@@ -549,7 +555,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         Returns:
             bool : True if timer is cleared, False if not
         """
-        self.get_timer()
+        await self.get_timer()
         if self.timer is None:
             logger.debug('No timer to clear')
             return False
@@ -563,21 +569,21 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             'id': self.timer.id
         }
 
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
-
-        if r.get('code') != 0:
-            logger.debug('Error in purifier response, code %s', r.get('code', 'unknown'))
+        r = Helpers.process_api_response(logger, "clear_timer", self, r_bytes)
+        if r is None:
             return False
+
         logger.debug("Timer cleared")
         return True
 
-    def change_fan_speed(self,
-                         speed: None | int = None) -> bool:
+    async def change_fan_speed(self,
+                               speed: None | int = None) -> bool:
         """Change fan speed based on levels in configuration dict.
 
         If no value is passed, the next speed in the list is selected.
@@ -597,12 +603,11 @@ class VeSyncAirBypass(VeSyncBaseDevice):
                              speed, str(speeds))
                 return False
             new_speed = speed
+        elif current_speed == speeds[-1]:
+            new_speed = speeds[0]
         else:
-            if current_speed == speeds[-1]:
-                new_speed = speeds[0]
-            else:
-                current_index = speeds.index(current_speed)
-                new_speed = speeds[current_index + 1]
+            current_index = speeds.index(current_speed)
+            new_speed = speeds[current_index + 1]
 
         body = Helpers.req_body(self.manager, 'devicestatus')
         body['uuid'] = self.uuid
@@ -618,24 +623,24 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             'mode': 'manual',
         }
 
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
+        r = Helpers.process_api_response(logger, "change_fan_speed", self, r_bytes)
+        if r is None:
+            return False
 
-        if r is not None and Helpers.code_check(r):
-            self.speed = new_speed
-            return True
-        logger.debug('Error changing %s speed', self.device_name)
-        return False
+        self.speed = new_speed
+        return True
 
-    def child_lock_on(self) -> bool:
+    async def child_lock_on(self) -> bool:
         """Turn Bypass child lock on."""
-        return self.set_child_lock(True)
+        return await self.set_child_lock(True)
 
-    def child_lock_off(self) -> bool:
+    async def child_lock_off(self) -> bool:
         """Turn Bypass child lock off.
 
         Returns:
@@ -643,7 +648,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         """
         return self.set_child_lock(False)
 
-    def set_child_lock(self, mode: bool) -> bool:
+    async def set_child_lock(self, mode: bool) -> bool:
         """Set Bypass child lock.
 
         Set child lock to on or off. Internal method used by `child_lock_on` and
@@ -668,23 +673,20 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             'child_lock': mode
         }
 
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
+        r = Helpers.process_api_response(logger, "set_child_lock", self, r_bytes)
+        if r is None:
+            return False
 
-        if r is not None and Helpers.code_check(r):
-            self.details['child_lock'] = mode
-            return True
-        if isinstance(r, dict):
-            logger.debug('Error toggling child lock')
-        else:
-            logger.debug('Error in api return json for %s', self.device_name)
-        return False
+        self.details['child_lock'] = mode
+        return True
 
-    def reset_filter(self) -> bool:
+    async def reset_filter(self) -> bool:
         """Reset filter to 100%.
 
         Returns:
@@ -700,19 +702,16 @@ class VeSyncAirBypass(VeSyncBaseDevice):
 
         body['payload']['data'] = {}
 
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
+        r = Helpers.process_api_response(logger, "reset_filter", self, r_bytes)
+        return bool(r)
 
-        if r is not None and Helpers.code_check(r):
-            return True
-        logger.debug('Error resetting filter')
-        return False
-
-    def mode_toggle(self, mode: str) -> bool:
+    async def mode_toggle(self, mode: str) -> bool:
         """Set purifier mode - sleep or manual.
 
         Set purifier mode based on devices available modes.
@@ -746,25 +745,25 @@ class VeSyncAirBypass(VeSyncBaseDevice):
                 'type': 'APP'
             }
 
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
+        r = Helpers.process_api_response(logger, "mode_toggle", self, r_bytes)
+        if r is None:
+            return False
 
-        if Helpers.code_check(r):
-            if mode.lower() == 'manual':
-                self.speed = 1
-                self.mode = 'manual'
-            else:
-                self.mode = mode
-                self.speed = 0
-            return True
-        logger.debug('Error setting purifier mode')
-        return False
+        if mode.lower() == 'manual':
+            self.speed = 1
+            self.mode = 'manual'
+        else:
+            self.mode = mode
+            self.speed = 0
+        return True
 
-    def manual_mode(self) -> bool:
+    async def manual_mode(self) -> bool:
         """Set mode to manual.
 
         Calls method [pyvesync.VeSyncAirBypass.mode_toggle][`self.mode_toggle('manual')`]
@@ -776,9 +775,9 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         if 'manual' not in self.modes:
             logger.debug('%s does not have manual mode', self.device_name)
             return False
-        return self.mode_toggle('manual')
+        return await self.mode_toggle('manual')
 
-    def sleep_mode(self) -> bool:
+    async def sleep_mode(self) -> bool:
         """Set sleep mode to on.
 
         Calls method [pyvesync.VeSyncAirBypass.mode_toggle][`self.mode_toggle('sleep')`]
@@ -789,9 +788,9 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         if 'sleep' not in self.modes:
             logger.debug('%s does not have sleep mode', self.device_name)
             return False
-        return self.mode_toggle('sleep')
+        return await self.mode_toggle('sleep')
 
-    def auto_mode(self) -> bool:
+    async def auto_mode(self) -> bool:
         """Set mode to auto.
 
         Calls method [pyvesync.VeSyncAirBypass.mode_toggle][`self.mode_toggle('sleep')`]
@@ -802,9 +801,9 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         if 'auto' not in self.modes:
             logger.debug('%s does not have auto mode', self.device_name)
             return False
-        return self.mode_toggle('auto')
+        return await self.mode_toggle('auto')
 
-    def toggle_switch(self, toggle: bool) -> bool:
+    async def toggle_switch(self, toggle: bool) -> bool:
         """Toggle purifier on/off.
 
         Helper method for `turn_on()` and `turn_off()` methods.
@@ -832,24 +831,23 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             'source': 'APP'
         }
 
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
+        r = Helpers.process_api_response(logger, "toggle_switch", self, r_bytes)
+        if r is None:
+            return False
 
-        if r is not None and Helpers.code_check(r):
-            if toggle:
-                self.device_status = 'on'
-            else:
-                self.device_status = 'off'
-            return True
-        logger.debug("Error toggling purifier - %s",
-                     self.device_name)
-        return False
+        if toggle:
+            self.device_status = 'on'
+        else:
+            self.device_status = 'off'
+        return True
 
-    def turn_on(self) -> bool:
+    async def turn_on(self) -> bool:
         """Turn bypass Purifier on.
 
         Calls method [pyvesync.VeSyncAirBypass.toggle_switch][`self.toggle_switch(True)`]
@@ -857,9 +855,9 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         Returns:
             bool : True if purifier is turned on, False if not
         """
-        return self.toggle_switch(True)
+        return await self.toggle_switch(True)
 
-    def turn_off(self) -> bool:
+    async def turn_off(self) -> bool:
         """Turn Bypass Purifier off.
 
         Calls method [pyvesync.VeSyncAirBypass.toggle_switch][`self.toggle_switch(False)`]
@@ -867,9 +865,9 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         Returns:
             bool : True if purifier is turned off, False if not
         """
-        return self.toggle_switch(False)
+        return await self.toggle_switch(False)
 
-    def set_display(self, mode: bool) -> bool:
+    async def set_display(self, mode: bool) -> bool:
         """Toggle display on/off.
 
         Called by `turn_on_display()` and `turn_off_display()` methods.
@@ -890,20 +888,17 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             'state': mode
         }
 
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
+        r = Helpers.process_api_response(logger, "set_display", self, r_bytes)
 
-        if r is not None and Helpers.code_check(r):
-            return True
-        logger.debug("Error toggling purifier display - %s",
-                     self.device_name)
-        return False
+        return bool(r)
 
-    def turn_on_display(self) -> bool:
+    async def turn_on_display(self) -> bool:
         """Turn Display on.
 
         Calls method [pyvesync.VeSyncAirBypass.set_display][`self.set_display(True)`]
@@ -911,9 +906,9 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         Returns:
             bool : True if display is turned on, False if not
         """
-        return self.set_display(True)
+        return await self.set_display(True)
 
-    def turn_off_display(self) -> bool:
+    async def turn_off_display(self) -> bool:
         """Turn Display off.
 
         Calls method [pyvesync.VeSyncAirBypass.set_display][`self.set_display(False)`]
@@ -921,9 +916,9 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         Returns:
             bool : True if display is turned off, False if not
         """
-        return self.set_display(False)
+        return await self.set_display(False)
 
-    def set_night_light(self, mode: str) -> bool:
+    async def set_night_light(self, mode: str) -> bool:
         """Set night light.
 
         Possible modes are on, off or dim.
@@ -945,18 +940,18 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             'night_light': mode.lower()
         }
 
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
+        r = Helpers.process_api_response(logger, "set_night_light", self, r_bytes)
+        if r is None:
+            return False
 
-        if r is not None and Helpers.code_check(r):
-            self.details['night_light'] = mode.lower()
-            return True
-        logger.debug('Error setting nightlight mode')
-        return False
+        self.details['night_light'] = mode.lower()
+        return True
 
     @property
     def air_quality(self) -> int:
@@ -1047,14 +1042,14 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         for line in disp:
             print(f'{line[0]:.<30} {line[1]} {line[2]}')
 
-    def displayJSON(self) -> str:  # noqa: N802
+    def displayJSON(self) -> str:
         """Return air purifier status and properties in JSON output.
 
         Returns:
             str : JSON formatted string of air purifier details
         """
         sup = super().displayJSON()
-        sup_val = json.loads(sup)
+        sup_val = orjson.loads(sup)
         sup_val.update(
             {
                 'Mode': self.mode,
@@ -1074,7 +1069,8 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             sup_val.update(
                 {'Air Quality Value': str(self.details.get('air_quality_value', ''))}
             )
-        return json.dumps(sup_val, indent=4)
+        return orjson.dumps(
+            sup_val, option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS).decode()
 
 
 class VeSyncAirBaseV2(VeSyncAirBypass):
@@ -1134,30 +1130,47 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         """Return true if light is detected."""
         return self.details['environment_light_state']
 
-    def get_details(self) -> None:
+    async def get_details(self) -> None:
         """Build API V2 Purifier details dictionary."""
         head, body = self.build_api_dict('getPurifierStatus')
 
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
-        if Helpers.nested_code_check(r) is False or not isinstance(r, dict):
-            logger.debug('Error getting purifier details')
-            self.connection_status = 'offline'
+        r = Helpers.process_api_response(logger, "get_details", self, r_bytes)
+        if r is None:
             return
 
-        inner_result = r.get('result', {}).get('result')
+        result = r.get('result', {})
+        result_code = result.get('code')
+        if result_code != 0:
+            error_info = ErrorCodes.get_error_info(result_code)
+            if error_info.device_online is False:
+                self.device_status = 'off'
+                self.connection_status = 'offline'
+            LibraryLogger.log_api_response_parse_error(
+                logger, self.device_name, self.device_type,
+                "get_details", error_info.error_message
+            )
+            return
 
-        if inner_result is not None:
+        inner_result = result.get('result')
+
+        if isinstance(inner_result, dict):
             self.build_purifier_dict(inner_result)
-        else:
-            self.connection_status = 'offline'
-            logger.debug('error in inner result dict from purifier')
-        if inner_result.get('configuration', {}):
-            self.build_config_dict(inner_result.get('configuration', {}))
+            if inner_result.get('configuration', {}):
+                self.build_config_dict(inner_result.get('configuration', {}))
+                return
+        LibraryLogger.log_api_response_parse_error(
+            logger,
+            self.device_name,
+            self.device_type,
+            "get_details",
+            "Error in response nested results"
+        )
 
     def build_purifier_dict(self, dev_dict: dict) -> None:
         """Build Bypass purifier status dictionary."""
@@ -1202,26 +1215,26 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         else:
             self.details['auto_preference_type'] = None
 
-    def turbo_mode(self) -> bool:
+    async def turbo_mode(self) -> bool:
         """Turn on Turbo mode for compatible devices."""
         if 'turbo' in self.modes:
-            return self.mode_toggle('turbo')
+            return await self.mode_toggle('turbo')
         logger.debug("Turbo mode not available for %s", self.device_name)
         return False
 
-    def pet_mode(self) -> bool:
+    async def pet_mode(self) -> bool:
         """Set Pet Mode for compatible devices."""
         if 'pet' in self.modes:
-            return self.mode_toggle('pet')
+            return await self.mode_toggle('pet')
         logger.debug("Pet mode not available for %s", self.device_name)
         return False
 
-    def set_night_light(self, mode: str) -> bool:
+    async def set_night_light(self, mode: str) -> bool:
         """TODO: Set night light."""
         logger.debug("Night light feature not configured")
         return False
 
-    def set_light_detection(self, toggle: bool) -> bool:
+    async def set_light_detection(self, toggle: bool) -> bool:
         """Enable/Disable Light Detection Feature."""
         toggle_id = int(toggle)
         if self.details['light_detection_switch'] == toggle_id:
@@ -1230,29 +1243,28 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
 
         head, body = self.build_api_dict('setLightDetection')
         body['payload']['data']['lightDetectionSwitch'] = toggle_id
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
+        r = Helpers.process_api_response(logger, "set_light_detection", self, r_bytes)
+        if r is None:
+            return False
 
-        if r is not None and Helpers.nested_code_check(r):
-            self.details['light_detection'] = toggle
-            return True
-        logger.debug("Error toggling purifier - %s",
-                     self.device_name)
-        return False
+        self.details['light_detection'] = toggle
+        return True
 
-    def set_light_detection_on(self) -> bool:
+    async def set_light_detection_on(self) -> bool:
         """Turn on light detection feature."""
-        return self.set_light_detection(True)
+        return await self.set_light_detection(True)
 
-    def set_light_detection_off(self) -> bool:
+    async def set_light_detection_off(self) -> bool:
         """Turn off light detection feature."""
-        return self.set_light_detection(False)
+        return await self.set_light_detection(False)
 
-    def toggle_switch(self, toggle: bool) -> bool:
+    async def toggle_switch(self, toggle: bool) -> bool:
         """Toggle purifier on/off."""
         if not isinstance(toggle, bool):
             logger.debug('Invalid toggle value for purifier switch')
@@ -1265,24 +1277,23 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
                 'switchIdx': 0
             }
 
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
+        r = Helpers.process_api_response(logger, "toggle_switch", self, r_bytes)
+        if r is None:
+            return False
 
-        if r is not None and Helpers.nested_code_check(r):
-            if toggle is True:
-                self.device_status = 'on'
-            else:
-                self.device_status = 'off'
-            return True
-        logger.debug("Error toggling purifier - %s",
-                     self.device_name)
-        return False
+        if toggle is True:
+            self.device_status = 'on'
+        else:
+            self.device_status = 'off'
+        return True
 
-    def set_child_lock(self, mode: bool) -> bool:
+    async def set_child_lock(self, mode: bool) -> bool:
         """Levoit 100S/200S set Child Lock.
 
         Parameters:
@@ -1297,21 +1308,20 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
             'childLockSwitch': toggle_id
         }
 
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
+        r = Helpers.process_api_response(logger, "set_child_lock", self, r_bytes)
+        if r is None:
+            return False
 
-        if r is not None and Helpers.nested_code_check(r):
-            self.details['child_lock'] = mode
-            return True
+        self.details['child_lock'] = mode
+        return True
 
-        logger.debug("Error toggling purifier child lock - %s", self.device_name)
-        return False
-
-    def set_display(self, mode: bool) -> bool:
+    async def set_display(self, mode: bool) -> bool:
         """Levoit Vital 100S/200S Set Display on/off with True/False."""
         mode_id = int(mode)
         head, body = self.build_api_dict('setDisplay')
@@ -1319,22 +1329,21 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
             'screenSwitch': mode_id
         }
 
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
+        r = Helpers.process_api_response(logger, "set_display", self, r_bytes)
+        if r is None:
+            return False
 
-        if r is not None and Helpers.nested_code_check(r):
-            self.details['screen_switch'] = mode
-            return True
+        self.details['screen_switch'] = mode
+        return True
 
-        logger.debug("Error toggling purifier display - %s", self.device_name)
-        return False
-
-    def set_timer(self, timer_duration: int, action: str = 'off',
-                  method: str = 'powerSwitch') -> bool:
+    async def set_timer(self, timer_duration: int, action: str = 'off',
+                        method: str = 'powerSwitch') -> bool:
         """Set timer for Levoit 100S.
 
         Parameters:
@@ -1368,42 +1377,40 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
             "subDeviceNo": 0
         }
 
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
+        r = Helpers.process_api_response(logger, "set_timer", self, r_bytes)
+        if r is None:
+            return False
 
-        if r is not None and Helpers.nested_code_check(r):
-            self.timer = Timer(timer_duration, action)
-            return True
+        self.timer = Timer(timer_duration, action)
+        return True
 
-        logger.debug("Error setting timer for - %s", self.device_name)
-        return False
-
-    def clear_timer(self) -> bool:
+    async def clear_timer(self) -> bool:
         """Clear running timer."""
         head, body = self.build_api_dict('delTimerV2')
         body['payload']['subDeviceNo'] = 0
         body['payload']['data'] = {'id': 1, "subDeviceNo": 0}
 
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
+        r = Helpers.process_api_response(logger, "clear_timer", self, r_bytes)
+        if r is None:
+            return False
 
-        if r is not None and Helpers.nested_code_check(r):
-            self.timer = None
-            return True
+        self.timer = None
+        return True
 
-        logger.debug("Error setting timer for - %s", self.device_name)
-        return False
-
-    def set_auto_preference(self, preference: str = 'default',
-                            room_size: int = 600) -> bool:
+    async def set_auto_preference(self, preference: str = 'default',
+                                  room_size: int = 600) -> bool:
         """Set Levoit Vital 100S/200S auto mode.
 
         Parameters:
@@ -1423,21 +1430,20 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
             'roomSize': room_size,
         }
 
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
+        r = Helpers.process_api_response(logger, "set_auto_preference", self, r_bytes)
+        if r is None:
+            return False
 
-        if r is not None and Helpers.code_check(r):
-            self.details['auto_preference'] = preference
-            return True
+        self.details['auto_preference'] = preference
+        return True
 
-        logger.debug("Error setting auto preference for - %s", self.device_name)
-        return False
-
-    def change_fan_speed(self, speed: None | int = None) -> bool:
+    async def change_fan_speed(self, speed: None | int = None) -> bool:
         """Change fan speed based on levels in configuration dict.
 
         The levels are defined in the configuration dict for the device. If no level is
@@ -1455,12 +1461,11 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
                              speed, str(speeds))
                 return False
             new_speed = speed
+        elif current_speed in [speeds[-1], 0]:
+            new_speed = speeds[0]
         else:
-            if current_speed in [speeds[-1], 0]:
-                new_speed = speeds[0]
-            else:
-                current_index = speeds.index(current_speed)
-                new_speed = speeds[current_index + 1]
+            current_index = speeds.index(current_speed)
+            new_speed = speeds[current_index + 1]
 
         head, body = self.build_api_dict('setLevel')
         if not head or not body:
@@ -1471,21 +1476,21 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
             'levelType': 'wind'
         }
 
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
+        r = Helpers.process_api_response(logger, "change_fan_speed", self, r_bytes)
+        if r is None:
+            return False
 
-        if r is not None and Helpers.code_check(r):
-            self.set_speed_level = new_speed
-            self.mode = 'manual'
-            return True
-        logger.debug('Error changing %s speed', self.device_name)
-        return False
+        self.set_speed_level = new_speed
+        self.mode = 'manual'
+        return True
 
-    def mode_toggle(self, mode: str) -> bool:
+    async def mode_toggle(self, mode: str) -> bool:
         """Set Levoit 100S purifier mode.
 
         Parameters:
@@ -1517,23 +1522,23 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
             'workMode': mode
         }
 
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
+        r = Helpers.process_api_response(logger, "mode_toggle", self, r_bytes)
+        if r is None:
+            return False
 
-        if Helpers.code_check(r):
-            self.mode = mode
-            return True
-        logger.debug('Error setting purifier mode')
-        return False
+        self.mode = mode
+        return True
 
     def displayJSON(self) -> str:
         """Return air purifier status and properties in JSON output."""
         sup = super().displayJSON()
-        sup_val = json.loads(sup)
+        sup_val = orjson.loads(sup)
         sup_val.update(
             {
                 'Mode': self.mode,
@@ -1563,7 +1568,8 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         for key, value in everest_keys.items():
             if key in self.details:
                 sup_val.update({value: str(self.details[key])})
-        return json.dumps(sup_val, indent=4)
+        return orjson.dumps(
+            sup_val, option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS).decode()
 
 
 class VeSyncAir131(VeSyncBaseDevice):
@@ -1587,49 +1593,48 @@ class VeSyncAir131(VeSyncBaseDevice):
             self.air_quality_feature = False
         self.details: dict = {}
 
-    def get_details(self) -> None:
+    async def get_details(self) -> None:
         """Build Air Purifier details dictionary."""
         body = Helpers.req_body(self.manager, 'devicedetail')
         body['uuid'] = self.uuid
         head = Helpers.req_headers(self.manager)
 
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/131airPurifier/v1/device/deviceDetail',
             method='post',
             headers=head,
             json_object=body,
         )
+        r = Helpers.process_api_response(logger, "get_details", self, r_bytes)
+        if r is None:
+            return
 
-        if r is not None and Helpers.code_check(r):
-            self.device_status = r.get('deviceStatus', 'unknown')
-            self.connection_status = r.get('connectionStatus', 'unknown')
-            self.details['active_time'] = r.get('activeTime', 0)
-            self.details['filter_life'] = r.get('filterLife', {})
-            self.details['screen_status'] = r.get('screenStatus', 'unknown')
-            self.mode = r.get('mode', self.mode)
-            self.details['level'] = r.get('level', 0)
-            self.details['air_quality'] = r.get('airQuality', 'unknown')
-        else:
-            logger.debug('Error getting %s details', self.device_name)
+        self.device_status = r.get('deviceStatus', 'unknown')
+        self.connection_status = r.get('connectionStatus', 'unknown')
+        self.details['active_time'] = r.get('activeTime', 0)
+        self.details['filter_life'] = r.get('filterLife', {})
+        self.details['screen_status'] = r.get('screenStatus', 'unknown')
+        self.mode = r.get('mode', self.mode)
+        self.details['level'] = r.get('level', 0)
+        self.details['air_quality'] = r.get('airQuality', 'unknown')
 
-    def get_config(self) -> None:
+    async def get_config(self) -> None:
         """Get configuration info for air purifier."""
         body = Helpers.req_body(self.manager, 'devicedetail')
         body['method'] = 'configurations'
         body['uuid'] = self.uuid
 
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/131airpurifier/v1/device/configurations',
             'post',
             headers=Helpers.req_headers(self.manager),
             json_object=body,
         )
+        r = Helpers.process_api_response(logger, "get_config", self, r_bytes)
+        if r is None:
+            return
 
-        if r is not None and Helpers.code_check(r):
-            self.config = Helpers.build_config_dict(r)
-        else:
-            logger.debug('Unable to get config info for %s',
-                         self.device_name)
+        self.config = Helpers.build_config_dict(r)
 
     @property
     def active_time(self) -> int:
@@ -1659,15 +1664,15 @@ class VeSyncAir131(VeSyncBaseDevice):
         """Return Screen status (on/off)."""
         return self.details.get('screen_status', 'unknown')
 
-    def turn_on_display(self) -> bool:
+    async def turn_on_display(self) -> bool:
         """Turn display on."""
-        return self.toggle_display('on')
+        return await self.toggle_display('on')
 
-    def turn_off_display(self) -> bool:
+    async def turn_off_display(self) -> bool:
         """Turn display off."""
-        return self.toggle_display('off')
+        return await self.toggle_display('off')
 
-    def toggle_display(self, status: str) -> bool:
+    async def toggle_display(self, status: str) -> bool:
         """Toggle Display of VeSync LV-PUR131."""
         if status.lower() not in ['on', 'off']:
             logger.debug('Invalid display status - %s', status)
@@ -1675,17 +1680,18 @@ class VeSyncAir131(VeSyncBaseDevice):
         head = Helpers.req_headers(self.manager)
         body = Helpers.req_body(self.manager, 'devicestatus')
         body['status'] = status.lower()
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/131airPurifier/v1/device/updateScreen', 'put',
             json_object=body, headers=head
         )
-        if r is not None and Helpers.code_check(r):
-            self.details['screen_status'] = status.lower()
-            return True
-        logger.debug('Error toggling display for %s', self.device_name)
-        return False
+        r = Helpers.process_api_response(logger, "toggle_display", self, r_bytes)
+        if r is None:
+            return False
 
-    def turn_on(self) -> bool:
+        self.details['screen_status'] = status.lower()
+        return True
+
+    async def turn_on(self) -> bool:
         """Turn Air Purifier on."""
         if self.device_status != 'on':
             body = Helpers.req_body(self.manager, 'devicestatus')
@@ -1693,19 +1699,20 @@ class VeSyncAir131(VeSyncBaseDevice):
             body['status'] = 'on'
             head = Helpers.req_headers(self.manager)
 
-            r, _ = Helpers.call_api(
+            r_bytes, _ = await self.manager.call_api(
                 '/131airPurifier/v1/device/deviceStatus', 'put',
                 json_object=body, headers=head
             )
+            r = Helpers.process_api_response(logger, "turn_on", self, r_bytes)
+            if r is None:
+                return False
 
-            if r is not None and Helpers.code_check(r):
-                self.device_status = 'on'
-                return True
-            logger.debug('Error turning %s on', self.device_name)
-            return False
+            self.device_status = 'on'
+            return True
+
         return False
 
-    def turn_off(self) -> bool:
+    async def turn_off(self) -> bool:
         """Turn Air Purifier Off."""
         if self.device_status == 'on':
             body = Helpers.req_body(self.manager, 'devicestatus')
@@ -1713,31 +1720,31 @@ class VeSyncAir131(VeSyncBaseDevice):
             body['status'] = 'off'
             head = Helpers.req_headers(self.manager)
 
-            r, _ = Helpers.call_api(
+            r_bytes, _ = await self.manager.call_api(
                 '/131airPurifier/v1/device/deviceStatus', 'put',
                 json_object=body, headers=head
             )
+            r = Helpers.process_api_response(logger, "turn_off", self, r_bytes)
+            if r is None:
+                return False
 
-            if r is not None and Helpers.code_check(r):
-                self.device_status = 'off'
-                return True
-            logger.debug('Error turning %s off', self.device_name)
-            return False
+            self.device_status = 'off'
+            return True
         return True
 
-    def auto_mode(self) -> bool:
+    async def auto_mode(self) -> bool:
         """Set mode to auto."""
-        return self.mode_toggle('auto')
+        return await self.mode_toggle('auto')
 
-    def manual_mode(self) -> bool:
+    async def manual_mode(self) -> bool:
         """Set mode to manual."""
-        return self.mode_toggle('manual')
+        return await self.mode_toggle('manual')
 
-    def sleep_mode(self) -> bool:
+    async def sleep_mode(self) -> bool:
         """Set sleep mode to on."""
-        return self.mode_toggle('sleep')
+        return await self.mode_toggle('sleep')
 
-    def change_fan_speed(self, speed: int | None = None) -> bool:
+    async def change_fan_speed(self, speed: int | None = None) -> bool:
         """Adjust Fan Speed for air purifier.
 
         Specifying 1,2,3 as argument or call without argument to cycle
@@ -1769,24 +1776,23 @@ class VeSyncAir131(VeSyncBaseDevice):
                 logger.debug('Invalid fan speed for %s',
                              self.device_name)
                 return False
+        elif (level + 1) > 3:
+            body['level'] = 1
         else:
-            if (level + 1) > 3:
-                body['level'] = 1
-            else:
-                body['level'] = int(level + 1)
+            body['level'] = int(level + 1)
 
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/131airPurifier/v1/device/updateSpeed', 'put',
             json_object=body, headers=head
         )
+        r = Helpers.process_api_response(logger, "change_fan_speed", self, r_bytes)
+        if r is None:
+            return False
 
-        if r is not None and Helpers.code_check(r):
-            self.details['level'] = body['level']
-            return True
-        logger.debug('Error changing %s speed', self.device_name)
-        return False
+        self.details['level'] = body['level']
+        return True
 
-    def mode_toggle(self, mode: str) -> bool:
+    async def mode_toggle(self, mode: str) -> bool:
         """Set mode to manual, auto or sleep."""
         head = Helpers.req_headers(self.manager)
         body = Helpers.req_body(self.manager, 'devicestatus')
@@ -1796,21 +1802,23 @@ class VeSyncAir131(VeSyncBaseDevice):
             if mode == 'manual':
                 body['level'] = 1
 
-            r, _ = Helpers.call_api(
+            r_bytes, _ = await self.manager.call_api(
                 '/131airPurifier/v1/device/updateMode', 'put',
                 json_object=body, headers=head
             )
+            r = Helpers.process_api_response(logger, "mode_toggle", self, r_bytes)
+            if r is None:
+                return False
 
-            if r is not None and Helpers.code_check(r):
-                self.mode = mode
-                return True
+            self.mode = mode
+            return True
 
         logger.debug('Error setting %s mode - %s', self.device_name, mode)
         return False
 
-    def update(self) -> None:
+    async def update(self) -> None:
         """Run function to get device details."""
-        self.get_details()
+        await self.get_details()
 
     def display(self) -> None:
         """Return formatted device info to stdout."""
@@ -1821,7 +1829,8 @@ class VeSyncAir131(VeSyncBaseDevice):
             ('Air Quality: ', self.air_quality, ''),
             ('Mode: ', self.mode, ''),
             ('Screen Status: ', self.screen_status, ''),
-            ('Filter Life: ', json.dumps(self.filter_life), ' percent')
+            ('Filter Life: ', orjson.dumps(
+                self.filter_life, option=orjson.OPT_NON_STR_KEYS), ' percent')
             ]
         for line in disp:
             print(f'{line[0]:.<30} {line[1]} {line[2]}')
@@ -1829,7 +1838,7 @@ class VeSyncAir131(VeSyncBaseDevice):
     def displayJSON(self) -> str:
         """Return air purifier status and properties in JSON output."""
         sup = super().displayJSON()
-        sup_val = json.loads(sup)
+        sup_val = orjson.loads(sup)
         sup_val.update(
             {
                 'Active Time': str(self.active_time),
@@ -1840,7 +1849,8 @@ class VeSyncAir131(VeSyncBaseDevice):
                 'Filter Life': str(self.filter_life)
             }
         )
-        return json.dumps(sup_val, indent=4)
+        return orjson.dumps(
+            sup_val, option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS).decode()
 
 
 class VeSyncTowerFan(VeSyncAirBaseV2):
@@ -1850,18 +1860,17 @@ class VeSyncTowerFan(VeSyncAirBaseV2):
         """Initialize the VeSync Base API V2 Fan Class."""
         super().__init__(details, manager)
 
-    def get_details(self) -> None:
+    async def get_details(self) -> None:
         """Build API V2 Fan details dictionary."""
         head, body = self.build_api_dict('getTowerFanStatus')
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
-        if Helpers.nested_code_check(r) is False or not isinstance(r, dict):
-            logger.debug('Error getting purifier details')
-            self.connection_status = 'offline'
+        r = Helpers.process_api_response(logger, "get_details", self, r_bytes)
+        if r is None:
             return
 
         inner_result = r.get('result', {}).get('result')
@@ -1874,7 +1883,7 @@ class VeSyncTowerFan(VeSyncAirBaseV2):
         if inner_result.get('configuration', {}):
             self.build_config_dict(inner_result.get('configuration', {}))
 
-    def mode_toggle(self, mode: str) -> bool:
+    async def mode_toggle(self, mode: str) -> bool:
         """Set Levoit Tower Fan purifier mode.
 
         Parameters:
@@ -1901,34 +1910,34 @@ class VeSyncTowerFan(VeSyncAirBaseV2):
             'workMode': mode
         }
 
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
+        r = Helpers.process_api_response(logger, "mode_toggle", self, r_bytes)
+        if r is None:
+            return False
 
-        if Helpers.code_check(r):
-            self.mode = mode
-            return True
-        logger.debug('Error setting purifier mode')
-        return False
+        self.mode = mode
+        return True
 
-    def normal_mode(self) -> bool:
+    async def normal_mode(self) -> bool:
         """Set mode to normal."""
-        return self.mode_toggle('normal')
+        return await self.mode_toggle('normal')
 
-    def manual_mode(self) -> bool:
+    async def manual_mode(self) -> bool:
         """Adapter to set mode to normal."""
-        return self.normal_mode()
+        return await self.normal_mode()
 
-    def advanced_sleep_mode(self) -> bool:
+    async def advanced_sleep_mode(self) -> bool:
         """Set advanced sleep mode."""
-        return self.mode_toggle('advancedSleep')
+        return await self.mode_toggle('advancedSleep')
 
-    def sleep_mode(self) -> bool:
+    async def sleep_mode(self) -> bool:
         """Adapter to set advanced sleep mode."""
-        return self.advanced_sleep_mode()
+        return await self.advanced_sleep_mode()
 
 
 class VeSyncHumid200300S(VeSyncBaseDevice):
@@ -2034,7 +2043,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
         self.config['display'] = conf_dict.get('display', False)
         self.config['automatic_stop'] = conf_dict.get('automatic_stop', True)
 
-    def get_details(self) -> None:
+    async def get_details(self) -> None:
         """Build 200S/300S Humidifier details dictionary."""
         head = Helpers.bypass_header()
         body = Helpers.bypass_body_v2(self.manager)
@@ -2046,37 +2055,62 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
             'data': {}
         }
 
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
-        if r is None or not isinstance(r, dict):
-            logger.debug("Error getting status of %s ", self.device_name)
-            return
+        r = Helpers.process_api_response(logger, "get_details", self, r_bytes)
+        if r is None:
+            return False
+
         outer_result = r.get('result', {})
-        inner_result = None
+        inner_result = outer_result.get('result')
 
-        if outer_result is not None:
-            inner_result = r.get('result', {}).get('result')
-        if inner_result is not None and Helpers.code_check(r):
-            if outer_result.get('code') == 0:
-                self.build_humid_dict(inner_result)
-            else:
-                logger.debug('error in inner result dict from humidifier')
-            if inner_result.get('configuration', {}):
-                self.build_config_dict(inner_result.get('configuration', {}))
-            else:
-                logger.debug('No configuration found in humidifier status')
-        else:
-            logger.debug('Error in humidifier response')
+        if outer_result.get("code") != 0:
+            outer_error = ErrorCodes.get_error_info(outer_result.get('code'))
+            if outer_error.device_online is False:
+                self.connection_status = 'offline'
+            LibraryLogger.log_device_code_error(
+                logger,
+                self.device_name,
+                self.device_type,
+                'get_details',
+                outer_result.get('code'),
+                outer_error.message
+            )
+            return False
 
-    def update(self) -> None:
+        if not inner_result or not outer_result:
+            LibraryLogger.log_api_response_parse_error(
+                logger,
+                self.device_name,
+                self.device_type,
+                "get_details",
+                "Error in inner result dict from humidifier",
+            )
+            return False
+
+        self.build_humid_dict(inner_result)
+        if inner_result.get('configuration', {}):
+            self.build_config_dict(inner_result.get('configuration', {}))
+            return True
+
+        LibraryLogger.log_api_response_parse_error(
+            logger,
+            self.device_name,
+            self.device_type,
+            "get_details",
+            "Error in configuration dict from humidifier",
+        )
+        return False
+
+    async def update(self) -> None:
         """Update 200S/300S Humidifier details."""
-        self.get_details()
+        await self.get_details()
 
-    def toggle_switch(self, toggle: bool) -> bool:
+    async def toggle_switch(self, toggle: bool) -> bool:
         """Toggle humidifier on/off."""
         if not isinstance(toggle, bool):
             logger.debug('Invalid toggle value for humidifier switch')
@@ -2095,40 +2129,39 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
             'source': 'APP'
         }
 
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
+        r = Helpers.process_api_response(logger, "toggle_switch", self, r_bytes)
+        if r is None:
+            return False
 
-        if r is not None and Helpers.code_check(r):
-            if toggle:
-                self.device_status = 'on'
-            else:
-                self.device_status = 'off'
+        if toggle:
+            self.device_status = 'on'
+        else:
+            self.device_status = 'off'
+        return True
 
-            return True
-        logger.debug("Error toggling 300S humidifier - %s", self.device_name)
-        return False
-
-    def turn_on(self) -> bool:
+    async def turn_on(self) -> bool:
         """Turn 200S/300S Humidifier on."""
-        return self.toggle_switch(True)
+        return await self.toggle_switch(True)
 
-    def turn_off(self) -> bool:
+    async def turn_off(self) -> bool:
         """Turn 200S/300S Humidifier off."""
-        return self.toggle_switch(False)
+        return await self.toggle_switch(False)
 
-    def automatic_stop_on(self) -> bool:
+    async def automatic_stop_on(self) -> bool:
         """Turn 200S/300S Humidifier automatic stop on."""
-        return self.set_automatic_stop(True)
+        return await self.set_automatic_stop(True)
 
-    def automatic_stop_off(self) -> bool:
+    async def automatic_stop_off(self) -> bool:
         """Turn 200S/300S Humidifier automatic stop on."""
-        return self.set_automatic_stop(False)
+        return await self.set_automatic_stop(False)
 
-    def set_automatic_stop(self, mode: bool) -> bool:
+    async def set_automatic_stop(self, mode: bool) -> bool:
         """Set 200S/300S Humidifier to automatic stop."""
         if mode not in (True, False):
             logger.debug(
@@ -2143,22 +2176,17 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
             'enabled': mode
         }
 
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
+        r = Helpers.process_api_response(logger, "set_automatic_stop", self, r_bytes)
+        # TODO: SET STATE
+        return bool(r)
 
-        if r is not None and Helpers.code_check(r):
-            return True
-        if isinstance(r, dict):
-            logger.debug('Error toggling automatic stop')
-        else:
-            logger.debug('Error in api return json for %s', self.device_name)
-        return False
-
-    def set_display(self, mode: bool) -> bool:
+    async def set_display(self, mode: bool) -> bool:
         """Toggle display on/off."""
         if not isinstance(mode, bool):
             logger.debug("Mode must be True or False")
@@ -2170,27 +2198,25 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
             'state': mode
         }
 
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
+        r = Helpers.process_api_response(logger, "set_display", self, r_bytes)
+        # TODO: SET STATE
+        return bool(r)
 
-        if r is not None and Helpers.code_check(r):
-            return True
-        logger.debug("Error toggling 300S display - %s", self.device_name)
-        return False
-
-    def turn_on_display(self) -> bool:
+    async def turn_on_display(self) -> bool:
         """Turn 200S/300S Humidifier on."""
-        return self.set_display(True)
+        return await self.set_display(True)
 
-    def turn_off_display(self) -> bool:
+    async def turn_off_display(self) -> bool:
         """Turn 200S/300S Humidifier off."""
-        return self.set_display(False)
+        return await self.set_display(False)
 
-    def set_humidity(self, humidity: int) -> bool:
+    async def set_humidity(self, humidity: int) -> bool:
         """Set target 200S/300S Humidifier humidity."""
         if humidity < 30 or humidity > 80:
             logger.debug("Humidity value must be set between 30 and 80")
@@ -2204,19 +2230,17 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
             'target_humidity': humidity
         }
 
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
+        r = Helpers.process_api_response(logger, "set_humidity", self, r_bytes)
+        # TODO: SET STATE
+        return bool(r)
 
-        if r is not None and Helpers.code_check(r):
-            return True
-        logger.debug('Error setting humidity')
-        return False
-
-    def set_night_light_brightness(self, brightness: int) -> bool:
+    async def set_night_light_brightness(self, brightness: int) -> bool:
         """Set target 200S/300S Humidifier night light brightness."""
         if not self.night_light:
             logger.debug('%s is a %s does not have a nightlight',
@@ -2234,19 +2258,18 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
             'night_light_brightness': brightness
         }
 
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
+        r = Helpers.process_api_response(logger, "set_night_light_brightness", self, r_bytes)
 
-        if r is not None and Helpers.code_check(r):
-            return True
-        logger.debug('Error setting humidity')
-        return False
+        # TODO: SET STATE
+        return bool(r)
 
-    def set_humidity_mode(self, mode: str) -> bool:
+    async def set_humidity_mode(self, mode: str) -> bool:
         """Set humidifier mode - sleep or auto."""
         if isinstance(self.mist_modes, list) and mode.lower() not in self.mist_modes:
             logger.debug('Invalid humidity mode used - %s',
@@ -2261,19 +2284,16 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
             'mode': mode.lower()
         }
 
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
+        r = Helpers.process_api_response(logger, "set_humidity_mode", self, r_bytes)
+        return bool(r)
 
-        if r is not None and Helpers.code_check(r):
-            return True
-        logger.debug('Error setting humidity mode')
-        return False
-
-    def set_warm_level(self, warm_level: int) -> bool:
+    async def set_warm_level(self, warm_level: int) -> bool:
         """Set target 600S Humidifier mist warmth."""
         if not self.warm_mist_feature:
             logger.debug('%s is a %s does not have a mist warmer',
@@ -2299,19 +2319,16 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
             'id': 0,
         }
 
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
+        r = Helpers.process_api_response(logger, "set_warm_level", self, r_bytes)
+        return bool(r)
 
-        if r is not None and Helpers.code_check(r):
-            return True
-        logger.debug('Error setting warm')
-        return False
-
-    def set_auto_mode(self) -> bool:
+    async def set_auto_mode(self) -> bool:
         """Set auto mode for humidifiers."""
         if isinstance(self.mist_modes, list) and 'auto' in self.mist_modes:
             call_str = 'auto'
@@ -2322,13 +2339,13 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
                          'please ensure %s model '
                          'is in configuration dictionary', self.device_type)
             call_str = 'auto'
-        return self.set_humidity_mode(call_str)
+        return await self.set_humidity_mode(call_str)
 
-    def set_manual_mode(self) -> bool:
+    async def set_manual_mode(self) -> bool:
         """Set humifier to manual mode with 1 mist level."""
-        return self.set_humidity_mode('manual')
+        return await self.set_humidity_mode('manual')
 
-    def set_mist_level(self, level: int | str) -> bool:
+    async def set_mist_level(self, level: int | str) -> bool:
         """Set humidifier mist level with int between 0 - 9."""
         try:
             level = int(level)
@@ -2349,17 +2366,14 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
             'type': 'mist'
         }
 
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
-
-        if r is not None and Helpers.code_check(r):
-            return True
-        logger.debug('Error setting mist level')
-        return False
+        r = Helpers.process_api_response(logger, "set_mist_level", self, r_bytes)
+        return bool(r)
 
     @property
     def humidity(self) -> int:
@@ -2426,7 +2440,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
     def displayJSON(self) -> str:
         """Return air purifier status and properties in JSON output."""
         sup = super().displayJSON()
-        sup_val = json.loads(sup)
+        sup_val = orjson.loads(sup)
         sup_val.update(
             {
                 'Mode': self.details['mode'],
@@ -2451,7 +2465,8 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
         if self.warm_mist_feature:
             sup_val['Warm mist enabled'] = self.details['warm_mist_enabled']
             sup_val['Warm mist level'] = self.details['warm_mist_level']
-        return json.dumps(sup_val, indent=4)
+        return orjson.dumps(
+            sup_val, option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS).decode()
 
 
 class VeSyncHumid200S(VeSyncHumid200300S):
@@ -2464,7 +2479,7 @@ class VeSyncHumid200S(VeSyncHumid200300S):
                            'setSwitch', 'setVirtualLevel', 'setTargetHumidity',
                            'setHumidityMode', 'setIndicatorLightSwitch']
 
-    def set_display(self, mode: bool) -> bool:
+    async def set_display(self, mode: bool) -> bool:
         """Toggle display on/off."""
         if not isinstance(mode, bool):
             logger.debug("Mode must be True or False")
@@ -2477,17 +2492,14 @@ class VeSyncHumid200S(VeSyncHumid200300S):
             'id': 0
         }
 
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
-
-        if r is not None and Helpers.code_check(r):
-            return True
-        logger.debug("Error toggling 200S display - %s", self.device_name)
-        return False
+        r = Helpers.process_api_response(logger, "set_display", self, r_bytes)
+        return bool(r)
 
 
 class VeSyncSuperior6000S(VeSyncBaseDevice):
@@ -2554,7 +2566,7 @@ class VeSyncSuperior6000S(VeSyncBaseDevice):
     def build_config_dict(self, _: dict) -> None:
         """Build configuration dict for humidifier."""
 
-    def get_details(self) -> None:
+    async def get_details(self) -> None:
         """Build Humidifier details dictionary."""
         head = Helpers.bypass_header()
         body = Helpers.bypass_body_v2(self.manager)
@@ -2566,37 +2578,52 @@ class VeSyncSuperior6000S(VeSyncBaseDevice):
             'data': {}
         }
 
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
-        if r is None or not isinstance(r, dict):
-            logger.debug("Error getting status of %s ", self.device_name)
+        r = Helpers.process_api_response(logger, "get_details", self, r_bytes)
+        if r is None:
             return
+
         outer_result = r.get('result', {})
-        inner_result = None
+        inner_result = outer_result.get('result')
 
-        if outer_result is not None:
-            inner_result = r.get('result', {}).get('result')
-        if inner_result is not None and Helpers.code_check(r):
-            if outer_result.get('code') == 0:
-                self.build_humid_dict(inner_result)
-            else:
-                logger.debug('error in inner result dict from humidifier')
-            if inner_result.get('configuration', {}):
-                self.build_config_dict(inner_result.get('configuration', {}))
-            else:
-                logger.debug('No configuration found in humidifier status')
-        else:
-            logger.debug('Error in humidifier response')
+        outer_code = outer_result.get('code')
+        if outer_code != 0:
+            error_info = ErrorCodes.get_error_info(outer_code)
+            if error_info.device_online is False:
+                self.connection_status = 'offline'
+            LibraryLogger.log_device_code_error(
+                logger,
+                self.device_name,
+                self.device_type,
+                'get_details',
+                outer_code,
+                error_info.message
+            )
+            return
 
-    def update(self) -> None:
+        if inner_result is not None:
+            self.build_humid_dict(inner_result)
+            self.build_config_dict(inner_result.get('configuration', {}))
+            return
+        LibraryLogger.log_api_response_parse_error(
+            logger,
+            self.device_name,
+            self.device_type,
+            "get_details",
+            "Error in inner result dict from humidifier",
+        )
+        return
+
+    async def update(self) -> None:
         """Update humidifier details."""
-        self.get_details()
+        await self.get_details()
 
-    def toggle_switch(self, toggle: bool) -> bool:
+    async def toggle_switch(self, toggle: bool) -> bool:
         """Toggle humidifier on/off."""
         if not isinstance(toggle, bool):
             logger.debug('Invalid toggle value for humidifier switch')
@@ -2615,32 +2642,32 @@ class VeSyncSuperior6000S(VeSyncBaseDevice):
             'source': 'APP'
         }
 
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
+        r = Helpers.process_api_response(logger, "toggle_switch", self, r_bytes)
+        if r is None:
+            return False
 
-        if r is not None and Helpers.code_check(r):
-            if toggle:
-                self.device_status = 'on'
-            else:
-                self.device_status = 'off'
+        if toggle:
+            self.device_status = 'on'
+        else:
+            self.device_status = 'off'
 
-            return True
-        logger.debug("Error toggling humidifier - %s", self.device_name)
-        return False
+        return True
 
-    def turn_on(self) -> bool:
+    async def turn_on(self) -> bool:
         """Turn humidifier on."""
-        return self.toggle_switch(True)
+        return await self.toggle_switch(True)
 
-    def turn_off(self) -> bool:
+    async def turn_off(self) -> bool:
         """Turn humidifier off."""
-        return self.toggle_switch(False)
+        return await self.toggle_switch(False)
 
-    def set_drying_mode_enabled(self, mode: bool) -> bool:
+    async def set_drying_mode_enabled(self, mode: bool) -> bool:
         """enable/disable drying filters after turning off."""
         if mode not in (True, False):
             logger.debug(
@@ -2652,25 +2679,16 @@ class VeSyncSuperior6000S(VeSyncBaseDevice):
             'autoDryingSwitch': int(mode)
         }
 
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
+        r = Helpers.process_api_response(logger, "set_drying_mode_enabled", self, r_bytes)
+        return bool(r)
 
-        if r is not None and Helpers.code_check(r):
-            return True
-        if isinstance(r, dict):
-            logger.debug('Error in set_drying_mode_enabled response')
-        else:
-            logger.debug(
-                'Error in set_drying_mode_enabled api return json for %s',
-                self.device_name
-            )
-        return False
-
-    def set_display_enabled(self, mode: bool) -> bool:
+    async def set_display_enabled(self, mode: bool) -> bool:
         """Toggle display on/off."""
         if not isinstance(mode, bool):
             logger.debug("Mode must be True or False")
@@ -2682,27 +2700,24 @@ class VeSyncSuperior6000S(VeSyncBaseDevice):
             'screenSwitch': int(mode)
         }
 
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
+        r = Helpers.process_api_response(logger, "set_display", self, r_bytes)
+        return bool(r)
 
-        if r is not None and Helpers.code_check(r):
-            return True
-        logger.debug("Error toggling display - %s", self.device_name)
-        return False
-
-    def turn_on_display(self) -> bool:
+    async def turn_on_display(self) -> bool:
         """Turn display on."""
         return self.set_display_enabled(True)
 
-    def turn_off_display(self) -> bool:
+    async def turn_off_display(self) -> bool:
         """Turn display off."""
         return self.set_display_enabled(False)
 
-    def set_humidity(self, humidity: int) -> bool:
+    async def set_humidity(self, humidity: int) -> bool:
         """Set target humidity for humidity mode."""
         if humidity < 30 or humidity > 80:
             logger.debug("Humidity value must be set between 30 and 80")
@@ -2716,19 +2731,16 @@ class VeSyncSuperior6000S(VeSyncBaseDevice):
             'targetHumidity': humidity
         }
 
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
+        r = Helpers.process_api_response(logger, "set_humidity", self, r_bytes)
+        return bool(r)
 
-        if r is not None and Helpers.code_check(r):
-            return True
-        logger.debug('Error setting humidity')
-        return False
-
-    def set_humidity_mode(self, mode: str) -> bool:
+    async def set_humidity_mode(self, mode: str) -> bool:
         """Set humidifier mode."""
         if not self.mist_modes or \
                 (isinstance(self.mist_modes, list) and mode not in self.mist_modes):
@@ -2744,35 +2756,32 @@ class VeSyncSuperior6000S(VeSyncBaseDevice):
             'workMode': 'autoPro' if mode == 'auto' else mode
         }
 
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
+        r = Helpers.process_api_response(logger, "set_humidity_mode", self, r_bytes)
+        return bool(r)
 
-        if r is not None and Helpers.code_check(r):
-            return True
-        logger.debug('Error setting humidity mode')
-        return False
-
-    def set_auto_mode(self) -> bool:
+    async def set_auto_mode(self) -> bool:
         """Set humidity mode to auto."""
-        return self.set_humidity_mode('auto')
+        return await self.set_humidity_mode('auto')
 
-    def set_manual_mode(self) -> bool:
+    async def set_manual_mode(self) -> bool:
         """Set humidity mode to manual."""
-        return self.set_humidity_mode('manual')
+        return await self.set_humidity_mode('manual')
 
-    def automatic_stop_on(self) -> bool:
+    async def automatic_stop_on(self) -> bool:
         """Set humidity mode to auto."""
-        return self.set_humidity_mode('auto')
+        return await self.set_humidity_mode('auto')
 
-    def automatic_stop_off(self) -> bool:
+    async def automatic_stop_off(self) -> bool:
         """Set humidity mode to manual."""
-        return self.set_humidity_mode('manual')
+        return await self.set_humidity_mode('manual')
 
-    def set_mist_level(self, level: int) -> bool:
+    async def set_mist_level(self, level: int) -> bool:
         """Set humidifier mist level with int between 0 - 9."""
         if not self.mist_levels or \
                 (isinstance(self.mist_levels, list) and level not in self.mist_levels):
@@ -2789,17 +2798,14 @@ class VeSyncSuperior6000S(VeSyncBaseDevice):
             'levelType': 'mist'
         }
 
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
-
-        if r is not None and Helpers.code_check(r):
-            return True
-        logger.debug('Error setting mist level')
-        return False
+        r = Helpers.process_api_response(logger, "set_mist_level", self, r_bytes)
+        return bool(r)
 
     @property
     def humidity_level(self) -> int:
@@ -2905,7 +2911,7 @@ class VeSyncSuperior6000S(VeSyncBaseDevice):
     def displayJSON(self) -> str:
         """Return air purifier status and properties in JSON output."""
         sup = super().displayJSON()
-        sup_val = json.loads(sup)
+        sup_val = orjson.loads(sup)
         sup_val.update(
             {
                 'Temperature': self.temperature,
@@ -2924,7 +2930,8 @@ class VeSyncSuperior6000S(VeSyncBaseDevice):
                 'Drying Mode Time Remaining': self.drying_mode_seconds_remaining,
             }
         )
-        return json.dumps(sup_val, indent=4)
+        return orjson.dumps(
+            sup_val, option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS).decode()
 
 
 class VeSyncHumid1000S(VeSyncHumid200300S):
@@ -2965,7 +2972,7 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
         self.config['display'] = bool(conf_dict.get('screenSwitch', 0))
         self.config['automatic_stop'] = bool(conf_dict.get('autoStopSwitch', 1))
 
-    def get_details(self) -> None:
+    async def get_details(self) -> None:
         """Build Humidifier details dictionary."""
         head = Helpers.bypass_header()
         body = Helpers.bypass_body_v2(self.manager)
@@ -2977,35 +2984,48 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
             'data': {}
         }
 
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
-        if r is None or not isinstance(r, dict):
-            logger.debug("Error getting status of %s ", self.device_name)
+        r = Helpers.process_api_response(logger, "get_details", self, r_bytes)
+        if r is None:
             return
+
         outer_result = r.get('result', {})
-        inner_result = None
+        inner_result = outer_result.get('result', {})
 
-        if outer_result is not None:
-            inner_result = r.get('result', {}).get('result')
-        if inner_result is not None and Helpers.code_check(r):
-            if outer_result.get('code') == 0:
-                self.connection_status = 'online'
-                self.build_humid_dict(inner_result)
-                self.build_config_dict(inner_result)
-            else:
-                logger.debug('error in inner result dict from humidifier')
-        elif r.get('code') == -11300030:
-            logger.debug('%s device offline', self.device_name)
-            self.connection_status = 'offline'
-            self.device_status = 'off'
-        else:
-            logger.debug('Error in humidifier response')
+        if outer_result is None or inner_result is None:
+            LibraryLogger.log_api_response_parse_error(
+                logger,
+                self.device_name,
+                self.device_type,
+                "get_details",
+                "Error in inner result dict from humidifier",
+            )
+            return
+        if outer_result.get('code') != 0:
+            error_info = ErrorCodes.get_error_info(outer_result.get('code'))
+            if error_info.device_online is False:
+                self.connection_status = 'offline'
+            LibraryLogger.log_device_code_error(
+                logger,
+                self.device_name,
+                self.device_type,
+                'get_details',
+                outer_result.get('code'),
+                error_info.message
+            )
+            return
 
-    def set_display(self, mode: bool) -> bool:
+        self.connection_status = 'online'
+        self.build_humid_dict(inner_result)
+        self.build_config_dict(inner_result.get('configuration', {}))
+        return
+
+    async def set_display(self, mode: bool) -> bool:
         """Toggle display on/off."""
         if not isinstance(mode, bool):
             logger.debug("Mode must be True or False")
@@ -3017,20 +3037,16 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
             'screenSwitch': int(mode)
         }
 
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
+        r = Helpers.process_api_response(logger, "set_display", self, r_bytes)
+        return bool(r)
 
-        if r is not None and Helpers.code_check(r):
-            return True
-        logger.debug("Error toggling purifier display - %s",
-                     self.device_name)
-        return False
-
-    def set_humidity_mode(self, mode: str) -> bool:
+    async def set_humidity_mode(self, mode: str) -> bool:
         """Set humidifier mode - sleep, auto or manual."""
         if not self.mist_modes or \
                 (isinstance(self.mist_modes, list) and
@@ -3047,23 +3063,20 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
             'workMode': mode.lower()
         }
 
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
+        r = Helpers.process_api_response(logger, "set_humidity_mode", self, r_bytes)
+        return bool(r)
 
-        if r is not None and Helpers.code_check(r):
-            return True
-        logger.debug('Error setting humidity mode')
-        return False
-
-    def set_sleep_mode(self) -> bool:
+    async def set_sleep_mode(self) -> bool:
         """Set humifier to manual mode with 1 mist level."""
-        return self.set_humidity_mode('sleep')
+        return await self.set_humidity_mode('sleep')
 
-    def set_mist_level(self, level: int | str) -> bool:
+    async def set_mist_level(self, level: int | str) -> bool:
         """Set humidifier mist level with int."""
         if not self.mist_levels or \
                 (isinstance(self.mist_levels, list) and level not in self.mist_levels):
@@ -3080,19 +3093,16 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
             'levelType': 'mist'
         }
 
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
+        r = Helpers.process_api_response(logger, "set_mist_level", self, r_bytes)
+        return bool(r)
 
-        if r is not None and Helpers.code_check(r):
-            return True
-        logger.debug('Error setting mist level')
-        return False
-
-    def toggle_switch(self, toggle: bool) -> bool:
+    async def toggle_switch(self, toggle: bool) -> bool:
         """Toggle humidifier on/off."""
         if not isinstance(toggle, bool):
             logger.debug('Invalid toggle value for humidifier switch')
@@ -3111,24 +3121,23 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
             'source': 'APP'
         }
 
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
+        r = Helpers.process_api_response(logger, "toggle_switch", self, r_bytes)
+        if r is None:
+            return False
 
-        if r is not None and Helpers.code_check(r):
-            if toggle:
-                self.device_status = 'on'
-            else:
-                self.device_status = 'off'
+        if toggle:
+            self.device_status = 'on'
+        else:
+            self.device_status = 'off'
+        return True
 
-            return True
-        logger.debug("Error toggling humidifier - %s", self.device_name)
-        return False
-
-    def set_humidity(self, humidity: int) -> bool:
+    async def set_humidity(self, humidity: int) -> bool:
         """Set target Humidifier humidity."""
         if humidity < 30 or humidity > 80:
             logger.debug("Humidity value must be set between 30 and 80")
@@ -3142,19 +3151,16 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
             'targetHumidity': humidity
         }
 
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
+        r = Helpers.process_api_response(logger, "set_humidity", self, r_bytes)
+        return bool(r)
 
-        if r is not None and Helpers.code_check(r):
-            return True
-        logger.debug('Error setting humidity')
-        return False
-
-    def set_automatic_stop(self, mode: bool) -> bool:
+    async def set_automatic_stop(self, mode: bool) -> bool:
         """Set  Humidifier to automatic stop."""
         if mode not in (True, False):
             logger.debug(
@@ -3169,17 +3175,11 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
             'autoStopSwitch': int(mode)
         }
 
-        r, _ = Helpers.call_api(
+        r_bytes, _ = await self.manager.call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
-
-        if r is not None and Helpers.code_check(r):
-            return True
-        if isinstance(r, dict):
-            logger.debug('Error toggling automatic stop')
-        else:
-            logger.debug('Error in api return json for %s', self.device_name)
-        return False
+        r = Helpers.process_api_response(logger, "set_automatic_stop", self, r_bytes)
+        return bool(r)

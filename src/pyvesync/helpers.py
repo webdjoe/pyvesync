@@ -6,15 +6,16 @@ import time
 import colorsys
 from dataclasses import dataclass, field, InitVar
 from typing import Any, NamedTuple, Union, TYPE_CHECKING
-import requests
-from pyvesync.logs import LibraryLogger, VeSyncRateLimitError
-from pyvesync.const import RATE_LIMIT_CODES
+import orjson
+from pyvesync.logs import LibraryLogger
+from pyvesync.errors import ErrorCodes
 
 if TYPE_CHECKING:
     from pyvesync.vesync import VeSync
+    from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 
 
-logger = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 API_BASE_URL = 'https://smartapi.vesync.com'
 API_RATE_LIMIT = 30
@@ -262,88 +263,150 @@ class Helpers:
                     return False
         return True
 
-    @staticmethod
-    def call_api(api: str, method: str, json_object:  dict | None = None,
-                 headers: dict | None = None) -> tuple:
-        """Make API calls by passing endpoint, header and body.
+    # @staticmethod
+    # def call_api(api: str, method: str, json_object:  dict | None = None,
+    #              headers: dict | None = None) -> tuple:
+    #     """Make API calls by passing endpoint, header and body.
 
-        api argument is appended to https://smartapi.vesync.com url
+    #     api argument is appended to https://smartapi.vesync.com url
+
+    #     Args:
+    #         api (str): Endpoint to call with https://smartapi.vesync.com.
+    #         method (str): HTTP method to use.
+    #         json_object (dict): JSON object to send in body.
+    #         headers (dict): Headers to send with request.
+
+    #     Returns:
+    #         tuple: Response and status code.
+    #     """
+    #     response = None
+    #     status_code = None
+
+    #     try:
+    #         if method.lower() == 'get':
+    #             r = requests.get(
+    #                 API_BASE_URL + api, json=json_object, headers=headers,
+    #                 timeout=API_TIMEOUT
+    #             )
+    #         elif method.lower() == 'post':
+    #             r = requests.post(
+    #                 API_BASE_URL + api, json=json_object, headers=headers,
+    #                 timeout=API_TIMEOUT
+    #             )
+    #         elif method.lower() == 'put':
+    #             r = requests.put(
+    #                 API_BASE_URL + api, json=json_object, headers=headers,
+    #                 timeout=API_TIMEOUT
+    #             )
+    #         else:
+    #             raise NameError(f'Invalid method {method}')
+    #     except Exception as e:
+    #         LibraryLogger.log_api_exception(
+    #             _LOGGER,
+    #             exception=e,
+    #             request_dict={
+    #                 "method": method,
+    #                 "endpoint": api,
+    #                 "headers": headers,
+    #                 "body": json_object,
+    #             },
+    #         )
+    #     else:
+    #         if r.status_code == 200:
+    #             status_code = 200
+    #             LibraryLogger.log_api_call(_LOGGER, r)
+    #             if LibraryLogger.is_json(r.text):
+    #                 response = r.json()
+    #                 if response.get('code') in RATE_LIMIT_CODES:
+    #                     LibraryLogger.log_api_exception(_LOGGER, request_dict={
+    #                         "method": method,
+    #                         "endpoint": api,
+    #                         "status_code": r.status_code,
+    #                         "headers": headers,
+    #                         "body": json_object,
+    #                         "response": response
+    #                     })
+    #                     raise VeSyncRateLimitError
+    #                 return response, status_code
+    #             response = r.text
+    #             return response, status_code
+    #         LibraryLogger.log_api_exception(_LOGGER, request_dict={
+    #             "method": method,
+    #             "endpoint": api,
+    #             "status_code": r.status_code,
+    #             "headers": headers,
+    #             "body": json_object,
+    #             "response": r.text
+    #         })
+    #     return response, status_code
+
+    @classmethod
+    def process_api_response(
+        cls,
+        logger: logging.Logger,
+        method_name: str,
+        device: VeSyncBaseDevice,
+        r_bytes: bytes | None,
+    ) -> dict | None:
+        """Process JSON response from Bytes.
+
+        Parses bytes and checks for errors common to all JSON
+        responses, included checking the "code" key for non-zero
+        values. Outputs error to passed logger with formated string
+        if an error is found.
 
         Args:
-            api (str): Endpoint to call with https://smartapi.vesync.com.
-            method (str): HTTP method to use.
-            json_object (dict): JSON object to send in body.
-            headers (dict): Headers to send with request.
+            logger (logging.Logger): Logger instance.
+            method_name (str): Method used in API call.
+            r_bytes (bytes | None): JSON response from API.
+            device (VeSyncBaseDevice): Instance of VeSyncBaseDevice.
 
         Returns:
-            tuple: Response and status code.
+            dict | None: Parsed JSON response or None if there was an error.
         """
-        response = None
-        status_code = None
+        if r_bytes is None or len(r_bytes) == 0:
+            LibraryLogger.log_api_response_parse_error(logger,
+                                                       device.device_name,
+                                                       device.device_type,
+                                                       method_name,
+                                                       "Response empty")
+            return None
 
         try:
-            if method.lower() == 'get':
-                r = requests.get(
-                    API_BASE_URL + api, json=json_object, headers=headers,
-                    timeout=API_TIMEOUT
+            r = orjson.loads(r_bytes)
+        except (ValueError, orjson.JSONDecodeError):
+            LibraryLogger.log_api_response_parse_error(logger,
+                                                       device.device_name,
+                                                       device.device_type,
+                                                       method_name,
+                                                       "Error decoding JSON response")
+            return None
+
+        if r.get('code') != 0:
+            error_code = r.get('code')
+            try:
+                error_int = int(error_code)
+            except TypeError:
+                error_int = -999999999
+            error_info = ErrorCodes.get_error_info(error_int)
+            if error_info.critical_error is True:
+                logger.warning("%s critical error - %s",
+                               device.device_name, error_info.message)
+            if error_info.device_online is False:
+                device.device_status = "off"
+                device.connection_status = "offline"
+            LibraryLogger.log_device_code_error(
+                logger, method_name, device.device_name, device.device_type,
+                r['code'], f"{error_info.error_type.name} - {error_info.message}"
                 )
-            elif method.lower() == 'post':
-                r = requests.post(
-                    API_BASE_URL + api, json=json_object, headers=headers,
-                    timeout=API_TIMEOUT
-                )
-            elif method.lower() == 'put':
-                r = requests.put(
-                    API_BASE_URL + api, json=json_object, headers=headers,
-                    timeout=API_TIMEOUT
-                )
-            else:
-                raise NameError(f'Invalid method {method}')
-        except Exception as e:
-            LibraryLogger.log_api_exception(
-                logger,
-                exception=e,
-                request_dict={
-                    "method": method,
-                    "endpoint": api,
-                    "headers": headers,
-                    "body": json_object,
-                },
-            )
-        else:
-            if r.status_code == 200:
-                status_code = 200
-                LibraryLogger.log_api_call(logger, r)
-                if LibraryLogger.is_json(r.text):
-                    response = r.json()
-                    if response.get('code') in RATE_LIMIT_CODES:
-                        LibraryLogger.log_api_exception(logger, request_dict={
-                            "method": method,
-                            "endpoint": api,
-                            "status_code": r.status_code,
-                            "headers": headers,
-                            "body": json_object,
-                            "response": response
-                        })
-                        raise VeSyncRateLimitError
-                    return response, status_code
-                response = r.text
-                return response, status_code
-            LibraryLogger.log_api_exception(logger, request_dict={
-                "method": method,
-                "endpoint": api,
-                "status_code": r.status_code,
-                "headers": headers,
-                "body": json_object,
-                "response": r.text
-            })
-        return response, status_code
+            return None
+        return r
 
     @staticmethod
     def code_check(r: dict | None) -> bool:
         """Test if code == 0 for successful API call."""
         if r is None:
-            logger.error('No response from API')
+            _LOGGER.error('No response from API')
             return False
         return (isinstance(r, dict) and r.get('code') == 0)
 
@@ -609,7 +672,7 @@ class Color:
             self.rgb = RGB(*self.valid_rgb(red, green, blue))  # type: ignore[arg-type]
             self.hsv = self.rgb_to_hsv(red, green, blue)  # type: ignore[arg-type]
         else:
-            logger.error('No color values provided')
+            _LOGGER.error('No color values provided')
 
     @staticmethod
     def _min_max(value: float | str, min_val: float,
@@ -720,7 +783,7 @@ class Timer:
     def status(self, status: str) -> None:
         """Set status of timer."""
         if status not in ['active', 'paused', 'done']:
-            logger.error('Invalid status %s', status)
+            _LOGGER.error('Invalid status %s', status)
             raise ValueError
         self._internal_update()
         if status == 'done' or self._status == 'done':

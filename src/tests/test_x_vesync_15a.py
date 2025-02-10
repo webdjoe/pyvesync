@@ -1,5 +1,5 @@
 from pyvesync.vesyncoutlet import VeSyncOutlet15A
-from pyvesync.helpers import Helpers as helpers
+from pyvesync.helpers import Helpers as Helpers
 import call_json
 import utils
 import call_json_outlets
@@ -85,8 +85,8 @@ class TestVesync15ASwitch(utils.TestBase):
         """Test 15A Device On/Off Methods"""
         self.mock_api.return_value = ({'code': 0}, 200)
         vswitch15a = VeSyncOutlet15A(DEV_LIST_DETAIL, self.manager)
-        head = helpers.req_headers(self.manager)
-        body = helpers.req_body(self.manager, 'devicestatus')
+        head = Helpers.req_headers(self.manager)
+        body = Helpers.req_body(self.manager, 'devicestatus')
 
         body['status'] = 'on'
         body['uuid'] = vswitch15a.uuid
@@ -114,12 +114,12 @@ class TestVesync15ASwitch(utils.TestBase):
         self.mock_api.return_value = ENERGY_HISTORY
         vswitch15a = VeSyncOutlet15A(DEV_LIST_DETAIL, self.manager)
         vswitch15a.get_weekly_energy()
-        body = helpers.req_body(self.manager, 'energy_week')
+        body = Helpers.req_body(self.manager, 'energy_week')
         body['uuid'] = vswitch15a.uuid
         self.mock_api.assert_called_with(
             '/15a/v1/device/energyweek',
             'post',
-            headers=helpers.req_headers(self.manager),
+            headers=Helpers.req_headers(self.manager),
             json_object=body,
         )
         energy_dict = vswitch15a.energy['week']
@@ -135,12 +135,12 @@ class TestVesync15ASwitch(utils.TestBase):
         self.mock_api.return_value = ENERGY_HISTORY
         vswitch15a = VeSyncOutlet15A(DEV_LIST_DETAIL, self.manager)
         vswitch15a.get_monthly_energy()
-        body = helpers.req_body(self.manager, 'energy_month')
+        body = Helpers.req_body(self.manager, 'energy_month')
         body['uuid'] = vswitch15a.uuid
         self.mock_api.assert_called_with(
             '/15a/v1/device/energymonth',
             'post',
-            headers=helpers.req_headers(self.manager),
+            headers=Helpers.req_headers(self.manager),
             json_object=body,
         )
         energy_dict = vswitch15a.energy['month']
@@ -156,12 +156,12 @@ class TestVesync15ASwitch(utils.TestBase):
         self.mock_api.return_value = ENERGY_HISTORY
         vswitch15a = VeSyncOutlet15A(DEV_LIST_DETAIL, self.manager)
         vswitch15a.get_yearly_energy()
-        body = helpers.req_body(self.manager, 'energy_year')
+        body = Helpers.req_body(self.manager, 'energy_year')
         body['uuid'] = vswitch15a.uuid
         self.mock_api.assert_called_with(
             '/15a/v1/device/energyyear',
             'post',
-            headers=helpers.req_headers(self.manager),
+            headers=Helpers.req_headers(self.manager),
             json_object=body,
         )
         energy_dict = vswitch15a.energy['year']

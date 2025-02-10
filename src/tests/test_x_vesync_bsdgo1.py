@@ -5,7 +5,7 @@ from unittest.mock import patch
 import logging
 from pyvesync import VeSync
 from pyvesync.vesyncoutlet import VeSyncOutletBSDGO1
-from pyvesync.helpers import Helpers as helpers
+from pyvesync.helpers import Helpers as Helpers
 import call_json
 import call_json_outlets
 from utils import Defaults, TestBase
@@ -44,10 +44,10 @@ class TestVeSyncBSDGO1Switch(TestBase):
         bsdgo1_outlet.get_details()
         response = CORRECT_BSDGO1_DETAILS[0]
         result = response.get('result', {})
-        
+
         expected_status = 'on' if result.get('powerSwitch_1') == 1 else 'off'
         assert bsdgo1_outlet.device_status == expected_status
-        
+
         assert result.get('active_time') == Defaults.active_time
         assert result.get('connectionStatus') == 'online'
 
@@ -63,11 +63,11 @@ class TestVeSyncBSDGO1Switch(TestBase):
         """Test BSDGO1 Device On/Off Methods."""
         self.mock_api.return_value = ({'code': 0}, 200)
         bsdgo1_outlet = VeSyncOutletBSDGO1(DEV_LIST_DETAIL, self.manager)
-        head = helpers.req_header_bypass()
-        body = helpers.req_body(self.manager, 'bypassV2')
+        head = Helpers.req_header_bypass()
+        body = Helpers.req_body(self.manager, 'bypassV2')
         body['cid'] = bsdgo1_outlet.cid
         body['configModule'] = bsdgo1_outlet.config_module
-        
+
         # Test turn_on
         body['payload'] = {
             'data': {'powerSwitch_1': 1},
@@ -82,7 +82,7 @@ class TestVeSyncBSDGO1Switch(TestBase):
             json_object=body
         )
         assert on
-        
+
         # Test turn_off
         body['payload'] = {
             'data': {'powerSwitch_1': 0},
@@ -103,4 +103,4 @@ class TestVeSyncBSDGO1Switch(TestBase):
         self.mock_api.return_value = BAD_BSDGO1_LIST
         bsdgo1_outlet = VeSyncOutletBSDGO1(DEV_LIST_DETAIL, self.manager)
         assert not bsdgo1_outlet.turn_on()
-        assert not bsdgo1_outlet.turn_off() 
+        assert not bsdgo1_outlet.turn_off()
