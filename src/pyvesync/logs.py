@@ -211,14 +211,8 @@ class LibraryLogger:
         parts = ["========API CALL========"]
         endpoint = urlparse(response.request.url).path
         endpoint = endpoint if isinstance(endpoint, str) else str(endpoint)
-        if response.status_code != 200:
-            parts.extend(
-                [f"Failed API CALL with status {response.status_code}",
-                 f"to endpoint: {endpoint}"]
-                )
-        else:
-            parts.append(f"API CALL to endpoint: {endpoint}")
-            parts.append(f"Response Status: {response.status_code}")
+        parts.append(f"API CALL to endpoint: {endpoint}")
+        parts.append(f"Response Status: {response.status_code}")
 
         method = response.request.method
         if method:
@@ -232,14 +226,10 @@ class LibraryLogger:
             request_body = cls.api_printer(response.request.body)
             if request_body:
                 parts.append(f"Request Body: {os.linesep} {request_body}")
-            else:
-                parts.append("Request Body: Error parsing from JSON")
 
         response_headers = cls.api_printer(response.headers)
         if response_headers:
             parts.append(f"Response Headers: {os.linesep} {response_headers}")
-        else:
-            parts.append(f"Response Headers (JSON ERROR): {response.headers}")
 
         if cls.is_json(response.text):
             response_body = cls.api_printer(response.json())
@@ -296,3 +286,31 @@ class LibraryLogger:
 
         full_message = os.linesep.join(parts)
         logger.debug(full_message)
+
+
+class VeSyncError(Exception):
+    """Base exception for VeSync errors."""
+
+
+class VesyncLoginError(VeSyncError):
+    """Exception raised for login authentication errors."""
+
+    def __init__(self, msg: str) -> None:
+        """Initialize the exception with a message."""
+        super().__init__(msg)
+
+
+class VeSyncRateLimitError(VeSyncError):
+    """Exception raised for VeSync API rate limit errors."""
+
+    def __init__(self) -> None:
+        """Initialize the exception with a message."""
+        super().__init__("VeSync API rate limit exceeded")
+
+
+class VeSyncAPIResponseError(VeSyncError):
+    """Exception raised for malformed VeSync API responses."""
+
+    def __init__(self) -> None:
+        """Initialize the exception with a message."""
+        super().__init__("VeSync API response error")

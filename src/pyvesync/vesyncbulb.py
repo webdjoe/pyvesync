@@ -37,37 +37,16 @@ import json
 import sys
 from typing import Union, Optional, NamedTuple
 from abc import ABCMeta, abstractmethod
-from enum import Enum
-from .helpers import (
-    Helpers, EConfig, Color, EDeviceFamily,
-    ERR_DEV_OFFLINE, ERR_REQ_TIMEOUTS
-)
-from .vesyncbasedevice import VeSyncBaseDevice, STATUS_ON, STATUS_OFF
+from .vesync_enums import EConfig, EDeviceFamily, ColorMode
+from .const import ERR_DEV_OFFLINE, ERR_REQ_TIMEOUTS, STATUS_ON, STATUS_OFF
+from .helpers import Helpers, Color
+from .vesyncbasedevice import VeSyncBaseDevice
 
 logger = logging.getLogger(__name__)
 
 module_bulb = sys.modules[__name__]
 
 NUMERIC_T = Optional[Union[int, float, str]]
-
-
-class ColorMode(str, Enum):
-    """Enumeration of known color modes."""
-
-    NONE = ''
-    WHITE = 'white'
-    COLOR = 'color'
-    HSV = 'hsv'
-    RGB = 'rgb'
-
-    @classmethod
-    def get(cls, name: str) -> ColorMode:
-        """Return the color mode for the given name."""
-        try:
-            return cls[name]
-        except Exception:
-            logger.error("No ColorMode for - %s", name)
-            return ColorMode.NONE
 
 
 # --8<-- [start:bulb_configs]
@@ -95,7 +74,7 @@ bulb_configs: dict = {
 }
 # --8<-- [end:bulb_configs]
 
-bulb_classes = {k: v[EConfig.CLASS] for k, v in bulb_configs.items()}
+bulb_classes = {k: str(v[EConfig.CLASS]) for k, v in bulb_configs.items()}
 bulb_features = {k: v[EConfig.FEATURES] for k, v in bulb_configs.items()}
 bulb_color_modes = {k: v[EConfig.COLOR_MODEL] for k, v in bulb_configs.items()}
 
@@ -564,7 +543,7 @@ class VeSyncBulb(VeSyncBaseDevice):
         return None
 
     def build_api_dict(self, method: str, data):
-        """Build the body for the api request for the given method"""
+        """Build the body for the api request for the given method."""
         return {
             **self.manager.req_body_bypass_v2(),
             'cid': self.cid,

@@ -6,12 +6,10 @@ import sys
 from functools import wraps
 from typing import Optional, Union
 from dataclasses import dataclass
+from .const import ERR_REQ_TIMEOUTS
 from .vesyncbasedevice import VeSyncBaseDevice
-from .helpers import (
-    Helpers, EConfig, EDeviceFamily,
-    ERR_REQ_TIMEOUTS, DEVICE_CONFIGS_T,
-    build_model_dict
-)
+from .vesync_enums import EConfig, EDeviceFamily
+from .helpers import Helpers, DEVICE_CONFIGS_T, build_model_dict
 
 logger = logging.getLogger(__name__)
 

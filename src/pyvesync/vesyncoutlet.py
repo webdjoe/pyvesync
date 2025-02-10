@@ -8,15 +8,14 @@ from abc import ABCMeta, abstractmethod
 from datetime import datetime, timedelta
 from typing import Optional
 
-from .helpers import (
-    Helpers, EConfig, EDeviceFamily, DEVICE_CONFIGS_T,
+from .const import (
     ENERGY_WEEK, ENERGY_MONTH, ENERGY_YEAR, PERIOD_2_DAYS,
+    STATUS_ON, STATUS_OFF, MODE_AUTO, MODE_MANUAL,
     ERR_REQ_TIMEOUTS
 )
-from .vesyncbasedevice import (
-    VeSyncBaseDevice,
-    STATUS_ON, STATUS_OFF, MODE_AUTO, MODE_MANUAL
-)
+from .vesync_enums import EConfig, EDeviceFamily
+from .helpers import Helpers, DEVICE_CONFIGS_T
+from .vesyncbasedevice import VeSyncBaseDevice
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +54,7 @@ outlet_configs: DEVICE_CONFIGS_T = {
 }
 # --8<-- [end:outlet_configs]
 
-outlet_classes = {k: v[EConfig.CLASS] for k, v in outlet_configs.items()}
+outlet_classes = {k: str(v[EConfig.CLASS]) for k, v in outlet_configs.items()}
 
 outlet_features = {k: v[EConfig.FEATURES] for k, v in outlet_configs.items()}
 
@@ -495,7 +494,7 @@ class VeSyncOutlet15A(VeSyncOutlet):
         return False
 
     def turn_nightlight(self, mode) -> bool:
-        """Turn the nightlight to mode"""
+        """Turn the nightlight to mode."""
         body = self.manager.req_body_status()
         body['uuid'] = self.uuid
         body['mode'] = mode

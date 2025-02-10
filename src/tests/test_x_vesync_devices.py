@@ -7,7 +7,7 @@ import logging
 import copy
 import time
 from itertools import chain
-from pyvesync.helpers import EDeviceFamily
+from pyvesync.vesync_enums import EDeviceFamily
 from pyvesync.vesyncfan import *
 from pyvesync.vesyncbulb import *
 from pyvesync.vesyncoutlet import *
@@ -159,7 +159,7 @@ class TestDeviceList(object):
         device_list = {'code': 0, 'result': {'list': [{'type': 'wifi-switch', 'cid': 'cid1'}]}}
         self.mock_api.return_value = device_list
         self.vesync_obj.get_devices()
-        assert len(caplog.records) == 2
+        assert len(caplog.records) == 1
         assert 'Error adding device' in caplog.text
 
     def test_unknown_device(self, caplog, api_mock):
@@ -249,7 +249,7 @@ class TestDeviceList(object):
             device.display()
 
         assert len(caplog.records) == 0
-    
+
     def test_resolve_updates(
         self,
         caplog,

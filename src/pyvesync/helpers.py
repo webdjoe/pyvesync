@@ -3,68 +3,31 @@ from __future__ import annotations
 import hashlib
 import logging
 import time
-import json
 import colorsys
 from dataclasses import dataclass, field, InitVar
 from typing import Any, NamedTuple, Union, Optional
 import re
 from enum import Enum
 import requests
-from .logs import LibraryLogger
+from .vesync_enums import EConfig
+from .logs import LibraryLogger, VeSyncRateLimitError
+from .const import ERR_RATE_LIMITS
+
 
 logger = logging.getLogger(__name__)
 
+# Base api for all device requests-
 API_BASE_URL: str = 'https://smartapi.vesync.com'
 
 # If device is out of reach, the cloud api sends a timeout response after 7 seconds,
 # using 8 here so there is time enough to catch that message
 API_TIMEOUT = 8
 
-DEFAULT_TZ: str = 'America/New_York'
-DEFAULT_REGION: str = 'US'
-
-MOBILE_ID: str = '1234567890123456'
-USER_TYPE: str = '1'
-
 NUMERIC = Union[int, float, str, None]
 
 DEVICE_CONFIGS_T = dict[str, dict[Enum, Union[list[Any], str]]]
+
 REQUEST_T = dict[str, Any]
-
-ENERGY_WEEK: str = 'week'
-ENERGY_MONTH: str = 'month'
-ENERGY_YEAR: str = 'year'
-PERIOD_2_DAYS: dict[str, int] = {ENERGY_WEEK: 7, ENERGY_MONTH: 30, ENERGY_YEAR: 365}
-
-ERR_DEV_OFFLINE: int = -11300027    # device offline
-ERR_REQ_TIMEOUT_1: int = -11300030  # request timeout
-ERR_REQ_TIMEOUT_2: int = -11302030  # request timeout
-ERR_REQ_TIMEOUTS: list[int] = [ERR_REQ_TIMEOUT_1, ERR_REQ_TIMEOUT_2]
-
-
-class EDeviceFamily(str, Enum):
-    """Enumeration of supported VeSync devices families."""
-
-    BULB = 'bulb'
-    FAN = 'fan'
-    KITCHEN = 'kitchen'
-    OUTLET = 'outlet'
-    SWITCH = 'switch'
-    NOT_SUPPORTED = 'not supported'
-
-
-class EConfig(str, Enum):
-    """Enumeration of supported devices configuration keys."""
-
-    CLASS = 'module'
-    COLOR_MODEL = 'color_model'
-    FEATURES = 'features'
-    LEVELS = 'levels'
-    MIST_LEVELS = 'mist_levels'
-    MIST_MODES = 'mist_modes'
-    MIST_LEVELS_WARM = 'warm_mist_levels'
-    MODELS = 'models'
-    MODES = 'modes'
 
 
 def build_model_dict(configurations, key) -> dict[str, str]:
@@ -174,23 +137,11 @@ class Helpers:
         response = None
 
         try:
-            header = Helpers.redactor(json.dumps(headers, indent=2))
-            body = Helpers.redactor(json.dumps(json_object, indent=2))
-            logger.debug("=======call_api=============================")
-            logger.debug("[%s] calling '%s' api", method, api)
-            logger.debug("API call URL: %s%s", API_BASE_URL, api)
-            logger.debug("API call headers:\n  %s", header)
-            logger.debug("API call json:\n  %s", body)
-            try:
-                call = getattr(requests, method.lower())
-                r = call(
-                    API_BASE_URL + api, json=json_object, headers=headers,
-                    timeout=API_TIMEOUT
-                )
-            except Exception as ex:
-                raise NameError(f'Invalid method {method} - {ex}') from ex
-        except requests.exceptions.RequestException as e:
-            logger.debug(e)
+            call = getattr(requests, method.lower())
+            r = call(
+                API_BASE_URL + api, json=json_object, headers=headers,
+                timeout=API_TIMEOUT
+            )
         except Exception as e:
             LibraryLogger.log_api_exception(
                 logger,
@@ -204,16 +155,29 @@ class Helpers:
             )
         else:
             if r.status_code == 200:
+                LibraryLogger.log_api_call(logger, r)
                 if LibraryLogger.is_json(r.text):
                     response = r.json()
-                    LibraryLogger.log_api_call(logger, r)
-                    return response, status_code
+                    if response.get('code') in ERR_RATE_LIMITS:
+                        LibraryLogger.log_api_exception(logger, request_dict={
+                            "method": method,
+                            "endpoint": api,
+                            "status_code": r.status_code,
+                            "headers": headers,
+                            "body": json_object,
+                            "response": response
+                        })
+                        raise VeSyncRateLimitError
+                    return response
+                response = r.text
+                return response
             LibraryLogger.log_api_exception(logger, request_dict={
                 "method": method,
                 "endpoint": api,
                 "status_code": r.status_code,
                 "headers": headers,
                 "body": json_object,
+                "response": r.text
             })
         return response
 

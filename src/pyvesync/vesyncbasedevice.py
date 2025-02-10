@@ -5,22 +5,11 @@ import json
 from typing import Optional, Any
 from abc import ABCMeta, abstractmethod
 
-from .helpers import Helpers, EDeviceFamily
+from .const import STATUS_ON, STATUS_OFF
+from .vesync_enums import EDeviceFamily
+from .helpers import Helpers
 
 logger = logging.getLogger(__name__)
-
-STATUS_ON = 'on'
-STATUS_OFF = 'off'
-
-MODE_ADVANCED_SLEEP = 'advancedSleep'
-MODE_AUTO = 'auto'
-MODE_DIM = 'dim'
-MODE_HUMIDITY = 'humidity'
-MODE_MANUAL = 'manual'
-MODE_NORMAL = 'normal'
-MODE_PET = 'pet'
-MODE_SLEEP = 'sleep'
-MODE_TURBO = 'turbo'
 
 
 class VeSyncBaseDevice:
@@ -181,6 +170,7 @@ class VeSyncBaseDevice:
 
     def call_api_v1(self, api: str, body: dict[str, Any]):
         """Call mannaged devices.
+
         Returns:
             dict: Response.
         """

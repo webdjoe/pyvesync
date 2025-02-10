@@ -26,8 +26,10 @@ import sys
 from abc import ABCMeta, abstractmethod
 from typing import Optional
 
-from .helpers import Helpers, EDeviceFamily, REQUEST_T, DEVICE_CONFIGS_T, EConfig
-from .vesyncbasedevice import VeSyncBaseDevice, STATUS_ON, STATUS_OFF
+from .const import STATUS_ON, STATUS_OFF
+from .vesync_enums import EConfig, EDeviceFamily
+from .helpers import Helpers, REQUEST_T, DEVICE_CONFIGS_T
+from .vesyncbasedevice import VeSyncBaseDevice
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +52,7 @@ switch_configs: DEVICE_CONFIGS_T = {
 }
 # --8<-- [end:switch_configs]
 
-switch_classes = {k: v[EConfig.CLASS] for k, v in switch_configs.items()}
+switch_classes = {k: str(v[EConfig.CLASS]) for k, v in switch_configs.items()}
 switch_features = {k: v[EConfig.FEATURES] for k, v in switch_configs.items()}
 
 __all__: list = [

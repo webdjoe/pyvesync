@@ -4,17 +4,15 @@ import json
 import logging
 import sys
 from typing import Any, Dict, List, Union, Optional
-from pyvesync.vesyncbasedevice import (
-    VeSyncBaseDevice,
+from .vesync_enums import EConfig, EDeviceFamily
+from .const import (
+    ERR_REQ_TIMEOUTS,
     STATUS_ON, STATUS_OFF,
     MODE_ADVANCED_SLEEP, MODE_AUTO, MODE_DIM, MODE_HUMIDITY,
     MODE_MANUAL, MODE_NORMAL, MODE_PET, MODE_SLEEP, MODE_TURBO,
 )
-from .helpers import (
-    Helpers, EConfig, Timer, EDeviceFamily,
-    ERR_REQ_TIMEOUTS,
-    build_model_dict
-)
+from .vesyncbasedevice import VeSyncBaseDevice
+from .helpers import Helpers, Timer, build_model_dict
 
 module_fan = sys.modules[__name__]
 

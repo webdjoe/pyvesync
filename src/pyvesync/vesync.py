@@ -5,34 +5,21 @@ import re
 import time
 from typing import List, Optional, Any,  Callable, Sequence
 
-from .helpers import (
-    Helpers, EDeviceFamily,
-    logger as helper_logger, REQUEST_T,
+from .vesync_enums import EDeviceFamily
+from .const import (
+    API_RATE_LIMIT, DEFAULT_ENER_UP_INT, MOBILE_ID, USER_TYPE,
+    APP_VERSION, PHONE_BRAND, PHONE_OS,
+    DEFAULT_TZ, DEFAULT_REGION, BYPASS_HEADER_UA,
     ENERGY_WEEK, ENERGY_MONTH, ENERGY_YEAR,
-    USER_TYPE, MOBILE_ID, DEFAULT_REGION
 )
-from .logs import LibraryLogger
+from .helpers import Helpers, logger, REQUEST_T
+from .logs import LibraryLogger, VesyncLoginError
 from .vesyncbasedevice import VeSyncBaseDevice
-from .vesyncbulb import factory as bulb_factory, logger as bulb_logger
-from .vesyncfan import factory as fan_factory, logger as fan_logger
-from .vesynckitchen import factory as kitchen_factory, logger as kitchen_logger
-from .vesyncoutlet import factory as outlet_factory, logger as outlet_logger
-from .vesyncswitch import factory as switch_factory, logger as switch_logger
-
-logger = logging.getLogger(__name__)
-
-APP_VERSION = '4.3.40'
-
-BYPASS_HEADER_UA = 'okhttp/3.12.1'
-
-API_RATE_LIMIT: int = 30
-
-PHONE_BRAND = 'SM N9005'
-PHONE_OS = 'Android'
-
-DEFAULT_TZ: str = 'America/New_York'
-
-DEFAULT_ENER_UP_INT: int = 21600
+from .vesyncbulb import factory as bulb_factory
+from .vesyncfan import factory as fan_factory
+from .vesynckitchen import factory as kitchen_factory
+from .vesyncoutlet import factory as outlet_factory
+from .vesyncswitch import factory as switch_factory
 
 FACTORIES: Sequence[Callable] = [
     bulb_factory, fan_factory, kitchen_factory, outlet_factory, switch_factory
@@ -69,8 +56,11 @@ class VeSync:  # pylint: disable=function-redefined
 
     def __init__(
             self,
-            username, password,
-            time_zone=DEFAULT_TZ, debug=False, redact=True
+            username: str,
+            password: str,
+            time_zone: str = DEFAULT_TZ,
+            debug: bool = False,
+            redact: bool = True
     ) -> None:
         """Initialize VeSync Manager.
 
@@ -344,15 +334,13 @@ class VeSync:  # pylint: disable=function-redefined
 
         Returns:
             True if login successful, False if not
+
+        Raises:
+            VesyncLoginError: If login fails
         """
-        user_check = isinstance(self.username, str) and len(self.username) > 0
-        pass_check = isinstance(self.password, str) and len(self.password) > 0
-        if user_check is False:
-            logger.error('Username invalid')
-            return False
-        if pass_check is False:
-            logger.error('Password invalid')
-            return False
+        if not isinstance(self.username, str) or len(self.username) == 0 \
+                or not isinstance(self.password, str) or len(self.password) == 0:
+            raise VesyncLoginError('Invalid username or password')
 
         r = Helpers.call_api(
             '/cloud/v1/user/login',
@@ -372,8 +360,11 @@ class VeSync:  # pylint: disable=function-redefined
                     logger.debug('token %s', self.token)
                     logger.debug('account_id %s', self.account_id)
                     return True
-        logger.error('Error logging in with username and password')
-        return False
+        if isinstance(r, dict) and isinstance(r.get('msg'), str):
+            message = r['msg']
+        else:
+            message = 'Unknown error logging in'
+        raise VesyncLoginError(message)
 
     def device_time_check(self) -> bool:
         """Test if update interval has been exceeded."""

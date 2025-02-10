@@ -2,6 +2,7 @@
 
 import unittest
 import importlib
+import json
 from unittest import mock
 from unittest.mock import patch, Mock, MagicMock
 
@@ -44,7 +45,7 @@ class TestVeSync(unittest.TestCase):
             missing = set(n for n in import_mod.__all__
                           if getattr(import_mod, n, None) is None)
             self.assertFalse(
-                missing, msg="%s.__all__ contains unresolved names: %s" % (mod, 
+                missing, msg="%s.__all__ contains unresolved names: %s" % (mod,
                     ", ".join(missing),))
 
     def test_username(self):
@@ -123,9 +124,13 @@ class TestApiFunc:
     def test_api_get(self, get_mock):
         """Test get api call."""
         get_mock.return_value = Mock(ok=True, status_code=200)
-        get_mock.return_value.json.return_value = {'code': 0}
+        get_mock.return_value.json.return_value = {"code": 0}
+        get_mock.return_value.status_code = 200
+        get_mock.return_value.method = "GET"
+        get_mock.return_value.text = '{"code": 0}'
+        get_mock.return_value.request.url = "https://smartapi.vesync.com/call/location"
 
-        mock_return = Helpers.call_api('/call/location', method='get')
+        mock_return = Helpers.call_api("/call/location", method='get')
 
         assert mock_return == {'code': 0}
 
@@ -133,7 +138,11 @@ class TestApiFunc:
     def test_api_post(self, post_mock):
         """Test post api call."""
         post_mock.return_value = Mock(ok=True, status_code=200)
-        post_mock.return_value.json.return_value = {'code': 0}
+        post_mock.return_value.json.return_value = {"code": 0}
+        post_mock.return_value.status_code = 200
+        post_mock.return_value.method = "GET"
+        post_mock.return_value.text = '{"code": 0}'
+        post_mock.return_value.request.url = "https://smartapi.vesync.com/call/location"
 
         mock_return = Helpers.call_api('/call/location', method='post')
 
@@ -143,7 +152,10 @@ class TestApiFunc:
     def test_api_put(self, put_mock):
         """Test put api call."""
         put_mock.return_value = Mock(ok=True, status_code=200)
-        put_mock.return_value.json.return_value = {'code': 0}
+        put_mock.return_value.json.return_value = {"code": 0}
+        put_mock.return_value.method = "GET"
+        put_mock.return_value.text = '{"code": 0}'
+        put_mock.return_value.request.url = "https://smartapi.vesync.com/call/location"
 
         mock_return = Helpers.call_api('/call/location', method='put')
 
@@ -153,6 +165,8 @@ class TestApiFunc:
     def test_api_bad_response(self, api_mock):
         """Test bad API response handling."""
         api_mock.side_effect = MagicMock(status_code=400)
+        api_mock.return_value.method = "GET"
+        api_mock.return_value.request.url = "https://smartapi.vesync.com/test/bad-response"
         mock_return = Helpers.call_api('/test/bad-response', method='get')
         print(api_mock.call_args_list)
         assert mock_return == None
