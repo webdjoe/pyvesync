@@ -35,6 +35,8 @@ indent-width = 4
 [lint]
 select = ["ALL"]
 ignore = ["T201",  # PRINT statement - IGNORE
+          "ERA001",  # Commented Code - IGNORE
+          "PERF203",  # Performance error of try/except in loop - IGNORE
           "COM812",  # Missing trailing comma - IGNORE
           "TRY003",  # Avoid specifying long messages outside the exception class - TODO: Add exception classes
           "TRY301",  # raise within try - TODO: Fix this

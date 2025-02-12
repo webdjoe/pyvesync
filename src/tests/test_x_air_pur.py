@@ -1,6 +1,6 @@
 """Levoit Air Purifier tests."""
 from pyvesync.vesyncfan import VeSyncAir131, VeSyncAirBypass
-from pyvesync.helpers import Helpers as helpers
+from pyvesync.helpers import Helpers as Helpers
 import call_json
 import call_json_fans
 from utils import TestBase, Defaults
@@ -63,8 +63,8 @@ class TestVesyncAirPurifier(TestBase):
         """Test Air Purifier Device On/Off Methods."""
         self.mock_api.return_value = ({'code': 0}, 200)
         fan = VeSyncAir131(DEV_LIST_DETAIL, self.manager)
-        head = helpers.req_headers(self.manager)
-        body = helpers.req_body(self.manager, 'devicestatus')
+        head = Helpers.req_headers(self.manager)
+        body = Helpers.req_body(self.manager, 'devicestatus')
         fan.device_status = 'off'
         body['status'] = 'on'
         body['uuid'] = fan.uuid

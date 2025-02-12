@@ -3,7 +3,7 @@ from unittest.mock import patch
 import logging
 from pyvesync import VeSync
 from pyvesync.vesyncswitch import VeSyncWallSwitch
-from pyvesync.helpers import Helpers as helpers
+from pyvesync.helpers import Helpers as Helpers
 import call_json
 import call_json_switches
 
@@ -72,8 +72,8 @@ class TestVesyncWallSwitch(object):
         """Test 15A Device On/Off Methods"""
         self.mock_api.return_value = ({'code': 0}, 200)
         wswitch = VeSyncWallSwitch(DEV_LIST_DETAIL, self.vesync_obj)
-        head = helpers.req_headers(self.vesync_obj)
-        body = helpers.req_body(self.vesync_obj, 'devicestatus')
+        head = Helpers.req_headers(self.vesync_obj)
+        body = Helpers.req_body(self.vesync_obj, 'devicestatus')
 
         body['status'] = 'on'
         body['uuid'] = wswitch.uuid

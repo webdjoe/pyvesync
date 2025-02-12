@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 from pyvesync import VeSync
 from pyvesync.vesyncoutlet import VeSyncOutlet7A
-from pyvesync.helpers import Helpers as helpers
+from pyvesync.helpers import Helpers as Helpers
 import call_json
 import call_json_outlets
 from utils import Defaults, TestBase
@@ -86,7 +86,7 @@ class TestVesync7ASwitch(TestBase):
         self.mock_api.return_value = ('response', 200)
         vswitch7a = VeSyncOutlet7A(DEV_LIST_DETAIL, self.manager)
         on = vswitch7a.turn_on()
-        head = helpers.req_headers(self.manager)
+        head = Helpers.req_headers(self.manager)
         self.mock_api.assert_called_with(
             '/v1/wifi-switch-1.3/' + vswitch7a.cid + '/status/on', 'put', headers=head
         )
@@ -112,7 +112,7 @@ class TestVesync7ASwitch(TestBase):
         self.mock_api.assert_called_with(
             '/v1/device/' + vswitch7a.cid + '/energy/week',
             'get',
-            headers=helpers.req_headers(self.manager),
+            headers=Helpers.req_headers(self.manager),
         )
         energy_dict = vswitch7a.energy['week']
         assert energy_dict['energy_consumption_of_today'] == 1
@@ -129,7 +129,7 @@ class TestVesync7ASwitch(TestBase):
         self.mock_api.assert_called_with(
             '/v1/device/' + vswitch7a.cid + '/energy/month',
             'get',
-            headers=helpers.req_headers(self.manager),
+            headers=Helpers.req_headers(self.manager),
         )
         energy_dict = vswitch7a.energy['month']
         assert energy_dict['energy_consumption_of_today'] == 1
@@ -146,7 +146,7 @@ class TestVesync7ASwitch(TestBase):
         self.mock_api.assert_called_with(
             '/v1/device/' + vswitch7a.cid + '/energy/year',
             'get',
-            headers=helpers.req_headers(self.manager),
+            headers=Helpers.req_headers(self.manager),
         )
         energy_dict = vswitch7a.energy['year']
         assert energy_dict['energy_consumption_of_today'] == 1
