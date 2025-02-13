@@ -366,7 +366,6 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         self.details['display'] = dev_dict.get('display', False)
         self.details['child_lock'] = dev_dict.get('child_lock', False)
         self.details['night_light'] = dev_dict.get('night_light', 'off')
-        self.details['display'] = dev_dict.get('display', False)
         self.details['display_forever'] = dev_dict.get('display_forever',
                                                        False)
         if self.air_quality_feature is True:
@@ -1665,6 +1664,14 @@ class VeSyncAir131(VeSyncBaseDevice):
         return self.details.get('air_quality', 'unknown')
 
     @property
+    def display_state(self) -> bool:
+        """Get display state.
+
+        See [pyvesync.VeSyncAir131.get_details]
+        """
+        return self.details.get('screen_status', 'unknown') == "on"
+
+    @property
     def screen_status(self) -> str:
         """Return Screen status (on/off)."""
         return self.details.get('screen_status', 'unknown')
@@ -2200,6 +2207,17 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
         """Turn 200S/300S Humidifier off."""
         return self.set_display(False)
 
+    @property
+    def display_state(self) -> bool:
+        """Get display state."""
+        # The field 'display' is defined both on 'config' (in build_config_dict) and
+        # 'details' (in build_humid_dict). get_details first calls build_humid_dict
+        # and then build_config_dict if the result has configuration populated. Based
+        # on this, the values in cofig seem to be an override. We will first check
+        # config and then fall back to details
+        value = self.config.get('display', None)
+        return self.details.get('display', False) if value is None else value
+
     def set_humidity(self, humidity: int) -> bool:
         """Set target 200S/300S Humidifier humidity."""
         if humidity < 30 or humidity > 80:
@@ -2713,6 +2731,12 @@ class VeSyncSuperior6000S(VeSyncBaseDevice):
     def turn_off_display(self):
         """Turn display off."""
         return self.set_display_enabled(False)
+
+    @property
+    def display_state(self) -> bool:
+        """Get display state."""
+        # This matches the values 0/1 set in set_display_enabled
+        return self.details.get('display') == 1
 
     def set_humidity(self, humidity: int) -> bool:
         """Set target humidity for humidity mode."""
