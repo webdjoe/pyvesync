@@ -34,15 +34,15 @@ METHOD_RESPONSES['DEVTYPE'].default_factory = lambda: ({"code": 0, "msg": "succe
 """
 
 from copy import deepcopy
-from pyvesync import vesyncfan, helpers
+from pyvesync import vesyncfan, helpers, const
 from utils import Defaults, FunctionResponses
 
 HUMID_MODELS = []
-for model_type, model_dict in vesyncfan.humid_features.items():
+for model_type, model_dict in const.HUMID_FEATURES.items():
     HUMID_MODELS.append(model_dict["models"][0])
 
 AIR_MODELS = []
-for model_type, model_dict in vesyncfan.air_features.items():
+for model_type, model_dict in const.AIR_FEATURES.items():
     AIR_MODELS.append(model_dict["models"][0])
 
 FANS = HUMID_MODELS + AIR_MODELS
