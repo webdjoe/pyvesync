@@ -3,179 +3,24 @@
 Routine Listings
 ----------------
 
-FunctionResponses : defaultdict
-    Defaultdict of the standard response tuple for device methods
-Defaults: class
-    Default values and methods for generating default values
 TestBase: class
     Base class for tests to start mock & instantiat VS object
+parse_args: function
+    Parse arguments from mock API call
+assert_test: function
+    Test pyvesync API calls against existing API
 """
+import asyncio
 import logging
 from pathlib import Path
 from typing import Any
 import pytest
 import yaml
-from collections import defaultdict, namedtuple
 from unittest.mock import patch
-from requests.structures import CaseInsensitiveDict
 from pyvesync.vesync import VeSync
-from pyvesync.helpers import Color
-import pyvesync.helpers as vs_helpers
-
+from defaults import Defaults, CALL_API_ARGS, ID_KEYS, API_DEFAULTS
 
 logger = logging.getLogger(__name__)
-
-FunctionResponses: defaultdict = defaultdict(lambda: ({"code": 0, "msg": None}, 200))
-
-CALL_API_ARGS = ['url', 'method', 'data', 'headers']
-
-ID_KEYS = ['CID', 'UUID', 'MACID']
-
-class Defaults:
-    """General defaults for API responses and requests.
-
-    Attributes
-    ----------
-    token : str
-        Default token for API requests
-    active_time : str
-        Default active time for API responses
-    account_id : str
-        Default account ID for API responses
-    active_time : str
-        Default active time for API responses
-    color: Color (dataclass)
-        Red=50, Green=100, Blue=225, Hue=223, Saturation=77.78, value=88.24
-        Default Color dataclass
-        contains red, green, blue, hue, saturation and value attributes
-
-    Methods
-    --------
-    name(dev_type='NA')
-        Default device name created from "dev_type-NAME"
-    cid(dev_type='NA')
-        Default device cid created from "dev_type-CID"
-    uuid(dev_type='NA')
-        Default device uuid created from "dev_type-UUID"
-    macid(dev_type='NA')
-        Default device macid created from "dev_type-MACID"
-    """
-
-    token = 'sample_tk'
-    account_id = 'sample_id'
-    trace_id = "TRACE_ID"
-    active_time = 1
-    color = Color(red=50, green=100, blue=225)
-    brightness = 100
-    color_temp = 100
-    bool_toggle = True
-    str_toggle = 'on'
-    bin_toggle = 1
-
-    @staticmethod
-    def name(dev_type: str = 'NA'):
-        """Name of device with format f"{dev_type}-NAME".
-
-        Parameters
-        ----------
-        dev_type : str
-            Device type use to create default name
-
-        Returns
-        -------
-        str
-            Default name for device f"dev_type-NAME"
-        """
-        return f'{dev_type}-NAME'
-
-    @staticmethod
-    def cid(dev_type='NA'):
-        """CID for a device with format f"{dev_type}-CID".
-
-        Parameters
-        ----------
-        dev_type : str
-            Device type use to create default cid
-
-        Returns
-        -------
-        str
-            Default cid for device f"dev_type-CID"
-        """
-        return f'{dev_type}-CID'
-
-    @staticmethod
-    def uuid(dev_type='NA'):
-        """UUID for a device with format f"{dev_type}-UUID".
-
-        Parameters
-        ----------
-        dev_type : str
-            Device type use to create default UUID
-
-        Returns
-        -------
-        str
-            Default uuid for device f"{dev_type}-UUID"
-        """
-        return f'{dev_type}-UUID'
-
-    @staticmethod
-    def macid(dev_type='NA'):
-        """MACID for a device with format f"{dev_type}-MACID".
-
-        Parameters
-        ----------
-        dev_type : str
-            Device type use to create default macid
-
-        Returns
-        -------
-        str
-            Default macID for device f"{dev_type}-MACID"
-        """
-        return f'{dev_type}-MACID'
-
-
-def parse_args(mock_api):
-    """Parse arguments from mock API call.
-
-    Arguments
-    ----------
-    mock_api : mock
-        Mock object used to path call_api() method
-
-    Returns
-    -------
-    dict
-        dictionary of all call_api() arguments
-    """
-    call_args = mock_api.call_args.args
-    call_kwargs = mock_api.call_args.kwargs
-    all_kwargs = dict(zip(CALL_API_ARGS, call_args))
-    all_kwargs.update(call_kwargs)
-    return all_kwargs
-
-
-API_DEFAULTS = CaseInsensitiveDict({
-    'accountID': Defaults.account_id,
-    'token': Defaults.token,
-    'timeZone': vs_helpers.DEFAULT_TZ,
-    'acceptLanguage': 'en',
-    'appVersion': vs_helpers.APP_VERSION,
-    'phoneBrand': vs_helpers.PHONE_BRAND,
-    'phoneOS': vs_helpers.PHONE_OS,
-    'userType': vs_helpers.USER_TYPE,
-    "tk": Defaults.token,
-    "traceId": "TRACE_ID",
-    'verifyEmail': 'EMAIL',
-    'nickName': 'NICKNAME',
-    'password': 'PASSWORD',
-    'username': 'EMAIL',
-    'email': 'EMAIL',
-    'deviceName': 'NAME'
-
-})
 
 
 class YAMLWriter:
@@ -363,11 +208,11 @@ class TestBase:
         ------
         Class instance with mocked call_api() function and VeSync object
         """
-        self.mock_api_call = patch('pyvesync.helpers.Helpers.call_api')
+        self.loop = asyncio.new_event_loop()
+        self.mock_api_call = patch('pyvesync.vesync.VeSync.async_call_api')
         self.caplog = caplog
         self.caplog.set_level(logging.DEBUG)
         self.mock_api = self.mock_api_call.start()
-        self.mock_api.create_autospect()
         self.mock_api.return_value.ok = True
         self.manager = VeSync('EMAIL', 'PASSWORD', debug=True)
         self.manager.enabled = True
@@ -377,9 +222,37 @@ class TestBase:
         yield
         self.mock_api_call.stop()
 
+    async def run_coro(self, coro):
+        """Run a coroutine in the event loop."""
+        return await coro
+
+    def run_in_loop(self, func, *args, **kwargs):
+        """Run a function in the event loop."""
+        return self.loop.run_until_complete(self.run_coro(func(*args, **kwargs)))
+
+
+def parse_args(mock_api):
+    """Parse arguments from mock API call.
+
+    Arguments
+    ----------
+    mock_api : mock
+        Mock object used to path call_api() method
+
+    Returns
+    -------
+    dict
+        dictionary of all call_api() arguments
+    """
+    call_args = mock_api.call_args.args
+    call_kwargs = mock_api.call_args.kwargs
+    all_kwargs = dict(zip(CALL_API_ARGS, call_args))
+    all_kwargs.update(call_kwargs)
+    return all_kwargs
+
 
 def assert_test(test_func, all_kwargs, dev_type=None,
-                 write_api=False, overwrite=False):
+                write_api=False, overwrite=False):
     """Test pyvesync API calls against existing API.
 
     Set `write_api=True` to True to write API call data to YAML file.

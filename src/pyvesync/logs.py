@@ -19,12 +19,12 @@ Usage:
 import logging
 import os
 import re
-from collections.abc import MutableMapping
+from collections.abc import Mapping
 
 import orjson
 from aiohttp import ClientResponse
 from aiohttp.client_exceptions import ClientResponseError
-from requests.structures import CaseInsensitiveDict
+from multidict import CIMultiDictProxy
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -125,8 +125,10 @@ class LibraryLogger:
         return stringvalue
 
     @staticmethod
-    def is_json(data: str | bytes) -> bool:
+    def is_json(data: str | bytes | None) -> bool:
         """Check if the data is JSON formatted."""
+        if data is None:
+            return False
         if isinstance(data, str):
             data = data.encode('utf-8')
         try:
@@ -136,7 +138,7 @@ class LibraryLogger:
         return True
 
     @classmethod
-    def api_printer(cls, api: MutableMapping | bytes | str | None) -> str | None:
+    def api_printer(cls, api: Mapping | bytes | str | None) -> str | None:
         """Print the API dictionary in a readable format."""
         if api is None or len(api) == 0:
             return None
@@ -145,7 +147,7 @@ class LibraryLogger:
                 api_dict = orjson.loads(api)
             elif isinstance(api, str):
                 api_dict = orjson.loads(api.encode("utf-8"))
-            elif isinstance(api, (dict, CaseInsensitiveDict)):
+            elif isinstance(api, (dict, CIMultiDictProxy)):
                 api_dict = dict(api)
             else:
                 return None
@@ -231,7 +233,7 @@ class LibraryLogger:
         device_name: str,
         device_type: str,
         code: int,
-        message: str,
+        message: str = '',
     ) -> None:
         """Log device code error from device API call.
 
@@ -246,8 +248,12 @@ class LibraryLogger:
             code (int): api response code
             message (str): api response message
         """
+        try:
+            code_str = str(code)
+        except (TypeError, ValueError):
+            code_str = "UNKNOWN"
         logger.debug("%s for %s API from %s returned error code: %s, message: %s",
-                     device_name, device_type, method, code, message)
+                     device_name, device_type, method, code_str, message)
 
     @classmethod
     def log_api_call(
@@ -293,12 +299,12 @@ class LibraryLogger:
             parts.append(f"Response Headers: {os.linesep} {response_headers}")
 
         if cls.is_json(response_body):
-            response_body = cls.api_printer(response_body)
-            parts.append(f"Response Body: {os.linesep} {response_body}")
+            response_str = cls.api_printer(response_body)
+            parts.append(f"Response Body: {os.linesep} {response_str}")
         else:
             if isinstance(response_body, bytes):
-                response_body = response_body.decode("utf-8")
-            parts.append(f"Response Body: {os.linesep} {response_body}")
+                response_str = response_body.decode("utf-8")
+            parts.append(f"Response Body: {os.linesep} {response_str}")
 
         full_message = os.linesep.join(parts)
         logger.debug(full_message)

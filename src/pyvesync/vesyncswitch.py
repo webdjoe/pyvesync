@@ -124,7 +124,7 @@ class VeSyncWallSwitch(VeSyncSwitch):
         body['uuid'] = self.uuid
         head = Helpers.req_headers(self.manager)
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/inwallswitch/v1/device/devicedetail', 'post',
             headers=head, json_object=body
         )
@@ -144,7 +144,7 @@ class VeSyncWallSwitch(VeSyncSwitch):
         body['method'] = 'configurations'
         body['uuid'] = self.uuid
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/inwallswitch/v1/device/configurations',
             'post',
             headers=Helpers.req_headers(self.manager),
@@ -164,7 +164,7 @@ class VeSyncWallSwitch(VeSyncSwitch):
         body['uuid'] = self.uuid
         head = Helpers.req_headers(self.manager)
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/inwallswitch/v1/device/devicestatus', 'put',
             headers=head, json_object=body
         )
@@ -183,7 +183,7 @@ class VeSyncWallSwitch(VeSyncSwitch):
         body['uuid'] = self.uuid
         head = Helpers.req_headers(self.manager)
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/inwallswitch/v1/device/devicestatus', 'put',
             headers=head, json_object=body
         )
@@ -213,7 +213,7 @@ class VeSyncDimmerSwitch(VeSyncSwitch):
         body['uuid'] = self.uuid
         head = Helpers.req_headers(self.manager)
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/dimmer/v1/device/devicedetail', 'post',
             headers=head, json_object=body
         )
@@ -226,10 +226,10 @@ class VeSyncDimmerSwitch(VeSyncSwitch):
         self.details['active_time'] = r.get('activeTime', 0)
         self.connection_status = r.get(
             'connectionStatus', self.connection_status)
-        self._brightness = r.get('brightness')
-        self._rgb_status = r.get('rgbStatus')
-        self._rgb_value = r.get('rgbValue')
-        self._indicator_light = r.get('indicatorlightStatus')
+        self._brightness = r.get('brightness', self._brightness)
+        self._rgb_status = r.get('rgbStatus', self._rgb_status)
+        self._rgb_value = r.get('rgbValue', self._rgb_value)
+        self._indicator_light = r.get('indicatorlightStatus', self._indicator_light)
 
     @property
     def brightness(self) -> float:
@@ -261,7 +261,7 @@ class VeSyncDimmerSwitch(VeSyncSwitch):
         body['uuid'] = self.uuid
         head = Helpers.req_headers(self.manager)
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/dimmer/v1/device/devicestatus', 'put',
             headers=head, json_object=body
         )
@@ -291,7 +291,7 @@ class VeSyncDimmerSwitch(VeSyncSwitch):
         body['uuid'] = self.uuid
         head = Helpers.req_headers(self.manager)
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/dimmer/v1/device/indicatorlightstatus',
             'put', headers=head, json_object=body
         )
@@ -326,7 +326,7 @@ class VeSyncDimmerSwitch(VeSyncSwitch):
         if red is not None and blue is not None and green is not None:
             body["rgbValue"] = {"red": red, "blue": blue, "green": green}
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             "/dimmer/v1/device/devicergbstatus", "put", headers=head, json_object=body
         )
 
@@ -380,7 +380,7 @@ class VeSyncDimmerSwitch(VeSyncSwitch):
             body['uuid'] = self.uuid
             head = Helpers.req_headers(self.manager)
 
-            r_bytes, _ = await self.manager.call_api(
+            r_bytes, _ = await self.manager.async_call_api(
                 '/dimmer/v1/device/updatebrightness', 'put',
                 headers=head, json_object=body
             )
@@ -415,7 +415,7 @@ class VeSyncDimmerSwitch(VeSyncSwitch):
         body['method'] = 'configurations'
         body['uuid'] = self.uuid
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/dimmer/v1/device/configurations',
             'post',
             headers=Helpers.req_headers(self.manager),

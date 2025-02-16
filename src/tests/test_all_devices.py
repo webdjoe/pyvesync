@@ -70,7 +70,7 @@ class TestGeneralAPI(TestBase):
         print("Test Login")
         self.mock_api.return_value = LOGIN_RESPONSE
         self.manager.enabled = False
-        assert self.manager.login()
+        assert self.run_in_loop(self.manager.login)
         all_kwargs = parse_args(self.mock_api)
         assert assert_test(self.manager.login, all_kwargs, None,
                            self.write_api, self.overwrite)
@@ -79,7 +79,7 @@ class TestGeneralAPI(TestBase):
         """Test get_devices() method request and API response."""
         print("Test Device List")
         self.mock_api.return_value = call_json.DeviceList.device_list_response()
-        self.manager.get_devices()
+        self.run_in_loop(self.manager.get_devices)
         all_kwargs = parse_args(self.mock_api)
         assert assert_test(self.manager.get_devices, all_kwargs, None,
                            self.write_api, self.overwrite)

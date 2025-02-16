@@ -8,6 +8,7 @@ import orjson
 
 from pyvesync.helpers import Helpers
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
+from pyvesync.logs import LibraryLogger
 
 if TYPE_CHECKING:
     from pyvesync import VeSync
@@ -94,8 +95,8 @@ class VeSyncOutlet(VeSyncBaseDevice):
             self.update_energy_ts = int(time.time())
             await self.get_weekly_energy()
             if 'week' in self.energy:
-                self.get_monthly_energy()
-                self.get_yearly_energy()
+                await self.get_monthly_energy()
+                await self.get_yearly_energy()
             if not bypass_check:
                 self.update_energy_ts = int(time.time())
 
@@ -183,18 +184,23 @@ class VeSyncOutlet7A(VeSyncOutlet):
 
     async def get_details(self) -> None:
         """Get 7A outlet details."""
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/v1/device/' + self.cid + '/detail',
             'get',
             headers=Helpers.req_headers(self.manager),
         )
 
-        r = Helpers.process_api_response(logger, "get_details", self, r_bytes)
-        if r is None:
+        if r_bytes is None or not LibraryLogger.is_json(r_bytes):
+            LibraryLogger.log_api_response_parse_error(
+                logger, self.device_name, self.device_type,
+                'get_details', "Response is not valid JSON"
+            )
             return
 
+        r = orjson.loads(r_bytes)
+
         self.device_status = r.get('deviceStatus', self.device_status)
-        self.details['active_time'] = r.get('activeTime', 0)
+        self.details['active_time'] = r.get('activeTime', self.active_time)
         self.details['energy'] = r.get('energy', 0)
         power = r.get('power', '0')
         self.details['power'] = self.parse_energy_detail(power)
@@ -216,7 +222,7 @@ class VeSyncOutlet7A(VeSyncOutlet):
 
     async def get_weekly_energy(self) -> None:
         """Get 7A outlet weekly energy info and buld weekly energy dict."""
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/v1/device/' + self.cid + '/energy/week',
             'get',
             headers=Helpers.req_headers(self.manager),
@@ -232,7 +238,7 @@ class VeSyncOutlet7A(VeSyncOutlet):
 
     async def get_monthly_energy(self) -> None:
         """Get 7A outlet monthly energy info and buld monthly energy dict."""
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/v1/device/' + self.cid + '/energy/month',
             'get',
             headers=Helpers.req_headers(self.manager),
@@ -247,7 +253,7 @@ class VeSyncOutlet7A(VeSyncOutlet):
 
     async def get_yearly_energy(self) -> None:
         """Get 7A outlet yearly energy info and build yearly energy dict."""
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/v1/device/' + self.cid + '/energy/year',
             'get',
             headers=Helpers.req_headers(self.manager),
@@ -262,7 +268,7 @@ class VeSyncOutlet7A(VeSyncOutlet):
 
     async def turn_on(self) -> bool:
         """Turn 7A outlet on - return True if successful."""
-        _, status_code = await self.manager.call_api(
+        _, status_code = await self.manager.async_call_api(
             '/v1/wifi-switch-1.3/' + self.cid + '/status/on',
             'put',
             headers=Helpers.req_headers(self.manager),
@@ -275,7 +281,7 @@ class VeSyncOutlet7A(VeSyncOutlet):
 
     async def turn_off(self) -> bool:
         """Turn 7A outlet off - return True if successful."""
-        _, status_code = await self.manager.call_api(
+        _, status_code = await self.manager.async_call_api(
             '/v1/wifi-switch-1.3/' + self.cid + '/status/off',
             'put',
             headers=Helpers.req_headers(self.manager),
@@ -290,7 +296,7 @@ class VeSyncOutlet7A(VeSyncOutlet):
 
     async def get_config(self) -> None:
         """Get 7A outlet configuration info."""
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/v1/device/' + self.cid + '/configurations',
             'get',
             headers=Helpers.req_headers(self.manager),
@@ -319,7 +325,7 @@ class VeSyncOutlet10A(VeSyncOutlet):
         body = Helpers.req_body(self.manager, 'devicedetail')
         body['uuid'] = self.uuid
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/10a/v1/device/devicedetail',
             'post',
             headers=Helpers.req_headers(self.manager),
@@ -339,7 +345,7 @@ class VeSyncOutlet10A(VeSyncOutlet):
         body['method'] = 'configurations'
         body['uuid'] = self.uuid
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/10a/v1/device/configurations',
             'post',
             headers=Helpers.req_headers(self.manager),
@@ -356,7 +362,7 @@ class VeSyncOutlet10A(VeSyncOutlet):
         body = Helpers.req_body(self.manager, 'energy_week')
         body['uuid'] = self.uuid
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/10a/v1/device/energyweek',
             'post',
             headers=Helpers.req_headers(self.manager),
@@ -375,7 +381,7 @@ class VeSyncOutlet10A(VeSyncOutlet):
         body = Helpers.req_body(self.manager, 'energy_month')
         body['uuid'] = self.uuid
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/10a/v1/device/energymonth',
             'post',
             headers=Helpers.req_headers(self.manager),
@@ -394,7 +400,7 @@ class VeSyncOutlet10A(VeSyncOutlet):
         body = Helpers.req_body(self.manager, 'energy_year')
         body['uuid'] = self.uuid
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/10a/v1/device/energyyear',
             'post',
             headers=Helpers.req_headers(self.manager),
@@ -414,7 +420,7 @@ class VeSyncOutlet10A(VeSyncOutlet):
         body['uuid'] = self.uuid
         body['status'] = 'on'
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/10a/v1/device/devicestatus',
             'put',
             headers=Helpers.req_headers(self.manager),
@@ -433,7 +439,7 @@ class VeSyncOutlet10A(VeSyncOutlet):
         body['uuid'] = self.uuid
         body['status'] = 'off'
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/10a/v1/device/devicestatus',
             'put',
             headers=Helpers.req_headers(self.manager),
@@ -461,7 +467,7 @@ class VeSyncOutlet15A(VeSyncOutlet):
         body = Helpers.req_body(self.manager, 'devicedetail')
         body['uuid'] = self.uuid
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/15a/v1/device/devicedetail',
             'post',
             headers=Helpers.req_headers(self.manager),
@@ -484,10 +490,12 @@ class VeSyncOutlet15A(VeSyncOutlet):
             'nightLightBrightness',
         )
 
-        self.device_status = r.get('deviceStatus')
-        self.connection_status = r.get('connectionStatus')
-        self.nightlight_status = r.get('nightLightStatus')
-        self.nightlight_brightness = r.get('nightLightBrightness')
+        self.device_status = r.get("deviceStatus", self.device_status)
+        self.connection_status = r.get("connectionStatus", self.connection_status)
+        self.nightlight_status = r.get("nightLightStatus", self.nightlight_status)
+        self.nightlight_brightness = r.get(
+            "nightLightBrightness", self.nightlight_brightness
+        )
         self.details = Helpers.build_details_dict(r)
 
     async def get_config(self) -> None:
@@ -496,7 +504,7 @@ class VeSyncOutlet15A(VeSyncOutlet):
         body['method'] = 'configurations'
         body['uuid'] = self.uuid
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/15a/v1/device/configurations',
             'post',
             headers=Helpers.req_headers(self.manager),
@@ -513,7 +521,7 @@ class VeSyncOutlet15A(VeSyncOutlet):
         body = Helpers.req_body(self.manager, 'energy_week')
         body['uuid'] = self.uuid
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/15a/v1/device/energyweek',
             'post',
             headers=Helpers.req_headers(self.manager),
@@ -531,7 +539,7 @@ class VeSyncOutlet15A(VeSyncOutlet):
         body = Helpers.req_body(self.manager, 'energy_month')
         body['uuid'] = self.uuid
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/15a/v1/device/energymonth',
             'post',
             headers=Helpers.req_headers(self.manager),
@@ -550,7 +558,7 @@ class VeSyncOutlet15A(VeSyncOutlet):
         body = Helpers.req_body(self.manager, 'energy_year')
         body['uuid'] = self.uuid
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/15a/v1/device/energyyear',
             'post',
             headers=Helpers.req_headers(self.manager),
@@ -570,7 +578,7 @@ class VeSyncOutlet15A(VeSyncOutlet):
         body['uuid'] = self.uuid
         body['status'] = 'on'
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/15a/v1/device/devicestatus',
             'put',
             headers=Helpers.req_headers(self.manager),
@@ -592,7 +600,7 @@ class VeSyncOutlet15A(VeSyncOutlet):
         body['uuid'] = self.uuid
         body['status'] = 'off'
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/15a/v1/device/devicestatus',
             'put',
             headers=Helpers.req_headers(self.manager),
@@ -611,7 +619,7 @@ class VeSyncOutlet15A(VeSyncOutlet):
         body['uuid'] = self.uuid
         body['mode'] = 'auto'
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/15a/v1/device/nightlightstatus',
             'put',
             headers=Helpers.req_headers(self.manager),
@@ -628,7 +636,7 @@ class VeSyncOutlet15A(VeSyncOutlet):
         body['uuid'] = self.uuid
         body['mode'] = 'manual'
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/15a/v1/device/nightlightstatus',
             'put',
             headers=Helpers.req_headers(self.manager),
@@ -651,7 +659,7 @@ class VeSyncOutdoorPlug(VeSyncOutlet):
         """Get details for outdoor outlet."""
         body = Helpers.req_body(self.manager, 'devicedetail')
         body['uuid'] = self.uuid
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/outdoorsocket15a/v1/device/devicedetail',
             'post',
             headers=Helpers.req_headers(self.manager),
@@ -662,7 +670,7 @@ class VeSyncOutdoorPlug(VeSyncOutlet):
             return
 
         self.details = Helpers.build_details_dict(r)
-        self.connection_status = r.get('connectionStatus')
+        self.connection_status = r.get('connectionStatus', self.connection_status)
 
         dev_no = self.sub_device_no
         sub_device_list = r.get('subDevices')
@@ -677,7 +685,7 @@ class VeSyncOutdoorPlug(VeSyncOutlet):
         body['method'] = 'configurations'
         body['uuid'] = self.uuid
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/outdoorsocket15a/v1/device/configurations',
             'post',
             headers=Helpers.req_headers(self.manager),
@@ -694,7 +702,7 @@ class VeSyncOutdoorPlug(VeSyncOutlet):
         body = Helpers.req_body(self.manager, 'energy_week')
         body['uuid'] = self.uuid
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/outdoorsocket15a/v1/device/energyweek',
             'post',
             headers=Helpers.req_headers(self.manager),
@@ -713,7 +721,7 @@ class VeSyncOutdoorPlug(VeSyncOutlet):
         body = Helpers.req_body(self.manager, 'energy_month')
         body['uuid'] = self.uuid
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/outdoorsocket15a/v1/device/energymonth',
             'post',
             headers=Helpers.req_headers(self.manager),
@@ -732,7 +740,7 @@ class VeSyncOutdoorPlug(VeSyncOutlet):
         body = Helpers.req_body(self.manager, 'energy_year')
         body['uuid'] = self.uuid
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/outdoorsocket15a/v1/device/energyyear',
             'post',
             headers=Helpers.req_headers(self.manager),
@@ -753,7 +761,7 @@ class VeSyncOutdoorPlug(VeSyncOutlet):
         body['status'] = status
         body['switchNo'] = self.sub_device_no
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/outdoorsocket15a/v1/device/devicestatus',
             'put',
             headers=Helpers.req_headers(self.manager),
@@ -795,7 +803,7 @@ class VeSyncOutletBSDGO1(VeSyncOutlet):
             'data': {}
         }
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             'post',
             headers=Helpers.req_header_bypass(),
@@ -827,7 +835,7 @@ class VeSyncOutletBSDGO1(VeSyncOutlet):
             'source': 'APP'
         }
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             'post',
             headers=Helpers.req_header_bypass(),

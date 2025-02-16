@@ -35,7 +35,7 @@ class ErrorInfo:
 
     Attributes:
         name (str): Name of the error
-        error_type (ErrorTypes): Type of the error
+        error_type (ErrorTypes): Type of the error see `ErrorTypes`
         message (str): Message for the error
         check_device (bool): Whether to emit warning, optional
     """
@@ -49,15 +49,28 @@ class ErrorInfo:
 
 
 class ErrorTypes(Enum):
-    """Error types for API return codes."""
+    """Error types for API return codes.
 
+    Attributes:
+        AUTHENTICATION: Authentication error
+        RATE_LIMIT: Rate limiting error
+        SERVER_ERROR: Server and connection error
+        REQUEST_ERROR: Error in Request parameters or method
+        DEVICE_ERROR: Device operational error, device
+            connected but cannot perform requested action
+        CONFIG_ERROR: Configuration error in user profie
+        DEVICE_OFFLINE: Device is offline, not connected
+        UNKNOWN_ERROR: Unknown error
+    """
+
+    SUCCESS = "success"
     AUTHENTICATION = "auth_error"
     RATE_LIMIT = "rate_limit_error"
     SERVER_ERROR = "server_error"
     REQUEST_ERROR = "request_error"
     DEVICE_ERROR = "device_error"
     CONFIG_ERROR = "config_error"
-    CHECK_DEVICE = "check_device"
+    DEVICE_OFFLINE = "device_offline"
     UNKNOWN_ERROR = "unknown_error"
 
 
@@ -67,13 +80,14 @@ class ErrorCodes:
     Taken from VeSync app source code. Values are `ErrorInfo` dataclasses.
 
     Attributes:
-        errors (MappingProxyType[str, ErrorInfo]): Dictionary of error codes and their meanings.
+        errors (MappingProxyType[str, ErrorInfo]): Dictionary of error codes and
+            their meanings.
 
     Example:
         Error codes are taken from VeSync app source code, if there are unknown errors
-        that are not found, please open an issue on GitHub. The "critical_error" key of the
-        error dictionary is used to determine if the logger should emit a warning. Used
-        for device issues that are critical, such as a short or voltage error.
+        that are not found, please open an issue on GitHub. The "critical_error" key of
+        the error dictionary is used to determine if the logger should emit a warning.
+        Used for device issues that are critical, such as a short or voltage error.
 
         Each error dictionary is structured as follows:
         ```
@@ -89,6 +103,18 @@ class ErrorCodes:
 
     errors: MappingProxyType[str, ErrorInfo] = MappingProxyType(
         {
+            "11": ErrorInfo(
+                "DEVICE_OFFLINE",
+                ErrorTypes.DEVICE_OFFLINE,
+                "Device offline",
+                device_online=False,
+            ),
+            "4041004": ErrorInfo(
+                "DEVICE_OFFLINE",
+                ErrorTypes.DEVICE_OFFLINE,
+                "Device offline",
+                device_online=False,
+            ),
             "-11203000": ErrorInfo(
                 "ACCOUNT_EXIST", ErrorTypes.AUTHENTICATION, "Account already exists"
             ),
@@ -100,7 +126,7 @@ class ErrorCodes:
             ),
             "-11300027": ErrorInfo(
                 "AIRPURGE_OFFLINE",
-                ErrorTypes.DEVICE_ERROR,
+                ErrorTypes.DEVICE_OFFLINE,
                 "Device offline",
                 device_online=False,
             ),
@@ -203,7 +229,7 @@ class ErrorCodes:
                 "BYPASS_MOTOR_OPEN", ErrorTypes.DEVICE_ERROR, "Motor open error", True
             ),
             "11017000": ErrorInfo(
-                "BYPASS_NOT_SUPPORTED", ErrorTypes.DEVICE_ERROR, "Not supported error"
+                "BYPASS_NOT_SUPPORTED", ErrorTypes.REQUEST_ERROR, "Not supported error"
             ),
             "11905000": ErrorInfo(
                 "BYPASS_NO_POT", ErrorTypes.DEVICE_ERROR, "No pot error", True
@@ -301,10 +327,10 @@ class ErrorCodes:
                 "Config module does not exist",
             ),
             "-11100000": ErrorInfo(
-                "DATABASE_FAILED", ErrorTypes.REQUEST_ERROR, "Database error"
+                "DATABASE_FAILED", ErrorTypes.SERVER_ERROR, "Database error"
             ),
             "-11101000": ErrorInfo(
-                "DATABASE_FAILED_ERROR", ErrorTypes.REQUEST_ERROR, "Database error"
+                "DATABASE_FAILED_ERROR", ErrorTypes.SERVER_ERROR, "Database error"
             ),
             "-11306000": ErrorInfo(
                 "DEVICE_BOUND",
@@ -319,7 +345,7 @@ class ErrorCodes:
             ),
             "-11300000": ErrorInfo(
                 "DEVICE_OFFLINE",
-                ErrorTypes.DEVICE_ERROR,
+                ErrorTypes.DEVICE_OFFLINE,
                 "Device offline",
                 device_online=False,
             ),
@@ -348,9 +374,7 @@ class ErrorCodes:
             "-11107000": ErrorInfo(
                 "MONGODB_ERROR", ErrorTypes.SERVER_ERROR, "MongoDB error"
             ),
-            "-11105000": ErrorInfo(
-                "MYSQL_ERROR", ErrorTypes.SERVER_ERROR, "MySQL error"
-            ),
+            "-11105000": ErrorInfo("MYSQL_ERROR", ErrorTypes.SERVER_ERROR, "MySQL error"),
             "88888888": ErrorInfo(
                 "NETWORK_DISABLE", ErrorTypes.SERVER_ERROR, "Network disabled"
             ),
@@ -366,9 +390,7 @@ class ErrorCodes:
             "-11901000": ErrorInfo(
                 "PID_NOT_EXIST", ErrorTypes.DEVICE_ERROR, "PID does not exist"
             ),
-            "-11106000": ErrorInfo(
-                "REDIS_ERROR", ErrorTypes.SERVER_ERROR, "Redis error"
-            ),
+            "-11106000": ErrorInfo("REDIS_ERROR", ErrorTypes.SERVER_ERROR, "Redis error"),
             "-11003000": ErrorInfo(
                 "REQUEST_HIGH", ErrorTypes.RATE_LIMIT, "Rate limiting error"
             ),
@@ -376,7 +398,7 @@ class ErrorCodes:
                 "RESOURCE_NOT_EXIST",
                 ErrorTypes.REQUEST_ERROR,
                 "No device with ID found",
-                device_online=False
+                device_online=False,
             ),
             "-11108000": ErrorInfo("S3_ERROR", ErrorTypes.SERVER_ERROR, "S3 error"),
             "-11502000": ErrorInfo(
@@ -384,9 +406,7 @@ class ErrorCodes:
                 ErrorTypes.CONFIG_ERROR,
                 "Maximum number of schedules reached",
             ),
-            "-11103000": ErrorInfo(
-                "SERVER_BUSY", ErrorTypes.SERVER_ERROR, "Server busy"
-            ),
+            "-11103000": ErrorInfo("SERVER_BUSY", ErrorTypes.SERVER_ERROR, "Server busy"),
             "-11104000": ErrorInfo(
                 "SERVER_TIMEOUT", ErrorTypes.SERVER_ERROR, "Server timeout"
             ),
@@ -402,7 +422,7 @@ class ErrorCodes:
             "-11001000": ErrorInfo(
                 "TOKEN_EXPIRED", ErrorTypes.AUTHENTICATION, "Invalid token"
             ),
-            "-999999999": ErrorInfo("UNKNOWN", ErrorTypes.REQUEST_ERROR, "Unknown error"),
+            "-999999999": ErrorInfo("UNKNOWN", ErrorTypes.SERVER_ERROR, "Unknown error"),
             "-11307000": ErrorInfo(
                 "UUID_NOT_EXIST",
                 ErrorTypes.DEVICE_ERROR,
@@ -429,10 +449,19 @@ class ErrorCodes:
             )
         """
         try:
-            if str(error_code) in cls.errors:
-                return cls.errors[str(error_code)]
-            error_code = int(int(error_code) / 1000) * 1000
-            return cls.errors[str(error_code)]
+            if isinstance(error_code, str):
+                error_str = error_code
+            elif isinstance(error_code, int):
+                error_str = str(error_code)
+            else:
+                return ErrorInfo("UNKNOWN", ErrorTypes.UNKNOWN_ERROR, "Unknown error")
+            if error_str == "0":
+                return ErrorInfo("SUCCESS", ErrorTypes.SUCCESS, "Success")
+            if error_str in cls.errors:
+                return cls.errors[error_str]
+            error_int = int(error_str)
+            error_code = int(error_int / 1000) * 1000
+            return cls.errors[error_str]
         except (ValueError, TypeError, KeyError):
             return ErrorInfo("UNKNOWN", ErrorTypes.UNKNOWN_ERROR, "Unknown error")
 

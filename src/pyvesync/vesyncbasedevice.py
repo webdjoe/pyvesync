@@ -130,9 +130,9 @@ class VeSyncBaseDevice:
         body['configModule'] = self.config_module
         body['region'] = self.device_region
         body['method'] = 'configInfo'
-        r_bytes, _ = await self.manager.call_api('/cloud/v1/deviceManaged/configInfo',
-                                                 'post',
-                                                 json_object=body)
+        r_bytes, _ = await self.manager.async_call_api(
+            '/cloud/v1/deviceManaged/configInfo', 'post', json_object=body
+            )
         if r_bytes is None or len(r_bytes) == 0:
             LibraryLogger.log_api_response_parse_error(
                 logger, self.device_name, self.device_type, 'get_pid', "Empty response"
@@ -142,13 +142,14 @@ class VeSyncBaseDevice:
             r = orjson.loads(r_bytes)
         except orjson.JSONDecodeError as err:
             LibraryLogger.log_api_response_parse_error(
-                logger, self.device_name, self.device_type, 'get_pid', err
+                logger, self.device_name, self.device_type, 'get_pid', err.msg
             )
             return
         if r.get('code') != 0:
-            LibraryLogger.log_device_code_error(logger, self.device_name,
-                                                self.device_type,
-                                                r['code'], r.get("msg", ""))
+            LibraryLogger.log_device_code_error(
+                logger, 'get_pid', self.device_name, self.device_type,
+                r.get('code'), r.get('msg', '')
+                )
             return
         self.pid = r.get('result', {}).get('pid')
 

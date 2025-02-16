@@ -306,11 +306,11 @@ class VeSync:  # pylint: disable=function-redefined
         new_devices = self._find_new_devices(devices)
 
         # Will be handled by validation
-        # detail_keys = ['deviceType', 'deviceName', 'deviceStatus'] # noqa: ERA001
+        # detail_keys = ['deviceType', 'deviceName', 'deviceStatus']
         for dev in new_devices:
             # if not all(k in dev for k in detail_keys):
-            #     logger.debug('Error adding device') # noqa: ERA001
-            #     continue  # noqa: ERA001
+            #     logger.debug('Error adding device')
+            #     continue
             dev_type = dev.get('deviceType')
             if dev_type is None:
                 logger.debug('Error adding device - Device without deviceType found')
@@ -329,18 +329,26 @@ class VeSync:  # pylint: disable=function-redefined
         """Return tuple listing outlets, switches, and fans of devices.
 
         This is an internal method called by `update()`
+
+        Raises:
+            VeSyncAPIResponseError: If API response is invalid.
+            VeSyncServerError: If server returns an error.
         """
         if not self.enabled:
             return False
 
         self.in_process = True
         proc_return = False
-        response_bytes, _ = await self.call_api(
+        response_bytes, _ = await self.async_call_api(
             '/cloud/v1/deviceManaged/devices',
             'post',
             headers=Helpers.req_header_bypass(),
             json_object=Helpers.req_body(self, 'devicelist'),
         )
+
+        if response_bytes is None or not LibraryLogger.is_json(response_bytes):
+            raise VeSyncAPIResponseError(
+                'Error receiving response to device list request')
 
         response = orjson.loads(response_bytes)
 
@@ -357,7 +365,7 @@ class VeSync:  # pylint: disable=function-redefined
 
         return proc_return
 
-    async def login(self) -> bool:  # pylint: disable=W9006 # issue with pylint parsing multiple exceptions
+    async def login(self) -> bool:  # pylint: disable=W9006 # pylint mult docstring raises
         """Log into VeSync server.
 
         Username and password are provided when class is instantiated.
@@ -374,33 +382,29 @@ class VeSync:  # pylint: disable=function-redefined
                 or not isinstance(self.password, str) or len(self.password) == 0:
             raise VesyncLoginError('Username and password must be specified')
 
-        resp_bytes, _ = await self.call_api(
+        resp_bytes, _ = await self.async_call_api(
             '/cloud/v1/user/login', 'post',
             json_object=Helpers.req_body(self, 'login')
         )
+        if resp_bytes is None or not LibraryLogger.is_json(resp_bytes):
+            raise VeSyncAPIResponseError('Error receiving response to login request')
+        response = orjson.loads(resp_bytes)
+        if response.get('code') == 0:
+            result = response['result']
+            self.token = result['token']
+            self.account_id = result['accountID']
+            self.country_code = result.get('countryCode')  # TODO: Fix Test defaults
+            self.enabled = True
+            logger.debug('Login successful')
+            return True
 
-        try:
-            response = orjson.loads(resp_bytes)
-        except orjson.JSONDecodeError as exc:
-            raise VeSyncAPIResponseError(
-                'Error receiving response to login request') from exc
-        if isinstance(response, dict):
-            if response.get('code') == 0:
-                result = response['result']
-                self.token = result['token']
-                self.account_id = result['accountID']
-                self.country_code = result['countryCode']
-                self.enabled = True
-                logger.debug('Login successful')
-                return True
-
-            error_info = ErrorCodes.get_error_info(response.get('code'))
-            resp_message = response['msg']
-            info_msg = f'{error_info.message} ({resp_message})'
-            if error_info.error_type == ErrorTypes.AUTHENTICATION:
-                raise VesyncLoginError(info_msg)
-            if error_info.error_type == ErrorTypes.SERVER_ERROR:
-                raise VeSyncServerError(info_msg)
+        error_info = ErrorCodes.get_error_info(response.get('code'))
+        resp_message = response.get('msg', '')
+        info_msg = f'{error_info.message} ({resp_message})'
+        if error_info.error_type == ErrorTypes.AUTHENTICATION:
+            raise VesyncLoginError(info_msg)
+        if error_info.error_type == ErrorTypes.SERVER_ERROR:
+            raise VeSyncServerError(info_msg)
         raise VeSyncAPIResponseError('Error receiving response to login request')
 
     def device_time_check(self) -> bool:
@@ -425,12 +429,12 @@ class VeSync:  # pylint: disable=function-redefined
         await self.update_all_devices()
 
     @deprecated('Energy history updates should be handled by each device')
-    def update_energy(self, bypass_check: bool = False) -> None:
+    async def update_energy(self, bypass_check: bool = False) -> None:
         """Fetch updated energy information for outlet devices."""
         if self.outlets:
             for outlet in self.outlets:
                 if isinstance(outlet, outlet_mods.VeSyncOutlet):
-                    outlet.update_energy(bypass_check)
+                    await outlet.update_energy(bypass_check)
 
     async def update_all_devices(self) -> None:
         """Run `get_details()` for each device and update state."""
@@ -453,8 +457,13 @@ class VeSync:  # pylint: disable=function-redefined
         if self.session and self._close_session:
             await self.session.close()
 
-    async def call_api(self, api: str, method: str, json_object:  dict | None = None,
-                       headers: dict | None = None) -> tuple[bytes | None, int | None]:
+    async def async_call_api(
+        self,
+        api: str,
+        method: str,
+        json_object: dict | None = None,
+        headers: dict | None = None,
+    ) -> tuple[bytes | None, int | None]:
         """Make API calls by passing endpoint, header and body.
 
         api argument is appended to https://smartapi.vesync.com url.
@@ -472,6 +481,7 @@ class VeSync:  # pylint: disable=function-redefined
         Raises:
             VeSyncAPIStatusCodeError: If API returns an error status code.
             VeSyncRateLimitError: If API returns a rate limit error.
+            VeSyncServerError: If API returns a server error.
             ClientResponseError: If API returns a client response error.
         """
         if self.session is None:
@@ -481,35 +491,39 @@ class VeSync:  # pylint: disable=function-redefined
         status_code = None
 
         try:
-            async with self.session.request(method, url=API_BASE_URL + api,
-                                            json=json_object, headers=headers,
-                                            raise_for_status=False
-                                            ) as response:
+            async with self.session.request(
+                method,
+                url=API_BASE_URL + api,
+                json=json_object,
+                headers=headers,
+                raise_for_status=False,
+            ) as response:
                 status_code = response.status
                 resp_bytes = await response.read()
-                if status_code == 200:
-                    LibraryLogger.log_api_call(logger, response, resp_bytes, json_object)
-                    if LibraryLogger.is_json(resp_bytes):
-                        resp_dict = orjson.loads(resp_bytes)
-                        resp_code = resp_dict.get('code')
-                        if resp_code != 0:
-                            error_info = ErrorCodes.get_error_info(resp_dict.get('code'))
-                            LibraryLogger.log_api_status_error(
-                                    logger, request_body=json_object,
-                                    response=response, response_bytes=resp_bytes
-                                    )
-                            if error_info.error_type == ErrorTypes.RATE_LIMIT:
-                                raise VeSyncRateLimitError
-                    return resp_bytes, status_code
-                LibraryLogger.log_api_status_error(logger,
-                                                   request_body=json_object,
-                                                   response=response,
-                                                   response_bytes=resp_bytes)
-                raise VeSyncAPIStatusCodeError(status_code)
+                if status_code != 200:
+                    LibraryLogger.log_api_status_error(
+                        logger,
+                        request_body=json_object,
+                        response=response,
+                        response_bytes=resp_bytes,
+                    )
+                    raise VeSyncAPIStatusCodeError(str(status_code))
+
+                LibraryLogger.log_api_call(logger, response, resp_bytes, json_object)
+                if LibraryLogger.is_json(resp_bytes):
+                    resp_dict = orjson.loads(resp_bytes)
+                    resp_code = ErrorCodes.get_error_info(resp_dict.get("code"))
+                    match resp_code.error_type:
+                        case ErrorTypes.RATE_LIMIT:
+                            logger.error("Rate limit error in API call to %s", api)
+                            raise VeSyncRateLimitError
+                        case ErrorTypes.SERVER_ERROR:
+                            logger.error("Server error in API call to %s", api)
+                            raise VeSyncServerError(resp_code.message)
+                        case _:
+                            pass
+                return resp_bytes, status_code
+
         except ClientResponseError as e:
-            LibraryLogger.log_api_exception(
-                logger,
-                exception=e,
-                request_body=json_object
-            )
+            LibraryLogger.log_api_exception(logger, exception=e, request_body=json_object)
             raise

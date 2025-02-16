@@ -382,8 +382,8 @@ class Helpers:
                                                        "Error decoding JSON response")
             return None
 
-        if r.get('code') != 0:
-            error_code = r.get('code')
+        error_code = r.get('error', {}).get('code') if 'error' in r else r.get('code')
+        if error_code != 0:
             try:
                 error_int = int(error_code)
             except TypeError:
@@ -397,7 +397,7 @@ class Helpers:
                 device.connection_status = "offline"
             LibraryLogger.log_device_code_error(
                 logger, method_name, device.device_name, device.device_type,
-                r['code'], f"{error_info.error_type.name} - {error_info.message}"
+                error_code, f"{error_info.error_type.name} - {error_info.message}"
                 )
             return None
         return r

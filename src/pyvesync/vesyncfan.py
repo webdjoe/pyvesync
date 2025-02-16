@@ -71,7 +71,7 @@ humid_features: dict = {
     },
     'OASISMIST1000S': {
             'module': 'VeSyncHumid1000S',
-            'models': ['LUH-M101S-WUS'],
+            'models': ['LUH-M101S-WUS', 'LUH-M101S-WEUR', 'LUH-M101S-WUSR'],
             'features': [],
             'mist_modes': ['auto', 'sleep', 'manual'],
             'mist_levels': list(range(1, 10))
@@ -403,7 +403,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             'data': {}
         }
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
@@ -456,7 +456,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         if not head and not body:
             return None
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
@@ -514,7 +514,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             'action': 'off',
         }
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
@@ -533,7 +533,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
                 self.connection_status = 'offline'
             LibraryLogger.log_api_response_parse_error(
                 logger, self.device_name, self.device_type,
-                "set_timer", error_info.error_message
+                "set_timer", error_info.message
             )
             return False
 
@@ -555,12 +555,12 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         Returns:
             bool : True if timer is cleared, False if not
         """
-        await self.get_timer()
         if self.timer is None:
             logger.debug('No timer to clear')
             return False
         if self.timer.id is None:
             logger.debug("Timer doesn't have an ID, can't clear")
+            return False
         head, body = self.build_api_dict('delTimer')
         if not head and not body:
             return False
@@ -569,7 +569,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             'id': self.timer.id
         }
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
@@ -580,6 +580,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             return False
 
         logger.debug("Timer cleared")
+        self.timer = None
         return True
 
     async def change_fan_speed(self,
@@ -623,7 +624,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             'mode': 'manual',
         }
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
@@ -646,7 +647,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         Returns:
             bool : True if child lock is turned off, False if not
         """
-        return self.set_child_lock(False)
+        return await self.set_child_lock(False)
 
     async def set_child_lock(self, mode: bool) -> bool:
         """Set Bypass child lock.
@@ -673,7 +674,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             'child_lock': mode
         }
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
@@ -702,7 +703,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
 
         body['payload']['data'] = {}
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
@@ -745,7 +746,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
                 'type': 'APP'
             }
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
@@ -831,7 +832,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             'source': 'APP'
         }
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
@@ -888,7 +889,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             'state': mode
         }
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
@@ -940,7 +941,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             'night_light': mode.lower()
         }
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
@@ -1134,7 +1135,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         """Build API V2 Purifier details dictionary."""
         head, body = self.build_api_dict('getPurifierStatus')
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
@@ -1153,7 +1154,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
                 self.connection_status = 'offline'
             LibraryLogger.log_api_response_parse_error(
                 logger, self.device_name, self.device_type,
-                "get_details", error_info.error_message
+                "get_details", error_info.message
             )
             return
 
@@ -1243,7 +1244,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
 
         head, body = self.build_api_dict('setLightDetection')
         body['payload']['data']['lightDetectionSwitch'] = toggle_id
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
@@ -1277,7 +1278,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
                 'switchIdx': 0
             }
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
@@ -1308,7 +1309,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
             'childLockSwitch': toggle_id
         }
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
@@ -1329,7 +1330,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
             'screenSwitch': mode_id
         }
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
@@ -1377,7 +1378,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
             "subDeviceNo": 0
         }
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
@@ -1396,7 +1397,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         body['payload']['subDeviceNo'] = 0
         body['payload']['data'] = {'id': 1, "subDeviceNo": 0}
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
@@ -1430,7 +1431,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
             'roomSize': room_size,
         }
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
@@ -1476,7 +1477,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
             'levelType': 'wind'
         }
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
@@ -1507,11 +1508,11 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         # Call change_fan_speed if mode is set to manual
         if mode == 'manual':
             if self.speed is None or self.speed == 0:
-                return self.change_fan_speed(1)
-            return self.change_fan_speed(self.speed)
+                return await self.change_fan_speed(1)
+            return await self.change_fan_speed(self.speed)
 
         if mode == 'off':
-            return self.turn_off()
+            return await self.turn_off()
 
         head, body = self.build_api_dict('setPurifierMode')
         if not head and not body:
@@ -1522,7 +1523,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
             'workMode': mode
         }
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
@@ -1599,7 +1600,7 @@ class VeSyncAir131(VeSyncBaseDevice):
         body['uuid'] = self.uuid
         head = Helpers.req_headers(self.manager)
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/131airPurifier/v1/device/deviceDetail',
             method='post',
             headers=head,
@@ -1624,7 +1625,7 @@ class VeSyncAir131(VeSyncBaseDevice):
         body['method'] = 'configurations'
         body['uuid'] = self.uuid
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/131airpurifier/v1/device/configurations',
             'post',
             headers=Helpers.req_headers(self.manager),
@@ -1680,7 +1681,7 @@ class VeSyncAir131(VeSyncBaseDevice):
         head = Helpers.req_headers(self.manager)
         body = Helpers.req_body(self.manager, 'devicestatus')
         body['status'] = status.lower()
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/131airPurifier/v1/device/updateScreen', 'put',
             json_object=body, headers=head
         )
@@ -1699,7 +1700,7 @@ class VeSyncAir131(VeSyncBaseDevice):
             body['status'] = 'on'
             head = Helpers.req_headers(self.manager)
 
-            r_bytes, _ = await self.manager.call_api(
+            r_bytes, _ = await self.manager.async_call_api(
                 '/131airPurifier/v1/device/deviceStatus', 'put',
                 json_object=body, headers=head
             )
@@ -1720,7 +1721,7 @@ class VeSyncAir131(VeSyncBaseDevice):
             body['status'] = 'off'
             head = Helpers.req_headers(self.manager)
 
-            r_bytes, _ = await self.manager.call_api(
+            r_bytes, _ = await self.manager.async_call_api(
                 '/131airPurifier/v1/device/deviceStatus', 'put',
                 json_object=body, headers=head
             )
@@ -1781,7 +1782,7 @@ class VeSyncAir131(VeSyncBaseDevice):
         else:
             body['level'] = int(level + 1)
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/131airPurifier/v1/device/updateSpeed', 'put',
             json_object=body, headers=head
         )
@@ -1802,7 +1803,7 @@ class VeSyncAir131(VeSyncBaseDevice):
             if mode == 'manual':
                 body['level'] = 1
 
-            r_bytes, _ = await self.manager.call_api(
+            r_bytes, _ = await self.manager.async_call_api(
                 '/131airPurifier/v1/device/updateMode', 'put',
                 json_object=body, headers=head
             )
@@ -1863,7 +1864,7 @@ class VeSyncTowerFan(VeSyncAirBaseV2):
     async def get_details(self) -> None:
         """Build API V2 Fan details dictionary."""
         head, body = self.build_api_dict('getTowerFanStatus')
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
@@ -1899,7 +1900,7 @@ class VeSyncTowerFan(VeSyncAirBaseV2):
             return False
 
         if mode == 'off':
-            return self.turn_off()
+            await self.turn_off()
 
         head, body = self.build_api_dict('setTowerFanMode')
         if not head and not body:
@@ -1910,7 +1911,7 @@ class VeSyncTowerFan(VeSyncAirBaseV2):
             'workMode': mode
         }
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
@@ -2055,7 +2056,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
             'data': {}
         }
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
@@ -2063,7 +2064,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
         )
         r = Helpers.process_api_response(logger, "get_details", self, r_bytes)
         if r is None:
-            return False
+            return
 
         outer_result = r.get('result', {})
         inner_result = outer_result.get('result')
@@ -2080,7 +2081,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
                 outer_result.get('code'),
                 outer_error.message
             )
-            return False
+            return
 
         if not inner_result or not outer_result:
             LibraryLogger.log_api_response_parse_error(
@@ -2090,12 +2091,12 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
                 "get_details",
                 "Error in inner result dict from humidifier",
             )
-            return False
+            return
 
         self.build_humid_dict(inner_result)
         if inner_result.get('configuration', {}):
             self.build_config_dict(inner_result.get('configuration', {}))
-            return True
+            return
 
         LibraryLogger.log_api_response_parse_error(
             logger,
@@ -2104,7 +2105,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
             "get_details",
             "Error in configuration dict from humidifier",
         )
-        return False
+        return
 
     async def update(self) -> None:
         """Update 200S/300S Humidifier details."""
@@ -2129,7 +2130,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
             'source': 'APP'
         }
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
@@ -2176,7 +2177,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
             'enabled': mode
         }
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
@@ -2198,7 +2199,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
             'state': mode
         }
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
@@ -2230,7 +2231,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
             'target_humidity': humidity
         }
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
@@ -2258,13 +2259,15 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
             'night_light_brightness': brightness
         }
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
-        r = Helpers.process_api_response(logger, "set_night_light_brightness", self, r_bytes)
+        r = Helpers.process_api_response(
+            logger, "set_night_light_brightness", self, r_bytes
+            )
 
         # TODO: SET STATE
         return bool(r)
@@ -2284,7 +2287,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
             'mode': mode.lower()
         }
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
@@ -2319,7 +2322,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
             'id': 0,
         }
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
@@ -2366,7 +2369,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
             'type': 'mist'
         }
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
@@ -2492,7 +2495,7 @@ class VeSyncHumid200S(VeSyncHumid200300S):
             'id': 0
         }
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
@@ -2578,7 +2581,7 @@ class VeSyncSuperior6000S(VeSyncBaseDevice):
             'data': {}
         }
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
@@ -2642,7 +2645,7 @@ class VeSyncSuperior6000S(VeSyncBaseDevice):
             'source': 'APP'
         }
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
@@ -2679,7 +2682,7 @@ class VeSyncSuperior6000S(VeSyncBaseDevice):
             'autoDryingSwitch': int(mode)
         }
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
@@ -2700,7 +2703,7 @@ class VeSyncSuperior6000S(VeSyncBaseDevice):
             'screenSwitch': int(mode)
         }
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
@@ -2711,11 +2714,11 @@ class VeSyncSuperior6000S(VeSyncBaseDevice):
 
     async def turn_on_display(self) -> bool:
         """Turn display on."""
-        return self.set_display_enabled(True)
+        return await self.set_display_enabled(True)
 
     async def turn_off_display(self) -> bool:
         """Turn display off."""
-        return self.set_display_enabled(False)
+        return await self.set_display_enabled(False)
 
     async def set_humidity(self, humidity: int) -> bool:
         """Set target humidity for humidity mode."""
@@ -2731,7 +2734,7 @@ class VeSyncSuperior6000S(VeSyncBaseDevice):
             'targetHumidity': humidity
         }
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
@@ -2756,7 +2759,7 @@ class VeSyncSuperior6000S(VeSyncBaseDevice):
             'workMode': 'autoPro' if mode == 'auto' else mode
         }
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
@@ -2798,7 +2801,7 @@ class VeSyncSuperior6000S(VeSyncBaseDevice):
             'levelType': 'mist'
         }
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
@@ -2984,7 +2987,7 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
             'data': {}
         }
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
@@ -3037,7 +3040,7 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
             'screenSwitch': int(mode)
         }
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
@@ -3063,7 +3066,7 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
             'workMode': mode.lower()
         }
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
@@ -3093,7 +3096,7 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
             'levelType': 'mist'
         }
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
@@ -3121,7 +3124,7 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
             'source': 'APP'
         }
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
@@ -3151,7 +3154,7 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
             'targetHumidity': humidity
         }
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
@@ -3175,7 +3178,7 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
             'autoStopSwitch': int(mode)
         }
 
-        r_bytes, _ = await self.manager.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
