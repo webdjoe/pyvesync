@@ -1,11 +1,13 @@
 """Test VeSync manager methods."""
 
 import pytest
+import asyncio
 from unittest.mock import patch
 import pyvesync
 import logging
 import copy
 import time
+import orjson
 from itertools import chain
 from pyvesync.vesyncfan import *
 from pyvesync.vesyncbulb import *
@@ -34,9 +36,9 @@ class TestDeviceList(object):
     @pytest.fixture(scope='function')
     def api_mock(self, caplog):
         """Mock call_api and initialize VeSync object."""
-        self.mock_api_call = patch('pyvesync.helpers.Helpers.call_api')
+        self.mock_api_call = patch('pyvesync.vesync.VeSync.async_call_api')
         self.mock_api = self.mock_api_call.start()
-        self.mock_api.create_autospec()
+        self.loop = asyncio.new_event_loop()
         self.mock_api.return_value.ok = True
         self.vesync_obj = pyvesync.vesync.VeSync('sam@mail.com', 'pass', debug=True)
         self.vesync_obj.enabled = True
@@ -47,11 +49,19 @@ class TestDeviceList(object):
         yield
         self.mock_api_call.stop()
 
+    async def run_coro(self, coro):
+        """Run a coroutine in the event loop."""
+        return await coro
+
+    def run_in_loop(self, func, *args, **kwargs):
+        """Run a function in the event loop."""
+        return self.loop.run_until_complete(self.run_coro(func(*args, **kwargs)))
+
     def test_device_api(self, caplog, api_mock):
         """Tests to ensure call_api is being called correctly."""
         head = json_vals.DEFAULT_HEADER_BYPASS
-        self.mock_api.return_value = ({'V': 2}, 200)
-        self.vesync_obj.get_devices()
+        self.mock_api.return_value = (orjson.dumps({'V': 2}), 200)
+        self.run_in_loop(self.vesync_obj.get_devices)
         call_list = self.mock_api.call_args_list
         call_p1 = call_list[0][0]
         call_p2 = call_list[0][1]
@@ -78,7 +88,7 @@ class TestDeviceList(object):
 
         self.mock_api.return_value = device_list
 
-        self.vesync_obj.get_devices()
+        self.run_in_loop(self.vesync_obj.get_devices)
 
         assert len(self.vesync_obj.outlets) == OUTLETS_NUM
         assert len(self.vesync_obj.switches) == SWITCHES_NUM
@@ -93,11 +103,11 @@ class TestDeviceList(object):
         Test for all 6 known devices - 4 outlets, 2 switches, 1 fan.
         """
 
-        device_list = json_vals.DeviceList.FAN_TEST
+        resp_dict, status = json_vals.DeviceList.FAN_TEST
 
-        self.mock_api.return_value = device_list
+        self.mock_api.return_value = orjson.dumps(resp_dict), status
 
-        self.vesync_obj.get_devices()
+        self.run_in_loop(self.vesync_obj.get_devices)
 
         assert len(self.vesync_obj.fans) == 3
 
@@ -109,26 +119,24 @@ class TestDeviceList(object):
         Test for all 6 known devices - 4 outlets, 2 switches, 1 fan.
         """
 
-        device_list = json_vals.DeviceList.device_list_response('Dual200S')
-
-        self.mock_api.return_value = device_list
+        self.mock_api.return_value = json_vals.DeviceList.device_list_response('Dual200S')
         self.vesync_obj.debug = True
-        self.vesync_obj.get_devices()
+        self.run_in_loop(self.vesync_obj.get_devices)
 
         assert len(self.vesync_obj.fans) == 1
 
     def test_getdevs_code(self, caplog, api_mock):
         """Test get_devices with code > 0 returned."""
-        device_list = ({'code': 1, 'msg': 'gibberish'}, 200)
+        device_list = (orjson.dumps({'code': 1, 'msg': 'gibberish'}), 200)
 
         self.mock_api.return_value = device_list
-        self.vesync_obj.get_devices()
+        self.run_in_loop(self.vesync_obj.get_devices)
 
         assert 'Error retrieving device list' in caplog.text
 
     def test_get_devices_resp_changes(self, caplog, api_mock):
         """Test if structure of device list response has changed."""
-        device_list = (
+        resp_dict, status = (
             {
                 'code': 0,
                 'NOTresult': {
@@ -143,15 +151,15 @@ class TestDeviceList(object):
             },
             200,
         )
-        self.mock_api.return_value = device_list
-        self.vesync_obj.get_devices()
+        self.mock_api.return_value = orjson.dumps(resp_dict), status
+        self.run_in_loop(self.vesync_obj.get_devices)
         assert len(caplog.records) == 1
         assert 'Device list in response not found' in caplog.text
 
     def test_7a_bad_conf(self, caplog, api_mock):
         """Test bad device list response."""
-        self.mock_api.return_value = (BAD_DEV_LIST, 200)
-        self.vesync_obj.get_devices()
+        self.mock_api.return_value = (orjson.dumps(BAD_DEV_LIST), 200)
+        self.run_in_loop(self.vesync_obj.get_devices)
         assert len(caplog.records) == 2
 
     def test_7a_no_dev_list(self, caplog, api_mock):
@@ -164,12 +172,12 @@ class TestDeviceList(object):
 
     def test_get_devices_devicetype_error(self, caplog, api_mock):
         """Test result and list keys exist but deviceType not in list."""
-        device_list = (
+        resp_dict, status = (
             {'code': 0, 'result': {'list': [{'type': 'wifi-switch', 'cid': 'cid1'}]}},
             200,
         )
-        self.mock_api.return_value = device_list
-        self.vesync_obj.get_devices()
+        self.mock_api.return_value = orjson.dumps(resp_dict), status
+        self.run_in_loop(self.vesync_obj.get_devices)
         assert len(caplog.records) == 2
         assert 'Error adding device' in caplog.text
 
@@ -184,8 +192,9 @@ class TestDeviceList(object):
         assert len(caplog.records) == 1
         assert 'Unknown' in caplog.text
 
-    def test_time_check(self, api_mock):
+    def NO_test_time_check(self, api_mock):
         """Test device details update throttle."""
+        # The throttle feature has been removed
         time_check = self.vesync_obj.device_time_check()
         assert time_check is True
         self.vesync_obj.last_update_ts = time.time()
@@ -209,32 +218,29 @@ class TestDeviceList(object):
 
         new_list = [device]
         self.vesync_obj.outlets = [outlet_test]
-        device_exists = pyvesync.vesync.VeSync.remove_old_devices(
-            self.vesync_obj, new_list
-        )
+        self.vesync_obj._remove_stale_devices(new_list)  # pylint: disable=protected-access
 
-        assert device_exists
+        assert self.vesync_obj.outlets == [outlet_test]
 
-        del device['cid']
+        device['cid'] = '7A-CID2'
 
-        device_exists = pyvesync.vesync.VeSync.remove_dev_test(outlet_test, new_list)
+        self.vesync_obj._remove_stale_devices([device])  # pylint: disable=protected-access
 
-        assert device_exists is False
+        assert not self.vesync_obj.outlets
 
         assert len(caplog.records) == 2
-        assert 'cid' in caplog.text
 
     @patch('pyvesync.vesyncoutlet.VeSyncOutdoorPlug', autospec=True)
     def test_add_dev_test(self, outdoor_patch, caplog, api_mock):
-        """Test add_device_test to return if device found in existing conf."""
+        """Test that new devices will not be added to instance."""
         outdoor_inst = VeSyncOutdoorPlug(
             json_vals.DeviceList.LIST_CONF_OUTDOOR_2, self.vesync_obj
         )
         self.vesync_obj.outlets = [outdoor_inst]
 
-        add_test = self.vesync_obj.add_dev_test(json_vals.DeviceList.LIST_CONF_OUTDOOR_1)
+        add_test = self.vesync_obj._find_new_devices([json_vals.DeviceList.LIST_CONF_OUTDOOR_1])
 
-        assert add_test
+        assert not add_test
 
     def test_display_func(self, caplog, api_mock):
         """Test display function outputs text."""

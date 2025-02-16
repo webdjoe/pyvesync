@@ -1,9 +1,10 @@
 """Base class for all VeSync devices."""
 from __future__ import annotations
 import logging
-import json
 from typing import TYPE_CHECKING
+import orjson
 from pyvesync.helpers import Helpers as helper  # noqa: N813
+from pyvesync.logs import LibraryLogger
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
@@ -50,39 +51,35 @@ class VeSyncBaseDevice:
     def __init__(self, details: dict, manager: VeSync) -> None:
         """Initialize VeSync device base class."""
         self.manager = manager
-        if 'cid' in details and details['cid'] is not None:
-            self.device_name: str = details['deviceName']
-            self.device_image: str | None = details.get('deviceImg')
-            self.cid: str = details['cid']
-            self.connection_status: str = details['connectionStatus']
-            self.connection_type: str | None = details.get(
-                'connectionType')
-            self.device_type: str = details['deviceType']
-            self.type: str | None = details.get('type')
-            self.uuid: str | None = details.get('uuid')
-            self.config_module: str = details['configModule']
-            self.mac_id: str | None = details.get('macID')
-            self.mode: str | None = details.get('mode')
-            self.speed: int | None = details.get('speed') if details.get(
-                'speed') != '' else None
-            self.extension = details.get('extension')
-            self.current_firm_version = details.get(
-                    'currentFirmVersion')
-            self.device_region: str | None = details.get('deviceRegion')
-            self.pid = None
-            self.sub_device_no = details.get('subDeviceNo', 0)
-            self.config: dict = {}
-            if isinstance(details.get('extension'), dict):
-                ext = details['extension']
-                self.speed = ext.get('fanSpeedLevel')
-                self.mode = ext.get('mode')
-            if self.connection_status != 'online':
-                self.device_status: str | None = 'off'
-            else:
-                self.device_status = details.get('deviceStatus')
-
+        self.device_name: str = details['deviceName']
+        self.device_image: str | None = details.get('deviceImg')
+        self.cid: str = details['cid']
+        self.connection_status: str = details['connectionStatus']
+        self.connection_type: str | None = details.get(
+            'connectionType')
+        self.device_type: str = details['deviceType']
+        self.type: str | None = details.get('type')
+        self.uuid: str | None = details.get('uuid')
+        self.config_module: str = details['configModule']
+        self.mac_id: str | None = details.get('macID')
+        self.mode: str | None = details.get('mode')
+        self.speed: int | None = details.get('speed') if details.get(
+            'speed') != '' else None
+        self.extension = details.get('extension')
+        self.current_firm_version = details.get(
+                'currentFirmVersion')
+        self.device_region: str | None = details.get('deviceRegion')
+        self.pid = None
+        self.sub_device_no = details.get('subDeviceNo', 0)
+        self.config: dict = {}
+        if isinstance(details.get('extension'), dict):
+            ext = details['extension']
+            self.speed = ext.get('fanSpeedLevel')
+            self.mode = ext.get('mode')
+        if self.connection_status != 'online':
+            self.device_status: str | None = 'off'
         else:
-            logger.error('No cid found for %s', self.__class__.__name__)
+            self.device_status = details.get('deviceStatus')
 
     def __eq__(self, other: object) -> bool:
         """Use device CID and subdevice number to test equality."""
@@ -127,21 +124,36 @@ class VeSyncBaseDevice:
             logger.debug('Call device.get_config() to get firmware versions')
         return False
 
-    def get_pid(self) -> None:
+    async def get_pid(self) -> None:
         """Get managed device configuration."""
         body = helper.req_body(self.manager, 'devicedetail')
         body['configModule'] = self.config_module
         body['region'] = self.device_region
         body['method'] = 'configInfo'
-        r, _ = helper.call_api('/cloud/v1/deviceManaged/configInfo',
-                               'post',
-                               json_object=body)
-        if not isinstance(r, dict) or r.get('code') != 0 or r.get('result') is None:
-            logger.error('Error getting config info for %s', self.device_name)
+        r_bytes, _ = await self.manager.async_call_api(
+            '/cloud/v1/deviceManaged/configInfo', 'post', json_object=body
+            )
+        if r_bytes is None or len(r_bytes) == 0:
+            LibraryLogger.log_api_response_parse_error(
+                logger, self.device_name, self.device_type, 'get_pid', "Empty response"
+            )
+            return
+        try:
+            r = orjson.loads(r_bytes)
+        except orjson.JSONDecodeError as err:
+            LibraryLogger.log_api_response_parse_error(
+                logger, self.device_name, self.device_type, 'get_pid', err.msg
+            )
+            return
+        if r.get('code') != 0:
+            LibraryLogger.log_device_code_error(
+                logger, 'get_pid', self.device_name, self.device_type,
+                r.get('code'), r.get('msg', '')
+                )
             return
         self.pid = r.get('result', {}).get('pid')
 
-    def update(self) -> None:
+    async def update(self) -> None:
         """Update device details."""
 
     def display(self) -> None:
@@ -192,7 +204,7 @@ class VeSyncBaseDevice:
         }
         ```
         """
-        return json.dumps(
+        return orjson.dumps(
             {
                 'Device Name': self.device_name,
                 'Model': self.device_type,
@@ -202,4 +214,4 @@ class VeSyncBaseDevice:
                 'Type': self.type,
                 'CID': self.cid,
             },
-            indent=4)
+            option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS).decode()

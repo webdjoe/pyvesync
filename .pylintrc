@@ -11,6 +11,8 @@ load-plugins=
     pylint.extensions.docparams,
     pylint.extensions.mccabe
 
+generated-members=orjson.*
+
 [BASIC]
 good-names=i,j,k,x,r,e,v,_,b,dt,d
 
@@ -38,6 +40,7 @@ disable=
     broad-exception-caught, # FIXME
     cyclic-import,
     duplicate-code,
+    fixme,
     global-statement,
     inconsistent-return-statements,
     invalid-name,
