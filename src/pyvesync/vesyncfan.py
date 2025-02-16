@@ -2210,13 +2210,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
     @property
     def display_state(self) -> bool:
         """Get display state."""
-        # The field 'display' is defined both on 'config' (in build_config_dict) and
-        # 'details' (in build_humid_dict). get_details first calls build_humid_dict
-        # and then build_config_dict if the result has configuration populated. Based
-        # on this, the values in cofig seem to be an override. We will first check
-        # config and then fall back to details
-        value = self.config.get('display', None)
-        return self.details.get('display', False) if value is None else value
+        return bool(self.details['display'])
 
     def set_humidity(self, humidity: int) -> bool:
         """Set target 200S/300S Humidifier humidity."""
