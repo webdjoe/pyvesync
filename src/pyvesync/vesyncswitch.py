@@ -21,11 +21,11 @@ Note:
 """
 
 import logging
-import json
 from abc import ABCMeta, abstractmethod
 from typing import TYPE_CHECKING
+import orjson
 
-from pyvesync.helpers import Helpers as helpers
+from pyvesync.helpers import Helpers
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 
 if TYPE_CHECKING:
@@ -55,7 +55,7 @@ feature_dict: dict[str, dict[str, list | str]] = {
 switch_modules: dict = {k: v['module']
                         for k, v in feature_dict.items()}
 
-__all__: list = [*switch_modules.values(), 'switch_modules']
+__all__: list = [*switch_modules.values(), 'switch_modules']  # noqa: PLE0604
 
 
 class VeSyncSwitch(VeSyncBaseDevice):
@@ -86,19 +86,19 @@ class VeSyncSwitch(VeSyncBaseDevice):
         return bool('dimmable' in self.features)
 
     @abstractmethod
-    def get_details(self) -> None:
+    async def get_details(self) -> None:
         """Get Device Details."""
 
     @abstractmethod
-    def turn_on(self) -> bool:
+    async def turn_on(self) -> bool:
         """Turn Switch On."""
 
     @abstractmethod
-    def turn_off(self) -> bool:
+    async def turn_off(self) -> bool:
         """Turn switch off."""
 
     @abstractmethod
-    def get_config(self) -> None:
+    async def get_config(self) -> None:
         """Get configuration and firmware deatils."""
 
     @property
@@ -106,9 +106,9 @@ class VeSyncSwitch(VeSyncBaseDevice):
         """Get active time of switch."""
         return self.details.get('active_time', 0)
 
-    def update(self) -> None:
+    async def update(self) -> None:
         """Update device details."""
-        self.get_details()
+        await self.get_details()
 
 
 class VeSyncWallSwitch(VeSyncSwitch):
@@ -118,79 +118,82 @@ class VeSyncWallSwitch(VeSyncSwitch):
         """Initialize standard etekcity wall switch class."""
         super().__init__(details, manager)
 
-    def get_details(self) -> None:
+    async def get_details(self) -> None:
         """Get switch device details."""
-        body = helpers.req_body(self.manager, 'devicedetail')
+        body = Helpers.req_body(self.manager, 'devicedetail')
         body['uuid'] = self.uuid
-        head = helpers.req_headers(self.manager)
+        head = Helpers.req_headers(self.manager)
 
-        r, _ = helpers.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/inwallswitch/v1/device/devicedetail', 'post',
             headers=head, json_object=body
         )
 
-        if r is not None and helpers.code_check(r):
-            self.device_status = r.get('deviceStatus', self.device_status)
-            self.details['active_time'] = r.get('activeTime', 0)
-            self.connection_status = r.get(
-                'connectionStatus', self.connection_status)
-        else:
-            logger.debug('Error getting %s details', self.device_name)
+        r = Helpers.process_api_response(logger, "get_details", self, r_bytes)
+        if r is None:
+            return
 
-    def get_config(self) -> None:
+        self.device_status = r.get('deviceStatus', self.device_status)
+        self.details['active_time'] = r.get('activeTime', 0)
+        self.connection_status = r.get(
+            'connectionStatus', self.connection_status)
+
+    async def get_config(self) -> None:
         """Get switch device configuration info."""
-        body = helpers.req_body(self.manager, 'devicedetail')
+        body = Helpers.req_body(self.manager, 'devicedetail')
         body['method'] = 'configurations'
         body['uuid'] = self.uuid
 
-        r, _ = helpers.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/inwallswitch/v1/device/configurations',
             'post',
-            headers=helpers.req_headers(self.manager),
+            headers=Helpers.req_headers(self.manager),
             json_object=body,
         )
 
-        if helpers.code_check(r):
-            self.config = helpers.build_config_dict(r)
-        else:
-            logger.warning('Unable to get %s config info',
-                           self.device_name)
+        r = Helpers.process_api_response(logger, "get_details", self, r_bytes)
+        if r is None:
+            return
 
-    def turn_off(self) -> bool:
+        self.config = Helpers.build_config_dict(r)
+
+    async def turn_off(self) -> bool:  # TO BE FIXED - combine with turn_on in toggle
         """Turn off switch device."""
-        body = helpers.req_body(self.manager, 'devicestatus')
+        body = Helpers.req_body(self.manager, 'devicestatus')
         body['status'] = 'off'
         body['uuid'] = self.uuid
-        head = helpers.req_headers(self.manager)
+        head = Helpers.req_headers(self.manager)
 
-        r, _ = helpers.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/inwallswitch/v1/device/devicestatus', 'put',
             headers=head, json_object=body
         )
 
-        if r is not None and helpers.code_check(r):
-            self.device_status = 'off'
-            return True
-        logger.warning('Error turning %s off', self.device_name)
-        return False
+        r = Helpers.process_api_response(logger, "get_details", self, r_bytes)
+        if r is None:
+            return False
 
-    def turn_on(self) -> bool:
+        self.device_status = 'off'
+        return True
+
+    async def turn_on(self) -> bool:
         """Turn on switch device."""
-        body = helpers.req_body(self.manager, 'devicestatus')
+        body = Helpers.req_body(self.manager, 'devicestatus')
         body['status'] = 'on'
         body['uuid'] = self.uuid
-        head = helpers.req_headers(self.manager)
+        head = Helpers.req_headers(self.manager)
 
-        r, _ = helpers.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/inwallswitch/v1/device/devicestatus', 'put',
             headers=head, json_object=body
         )
 
-        if r is not None and helpers.code_check(r):
-            self.device_status = 'on'
-            return True
-        logger.warning('Error turning %s on', self.device_name)
-        return False
+        r = Helpers.process_api_response(logger, "get_details", self, r_bytes)
+        if r is None:
+            return False
+
+        self.device_status = 'on'
+        return True
 
 
 class VeSyncDimmerSwitch(VeSyncSwitch):
@@ -204,28 +207,29 @@ class VeSyncDimmerSwitch(VeSyncSwitch):
         self._rgb_status = 'unknown'
         self._indicator_light = 'unknown'
 
-    def get_details(self) -> None:
+    async def get_details(self) -> None:
         """Get dimmer switch details."""
-        body = helpers.req_body(self.manager, 'devicedetail')
+        body = Helpers.req_body(self.manager, 'devicedetail')
         body['uuid'] = self.uuid
-        head = helpers.req_headers(self.manager)
+        head = Helpers.req_headers(self.manager)
 
-        r, _ = helpers.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/dimmer/v1/device/devicedetail', 'post',
             headers=head, json_object=body
         )
 
-        if r is not None and helpers.code_check(r):
-            self.device_status = r.get('deviceStatus', self.device_status)
-            self.details['active_time'] = r.get('activeTime', 0)
-            self.connection_status = r.get(
-                'connectionStatus', self.connection_status)
-            self._brightness = r.get('brightness')
-            self._rgb_status = r.get('rgbStatus')
-            self._rgb_value = r.get('rgbValue')
-            self._indicator_light = r.get('indicatorlightStatus')
-        else:
-            logger.debug('Error getting %s details', self.device_name)
+        r = Helpers.process_api_response(logger, "get_details", self, r_bytes)
+        if r is None:
+            return
+
+        self.device_status = r.get('deviceStatus', self.device_status)
+        self.details['active_time'] = r.get('activeTime', 0)
+        self.connection_status = r.get(
+            'connectionStatus', self.connection_status)
+        self._brightness = r.get('brightness', self._brightness)
+        self._rgb_status = r.get('rgbStatus', self._rgb_status)
+        self._rgb_value = r.get('rgbValue', self._rgb_value)
+        self._indicator_light = r.get('indicatorlightStatus', self._indicator_light)
 
     @property
     def brightness(self) -> float:
@@ -247,103 +251,108 @@ class VeSyncDimmerSwitch(VeSyncSwitch):
         """RGB Light Values."""
         return self._rgb_value
 
-    def switch_toggle(self, status: str) -> bool:
+    async def switch_toggle(self, status: str) -> bool:
         """Toggle switch status."""
         if status not in ['on', 'off']:
             logger.debug('Invalid status passed to wall switch')
             return False
-        body = helpers.req_body(self.manager, 'devicestatus')
+        body = Helpers.req_body(self.manager, 'devicestatus')
         body['status'] = status
         body['uuid'] = self.uuid
-        head = helpers.req_headers(self.manager)
+        head = Helpers.req_headers(self.manager)
 
-        r, _ = helpers.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/dimmer/v1/device/devicestatus', 'put',
             headers=head, json_object=body
         )
 
-        if r is not None and helpers.code_check(r):
-            self.device_status = status
-            return True
+        r = Helpers.process_api_response(logger, "get_details", self, r_bytes)
+        if r is None:
+            return False
 
-        logger.warning('Error turning %s %s',
-                       self.device_name, status)
-        return False
+        self.device_status = status
+        return True
 
-    def turn_on(self) -> bool:
+    async def turn_on(self) -> bool:
         """Turn switch on."""
-        return self.switch_toggle('on')
+        return await self.switch_toggle('on')
 
-    def turn_off(self) -> bool:
+    async def turn_off(self) -> bool:
         """Turn switch off."""
-        return self.switch_toggle('off')
+        return await self.switch_toggle('off')
 
-    def indicator_light_toggle(self, status: str) -> bool:
+    async def indicator_light_toggle(self, status: str) -> bool:
         """Toggle indicator light."""
         if status not in ['on', 'off']:
             logger.debug('Invalid status for wall switch')
             return False
-        body = helpers.req_body(self.manager, 'devicestatus')
+        body = Helpers.req_body(self.manager, 'devicestatus')
         body['status'] = status
         body['uuid'] = self.uuid
-        head = helpers.req_headers(self.manager)
+        head = Helpers.req_headers(self.manager)
 
-        r, _ = helpers.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/dimmer/v1/device/indicatorlightstatus',
             'put', headers=head, json_object=body
         )
 
-        if r is not None and helpers.code_check(r):
-            self.device_status = status
-            return True
+        r = Helpers.process_api_response(logger, "get_details", self, r_bytes)
+        if r is None:
+            return False
 
-        logger.warning('Error turning %s indicator light %s',
-                       self.device_name, status)
-        return False
+        self.device_status = status
+        return True
 
-    def indicator_light_on(self) -> bool:
+    async def indicator_light_on(self) -> bool:
         """Turn Indicator light on."""
-        return self.indicator_light_toggle('on')
+        return await self.indicator_light_toggle('on')
 
-    def indicator_light_off(self) -> bool:
+    async def indicator_light_off(self) -> bool:
         """Turn indicator light off."""
-        return self.indicator_light_toggle('off')
+        return await self.indicator_light_toggle('off')
 
-    def rgb_color_status(self, status: str,
-                         red: int | None = None,
-                         blue: int | None = None,
-                         green: int | None = None) -> bool:
+    async def rgb_color_status(
+        self,
+        status: str,
+        red: int | None = None,
+        blue: int | None = None,
+        green: int | None = None,
+    ) -> bool:
         """Set faceplate RGB color."""
-        body = helpers.req_body(self.manager, 'devicestatus')
-        body['status'] = status
-        body['uuid'] = self.uuid
-        head = helpers.req_headers(self.manager)
+        body = Helpers.req_body(self.manager, "devicestatus")
+        body["status"] = status
+        body["uuid"] = self.uuid
+        head = Helpers.req_headers(self.manager)
         if red is not None and blue is not None and green is not None:
-            body['rgbValue'] = {'red': red, 'blue': blue, 'green': green}
+            body["rgbValue"] = {"red": red, "blue": blue, "green": green}
 
-        r, _ = helpers.call_api(
-            '/dimmer/v1/device/devicergbstatus', 'put',
-            headers=head, json_object=body
+        r_bytes, _ = await self.manager.async_call_api(
+            "/dimmer/v1/device/devicergbstatus", "put", headers=head, json_object=body
         )
 
-        if r is not None and helpers.code_check(r):
-            self._rgb_status = status
-            if body.get('rgbValue') is not None and \
-                    red is not None and blue is not None and green is not None:
-                self._rgb_value = {'red': red, 'blue': blue, 'green': green}
-            return True
-        logger.warning('Error turning %s off', self.device_name)
-        return False
+        r = Helpers.process_api_response(logger, "get_details", self, r_bytes)
+        if r is None:
+            return False
 
-    def rgb_color_off(self) -> bool:
+        self._rgb_status = status
+        if (
+            body.get("rgbValue") is not None
+            and red is not None
+            and blue is not None
+            and green is not None
+        ):
+            self._rgb_value = {"red": red, "blue": blue, "green": green}
+        return True
+
+    async def rgb_color_off(self) -> bool:
         """Turn RGB Color Off."""
-        return self.rgb_color_status('off')
+        return await self.rgb_color_status('off')
 
-    def rgb_color_on(self) -> bool:
+    async def rgb_color_on(self) -> bool:
         """Turn RGB Color Off."""
-        return self.rgb_color_status('on')
+        return await self.rgb_color_status('on')
 
-    def rgb_color_set(self, red: int, green: int, blue: int) -> bool:
+    async def rgb_color_set(self, red: int, green: int, blue: int) -> bool:
         """Set RGB color of faceplate."""
         try:
             red = int(red)
@@ -358,35 +367,36 @@ class VeSyncDimmerSwitch(VeSyncSwitch):
                     logger.warning('Invalid RGB value')
                     return False
 
-            return bool(self.rgb_color_status('on', red, green, blue))
+            return bool(await self.rgb_color_status('on', red, green, blue))
         return False
 
-    def set_brightness(self, brightness: int) -> bool:
+    async def set_brightness(self, brightness: int) -> bool:
         """Set brightness of dimmer - 1 - 100."""
         if isinstance(brightness, int) and (
                 brightness > 0 or brightness <= 100):
 
-            body = helpers.req_body(self.manager, 'devicestatus')
+            body = Helpers.req_body(self.manager, 'devicestatus')
             body['brightness'] = brightness
             body['uuid'] = self.uuid
-            head = helpers.req_headers(self.manager)
+            head = Helpers.req_headers(self.manager)
 
-            r, _ = helpers.call_api(
+            r_bytes, _ = await self.manager.async_call_api(
                 '/dimmer/v1/device/updatebrightness', 'put',
                 headers=head, json_object=body
             )
 
-            if r is not None and helpers.code_check(r):
-                self._brightness = brightness
-                return True
-            logger.warning('Error setting %s brightness', self.device_name)
-        else:
-            logger.warning('Invalid brightness')
+            r = Helpers.process_api_response(logger, "get_details", self, r_bytes)
+            if r is None:
+                return False
+
+            self._brightness = brightness
+            return True
+        logger.warning('Invalid brightness')
         return False
 
     def displayJSON(self) -> str:
         """JSON API for dimmer switch."""
-        sup_val = json.loads(super().displayJSON())
+        sup_val = orjson.loads(super().displayJSON())
         if self.is_dimmable is True:  # pylint: disable=using-constant-test
             sup_val.update(
                 {
@@ -395,22 +405,25 @@ class VeSyncDimmerSwitch(VeSyncSwitch):
                     'RGB Light': str(self._rgb_status),
                 }
             )
-        return json.dumps(sup_val, indent=4)
+        return orjson.dumps(
+            sup_val, option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS
+            ).decode()
 
-    def get_config(self) -> None:
+    async def get_config(self) -> None:
         """Get dimmable switch device configuration info."""
-        body = helpers.req_body(self.manager, 'devicedetail')
+        body = Helpers.req_body(self.manager, 'devicedetail')
         body['method'] = 'configurations'
         body['uuid'] = self.uuid
 
-        r, _ = helpers.call_api(
+        r_bytes, _ = await self.manager.async_call_api(
             '/dimmer/v1/device/configurations',
             'post',
-            headers=helpers.req_headers(self.manager),
+            headers=Helpers.req_headers(self.manager),
             json_object=body,
         )
 
-        if helpers.code_check(r):
-            self.config = helpers.build_config_dict(r)
-        else:
-            logger.warning('Unable to get %s config info', self.device_name)
+        r = Helpers.process_api_response(logger, "get_details", self, r_bytes)
+        if r is None:
+            return
+
+        self.config = Helpers.build_config_dict(r)

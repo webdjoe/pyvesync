@@ -1,6 +1,7 @@
 import copy
+import orjson
 import pyvesync.helpers as helpers
-from utils import Defaults
+from defaults import Defaults
 import call_json_switches
 import call_json_outlets
 import call_json_bulbs
@@ -110,7 +111,7 @@ DEFAULT_BODY = {
 
 
 LOGIN_RET_BODY = (
-    {
+    orjson.dumps({
         'traceId': Defaults.trace_id,
         'msg': '',
         'result': {
@@ -123,7 +124,7 @@ LOGIN_RET_BODY = (
             'token': Defaults.token,
         },
         'code': 0,
-    },
+    }),
     200,
 )
 
@@ -222,7 +223,7 @@ class DeviceList:
         for model in full_model_list:
             response_base['result']['list'].append(cls.device_list_item(model))
             response_base['result']['total'] += 1
-        return response_base, 200
+        return orjson.dumps(response_base), 200
 
     LIST_CONF_7A = {
         'deviceType': 'wifi-switch-1.3',

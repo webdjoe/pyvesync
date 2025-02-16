@@ -1,11 +1,13 @@
 """Test scripts for Etekcity Outdoor Outlet."""
 from typing import Any, Dict, Union
 from copy import deepcopy
+import orjson
 from pyvesync.vesyncoutlet import VeSyncOutdoorPlug
-from pyvesync.helpers import Helpers as helpers
+from pyvesync.helpers import Helpers as Helpers
 import call_json
 import call_json_outlets
-from utils import TestBase, Defaults
+from utils import TestBase
+from defaults import Defaults
 
 DEVICE_TYPE = 'ESO15-TB'
 
@@ -33,8 +35,9 @@ class TestVesyncOutdoorPlug(TestBase):
 
     def test_outdoor_conf(self):
         """Tests outdoor outlet is instantiated properly."""
-        self.mock_api.return_value = CORRECT_OUTDOOR_RESP
-        self.manager.get_devices()
+        resp_dict, status = CORRECT_OUTDOOR_RESP
+        self.mock_api.return_value = orjson.dumps(resp_dict), status
+        self.run_in_loop(self.manager.get_devices)
         outlets = self.manager.outlets
         assert len(outlets) == 2
         outdoor_outlet = outlets[0]
@@ -44,9 +47,10 @@ class TestVesyncOutdoorPlug(TestBase):
 
     def test_outdoor_details(self):
         """Tests retrieving outdoor outlet details."""
-        self.mock_api.return_value = CORRECT_OUTDOOR_DETAILS
+        resp_dict, status = CORRECT_OUTDOOR_DETAILS
+        self.mock_api.return_value = orjson.dumps(resp_dict), status
         outdoor_outlet = VeSyncOutdoorPlug(DEV_LIST_DETAIL, self.manager)
-        outdoor_outlet.get_details()
+        self.run_in_loop(outdoor_outlet.get_details)
         dev_details = outdoor_outlet.details
         assert outdoor_outlet.device_status == 'on'
         assert isinstance(outdoor_outlet, VeSyncOutdoorPlug)
@@ -54,29 +58,30 @@ class TestVesyncOutdoorPlug(TestBase):
 
     def test_outdoor_details_fail(self, caplog):
         """Test outdoor outlet get_details response."""
-        self.mock_api.return_value = BAD_OUTDOOR_LIST
+        resp_dict, status = BAD_OUTDOOR_LIST
+        self.mock_api.return_value = orjson.dumps(resp_dict), status
         outdoor_outlet = VeSyncOutdoorPlug(DEV_LIST_DETAIL, self.manager)
-        outdoor_outlet.get_details()
+        self.run_in_loop(outdoor_outlet.get_details)
         assert len(caplog.records) == 1
         assert 'details' in caplog.text
 
     def test_outdoor_outlet_onoff(self):
         """Test Outdoor Outlet Device On/Off Methods."""
-        self.mock_api.return_value = ({'code': 0}, 200)
+        self.mock_api.return_value = (orjson.dumps({'code': 0}), 200)
         outdoor_outlet = VeSyncOutdoorPlug(DEV_LIST_DETAIL, self.manager)
-        head = helpers.req_headers(self.manager)
-        body = helpers.req_body(self.manager, 'devicestatus')
+        head = Helpers.req_headers(self.manager)
+        body = Helpers.req_body(self.manager, 'devicestatus')
 
         body['status'] = 'on'
         body['uuid'] = outdoor_outlet.uuid
         body['switchNo'] = outdoor_outlet.sub_device_no
-        on = outdoor_outlet.turn_on()
+        on = self.run_in_loop(outdoor_outlet.turn_on)
         self.mock_api.assert_called_with(
             '/outdoorsocket15a/v1/device/devicestatus', 'put',
             headers=head, json_object=body
         )
         assert on
-        off = outdoor_outlet.turn_off()
+        off = self.run_in_loop(outdoor_outlet.turn_off)
         body['status'] = 'off'
         self.mock_api.assert_called_with(
             '/outdoorsocket15a/v1/device/devicestatus', 'put',
@@ -86,22 +91,23 @@ class TestVesyncOutdoorPlug(TestBase):
 
     def test_outdoor_outlet_onoff_fail(self):
         """Test outdoor outlet On/Off Fail with Code>0."""
-        self.mock_api.return_value = ({'code': 1}, 400)
+        self.mock_api.return_value = (orjson.dumps({'code': 1}), 400)
         outdoor_outlet = VeSyncOutdoorPlug(DEV_LIST_DETAIL, self.manager)
-        assert not outdoor_outlet.turn_on()
-        assert not outdoor_outlet.turn_off()
+        assert not self.run_in_loop(outdoor_outlet.turn_on)
+        assert not self.run_in_loop(outdoor_outlet.turn_off)
 
     def test_outdoor_outlet_weekly(self):
         """Test outdoor outlet get_weekly_energy."""
-        self.mock_api.return_value = ENERGY_HISTORY
+        resp_dict, status = ENERGY_HISTORY
+        self.mock_api.return_value = orjson.dumps(resp_dict), status
         outdoor_outlet = VeSyncOutdoorPlug(DEV_LIST_DETAIL, self.manager)
-        outdoor_outlet.get_weekly_energy()
-        body = helpers.req_body(self.manager, 'energy_week')
+        self.run_in_loop(outdoor_outlet.get_weekly_energy)
+        body = Helpers.req_body(self.manager, 'energy_week')
         body['uuid'] = outdoor_outlet.uuid
         self.mock_api.assert_called_with(
             '/outdoorsocket15a/v1/device/energyweek',
             'post',
-            headers=helpers.req_headers(self.manager),
+            headers=Helpers.req_headers(self.manager),
             json_object=body,
         )
         energy_dict = outdoor_outlet.energy['week']
@@ -114,15 +120,16 @@ class TestVesyncOutdoorPlug(TestBase):
 
     def test_outdoor_outlet_monthly(self):
         """Test outdoor outlet get_monthly_energy."""
-        self.mock_api.return_value = ENERGY_HISTORY
+        resp_dict, status = ENERGY_HISTORY
+        self.mock_api.return_value = orjson.dumps(resp_dict), status
         outdoor_outlet = VeSyncOutdoorPlug(DEV_LIST_DETAIL, self.manager)
-        outdoor_outlet.get_monthly_energy()
-        body = helpers.req_body(self.manager, 'energy_month')
+        self.run_in_loop(outdoor_outlet.get_monthly_energy)
+        body = Helpers.req_body(self.manager, 'energy_month')
         body['uuid'] = outdoor_outlet.uuid
         self.mock_api.assert_called_with(
             '/outdoorsocket15a/v1/device/energymonth',
             'post',
-            headers=helpers.req_headers(self.manager),
+            headers=Helpers.req_headers(self.manager),
             json_object=body,
         )
         energy_dict = outdoor_outlet.energy['month']
@@ -135,15 +142,16 @@ class TestVesyncOutdoorPlug(TestBase):
 
     def test_outdoor_outlet_yearly(self):
         """Test outdoor outlet get_yearly_energy."""
-        self.mock_api.return_value = ENERGY_HISTORY
+        resp_dict, status = ENERGY_HISTORY
+        self.mock_api.return_value = orjson.dumps(resp_dict), status
         outdoor_outlet = VeSyncOutdoorPlug(DEV_LIST_DETAIL, self.manager)
-        outdoor_outlet.get_yearly_energy()
-        body = helpers.req_body(self.manager, 'energy_year')
+        self.run_in_loop(outdoor_outlet.get_yearly_energy)
+        body = Helpers.req_body(self.manager, 'energy_year')
         body['uuid'] = outdoor_outlet.uuid
         self.mock_api.assert_called_with(
             '/outdoorsocket15a/v1/device/energyyear',
             'post',
-            headers=helpers.req_headers(self.manager),
+            headers=Helpers.req_headers(self.manager),
             json_object=body,
         )
         energy_dict = outdoor_outlet.energy['year']
@@ -156,17 +164,17 @@ class TestVesyncOutdoorPlug(TestBase):
 
     def test_history_fail(self):
         """Test outdoor outlet energy failure."""
-        bad_history = {'code': 1}
+        bad_history = orjson.dumps({'code': 1})
         self.mock_api.return_value = (bad_history, 200)
         outdoor_outlet = VeSyncOutdoorPlug(DEV_LIST_DETAIL, self.manager)
-        outdoor_outlet.update_energy()
+        self.run_in_loop(outdoor_outlet.update_energy)
         assert len(self.caplog.records) == 1
         assert 'weekly' in self.caplog.text
         self.caplog.clear()
-        outdoor_outlet.get_monthly_energy()
+        self.run_in_loop(outdoor_outlet.get_monthly_energy)
         assert len(self.caplog.records) == 1
         assert 'monthly' in self.caplog.text
         self.caplog.clear()
-        outdoor_outlet.get_yearly_energy()
+        self.run_in_loop(outdoor_outlet.get_yearly_energy)
         assert len(self.caplog.records) == 1
         assert 'yearly' in self.caplog.text

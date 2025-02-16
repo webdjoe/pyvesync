@@ -27,8 +27,10 @@ See Also
 """
 
 import logging
+import orjson
 from pyvesync.vesync import object_factory
-from utils import TestBase, assert_test, parse_args, Defaults
+from utils import TestBase, assert_test, parse_args
+from defaults import Defaults
 import call_json
 import call_json_switches
 
@@ -125,7 +127,8 @@ class TestSwitches(TestBase):
         method. The device details contain the default values set in `utils.Defaults`
         """
         # Set return value for call_api based on call_json_bulb.DETAILS_RESPONSES
-        self.mock_api.return_value = call_json_switches.DETAILS_RESPONSES[dev_type]
+        resp_dict, status = call_json_switches.DETAILS_RESPONSES[dev_type]
+        self.mock_api.return_value = orjson.dumps(resp_dict), status
 
         # Instantiate device from device list return item
         device_config = call_json.DeviceList.device_list_item(dev_type)
@@ -133,7 +136,7 @@ class TestSwitches(TestBase):
                                        device_config,
                                        self.manager)
         method_call = getattr(switch_obj, method)
-        method_call()
+        self.run_in_loop(method_call)
 
         # Parse mock_api args tuple from arg, kwargs to kwargs
         all_kwargs = parse_args(self.mock_api)
@@ -149,8 +152,9 @@ class TestSwitches(TestBase):
             assert switch_obj.rgb_light_status == 'on'
             assert switch_obj.rgb_light_value == COLOR_DICT
         self.mock_api.reset_mock()
-        self.mock_api.return_value = call_json.DETAILS_BADCODE
-        method_call()
+        bad_dict, status = call_json.DETAILS_BADCODE
+        self.mock_api.return_value = orjson.dumps(bad_dict), status
+        self.run_in_loop(method_call)
         assert 'details' in self.caplog.records[-1].message
 
     def test_methods(self, dev_type, method):
@@ -192,12 +196,12 @@ class TestSwitches(TestBase):
         method_response = call_json_switches.METHOD_RESPONSES[dev_type][method_name]
         if callable(method_response):
             if method_kwargs:
-                self.mock_api.return_value = method_response(**method_kwargs)
+                resp_dict, status = method_response(**method_kwargs)
             else:
-                self.mock_api.return_value = method_response()
+                resp_dict, status = method_response()
         else:
-            self.mock_api.return_value = method_response
-
+            resp_dict, status = method_response
+        self.mock_api.return_value = orjson.dumps(resp_dict), status
         # Get device configuration from call_json.DeviceList.device_list_item()
         device_config = call_json.DeviceList.device_list_item(dev_type)
 
@@ -217,9 +221,9 @@ class TestSwitches(TestBase):
 
         # Call method with kwargs if defined
         if method_kwargs:
-            method_call(**method_kwargs)
+            self.run_in_loop(method_call, **method_kwargs)
         else:
-            method_call()
+            self.run_in_loop(method_call)
 
         # Parse arguments from mock_api call into a dictionary
         all_kwargs = parse_args(self.mock_api)
@@ -229,8 +233,11 @@ class TestSwitches(TestBase):
                     self.write_api, self.overwrite)
 
         self.mock_api.reset_mock()
-        self.mock_api.return_value = call_json.DETAILS_BADCODE
+        resp_dict, status = call_json.DETAILS_BADCODE
+        self.mock_api.return_value = orjson.dumps(resp_dict), status
         if method_kwargs:
-            assert method_call(**method_kwargs) is False
+            return_val = self.run_in_loop(method_call, **method_kwargs)
+            assert return_val is False
         else:
-            assert method_call() is False
+            return_val = self.run_in_loop(method_call)
+            assert return_val is False

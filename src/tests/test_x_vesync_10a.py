@@ -1,14 +1,13 @@
 """Test scripts for Etekcity 10A Outlets."""
 
 import pytest
-from unittest.mock import patch
-import logging
-from pyvesync import VeSync
+import orjson
 from pyvesync.vesyncoutlet import VeSyncOutlet10A
-from pyvesync.helpers import Helpers as helpers
+from pyvesync.helpers import Helpers as Helpers
 import call_json
 import call_json_outlets
-from utils import Defaults, TestBase
+from utils import TestBase
+from defaults import Defaults
 
 OutletDefaults = call_json_outlets.OutletDefaults
 
@@ -35,8 +34,9 @@ class TestVesync10ASwitch(TestBase):
     )
     def test_10a_conf(self, mock_return, devtype):
         """Tests that 10A US & EU Outlet is instantiated properly."""
-        self.mock_api.return_value = mock_return
-        self.manager.get_devices()
+        resp_dict, status = mock_return
+        self.mock_api.return_value = resp_dict, status
+        self.run_in_loop(self.manager.get_devices)
         outlets = self.manager.outlets
         assert len(outlets) == 1
         outlet = outlets[0]
@@ -48,12 +48,13 @@ class TestVesync10ASwitch(TestBase):
 
     def test_10a_details(self):
         """Test 10A get_details()."""
-        self.mock_api.return_value = CORRECT_10A_DETAILS
+        resp_dict, status = CORRECT_10A_DETAILS
+        self.mock_api.return_value = orjson.dumps(resp_dict), status
         outlet = VeSyncOutlet10A(DEV_LIST_DETAIL_US, self.manager)
-        outlet.get_details()
+        self.run_in_loop(outlet.get_details)
         dev_details = outlet.details
         assert outlet.device_status == 'on'
-        assert type(dev_details) == dict
+        assert isinstance(dev_details, dict)
         assert dev_details['active_time'] == Defaults.active_time
         assert dev_details['energy'] == OutletDefaults.energy
         assert dev_details['power'] == OutletDefaults.power
@@ -63,27 +64,28 @@ class TestVesync10ASwitch(TestBase):
 
     def test_10a_details_fail(self):
         """Test 10A get_details with Code>0."""
-        self.mock_api.return_value = BAD_10A_LIST
+        resp_dict, status = BAD_10A_LIST
+        self.mock_api.return_value = orjson.dumps(resp_dict), status
         out = VeSyncOutlet10A(DEV_LIST_DETAIL_EU, self.manager)
-        out.get_details()
+        self.run_in_loop(out.get_details)
         assert len(self.caplog.records) == 1
         assert 'details' in self.caplog.text
 
     def test_10a_onoff(self):
         """Test 10A Device On/Off Methods."""
-        self.mock_api.return_value = ({'code': 0}, 200)
+        self.mock_api.return_value = (orjson.dumps({'code': 0}), 200)
         out = VeSyncOutlet10A(DEV_LIST_DETAIL_EU, self.manager)
-        head = helpers.req_headers(self.manager)
-        body = helpers.req_body(self.manager, 'devicestatus')
+        head = Helpers.req_headers(self.manager)
+        body = Helpers.req_body(self.manager, 'devicestatus')
 
         body['status'] = 'on'
         body['uuid'] = out.uuid
-        on = out.turn_on()
+        on = self.run_in_loop(out.turn_on)
         self.mock_api.assert_called_with(
             '/10a/v1/device/devicestatus', 'put', headers=head, json_object=body
         )
         assert on
-        off = out.turn_off()
+        off = self.run_in_loop(out.turn_off)
         body['status'] = 'off'
         self.mock_api.assert_called_with(
             '/10a/v1/device/devicestatus', 'put', headers=head, json_object=body
@@ -92,22 +94,23 @@ class TestVesync10ASwitch(TestBase):
 
     def test_10a_onoff_fail(self):
         """Test 10A On/Off Fail with Code>0."""
-        self.mock_api.return_value = ({'code': 1}, 400)
+        self.mock_api.return_value = (orjson.dumps({'code': 1}), 400)
         out = VeSyncOutlet10A(DEV_LIST_DETAIL_US, self.manager)
-        assert not out.turn_on()
-        assert not out.turn_off()
+        assert not self.run_in_loop(out.turn_on)
+        assert not self.run_in_loop(out.turn_off)
 
     def test_10a_weekly(self):
         """Test 10A get_weekly_energy."""
-        self.mock_api.return_value = ENERGY_HISTORY
+        resp_dict, status = ENERGY_HISTORY
+        self.mock_api.return_value = orjson.dumps(resp_dict), status
         out = VeSyncOutlet10A(DEV_LIST_DETAIL_EU, self.manager)
-        out.get_weekly_energy()
-        body = helpers.req_body(self.manager, 'energy_week')
+        self.run_in_loop(out.get_weekly_energy)
+        body = Helpers.req_body(self.manager, 'energy_week')
         body['uuid'] = out.uuid
         self.mock_api.assert_called_with(
             '/10a/v1/device/energyweek',
             'post',
-            headers=helpers.req_headers(self.manager),
+            headers=Helpers.req_headers(self.manager),
             json_object=body,
         )
         energy_dict = out.energy['week']
@@ -120,15 +123,16 @@ class TestVesync10ASwitch(TestBase):
 
     def test_10a_monthly(self):
         """Test 10A get_monthly_energy."""
-        self.mock_api.return_value = ENERGY_HISTORY
+        resp_dict, status = ENERGY_HISTORY
+        self.mock_api.return_value = orjson.dumps(resp_dict), status
         out = VeSyncOutlet10A(DEV_LIST_DETAIL_EU, self.manager)
-        out.get_monthly_energy()
-        body = helpers.req_body(self.manager, 'energy_month')
+        self.run_in_loop(out.get_monthly_energy)
+        body = Helpers.req_body(self.manager, 'energy_month')
         body['uuid'] = out.uuid
         self.mock_api.assert_called_with(
             '/10a/v1/device/energymonth',
             'post',
-            headers=helpers.req_headers(self.manager),
+            headers=Helpers.req_headers(self.manager),
             json_object=body,
         )
         energy_dict = out.energy['month']
@@ -141,15 +145,16 @@ class TestVesync10ASwitch(TestBase):
 
     def test_10a_yearly(self):
         """Test 10A get_yearly_energy."""
-        self.mock_api.return_value = ENERGY_HISTORY
+        resp_dict, status = ENERGY_HISTORY
+        self.mock_api.return_value = orjson.dumps(resp_dict), status
         out = VeSyncOutlet10A(DEV_LIST_DETAIL_US, self.manager)
-        out.get_yearly_energy()
-        body = helpers.req_body(self.manager, 'energy_year')
+        self.run_in_loop(out.get_yearly_energy)
+        body = Helpers.req_body(self.manager, 'energy_year')
         body['uuid'] = out.uuid
         self.mock_api.assert_called_with(
             '/10a/v1/device/energyyear',
             'post',
-            headers=helpers.req_headers(self.manager),
+            headers=Helpers.req_headers(self.manager),
             json_object=body,
         )
         energy_dict = out.energy['year']
@@ -163,16 +168,16 @@ class TestVesync10ASwitch(TestBase):
     def test_history_fail(self):
         """Test 15A energy failure."""
         bad_history = {'code': 1}
-        self.mock_api.return_value = (bad_history, 200)
+        self.mock_api.return_value = (orjson.dumps(bad_history), 200)
         out = VeSyncOutlet10A(DEV_LIST_DETAIL_US, self.manager)
-        out.update_energy()
+        self.run_in_loop(out.update_energy)
         assert len(self.caplog.records) == 1
         assert 'weekly' in self.caplog.text
         self.caplog.clear()
-        out.get_monthly_energy()
+        self.run_in_loop(out.get_monthly_energy)
         assert len(self.caplog.records) == 1
         assert 'monthly' in self.caplog.text
         self.caplog.clear()
-        out.get_yearly_energy()
+        self.run_in_loop(out.get_yearly_energy)
         assert len(self.caplog.records) == 1
         assert 'yearly' in self.caplog.text
