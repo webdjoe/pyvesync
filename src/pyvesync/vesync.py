@@ -455,7 +455,10 @@ class VeSync:  # pylint: disable=function-redefined
     async def __aexit__(self, *exec_info: object) -> None:
         """Asynchronous context manager exit."""
         if self.session and self._close_session:
+            logger.debug("Closing session, exiting context manager")
             await self.session.close()
+            return
+        logger.debug("Session not closed, exiting context manager")
 
     async def async_call_api(
         self,

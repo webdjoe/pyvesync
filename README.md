@@ -2,9 +2,9 @@
 
 pyvesync is a library to manage VeSync compatible [smart home devices](#supported-devices)
 
-## What's new in pyvesync 2.0
+## What's new in pyvesync 3.0
 
-**BREAKING CHANGES** - The release of pyvesync 2.0 comes with many improvements and new features, but as a result there are many breaking changes.
+**BREAKING CHANGES** - The release of pyvesync 3.0 comes with many improvements and new features, but as a result there are many breaking changes.
 
 ### Asynchronous operation
 
@@ -38,6 +38,13 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+```
+
+pvesync will close the `ClientSession` that was created by the library on `__aexit__`. If a session is passed in as an argument, the library does not close it. If a session is passed in and not closed, aiohttp will generate an error on exit:
+
+```text
+2025-02-16 14:41:07 - ERROR - asyncio - Unclosed client session
+2025-02-16 14:41:07 - ERROR - asyncio - Unclosed connector
 ```
 
 ### Custom Exceptions
