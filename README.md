@@ -40,6 +40,17 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
+If using `async with` is not ideal, the `__aenter__()` and `__aexit__()` methods need to be called manually:
+
+```python
+manager = VeSync(user, pass)
+await manager.__aenter__()
+
+...
+
+await manager.__aexit__(None, None, None)
+```
+
 pvesync will close the `ClientSession` that was created by the library on `__aexit__`. If a session is passed in as an argument, the library does not close it. If a session is passed in and not closed, aiohttp will generate an error on exit:
 
 ```text
