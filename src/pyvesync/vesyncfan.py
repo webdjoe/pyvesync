@@ -66,7 +66,7 @@ humid_features: dict = {
     },
     'OASISMIST1000S': {
             'module': 'VeSyncHumid1000S',
-            'models': ['LUH-M101S-WUS'],
+            'models': ['LUH-M101S-WUS', 'LUH-M101S-WEUR'],
             'features': [],
             'mist_modes': ['auto', 'sleep', 'manual'],
             'mist_levels': list(range(1, 10))
