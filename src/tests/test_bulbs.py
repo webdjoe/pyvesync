@@ -34,8 +34,8 @@ import call_json
 import call_json_bulbs
 
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+_LOGGER = logging.getLogger(__name__)
+_LOGGER.setLevel(logging.DEBUG)
 
 DEFAULT_COLOR = Defaults.color
 DEFAULT_COLOR_RGB = dict(DEFAULT_COLOR.rgb._asdict())

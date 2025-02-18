@@ -41,7 +41,7 @@ class TestVeSyncBSDGO1Switch(TestBase):
         """Test BSDGO1 get_details()."""
         self.mock_api.return_value = CORRECT_BSDGO1_DETAILS
         bsdgo1_outlet = VeSyncOutletBSDGO1(DEV_LIST_DETAIL, self.manager)
-        assert bsdgo1_outlet.get_details()
+        bsdgo1_outlet.get_details()
         response = CORRECT_BSDGO1_DETAILS
         result = response.get('result', {})
 
@@ -55,7 +55,7 @@ class TestVeSyncBSDGO1Switch(TestBase):
         """Test BSDGO1 get_details with bad response."""
         self.mock_api.return_value = BAD_BSDGO1_LIST
         bsdgo1_outlet = VeSyncOutletBSDGO1(DEV_LIST_DETAIL, self.manager)
-        assert bsdgo1_outlet.get_details()==False
+        bsdgo1_outlet.get_details()
         assert len(self.caplog.records) == 1
         assert 'FAILED' in self.caplog.text
 

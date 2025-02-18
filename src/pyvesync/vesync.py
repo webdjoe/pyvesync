@@ -12,8 +12,8 @@ from .const import (
     DEFAULT_TZ, DEFAULT_REGION, BYPASS_HEADER_UA,
     ENERGY_WEEK, ENERGY_MONTH, ENERGY_YEAR,
 )
-from .helpers import Helpers, logger, REQUEST_T
-from .logs import LibraryLogger, VesyncLoginError
+from .helpers import Helpers, REQUEST_T
+from .logs import LibraryLogger, VesyncLoginError, _LOGGER
 from .vesyncbasedevice import VeSyncBaseDevice
 from .vesyncbulb import factory as bulb_factory
 from .vesyncfan import factory as fan_factory
@@ -112,14 +112,14 @@ class VeSync:  # pylint: disable=function-redefined
         if isinstance(time_zone, str) and time_zone:
             reg_test = r'[^a-zA-Z/_]'
             if bool(re.search(reg_test, time_zone)):
-                logger.warning(
+                _LOGGER.warning(
                     'Invalid characters in time zone %s - using default!',
                     time_zone
                 )
             else:
                 self.time_zone = time_zone
         else:
-            logger.warning('Time zone is not a string - using default!')
+            _LOGGER.warning('Time zone is not a string - using default!')
 
     @property
     def debug(self) -> bool:
@@ -171,9 +171,9 @@ class VeSync:  # pylint: disable=function-redefined
                         device_found = True
                         break
                 else:
-                    logger.debug('No cid found in - %s', str(item))
+                    _LOGGER.debug('No cid found in - %s', str(item))
             if not device_found:
-                logger.debug(
+                _LOGGER.debug(
                     'Device removed - %s - %s',
                     device.device_name, device.device_type
                 )
@@ -201,7 +201,7 @@ class VeSync:  # pylint: disable=function-redefined
         ]
         after = len(self._device_list)
         if before != after:
-            logger.debug('%s devices removed', str((before - after)))
+            _LOGGER.debug('%s devices removed', str((before - after)))
         return True
 
     @staticmethod
@@ -217,7 +217,7 @@ class VeSync:  # pylint: disable=function-redefined
                     dev['cid'] = dev['uuid']
                 else:
                     dev_rem.append(dev_num)
-                    logger.warning('Device with no ID  - %s',
+                    _LOGGER.warning('Device with no ID  - %s',
                                    dev.get('deviceName'))
             dev_num += 1
             if dev_rem:
@@ -250,13 +250,13 @@ class VeSync:  # pylint: disable=function-redefined
                     self._device_list.append(device)
                     break
             except AttributeError as err:
-                logger.debug(
+                _LOGGER.debug(
                     'Error - %s: device %s(%s) not added',
                     err, dev_name, dev_type
                 )
 
         if (device is None):
-            logger.debug('Unknown device %s (%s) - not added!', dev_type, dev_name)
+            _LOGGER.debug('Unknown device %s (%s) - not added!', dev_type, dev_name)
 
         return device
 
@@ -271,10 +271,10 @@ class VeSync:  # pylint: disable=function-redefined
         num_devices = len(devices)
 
         if not devices:
-            logger.warning('No devices found in api return')
+            _LOGGER.warning('No devices found in api return')
             return False
         if num_devices == 0:
-            logger.debug('New device list initialized')
+            _LOGGER.debug('New device list initialized')
         else:
             self.remove_old_devices(devices)
 
@@ -283,7 +283,7 @@ class VeSync:  # pylint: disable=function-redefined
         detail_keys = ['deviceType', 'deviceName', 'deviceStatus']
         for dev_details in devices:
             if not all(k in dev_details for k in detail_keys):
-                logger.debug('Error adding device')
+                _LOGGER.debug('Error adding device')
                 continue
             self.object_factory(dev_details)
 
@@ -315,13 +315,13 @@ class VeSync:  # pylint: disable=function-redefined
                         device_list = result['list']
                         proc_return = self.process_devices(device_list)
                     else:
-                        logger.error('Device list in response not found')
+                        _LOGGER.error('Device list in response not found')
                 else:
-                    logger.error('Device list in response not found')
+                    _LOGGER.error('Device list in response not found')
             else:
-                logger.error('Result in response not found')
+                _LOGGER.error('Result in response not found')
         else:
-            logger.warning('Error retrieving device list')
+            _LOGGER.warning('Error retrieving device list')
 
         self.in_process = False
 
@@ -356,9 +356,9 @@ class VeSync:  # pylint: disable=function-redefined
                     self.account_id = result.get('accountID')
                     self.country_code = result.get('countryCode')
                     self.enabled = True
-                    logger.debug('Login successful')
-                    logger.debug('token %s', self.token)
-                    logger.debug('account_id %s', self.account_id)
+                    _LOGGER.debug('Login successful')
+                    _LOGGER.debug('token %s', self.token)
+                    _LOGGER.debug('account_id %s', self.account_id)
                     return True
         if isinstance(r, dict) and isinstance(r.get('msg'), str):
             message = r['msg']
@@ -383,12 +383,12 @@ class VeSync:  # pylint: disable=function-redefined
         if self.device_time_check():
 
             if not self.enabled:
-                logger.error('Not logged in to VeSync')
+                _LOGGER.error('Not logged in to VeSync')
                 return
 
             self.get_devices()
 
-            logger.debug('Start updating the device details one by one')
+            _LOGGER.debug('Start updating the device details one by one')
             self.update_all_devices()
 
             self.last_update_ts = time.time()
@@ -451,7 +451,7 @@ class VeSync:  # pylint: disable=function-redefined
     @property
     def device_list(self) -> List[VeSyncBaseDevice]:
         """Returns a list of all registered devices."""
-        return self._device_list.copy()
+        return list(self._device_list)
 
     def req_headers(self) -> REQUEST_T:
         """Build header for legacy api GET requests.
@@ -721,7 +721,7 @@ class VeSync:  # pylint: disable=function-redefined
         if (api == VeSync.API_FIRMWARE):
             return self.req_body_firmware()
 
-        logger.warning('pyvesync: building request-body for unknown method "%s"!', api)
+        _LOGGER.warning('pyvesync: building request-body for unknown method "%s"!', api)
         return {
             **self.req_body_base(),
             **self.req_body_auth(),

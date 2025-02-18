@@ -21,8 +21,8 @@ import call_json_fans
 import call_json_switches
 from utils import TestBase, assert_test, parse_args
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+_LOGGER = logging.getLogger(__name__)
+_LOGGER.setLevel(logging.DEBUG)
 
 LOGIN_RESPONSE = call_json.LOGIN_RET_BODY
 

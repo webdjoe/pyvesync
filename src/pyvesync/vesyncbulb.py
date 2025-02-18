@@ -35,14 +35,14 @@ from __future__ import annotations
 import logging
 import json
 import sys
-from typing import Union, Optional, NamedTuple
+from typing import Union, Optional, NamedTuple, Any
 from abc import ABCMeta, abstractmethod
 from .vesync_enums import EConfig, EDeviceFamily, ColorMode
 from .const import ERR_DEV_OFFLINE, ERR_REQ_TIMEOUTS, STATUS_ON, STATUS_OFF
 from .helpers import Helpers, Color
 from .vesyncbasedevice import VeSyncBaseDevice
 
-logger = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 module_bulb = sys.modules[__name__]
 
@@ -126,7 +126,7 @@ class VeSyncBulb(VeSyncBaseDevice):
         super().__init__(details, manager, bulb_features, EDeviceFamily.BULB)
         self._color_mode = bulb_color_modes.get(self.device_type, ColorMode.NONE)
         if self.features is None:
-            logger.error("No configuration set for - %s", self.device_type)
+            _LOGGER.error("No configuration set for - %s", self.device_type)
             raise KeyError
 
     @property
@@ -335,7 +335,7 @@ class VeSyncBulb(VeSyncBaseDevice):
         elif self._color is not None:
             valid_hue = self._color.hsv.hue
         else:
-            logger.debug("No current hue value, setting to 0")
+            _LOGGER.debug("No current hue value, setting to 0")
             valid_hue = 360
         hsv_dict['hue'] = valid_hue
         for itm, val in {'saturation': saturation, 'value': value}.items():
@@ -344,7 +344,7 @@ class VeSyncBulb(VeSyncBaseDevice):
             elif self.color is not None:
                 valid_item = getattr(self.color.hsv, itm)
             else:
-                logger.debug("No current %s value, setting to 0", itm)
+                _LOGGER.debug("No current %s value, setting to 0", itm)
                 valid_item = 100
             hsv_dict[itm] = valid_item
         return Color(hue=hsv_dict['hue'], saturation=hsv_dict['saturation'],
@@ -445,7 +445,7 @@ class VeSyncBulb(VeSyncBaseDevice):
             bool: True if successful, False otherwise.
         """
         if self.rgb_shift_feature is False:
-            logger.debug("HSV not supported by bulb")
+            _LOGGER.debug("HSV not supported by bulb")
             return False
         return bool(hue and saturation and value)
 
@@ -463,7 +463,7 @@ class VeSyncBulb(VeSyncBaseDevice):
             bool: True if successful, False otherwise.
         """
         if self.rgb_shift_feature is False:
-            logger.debug("RGB not supported by bulb")
+            _LOGGER.debug("RGB not supported by bulb")
             return False
         return bool(red and green and blue)
 
@@ -471,23 +471,23 @@ class VeSyncBulb(VeSyncBaseDevice):
         """Return formatted bulb info to stdout."""
         super().display()
         if self.connection_status == 'online':
-            disp = []  # initiate list
+            disp: list[tuple[str, Any, str]] = []  # initiate list
             if self.dimmable_feature:
-                disp.append(('Brightness', str(self.brightness), '%'))
+                disp.append(('Brightness', self.brightness, '%'))
             if self.color_temp_feature:
                 disp += [
-                    ('White Temperature Pct', str(self.color_temp_pct), '%'),
-                    ('White Temperature Kelvin', str(self.color_temp_kelvin), 'K')
+                    ('White Temperature Pct', self.color_temp_pct, '%'),
+                    ('White Temperature Kelvin', self.color_temp_kelvin, 'K')
                 ]
             if self.rgb_shift_feature and self.color is not None:
                 disp += [
                     ('ColorHSV', Helpers.named_tuple_to_str(self.color.hsv), ''),
                     ('ColorRGB', Helpers.named_tuple_to_str(self.color.rgb), ''),
-                    ('ColorMode', str(self.color_mode), '')
+                    ('ColorMode', self.color_mode, '')
                 ]
             if len(disp) > 0:
                 for line in disp:
-                    print(f"{line[0]+': ':.<30} {' '.join(line[1:])}")
+                    print(f"{line[0]+': ':.<30} {' '.join([str(ln) for ln in line[1:]])}")
 
     def displayJSON(self) -> str:
         """Return bulb device info in JSON format.
@@ -602,13 +602,13 @@ class VeSyncBulbESL100MC(VeSyncBulb):
         r = self.manager.post_device_managed_v2(body)
         if not isinstance(r, dict) or not isinstance(r.get('result'), dict) \
                 or r.get('code') != 0:
-            logger.debug("Error in bulb response")
+            _LOGGER.debug("Error in bulb response")
             return
         outer_result = r.get('result', {})
         inner_result = outer_result.get('result')
 
         if inner_result is None or outer_result.get('code') != 0:
-            logger.debug("No status data in bulb response")
+            _LOGGER.debug("No status data in bulb response")
             return
         self._interpret_api_call_result(inner_result)
         return
@@ -681,10 +681,10 @@ class VeSyncBulbESL100MC(VeSyncBulb):
             new_color = self._validate_rgb(red, green, blue)
             color_mode = 'color'
             if self.device_status == STATUS_ON and new_color == self._color:
-                logger.debug("New color is same as current color")
+                _LOGGER.debug("New color is same as current color")
                 return True
         else:
-            logger.debug("RGB Values not provided")
+            _LOGGER.debug("RGB Values not provided")
             new_color = None
             if brightness is not None:
                 brightness_update = int(self._validate_brightness(brightness))
@@ -694,11 +694,11 @@ class VeSyncBulbESL100MC(VeSyncBulb):
                     and
                     (brightness_update == self._brightness)
                 ):
-                    logger.debug('Brightness already set to %s', brightness)
+                    _LOGGER.debug('Brightness already set to %s', brightness)
                     return True
                 color_mode = 'white'
             else:
-                logger.debug("Brightness and RGB values are not set")
+                _LOGGER.debug("Brightness and RGB values are not set")
                 return False
 
         data = {
@@ -713,7 +713,7 @@ class VeSyncBulbESL100MC(VeSyncBulb):
         body = self.build_api_dict('setLightStatus', data)
         r = self.manager.post_device_managed_v2(body)
         if not isinstance(r, dict) or r.get('code') != 0:
-            logger.debug("Error in setting bulb status")
+            _LOGGER.debug("Error in setting bulb status")
             return False
 
         if color_mode == 'color' and new_color is not None:
@@ -732,12 +732,12 @@ class VeSyncBulbESL100MC(VeSyncBulb):
         if (status in (STATUS_ON, STATUS_OFF)):
             turn_on = status == STATUS_ON
         else:
-            logger.debug("Status must be on or off")
+            _LOGGER.debug("Status must be on or off")
             return False
         body = self.build_api_dict('setSwitch', {'id': 0, 'enabled': turn_on})
         r = self.manager.post_device_managed_v2(body)
         if not isinstance(r, dict) or r.get('code') != 0:
-            logger.debug("Error in setting %s %s", self.device_name, status)
+            _LOGGER.debug("Error in setting %s %s", self.device_name, status)
             return False
         self.device_status = status
         return True
@@ -785,7 +785,7 @@ class VeSyncBulbESL100(VeSyncBulb):
             if self.dimmable_feature:
                 self._brightness = int(r.get('brightNess'))
         else:
-            logger.debug('Error getting %s details', self.device_name)
+            _LOGGER.debug('Error getting %s details', self.device_name)
 
     def get_config(self) -> None:
         body = self.manager.req_body_device_detail()
@@ -797,7 +797,7 @@ class VeSyncBulbESL100(VeSyncBulb):
         if Helpers.code_check(r):
             self.config = Helpers.build_config_dict(r)
         else:
-            logger.debug('Error getting %s config info', self.device_name)
+            _LOGGER.debug('Error getting %s config info', self.device_name)
 
     def turn(self, status: str) -> bool:
         body = self.manager.req_body_status()
@@ -819,11 +819,11 @@ class VeSyncBulbESL100(VeSyncBulb):
             bool: True if successful, False otherwise.
         """
         if not self.dimmable_feature:
-            logger.debug('%s is not dimmable', self.device_name)
+            _LOGGER.debug('%s is not dimmable', self.device_name)
             return False
         brightness_update = int(self._validate_brightness(brightness))
         if self.device_status == STATUS_ON and brightness_update == self._brightness:
-            logger.debug("Device already in requested state")
+            _LOGGER.debug("Device already in requested state")
             return True
         if self.device_status == STATUS_OFF:
             self.turn(STATUS_ON)
@@ -837,7 +837,7 @@ class VeSyncBulbESL100(VeSyncBulb):
             self._brightness = brightness_update
             return True
 
-        logger.debug('Error setting brightness for %s', self.device_name)
+        _LOGGER.debug('Error setting brightness for %s', self.device_name)
         return False
 
 
@@ -862,17 +862,17 @@ class VeSyncBulbESL100CW(VeSyncBulb):
             if light_resp is not None:
                 self._interpret_api_call_result(light_resp)
             elif r.get('code') == ERR_DEV_OFFLINE:
-                logger.debug('%s device offline', self.device_name)
+                _LOGGER.debug('%s device offline', self.device_name)
                 self.connection_status = 'offline'
                 self.device_status = STATUS_OFF
             else:
-                logger.debug(
+                _LOGGER.debug(
                     '%s - Unknown return code - %s with message %s',
                     self.device_name,
                     str(r.get('code', '')),
                     str(r.get('msg', '')),
                 )
-        logger.debug('Error calling %s', self.device_name)
+        _LOGGER.debug('Error calling %s', self.device_name)
 
     def _interpret_api_call_result(self, response: dict) -> None:
         self.connection_status = 'online'
@@ -888,11 +888,11 @@ class VeSyncBulbESL100CW(VeSyncBulb):
         if Helpers.code_check(r):
             self.config = Helpers.build_config_dict(r)
         else:
-            logger.debug('Error getting %s config info', self.device_name)
+            _LOGGER.debug('Error getting %s config info', self.device_name)
 
     def turn(self, status: str) -> bool:
         if status not in (STATUS_ON, STATUS_OFF):
-            logger.debug('Invalid status %s', status)
+            _LOGGER.debug('Invalid status %s', status)
             return False
         body = {
             **self.manager.req_body_bypass_v1(),
@@ -906,7 +906,7 @@ class VeSyncBulbESL100CW(VeSyncBulb):
         if Helpers.code_check(r):
             self.device_status = status
             return True
-        logger.debug('%s offline', self.device_name)
+        _LOGGER.debug('%s offline', self.device_name)
         self.device_status = STATUS_OFF
         self.connection_status = 'offline'
         return False
@@ -915,7 +915,7 @@ class VeSyncBulbESL100CW(VeSyncBulb):
         """Set brightness of tunable bulb."""
         brightness_update = int(self._validate_brightness(brightness))
         if self.device_status == STATUS_ON and brightness_update == self._brightness:
-            logger.debug("Device already in requested state")
+            _LOGGER.debug("Device already in requested state")
             return True
         body = {
             **self.manager.req_body_bypass_v1(),
@@ -936,7 +936,7 @@ class VeSyncBulbESL100CW(VeSyncBulb):
             return True
         self.device_status = STATUS_OFF
         self.connection_status = 'offline'
-        logger.debug('%s offline', self.device_name)
+        _LOGGER.debug('%s offline', self.device_name)
 
         return False
 
@@ -944,7 +944,7 @@ class VeSyncBulbESL100CW(VeSyncBulb):
         """Set Color Temperature of Bulb in pct (1 - 100)."""
         color_temp_update = self._validate_color_temp(color_temp)
         if self.device_status == STATUS_ON and color_temp_update == self._color_temp:
-            logger.debug("Device already in requested state")
+            _LOGGER.debug("Device already in requested state")
             return True
         body = {
             **self.manager.req_body_bypass_v1(),
@@ -964,11 +964,11 @@ class VeSyncBulbESL100CW(VeSyncBulb):
                 self._color_temp = color_temp
                 return True
             if code == ERR_DEV_OFFLINE:
-                logger.debug('%s device offline', self.device_name)
+                _LOGGER.debug('%s device offline', self.device_name)
                 self.connection_status = 'offline'
                 self.device_status = STATUS_OFF
             else:
-                logger.debug(
+                _LOGGER.debug(
                     '%s - Unknown return code - %d with message %s',
                     self.device_name,
                     r.get('code'),
@@ -990,7 +990,7 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
         if Helpers.code_check(r):
             self._interpret_api_call_result(r)
         else:
-            logger.debug('Error calling %s', self.device_name)
+            _LOGGER.debug('Error calling %s', self.device_name)
 
     def _interpret_api_call_result(self, response: dict) -> None:
         if response.get('result', {}).get('result') is not None:
@@ -1006,22 +1006,22 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
                 try:
                     self._color_mode = ColorMode(color_mode)
                 except Exception:
-                    logger.warning("Unknown ColorMode '%s' - using 'color'!")
+                    _LOGGER.warning("Unknown ColorMode '%s' - using 'color'!")
                     self._color_mode = ColorMode.COLOR
                 hue = float(round(innerresult.get('hue')/27.777777, 2))
                 sat = float(innerresult.get('saturation')/100)
                 val = float(innerresult.get('value'))
                 self._color = Color(hue=hue, saturation=sat, value=val)
         elif (response.get('code') in ERR_REQ_TIMEOUTS):
-            logger.debug('%s device request timeout', self.device_name)
+            _LOGGER.debug('%s device request timeout', self.device_name)
             self.connection_status = 'offline'
             self.device_status = STATUS_OFF
         elif response.get('code') == ERR_DEV_OFFLINE:
-            logger.debug('%s device offline', self.device_name)
+            _LOGGER.debug('%s device offline', self.device_name)
             self.connection_status = 'offline'
             self.device_status = STATUS_OFF
         else:
-            logger.debug(
+            _LOGGER.debug(
                 '%s - Unknown return code - %d with message %s',
                 self.device_name,
                 response.get('code'),
@@ -1039,8 +1039,8 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
                 result = r.get('result')
                 self.__build_config_dict(result)
         else:
-            logger.debug('Error getting %s config info', self.device_name)
-            logger.debug('  return code - %d with message %s',
+            _LOGGER.debug('Error getting %s config info', self.device_name)
+            _LOGGER.debug('  return code - %d with message %s',
                          r.get('code'), r.get('msg'))
 
     def __build_config_dict(self, conf_dict: dict[str, str]) -> None:
@@ -1066,18 +1066,18 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
         elif status == STATUS_ON:
             status_bool = True
         else:
-            logger.debug('Invalid status %s for turn - only on/off allowed',
+            _LOGGER.debug('Invalid status %s for turn - only on/off allowed',
                          status)
             return False
         if status == self.device_status:
-            logger.debug("Device already in requested state")
+            _LOGGER.debug("Device already in requested state")
             return True
         body = self.build_api_dict('setSwitch', {'id': 0, 'enabled': status_bool})
         r = self.manager.post_device_managed_v2(body)
         if Helpers.code_check(r):
             self.device_status = status
             return True
-        logger.debug('%s offline', self.device_name)
+        _LOGGER.debug('%s offline', self.device_name)
         self.device_status = STATUS_OFF
         self.connection_status = 'offline'
         return False
@@ -1135,7 +1135,7 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
             same_colors = all(current_dict.get(k) == v
                               for k, v in filtered_arg_dict.items())
             if self.device_status == STATUS_ON and same_colors:
-                logger.debug("Device already in requested state")
+                _LOGGER.debug("Device already in requested state")
                 return True
         arg_dict = {
             "hue": int(round(arg_dict["hue"]*27.77778, 0)) if isinstance(
@@ -1206,7 +1206,7 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
         if brightness is not None:
             brightness_update = self._validate_brightness(brightness)
             if self.device_status == 'on' and brightness_update == self._brightness:
-                logger.debug('Brightness already set to %s', brightness)
+                _LOGGER.debug('Brightness already set to %s', brightness)
                 return True
             if all(locals().get(k) is None for k in force_list):
                 request_dict['force'] = 0
@@ -1227,7 +1227,7 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
                               'hsv': 'hsv'}
             if not isinstance(color_mode, str) or \
                     color_mode.lower() not in possible_modes:
-                logger.error('Error: invalid color_mode value')
+                _LOGGER.error('Error: invalid color_mode value')
                 return False
             color_mode = color_mode.lower()
             request_dict['colorMode'] = possible_modes[color_mode]
@@ -1259,7 +1259,7 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
             return True
         self.device_status = STATUS_OFF
         self.connection_status = 'offline'
-        logger.debug('%s offline', self.device_name)
+        _LOGGER.debug('%s offline', self.device_name)
         return False
 
 

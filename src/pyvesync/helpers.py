@@ -13,8 +13,7 @@ from .vesync_enums import EConfig
 from .logs import LibraryLogger, VeSyncRateLimitError
 from .const import ERR_RATE_LIMITS
 
-
-logger = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 # Base api for all device requests-
 API_BASE_URL: str = 'https://smartapi.vesync.com'
@@ -31,6 +30,10 @@ REQUEST_T = dict[str, Any]
 
 
 def build_model_dict(configurations, key) -> dict[str, str]:
+    """Build a dict for the give model name to a corresponding class name."""
+    return {k: v.get(key) for v in configurations.values() for k in v[EConfig.MODELS]}
+
+def build_model_dicts(configurations, key) -> dict[str, list[str]]:
     """Build a dict for the give model name to a corresponding class name."""
     return {k: v.get(key) for v in configurations.values() for k in v[EConfig.MODELS]}
 
@@ -144,7 +147,7 @@ class Helpers:
             )
         except Exception as e:
             LibraryLogger.log_api_exception(
-                logger,
+                _LOGGER,
                 exception=e,
                 request_dict={
                     "method": method,
@@ -155,11 +158,11 @@ class Helpers:
             )
         else:
             if r.status_code == 200:
-                LibraryLogger.log_api_call(logger, r)
+                LibraryLogger.log_api_call(_LOGGER, r)
                 if LibraryLogger.is_json(r.text):
                     response = r.json()
                     if response.get('code') in ERR_RATE_LIMITS:
-                        LibraryLogger.log_api_exception(logger, request_dict={
+                        LibraryLogger.log_api_exception(_LOGGER, request_dict={
                             "method": method,
                             "endpoint": api,
                             "status_code": r.status_code,
@@ -171,7 +174,7 @@ class Helpers:
                     return response
                 response = r.text
                 return response
-            LibraryLogger.log_api_exception(logger, request_dict={
+            LibraryLogger.log_api_exception(_LOGGER, request_dict={
                 "method": method,
                 "endpoint": api,
                 "status_code": r.status_code,
@@ -185,7 +188,7 @@ class Helpers:
     def code_check(r: Optional[REQUEST_T]) -> bool:
         """Test if code == 0 for successful API call."""
         if r is None:
-            logger.error('No response from API')
+            _LOGGER.error('No response from API')
             return False
         return (isinstance(r, dict) and r.get('code') == 0)
 
@@ -394,7 +397,7 @@ class Color:
             self.rgb = RGB(*self.valid_rgb(red, green, blue))  # type: ignore[arg-type]
             self.hsv = self.rgb_to_hsv(red, green, blue)  # type: ignore[arg-type]
         else:
-            logger.error('No color values provided')
+            _LOGGER.error('No color values provided')
 
     @staticmethod
     def _min_max(value: float | str, min_val: float,
@@ -505,7 +508,7 @@ class Timer:
     def status(self, status: str) -> None:
         """Set status of timer."""
         if status not in ['active', 'paused', 'done']:
-            logger.error('Invalid status %s', status)
+            _LOGGER.error('Invalid status %s', status)
             raise ValueError
         self._internal_update()
         if status == 'done' or self._status == 'done':

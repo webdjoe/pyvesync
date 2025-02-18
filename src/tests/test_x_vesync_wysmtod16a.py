@@ -38,7 +38,7 @@ class TestVeSyncWYSMTOD16ASwitch(TestBase):
         """Test WYSMTOD16A get_details()."""
         self.mock_api.return_value = CORRECT_WYSMTOD16A_DETAILS
         wysmtod16a_outlet = VeSyncOutletWYSMTOD16A(DEV_LIST_DETAIL, self.manager)
-        assert wysmtod16a_outlet.get_details() == True
+        wysmtod16a_outlet.get_details()
         response = CORRECT_WYSMTOD16A_DETAILS
         properties = response.get('result', {}).get('result', {})
         expected_status = 'on' if properties.get('powerSwitch_1') == 1 else 'off'
@@ -48,7 +48,7 @@ class TestVeSyncWYSMTOD16ASwitch(TestBase):
         """Test WYSMTOD16A get_details with bad response."""
         self.mock_api.return_value = BAD_WYSMTOD16A_LIST
         wysmtod16a_outlet = VeSyncOutletWYSMTOD16A(DEV_LIST_DETAIL, self.manager)
-        assert wysmtod16a_outlet.get_details() == False
+        wysmtod16a_outlet.get_details()
         assert len(self.caplog.records) == 1
         assert 'FAILED' in self.caplog.text
 

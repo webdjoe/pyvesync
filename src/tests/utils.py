@@ -15,16 +15,14 @@ from pathlib import Path
 from typing import Any
 import pytest
 import yaml
-from collections import defaultdict, namedtuple
+from collections import defaultdict
 from unittest.mock import patch
 from requests.structures import CaseInsensitiveDict
 from pyvesync.vesync import VeSync, APP_VERSION, PHONE_BRAND, PHONE_OS
 from pyvesync.helpers import Color
-import pyvesync.helpers as vs_helpers
-from pyvesync.const import *
+from pyvesync.const import USER_TYPE, DEFAULT_TZ
 
-
-logger = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 FunctionResponses: defaultdict = defaultdict(lambda: {"code": 0, "msg": None})
 
@@ -235,7 +233,7 @@ class YAMLWriter:
 
     def _new_file(self) -> bool:
         if not self.file.exists():
-            logger.debug(f'Creating new file {self.file}')
+            _LOGGER.debug(f'Creating new file {self.file}')
             self.file.touch()
             return True
         return False
@@ -264,7 +262,7 @@ class YAMLWriter:
             current_dict = self.existing_yaml.get(method)
             self._existing_api = current_dict
             if current_dict is not None:
-                logger.debug(f'API call {method} already exists in {self.file}')
+                _LOGGER.debug(f'API call {method} already exists in {self.file}')
                 return True
         return False
 
@@ -283,7 +281,7 @@ class YAMLWriter:
         if self.existing_yaml is not None:
             current_dict = self.existing_yaml.get(method)
             if current_dict is not None and overwrite is False:
-                logger.debug(f'API call {method} already exists in {self.file}')
+                _LOGGER.debug(f'API call {method} already exists in {self.file}')
                 return
             self.existing_yaml[method] = yaml_dict
         else:
@@ -425,11 +423,11 @@ def assert_test(test_func, all_kwargs, dev_type=None, write_api=False, overwrite
         writer.write_api(method_name, all_kwargs, overwrite)
         return True
     if writer.existing_api(method_name) is False:
-        logger.debug("No existing, API data for %s %s %s", mod, cls_name, method_name)
+        _LOGGER.debug("No existing, API data for %s %s %s", mod, cls_name, method_name)
         if write_api is True:
-            logger.debug("Writing API data for %s %s %s", mod, cls_name, method_name)
+            _LOGGER.debug("Writing API data for %s %s %s", mod, cls_name, method_name)
             writer.write_api(method_name, all_kwargs, overwrite)
         else:
-            logger.debug("Not writing API data for %s %s %s", mod, cls_name, method_name)
+            _LOGGER.debug("Not writing API data for %s %s %s", mod, cls_name, method_name)
     assert writer._existing_api == all_kwargs
     return True

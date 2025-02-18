@@ -32,8 +32,8 @@ import call_json
 import call_json_switches
 
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+_LOGGER = logging.getLogger(__name__)
+_LOGGER.setLevel(logging.DEBUG)
 
 DEFAULT_COLOR = Defaults.color.rgb
 COLOR_DICT = {

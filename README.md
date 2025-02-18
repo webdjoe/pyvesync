@@ -12,8 +12,6 @@ pyvesync is a library to manage VeSync compatible [smart home devices](#supporte
   - [Etekcity Bulbs](#etekcity-bulbs)
   - [Valceno Bulbs](#valceno-bulbs)
   - [Levoit Humidifiers](#levoit-humidifiers)
-  - [Cosori Air Fryer](#cosori-air-fryer)
-  - [Fans](#fans)
 - [Usage](#usage)
 - [Configuration](#configuration)
   - [Time Zones](#time-zones)
@@ -31,10 +29,9 @@ pyvesync is a library to manage VeSync compatible [smart home devices](#supporte
   - [Standard Air Purifier Properties \& Methods](#standard-air-purifier-properties--methods)
     - [Air Purifier Properties](#air-purifier-properties)
     - [Air Purifier Methods](#air-purifier-methods)
-    - [Levoit Purifier Core200S/300S/400S, Vital 100S/200S \& Everest Air Properties](#levoit-purifier-core200s300s400s-vital-100s200s--everest-air-properties)
-    - [Levoit Purifier Core200S/300S/400S, Vital 100S/200S \& Everest Air Methods](#levoit-purifier-core200s300s400s-vital-100s200s--everest-air-methods)
-    - [Levoit Vital 100S/200S \& Everest Air Properties and Methods](#levoit-vital-100s200s--everest-air-properties-and-methods)
-    - [Levoit Everest Air Properties \& Methods](#levoit-everest-air-properties--methods)
+    - [Levoit Purifier Core200S/300S/400S and Vital 100S/200S Properties](#levoit-purifier-core200s300s400s-vital-100s200s--everest-air-properties)
+    - [Levoit Purifier Core200S/300S/400S, Vital 100S/200S & Everest Air Methods](#levoit-purifier-core200s300s400s-vital-100s200s--everest-air-methods)
+    - [Levoit Vital 100S/200S Properties and Methods](#levoit-vital-100s200s--everest-air-properties-and-methods)
   - [Lights API Methods \& Properties](#lights-api-methods--properties)
     - [Brightness Light Bulb Method and Properties](#brightness-light-bulb-method-and-properties)
     - [Light Bulb Color Temperature Methods and Properties](#light-bulb-color-temperature-methods-and-properties)
@@ -64,8 +61,6 @@ pyvesync is a library to manage VeSync compatible [smart home devices](#supporte
 - [Debug mode](#debug-mode)
 - [Redact mode](#redact-mode)
 - [Feature Requests](#feature-requests)
-- [Device Requests](#device-requests)
-- [Contributing](#contributing)
 
 ## Installation
 
@@ -963,8 +958,8 @@ import logging
 import json
 from pyvesync import VeSync
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+_LOGGER = logging.getLogger(__name__)
+_LOGGER.setLevel(logging.DEBUG)
 
 USERNAME = "YOUR USERNAME"
 PASSWORD = "YOUR PASSWORD"
@@ -973,19 +968,19 @@ def test_device():
     # Instantiate VeSync class and login
     manager = VeSync(USERNAME, PASSWORD, debug=True)
     if manager.login() == False:
-        logger.debug("Unable to login")
+        _LOGGER.debug("Unable to login")
         return
 
-    # Pull and update the list of devices
+    # Pull and update devices
     manager.update()
 
     fan = None
-    logger.debug(str(manager.device_list))
+    _LOGGER.debug(str(manager.fans))
 
-    for dev in manager.device_list:
+    for dev in manager.fans:
         # Print all device info
-        logger.debug(dev.device_name + "\n")
-        logger.debug(dev.display())
+        _LOGGER.debug(dev.device_name + "\n")
+        _LOGGER.debug(dev.display())
 
         # Find correct device
         if dev.device_name.lower() == DEVICE_NAME.lower():
@@ -993,21 +988,21 @@ def test_device():
             break
 
     if fan == None:
-        logger.debug("Device not found")
-        logger.debug("Devices found - \n %s", str(manager._device_list))
+        _LOGGER.debug("Device not found")
+        _LOGGER.debug("Devices found - \n %s", str(manager._device_list))
         return
 
 
-    logger.debug('--------------%s-----------------' % fan.device_name)
-    logger.debug(dev.display())
-    logger.debug(dev.displayJSON())
+    _LOGGER.debug('--------------%s-----------------' % fan.device_name)
+    _LOGGER.debug(dev.display())
+    _LOGGER.debug(dev.displayJSON())
     # Test all device methods and functionality
     # Test Properties
-    logger.debug("Fan is on - %s", fan.is_on)
-    logger.debug("Modes - %s", fan.modes)
-    logger.debug("Fan Level - %s", fan.fan_level)
-    logger.debug("Fan Air Quality - %s", fan.air_quality)
-    logger.debug("Screen Status - %s", fan.screen_status)
+    _LOGGER.debug("Fan is on - %s", fan.is_on)
+    _LOGGER.debug("Modes - %s", fan.modes)
+    _LOGGER.debug("Fan Level - %s", fan.fan_level)
+    _LOGGER.debug("Fan Air Quality - %s", fan.air_quality)
+    _LOGGER.debug("Screen Status - %s", fan.screen_status)
 
     fan.turn_on()
     fan.turn_off()
@@ -1022,22 +1017,22 @@ def test_device():
     fan.turn_on_display()
 
     fan.set_light_detection_on()
-    logger.debug(fan.light_detection_state)
-    logger.debug(fan.light_detection)
+    _LOGGER.debug(fan.light_detection_state)
+    _LOGGER.debug(fan.light_detection)
 
     # Only on Vital 200S
     fan.pet_mode()
 
-    logger.debug("Set Fan Speed - %s", fan.set_fan_speed)
-    logger.debug("Current Fan Level - %s", fan.fan_level)
-    logger.debug("Current mode - %s", fan.mode)
+    _LOGGER.debug("Set Fan Speed - %s", fan.set_fan_speed)
+    _LOGGER.debug("Current Fan Level - %s", fan.fan_level)
+    _LOGGER.debug("Current mode - %s", fan.mode)
 
     # Display all device info
-    logger.debug(dev.display())
-    logger.debug(dev.displayJSON())
+    _LOGGER.debug(dev.display())
+    _LOGGER.debug(dev.displayJSON())
 
 if __name__ == "__main__":
-    logger.debug("Testing device")
+    _LOGGER.debug("Testing device")
     test_device()
 ...
 

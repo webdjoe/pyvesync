@@ -32,8 +32,8 @@ import call_json
 import call_json_fans
 
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+_LOGGER = logging.getLogger(__name__)
+_LOGGER.setLevel(logging.DEBUG)
 
 DEFAULT_COLOR = Defaults.color
 DEFAULT_COLOR_RGB = dict(DEFAULT_COLOR.rgb._asdict())
@@ -111,7 +111,7 @@ class TestAirPurifiers(TestBase):
                      ['set_timer', {'timer_duration': 100}], ['clear_timer']],
 
     }
-        
+
     def test_details(self, dev_type, method):
         """Test the device details API request and response.
 

@@ -31,7 +31,7 @@ from .vesync_enums import EConfig, EDeviceFamily
 from .helpers import Helpers, REQUEST_T, DEVICE_CONFIGS_T
 from .vesyncbasedevice import VeSyncBaseDevice
 
-logger = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 module_switch = sys.modules[__name__]
 
@@ -139,7 +139,7 @@ class VeSyncWallSwitch(VeSyncSwitch):
                     'connectionStatus', self.connection_status
                 )
                 return
-        logger.debug('Error getting %s details', self.device_name)
+        _LOGGER.debug('Error getting %s details', self.device_name)
 
     def get_config(self) -> None:
         """Get switch device configuration info."""
@@ -150,12 +150,12 @@ class VeSyncWallSwitch(VeSyncSwitch):
             if (r is not None):
                 self.config = Helpers.build_config_dict(r)
                 return
-        logger.warning('Unable to get %s config info', self.device_name)
+        _LOGGER.warning('Unable to get %s config info', self.device_name)
 
     def turn(self, status: str) -> bool:
         """Turn switch device on/off."""
         if status not in [STATUS_ON, STATUS_OFF]:
-            logger.debug('Invalid status passed to wall switch')
+            _LOGGER.debug('Invalid status passed to wall switch')
             return False
         body = self._get_body_status({'status': status})
         r = self._get_result(body, '/inwallswitch/v1/device/devicestatus', 'put')
@@ -164,7 +164,7 @@ class VeSyncWallSwitch(VeSyncSwitch):
             self.device_status = status
             return True
 
-        logger.warning('Error turning %s %s', self.device_name, status)
+        _LOGGER.warning('Error turning %s %s', self.device_name, status)
         return False
 
 
@@ -215,7 +215,7 @@ class VeSyncDimmerSwitch(VeSyncSwitch):
                 self._rgb_value = r.get('rgbValue', {'red': 0, 'green': 0, 'blue': 0})
                 self._indicator_light = r.get('indicatorlightStatus', '')
         else:
-            logger.debug('Error getting %s details', self.device_name)
+            _LOGGER.debug('Error getting %s details', self.device_name)
 
     def get_config(self) -> None:
         """Get dimmable switch device configuration info."""
@@ -226,12 +226,12 @@ class VeSyncDimmerSwitch(VeSyncSwitch):
             if r is not None:
                 self.config = Helpers.build_config_dict(r)
                 return
-        logger.warning('Unable to get %s config info', self.device_name)
+        _LOGGER.warning('Unable to get %s config info', self.device_name)
 
     def turn(self, status: str) -> bool:
         """Turn switch on/off."""
         if status not in [STATUS_ON, STATUS_OFF]:
-            logger.debug('Invalid status passed to wall switch')
+            _LOGGER.debug('Invalid status passed to wall switch')
             return False
         body = self._get_body_status({'status': status})
         r = self._get_result(body, '/dimmer/v1/device/devicestatus', 'put')
@@ -240,13 +240,13 @@ class VeSyncDimmerSwitch(VeSyncSwitch):
             self.device_status = status
             return True
 
-        logger.warning('Error turning %s %s', self.device_name, status)
+        _LOGGER.warning('Error turning %s %s', self.device_name, status)
         return False
 
     def indicator_light_turn(self, status: str) -> bool:
         """Turn indicator light."""
         if status not in [STATUS_ON, STATUS_OFF]:
-            logger.debug('Invalid status for wall switch')
+            _LOGGER.debug('Invalid status for wall switch')
             return False
         body = self._get_body_status({'status': status})
         r = self._get_result(body, '/dimmer/v1/device/indicatorlightstatus', 'put')
@@ -255,7 +255,7 @@ class VeSyncDimmerSwitch(VeSyncSwitch):
             self.device_status = status
             return True
 
-        logger.warning('Error turning %s indicator light %s',
+        _LOGGER.warning('Error turning %s indicator light %s',
                        self.device_name, status)
         return False
 
@@ -280,13 +280,12 @@ class VeSyncDimmerSwitch(VeSyncSwitch):
         if Helpers.code_check(r):
             self._rgb_status = status
             if body.get('rgbValue') is not None:
-                r = int(0 if red is None else red)
-                g = int(0 if green is None else green)
-                b = int(0 if blue is None else blue)
-                rgb = {'red': r, 'green': g, 'blue': b}
-                self._rgb_value = rgb
+                _r = int(0 if red is None else red)
+                _g = int(0 if green is None else green)
+                _b = int(0 if blue is None else blue)
+                self._rgb_value = {'red': _r, 'green': _g, 'blue': _b}
             return True
-        logger.warning('Error setting %s RGB %s', self.device_name, status)
+        _LOGGER.warning('Error setting %s RGB %s', self.device_name, status)
         return False
 
     def rgb_color_off(self) -> bool:
@@ -309,7 +308,7 @@ class VeSyncDimmerSwitch(VeSyncSwitch):
                 green, int) and isinstance(blue, int):
             for color in [red, green, blue]:
                 if color < 0 or color > 255:
-                    logger.warning('Invalid RGB value')
+                    _LOGGER.warning('Invalid RGB value')
                     return False
 
             return bool(self.rgb_color_status(STATUS_ON, red, green, blue))
@@ -326,9 +325,9 @@ class VeSyncDimmerSwitch(VeSyncSwitch):
             if Helpers.code_check(r):
                 self._brightness = brightness
                 return True
-            logger.warning('Error setting %s brightness', self.device_name)
+            _LOGGER.warning('Error setting %s brightness', self.device_name)
         else:
-            logger.warning('Invalid brightness')
+            _LOGGER.warning('Invalid brightness')
         return False
 
     def display(self) -> None:

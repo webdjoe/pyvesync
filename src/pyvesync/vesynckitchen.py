@@ -11,7 +11,7 @@ from .vesyncbasedevice import VeSyncBaseDevice
 from .vesync_enums import EConfig, EDeviceFamily
 from .helpers import Helpers, DEVICE_CONFIGS_T, build_model_dict
 
-logger = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 module_kitchen = sys.modules[__name__]
 
@@ -51,7 +51,7 @@ def check_status(func):
     @wraps(func)
     def wrapper(self, *args, **kwargs):
         seconds_elapsed = int(time.time()) - self.last_update
-        logger.debug("Seconds elapsed between updates: %s", seconds_elapsed)
+        _LOGGER.debug("Seconds elapsed between updates: %s", seconds_elapsed)
         refresh = False
         if self.refresh_interval is None:
             refresh = bool(seconds_elapsed > REFRESH_INTERVAL)
@@ -60,7 +60,7 @@ def check_status(func):
         elif self.refresh_interval > 0:
             refresh = bool(seconds_elapsed > self.refresh_interval)
         if refresh is True:
-            logger.debug("Updating status, %s seconds elapsed", seconds_elapsed)
+            _LOGGER.debug("Updating status, %s seconds elapsed", seconds_elapsed)
             self.update()
         return func(self, *args, **kwargs)
     return wrapper
@@ -323,7 +323,7 @@ class VeSyncAirFryer158(VeSyncKitchen):
         if not isinstance(r, dict) \
                 or r.get('code') != 0 \
                 or not isinstance(r.get('result'), dict):
-            logger.debug('Failed to get config for %s', self.device_name)
+            _LOGGER.debug('Failed to get config for %s', self.device_name)
             return
         result = r.get('result')
         if result is not None:
@@ -414,15 +414,15 @@ class VeSyncAirFryer158(VeSyncKitchen):
         r = Helpers.call_api('/cloud/v1/deviceManaged/bypass', 'post', json_object=body)
 
         if r is None:
-            logger.debug('Failed to get details for %s', self.device_name)
+            _LOGGER.debug('Failed to get details for %s', self.device_name)
             return False
         if r.get('code') in ERR_REQ_TIMEOUTS:
-            logger.debug('%s is offline', self.device_name)
+            _LOGGER.debug('%s is offline', self.device_name)
             self.fryer_status.set_standby()
             self.fryer_status.cook_status = 'offline'
             return False
         if r.get('code') != 0:
-            logger.debug('Failed to get details for %s \n with code: %s and message: %s',
+            _LOGGER.debug('Failed to get details for %s \n with code: %s and message: %s',
                          self.device_name, str(r.get("code", 0)), r.get("msg", ''))
             return False
         return_status = r.get('result', {}).get('returnStatus')
@@ -449,7 +449,7 @@ class VeSyncAirFryer158(VeSyncKitchen):
                 }
             }
         else:
-            logger.debug('Cannot end %s as it is not cooking or preheating',
+            _LOGGER.debug('Cannot end %s as it is not cooking or preheating',
                          self.device_name)
             return False
 
@@ -462,7 +462,7 @@ class VeSyncAirFryer158(VeSyncKitchen):
     def pause(self) -> bool:
         """Pause the cooking process."""
         if self.cook_status not in ['cooking', 'heating']:
-            logger.debug('Cannot pause %s as it is not cooking or preheating',
+            _LOGGER.debug('Cannot pause %s as it is not cooking or preheating',
                          self.device_name)
             return False
         if self.preheat is True:
@@ -489,11 +489,11 @@ class VeSyncAirFryer158(VeSyncKitchen):
         """Temperature validation."""
         if self.fryer_status.temp_unit == 'fahrenheit':
             if set_temp < 200 or set_temp > 400:
-                logger.debug('Invalid temperature %s for %s', set_temp, self.device_name)
+                _LOGGER.debug('Invalid temperature %s for %s', set_temp, self.device_name)
                 return False
         if self.fryer_status.temp_unit == 'celsius':
             if set_temp < 75 or set_temp > 205:
-                logger.debug('Invalid temperature %s for %s', set_temp, self.device_name)
+                _LOGGER.debug('Invalid temperature %s for %s', set_temp, self.device_name)
                 return False
         return True
 
@@ -508,7 +508,7 @@ class VeSyncAirFryer158(VeSyncKitchen):
     def resume(self) -> bool:
         """Resume paused preheat or cook."""
         if self.cook_status not in ['preheatStop', 'cookStop']:
-            logger.debug('Cannot resume %s as it is not paused', self.device_name)
+            _LOGGER.debug('Cannot resume %s as it is not paused', self.device_name)
             return False
         if self.preheat is True:
             cmd = {
@@ -534,7 +534,7 @@ class VeSyncAirFryer158(VeSyncKitchen):
     def set_preheat(self, target_temp: int, cook_time: int) -> bool:
         """Set preheat mode with cooking time."""
         if self.cook_status not in ['standby', 'cookEnd', 'preheatEnd']:
-            logger.debug('Cannot set preheat for %s as it is not in standby',
+            _LOGGER.debug('Cannot set preheat for %s as it is not in standby',
                          self.device_name)
             return False
         if self._validate_temp(target_temp) is False:
@@ -553,7 +553,7 @@ class VeSyncAirFryer158(VeSyncKitchen):
     def cook_from_preheat(self) -> bool:
         """Start Cook when preheat has ended."""
         if self.preheat is False or self.cook_status != 'preheatEnd':
-            logger.debug('Cannot start cook from preheat for %s', self.device_name)
+            _LOGGER.debug('Cannot start cook from preheat for %s', self.device_name)
             return False
         return self._set_cook(status='cooking')
 
@@ -612,13 +612,13 @@ class VeSyncAirFryer158(VeSyncKitchen):
         body = self.get_status_body(json_cmd)
         r = Helpers.call_api('/cloud/v1/deviceManaged/bypass', 'post', json_object=body)
         if r is None:
-            logger.debug('Failed to set status for %s - No response from API',
+            _LOGGER.debug('Failed to set status for %s - No response from API',
                          self.device_name)
             return False
 
         if r.get('code') != 0 and r.get('code') is not None:
             debug_msg = self.fryer_code_check(r.get('code', ''))
-            logger.debug('Failed to set status for %s \n Code: %s and message: %s \n'
+            _LOGGER.debug('Failed to set status for %s \n Code: %s and message: %s \n'
                          ' %s', self.device_name, r.get("code"),
                          r.get("msg"), debug_msg)
             return False

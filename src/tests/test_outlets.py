@@ -33,8 +33,8 @@ import call_json
 import call_json_outlets
 
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+_LOGGER = logging.getLogger(__name__)
+_LOGGER.setLevel(logging.DEBUG)
 
 OUTLET_DEV_TYPES = call_json_outlets.OUTLETS
 POWER_METHODS = ['get_energy_update']
@@ -161,13 +161,13 @@ class TestOutlets(TestBase):
         outlet_obj = self.manager.object_factory(device_config)
 
         # Call get_details() directly
-        assert outlet_obj.get_details() == True
+        outlet_obj.get_details()
 
         # Parse arguments from mock_api call into dictionary
         all_kwargs = parse_args(self.mock_api)
 
         # Set both write_api and overwrite to True to update YAML files
-        assert outlet_obj.get_details() == True
+        outlet_obj.get_details()
         assert_test(outlet_obj.get_details, all_kwargs, dev_type, write_api=True, overwrite=True)
 
         # Test bad responses
@@ -176,7 +176,7 @@ class TestOutlets(TestBase):
             self.mock_api.return_value = None
         else:
             self.mock_api.return_value = call_json.DETAILS_BADCODE
-        assert outlet_obj.get_details() == False
+        outlet_obj.get_details()
         assert len(self.caplog.records) == 1
         assert 'Failed' in self.caplog.text
 

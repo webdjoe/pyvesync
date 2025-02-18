@@ -7,7 +7,7 @@ This module provides enumerations.
 from enum import Enum
 from logging import getLogger
 
-logger = getLogger(__name__)
+_LOGGER = getLogger(__name__)
 
 
 class EDeviceFamily(str, Enum):
@@ -50,5 +50,5 @@ class ColorMode(str, Enum):
         try:
             return cls[name]
         except Exception:
-            logger.error("No ColorMode for - %s", name)
+            _LOGGER.error("No ColorMode for - %s", name)
             return ColorMode.NONE

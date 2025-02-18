@@ -9,7 +9,7 @@ from .const import STATUS_ON, STATUS_OFF
 from .vesync_enums import EDeviceFamily
 from .helpers import Helpers
 
-logger = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 
 class VeSyncBaseDevice:
@@ -69,7 +69,7 @@ class VeSyncBaseDevice:
     sub_device_no: int
     type: Optional[str] = None
     uuid: Optional[str] = None
-    speed: Optional[str] = None
+    speed: Optional[int] = None
     features: list[str]
     details: dict[str, Any]
 
@@ -116,7 +116,7 @@ class VeSyncBaseDevice:
 
         else:
             self.features = []
-            logger.error('No cid found for %s', self.__class__.__name__)
+            _LOGGER.error('No cid found for %s', self.__class__.__name__)
         self.details = {}
 
     def __eq__(self, other: object) -> bool:
@@ -161,7 +161,7 @@ class VeSyncBaseDevice:
             if cfv != lfv:
                 return True
         else:
-            logger.debug('Call device.get_config() to get firmware versions')
+            _LOGGER.debug('Call device.get_config() to get firmware versions')
         return False
 
     def supports(self, feature: str) -> bool:
@@ -190,7 +190,7 @@ class VeSyncBaseDevice:
         body['method'] = 'configInfo'
         r = self.call_api_v1('configInfo', body)
         if not isinstance(r, dict) or r.get('code') != 0 or r.get('result') is None:
-            logger.error('Error getting config info for %s', self.device_name)
+            _LOGGER.error('Error getting config info for %s', self.device_name)
             return
         self.pid = r.get('result', {}).get('pid')
 
