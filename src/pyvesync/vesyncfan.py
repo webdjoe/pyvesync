@@ -1691,6 +1691,7 @@ class VeSyncAir131(VeSyncBaseDevice):
             return False
         head = Helpers.req_headers(self.manager)
         body = Helpers.req_body(self.manager, 'devicestatus')
+        body['uuid'] = self.uuid
         body['status'] = status.lower()
         r, _ = Helpers.call_api(
             '/131airPurifier/v1/device/updateScreen', 'put',
