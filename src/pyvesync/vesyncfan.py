@@ -73,7 +73,7 @@ humid_features: dict = {
     },
     'Superior6000S': {
             'module': 'VeSyncSuperior6000S',
-            'models': ['LEH-S601S-WUS', 'LEH-S601S-WUSR'],
+            'models': ['LEH-S601S-WUS', 'LEH-S601S-WUSR', 'LEH-S601S-WEUR'],
             'features': [],
             'mist_modes': ['auto', 'humidity', 'sleep', 'manual'],
             'mist_levels': list(range(1, 10))
