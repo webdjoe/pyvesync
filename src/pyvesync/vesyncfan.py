@@ -2,9 +2,12 @@
 
 import json
 import logging
-from typing import Any, Dict, List, Tuple, Union, Optional
+from typing import Any, TYPE_CHECKING
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 from pyvesync.helpers import Helpers, Timer
+
+if TYPE_CHECKING:
+    from pyvesync import VeSync
 
 
 humid_features: dict = {
@@ -200,7 +203,7 @@ fan_classes: set = {v['module']
 
 fan_modules: dict = model_dict()
 
-__all__: list = list(fan_classes) + ['fan_modules']
+__all__: list = [*fan_classes, 'fan_modules']
 
 
 class VeSyncAirBypass(VeSyncBaseDevice):
@@ -240,7 +243,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
     ```
     """
 
-    def __init__(self, details: Dict[str, list], manager):
+    def __init__(self, details: dict[str, list], manager: 'VeSync') -> None:
         """Initialize VeSync Air Purifier Bypass Base Class."""
         super().__init__(details, manager)
         self.enabled = True
@@ -256,7 +259,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             self.air_quality_feature = True
         else:
             self.air_quality_feature = False
-        self.details: Dict[str, Any] = {
+        self.details: dict[str, Any] = {
             'filter_life': 0,
             'mode': 'manual',
             'level': 0,
@@ -264,15 +267,15 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             'child_lock': False,
             'night_light': 'off',
         }
-        self.timer: Optional[Timer] = None
+        self.timer: Timer | None = None
         if self.air_quality_feature is True:
             self.details['air_quality'] = 0
-        self.config: Dict[str, Union[str, int, float, bool]] = {
+        self.config: dict[str, str | int | float | bool] = {
             'display': False,
             'display_forever': False
         }
 
-    def build_api_dict(self, method: str) -> Tuple[Dict, Dict]:
+    def build_api_dict(self, method: str) -> tuple[dict, dict]:
         """Build device api body dictionary.
 
         This method is used internally as a helper function to build API
@@ -282,7 +285,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             method (str): API method to call
 
         Returns:
-            Tuple(Dict, Dict): Tuple of headers and body dictionaries
+            Tuple(dict, dict): Tuple of headers and body dictionaries
 
         Notes:
             Possible methods are:
@@ -373,7 +376,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
                 'air_quality_value', 0)
             self.details['air_quality'] = dev_dict.get('air_quality', 0)
 
-    def build_config_dict(self, conf_dict: Dict[str, str]) -> None:
+    def build_config_dict(self, conf_dict: dict[str, str]) -> None:
         """Build configuration dict for Bypass purifier.
 
         Used by the `update()` method to populate the `config` attribute.
@@ -426,11 +429,11 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         else:
             logger.debug('Error in purifier response')
 
-    def update(self):
+    def update(self) -> None:
         """Update Purifier details."""
         self.get_details()
 
-    def get_timer(self) -> Optional[Timer]:
+    def get_timer(self) -> Timer | None:
         """Retrieve running timer from purifier.
 
         Returns Timer object if timer is running, None if no timer is running.
@@ -573,7 +576,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         return True
 
     def change_fan_speed(self,
-                         speed=None) -> bool:
+                         speed: None | int = None) -> bool:
         """Change fan speed based on levels in configuration dict.
 
         If no value is passed, the next speed in the list is selected.
@@ -855,7 +858,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         """
         return self.toggle_switch(True)
 
-    def turn_off(self):
+    def turn_off(self) -> bool:
         """Turn Bypass Purifier off.
 
         Calls method [pyvesync.VeSyncAirBypass.toggle_switch][`self.toggle_switch(False)`]
@@ -909,7 +912,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         """
         return self.set_display(True)
 
-    def turn_off_display(self):
+    def turn_off_display(self) -> bool:
         """Turn Display off.
 
         Calls method [pyvesync.VeSyncAirBypass.set_display][`self.set_display(False)`]
@@ -955,7 +958,7 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         return False
 
     @property
-    def air_quality(self):
+    def air_quality(self) -> int:
         """Get air quality value (ug/m3)."""
         if self.air_quality_feature is not True:
             logger.debug("%s does not have air quality sensor",
@@ -966,13 +969,9 @@ class VeSyncAirBypass(VeSyncBaseDevice):
             return 0
 
     @property
-    def fan_level(self):
+    def fan_level(self) -> int | None:
         """Get current fan level."""
-        try:
-            speed = int(self.speed)
-        except ValueError:
-            speed = self.speed
-        return speed
+        return self.speed
 
     @property
     def filter_life(self) -> int:
@@ -1098,13 +1097,13 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
 
     """
 
-    def __init__(self, details: Dict[str, list], manager):
+    def __init__(self, details: dict[str, list], manager: 'VeSync') -> None:
         """Initialize the VeSync Base API V2 Air Purifier Class."""
         super().__init__(details, manager)
-        self.set_speed_level: Optional[int] = None
-        self.auto_prefences: List[str] = ['default', 'efficient', 'quiet']
+        self.set_speed_level: int | None = None
+        self.auto_prefences: list[str] = ['default', 'efficient', 'quiet']
 
-    def build_api_dict(self, method: str) -> Tuple[Dict, Dict]:
+    def build_api_dict(self, method: str) -> tuple[dict, dict]:
         """Return default body for Bypass V2 API."""
         header = Helpers.bypass_header()
         body = Helpers.bypass_body_v2(self.manager)
@@ -1446,7 +1445,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         logger.debug("Error setting auto preference for - %s", self.device_name)
         return False
 
-    def change_fan_speed(self, speed=None) -> bool:
+    def change_fan_speed(self, speed: None | int = None) -> bool:
         """Change fan speed based on levels in configuration dict.
 
         The levels are defined in the configuration dict for the device. If no level is
@@ -1578,7 +1577,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
 class VeSyncAir131(VeSyncBaseDevice):
     """Levoit Air Purifier Class."""
 
-    def __init__(self, details, manager):
+    def __init__(self, details: dict, manager: 'VeSync') -> None:
         """Initilize air purifier class."""
         super().__init__(details, manager)
         self.enabled = True
@@ -1594,7 +1593,7 @@ class VeSyncAir131(VeSyncBaseDevice):
             self.air_quality_feature = True
         else:
             self.air_quality_feature = False
-        self.details = {}
+        self.details: dict = {}
 
     def get_details(self) -> None:
         """Build Air Purifier details dictionary."""
@@ -1754,7 +1753,7 @@ class VeSyncAir131(VeSyncBaseDevice):
         """Set sleep mode to on."""
         return self.mode_toggle('sleep')
 
-    def change_fan_speed(self, speed: Optional[int] = None) -> bool:
+    def change_fan_speed(self, speed: int | None = None) -> bool:
         """Adjust Fan Speed for air purifier.
 
         Specifying 1,2,3 as argument or call without argument to cycle
@@ -1863,7 +1862,7 @@ class VeSyncAir131(VeSyncBaseDevice):
 class VeSyncTowerFan(VeSyncAirBaseV2):
     """Levoit Tower Fan Device Class."""
 
-    def __init__(self, details: Dict[str, list], manager):
+    def __init__(self, details: dict[str, list], manager: 'VeSync') -> None:
         """Initialize the VeSync Base API V2 Fan Class."""
         super().__init__(details, manager)
 
@@ -1931,11 +1930,11 @@ class VeSyncTowerFan(VeSyncAirBaseV2):
         logger.debug('Error setting purifier mode')
         return False
 
-    def normal_mode(self):
+    def normal_mode(self) -> bool:
         """Set mode to normal."""
         return self.mode_toggle('normal')
 
-    def manual_mode(self):
+    def manual_mode(self) -> bool:
         """Adapter to set mode to normal."""
         return self.normal_mode()
 
@@ -1951,15 +1950,15 @@ class VeSyncTowerFan(VeSyncAirBaseV2):
 class VeSyncHumid200300S(VeSyncBaseDevice):
     """200S/300S Humidifier Class."""
 
-    def __init__(self, details, manager):
+    def __init__(self, details: dict, manager: 'VeSync') -> None:
         """Initialize 200S/300S Humidifier class."""
         super().__init__(details, manager)
-        self.enabled = True
+        self.enabled: str | bool = True
         self._config_dict = model_features(self.device_type)
         self.mist_levels = self._config_dict.get('mist_levels')
         self.mist_modes = self._config_dict.get('mist_modes')
         self._features = self._config_dict.get('features')
-        if 'warm_mist' in self._features:
+        if isinstance(self._features, list) and 'warm_mist' in self._features:
             self.warm_mist_levels = self._config_dict.get(
                 'warm_mist_levels', [])
             self.warm_mist_feature = True
@@ -1993,7 +1992,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
                            'setVirtualLevel', 'setTargetHumidity',
                            'setHumidityMode', 'setDisplay', 'setLevel']
 
-    def build_api_dict(self, method: str) -> Tuple[Dict, Dict]:
+    def build_api_dict(self, method: str) -> tuple[dict, dict]:
         """Build humidifier api call header and body.
 
         Available methods are: 'getHumidifierStatus', 'setAutomaticStop',
@@ -2013,11 +2012,11 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
         }
         return head, body
 
-    def build_humid_dict(self, dev_dict: Dict[str, str]) -> None:
+    def build_humid_dict(self, dev_dict: dict[str, str]) -> None:
         """Build humidifier status dictionary."""
-        self.enabled = dev_dict.get('enabled')
+        self.enabled = dev_dict.get('enabled', False)
         self.device_status = 'on' if self.enabled else 'off'
-        self.mode = dev_dict.get('mode', None)
+        self.mode = dev_dict.get('mode')
         self.details['humidity'] = dev_dict.get('humidity', 0)
         self.details['mist_virtual_level'] = dev_dict.get(
             'mist_virtual_level', 0)
@@ -2044,7 +2043,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
             self.details['display'] = dev_dict.get(
                 'indicator_light_switch', False)
 
-    def build_config_dict(self, conf_dict):
+    def build_config_dict(self, conf_dict: dict) -> None:
         """Build configuration dict for 300s humidifier."""
         self.config['auto_target_humidity'] = conf_dict.get(
             'auto_target_humidity', 0)
@@ -2089,7 +2088,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
         else:
             logger.debug('Error in humidifier response')
 
-    def update(self):
+    def update(self) -> None:
         """Update 200S/300S Humidifier details."""
         self.get_details()
 
@@ -2133,7 +2132,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
         """Turn 200S/300S Humidifier on."""
         return self.toggle_switch(True)
 
-    def turn_off(self):
+    def turn_off(self) -> bool:
         """Turn 200S/300S Humidifier off."""
         return self.toggle_switch(False)
 
@@ -2203,7 +2202,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
         """Turn 200S/300S Humidifier on."""
         return self.set_display(True)
 
-    def turn_off_display(self):
+    def turn_off_display(self) -> bool:
         """Turn 200S/300S Humidifier off."""
         return self.set_display(False)
 
@@ -2270,7 +2269,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
 
     def set_humidity_mode(self, mode: str) -> bool:
         """Set humidifier mode - sleep or auto."""
-        if mode.lower() not in self.mist_modes:
+        if isinstance(self.mist_modes, list) and mode.lower() not in self.mist_modes:
             logger.debug('Invalid humidity mode used - %s',
                          mode)
             logger.debug('Proper modes for this device are - %s',
@@ -2295,7 +2294,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
         logger.debug('Error setting humidity mode')
         return False
 
-    def set_warm_level(self, warm_level) -> bool:
+    def set_warm_level(self, warm_level: int) -> bool:
         """Set target 600S Humidifier mist warmth."""
         if not self.warm_mist_feature:
             logger.debug('%s is a %s does not have a mist warmer',
@@ -2333,31 +2332,31 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
         logger.debug('Error setting warm')
         return False
 
-    def set_auto_mode(self):
+    def set_auto_mode(self) -> bool:
         """Set auto mode for humidifiers."""
-        if 'auto' in self.mist_modes:
+        if isinstance(self.mist_modes, list) and 'auto' in self.mist_modes:
             call_str = 'auto'
-        elif 'humidity' in self.mist_modes:
+        elif isinstance(self.mist_modes, list) and 'humidity' in self.mist_modes:
             call_str = 'humidity'
         else:
             logger.debug('Trying auto mode, mode not set for this model, '
                          'please ensure %s model '
                          'is in configuration dictionary', self.device_type)
             call_str = 'auto'
-        set_auto = self.set_humidity_mode(call_str)
-        return set_auto
+        return self.set_humidity_mode(call_str)
 
-    def set_manual_mode(self):
+    def set_manual_mode(self) -> bool:
         """Set humifier to manual mode with 1 mist level."""
         return self.set_humidity_mode('manual')
 
-    def set_mist_level(self, level) -> bool:
+    def set_mist_level(self, level: int | str) -> bool:
         """Set humidifier mist level with int between 0 - 9."""
         try:
             level = int(level)
         except ValueError:
             level = str(level)
-        if level not in self.mist_levels:
+        if not self.mist_levels or \
+                (isinstance(self.mist_levels, list) and level not in self.mist_levels):
             logger.debug('Humidifier mist level must be between 0 and 9')
             return False
 
@@ -2384,38 +2383,36 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
         return False
 
     @property
-    def humidity(self):
+    def humidity(self) -> int:
         """Get Humidity level."""
-        return self.details['humidity']
+        return self.details['humidity']  # type: ignore[return-value]
 
     @property
-    def mist_level(self):
+    def mist_level(self) -> int:
         """Get current mist level."""
-        return self.details['mist_virtual_level']
+        return self.details['mist_virtual_level']  # type: ignore[return-value]
 
     @property
-    def water_lacks(self):
+    def water_lacks(self) -> bool:
         """If tank is empty return true."""
-        return self.details['water_lacks']
+        return self.details['water_lacks']  # type: ignore[return-value]
 
     @property
-    def auto_humidity(self):
+    def auto_humidity(self) -> int:
         """Auto target humidity."""
         return self.config['auto_target_humidity']
 
     @property
-    def auto_enabled(self):
+    def auto_enabled(self) -> bool:
         """Auto mode is enabled."""
-        if self.details.get('mode') == 'auto' \
-                or self.details.get('mode') == 'humidity':
-            return True
-        return False
+        return self.details.get('mode') == 'auto' \
+            or self.details.get('mode') == 'humidity'
 
     @property
-    def warm_mist_enabled(self):
+    def warm_mist_enabled(self) -> bool:
         """Warm mist feature enabled."""
         if self.warm_mist_feature:
-            return self.details['warm_mist_enabled']
+            return self.details['warm_mist_enabled']  # type: ignore[return-value]
         return False
 
     def display(self) -> None:
@@ -2481,7 +2478,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
 class VeSyncHumid200S(VeSyncHumid200300S):
     """Levoit Classic 200S Specific class."""
 
-    def __init__(self, details, manager):
+    def __init__(self, details: dict, manager: 'VeSync') -> None:
         """Initialize levoit 200S device class."""
         super().__init__(details, manager)
         self._api_modes = ['getHumidifierStatus', 'setAutomaticStop',
@@ -2517,7 +2514,7 @@ class VeSyncHumid200S(VeSyncHumid200300S):
 class VeSyncSuperior6000S(VeSyncBaseDevice):
     """Superior 6000S Humidifier."""
 
-    def __init__(self, details, manager):
+    def __init__(self, details: dict, manager: 'VeSync') -> None:
         """Initialize Superior 6000S Humidifier class."""
         super().__init__(details, manager)
         self._config_dict = model_features(self.device_type)
@@ -2525,7 +2522,7 @@ class VeSyncSuperior6000S(VeSyncBaseDevice):
         self.mist_modes = self._config_dict.get('mist_modes')
         self.connection_status = details.get('deviceProp', {}).get(
             'connectionStatus', None)
-        self.details = {}
+        self.details: dict = {}
         self.config = {}
         self._api_modes = [
             'getHumidifierStatus',
@@ -2537,7 +2534,7 @@ class VeSyncSuperior6000S(VeSyncBaseDevice):
             'setDryingMode',
         ]
 
-    def build_api_dict(self, method: str) -> Tuple[Dict, Dict]:
+    def build_api_dict(self, method: str) -> tuple[dict, dict]:
         """Build humidifier api call header and body.
 
         Available methods are: 'getHumidifierStatus', 'setSwitch',
@@ -2557,13 +2554,13 @@ class VeSyncSuperior6000S(VeSyncBaseDevice):
         }
         return head, body
 
-    def build_humid_dict(self, dev_dict: Dict[str, str]) -> None:
+    def build_humid_dict(self, dev_dict: dict[str, str]) -> None:
         """Build humidifier status dictionary."""
         self.device_status = 'off' if dev_dict.get('powerSwitch', 0) == 0 else 'on'
         self.mode = 'auto' if dev_dict.get('workMode', '') == 'autoPro' \
             else dev_dict.get('workMode', '')
         self.details['humidity'] = dev_dict.get('humidity', 0)
-        self.details['target_humidity'] = dev_dict.get('targetHumidity', None)
+        self.details['target_humidity'] = dev_dict.get('targetHumidity')
         self.details['mist_virtual_level'] = dev_dict.get(
             'virtualLevel', 0)
         self.details['mist_level'] = dev_dict.get('mistLevel', 0)
@@ -2572,10 +2569,10 @@ class VeSyncSuperior6000S(VeSyncBaseDevice):
             'waterTankLifted', False)
         self.details['filter_life_percentage'] = dev_dict.get('filterLifePercent', 0)
         self.details['temperature'] = dev_dict.get('temperature', 0)
-        self.details['display'] = dev_dict.get('screenSwitch', None)
+        self.details['display'] = dev_dict.get('screenSwitch')
         self.details['drying_mode'] = dev_dict.get('dryingMode', {})
 
-    def build_config_dict(self, _):
+    def build_config_dict(self, _: dict) -> None:
         """Build configuration dict for humidifier."""
 
     def get_details(self) -> None:
@@ -2616,7 +2613,7 @@ class VeSyncSuperior6000S(VeSyncBaseDevice):
         else:
             logger.debug('Error in humidifier response')
 
-    def update(self):
+    def update(self) -> None:
         """Update humidifier details."""
         self.get_details()
 
@@ -2660,7 +2657,7 @@ class VeSyncSuperior6000S(VeSyncBaseDevice):
         """Turn humidifier on."""
         return self.toggle_switch(True)
 
-    def turn_off(self):
+    def turn_off(self) -> bool:
         """Turn humidifier off."""
         return self.toggle_switch(False)
 
@@ -2722,7 +2719,7 @@ class VeSyncSuperior6000S(VeSyncBaseDevice):
         """Turn display on."""
         return self.set_display_enabled(True)
 
-    def turn_off_display(self):
+    def turn_off_display(self) -> bool:
         """Turn display off."""
         return self.set_display_enabled(False)
 
@@ -2760,7 +2757,8 @@ class VeSyncSuperior6000S(VeSyncBaseDevice):
 
     def set_humidity_mode(self, mode: str) -> bool:
         """Set humidifier mode."""
-        if mode not in self.mist_modes:
+        if not self.mist_modes or \
+                (isinstance(self.mist_modes, list) and mode not in self.mist_modes):
             logger.debug('Invalid humidity mode used - %s',
                          mode)
             logger.debug('Proper modes for this device are - %s',
@@ -2801,13 +2799,10 @@ class VeSyncSuperior6000S(VeSyncBaseDevice):
         """Set humidity mode to manual."""
         return self.set_humidity_mode('manual')
 
-    def set_mist_level(self, level) -> bool:
+    def set_mist_level(self, level: int) -> bool:
         """Set humidifier mist level with int between 0 - 9."""
-        try:
-            level = int(level)
-        except ValueError:
-            level = str(level)
-        if level not in self.mist_levels:
+        if not self.mist_levels or \
+                (isinstance(self.mist_levels, list) and level not in self.mist_levels):
             logger.debug('Humidifier mist level must be between 0 and 9')
             return False
 
@@ -2834,35 +2829,35 @@ class VeSyncSuperior6000S(VeSyncBaseDevice):
         return False
 
     @property
-    def humidity_level(self):
+    def humidity_level(self) -> int:
         """Get Humidity level."""
         return self.details['humidity']
 
     # Duplicate for compatibility
     @property
-    def humidity(self):
+    def humidity(self) -> int:
         """Get Humidity level."""
         return self.details['humidity']
 
     @property
-    def mist_level(self):
+    def mist_level(self) -> int:
         """Get current mist level."""
         return self.details['mist_level']
 
     @property
-    def mist_virtual_level(self):
+    def mist_virtual_level(self) -> int:
         """Get current mist virtual level."""
         return self.details['mist_virtual_level']
 
     @property
-    def water_lacks(self):
+    def water_lacks(self) -> bool | None:
         """If tank is empty return true."""
         if 'water_lacks' in self.details:
             return bool(self.details['water_lacks'])
         return None
 
     @property
-    def drying_mode_state(self):
+    def drying_mode_state(self) -> str | None:
         """True if humidifier is currently drying the filters, false otherwise."""
         state = self.details.get('drying_mode', {}).get('dryingState')
         if state == 1:
@@ -2872,12 +2867,12 @@ class VeSyncSuperior6000S(VeSyncBaseDevice):
         return None
 
     @property
-    def drying_mode_seconds_remaining(self):
+    def drying_mode_seconds_remaining(self) -> int:
         """If drying_mode_state is on, how many seconds are remaining."""
         return self.details.get('drying_mode', {}).get('dryingRemain')
 
     @property
-    def drying_mode_enabled(self):
+    def drying_mode_enabled(self) -> bool | None:
         """Checks if drying mode is enabled.
 
         Returns:
@@ -2888,7 +2883,7 @@ class VeSyncSuperior6000S(VeSyncBaseDevice):
         return None if enabled is None else bool(enabled)
 
     @property
-    def drying_mode_level(self):
+    def drying_mode_level(self) -> str | None:
         """Drying mode level 1 = low, 2 = high."""
         level = self.details.get('drying_mode', {}).get('dryingLevel')
         if level == 1:
@@ -2898,17 +2893,17 @@ class VeSyncSuperior6000S(VeSyncBaseDevice):
         return None
 
     @property
-    def temperature(self):
+    def temperature(self) -> int:
         """Current temperature."""
         return self.details['temperature']
 
     @property
-    def auto_humidity(self):
+    def auto_humidity(self) -> int:
         """Auto target humidity."""
         return self.details['target_humidity']
 
     @property
-    def target_humidity(self):
+    def target_humidity(self) -> int:
         """The target humidity when in humidity mode."""
         return self.details['target_humidity']
 
@@ -2962,7 +2957,7 @@ class VeSyncSuperior6000S(VeSyncBaseDevice):
 class VeSyncHumid1000S(VeSyncHumid200300S):
     """Levoit OasisMist 1000S Specific class."""
 
-    def __init__(self, details, manager):
+    def __init__(self, details: dict, manager: 'VeSync') -> None:
         """Initialize levoit 1000S device class."""
         super().__init__(details, manager)
         self.connection_status = details.get('deviceProp', {}).get(
@@ -2972,7 +2967,7 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
                            'setSwitch', 'setVirtualLevel', 'setTargetHumidity',
                            'setHumidityMode', 'setDisplay']
 
-    def build_humid_dict(self, dev_dict: Dict[str, str]) -> None:
+    def build_humid_dict(self, dev_dict: dict[str, str]) -> None:
         """Build humidifier status dictionary."""
         super().build_humid_dict(dev_dict)
         self.device_status = 'off' if dev_dict.get('powerSwitch', 0) == 0 else 'on'
@@ -2990,7 +2985,7 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
         ))
         self.details['display'] = bool(dev_dict['screenState'])
 
-    def build_config_dict(self, conf_dict):
+    def build_config_dict(self, conf_dict: dict) -> None:
         """Build configuration dict for humidifier."""
         self.config['auto_target_humidity'] = conf_dict.get(
             'targetHumidity', 0)
@@ -3064,7 +3059,9 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
 
     def set_humidity_mode(self, mode: str) -> bool:
         """Set humidifier mode - sleep, auto or manual."""
-        if mode.lower() not in self.mist_modes:
+        if not self.mist_modes or \
+                (isinstance(self.mist_modes, list) and
+                 mode.lower() not in self.mist_modes):
             logger.debug('Invalid humidity mode used - %s',
                          mode)
             logger.debug('Proper modes for this device are - %s',
@@ -3089,17 +3086,14 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
         logger.debug('Error setting humidity mode')
         return False
 
-    def set_sleep_mode(self):
+    def set_sleep_mode(self) -> bool:
         """Set humifier to manual mode with 1 mist level."""
         return self.set_humidity_mode('sleep')
 
-    def set_mist_level(self, level) -> bool:
+    def set_mist_level(self, level: int | str) -> bool:
         """Set humidifier mist level with int."""
-        try:
-            level = int(level)
-        except ValueError:
-            level = str(level)
-        if level not in self.mist_levels:
+        if not self.mist_levels or \
+                (isinstance(self.mist_levels, list) and level not in self.mist_levels):
             logger.debug('Humidifier mist level out of range')
             return False
 

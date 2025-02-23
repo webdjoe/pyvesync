@@ -1,8 +1,11 @@
 [MASTER]
-ignore=src/tests,
-    tools/
-    docs/
-    site/
+ignore-paths=^src/tests/.*$,
+    ^test/.*$,
+    ^tools/.*$,
+    ^docs/.*$,
+    ^site/.*$
+
+ignore=test/
 
 load-plugins=
     pylint.extensions.docparams,

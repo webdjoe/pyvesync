@@ -140,28 +140,34 @@ To start with the module:
 
 ```python
 from pyvesync import VeSync
+from pyvesync.logs import VeSyncLoginError
 
 manager = VeSync("EMAIL", "PASSWORD", "TIME_ZONE", debug=False, redact=True)
-manager.login()
 # debug and redact are optional arguments, the above values are their defaults
 
-# Get/Update Devices from server - populate device lists
-manager.update()
+try:
+  manager.login()
+# login() method returns exception if not successful
+except VeSyncLoginError:
+  print("Unable to login")
+else:
+  # Get/Update Devices from server - populate device lists
+  manager.update()
 
-my_switch = manager.outlets[0]
-# Turn on the first switch
-my_switch.turn_on()
-# Turn off the first switch
-my_switch.turn_off()
+  my_switch = manager.outlets[0]
+  # Turn on the first switch
+  my_switch.turn_on()
+  # Turn off the first switch
+  my_switch.turn_off()
 
-# Get energy usage data for outlets
-manager.update_energy()
+  # Get energy usage data for outlets
+  manager.update_energy()
 
-# Set bulb brightness to 75% of first bulb in the list
-my_bulb = manager.bulbs[0]
-my_bulb.set_brightness(75)
-# get its details in JSON and print
-print(my_bulb.displayJSON())
+  # Set bulb brightness to 75% of first bulb in the list
+  my_bulb = manager.bulbs[0]
+  my_bulb.set_brightness(75)
+  # get its details in JSON and print
+  print(my_bulb.displayJSON())
 ```
 
 Devices are stored in the respective lists in the instantiated `VeSync` class:

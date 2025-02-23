@@ -4,9 +4,13 @@ import logging
 import time
 import json
 from abc import ABCMeta, abstractmethod
+from typing import TYPE_CHECKING
 
 from pyvesync.helpers import Helpers
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
+
+if TYPE_CHECKING:
+    from pyvesync import VeSync
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +31,7 @@ outlet_config = {
 
 outlet_modules = {k: v['module'] for k, v in outlet_config.items()}
 
-__all__ = list(outlet_modules.values()) + ['outlet_modules']
+__all__ = [*outlet_modules.values(), 'outlet_modules']
 
 
 class VeSyncOutlet(VeSyncBaseDevice):
@@ -35,13 +39,13 @@ class VeSyncOutlet(VeSyncBaseDevice):
 
     __metaclass__ = ABCMeta
 
-    def __init__(self, details, manager):
+    def __init__(self, details: dict, manager: 'VeSync') -> None:
         """Initilize VeSync Outlet base class."""
         super().__init__(details, manager)
 
-        self.details = {}
-        self.energy = {}
-        self.update_energy_ts = None
+        self.details: dict = {}
+        self.energy: dict = {}
+        self.update_energy_ts: None | int = None
         self._energy_update_interval = manager.energy_update_interval
 
     @property
@@ -49,11 +53,8 @@ class VeSyncOutlet(VeSyncBaseDevice):
         """Test if energy update interval has been exceeded."""
         if self.update_energy_ts is None:
             return True
-
-        if ((time.time() - self.update_energy_ts)
-                > self._energy_update_interval):
-            return True
-        return False
+        return ((time.time() - self.update_energy_ts)
+                > self._energy_update_interval)
 
     @abstractmethod
     def turn_on(self) -> bool:
@@ -76,27 +77,27 @@ class VeSyncOutlet(VeSyncBaseDevice):
         """Build Monthly Energy History Dictionary."""
 
     @abstractmethod
-    def get_yearly_energy(self):
+    def get_yearly_energy(self) -> None:
         """Build Yearly Energy Dictionary."""
 
     @abstractmethod
-    def get_config(self):
+    def get_config(self) -> None:
         """Get configuration and firmware details."""
 
-    def update(self):
+    def update(self) -> None:
         """Get Device Energy and Status."""
         self.get_details()
 
-    def update_energy(self, bypass_check: bool = False):
+    def update_energy(self, bypass_check: bool = False) -> None:
         """Build weekly, monthly and yearly dictionaries."""
         if bypass_check or (not bypass_check and self.update_time_check):
-            self.update_energy_ts = time.time()
+            self.update_energy_ts = int(time.time())
             self.get_weekly_energy()
             if 'week' in self.energy:
                 self.get_monthly_energy()
                 self.get_yearly_energy()
             if not bypass_check:
-                self.update_energy_ts = time.time()
+                self.update_energy_ts = int(time.time())
 
     @property
     def active_time(self) -> int:
@@ -133,7 +134,7 @@ class VeSyncOutlet(VeSyncBaseDevice):
         """Return total energy usage over the year."""
         return self.energy.get('year', {}).get('total_energy', 0)
 
-    def display(self):
+    def display(self) -> None:
         """Return formatted device info to stdout."""
         super().display()
         disp = [
@@ -148,7 +149,7 @@ class VeSyncOutlet(VeSyncBaseDevice):
         for line in disp:
             print(f'{line[0]:.<30} {line[1]} {line[2]}')
 
-    def displayJSON(self):
+    def displayJSON(self) -> str:
         """Return JSON details for outlet."""
         sup = super().displayJSON()
         sup_val = json.loads(sup)
@@ -170,7 +171,7 @@ class VeSyncOutlet(VeSyncBaseDevice):
 class VeSyncOutlet7A(VeSyncOutlet):
     """Etekcity 7A Round Outlet Class."""
 
-    def __init__(self, details, manager):
+    def __init__(self, details: dict, manager: 'VeSync') -> None:
         """Initilize Etekcity 7A round outlet class."""
         super().__init__(details, manager)
         self.det_keys = ['deviceStatus', 'activeTime',
@@ -198,7 +199,7 @@ class VeSyncOutlet7A(VeSyncOutlet):
             logger.debug('Unable to get %s details', self.device_name)
 
     @staticmethod
-    def parse_energy_detail(energy):
+    def parse_energy_detail(energy: str | float) -> float:
         """Parse energy details to be compatible with new and old firmware."""
         try:
             if isinstance(energy, str) and ':' in energy:
@@ -256,7 +257,6 @@ class VeSyncOutlet7A(VeSyncOutlet):
             'put',
             headers=Helpers.req_headers(self.manager),
         )
-
         if status_code is not None and status_code == 200:
             self.device_status = 'on'
 
@@ -297,7 +297,7 @@ class VeSyncOutlet7A(VeSyncOutlet):
 class VeSyncOutlet10A(VeSyncOutlet):
     """Etekcity 10A Round Outlets."""
 
-    def __init__(self, details, manager):
+    def __init__(self, details: dict, manager: 'VeSync') -> None:
         """Initialize 10A outlet class."""
         super().__init__(details, manager)
 
@@ -432,7 +432,7 @@ class VeSyncOutlet10A(VeSyncOutlet):
 class VeSyncOutlet15A(VeSyncOutlet):
     """Class for Etekcity 15A Rectangular Outlets."""
 
-    def __init__(self, details, manager):
+    def __init__(self, details: dict, manager: 'VeSync') -> None:
         """Initialize 15A rectangular outlets."""
         super().__init__(details, manager)
         self.nightlight_status = 'off'
@@ -618,7 +618,7 @@ class VeSyncOutlet15A(VeSyncOutlet):
 class VeSyncOutdoorPlug(VeSyncOutlet):
     """Class to hold Etekcity outdoor outlets."""
 
-    def __init__(self, details, manager):
+    def __init__(self, details: dict, manager: 'VeSync') -> None:
         """Initialize Etekcity Outdoor Plug class."""
         super().__init__(details, manager)
 
@@ -713,7 +713,7 @@ class VeSyncOutdoorPlug(VeSyncOutlet):
         else:
             logger.debug('Unable to get %s yearly data', self.device_name)
 
-    def toggle(self, status) -> bool:
+    def toggle(self, status: str) -> bool:
         """Toggle power for outdoor outlet."""
         body = Helpers.req_body(self.manager, 'devicestatus')
         body['uuid'] = self.uuid
@@ -745,7 +745,7 @@ class VeSyncOutdoorPlug(VeSyncOutlet):
 class VeSyncOutletBSDGO1(VeSyncOutlet):
     """VeSync BSDGO1 smart plug."""
 
-    def __init__(self, details, manager):
+    def __init__(self, details: dict, manager: 'VeSync') -> None:
         """Initialize BSDGO1 smart plug class."""
         super().__init__(details, manager)
 

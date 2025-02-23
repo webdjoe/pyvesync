@@ -81,7 +81,7 @@ feature_dict: dict = {
 
 bulb_modules: dict = {k: v['module'] for k, v in feature_dict.items()}
 
-__all__: list = list(bulb_modules.values()) + ["bulb_modules", "VeSyncBulb"]
+__all__: list = [*bulb_modules.values(), "bulb_modules", "VeSyncBulb"]
 
 
 def pct_to_kelvin(pct: float, max_k: int = 6500, min_k: int = 2700) -> float:

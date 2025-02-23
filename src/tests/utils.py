@@ -365,6 +365,7 @@ class TestBase:
         """
         self.mock_api_call = patch('pyvesync.helpers.Helpers.call_api')
         self.caplog = caplog
+        self.caplog.set_level(logging.DEBUG)
         self.mock_api = self.mock_api_call.start()
         self.mock_api.create_autospect()
         self.mock_api.return_value.ok = True
@@ -381,7 +382,7 @@ def assert_test(test_func, all_kwargs, dev_type=None,
                  write_api=False, overwrite=False):
     """Test pyvesync API calls against existing API.
 
-    Set `write_api=True` to True to write API call data to YAML file. 
+    Set `write_api=True` to True to write API call data to YAML file.
     This will not overwrite existing data unless overwrite is True.
     The overwrite argument is only used when API changes, defaults
     to false for development testing. `overwrite=True` and `write_api=True`
