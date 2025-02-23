@@ -69,7 +69,7 @@ humid_features: dict = {
     },
     'OASISMIST1000S': {
             'module': 'VeSyncHumid1000S',
-            'models': ['LUH-M101S-WUS'],
+            'models': ['LUH-M101S-WUS', 'LUH-M101S-WEUR'],
             'features': [],
             'mist_modes': ['auto', 'sleep', 'manual'],
             'mist_levels': list(range(1, 10))
@@ -121,7 +121,7 @@ air_features: dict = {
     },
     'LV-PUR131S': {
         'module': 'VeSyncAir131',
-        'models': ['LV-PUR131S', 'LV-RH131S'],
+        'models': ['LV-PUR131S', 'LV-RH131S', 'LV-RH131S-WM'],
         'modes': ['manual', 'auto', 'sleep', 'off'],
         'features': ['air_quality'],
         'levels': list(range(1, 3))
@@ -369,7 +369,6 @@ class VeSyncAirBypass(VeSyncBaseDevice):
         self.details['display'] = dev_dict.get('display', False)
         self.details['child_lock'] = dev_dict.get('child_lock', False)
         self.details['night_light'] = dev_dict.get('night_light', 'off')
-        self.details['display'] = dev_dict.get('display', False)
         self.details['display_forever'] = dev_dict.get('display_forever',
                                                        False)
         if self.air_quality_feature is True:
@@ -1134,6 +1133,15 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         """Return true if light is detected."""
         return self.details['environment_light_state']
 
+    @property
+    def fan_level(self):
+        """Get current fan level."""
+        try:
+            speed = int(self.set_speed_level)
+        except ValueError:
+            speed = self.set_speed_level
+        return speed
+
     def get_details(self) -> None:
         """Build API V2 Purifier details dictionary."""
         head, body = self.build_api_dict('getPurifierStatus')
@@ -1653,6 +1661,14 @@ class VeSyncAir131(VeSyncBaseDevice):
     def air_quality(self) -> str:
         """Get Air Quality."""
         return self.details.get('air_quality', 'unknown')
+
+    @property
+    def display_state(self) -> bool:
+        """Get display state.
+
+        See [pyvesync.VeSyncAir131.get_details]
+        """
+        return self.details.get('screen_status', 'unknown') == "on"
 
     @property
     def screen_status(self) -> str:
@@ -2190,6 +2206,11 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
         """Turn 200S/300S Humidifier off."""
         return self.set_display(False)
 
+    @property
+    def display_state(self) -> bool:
+        """Get display state."""
+        return bool(self.details['display'])
+
     def set_humidity(self, humidity: int) -> bool:
         """Set target 200S/300S Humidifier humidity."""
         if humidity < 30 or humidity > 80:
@@ -2243,7 +2264,7 @@ class VeSyncHumid200300S(VeSyncBaseDevice):
 
         if r is not None and Helpers.code_check(r):
             return True
-        logger.debug('Error setting humidity')
+        logger.debug('Error setting night light brightness')
         return False
 
     def set_humidity_mode(self, mode: str) -> bool:
@@ -2702,6 +2723,12 @@ class VeSyncSuperior6000S(VeSyncBaseDevice):
         """Turn display off."""
         return self.set_display_enabled(False)
 
+    @property
+    def display_state(self) -> bool:
+        """Get display state."""
+        # This matches the values 0/1 set in set_display_enabled
+        return self.details.get('display') == 1
+
     def set_humidity(self, humidity: int) -> bool:
         """Set target humidity for humidity mode."""
         if humidity < 30 or humidity > 80:
@@ -2873,7 +2900,7 @@ class VeSyncSuperior6000S(VeSyncBaseDevice):
     @property
     def auto_humidity(self) -> int:
         """Auto target humidity."""
-        return self.config['target_humidity']
+        return self.details['target_humidity']
 
     @property
     def target_humidity(self) -> int:
