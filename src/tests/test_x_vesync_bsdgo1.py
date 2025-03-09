@@ -1,8 +1,8 @@
 """Test scripts for BSDGO1 Outlets."""
 
 import orjson
-from pyvesync.vesyncoutlet import VeSyncOutletBSDGO1
-from pyvesync.helpers import Helpers as Helpers
+from pyvesync.devices.vesyncoutlet import VeSyncOutletBSDGO1
+from pyvesync.helper_utils.helpers import Helpers as Helpers
 import call_json
 import call_json_outlets
 from utils import TestBase

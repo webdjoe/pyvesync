@@ -28,9 +28,10 @@ See Also
 
 import logging
 import math
+from dataclasses import asdict
 import orjson
 from pyvesync.vesync import object_factory
-from pyvesync.vesyncbulb import pct_to_kelvin
+from pyvesync.devices.vesyncbulb import pct_to_kelvin
 from utils import TestBase, assert_test, parse_args
 from defaults import Defaults
 import call_json
@@ -41,8 +42,8 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 DEFAULT_COLOR = Defaults.color
-DEFAULT_COLOR_RGB = dict(DEFAULT_COLOR.rgb._asdict())
-DEFAULT_COLOR_HSV = dict(DEFAULT_COLOR.hsv._asdict())
+DEFAULT_COLOR_RGB = dict(asdict(DEFAULT_COLOR.rgb))
+DEFAULT_COLOR_HSV = dict(asdict(DEFAULT_COLOR.hsv))
 RGB_SET = {
     'red': 50,
     'green': 200,
