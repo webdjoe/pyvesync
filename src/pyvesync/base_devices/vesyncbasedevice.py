@@ -5,7 +5,7 @@ import logging
 from datetime import datetime as dt
 from zoneinfo import ZoneInfo
 from typing import TYPE_CHECKING, Any
-import warnings  # noqa: F401  # pylint: disable=unused-import
+import warnings
 from mashumaro.types import SerializableType
 import orjson
 
@@ -140,18 +140,17 @@ class VeSyncBaseDevice(ABC):
             f"CID: {self.cid}"
         )
 
-    #
-    # def __getattr__(self, attr: str) -> object:
-    #     """Return attribute from device state."""
-    #     if hasattr(self.state, attr):
-    #         warnings.warn(
-    #             "Access device state through the self.state attribute. "
-    #             "Access to state in the device class will be removed in future releases.",  # noqa: E501
-    #             category=DeprecationWarning,
-    #             stacklevel=2,
-    #         )
-    #         return getattr(self.state, attr)
-    #     return object.__getattribute__(self, attr)
+    def __getattr__(self, attr: str) -> object:
+        """Return attribute from device state."""
+        if hasattr(self.state, attr):
+            warnings.warn(
+                "Access device state through the self.state attribute. "
+                "Access to state in the device class will be removed in future releases.",  # noqa: E501
+                category=DeprecationWarning,
+                stacklevel=2,
+            )
+            return getattr(self.state, attr)
+        return object.__getattribute__(self, attr)
 
     @property
     def is_on(self) -> bool:
