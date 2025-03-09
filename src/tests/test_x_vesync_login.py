@@ -1,11 +1,13 @@
 """Test VeSync login method."""
 
+import asyncio
 import logging
 import pytest
 from unittest.mock import patch
+import orjson
 import pyvesync
 from pyvesync.vesync import VeSync
-from pyvesync.helpers import Helpers as helpers
+from pyvesync.helpers import Helpers as Helpers
 from pyvesync.logs import VesyncLoginError
 
 login_test_vals = [
@@ -47,24 +49,32 @@ class TestLogin(object):
     @pytest.fixture()
     def api_mock(self, caplog):
         """Mock call_api and initialize VeSync device."""
-        self.mock_api_call = patch('pyvesync.helpers.Helpers.call_api')
+        self.mock_api_call = patch('pyvesync.vesync.VeSync.async_call_api')
         self.mock_api = self.mock_api_call.start()
-        self.mock_api.create_autospec()
+        self.loop = asyncio.new_event_loop()
         self.mock_api.return_value.ok = True
         caplog.set_level(logging.DEBUG)
         yield
         self.mock_api_call.stop()
 
+    async def run_coro(self, coro):
+        """Run a coroutine in the event loop."""
+        return await coro
+
+    def run_in_loop(self, func, *args, **kwargs):
+        """Run a function in the event loop."""
+        return self.loop.run_until_complete(self.run_coro(func(*args, **kwargs)))
+
     @pytest.mark.parametrize('email, password, testid', login_bad_call)
     def test_bad_login(self, api_mock, email, password, testid):
         """Test failed login."""
-        full_return = ({'code': 455}, 200)
+        full_return = (orjson.dumps({'code': -11201000}), 200)
         self.mock_api.return_value = full_return
         vesync_obj = VeSync(email, password)
         with pytest.raises(VesyncLoginError):
-            vesync_obj.login()
+            self.run_in_loop(vesync_obj.login)
         if testid == 'correct':
-            jd = helpers.req_body(vesync_obj, 'login')
+            jd = Helpers.req_body(vesync_obj, 'login')
             self.mock_api.assert_called_with('/cloud/v1/user/login', 'post',
                                              json_object=jd)
         else:
@@ -72,14 +82,15 @@ class TestLogin(object):
 
     def test_good_login(self, api_mock):
         """Test successful login."""
-        full_return = (
+        resp_dict, status = (
             {'code': 0, 'result': {'accountID': 'sam_actid', 'token': 'sam_token'}},
             200,
         )
-        self.mock_api.return_value = full_return
+        self.mock_api.return_value = orjson.dumps(resp_dict), status
         vesync_obj = VeSync('sam@mail.com', 'pass')
-        assert vesync_obj.login() is True
-        jd = helpers.req_body(vesync_obj, 'login')
+        login = self.run_in_loop(vesync_obj.login)
+        assert login is True
+        jd = Helpers.req_body(vesync_obj, 'login')
         self.mock_api.assert_called_with('/cloud/v1/user/login', 'post', json_object=jd)
         assert vesync_obj.token == 'sam_token'
         assert vesync_obj.account_id == 'sam_actid'

@@ -21,7 +21,10 @@ classifiers = [
     "Topic :: Home Automation"
 ]
 dependencies = [
-    "requests>=2.20.0"
+    "requests>=2.20.0",
+    "aiohttp>=3.8.1",
+    "mashumaro[orjson]>=3.13.1",
+    "Deprecated>=1.2.14"
 ]
 
 [project.urls]
@@ -46,8 +49,6 @@ pythonpath = "src"
 log_level = "DEBUG"
 log_cli_level = "DEBUG"
 log_cli = true
-
-
 
 [tool.pylint.MAIN]
 persistent = false

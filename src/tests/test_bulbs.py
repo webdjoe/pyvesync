@@ -28,9 +28,11 @@ See Also
 
 import logging
 import math
+import orjson
 from pyvesync.vesync import object_factory
 from pyvesync.vesyncbulb import pct_to_kelvin
-from utils import TestBase, assert_test, parse_args, Defaults
+from utils import TestBase, assert_test, parse_args
+from defaults import Defaults
 import call_json
 import call_json_bulbs
 
@@ -137,7 +139,8 @@ class TestBulbs(TestBase):
         method. The device details contain the default values set in `utils.Defaults`
         """
         # Set return value for call_api based on call_json_bulb.DETAILS_RESPONSES
-        return_val = call_json_bulbs.DETAILS_RESPONSES[dev_type]
+        return_dict, status = call_json_bulbs.DETAILS_RESPONSES[dev_type]
+        return_val = (orjson.dumps(return_dict), status)
         self.mock_api.return_value = return_val
 
         # Instantiate device from device list return item
@@ -146,7 +149,7 @@ class TestBulbs(TestBase):
                                      device_config,
                                      self.manager)
         method_call = getattr(bulb_obj, method)
-        method_call()
+        self.run_in_loop(method_call)
 
         # Parse mock_api args tuple from arg, kwargs to kwargs
         all_kwargs = parse_args(self.mock_api)
@@ -227,16 +230,16 @@ class TestBulbs(TestBase):
 
         # Call method with kwargs if defined
         if method_kwargs:
-            method_call(**method_kwargs)
+            self.run_in_loop(method_call, **method_kwargs)
         else:
-            method_call()
+            self.run_in_loop(method_call)
 
         # Parse arguments from mock_api call into a dictionary
         all_kwargs = parse_args(self.mock_api)
 
         # Assert request matches recored request or write new records
         assert_test(method_call, all_kwargs, dev_type,
-                     self.write_api, self.overwrite)
+                    self.write_api, self.overwrite)
 
     def _assert_color(self, bulb_obj):
         assert math.isclose(bulb_obj.color_rgb.red, DEFAULT_COLOR.rgb.red, rel_tol=1)

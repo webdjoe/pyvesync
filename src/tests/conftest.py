@@ -1,36 +1,47 @@
+"""pytest test parametrization for VeSync devices."""
+
+
 def pytest_addoption(parser):
     """Prevent new API's from being written during pipeline tests."""
     parser.addoption(
-        "--write_api", action="store_true", default=False,
-          help="run tests without writing API to yaml"
+        "--write_api",
+        action="store_true",
+        default=False,
+        help="run tests without writing API to yaml",
     )
     parser.addoption(
-        "--overwrite", action="store_true", default=False,
-          help="overwrite existing API in yaml - WARNING do not use unless absolutely necessary"
+        "--overwrite",
+        action="store_true",
+        default=False,
+        help="overwrite existing API in yaml - WARNING do not use unless absolutely necessary",
     )
 
+
 def pytest_generate_tests(metafunc):
+    """Generate tests for device methods.
+
+    Excludes legacy tests that start with 'test_x'.
+    """
     if metafunc.cls is None or 'test_x' in metafunc.module.__name__:
         return
-    if metafunc.config.getoption('--write_api'):
-        write_api = True
-    else:
-        write_api = False
-    if metafunc.config.getoption('--overwrite'):
-        overwrite = True
-    else:
-        overwrite = False
+    write_api = bool(metafunc.config.getoption('--write_api'))
+
+    overwrite = bool(metafunc.config.getoption('--overwrite'))
+
     metafunc.cls.overwrite = overwrite
     metafunc.cls.write_api = write_api
+
+    # Require class attribute 'device' to parametrize tests
     if 'device' in metafunc.cls.__dict__:
         device = metafunc.cls.__dict__['device']
         if device not in metafunc.cls.__dict__:
             return
         devices = metafunc.cls.__dict__[device]
+
         if metafunc.function.__name__ == 'test_details':
             return details_generator(metafunc, device, devices)
 
-        elif metafunc.function.__name__ == 'test_methods':
+        if metafunc.function.__name__ == 'test_methods':
             return method_generator(metafunc, device, devices)
 
 
@@ -42,7 +53,6 @@ def details_generator(metafunc, gen_type, devices):
         id_list.append(f"{gen_type}.{dev_type}.update")
         argvalues.append([dev_type, 'update'])
     metafunc.parametrize("dev_type, method", argvalues, ids=id_list)
-    return
 
 
 def method_generator(metafunc, gen_type, devices):

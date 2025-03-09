@@ -1,12 +1,12 @@
 """VeSync Kitchen Devices."""
-import json
 import logging
 import time
-from functools import wraps
-from typing import TYPE_CHECKING, Any, TypeVar, Callable
+from typing import TYPE_CHECKING, TypeVar
 from dataclasses import dataclass
+import orjson
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
-from pyvesync.helpers import Helpers as helpers
+from pyvesync.helpers import Helpers
+from pyvesync.logs import LibraryLogger
 
 if TYPE_CHECKING:
     from pyvesync import VeSync
@@ -61,26 +61,6 @@ RECIPE_ID = 1
 RECIPE_TYPE = 3
 CUSTOM_RECIPE = 'Manual Cook'
 COOK_MODE = 'custom'
-
-
-def check_status(func: Callable[..., T]) -> Callable[..., T]:
-    """Check interval between updates."""
-    @wraps(func)
-    def wrapper(self: 'VeSyncAirFryer158', *args: Any, **kwargs: Any) -> T:
-        seconds_elapsed = int(time.time()) - self.last_update
-        logger.debug("Seconds elapsed between updates: %s", seconds_elapsed)
-        refresh = False
-        if self.refresh_interval is None:
-            refresh = bool(seconds_elapsed > REFRESH_INTERVAL)
-        elif self.refresh_interval == 0:
-            refresh = True
-        elif self.refresh_interval > 0:
-            refresh = bool(seconds_elapsed > self.refresh_interval)
-        if refresh is True:
-            logger.debug("Updating status, %s seconds elapsed", seconds_elapsed)
-            self.update()
-        return func(self, *args, **kwargs)
-    return wrapper
 
 
 @dataclass(init=False, eq=False, repr=False)
@@ -175,7 +155,7 @@ class FryerStatus:
         """Return if heating."""
         return self.cook_status == 'heating' and self.remaining_time > 0
 
-    def status_request(self, json_cmd: dict) -> None:  # pylint: disable=R1260
+    def status_request(self, json_cmd: dict) -> None:  # pylint:disable=R1260 # noqa
         """Set status from jsonCmd of API call."""
         self.last_timestamp = None
         if not isinstance(json_cmd, dict):
@@ -282,18 +262,14 @@ class VeSyncAirFryer158(VeSyncBaseDevice):
         """Init the VeSync Air Fryer 158 class."""
         super().__init__(details, manager)
         self.fryer_status = FryerStatus()
-
-        if self.pid is None:
-            self.get_pid()
-        self.fryer_status.temp_unit = self.get_temp_unit()
-        self.ready_start = self.get_remote_cook_mode()
         self.last_update = int(time.time())
         self.refresh_interval = 0
+        self.ready_start = False
 
     def get_body(self, method:  str | None = None) -> dict:
         """Return body of api calls."""
         body = {
-            **helpers.req_body(self.manager, 'bypass'),
+            **Helpers.req_body(self.manager, 'bypass'),
             'cid': self.cid,
             'userCountryCode': self.manager.country_code,
             'debugMode': False
@@ -315,29 +291,36 @@ class VeSyncAirFryer158(VeSyncBaseDevice):
         )
         return body
 
-    def get_temp_unit(self) -> str | None:
+    async def get_temp_unit(self) -> str | None:
         """Get Air Fryer Configuration."""
         body = self.get_body('configurationsV2')
 
-        r, _ = helpers.call_api('/cloud/v2/deviceManaged/configurationsV2', 'post',
-                                json_object=body)
-        if not isinstance(r, dict) or r.get('code') != 0 \
-                or not isinstance(r.get('result'), dict):
-            logger.debug('Failed to get config for %s', self.device_name)
+        r_bytes, _ = await self.manager.async_call_api(
+            '/cloud/v2/deviceManaged/configurationsV2', 'post', json_object=body)
+        r = Helpers.process_api_response(
+            logger, "get_temp_unit", self, r_bytes
+            )
+        if r is None:
             return None
+
         result = r.get('result')
         if result is not None:
-            return result.get('airFryerInfo', {}).get('workTempUnit', 'f')
+            return result.get('airFryerInfo', {}).get('workTempUnit', None)
+        LibraryLogger.log_api_response_parse_error(
+            logger, self.device_name, self.device_type,
+            "get_temp_unit", msg="Result not found in response"
+            )
         return None
 
-    def get_remote_cook_mode(self) -> bool:
+    async def get_remote_cook_mode(self) -> bool:
         """Get the cook mode."""
         body = self.get_body('getRemoteCookMode158')
-        r, _ = helpers.call_api('/cloud/v1/deviceManaged/getRemoteCookMode158',
-                                'post',
-                                json_object=body)
-        if not isinstance(r, dict) or r.get('code') != 0 \
-                or not isinstance(r.get('result'), dict):
+        r_bytes, _ = await self.manager.async_call_api(
+            '/cloud/v1/deviceManaged/getRemoteCookMode158', 'post', json_object=body)
+        r = Helpers.process_api_response(
+            logger, "get_remote_cook_mode", self, r_bytes
+            )
+        if r is None:
             return False
         return r.get('result', {}).get('readyStart', False)
 
@@ -410,34 +393,52 @@ class VeSyncAirFryer158(VeSyncBaseDevice):
         """Return time remaining in minutes or None if not cooking/heating."""
         return self.fryer_status.remaining_time
 
-    def get_details(self) -> bool:
+    async def get_details(self) -> bool:
         """Get Air Fryer Status and Details."""
+        if self.pid is None:
+            await self.get_pid()
+        if self.fryer_status.temp_unit is None:
+            await self.get_temp_unit()
+
+        self.ready_start = await self.get_remote_cook_mode()
         cmd = {'getStatus': 'status'}
         req_body = self.get_status_body(cmd)
         url = '/cloud/v1/deviceManaged/bypass'
-        resp, _ = helpers.call_api(url, 'post', json_object=req_body)
-
+        r_bytes, _ = await self.manager.async_call_api(url, 'post', json_object=req_body)
+        resp = Helpers.process_api_response(logger, "get_details", self, r_bytes)
         if resp is None:
-            logger.debug('Failed to get details for %s', self.device_name)
+            self.device_status = 'off'
+            self.connection_status = 'offline'
             return False
-        if resp.get('code') == -11300030:
-            logger.debug('%s is offline', self.device_name)
-            self.fryer_status.set_standby()
-            self.fryer_status.cook_status = 'offline'
-            return False
-        if resp.get('code') != 0:
-            logger.debug('Failed to get details for %s \n with code: %s and message: %s',
-                         self.device_name, str(resp.get("code", 0)), resp.get("msg", ''))
-            return False
+
         return_status = resp.get('result', {}).get('returnStatus')
         if return_status is None:
+            LibraryLogger.log_api_response_parse_error(
+                logger, self.device_name, self.device_type,
+                "get_details", msg="Return status not found in response"
+                )
             return False
         self.fryer_status.status_response(return_status)
         return True
 
-    @check_status
-    def end(self) -> bool:
+    async def check_status(self) -> None:
+        """Update status if REFRESH_INTERVAL has passed."""
+        seconds_elapsed = int(time.time()) - self.last_update
+        logger.debug("Seconds elapsed between updates: %s", seconds_elapsed)
+        refresh = False
+        if self.refresh_interval is None:
+            refresh = bool(seconds_elapsed > REFRESH_INTERVAL)
+        elif self.refresh_interval == 0:
+            refresh = True
+        elif self.refresh_interval > 0:
+            refresh = bool(seconds_elapsed > self.refresh_interval)
+        if refresh is True:
+            logger.debug("Updating status, %s seconds elapsed", seconds_elapsed)
+            await self.update()
+
+    async def end(self) -> bool:
         """End the cooking process."""
+        await self.check_status()
         if self.preheat is False \
                 and self.fryer_status.cook_status in ['cookStop', 'cooking']:
             cmd = {
@@ -457,14 +458,15 @@ class VeSyncAirFryer158(VeSyncBaseDevice):
                          self.device_name)
             return False
 
-        if self._status_api(cmd) is True:
-            self.fryer_status.set_standby()
-            return True
-        return False
+        status_api = await self._status_api(cmd)
+        if status_api is False:
+            return False
+        self.fryer_status.set_standby()
+        return True
 
-    @check_status
-    def pause(self) -> bool:
+    async def pause(self) -> bool:
         """Pause the cooking process."""
+        await self.check_status()
         if self.cook_status not in ['cooking', 'heating']:
             logger.debug('Cannot pause %s as it is not cooking or preheating',
                          self.device_name)
@@ -481,7 +483,8 @@ class VeSyncAirFryer158(VeSyncBaseDevice):
                     'cookStatus': 'stop'
                 }
             }
-        if self._status_api(cmd) is True:
+        status_api = await self._status_api(cmd)
+        if status_api is True:
             if self.preheat is True:
                 self.fryer_status.cook_status = 'preheatStop'
             else:
@@ -501,16 +504,16 @@ class VeSyncAirFryer158(VeSyncBaseDevice):
             return False
         return True
 
-    @check_status
-    def cook(self, set_temp: int, set_time: int) -> bool:
+    async def cook(self, set_temp: int, set_time: int) -> bool:
         """Set cook time and temperature in Minutes."""
+        await self.check_status()
         if self._validate_temp(set_temp) is False:
             return False
-        return self._set_cook(set_temp, set_time)
+        return await self._set_cook(set_temp, set_time)
 
-    @check_status
-    def resume(self) -> bool:
+    async def resume(self) -> bool:
         """Resume paused preheat or cook."""
+        await self.check_status()
         if self.cook_status not in ['preheatStop', 'cookStop']:
             logger.debug('Cannot resume %s as it is not paused', self.device_name)
             return False
@@ -526,7 +529,8 @@ class VeSyncAirFryer158(VeSyncBaseDevice):
                     'cookStatus': 'cooking'
                 }
             }
-        if self._status_api(cmd) is True:
+        status_api = await self._status_api(cmd)
+        if status_api is True:
             if self.preheat is True:
                 self.fryer_status.cook_status = 'heating'
             else:
@@ -534,9 +538,9 @@ class VeSyncAirFryer158(VeSyncBaseDevice):
             return True
         return False
 
-    @check_status
-    def set_preheat(self, target_temp: int, cook_time: int) -> bool:
+    async def set_preheat(self, target_temp: int, cook_time: int) -> bool:
         """Set preheat mode with cooking time."""
+        await self.check_status()
         if self.cook_status not in ['standby', 'cookEnd', 'preheatEnd']:
             logger.debug('Cannot set preheat for %s as it is not in standby',
                          self.device_name)
@@ -551,19 +555,19 @@ class VeSyncAirFryer158(VeSyncBaseDevice):
         json_cmd = {
             'preheat': cmd
         }
-        return self._status_api(json_cmd)
+        return await self._status_api(json_cmd)
 
-    # @check_status
-    def cook_from_preheat(self) -> bool:
+    async def cook_from_preheat(self) -> bool:
         """Start Cook when preheat has ended."""
+        await self.check_status()
         if self.preheat is False or self.cook_status != 'preheatEnd':
             logger.debug('Cannot start cook from preheat for %s', self.device_name)
             return False
-        return self._set_cook(status='cooking')
+        return await self._set_cook(status='cooking')
 
-    def update(self) -> None:
+    async def update(self) -> None:
         """Update the device details."""
-        self.get_details()
+        await self.get_details()
 
     @staticmethod
     def fryer_code_check(code: str | int) -> str | None:
@@ -602,45 +606,38 @@ class VeSyncAirFryer158(VeSyncBaseDevice):
         })
         return cmd
 
-    def _set_cook(self, set_temp: int | None = None,
-                  set_time: int | None = None,
-                  status: str = 'cooking') -> bool:
+    async def _set_cook(self, set_temp: int | None = None,
+                        set_time: int | None = None,
+                        status: str = "cooking") -> bool:
         if set_temp is not None and set_time is not None:
             set_cmd = self._cmd_api_dict
 
-            set_cmd['cookSetTime'] = set_time
-            set_cmd['cookSetTemp'] = set_temp
+            set_cmd["cookSetTime"] = set_time
+            set_cmd["cookSetTemp"] = set_temp
         else:
             set_cmd = self._cmd_api_base
-        set_cmd['cookStatus'] = status
-        cmd = {'cookMode': set_cmd}
-        return self._status_api(cmd)
+        set_cmd["cookStatus"] = status
+        cmd = {"cookMode": set_cmd}
+        return await self._status_api(cmd)
 
-    def _status_api(self, json_cmd: dict) -> bool:
+    async def _status_api(self, json_cmd: dict) -> bool:
         """Set API status with jsonCmd."""
         body = self.get_status_body(json_cmd)
         url = '/cloud/v1/deviceManaged/bypass'
-        resp, _ = helpers.call_api(url, 'post', json_object=body)
+        r_bytes, _ = await self.manager.async_call_api(url, 'post', json_object=body)
+        resp = Helpers.process_api_response(logger, "set_status", self, r_bytes)
         if resp is None:
-            logger.debug('Failed to set status for %s - No response from API',
-                         self.device_name)
             return False
 
-        if resp.get('code') != 0 and resp.get('code') is not None:
-            debug_msg = self.fryer_code_check(resp.get('code'))
-            logger.debug('Failed to set status for %s \n Code: %s and message: %s \n'
-                         ' %s', self.device_name, resp.get("code"),
-                         resp.get("msg"), debug_msg)
-            return False
         self.last_update = int(time.time())
         self.fryer_status.status_request(json_cmd)
-        self.update()
+        await self.update()
         return True
 
     def displayJSON(self) -> str:
         """Display JSON of device details."""
         sup = super().displayJSON()
-        sup_dict = json.loads(sup)
+        sup_dict = orjson.loads(sup)
         sup_dict['cook_status'] = self.cook_status
         sup_dict['temp_unit'] = self.temp_unit
 
@@ -659,4 +656,6 @@ class VeSyncAirFryer158(VeSyncBaseDevice):
                 }
                 status_dict.update(preheat_dict)
             sup_dict.update(status_dict)
-        return json.dumps(sup_dict, indent=4)
+        return orjson.dumps(
+            sup_dict, option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS
+            ).decode()

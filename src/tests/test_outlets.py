@@ -28,12 +28,11 @@ See Also
 
 import pytest
 import logging
+import orjson
 from pyvesync.vesync import object_factory
 from utils import TestBase, assert_test, parse_args
 import call_json
 import call_json_outlets
-from utils import Defaults
-
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -99,12 +98,15 @@ class TestOutlets(TestBase):
     ]
     device_methods = {
         'ESW15-USA': [
-            ['turn_on_nightlight'], 
-            ['turn_off_nightlight']
+            ['turn_on_nightlight'],
+            ['turn_off_nightlight'],
+            ['get_weekly_energy'],
+            ['get_monthly_energy'],
+            ['get_yearly_energy']
         ],
         'wifi-switch-1.3': [
             ['get_weekly_energy'],
-            ['get_monthly_energy'], 
+            ['get_monthly_energy'],
             ['get_yearly_energy']
         ],
         'ESW03-USA': [
@@ -113,11 +115,6 @@ class TestOutlets(TestBase):
             ['get_yearly_energy']
         ],
         'ESW01-EU': [
-            ['get_weekly_energy'],
-            ['get_monthly_energy'],
-            ['get_yearly_energy']
-        ],
-        'ESW15-USA': [
             ['get_weekly_energy'],
             ['get_monthly_energy'],
             ['get_yearly_energy']
@@ -152,27 +149,26 @@ class TestOutlets(TestBase):
         """        # Get response for device details
         details_response = call_json_outlets.DETAILS_RESPONSES[dev_type]
         if callable(details_response):
-            self.mock_api.return_value = details_response()
+            response_dict, status = details_response()
         else:
-            self.mock_api.return_value = details_response
-
+            response_dict, status = details_response
+        self.mock_api.return_value = orjson.dumps(response_dict), status
         # Get device configuration
         device_config = call_json.DeviceList.device_list_item(dev_type)
 
         # Instantiate device
-        _, outlet_obj = object_factory(dev_type,
-                                     device_config,
-                                     self.manager)
+        _, outlet_obj = object_factory(dev_type, device_config, self.manager)
 
         # Call get_details() directly
-        outlet_obj.get_details()
+        self.run_in_loop(outlet_obj.get_details)
 
         # Parse arguments from mock_api call into dictionary
         all_kwargs = parse_args(self.mock_api)
 
         # Set both write_api and overwrite to True to update YAML files
-        assert_test(outlet_obj.get_details, all_kwargs, dev_type,
-                   write_api=True, overwrite=True)
+        assert_test(
+            outlet_obj.get_details, all_kwargs, dev_type, write_api=True, overwrite=True
+        )
 
         # Test bad responses
         self.mock_api.reset_mock()
@@ -180,7 +176,7 @@ class TestOutlets(TestBase):
             self.mock_api.return_value = (None, 400)
         else:
             self.mock_api.return_value = call_json.DETAILS_BADCODE
-        outlet_obj.get_details()
+        self.run_in_loop(outlet_obj.get_details)
         assert len(self.caplog.records) == 1
         assert 'details' in self.caplog.text
 
@@ -222,19 +218,17 @@ class TestOutlets(TestBase):
         method_response = call_json_outlets.METHOD_RESPONSES[dev_type][method_name]
         if callable(method_response):
             if method_kwargs:
-                self.mock_api.return_value = method_response(**method_kwargs)
+                resp_dict, status = method_response(**method_kwargs)
             else:
-                self.mock_api.return_value = method_response()
+                resp_dict, status = method_response()
         else:
-            self.mock_api.return_value = method_response
-
+            resp_dict, status = method_response
+        self.mock_api.return_value = orjson.dumps(resp_dict), status
         # Get device configuration
         device_config = call_json.DeviceList.device_list_item(dev_type)
 
         # Instantiate device
-        _, outlet_obj = object_factory(dev_type,
-                                     device_config,
-                                     self.manager)
+        _, outlet_obj = object_factory(dev_type, device_config, self.manager)
 
         # Get method from device object
         method_call = getattr(outlet_obj, method[0])
@@ -247,16 +241,15 @@ class TestOutlets(TestBase):
 
         # Call method with kwargs if present
         if method_kwargs:
-            method_call(**method_kwargs)
+            self.run_in_loop(method_call, **method_kwargs)
         else:
-            method_call()
+            self.run_in_loop(method_call)
 
         # Parse arguments from mock_api call into dictionary
         all_kwargs = parse_args(self.mock_api)
 
         # Assert request matches recorded request or write new records
-        assert_test(method_call, all_kwargs, dev_type,
-                   self.write_api, self.overwrite)
+        assert_test(method_call, all_kwargs, dev_type, self.write_api, self.overwrite)
 
         # Test bad responses
         self.mock_api.reset_mock()
@@ -270,15 +263,17 @@ class TestOutlets(TestBase):
             outlet_obj.device_status = 'on'
         if 'energy' in method[0]:
             return
-        assert method_call() is False
+        bad_return = self.run_in_loop(method_call)
+        assert bad_return is False
 
     @pytest.mark.parametrize('dev_type', [d for d in OUTLET_DEV_TYPES if d != 'BSDOG01'])
     def test_power(self, dev_type):
         """Test outlets power history methods."""
-        self.mock_api.return_value = call_json_outlets.ENERGY_HISTORY
+        resp_dict, status = call_json_outlets.ENERGY_HISTORY
+        self.mock_api.return_value = orjson.dumps(resp_dict), status
         device_config = call_json.DeviceList.device_list_item(dev_type)
         _, outlet_obj = object_factory(dev_type, device_config, self.manager)
-        outlet_obj.update_energy()
+        self.run_in_loop(outlet_obj.update_energy)
         assert self.mock_api.call_count == 3
         assert list(outlet_obj.energy.keys()) == ['week', 'month', 'year']
         self.mock_api.reset_mock()
@@ -287,8 +282,8 @@ class TestOutlets(TestBase):
             self.mock_api.return_value = (None, 400)
         else:
             self.mock_api.return_value = call_json.DETAILS_BADCODE
-        outlet_obj.update_energy()
+        self.run_in_loop(outlet_obj.update_energy)
         self.mock_api.call_count == 0
-        outlet_obj.update_energy(bypass_check=True)
+        self.run_in_loop(outlet_obj.update_energy, {"bypass_check": True})
         self.mock_api.assert_called_once()
-        assert 'Unable to get' in self.caplog.records[-1].message
+        assert 'unexpected response format' in self.caplog.records[-1].message

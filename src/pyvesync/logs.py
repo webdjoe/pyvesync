@@ -17,14 +17,15 @@ Usage:
 """
 
 import logging
-import json
 import os
 import re
-from textwrap import indent
-from collections.abc import MutableMapping
-from urllib.parse import urlparse
-from requests import RequestException, Response
-from requests.structures import CaseInsensitiveDict
+from collections.abc import Mapping
+
+import orjson
+from aiohttp import ClientResponse
+from aiohttp.client_exceptions import ClientResponseError
+from multidict import CIMultiDictProxy
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -124,32 +125,40 @@ class LibraryLogger:
         return stringvalue
 
     @staticmethod
-    def is_json(data: str) -> bool:
+    def is_json(data: str | bytes | None) -> bool:
         """Check if the data is JSON formatted."""
+        if data is None:
+            return False
+        if isinstance(data, str):
+            data = data.encode('utf-8')
         try:
-            json.loads(data)
-        except json.JSONDecodeError:
+            orjson.loads(data)
+        except orjson.JSONDecodeError:
             return False
         return True
 
     @classmethod
-    def api_printer(cls, api: MutableMapping | bytes | str | None) -> str | None:
+    def api_printer(cls, api: Mapping | bytes | str | None) -> str | None:
         """Print the API dictionary in a readable format."""
-        if api is None:
+        if api is None or len(api) == 0:
             return None
         try:
             if isinstance(api, bytes):
-                api_dict = json.loads(api.decode("utf-8"))
+                api_dict = orjson.loads(api)
             elif isinstance(api, str):
-                api_dict = json.loads(api)
-            elif isinstance(api, (dict, CaseInsensitiveDict)):
+                api_dict = orjson.loads(api.encode("utf-8"))
+            elif isinstance(api, (dict, CIMultiDictProxy)):
                 api_dict = dict(api)
             else:
                 return None
-            dump = indent(json.dumps(dict(api_dict), indent=2), ' ')
-            return cls.redactor(dump)
-        except json.JSONDecodeError:
-            return None
+            dump = orjson.dumps(dict(api_dict),
+                                option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS)
+            return cls.redactor(dump.decode("utf-8"))
+
+        except (orjson.JSONDecodeError, orjson.JSONEncodeError):
+            if isinstance(api, bytes):
+                return api.decode("utf-8")
+            return str(api)
 
     @staticmethod
     def set_log_level(level: str | int = logging.WARNING) -> None:
@@ -188,10 +197,71 @@ class LibraryLogger:
                 logger.setLevel(level)
 
     @classmethod
+    def log_api_response_parse_error(
+        cls,
+        logger: logging.Logger,
+        device_name: str,
+        device_type: str,
+        method: str,
+        msg: str | None = None,
+    ) -> None:
+        """Log an error parsing API response.
+
+        Use this log message to indicate that the API response
+        is not in the expected format.
+
+        Args:
+            logger (logging.Logger): module logger
+            device_name (str): device name
+            device_type (str): device type
+            method (str): method that caused the error
+            msg (str | None, optional): optional description of error
+        """
+        logger.debug(
+            "%s for %s API returned an unexpected response format in %s: %s",
+            device_name,
+            device_type,
+            method,
+            msg if msg is not None else "",
+        )
+
+    @classmethod
+    def log_device_code_error(
+        cls,
+        logger: logging.Logger,
+        method: str,
+        device_name: str,
+        device_type: str,
+        code: int,
+        message: str = '',
+    ) -> None:
+        """Log device code error from device API call.
+
+        When API responds with JSON, if the code key is not 0,
+        it indicates an error has occured.
+
+        Args:
+            logger (logging.Logger): module logger instance
+            method (str): method that caused the error
+            device_name (str): device name
+            device_type (str): device type
+            code (int): api response code
+            message (str): api response message
+        """
+        try:
+            code_str = str(code)
+        except (TypeError, ValueError):
+            code_str = "UNKNOWN"
+        logger.debug("%s for %s API from %s returned error code: %s, message: %s",
+                     device_name, device_type, method, code_str, message)
+
+    @classmethod
     def log_api_call(
         cls,
         logger: logging.Logger,
-        response: Response
+        response: ClientResponse,
+        response_body: bytes | None = None,
+        request_body: str | dict | None = None,
     ) -> None:
         """Log API calls in debug mode.
 
@@ -200,7 +270,9 @@ class LibraryLogger:
 
         Args:
             logger (logging.Logger): The logger instance to use.
-            response (Response): Requests response object from the API call.
+            response (aiohttp.ClientResponse): Requests response object from the API call.
+            response_body (bytes, optional): The response body to log.
+            request_body (dict | str, optional): The request body to log.
 
         Notes:
             This is a method used for the logging of API calls when the debug
@@ -209,33 +281,73 @@ class LibraryLogger:
         """
         # Build the log message parts.
         parts = ["========API CALL========"]
-        endpoint = urlparse(response.request.url).path
-        endpoint = endpoint if isinstance(endpoint, str) else str(endpoint)
+        endpoint = response.url.path
         parts.append(f"API CALL to endpoint: {endpoint}")
-        parts.append(f"Response Status: {response.status_code}")
+        parts.append(f"Response Status: {response.status}")
+        parts.append(f"Method: {response.method}")
 
-        method = response.request.method
-        if method:
-            parts.append(f"Method: {method.upper()}")
-
-        request_headers = cls.api_printer(response.request.headers)
+        request_headers = cls.api_printer(response.request_info.headers)
         if request_headers:
             parts.append(f"Request Headers: {os.linesep} {request_headers}")
 
-        if method and method.upper() == "POST" and response.request.body is not None:
-            request_body = cls.api_printer(response.request.body)
-            if request_body:
-                parts.append(f"Request Body: {os.linesep} {request_body}")
+        if request_body is not None:
+            request_body = cls.api_printer(request_body)
+            parts.append(f"Request Body: {os.linesep} {request_body}")
 
         response_headers = cls.api_printer(response.headers)
         if response_headers:
             parts.append(f"Response Headers: {os.linesep} {response_headers}")
 
-        if cls.is_json(response.text):
-            response_body = cls.api_printer(response.json())
-            parts.append(f"Response Body: {os.linesep} {response_body}")
+        if cls.is_json(response_body):
+            response_str = cls.api_printer(response_body)
+            parts.append(f"Response Body: {os.linesep} {response_str}")
         else:
-            parts.append(f"Response Body: {os.linesep} {response.text}")
+            if isinstance(response_body, bytes):
+                response_str = response_body.decode("utf-8")
+            parts.append(f"Response Body: {os.linesep} {response_str}")
+
+        full_message = os.linesep.join(parts)
+        logger.debug(full_message)
+
+    @classmethod
+    def log_api_status_error(
+        cls,
+        logger: logging.Logger,
+        *,
+        request_body: dict | None,
+        response: ClientResponse,
+        response_bytes: bytes | None,
+    ) -> None:
+        """Log API exceptions in debug mode.
+
+        Logs an API call with a specific format that includes the endpoint,
+        JSON-formatted headers, request body (if any) and response body.
+
+        Args:
+            logger (logging.Logger): The logger instance to use.
+            request_body (dict | None): KW only, The request body to log.
+            response (aiohttp.ClientResponse): KW only, dictionary
+                containing the request information.
+            response_bytes (bytes | None): KW only, The response body to log.
+        """
+        # Build the log message parts.
+        parts = [f"Error in API CALL to endpoint: {response.url.path}"]
+        parts.append(f"Response Status: {response.status}")
+        req_headers = cls.api_printer(response.request_info.headers)
+        if req_headers is not None:
+            parts.append(f"Request Headers: {os.linesep} {req_headers}")
+
+        req_body = cls.api_printer(request_body)
+        if req_body is not None:
+            parts.append(f"Request Body: {os.linesep} {req_body}")
+
+        resp_headers = cls.api_printer(response.headers)
+        if resp_headers is not None:
+            parts.append(f"Response Headers: {os.linesep} {resp_headers}")
+
+        resp_body = cls.api_printer(response_bytes)
+        if resp_body is not None:
+            parts.append(f"Request Body: {os.linesep} {request_body}")
 
         full_message = os.linesep.join(parts)
         logger.debug(full_message)
@@ -245,8 +357,8 @@ class LibraryLogger:
         cls,
         logger: logging.Logger,
         *,
-        request_dict: dict,
-        exception: Exception | RequestException | None = None,
+        exception: ClientResponseError,
+        request_body: dict | None
     ) -> None:
         """Log API exceptions in debug mode.
 
@@ -255,34 +367,19 @@ class LibraryLogger:
 
         Args:
             logger (logging.Logger): The logger instance to use.
-            request_dict (dict): Dictionary containing the request information.
-            exception (Exception): The exception that occurred during the API call.
-
-        Note:
-            `request_dict` argument is a dictionary of request and response values:
-            {
-                "endpoint": "/api/v1/resource",
-                "headers": {"Authorization": "Bearer xyz"},
-                "method": "POST",
-                "body": {"key": "value"},
-            }
+            exception (ClientResponseError): KW only, The request body to log.
+            request_body (dict | None): KW only, The request body.
         """
         # Build the log message parts.
-        parts = [f"Error in API CALL to endpoint: {request_dict['endpoint']}"]
-        if request_dict.get("status_code"):
-            parts.append(f"Response Status: {request_dict['status_code']}")
-        if isinstance(exception, (RequestException, Exception)):
-            parts.append(f"Exception: {exception}")
+        parts = [f"Error in API CALL to endpoint: {exception.request_info.url.path}"]
+        parts.append(f"Exception Raised: {exception}")
+        req_headers = cls.api_printer(exception.request_info.headers)
+        if req_headers is not None:
+            parts.append(f"Request Headers: {os.linesep} {req_headers}")
 
-        parts.append(f"Method: {request_dict['method'].upper()}")
-
-        headers = cls.api_printer(request_dict.get("headers"))
-        if headers:
-            parts.append(f"Request Headers: {os.linesep}"
-                         f"{json.dumps(request_dict['headers'], indent=2)}")
-        request_body = cls.api_printer(request_dict.get('body'))
-        if request_body is not None:
-            parts.append(f"Request Body: {os.linesep} {request_body}")
+        req_body = cls.api_printer(request_body)
+        if req_body is not None:
+            parts.append(f"Request Body: {os.linesep} {req_body}")
 
         full_message = os.linesep.join(parts)
         logger.debug(full_message)
@@ -300,6 +397,14 @@ class VesyncLoginError(VeSyncError):
         super().__init__(msg)
 
 
+class VeSyncServerError(VeSyncError):
+    """Exception raised for VeSync API server errors."""
+
+    def __init__(self, msg: str) -> None:
+        """Initialize the exception with a message."""
+        super().__init__(msg)
+
+
 class VeSyncRateLimitError(VeSyncError):
     """Exception raised for VeSync API rate limit errors."""
 
@@ -311,6 +416,19 @@ class VeSyncRateLimitError(VeSyncError):
 class VeSyncAPIResponseError(VeSyncError):
     """Exception raised for malformed VeSync API responses."""
 
-    def __init__(self) -> None:
+    def __init__(self, msg: None | str = None) -> None:
         """Initialize the exception with a message."""
-        super().__init__("VeSync API response error")
+        if msg is None:
+            msg = "Unexpected VeSync API response."
+        super().__init__(msg)
+
+
+class VeSyncAPIStatusCodeError(VeSyncError):
+    """Exception raised for malformed VeSync API responses."""
+
+    def __init__(self, status_code: str | None = None) -> None:
+        """Initialize the exception with a message."""
+        message = "VeSync API returned an unknown status code"
+        if status_code is not None:
+            message = f"VeSync API returned status code {status_code}"
+        super().__init__(message)

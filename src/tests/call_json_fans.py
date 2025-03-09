@@ -35,7 +35,7 @@ METHOD_RESPONSES['DEVTYPE'].default_factory = lambda: ({"code": 0, "msg": "succe
 
 from copy import deepcopy
 from pyvesync import vesyncfan, helpers
-from utils import Defaults, FunctionResponses
+from defaults import Defaults, FunctionResponses
 
 HUMID_MODELS = []
 for model_type, model_dict in vesyncfan.humid_features.items():
@@ -367,7 +367,7 @@ class FanDetails:
                 "scheduleCount": 0,
                 "displayingType": 0,
                 "errorCode": 0,
-            }                
+            }
         },
     }, 200)
 
