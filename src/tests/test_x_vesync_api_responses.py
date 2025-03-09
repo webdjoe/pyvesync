@@ -9,13 +9,10 @@ import pytest
 from unittest.mock import patch, MagicMock
 
 from pyvesync import VeSync
-from pyvesync.helpers import Helpers, API_BASE_URL
-from pyvesync.logs import (
-    VeSyncAPIResponseError,
-    VeSyncAPIStatusCodeError,
-    VeSyncRateLimitError,
-    VeSyncServerError,
-    VesyncLoginError
+from pyvesync.helper_utils.errors import VeSyncRateLimitError, VeSyncServerError, VesyncLoginError
+from pyvesync.helper_utils.helpers import Helpers, API_BASE_URL
+from pyvesync.helper_utils.errors import (
+    VeSyncAPIStatusCodeError
     )
 from defaults import Defaults
 from aiohttp_mocker import AiohttpMockSession
@@ -58,6 +55,15 @@ SERVER_ERROR_PARAMS = [
 ]
 
 # Status code errors should raise an exception in `async_call_api`
+STATUS_CODE_ERROR = 400
+STATUS_CODE_RESP = None
+STATUS_CODE_PARAMS = [
+    pytest.param('/endpoint', 'get', STATUS_CODE_RESP, STATUS_CODE_ERROR, id='get_status_code'),
+    pytest.param('/endpoint', 'post', STATUS_CODE_RESP, STATUS_CODE_ERROR, id='post_status_code'),
+    pytest.param('/endpoint', 'put', STATUS_CODE_RESP, STATUS_CODE_ERROR, id='put_status_code'),
+]
+
+# Login errors should not raise an exception in `async_call_api`, but are raised in login() method
 STATUS_CODE_ERROR = 400
 STATUS_CODE_RESP = None
 STATUS_CODE_PARAMS = [

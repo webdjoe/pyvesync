@@ -1,7 +1,8 @@
 """Levoit Air Purifier tests."""
 import orjson
-from pyvesync.vesyncfan import VeSyncAir131, VeSyncAirBypass
-from pyvesync.helpers import Helpers as Helpers
+from pyvesync.devices.vesyncpurifier import VeSyncAirBypass
+from pyvesync.devices.vesyncpurifier import VeSyncAir131
+from pyvesync.helper_utils.helpers import Helpers as Helpers
 import call_json
 import call_json_fans
 from utils import TestBase
@@ -101,14 +102,14 @@ class TestVesyncAirPurifier(TestBase):
         fan = VeSyncAir131(DEV_LIST_DETAIL, self.manager)
         fan.mode = 'manual'
         fan.details['level'] = 1
-        b = self.run_in_loop(fan.change_fan_speed)
+        b = self.run_in_loop(fan.set_fan_speed)
         assert fan.fan_level == 2
-        b = self.run_in_loop(fan.change_fan_speed)
+        b = self.run_in_loop(fan.set_fan_speed)
         assert fan.fan_level == 3
-        b = self.run_in_loop(fan.change_fan_speed)
+        b = self.run_in_loop(fan.set_fan_speed)
         assert fan.fan_level == 1
         assert b
-        b = self.run_in_loop(fan.change_fan_speed, 2)
+        b = self.run_in_loop(fan.set_fan_speed, 2)
         assert b
         assert fan.fan_level == 2
 

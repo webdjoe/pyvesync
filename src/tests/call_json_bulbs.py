@@ -35,7 +35,7 @@ METHOD_RESPONSES['XYD0001'].default_factory = lambda: ({"code": 0, "msg": "succe
 """
 from copy import deepcopy
 from defaults import FunctionResponses, Defaults
-from pyvesync.vesyncbulb import bulb_modules
+from pyvesync.devices.vesyncbulb import bulb_modules
 TRACE_ID = "TRACE_ID"
 
 # BULBS = ['ESL100', 'ESL100CW', 'ESL100MC', 'XYD0001']

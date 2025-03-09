@@ -1,49 +1,197 @@
 """Helper functions for VeSync API."""
 from __future__ import annotations
+from collections.abc import Iterator
 import hashlib
 import logging
 import time
-import colorsys
-from dataclasses import dataclass, field, InitVar
-from typing import Any, NamedTuple, Union, TYPE_CHECKING
+import re
+from dataclasses import dataclass, InitVar
+from typing import Any, Literal, NamedTuple, Union, TYPE_CHECKING, TypeVar
 import orjson
-from pyvesync.logs import LibraryLogger
-from pyvesync.errors import ErrorCodes
+from pyvesync.const import (
+    APP_VERSION,
+    BYPASS_HEADER_UA,
+    DEFAULT_REGION,
+    MOBILE_ID,
+    PHONE_BRAND,
+    PHONE_OS,
+    USER_TYPE
+    )
+from pyvesync.helper_utils.logs import LibraryLogger
+from pyvesync.helper_utils.errors import ErrorCodes
 
 if TYPE_CHECKING:
     from pyvesync.vesync import VeSync
-    from pyvesync.vesyncbasedevice import VeSyncBaseDevice
+    from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
+
+T = TypeVar('T')
 
 
 _LOGGER = logging.getLogger(__name__)
 
 API_BASE_URL = 'https://smartapi.vesync.com'
 API_RATE_LIMIT = 30
-# If device is out of reach, the cloud api sends a timeout response after 7 seconds,
-# using 8 here so there is time enough to catch that message
-API_TIMEOUT = 8
-USER_AGENT = ("VeSync/3.2.39 (com.etekcity.vesyncPlatform;"
-              " build:5; iOS 15.5.0) Alamofire/5.2.1")
+NUMERIC_OPT = Union[float, str, None]
 
-DEFAULT_TZ = 'America/New_York'
-DEFAULT_REGION = 'US'
-
-APP_VERSION = '2.8.6'
-PHONE_BRAND = 'SM N9005'
-PHONE_OS = 'Android'
-MOBILE_ID = '1234567890123456'
-USER_TYPE = '1'
-BYPASS_APP_V = "VeSync 3.0.51"
-
-BYPASS_HEADER_UA = 'okhttp/3.12.1'
-
-NUMERIC = Union[int, float, str, None]
+NUMERIC_STRICT = Union[float, str]
 
 REQUEST_T = dict[str, Any]
 
 
+class Validators:
+    """Methods to validate input."""
+
+    @staticmethod
+    def validate_range(
+        value: NUMERIC_OPT, minimum: NUMERIC_STRICT, maximum: NUMERIC_STRICT
+    ) -> bool:
+        """Validate number is within range."""
+        if value is None:
+            return False
+        try:
+            return float(minimum) <= float(value) <= float(maximum)
+        except (ValueError, TypeError):
+            return False
+
+    @classmethod
+    def validate_zero_to_hundred(cls, value: NUMERIC_OPT) -> bool:
+        """Validate number is a percentage."""
+        return Validators.validate_range(value, 0, 100)
+
+    @classmethod
+    def validate_hsv(cls, hue: NUMERIC_OPT, saturation: NUMERIC_OPT,
+                     value: NUMERIC_OPT) -> bool:
+        """Validate HSV values."""
+        return (
+            cls.validate_range(hue, 0, 360)
+            and cls.validate_zero_to_hundred(saturation)
+            and cls.validate_zero_to_hundred(value)
+        )
+
+    @classmethod
+    def validate_rgb(cls, red: NUMERIC_OPT, green: NUMERIC_OPT,
+                     blue: NUMERIC_OPT) -> bool:
+        """Validate RGB values."""
+        return all(
+            cls.validate_range(val, 0, 255) for val in (red, green, blue)
+        )
+
+
+class Converters:
+    """Helper functions to convert units."""
+
+    @staticmethod
+    def color_temp_kelvin_to_pct(kelvin: int) -> int:
+        """Convert Kelvin to percentage."""
+        return int((kelvin - 2700) / 153)
+
+    @staticmethod
+    def color_temp_pct_to_kelvin(pct: int) -> int:
+        """Convert percentage to Kelvin."""
+        return int(pct * 153 + 2700)
+
+    @staticmethod
+    def temperature_kelvin_to_celsius(kelvin: int) -> float:
+        """Convert Kelvin to Celsius."""
+        return kelvin - 273.15
+
+    @staticmethod
+    def temperature_celsius_to_kelvin(celsius: float) -> int:
+        """Convert Celsius to Kelvin."""
+        return int(celsius + 273.15)
+
+    @staticmethod
+    def temperature_fahrenheit_to_celsius(fahrenheit: float) -> float:
+        """Convert Fahrenheit to Celsius."""
+        return (fahrenheit - 32) * 5.0 / 9.0
+
+    @staticmethod
+    def temperature_celsius_to_fahrenheit(celsius: float) -> float:
+        """Convert Celsius to Fahrenheit."""
+        return celsius * 9.0 / 5.0 + 32
+
+
 class Helpers:
     """VeSync Helper Functions."""
+
+    @staticmethod
+    def bump_level(level: T | None, levels: list[T]) -> T:
+        """Increment level by one if not at max level."""
+        if level in levels:
+            idx = levels.index(level)
+            if idx < len(levels) - 1:
+                return levels[idx + 1]
+        return levels[0]
+
+    @staticmethod
+    def try_json_loads(data: str | bytes | None) -> dict | None:
+        """Try to load JSON data."""
+        if data is None:
+            return None
+        try:
+            return orjson.loads(data)
+        except (orjson.JSONDecodeError, TypeError):
+            return None
+
+    @staticmethod
+    def string_status(status: bool | None | str) -> Literal['on', 'off']:
+        """Get string status from boolean or string."""
+        if isinstance(status, bool):
+            return 'on' if status else 'off'
+        return 'on' if status == 'on' else 'off'
+
+    @staticmethod
+    def get_class_attributes(target_class: object, keys: list[str]) -> dict[str, Any]:
+        """Find matching attributes, static methods, and class methods from list of keys.
+
+        This function is case insensitive and will remove underscores from the keys before
+        comparing them to the class attributes. The provided keys will be returned in the
+        same format if found
+
+        Args:
+            target_class (object): Class to search for attributes
+            keys (list[str]): List of keys to search for
+
+        Returns:
+            dict[str, Any]: Dictionary of keys and their values from the class
+        """
+        alias_map = {
+            'userCountryCode': 'countrycode',
+            'deviceId': 'cid',
+            'homeTimeZone': 'timezone',
+            'configModel': 'configmodule',
+        }
+
+        def normalize_name(name: str) -> str:
+            """Normalize a string by removing underscores and making it lowercase."""
+            return re.sub(r'_', '', name).lower()
+
+        def get_value(attr_name: str) -> str | float | None:
+            """Get value from attribute."""
+            attr = getattr(target_class, attr_name)
+            try:
+                return attr() if callable(attr) else attr
+            except TypeError:
+                return None
+        result = {}
+        normalized_keys = {normalize_name(key): key for key in keys}
+        normalized_aliases = [normalize_name(key) for key in alias_map.values()]
+
+        for attr_name in dir(target_class):
+            normalized_attr = normalize_name(attr_name)
+            if normalized_attr in normalized_keys:
+                attr_val = get_value(attr_name)
+                if attr_val is not None:
+                    result[normalized_keys[normalized_attr]] = attr_val
+            if normalized_attr in normalized_aliases:
+                attr_val = get_value(attr_name)
+                if attr_val is not None:
+                    key_index = normalized_aliases.index(normalized_attr)
+                    key_val = list(alias_map.keys())[key_index]
+                    if key_val in keys:
+                        result[key_val] = attr_val
+
+        return result
 
     @staticmethod
     def req_headers(manager: VeSync) -> dict[str, str]:
@@ -263,85 +411,36 @@ class Helpers:
                     return False
         return True
 
-    # @staticmethod
-    # def call_api(api: str, method: str, json_object:  dict | None = None,
-    #              headers: dict | None = None) -> tuple:
-    #     """Make API calls by passing endpoint, header and body.
+    @staticmethod
+    def _get_internal_codes(response: dict) -> list[int]:
+        """Get all error codes from nested dictionary.
 
-    #     api argument is appended to https://smartapi.vesync.com url
+        Args:
+            response (dict): API response.
 
-    #     Args:
-    #         api (str): Endpoint to call with https://smartapi.vesync.com.
-    #         method (str): HTTP method to use.
-    #         json_object (dict): JSON object to send in body.
-    #         headers (dict): Headers to send with request.
+        Returns:
+            list[int]: List of error codes.
+        """
+        error_keys = ['error', 'code', 'device_error_code', 'errorCode']
 
-    #     Returns:
-    #         tuple: Response and status code.
-    #     """
-    #     response = None
-    #     status_code = None
-
-    #     try:
-    #         if method.lower() == 'get':
-    #             r = requests.get(
-    #                 API_BASE_URL + api, json=json_object, headers=headers,
-    #                 timeout=API_TIMEOUT
-    #             )
-    #         elif method.lower() == 'post':
-    #             r = requests.post(
-    #                 API_BASE_URL + api, json=json_object, headers=headers,
-    #                 timeout=API_TIMEOUT
-    #             )
-    #         elif method.lower() == 'put':
-    #             r = requests.put(
-    #                 API_BASE_URL + api, json=json_object, headers=headers,
-    #                 timeout=API_TIMEOUT
-    #             )
-    #         else:
-    #             raise NameError(f'Invalid method {method}')
-    #     except Exception as e:
-    #         LibraryLogger.log_api_exception(
-    #             _LOGGER,
-    #             exception=e,
-    #             request_dict={
-    #                 "method": method,
-    #                 "endpoint": api,
-    #                 "headers": headers,
-    #                 "body": json_object,
-    #             },
-    #         )
-    #     else:
-    #         if r.status_code == 200:
-    #             status_code = 200
-    #             LibraryLogger.log_api_call(_LOGGER, r)
-    #             if LibraryLogger.is_json(r.text):
-    #                 response = r.json()
-    #                 if response.get('code') in RATE_LIMIT_CODES:
-    #                     LibraryLogger.log_api_exception(_LOGGER, request_dict={
-    #                         "method": method,
-    #                         "endpoint": api,
-    #                         "status_code": r.status_code,
-    #                         "headers": headers,
-    #                         "body": json_object,
-    #                         "response": response
-    #                     })
-    #                     raise VeSyncRateLimitError
-    #                 return response, status_code
-    #             response = r.text
-    #             return response, status_code
-    #         LibraryLogger.log_api_exception(_LOGGER, request_dict={
-    #             "method": method,
-    #             "endpoint": api,
-    #             "status_code": r.status_code,
-    #             "headers": headers,
-    #             "body": json_object,
-    #             "response": r.text
-    #         })
-    #     return response, status_code
+        def extract_all_error_codes(key: str, var: dict) -> Iterator[int]:
+            """Find all error code keys in nested dictionary."""
+            if hasattr(var, 'items'):
+                for k, v in var.items():
+                    if k == key and int(v) != 0:
+                        yield v
+                    if isinstance(v, dict):
+                        yield from extract_all_error_codes(key, v)
+                    elif isinstance(v, list):
+                        for item in v:
+                            yield from extract_all_error_codes(key, item)
+        errors = []
+        for error_key in error_keys:
+            errors.extend(list(extract_all_error_codes(error_key, response)))
+        return errors
 
     @classmethod
-    def process_api_response(
+    def process_dev_response(
         cls,
         logger: logging.Logger,
         method_name: str,
@@ -364,41 +463,55 @@ class Helpers:
         Returns:
             dict | None: Parsed JSON response or None if there was an error.
         """
+        device.state.update_ts()
         if r_bytes is None or len(r_bytes) == 0:
-            LibraryLogger.log_api_response_parse_error(logger,
-                                                       device.device_name,
-                                                       device.device_type,
-                                                       method_name,
-                                                       "Response empty")
+            LibraryLogger.log_device_api_response_error(
+                logger,
+                device.device_name,
+                device.device_type,
+                method_name,
+                "Response empty",
+            )
             return None
 
         try:
             r = orjson.loads(r_bytes)
         except (ValueError, orjson.JSONDecodeError):
-            LibraryLogger.log_api_response_parse_error(logger,
-                                                       device.device_name,
-                                                       device.device_type,
-                                                       method_name,
-                                                       "Error decoding JSON response")
+            LibraryLogger.log_device_api_response_error(
+                logger,
+                device.device_name,
+                device.device_type,
+                method_name,
+                "Error decoding JSON response",
+            )
             return None
 
         error_code = r.get('error', {}).get('code') if 'error' in r else r.get('code')
-        if error_code != 0:
-            try:
-                error_int = int(error_code)
-            except TypeError:
-                error_int = -999999999
-            error_info = ErrorCodes.get_error_info(error_int)
-            if error_info.critical_error is True:
-                logger.warning("%s critical error - %s",
-                               device.device_name, error_info.message)
-            if error_info.device_online is False:
-                device.device_status = "off"
-                device.connection_status = "offline"
-            LibraryLogger.log_device_code_error(
-                logger, method_name, device.device_name, device.device_type,
-                error_code, f"{error_info.error_type.name} - {error_info.message}"
-                )
+
+        # Get error codes from nested dictionaries.
+        if error_code == 0:
+            internal_codes = cls._get_internal_codes(r)
+            if internal_codes:
+                error_code = internal_codes[0]
+
+        try:
+            error_int = int(error_code)
+        except TypeError:
+            error_int = -999999999
+        error_info = ErrorCodes.get_error_info(error_int)
+        if error_info.critical_error is True:
+            logger.warning("%s critical error - %s",
+                           device.device_name, error_info.message)
+        if error_info.device_online is False:
+            device.state.device_status = "off"
+            device.state.connection_status = "offline"
+        LibraryLogger.log_device_return_code(
+            logger, method_name, device.device_name, device.device_type,
+            error_code,
+            f"{error_info.error_type} - {error_info.name} {error_info.message}"
+            )
+        device.last_response = error_info
+        if error_int != 0:
             return None
         return r
 
@@ -582,157 +695,6 @@ class Helpers:
         for key, val in named_tuple._asdict().items():
             tuple_str += f'{key}: {val}, '
         return tuple_str
-
-
-class HSV(NamedTuple):
-    """HSV color space named tuple.
-
-    Used as an attribute in the `pyvesync.helpers.Color` dataclass.
-
-    Attributes:
-        hue (float): The hue component of the color, typically in the range [0, 360).
-        saturation (float): The saturation component of the color,
-            typically in the range [0, 1].
-        value (float): The value (brightness) component of the color,
-            typically in the range [0, 1].
-    """
-
-    hue: float
-    saturation: float
-    value: float
-
-
-class RGB(NamedTuple):
-    """RGB color space named tuple.
-
-    Used as an attribute in the :obj:`pyvesync.helpers.Color` dataclass.
-
-    Attributes:
-        red (float): The red component of the RGB color.
-        green (float): The green component of the RGB color.
-        blue (float): The blue component of the RGB color.
-    """
-
-    red: float
-    green: float
-    blue: float
-
-
-@dataclass
-class Color:
-    """Dataclass for color values.
-
-    For HSV, pass hue as value in degrees 0-360, saturation and value as values
-    between 0 and 100. For RGB, pass red, green and blue as values between 0 and 255. This
-    dataclass provides validation and conversion methods for both HSV and RGB color spaces
-
-    Notes:
-        To instantiate pass kw arguments for colors with *either* **hue, saturation and
-        value** *or* **red, green and blue**. RGB will take precedence if both are
-        provided. Once instantiated, the named tuples `hsv` and `rgb` will be
-        available as attributes.
-
-    Args:
-        red (int): Red value of RGB color, 0-255
-        green (int): Green value of RGB color, 0-255
-        blue (int): Blue value of RGB color, 0-255
-        hue (int): Hue value of HSV color, 0-360
-        saturation (int): Saturation value of HSV color, 0-100
-        value (int): Value (brightness) value of HSV color, 0-100
-
-    Attributes:
-        hsv (namedtuple): hue (0-360), saturation (0-100), value (0-100)
-            see [`HSV dataclass`][pyvesync.helpers.HSV]
-        rgb (namedtuple): red (0-255), green (0-255), blue (0-255)
-            see [`RGB dataclass`][pyvesync.helpers.RGB]
-    """
-
-    red: InitVar[NUMERIC] = field(default=None, repr=False, compare=False)
-    green: InitVar[NUMERIC] = field(default=None, repr=False, compare=False)
-    blue: InitVar[NUMERIC] = field(default=None, repr=False, compare=False)
-    hue: InitVar[NUMERIC] = field(default=None, repr=False, compare=False)
-    saturation: InitVar[NUMERIC] = field(default=None, repr=False,
-                                         compare=False)
-    value: InitVar[NUMERIC] = field(default=None, repr=False, compare=False)
-    hsv: HSV = field(init=False)
-    rgb: RGB = field(init=False)
-
-    def __post_init__(self,
-                      red: NUMERIC,
-                      green: NUMERIC,
-                      blue: NUMERIC,
-                      hue: NUMERIC,
-                      saturation: NUMERIC,
-                      value: NUMERIC) -> None:
-        """Check HSV or RGB Values and create named tuples."""
-        if None not in [hue, saturation, value]:
-            self.hsv = HSV(*self.valid_hsv(hue, saturation, value))  # type: ignore[arg-type] # noqa
-            self.rgb = self.hsv_to_rgb(hue, saturation, value)  # type: ignore[arg-type]  # noqa
-        elif None not in [red, green, blue]:
-            self.rgb = RGB(*self.valid_rgb(red, green, blue))  # type: ignore[arg-type]
-            self.hsv = self.rgb_to_hsv(red, green, blue)  # type: ignore[arg-type]
-        else:
-            _LOGGER.error('No color values provided')
-
-    @staticmethod
-    def _min_max(value: float | str, min_val: float,
-                 max_val: float, default: float) -> float:
-        """Check if value is within min and max values."""
-        try:
-            val = max(min_val, (min(max_val, round(float(value), 2))))
-        except (ValueError, TypeError):
-            val = default
-        return val
-
-    @classmethod
-    def valid_hsv(cls, h: float | str,
-                  s: float | str,
-                  v: float | str) -> tuple:
-        """Check if HSV values are valid."""
-        valid_hue = float(cls._min_max(h, 0, 360, 360))
-        valid_saturation = float(cls._min_max(s, 0, 100, 100))
-        valid_value = float(cls._min_max(v, 0, 100, 100))
-        return (
-            valid_hue,
-            valid_saturation,
-            valid_value
-        )
-
-    @classmethod
-    def valid_rgb(cls, r: float, g: float, b: float) -> list:
-        """Check if RGB values are valid."""
-        rgb = []
-        for val in (r, g, b):
-            valid_val = cls._min_max(val, 0, 255, 255)
-            rgb.append(valid_val)
-        return rgb
-
-    @staticmethod
-    def hsv_to_rgb(hue: float, saturation: float, value: float) -> RGB:
-        """Convert HSV to RGB."""
-        return RGB(
-            *tuple(round(i * 255, 0) for i in colorsys.hsv_to_rgb(
-                hue / 360,
-                saturation / 100,
-                value / 100
-            ))
-        )
-
-    @staticmethod
-    def rgb_to_hsv(red: float, green: float, blue: float) -> HSV:
-        """Convert RGB to HSV."""
-        hsv_tuple = colorsys.rgb_to_hsv(
-                red / 255,
-                green / 255,
-                blue / 255
-            )
-        hsv_factors = [360, 100, 100]
-
-        return HSV(
-            float(round(hsv_tuple[0] * hsv_factors[0], 2)),
-            float(round(hsv_tuple[1] * hsv_factors[1], 2)),
-            float(round(hsv_tuple[2] * hsv_factors[2], 0)),
-        )
 
 
 @dataclass

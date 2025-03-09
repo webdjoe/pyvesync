@@ -4,11 +4,17 @@ pyvesync is a library to manage VeSync compatible [smart home devices](#supporte
 
 ## What's new in pyvesync 3.0
 
-**BREAKING CHANGES** - The release of pyvesync 3.0 comes with many improvements and new features, but as a result there are many breaking changes.
+**BREAKING CHANGES** - The release of pyvesync 3.0 comes with many improvements and new features, but as a result there are many breaking changes. The structure has been completely refactored, so please read through the README and thoroughly test before deploying.
+
+The goal is to standardize the library across all devices to allow easier and consistent maintainability moving forward. The original library was created 8 years ago for supporting only a few outlets, it was not designed for supporting 20+ different devices.
+
+The two primary changes are aynchronous operation and strongly typed API requests and responses. Every API call is validated with a model, no more ad-hoc dictionaries being built in each method.
+
+If you submit a PR please ensure that it follows all conventions outlined in [CONTRIBUTING](CONTRIBUTING).
 
 ### Asynchronous operation
 
-Library is now asynchronous, using aiohttp as a replacement for requests. The `pyvesync.VeSync` class is now an asynchronous context manager. A `aiohttp.ClientSession` can be passed or created internally.
+Library is now asynchronous, using aiohttp as a replacement for requests. The `pyvesync.VeSync` class is an asynchronous context manager. A `aiohttp.ClientSession` can be passed or created internally.
 
 ```python
 import asyncio
@@ -18,12 +24,35 @@ from pyvesync.vesync import VeSync
 async def main():
     async with VeSync("user", "password") as manager:
         await manager.login()  # Still returns true
-        await manager.update()
+        if not manager.enabled:
+            print("Not logged in.")
+            return
+        await manager.get_devices() # Instantiates supported devices in device list
+        await manager.update() # Updates the state of all devices
 
-        outlet = manager.outlets[0]
-        await outlet.update()
-        await outlet.turn_off()
-        outlet.display()
+        # manager.devices is a DeviceContainer object
+        # manager.devices.outlets is a list of VeSyncOutlet objects
+        # manager.devices.switches is a list of VeSyncSwitch objects
+        # manager.devices.fans is a list of VeSyncFan objects
+        # manager.devices.bulbs is a list of VeSyncBulb objects
+        # manager.devices.humidifiers is a list of VeSyncHumid objects
+        # manager.devices.air_purifiers is a list of VeSyncAir objects
+
+        for outlet in manager.devices.outlets:
+            # The outlet object contain all action methods and static device attributes
+            await outlet.update()
+            await outlet.turn_off()
+            outlet.display() # Print static device information, name, type, CID, etc.
+
+            # State of object held in `device.state` attribute
+            print(outlet.state)
+            state_json = outlet.dumps() # Returns JSON string of device state
+            state_bytes = orjson.dumps(outlet.state) # Returns bytes of device state
+
+            # to view the response information of the last API call
+            print(outlet.last_response)
+            # Prints a ResponseInfo object containing error code,
+            # and other response information
 
 
 # Or use your own session
@@ -43,7 +72,8 @@ if __name__ == "__main__":
 If using `async with` is not ideal, the `__aenter__()` and `__aexit__()` methods need to be called manually:
 
 ```python
-manager = VeSync(user, pass)
+manager = VeSync(user, password)
+
 await manager.__aenter__()
 
 ...
@@ -58,11 +88,27 @@ pvesync will close the `ClientSession` that was created by the library on `__aex
 2025-02-16 14:41:07 - ERROR - asyncio - Unclosed connector
 ```
 
+### VeSync Class Signature
+
+The VeSync signature is:
+
+```python
+VeSync(
+    username: str,
+    password: str,
+    session: ClientSession | None = None,
+    time_zone: str = DEFAULT_TZ  # America/New_York
+    redact: bool = True
+    )
+```
+
+The VeSync class no longer accepts a `debug` argument. To set debug the library set `manager.debug = True` to the instance.
+
 ### Custom Exceptions
 
 Exceptions are no longer caught by the library and must be handled by the user. Exceptions are raised by server errors and aiohttp connection errors.
 
-Errors that occur at the aiohttp level are raised automatically and passed to the user. That means exceptions raised by aiohttp that inherit from `aiohttp.ClientError` are propogated.
+Errors that occur at the aiohttp level are raised automatically and propogated to the user. That means exceptions raised by aiohttp that inherit from `aiohttp.ClientError` are propogated.
 
 When the connection to the VeSync API succeeds but returns an error code that prevents the library from functioning a custom exception inherrited from `pyvesync.logs.VeSyncError` is raised.
 
@@ -73,9 +119,34 @@ Custom Exceptions raised by all API calls:
 - `pyvesync.logs.VeSyncAPIStatusCodeError` - The API returned a non-200 status code.
 - `pyvesync.logs.VeSyncAPIResponseError` - The response from the API was not in an expected format.
 
+
 Login API Exceptions
 
 - `pyvesync.logs.VeSyncLoginError` - The username or password is incorrect.
+
+See [errors.py](src/pyvesync/errors.py) for a complete list of error codes and exceptions.
+
+### Input Validation
+
+When values that are required to be in a range are input, such as RGB/HSV colors, fan levels, etc. the library will no longer automatically adjust values outside of that range. The function performing the operation will just return False, with a debug message in the log. This is to minimize complexity and utility of the underlying code. If an invalid input is provided, the library should not assume to correct it.
+
+For example, setting bulb RGB color:
+
+**OLD OPERATION** - Entering values outside the accepted range were corrected to the nearest extreme and the operation is performed.
+
+```python
+set_rgb = await bulb.set_rgb(300,0,-50)
+assert set_rgb == True # Bulb was set to the min/max RGB 255,0,0
+```
+
+**NEW OPERATION** - invalid values return false and operation is not performed.
+
+```python
+set_rgb = await bulb.set_rgb(300,0,-50)
+assert set_rgb == False
+```
+
+All methods that set RGB/HSV color now require all three inputs, red/green/blue or hue/saturation/value. I do not see the use in updating `red`, `green` or `blue`/`hue`, `saturation` or `value` individually. If you have a strong need for this, please open an issue with a detailed use case.
 
 ## Table of Contents <!-- omit in toc -->
 
@@ -225,17 +296,18 @@ async def main():
         await manager.login()  # Still returns true
         await manager.update()
 
-        outlet = manager.outlets[0]
+        # Acts as a set of device instances
+        device_container = manager.devices
+
+        outlets = device_container.outlets # List of outlet instances
+        outlet = outlets[0]
         await outlet.update()
         await outlet.turn_off()
         outlet.display()
 
-
-        # Set bulb brightness to 75% of first bulb in the list
-        my_bulb = manager.bulbs[0]
-        await my_bulb.set_brightness(75)
-        # get its details in JSON and print
-        print(my_bulb.displayJSON())
+        # Iterate of entire device list
+        for devices in device_container:
+            device.display()
 
 
 if __name__ == "__main__":
@@ -248,21 +320,25 @@ Devices are stored in the respective lists in the instantiated `VeSync` class:
 await manager.login()  # Asynchronous
 await manager.update()  # Asynchronous
 
-manager.outlets = [VeSyncOutletObjects]
-manager.switches = [VeSyncSwitchObjects]
-manager.fans = [VeSyncFanObjects]
-manager.bulbs = [VeSyncBulbObjects]
 
-# Get device (outlet, etc.) by device name
+# Acts as set with properties that return product type lists
+manager.devices = DeviceContainer instance
+
+manager.devices.outlets = [VeSyncOutletObjects]
+manager.devices.switches = [VeSyncSwitchObjects]
+manager.devices.fans = [VeSyncFanObjects]
+manager.devices.bulbs = [VeSyncBulbObjects]
+
+# Get device by device name
 dev_name = "My Device"
-for device in manager.outlets:
+for device in manager.devices:
   if device.device_name == dev_name:
     my_device = device
     device.display()
 
 # Turn on switch by switch name
 switch_name = "My Switch"
-for switch in manager.switches:
+for switch in manager.devices.switches:
   if switch.device_name == switch_name:
     await switch.turn_on()   # Asynchronous
 ```
@@ -275,13 +351,9 @@ The `time_zone` argument is optional but the specified time zone must match time
 [tz database](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones).
 The time zone determines how the energy history is generated for the smart outlets, i.e. for the week starts at 12:01AM Sunday morning at the specified time zone.  If no time zone or an invalid time zone is entered the default is America/New_York
 
-### Outlet energy data update interval -  **REMOVED FROM LIBRARY**
+### Outlet energy data update interval
 
-If outlets are going to be continuously polled, a custom energy update interval can be set - The default is 6 hours (21600 seconds)
-
-```python
-manager.energy_update_interval = 360 # time in seconds
-```
+**REMOVED FROM LIBRARY** - This feature has been removed. The library does not implement any api rate limiting, this must be done by the user.
 
 ## Example Usage
 
@@ -291,7 +363,7 @@ Checking timing of updates is responsability of user, library will not check `up
 
 ```python
 
-for s in manager.outlets:
+for s in manager.devices.outlets:
   await s.update_energy() # Get energy history for each device
 ```
 
@@ -299,15 +371,13 @@ for s in manager.outlets:
 
 ### Manager API
 
-`VeSync.get_devices()` *async* - Returns a list of devices
+`VeSync.login()` <code style="color: red; background: none">async</code> - Uses class username and password to login to VeSync
 
-`VeSync.login()` *async* - Uses class username and password to login to VeSync
+`VeSync.update()` <code style="color: red; background: none">async</code> - Fetch updated information about devices
 
-`VeSync.update()` *async* - Fetch updated information about devices
+`VeSync.update_all_devices()` <code style="color: red; background: none">async</code> - Fetch details for all devices (run `VeSyncDevice.update()`)
 
-`VeSync.update_all_devices()` *async* - Fetch details for all devices (run `VeSyncDevice.update()`)
-
-`VeSync.update_energy()` *async* - Get energy history for all outlets - Builds week, month and year nested energy dictionary.  **CHANGE** `bypass_check` has been removed.
+`VeSync.update_energy()` <code style="color: red; background: none">async</code> - Get energy history for all outlets - Builds week, month and year nested energy dictionary.  **CHANGE** `bypass_check` has been removed.
 
 ### Standard Device API
 
@@ -333,21 +403,21 @@ These properties and methods are available for all devices.
 
 #### Standard Methods
 
-`VeSyncDevice.turn_on()` ***async*** - Turn on the device
+`VeSyncDevice.turn_on()` <code style="color: red; background: none">async</code> - Turn on the device
 
-`VeSyncDevice.turn_off()` ***async*** - Turn off the device
+`VeSyncDevice.turn_off()` <code style="color: red; background: none">async</code> - Turn off the device
 
-`VeSyncDevice.update()` ***async*** - Fetch updated information about device
+`VeSyncDevice.update()` <code style="color: red; background: none">async</code> - Fetch updated information about device
 
-`VeSyncDevice.active_time` ***async*** - Return active time of the device in minutes
+`VeSyncDevice.active_time` - Return active time of the device in minutes
 
-`VeSyncDevice.get_config()` ***async*** - Retrieve Configuration data such as firmware version for device and store in the `VeSyncDevice.config` dictionary
+`VeSyncDevice.get_config()` <code style="color: red; background: none">async</code> - Retrieve Configuration data such as firmware version for device and store in the `VeSyncDevice.config` dictionary
 
 ### Outlet API Methods & Properties
 
 #### Outlet power and energy API Methods & Properties
 
-`VeSyncOutlet.update_energy()` ***async*** - Get outlet energy history - Builds week, month and year nested energy dictionary. **BREAKING CHANGE** `bypass_check` has been removed.
+`VeSyncOutlet.update_energy()` <code style="color: red; background: none">async</code> - Get outlet energy history - Builds week, month and year nested energy dictionary. **BREAKING CHANGE** `bypass_check` has been removed.
 
 `VeSyncOutlet.energy_today` - Return current energy usage in kWh
 
@@ -369,9 +439,9 @@ The rectangular smart switch model supports some additional functionality on top
 
 `VeSyncOutlet.nightlight_brightness` - Get the brightness of the nightlight
 
-`VeSyncOutlet.turn_on_nightlight()` ***async*** - Turn on the nightlight
+`VeSyncOutlet.turn_on_nightlight()` <code style="color: red; background: none">async</code> - Turn on the nightlight
 
-`VeSyncOutlet.turn_off_nightlight()` ***async*** - Turn off the nightlight
+`VeSyncOutlet.turn_off_nightlight()` <code style="color: red; background: none">async</code> - Turn off the nightlight
 
 ### Standard Air Purifier Properties & Methods
 
@@ -410,13 +480,13 @@ NOTE: LV-PUR131S outputs `air_quality` as a string, such as `Excellent`
 
 #### Air Purifier Methods
 
-`VeSyncFan.auto_mode()` ***async*** - Change mode to auto
+`VeSyncFan.auto_mode()` <code style="color: red; background: none">async</code> - Change mode to auto
 
-`VeSyncFan.manual_mode()` ***async*** - Change fan mode to manual with fan level 1
+`VeSyncFan.manual_mode()` <code style="color: red; background: none">async</code> - Change fan mode to manual with fan level 1
 
-`VeSyncFan.sleep_mode()` ***async*** - Change fan mode to sleep
+`VeSyncFan.sleep_mode()` <code style="color: red; background: none">async</code> - Change fan mode to sleep
 
-`VeSyncFan.change_fan_speed(speed=None)` ***async*** - Change fan speed. Call without speed to toggle to next speed
+`VeSyncFan.change_fan_speed(speed=None)` <code style="color: red; background: none">async</code> - Change fan speed. Call without speed to toggle to next speed
 
 Compatible levels for each model:
 
@@ -433,23 +503,23 @@ Compatible levels for each model:
 
 #### Levoit Purifier Core200S/300S/400S, Vital 100S/200S & Everest Air Methods
 
-`VeSyncFan.child_lock_on()` ***async*** - Enable child lock
+`VeSyncFan.child_lock_on()` <code style="color: red; background: none">async</code> - Enable child lock
 
-`VeSyncFan.child_lock_off()` ***async*** - Disable child lock
+`VeSyncFan.child_lock_off()` <code style="color: red; background: none">async</code> - Disable child lock
 
-`VeSyncFan.turn_on_display()` ***async*** - Turn display on
+`VeSyncFan.turn_on_display()` <code style="color: red; background: none">async</code> - Turn display on
 
-`VeSyncFan.turn_off_display()` ***async*** - Turn display off
+`VeSyncFan.turn_off_display()` <code style="color: red; background: none">async</code> - Turn display off
 
-`VeSyncFan.set_night_light('on'|'dim'|'off')` ***async*** - Set night light brightness
+`VeSyncFan.set_night_light('on'|'dim'|'off')` <code style="color: red; background: none">async</code> - Set night light brightness
 
-`VeSyncFan.get_timer()` ***async*** - Get any running timers, stores Timer DataClass in `VeSyncFan.timer`. See [Timer Dataclass](#timer-dataclass)
+`VeSyncFan.get_timer()` <code style="color: red; background: none">async</code> - Get any running timers, stores Timer DataClass in `VeSyncFan.timer`. See [Timer Dataclass](#timer-dataclass)
 
-`VeSyncFan.set_timer(timer_duration=3000)` ***async*** - Set a timer for the device, only turns device off. Timer DataClass stored in `VeSyncFan.timer`
+`VeSyncFan.set_timer(timer_duration=3000)` <code style="color: red; background: none">async</code> - Set a timer for the device, only turns device off. Timer DataClass stored in `VeSyncFan.timer`
 
-`VeSyncFan.clear_timer()` ***async*** - Cancel any running timer
+`VeSyncFan.clear_timer()` <code style="color: red; background: none">async</code> - Cancel any running timer
 
-`VeSyncFan.reset_filter()` ***async*** - Reset filter to 100% **NOTE: Only available on Core200S**
+`VeSyncFan.reset_filter()` <code style="color: red; background: none">async</code> - Reset filter to 100% **NOTE: Only available on Core200S**
 
 #### Levoit Vital 100S/200S & Everest Air Properties and Methods
 
@@ -463,17 +533,17 @@ The Levoit Vital 100S/200S has additional features not available on other models
 
 `VeSyncFan.light_detection_state` - Returns whether light is detected (True/False)
 
-`VeSyncFan.pet_mode()` ***async*** - Set pet mode **NOTE: Only available on Vital 200S**
+`VeSyncFan.pet_mode()` <code style="color: red; background: none">async</code> - Set pet mode **NOTE: Only available on Vital 200S**
 
-`VeSyncFan.set_auto_preference(preference='default', room_size=600)` ***async*** - Set the auto mode preference. Preference can be 'default', 'efficient' or quiet. Room size defaults to 600
+`VeSyncFan.set_auto_preference(preference='default', room_size=600)` <code style="color: red; background: none">async</code> - Set the auto mode preference. Preference can be 'default', 'efficient' or quiet. Room size defaults to 600
 
-`VeSyncFan.set_light_detection_on()` ***async*** - Turn on light detection mode
+`VeSyncFan.set_light_detection_on()` <code style="color: red; background: none">async</code> - Turn on light detection mode
 
-`VeSyncFan.set_light_detection_off()` ***async*** - Turn off light detection mode
+`VeSyncFan.set_light_detection_off()` <code style="color: red; background: none">async</code> - Turn off light detection mode
 
 #### Levoit Everest Air Properties & Methods
 
-`VeSyncFan.turbo_mode()` ***async*** - Set turbo mode
+`VeSyncFan.turbo_mode()` <code style="color: red; background: none">async</code> - Set turbo mode
 
 Additional properties in the `VeSyncFan['details']` dictionary:
 
@@ -495,7 +565,7 @@ VeSyncFan['Details'] = {
 *Compatible with all bulbs*
 `VeSyncBulb.brightness` - Return brightness in percentage (1 - 100)
 
-`VeSyncBulb.set_brightness(brightness)` ***async*** - Set bulb brightness values from 1 - 100
+`VeSyncBulb.set_brightness(brightness)` <code style="color: red; background: none">async</code> - Set bulb brightness values from 1 - 100
 
 #### Light Bulb Color Temperature Methods and Properties
 
@@ -504,7 +574,7 @@ VeSyncFan['Details'] = {
 
 `VeSyncBulb.color_temp_kelvin` - Return brightness in Kelvin
 
-`VeSyncBulb.set_color_temp(color_temp)` ***async*** - Set white temperature in percentage (0 - 100)
+`VeSyncBulb.set_color_temp(color_temp)` <code style="color: red; background: none">async</code> - Set white temperature in percentage (0 - 100)
 
 #### Multicolor Light Bulb Methods and Properties
 
@@ -535,33 +605,33 @@ VeSyncBulb.color.hsv = namedtuple('HSV', ['hue', 'saturation', 'value'])
 `VeSyncBulb.color_value_rgb` - Return color value in RGB named tuple format (red: float, green: float, blue: float 0-255.0)
 
 **Methods**
-`VeSyncBulb.set_hsv(hue, saturation, value)` ***async***
+`VeSyncBulb.set_hsv(hue, saturation, value)` <code style="color: red; background: none">async</code>
 
 - Set bulb color in HSV format
 - Arguments: hue (numeric) 0 - 360, saturation (numeric) 0-100, value (numeric) 0-100
 - Returns bool
 
-`VeSyncBulb.set_rgb(red, green, blue)` ***async***
+`VeSyncBulb.set_rgb(red, green, blue)` <code style="color: red; background: none">async</code>
 
 - Set bulb color in RGB format
 - Arguments: red (numeric) 0-255, green (numeric) 0-255, blue (numeric) 0-255
 - Returns bool
 
-`VeSyncBulb.enable_white_mode()` ***async***
+`VeSyncBulb.enable_white_mode()` <code style="color: red; background: none">async</code>
 
 - Turn bulb to white mode - returns bool
 
-`VeSyncBulb.set_color_temp(color_temp)` ***async***
+`VeSyncBulb.set_color_temp(color_temp)` <code style="color: red; background: none">async</code>
 
 - Set bulb white temperature (int values from 0 - 100)
 - Setting this will automatically force the bulb into White mode
 
-`VeSyncBulb.set_status(brightness, color_temp, color_saturation, color_hue, color_mode color_value)` ***async***
+`VeSyncBulb.set_status(brightness, color_temp, color_saturation, color_hue, color_mode color_value)` <code style="color: red; background: none">async</code>
 
 - Set every property, in a single call
 - All parameters are optional
 
-**NOTE: Due to the varying API between bulbs, avoid setting the `color_mode` argument directly, instead set colors values with `set_hsv` or `set_rgb` to turn on color and use `enable_white_mode()` ***async***  to turn off color.**
+**NOTE: Due to the varying API between bulbs, avoid setting the `color_mode` argument directly, instead set colors values with `set_hsv` or `set_rgb` to turn on color and use `enable_white_mode()` <code style="color: red; background: none">async</code>  to turn off color.**
 
 #### Dimmable Switch Methods and Properties
 
@@ -573,17 +643,17 @@ VeSyncBulb.color.hsv = namedtuple('HSV', ['hue', 'saturation', 'value'])
 
 `VeSyncSwitch.rgb_light_value` - return dictionary of rgb light color (0 - 255)
 
-`VeSyncSwitch.set_brightness(brightness)` ***async*** - Set brightness of switch (1 - 100)
+`VeSyncSwitch.set_brightness(brightness)` <code style="color: red; background: none">async</code> - Set brightness of switch (1 - 100)
 
-`VeSyncSwitch.indicator_light_on()` ***async*** - Turn indicator light on
+`VeSyncSwitch.indicator_light_on()` <code style="color: red; background: none">async</code> - Turn indicator light on
 
-`VeSyncSwitch.indicator_light_off()` ***async*** - Turn indicator light off
+`VeSyncSwitch.indicator_light_off()` <code style="color: red; background: none">async</code> - Turn indicator light off
 
-`VeSyncSwitch.rgb_color_on()` ***async*** - Turn rgb light on
+`VeSyncSwitch.rgb_color_on()` <code style="color: red; background: none">async</code> - Turn rgb light on
 
-`VeSyncSwitch.rgb_color_off()` ***async*** - Turn rgb light off
+`VeSyncSwitch.rgb_color_off()` <code style="color: red; background: none">async</code> - Turn rgb light off
 
-`VeSyncSwitch.rgb_color_set(red, green, blue)` ***async*** - Set color of rgb light (0 - 255)
+`VeSyncSwitch.rgb_color_set(red, green, blue)` <code style="color: red; background: none">async</code> - Set color of rgb light (0 - 255)
 
 ### Levoit Humidifier Methods and Properties
 
@@ -639,27 +709,27 @@ VeSyncLV600S.details = {
 
 #### Humidifer Methods
 
-`VeSyncHumid.automatic_stop_on()` ***async*** Set humidifier to stop at set humidity
+`VeSyncHumid.automatic_stop_on()` <code style="color: red; background: none">async</code> Set humidifier to stop at set humidity
 
-`VeSyncHumid.automatic_stop_off()` ***async*** Set humidifier to run continuously
+`VeSyncHumid.automatic_stop_off()` <code style="color: red; background: none">async</code> Set humidifier to run continuously
 
-`VeSyncHumid.turn_on_display()` ***async*** Turn display on
+`VeSyncHumid.turn_on_display()` <code style="color: red; background: none">async</code> Turn display on
 
-`VeSyncHumid.turn_off_display()` ***async*** Turn display off
+`VeSyncHumid.turn_off_display()` <code style="color: red; background: none">async</code> Turn display off
 
-`VeSyncHumid.set_humidity(30)` ***async*** Set humidity between 30 and 80 percent
+`VeSyncHumid.set_humidity(30)` <code style="color: red; background: none">async</code> Set humidity between 30 and 80 percent
 
-`VeSyncHumid.set_night_light_brightness(50)` ***async*** Set nightlight brightness between 1 and 100
+`VeSyncHumid.set_night_light_brightness(50)` <code style="color: red; background: none">async</code> Set nightlight brightness between 1 and 100
 
-`VeSyncHumid.set_humidity_mode('sleep')` ***async*** Set humidity mode - sleep/auto
+`VeSyncHumid.set_humidity_mode('sleep')` <code style="color: red; background: none">async</code> Set humidity mode - sleep/auto
 
-`VeSyncHumid.set_mist_level(4)` ***async*** Set mist output 1 - 9
+`VeSyncHumid.set_mist_level(4)` <code style="color: red; background: none">async</code> Set mist output 1 - 9
 
 #### 600S warm mist feature
 
 `VeSync600S.warm_mist_enabled` - Returns true if warm mist feature is enabled
 
-`VeSync600S.set_warm_level(2)` - ***async*** Sets warm mist level
+`VeSync600S.set_warm_level(2)` - <code style="color: red; background: none">async</code> Sets warm mist level
 
 ### Cosori Devices
 
@@ -724,19 +794,19 @@ They can be set through the `VeSyncAirFryer158.fryer_status` dataclass but shoul
 
 ##### Air Fryer Methods
 
-`VeSyncAirFryer158.update()` ***async*** - Retrieve current status
+`VeSyncAirFryer158.update()` <code style="color: red; background: none">async</code> - Retrieve current status
 
-`VeSyncAirFryer158.cook(set_temp: int, set_time: int)` ***async*** - Set air fryer cook mode based on time and temp in defined units
+`VeSyncAirFryer158.cook(set_temp: int, set_time: int)` <code style="color: red; background: none">async</code> - Set air fryer cook mode based on time and temp in defined units
 
-`VeSyncAirFryer158.set_preheat(target_temp: int, cook_time: int)` ***async*** - Set air fryer preheat mode based on time and temp in defined units
+`VeSyncAirFryer158.set_preheat(target_temp: int, cook_time: int)` <code style="color: red; background: none">async</code> - Set air fryer preheat mode based on time and temp in defined units
 
-`VeSyncAirFryer158.cook_from_preheat()` ***async*** - Start cook mode when air fryer is in `preheatEnd` state
+`VeSyncAirFryer158.cook_from_preheat()` <code style="color: red; background: none">async</code> - Start cook mode when air fryer is in `preheatEnd` state
 
-`VeSyncAirFryer158.pause()` ***async*** - Pause air fryer when in `cooking` or `heating` state
+`VeSyncAirFryer158.pause()` <code style="color: red; background: none">async</code> - Pause air fryer when in `cooking` or `heating` state
 
-`VeSyncAirFryer158.resume()` ***async*** - Resume air fryer when in `cookStop` or `preheatStop` state
+`VeSyncAirFryer158.resume()` <code style="color: red; background: none">async</code> - Resume air fryer when in `cookStop` or `preheatStop` state
 
-`VeSyncAirFryer158.end()` ***async*** - End cooking or preheating and return air fryer to `standby` state
+`VeSyncAirFryer158.end()` <code style="color: red; background: none">async</code> - End cooking or preheating and return air fryer to `standby` state
 
 
 ### Timer DataClass

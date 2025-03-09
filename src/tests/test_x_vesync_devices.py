@@ -10,9 +10,10 @@ import time
 import orjson
 from itertools import chain
 from pyvesync.vesyncfan import *
-from pyvesync.vesyncbulb import *
-from pyvesync.vesyncoutlet import *
-from pyvesync.vesyncswitch import *
+from pyvesync.devices.vesyncbulb import *
+from pyvesync.devices.vesyncoutlet import *
+from pyvesync.devices.vesyncpurifier import VeSyncAir131
+from pyvesync.devices.vesyncswitch import *
 import call_json as json_vals
 from call_json_switches import SWITCHES_NUM
 from call_json_outlets import OUTLETS_NUM

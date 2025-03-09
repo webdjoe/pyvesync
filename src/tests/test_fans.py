@@ -27,6 +27,7 @@ See Also
 """
 
 import logging
+from dataclasses import asdict
 import orjson
 import pytest
 from pyvesync.vesync import object_factory
@@ -40,8 +41,8 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 DEFAULT_COLOR = Defaults.color
-DEFAULT_COLOR_RGB = dict(DEFAULT_COLOR.rgb._asdict())
-DEFAULT_COLOR_HSV = dict(DEFAULT_COLOR.hsv._asdict())
+DEFAULT_COLOR_RGB = dict(asdict(DEFAULT_COLOR.rgb))
+DEFAULT_COLOR_HSV = dict(asdict(DEFAULT_COLOR.hsv))
 RGB_SET = {
     'red': 50,
     'green': 200,

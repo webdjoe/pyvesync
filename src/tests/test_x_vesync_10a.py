@@ -2,8 +2,8 @@
 
 import pytest
 import orjson
-from pyvesync.vesyncoutlet import VeSyncOutlet10A
-from pyvesync.helpers import Helpers as Helpers
+from pyvesync.devices.vesyncoutlet import VeSyncOutlet10A
+from pyvesync.helper_utils.helpers import Helpers as Helpers
 import call_json
 import call_json_outlets
 from utils import TestBase

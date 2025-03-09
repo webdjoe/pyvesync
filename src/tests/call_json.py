@@ -1,6 +1,7 @@
 import copy
 import orjson
-import pyvesync.helpers as helpers
+import pyvesync.const
+import pyvesync.helper_utils.helpers as helpers
 from defaults import Defaults
 import call_json_switches
 import call_json_outlets
@@ -9,13 +10,13 @@ import call_json_fans
 
 API_BASE_URL = helpers.API_BASE_URL
 API_RATE_LIMIT = helpers.API_RATE_LIMIT
-API_TIMEOUT = helpers.API_TIMEOUT
-DEFAULT_TZ = helpers.DEFAULT_TZ
-APP_VERSION = helpers.APP_VERSION
-PHONE_BRAND = helpers.PHONE_BRAND
-PHONE_OS = helpers.PHONE_OS
-MOBILE_ID = helpers.MOBILE_ID
-USER_TYPE = helpers.USER_TYPE
+API_TIMEOUT = pyvesync.const.API_TIMEOUT
+DEFAULT_TZ = pyvesync.const.DEFAULT_TZ
+APP_VERSION = pyvesync.const.APP_VERSION
+PHONE_BRAND = pyvesync.const.PHONE_BRAND
+PHONE_OS = pyvesync.const.PHONE_OS
+MOBILE_ID = pyvesync.const.MOBILE_ID
+USER_TYPE = pyvesync.const.USER_TYPE
 
 
 """
