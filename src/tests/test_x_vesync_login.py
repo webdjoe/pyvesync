@@ -7,8 +7,8 @@ from unittest.mock import patch
 import orjson
 import pyvesync
 from pyvesync.vesync import VeSync
-from pyvesync.helper_utils.helpers import Helpers as Helpers
-from pyvesync.helper_utils.errors import VesyncLoginError
+from pyvesync.utils.helpers import Helpers as Helpers
+from pyvesync.utils.errors import VesyncLoginError
 
 login_test_vals = [
     ('sam@mail.com', 'pass', 'America/New_York', 'full corret'),

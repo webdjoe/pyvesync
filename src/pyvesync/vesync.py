@@ -8,17 +8,18 @@ from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientResponseError
 import orjson
 
-from pyvesync.helper_utils.helpers import Helpers
+from pyvesync.utils.helpers import Helpers
 from pyvesync.const import API_BASE_URL, DEFAULT_REGION
 from pyvesync.device_container import DeviceContainer
-from pyvesync.data_models.login_models import RequestLoginModel, ResponseLoginModel
-from pyvesync.data_models.base_models import RequestBaseModel
-from pyvesync.helper_utils.logs import LibraryLogger
-from pyvesync.data_models.device_list_models import (
+from pyvesync.models.base_models import RequestBaseModel
+from pyvesync.utils.logs import LibraryLogger
+from pyvesync.models.vesync_models import (
     RequestDeviceListModel,
-    ResponseDeviceListModel
+    ResponseDeviceListModel,
+    RequestLoginModel,
+    ResponseLoginModel
     )
-from pyvesync.helper_utils.errors import (
+from pyvesync.utils.errors import (
     ErrorCodes,
     ErrorTypes,
     VeSyncAPIResponseError,
@@ -46,9 +47,7 @@ class VeSync:  # pylint: disable=function-redefined
                  username: str,
                  password: str,
                  session: ClientSession | None = None,
-                 time_zone: str = DEFAULT_TZ,
-                 debug: bool = False,
-                 redact: bool = True) -> None:
+                 time_zone: str = DEFAULT_TZ) -> None:
         """Initialize VeSync Manager.
 
         This class is used as the manager for all VeSync objects, all methods and
@@ -69,10 +68,6 @@ class VeSync:  # pylint: disable=function-redefined
                 aiohttp client session for API calls, by default None
             time_zone : str, optional
                 Time zone for device from IANA database, by default DEFAULT_TZ
-            debug : bool, optional
-                THIS IS DEPRECATED, to debug set instance property `manager.debug=False`
-            redact : bool, optional
-                Redact sensitive information in logs, by default True
 
         Attributes:
             session : ClientSession
@@ -86,7 +81,7 @@ class VeSync:  # pylint: disable=function-redefined
             enabled : bool
                 True if logged in to VeSync, False if not
 
-        Notes:
+        Note:
             This class is a context manager, use `async with VeSync() as manager:`
             to manage the session context. The session will be closed when exiting
             if no session is passed in.
@@ -98,13 +93,19 @@ class VeSync:  # pylint: disable=function-redefined
 
             If using a context manager is not convenient, `manager.__aenter__()` and
             `manager.__aexit__()` can be called directly.
+
+        See Also:
+            :obj:`DeviceContainer`
+                Container object to store VeSync devices
+            :obj:`DeviceState`
+                Object to store device state information
         """
         self.session = session
         self._close_session = False
-        self._debug = debug
-        self._redact = redact
-        if redact:
-            self.redact = redact
+        self._debug = False
+        self._redact = True
+        if self._redact:
+            self.redact = self.redact
         self.username: str = username
         self.password: str = password
         self._token: str | None = None
@@ -119,7 +120,12 @@ class VeSync:  # pylint: disable=function-redefined
 
     @property
     def devices(self) -> DeviceContainer:
-        """Return VeSync device container."""
+        """Return VeSync device container.
+
+        See Also:
+            The pyvesync.device_container.DeviceContainer object
+            for methods and properties.
+        """
         return self._device_container
 
     @property
@@ -145,8 +151,10 @@ class VeSync:  # pylint: disable=function-redefined
     def debug(self, new_flag: bool) -> None:
         """Set debug flag."""
         if new_flag:
+            LibraryLogger.debug = True
             LibraryLogger.configure_logger(logging.DEBUG)
         else:
+            LibraryLogger.debug = False
             LibraryLogger.configure_logger(logging.WARNING)
         self._debug = new_flag
 
@@ -258,7 +266,7 @@ class VeSync:  # pylint: disable=function-redefined
         )
         resp_bytes, _ = await self.async_call_api(
             '/cloud/v1/user/login', 'post',
-            json_object=request_login.to_dict()
+            json_object=request_login
         )
         if resp_bytes is None or not LibraryLogger.is_json(resp_bytes):
             raise VeSyncAPIResponseError('Error receiving response to login request')
@@ -333,7 +341,7 @@ class VeSync:  # pylint: disable=function-redefined
         Args:
             api (str): Endpoint to call with https://smartapi.vesync.com.
             method (str): HTTP method to use.
-            json_object (dict): JSON object to send in body.
+            json_object (dict | RequestBaseModel): JSON object to send in body.
             headers (dict): Headers to send with request.
 
         Returns:
@@ -345,27 +353,31 @@ class VeSync:  # pylint: disable=function-redefined
             VeSyncServerError: If API returns a server error.
             VeSyncTokenError: If API returns an authentication error.
             ClientResponseError: If API returns a client response error.
+
+        Note:
+            Future releases will require the `json_object` argument to be a dataclass,
+            instead of dictionary.
         """
         if self.session is None:
             self.session = ClientSession()
             self._close_session = True
         response = None
         status_code = None
-
+        if isinstance(json_object, RequestBaseModel):
+            req_dict = json_object.to_dict()
+        elif isinstance(json_object, dict):
+            req_dict = json_object
+        else:
+            req_dict = None
         try:
             async with self.session.request(
                 method,
                 url=API_BASE_URL + api,
-                json=json_object,
+                json=req_dict,
                 headers=headers,
                 raise_for_status=False,
             ) as response:
-                if isinstance(json_object, RequestBaseModel):
-                    req_dict = json_object.to_dict()
-                elif isinstance(json_object, dict):
-                    req_dict = json_object
-                else:
-                    req_dict = {}
+
                 status_code = response.status
                 resp_bytes = await response.read()
                 if status_code != 200:

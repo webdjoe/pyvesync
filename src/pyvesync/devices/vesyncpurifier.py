@@ -6,11 +6,11 @@ from typing import TYPE_CHECKING
 from typing_extensions import deprecated
 import orjson
 
-from pyvesync.base_devices.purifier_base_device import VeSyncPurifier
-from pyvesync.helper_utils.device_mixins import BypassV2Mixin
-from pyvesync.helper_utils.logs import LibraryLogger
-from pyvesync.helper_utils.helpers import Helpers, Timer
-from pyvesync.data_models.base_models import DefaultValues
+from pyvesync.base_devices.purifier_base import VeSyncPurifier
+from pyvesync.utils.device_mixins import BypassV2Mixin
+from pyvesync.utils.logs import LibraryLogger
+from pyvesync.utils.helpers import Helpers, Timer
+from pyvesync.models.base_models import DefaultValues
 from pyvesync.const import (
     IntFlag,
     StrFlag,
@@ -20,7 +20,7 @@ from pyvesync.const import (
     AirQualityLevel,
     PurifierModes
     )
-from pyvesync.data_models.purifier_models import (
+from pyvesync.models.purifier_models import (
     PurifierCoreDetailsResult,
     PurifierGetTimerResult,
     PurifierModifyTimerResult,
@@ -36,7 +36,7 @@ from pyvesync.data_models.purifier_models import (
 
 if TYPE_CHECKING:
     from pyvesync import VeSync
-    from pyvesync.data_models.device_list_models import ResponseDeviceDetailsModel
+    from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
     from pyvesync.device_map import PurifierMap
 
 
@@ -201,9 +201,6 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
         """Retrieve running timer from purifier.
 
         Returns Timer object if timer is running, None if no timer is running.
-
-        Args:
-            None
 
         Returns:
             Timer | None : Timer object if timer is running, None if no timer is running
@@ -1071,7 +1068,6 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         return True
 
     async def clear_timer(self) -> bool:
-        """Clear running timer."""
         # head, body = self.build_api_dict('delTimerV2')
         # body['payload']['subDeviceNo'] = 0
         # body['payload']['data'] = {'id': 1, "subDeviceNo": 0}
@@ -1143,14 +1139,6 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         return True
 
     async def set_fan_speed(self, speed: None | int = None) -> bool:
-        """Change fan speed based on levels in configuration dict.
-
-        The levels are defined in the configuration dict for the device. If no level is
-        passed, the next valid level will be used. If the current level is the last level.
-
-        Parameters:
-            speed (int | None): Speed to set based on levels in configuration dict
-        """
         current_speed = self.state.fan_set_level or 0
 
         if speed is not None:
@@ -1190,14 +1178,6 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         return True
 
     async def set_mode(self, mode: str) -> bool:
-        """Set Levoit 100S purifier mode.
-
-        Parameters:
-            mode (str): Mode to set purifier to, options are: auto, manual, sleep
-
-        Returns:
-            bool : True if successful, False if not
-        """
         if mode.lower() not in self.modes:
             logger.debug('Invalid purifier mode used - %s',
                          mode)
@@ -1281,7 +1261,6 @@ class VeSyncAir131(VeSyncPurifier):
         self.state.air_quality_level = AirQualityLevel(details.airQuality).value
 
     async def get_details(self) -> None:
-        """Build Air Purifier details dictionary."""
         # body = Helpers.req_body(self.manager, 'devicedetail')
         # body['uuid'] = self.uuid
         # head = Helpers.req_headers(self.manager)
@@ -1311,7 +1290,6 @@ class VeSyncAir131(VeSyncPurifier):
             )
 
     async def toggle_display(self, mode: bool) -> bool:
-        """Toggle Display of VeSync LV-PUR131."""
         update_dict = {
             "status": "on" if mode else "off"
         }
@@ -1332,7 +1310,6 @@ class VeSyncAir131(VeSyncPurifier):
         return True
 
     async def toggle_switch(self, toggle: bool | None = None) -> bool:
-        """Toggle Air Purifier on/off."""
         if toggle is None:
             toggle = self.state.device_status != DeviceStatus.ON
 
@@ -1354,11 +1331,6 @@ class VeSyncAir131(VeSyncPurifier):
         return True
 
     async def set_fan_speed(self, speed: int | None = None) -> bool:
-        """Adjust Fan Speed for air purifier.
-
-        Specifying 1,2,3 as argument or call without argument to cycle
-        through speeds increasing by one.
-        """
         current_speed = self.state.fan_set_level or 0
 
         if speed is not None:
@@ -1394,7 +1366,6 @@ class VeSyncAir131(VeSyncPurifier):
         return True
 
     async def set_mode(self, mode: str) -> bool:
-        """Set mode to manual, auto or sleep."""
         if mode not in self.modes:
             logger.debug('Invalid purifier mode used - %s', mode)
             return False
@@ -1418,7 +1389,6 @@ class VeSyncAir131(VeSyncPurifier):
         return True
 
     async def update(self) -> None:
-        """Run function to get device details."""
         await self.get_details()
 
     # def display(self) -> None:

@@ -3,7 +3,7 @@ from typing import Any, Dict, Union
 from copy import deepcopy
 import orjson
 from pyvesync.devices.vesyncoutlet import VeSyncOutdoorPlug
-from pyvesync.helper_utils.helpers import Helpers as Helpers
+from pyvesync.utils.helpers import Helpers as Helpers
 import call_json
 import call_json_outlets
 from utils import TestBase

@@ -3,11 +3,11 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
-from pyvesync.helper_utils.helpers import Helpers, Timer
-from pyvesync.base_devices.fan_base_device import VeSyncFanBase
-from pyvesync.data_models.base_models import DefaultValues
+from pyvesync.utils.helpers import Helpers, Timer
+from pyvesync.base_devices.fan_base import VeSyncFanBase
+from pyvesync.models.base_models import DefaultValues
 from pyvesync.const import DeviceStatus, ConnectionStatus
-from pyvesync.data_models.fan_models import (
+from pyvesync.models.fan_models import (
     TowerFanResult,
     RequestFanStatus,
     ResponseFanBase
@@ -16,7 +16,7 @@ from pyvesync.data_models.fan_models import (
 if TYPE_CHECKING:
     from pyvesync.device_map import FanMap
     from pyvesync import VeSync
-    from pyvesync.data_models.device_list_models import ResponseDeviceDetailsModel
+    from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
 
 logger = logging.getLogger(__name__)
 
@@ -106,7 +106,6 @@ class VeSyncTowerFan(VeSyncFanBase):
             )
 
     async def get_details(self) -> None:
-        """Build API V2 Fan details dictionary."""
         body = self._build_request('getTowerFanStatus')
         headers = Helpers.req_header_bypass()
         r_bytes, _ = await self.manager.async_call_api(
@@ -162,15 +161,6 @@ class VeSyncTowerFan(VeSyncFanBase):
         return True
 
     async def set_mode(self, mode: str) -> bool:
-        """Set Levoit Tower Fan purifier mode.
-
-        Parameters:
-            mode : str
-                Mode to set purifier to, set by `config_dict`
-
-        Returns:
-            bool : True if successful, False if not
-        """
         if mode.lower() == DeviceStatus.OFF:
             logger.warning('Deprecated - Use `turn_off` method to turn off device')
             return await self.turn_off()
@@ -261,15 +251,6 @@ class VeSyncTowerFan(VeSyncFanBase):
         return True
 
     async def toggle_display(self, toggle: bool) -> bool:
-        """Toggle display on/off.
-
-        Parameters:
-            toggle : bool
-                True to turn display on, False to turn off
-
-        Returns:
-            bool : True if successful, False if not
-        """
         payload_data = {
             "screenSwitch": int(toggle)
         }

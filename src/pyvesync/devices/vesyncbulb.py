@@ -7,9 +7,8 @@ This module provides classes for the following Etekcity/Valceno smart lights:
     3. XYD0001: RGB Bulb
     4. ESL100MC: Multi-Color Bulb
 
-The `DeviceContainer` class is used to instantiate and store bulb device instances.
-These classes inherit from the `VeSyncBulb` base class, which provides common methods
-and attributes for all bulb devices.
+The classes all inherit from VeSyncBulb, which is a subclass of VeSyncBaseDevice and
+[VeSyncToggleDevice](pyvesync.base_devices.vesyncbasedevice.VeSyncToggleDevice).
 """
 
 from __future__ import annotations
@@ -17,17 +16,18 @@ import logging
 from collections.abc import Mapping
 from typing import TYPE_CHECKING
 from deprecated import deprecated
-from pyvesync.base_devices.bulb_base_device import VeSyncBulb
+from pyvesync.base_devices.bulb_base import VeSyncBulb
 from pyvesync.const import DeviceStatus, ConnectionStatus
-from pyvesync.data_models.base_models import DefaultValues
-from pyvesync.helper_utils.helpers import Helpers, Validators
-from pyvesync.helper_utils.colors import Color
-from pyvesync.data_models import bulb_models
+from pyvesync.models.base_models import DefaultValues
+from pyvesync.utils.device_mixins import BypassV1Mixin
+from pyvesync.utils.helpers import Helpers, Validators
+from pyvesync.utils.colors import Color
+from pyvesync.models import bulb_models
 
 
 if TYPE_CHECKING:
     from pyvesync import VeSync
-    from pyvesync.data_models.device_list_models import ResponseDeviceDetailsModel
+    from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
     from pyvesync.device_map import BulbMap
 
 logger = logging.getLogger(__name__)
@@ -74,12 +74,12 @@ __all__: list = [*bulb_modules.values(), "bulb_modules"]  # noqa: PLE0604
 class VeSyncBulbESL100MC(VeSyncBulb):
     """Etekcity ESL100 Multi Color Bulb device instance.
 
-    Inherits from [VeSyncBulb][pyvesync.vesyncbulb.VeSyncBulb]
-    and [VeSyncBaseDevice][pyvesync.vesyncbasedevice.VeSyncBaseDevice].
+    Inherits from [VeSyncBulb](pyvesync.base_devices.vesyncbulb.VeSyncBulb)
+    and [VeSyncBaseDevice](pyvesync.base_devices.vesyncbasedevice.VeSyncBaseDevice).
 
     The state of the bulb is stored in the `state` attribute, which is an instance of
-    [BulbState][pyvesync.helpers.BulbState]. The `state` attribute contains all settable
-    states for the bulb.
+    [BulbState](pyvesync.base_devices..BulbState). The `state` attribute
+    contains all settable states for the bulb.
 
     Attributes:
         state (BulbState): State of the bulb, contains all settable states.
@@ -193,29 +193,9 @@ class VeSyncBulbESL100MC(VeSyncBulb):
                       red: float,
                       green: float,
                       blue: float) -> bool:
-        """Set color of bulb using Red, Green and Blue values.
-
-        Args:
-            red (float): red value 0-255
-            green (float): green value 0-255
-            blue (float): blue value 0-255
-
-        Returns:
-            bool: True if successful, False otherwise.
-        """
         return await self.set_status(red=red, green=green, blue=blue)
 
     async def set_hsv(self, hue: float, saturation: float, value: float) -> bool:
-        """Set color of bulb using HSV values.
-
-        Args:
-            hue (float): hue value 0-360
-            saturation (float): saturation value 0-100
-            value (float): value (brightness) value 0-100
-
-        Returns:
-            bool: True if successful, False otherwise.
-        """
         hsv = Color.from_hsv(hue=hue, saturation=saturation, value=value)
         if hsv is not None:
             return await self.set_status(
@@ -359,7 +339,7 @@ class VeSyncBulbESL100MC(VeSyncBulb):
         return True
 
 
-class VeSyncBulbESL100(VeSyncBulb):
+class VeSyncBulbESL100(BypassV1Mixin, VeSyncBulb):
     """Object to hold VeSync ESL100 light bulb.
 
     This bulb only has the dimmable feature. Inherits from pyvesync.vesyncbulb.VeSyncBulb
@@ -384,46 +364,25 @@ class VeSyncBulbESL100(VeSyncBulb):
             feature_map (DeviceMapTemplate): Device configuration map.
         """
         super().__init__(details, manager, feature_map)
-        self.request_keys = [
-            'acceptLanguage',
-            'accountID',
-            'appVersion',
-            'cid',
-            'configModule',
-            'debugMode',
-            'phoneBrand',
-            'phoneOS',
-            'timeZone',
-            'token',
-            'traceId',
-            'uuid',
-            'userCountryCode'
-        ]
-
-    def _build_request(self, method_dict: dict) -> dict:
-        """Generate base request body for ESL100."""
-        default_dict = Helpers.get_class_attributes(DefaultValues, self.request_keys)
-        default_dict.update(Helpers.get_class_attributes(self, self.request_keys))
-        default_dict.update(Helpers.get_class_attributes(self.manager, self.request_keys))
-        default_dict['configModel'] = self.config_module
-        default_dict['deviceId'] = self.cid
-        default_dict |= method_dict
-
-        return default_dict
 
     async def get_details(self) -> None:
-        # body = Helpers.req_body(self.manager, 'devicedetail')
-        # body['uuid'] = self.uuid
         method_dict = {
             "method": "deviceDetail",
         }
-        body = self._build_request(method_dict)
+        # body = self._build_request(method_dict)
 
-        r_bytes, _ = await self.manager.async_call_api(
-            '/cloud/v1/deviceManaged/deviceDetail',
-            'post',
-            headers=Helpers.req_header_bypass(),
-            json_object=body,
+        # r_bytes, _ = await self.manager.async_call_api(
+        #     '/cloud/v1/deviceManaged/deviceDetail',
+        #     'post',
+        #     headers=Helpers.req_header_bypass(),
+        #     json_object=body,
+        # )
+
+        r_bytes = await self.call_bypassv1_api(
+            bulb_models.RequestESL100Detail,
+            method_dict,
+            'deviceDetail',
+            'deviceDetail'
         )
 
         # r_bytes, _ = await self.manager.async_call_api(
@@ -437,7 +396,7 @@ class VeSyncBulbESL100(VeSyncBulb):
         if r is None:
             return
 
-        model = bulb_models.ResponseESL100DeviceDetail.from_dict(r)
+        model = bulb_models.ResponseESL100Detail.from_dict(r)
         self.state.brightness = model.result.brightness
         self.state.device_status = model.result.deviceStatus
         self.state.connection_status = model.result.connectionStatus
@@ -464,15 +423,13 @@ class VeSyncBulbESL100(VeSyncBulb):
         #     json_object=body,
         # )
         method_dict = {
-            "method": "smartBulbPowerSwitchCtl",
             "status": status,
         }
-        body = self._build_request(method_dict)
-        r_bytes, _ = await self.manager.async_call_api(
-            '/cloud/v1/deviceManaged/smartBulbPowerSwitchCtl',
-            'post',
-            headers=Helpers.bypass_header(),
-            json_object=body,
+        r_bytes = await self.call_bypassv1_api(
+            bulb_models.RequestESL100Status,
+            method_dict,
+            'smartBulbPowerSwitchCtl',
+            'smartBulbPowerSwitchCtl'
         )
 
         r = Helpers.process_dev_response(logger, "toggle", self, r_bytes)
@@ -516,16 +473,14 @@ class VeSyncBulbESL100(VeSyncBulb):
             return True
 
         method_dict = {
-            "method": "smartBulbBrightnessCtl",
             "brightNess": str(brightness_update),
             "status": "on",
         }
-        body = self._build_request(method_dict)
-        r_bytes, _ = await self.manager.async_call_api(
-            '/cloud/v1/deviceManaged/smartBulbBrightnessCtl',
-            'put',
-            headers=Helpers.bypass_header(),
-            json_object=body,
+        r_bytes = await self.call_bypassv1_api(
+            bulb_models.RequestESL100Brightness,
+            method_dict,
+            'smartBulbBrightnessCtl',
+            'smartBulbBrightnessCtl'
         )
 
         r = Helpers.process_dev_response(logger, "set_brightness", self, r_bytes)
@@ -538,7 +493,7 @@ class VeSyncBulbESL100(VeSyncBulb):
         return True
 
 
-class VeSyncBulbESL100CW(VeSyncBulb):
+class VeSyncBulbESL100CW(BypassV1Mixin, VeSyncBulb):
     """VeSync Tunable and Dimmable White Bulb."""
 
     __slots__ = ()
@@ -547,50 +502,21 @@ class VeSyncBulbESL100CW(VeSyncBulb):
                  manager: VeSync, feature_map: BulbMap) -> None:
         """Initialize Etekcity Tunable white bulb."""
         super().__init__(details, manager, feature_map)
-        self.request_keys = [
-            "acceptLanguage",
-            "accountID",
-            "appVersion",
-            "cid",
-            "configModule",
-            "debugMode",
-            "phoneBrand",
-            "phoneOS",
-            "timeZone",
-            "token",
-            "traceId",
-            "userCountryCode",
-            "uuid",
-        ]
-
-    def _build_request(self, json_cmd: dict) -> dict:
-        """Generate base request body for ESL100CW."""
-        default_dict = Helpers.get_class_attributes(DefaultValues, self.request_keys)
-        default_dict.update(Helpers.get_class_attributes(self, self.request_keys))
-        default_dict.update(Helpers.get_class_attributes(self.manager, self.request_keys))
-        default_dict['method'] = 'bypass'
-        default_dict['deviceId'] = self.cid
-        default_dict['configModel'] = self.config_module
-        return default_dict | json_cmd
 
     async def get_details(self) -> None:
-        body = self._build_request({"jsonCmd": {"getLightStatus": "get"}})
-        r_bytes, _ = await self.manager.async_call_api(
-            '/cloud/v1/deviceManaged/bypass',
-            'post',
-            headers=Helpers.bypass_header(),
-            json_object=body,
-        )
+        r_bytes = await self.call_bypassv1_api(
+            bulb_models.RequestESL100CWBase, {"jsonCmd": {"getLightStatus": "get"}},
+            )
 
         r = Helpers.process_dev_response(logger, "get_details", self, r_bytes)
         if r is None:
             return
 
-        light_resp = bulb_models.ResponseESL100CWDeviceDetail.from_dict(r)
+        light_resp = bulb_models.ResponseESL100CWDetail.from_dict(r)
         self._interpret_apicall_result(light_resp)
 
     def _interpret_apicall_result(
-            self, response: bulb_models.ResponseESL100CWDeviceDetail) -> None:
+            self, response: bulb_models.ResponseESL100CWDetail) -> None:
         self.state.connection_status = ConnectionStatus.ONLINE
         result = response.result.light
         self.state.device_status = result.action
@@ -601,6 +527,7 @@ class VeSyncBulbESL100CW(VeSyncBulb):
         "toggle() is deprecated, use toggle_switch(toggle: bool | None = None) instead"
         )
     async def toggle(self, status: str) -> bool:
+        """Deprecated, use toggle_switch() instead."""
         status_bool = status == DeviceStatus.ON
         return await self.toggle_switch(status_bool)
 
@@ -608,12 +535,12 @@ class VeSyncBulbESL100CW(VeSyncBulb):
         if toggle is None:
             toggle = self.state.device_status == DeviceStatus.OFF
         status = DeviceStatus.ON if toggle else DeviceStatus.OFF
-        body = self._build_request({"jsonCmd": {"light": {"action": status}}})
-        r_bytes, _ = await self.manager.async_call_api(
-            '/cloud/v1/deviceManaged/bypass',
-            'post',
-            headers=Helpers.req_header_bypass(),
-            json_object=body,
+
+        r_bytes = await self.call_bypassv1_api(
+            bulb_models.RequestESL100CWBase,
+            {"jsonCmd": {"light": {"action": status}}},
+            'bypass',
+            'bypass'
         )
 
         r = Helpers.process_dev_response(logger, "toggle", self, r_bytes)
@@ -659,12 +586,19 @@ class VeSyncBulbESL100CW(VeSyncBulb):
             'colorTempe': color_temp_update,
             'brightness': brightness_update,
             'action': DeviceStatus.ON}
-        body = self._build_request({'jsonCmd': {'light': light_dict}})
-        r_bytes, _ = await self.manager.async_call_api(
-            '/cloud/v1/deviceManaged/bypass',
-            'post',
-            headers=Helpers.bypass_header(),
-            json_object=body,
+        # body = self._build_request({'jsonCmd': {'light': light_dict}})
+        # r_bytes, _ = await self.manager.async_call_api(
+        #     '/cloud/v1/deviceManaged/bypass',
+        #     'post',
+        #     headers=Helpers.bypass_header(),
+        #     json_object=body,
+        # )
+
+        r_bytes = await self.call_bypassv1_api(
+            bulb_models.RequestESL100CWBase,
+            {"jsonCmd": {"light": light_dict}},
+            'bypass',
+            'bypass'
         )
 
         r = Helpers.process_dev_response(logger, "set_brightness", self, r_bytes)
@@ -845,7 +779,6 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
         return await self.toggle_switch(status_bool)
 
     async def toggle_switch(self, toggle: bool | None = None) -> bool:
-        """Toggle switch of VeSync Valceno A19MC."""
         if toggle is None:
             toggle = self.state.device_status == DeviceStatus.OFF
 
@@ -871,18 +804,6 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
         return True
 
     async def set_rgb(self, red: float, green: float, blue: float) -> bool:
-        """Set color of bulb using Red, Green and Blue values.
-
-        All values must be provided.
-
-        Args:
-            red (float): red value 0-255
-            green (float): green value 0-255
-            blue (float): blue value 0-255
-
-        Returns:
-            bool: True if successful, False otherwise.
-        """
         new_color = Color.from_rgb(red=red, green=green, blue=blue)
         if new_color is None:
             logger.debug("Invalid RGB values")

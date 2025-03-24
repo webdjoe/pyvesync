@@ -65,7 +65,7 @@ unfixable = ["B"]
 
 [lint.per-file-ignores]
 "vesync.py" = ["F403"]
-"**/data_models/*" = ["N804", "N803", "ANN401", "N802", "N815"]
+"**/models/*" = ["N804", "N803", "ANN401", "N802", "N815"]
 "vesyncbulb.py" = ["PLR2004"]
 "**/errors.py" = ["S105"]
 

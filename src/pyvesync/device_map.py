@@ -27,7 +27,7 @@ Attributes:
     bulb_modules: list[BulbMap]: List of Bulb device mappings.
     fan_modules: list[FanMap]: List of Fan device mappings.
     purifier_modules: list[PurifierMap]: List of Purifier device mappings.
-    humdifier_modules: list[HumidifierMap]: List of Humidifier device mappings.
+    humidifier_modules: list[HumidifierMap]: List of Humidifier device mappings.
 
 Note:
     To add devices, add the device mapping to the appropriate `*_modules` list,
@@ -89,6 +89,7 @@ class OutletMap(DeviceMapTemplate):
     """Template for DeviceModules mapping."""
     product_type: str = ProductTypes.OUTLET
     module: ModuleType = vesyncoutlet
+    nightlight_modes: list[NightlightModes] = field(default_factory=list)
 
 
 @dataclass(kw_only=True)
@@ -170,6 +171,7 @@ outlet_modules = [
         dev_types=["ESW15-USA"],
         class_name="VeSyncOutlet15A",
         features=[OutletFeatures.ENERGY_MONITOR, OutletFeatures.NIGHTLIGHT],
+        nightlight_modes=[NightlightModes.ON, NightlightModes.OFF, NightlightModes.AUTO],
     ),
     OutletMap(
         dev_types=["ESO15-TB"],
@@ -259,7 +261,7 @@ bulb_modules = [
     ),
 ]
 
-humdifier_modules: list[HumidifierMap] = [
+humidifier_modules: list[HumidifierMap] = [
     HumidifierMap(
         class_name="VeSyncHumid200300S",
         dev_types=["Classic300S", "LUH-A601S-WUSB", "LUH-A601S-AUSW"],
@@ -458,7 +460,10 @@ purifier_modules: list[PurifierMap] = [
             PurifierModes.AUTO,
             PurifierModes.PET,
         ],
-        features=[PurifierFeatures.AIR_QUALITY],
+        features=[
+            PurifierFeatures.AIR_QUALITY,
+            PurifierFeatures.LIGHT_DETECT
+            ],
         fan_levels=list(range(1, 5)),
         device_alias="Vital 200S",
         auto_preferences=[
@@ -481,7 +486,11 @@ purifier_modules: list[PurifierMap] = [
             PurifierModes.AUTO,
             PurifierModes.TURBO,
         ],
-        features=[PurifierFeatures.AIR_QUALITY, PurifierFeatures.FAN_ROTATE],
+        features=[
+            PurifierFeatures.AIR_QUALITY,
+            PurifierFeatures.VENT_ANGLE,
+            PurifierFeatures.LIGHT_DETECT
+            ],
         fan_levels=list(range(1, 4)),
         device_alias="Everest Air",
         auto_preferences=[
@@ -538,7 +547,7 @@ def get_device_config(device_type: str) -> DeviceMapTemplate | None:
         bulb_modules,
         fan_modules,
         purifier_modules,
-        humdifier_modules,
+        humidifier_modules,
         air_fryer_modules,
     ]
     for module in chain(*all_modules):

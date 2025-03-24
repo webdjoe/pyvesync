@@ -5,12 +5,12 @@ from typing import TYPE_CHECKING
 from typing_extensions import deprecated
 import orjson
 
-from pyvesync.base_devices.humidifier_base_device import VeSyncHumidifier
-from pyvesync.helper_utils.helpers import Helpers, Validators, Timer
-from pyvesync.helper_utils.logs import LibraryLogger
-from pyvesync.helper_utils.device_mixins import BypassV2Mixin
+from pyvesync.base_devices.humidifier_base import VeSyncHumidifier
+from pyvesync.utils.helpers import Helpers, Validators, Timer
+from pyvesync.utils.logs import LibraryLogger
+from pyvesync.utils.device_mixins import BypassV2Mixin
 from pyvesync.const import DeviceStatus, IntFlag, ConnectionStatus
-from pyvesync.data_models.humidifier_models import (
+from pyvesync.models.humidifier_models import (
     ClassicLVHumidResult,
     Levoit1000SResult,
     InnerHumidifierBaseResult,
@@ -20,7 +20,7 @@ from pyvesync.data_models.humidifier_models import (
 
 if TYPE_CHECKING:
     from pyvesync import VeSync
-    from pyvesync.data_models.device_list_models import ResponseDeviceDetailsModel
+    from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
     from pyvesync.device_map import (
         HumidifierMap
         )
@@ -38,38 +38,6 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
                  manager: VeSync, feature_map: HumidifierMap) -> None:
         """Initialize 200S/300S Humidifier class."""
         super().__init__(details, manager, feature_map)
-        # self.enabled: str | bool = True
-        # self._config_dict = model_features(self.device_type)
-        # self.mist_levels = self._config_dict.get('mist_levels')
-        # self.mist_modes = self._config_dict.get('mist_modes')
-        # self._features = self._config_dict.get('features')
-        # if isinstance(self._features, list) and 'warm_mist' in self._features:
-        #     self.warm_mist_levels = self._config_dict.get(
-        #         'warm_mist_levels', [])
-        #     self.warm_mist_feature = True
-        # else:
-        #     self.warm_mist_feature = False
-        #     self.warm_mist_levels = []
-
-    # def build_api_dict(self, method: str) -> tuple[dict, dict]:
-    #     """Build humidifier api call header and body.
-
-    #     Available methods are: 'getHumidifierStatus', 'setAutomaticStop',
-    #     'setSwitch', 'setNightLightBrightness', 'setVirtualLevel',
-    #     'setTargetHumidity', 'setHumidityMode'
-    #     """
-    #     if method not in self._api_modes:
-    #         logger.debug('Invalid mode - %s', method)
-    #         raise ValueError
-    #     head = Helpers.bypass_header()
-    #     body = Helpers.bypass_body_v2(self.manager)
-    #     body['cid'] = self.cid
-    #     body['configModule'] = self.config_module
-    #     body['payload'] = {
-    #         'method': method,
-    #         'source': 'APP'
-    #     }
-    #     return head, body
 
     def _set_state(self, resp_model: InnerHumidifierBaseResult) -> None:
         """Set state from get_details API model."""
@@ -106,7 +74,6 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
             self.state.display_set_status = DeviceStatus.from_bool(config.display)
 
     async def get_details(self) -> None:
-        """Build 200S/300S Humidifier details dictionary."""
         body = self._build_request("getHumidifierStatus")
         headers = Helpers.req_header_bypass()
 
@@ -133,11 +100,9 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
         self._set_state(r_model.result.result)
 
     async def update(self) -> None:
-        """Update 200S/300S Humidifier details."""
         await self.get_details()
 
     async def toggle_switch(self, toggle: bool | None = None) -> bool:
-        """Toggle humidifier on/off."""
         if toggle is None:
             toggle = self.state.device_status == DeviceStatus.ON
 
@@ -209,7 +174,6 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
         return await self.toggle_display(toggle)
 
     async def toggle_display(self, toggle: bool) -> bool:
-        """Toggle display on/off."""
         payload_data = {
             'state': toggle
         }
@@ -264,7 +228,11 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
         return True
 
     async def set_night_light_brightness(self, brightness: int) -> bool:
-        """Set 200S/300S Humidifier night light brightness."""
+        """Set 200S/300S Humidifier night light brightness.
+
+        Args:
+            brightness (int): Target night light brightness.
+        """
         if not self.supports_nightlight:
             logger.debug('%s is a %s does not have a nightlight',
                          self.device_name, self.device_type)
@@ -373,7 +341,6 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
         return True
 
     async def set_mist_level(self, level: int) -> bool:
-        """Set humidifier mist level with int between 0 - 9."""
         if level not in self.mist_levels:
             logger.debug(
                 "Humidifier mist level must be between %s and %s",
@@ -614,7 +581,6 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
         self._set_state(result)
 
     async def toggle_switch(self, toggle: bool | None = None) -> bool:
-        """Toggle humidifier on/off."""
         if toggle is None:
             toggle = self.state.device_status != DeviceStatus.ON
 
@@ -674,7 +640,6 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
         return await self.toggle_display(mode)
 
     async def toggle_display(self, toggle: bool | None = None) -> bool:
-        """Toggle display on/off."""
         if toggle is None:
             toggle = self.state.display_set_status != DeviceStatus.ON
 
@@ -728,7 +693,6 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
         return await self.set_mode(mode)
 
     async def set_mode(self, mode: str) -> bool:
-        """Set humidifier mode."""
         if mode.lower() not in self.mist_modes:
             logger.debug('Invalid humidity mode used - %s',
                          mode)
@@ -782,7 +746,6 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
         return await self.set_mode('manual')
 
     async def set_mist_level(self, level: int) -> bool:
-        """Set humidifier mist level with int between 0 - 9."""
         if level not in self.mist_levels:
             logger.debug("Humidifier mist level must be between 0 and 9")
             return False
@@ -1069,7 +1032,6 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
         return True
 
     async def set_humidity(self, humidity: int) -> bool:
-        """Set target Humidifier humidity."""
         if Validators.validate_range(humidity, *self.target_minmax):
             logger.debug("Humidity value must be set between %s and %s",
                          self.target_minmax[0], self.target_minmax[1])
@@ -1096,14 +1058,9 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
 
     @deprecated("Use toggle_automatic_stop() instead.")
     async def set_automatic_stop(self, mode: bool) -> bool:
-        """Set Humidifier to automatic stop.
-
-        Deprecated, please use toggle_automatic_stop() instead.
-        """
         return await self.toggle_automatic_stop(mode)
 
     async def toggle_automatic_stop(self, toggle: bool | None = None) -> bool:
-        """Set  Humidifier to automatic stop."""
         if toggle is None:
             toggle = self.state.automatic_stop_config != DeviceStatus.ON
 

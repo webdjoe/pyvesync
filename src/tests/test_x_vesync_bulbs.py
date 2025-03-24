@@ -1,6 +1,6 @@
 from collections import namedtuple
 import orjson
-from pyvesync.helper_utils.colors import RGB
+from pyvesync.utils.colors import RGB
 from pyvesync.devices.vesyncbulb import (VeSyncBulbESL100, VeSyncBulbESL100CW,
                                  VeSyncBulbESL100MC, VeSyncBulbValcenoA19MC)
 import call_json

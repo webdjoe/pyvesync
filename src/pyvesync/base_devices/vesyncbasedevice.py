@@ -2,24 +2,25 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 import logging
+import inspect
 from datetime import datetime as dt
 from zoneinfo import ZoneInfo
 from typing import TYPE_CHECKING, Any
 import warnings
-from mashumaro.types import SerializableType
 import orjson
 
-from pyvesync.helper_utils.helpers import Helpers
+from pyvesync.utils.helpers import Helpers
 from pyvesync.const import DeviceStatus, ConnectionStatus, IntFlag, StrFlag
-from pyvesync.helper_utils.logs import LibraryLogger
+from pyvesync.utils.logs import LibraryLogger
+from pyvesync.models.base_models import DefaultValues, RequestBaseModel
 
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from pyvesync import VeSync
-    from pyvesync.data_models.device_list_models import ResponseDeviceDetailsModel
+    from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
     from pyvesync.device_map import DeviceMapTemplate
-    from pyvesync.helper_utils.errors import ResponseInfo
+    from pyvesync.utils.errors import ResponseInfo
 
 
 class VeSyncBaseDevice(ABC):
@@ -35,6 +36,10 @@ class VeSyncBaseDevice(ABC):
             subclass of DeviceMapTemplate based on device type.
 
     Attributes:
+        state (pyvesync.base_devices.vesyncbasedevice.DeviceState): Device state object
+            Each device has a separate state base class in the base_devices module.
+        last_response (ResponseInfo): Last response from API call.
+        manager (VeSync): Manager object for API calls.
         device_name (str): Name of device.
         device_image (str): URL for device image.
         cid (str): Device ID.
@@ -56,6 +61,16 @@ class VeSyncBaseDevice(ABC):
         firmware_update(): Return True if firmware update available.
         display(): Print formatted device info to stdout.
         displayJSON(): JSON API for device details.
+
+    Note:
+        Device states are found in the `state` attribute in a subclass of DeviceState
+        based on the device type. The `DeviceState` subclass is located in device the
+        base_devices module.
+
+        The `last_response` attribute is used to store the last response and error
+        information from the API call. See the `pyvesync.errors` module for more
+        information.
+
     """
 
     __slots__ = (
@@ -75,7 +90,6 @@ class VeSyncBaseDevice(ABC):
         "pid",
         "product_type",
         "request_keys",
-        "speed",
         "state",
         "sub_device_no",
         "type",
@@ -87,7 +101,13 @@ class VeSyncBaseDevice(ABC):
                  manager: VeSync,
                  feature_map: DeviceMapTemplate
                  ) -> None:
-        """Initialize VeSync device base class."""
+        """Initialize VeSync device base class.
+
+        Args:
+            details (ResponseDeviceDetailsModel): Device details from API call.
+            manager (VeSync): Manager object for API calls.
+            feature_map (DeviceMapTemplate): Device configuration map, will be specific
+        """
         self.enabled: bool = True
         self.state: DeviceState = DeviceState(self, details, feature_map)
         self.last_response: ResponseInfo | None = None
@@ -103,11 +123,54 @@ class VeSyncBaseDevice(ABC):
         self.mac_id: str | None = details.macID
         self.current_firm_version = details.currentFirmVersion
         self.device_region: str | None = details.deviceRegion
-        self.pid = None
+        self.pid: str | None = None
         self.sub_device_no = details.subDeviceNo
         # From feature_map
         self.product_type: str = feature_map.product_type
         self.features = feature_map.features
+
+    def build_request_from_model(
+        self,
+        model: type[RequestBaseModel],
+        request_keys: list[str],
+        instances: list[object] | None = None,
+        update_dict: dict[str, Any] | None = None,
+    ) -> RequestBaseModel:
+        """Pass a model in to build a request.
+
+        The instances argument is a list of instances to build the request from.
+        No need to pass the device or VeSync instance. It automatically gets the
+        attributes from the device instance and VeSync instance.
+
+        Args:
+            model (SerializableType): Model to build request from.
+            request_keys (dict[str, str]): Dictionary of keys and type to use for request.
+            instances (list[object] | None): List of additional classes to get
+                attributes for the request model.
+            update_dict (dict[str, Any]): Optional dictionary to update dict.
+
+        Returns:
+            dict[str, Any] | None : Built dictionary of request from keys
+
+        Note:
+            Order of building the request is:
+            1. DefaultValues class
+            2. VeSync manager
+            3. Device
+            4. Other Instances
+            5. Update dict
+        """
+        request_dict: dict[str, Any] = {}
+        request_dict.update(Helpers.get_class_attributes(DefaultValues, request_keys))
+        request_dict.update(Helpers.get_class_attributes(self.manager, request_keys))
+        request_dict.update(Helpers.get_class_attributes(self, request_keys))
+        if instances is not None and len(instances) > 0:
+            for obj in instances:
+                request_dict.update(Helpers.get_class_attributes(obj, request_keys))
+
+        if update_dict is not None:
+            request_dict.update(update_dict)
+        return model.from_dict(request_dict)
 
     def __eq__(self, other: object) -> bool:
         """Use device CID and sub-device number to test equality."""
@@ -141,11 +204,14 @@ class VeSyncBaseDevice(ABC):
         )
 
     def __getattr__(self, attr: str) -> object:
-        """Return attribute from device state."""
+        """Return attribute from device state.
+
+        This will be removed in the next release.
+        """
         if hasattr(self.state, attr):
             warnings.warn(
                 "Access device state through the self.state attribute. "
-                "Access to state in the device class will be removed in future releases.",  # noqa: E501
+                "Access to state in the device class will be removed in future releases.",
                 category=DeprecationWarning,
                 stacklevel=2,
             )
@@ -204,14 +270,21 @@ class VeSyncBaseDevice(ABC):
 
     @abstractmethod
     async def get_details(self) -> None:
-        """Get device details."""
+        """Get device details.
+
+        This method is defined in each device class to contain
+        the logic to pull the device state.
+        """
 
     async def update(self) -> None:
         """Update device details."""
         await self.get_details()
 
-    def display(self) -> None:
+    def display(self, state: bool = True) -> None:
         """Print formatted static device info to stdout.
+
+        Args:
+            state (bool): If True, include state in display, defaults to True.
 
         Example:
         ```
@@ -223,7 +296,7 @@ class VeSyncBaseDevice(ABC):
         ```
         """
         # noinspection SpellCheckingInspection
-        disp = [
+        display_list = [
             ('Device Name:', self.device_name),
             ('Product Type: ', self.product_type),
             ('Model: ', self.device_type),
@@ -235,13 +308,19 @@ class VeSyncBaseDevice(ABC):
             ('Features', self.features),
         ]
         if self.uuid is not None:
-            disp.append(('UUID: ', self.uuid))
+            display_list.append(('UUID: ', self.uuid))
 
-        for line in disp:
+        for line in display_list:
             print(f'{line[0]:.<30} {line[1]}')
+        if state:
+            self.state.display()
 
-    def displayJSON(self) -> str:  # pylint: disable=invalid-name
+    def displayJSON(self, state: bool = True, indent: bool = True) -> str:  # pylint: disable=invalid-name
         """JSON API for device details.
+
+        Args:
+            state (bool): If True, include state in JSON output, defaults to True.
+            indent (bool): If True, indent JSON output, defaults to True.
 
         Returns:
             str: JSON formatted string of device details.
@@ -257,15 +336,23 @@ class VeSyncBaseDevice(ABC):
         }
         ```
         """
+        device_dict = {
+            "Device Name": self.device_name,
+            "Model": self.device_type,
+            "Subdevice No": str(self.sub_device_no),
+            "Type": self.type,
+            "CID": self.cid,
+        }
+        state_dict = self.state.to_dict() if state else {}
+        if indent:
+            return orjson.dumps(
+                device_dict | state_dict,
+                option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS,
+            ).decode()
+
         return orjson.dumps(
-            {
-                'Device Name': self.device_name,
-                'Model': self.device_type,
-                'Subdevice No': str(self.sub_device_no),
-                'Type': self.type,
-                'CID': self.cid,
-            },
-            option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS).decode()
+            device_dict | state_dict, option=orjson.OPT_NON_STR_KEYS
+        ).decode()
 
 
 class VeSyncBaseToggleDevice(VeSyncBaseDevice):
@@ -286,8 +373,31 @@ class VeSyncBaseToggleDevice(VeSyncBaseDevice):
         return await self.toggle_switch(False)
 
 
-class DeviceState(SerializableType):
-    """Base dataclass to hold device state."""
+class DeviceState:
+    """Base dataclass to hold device state.
+
+    Args:
+        device (VeSyncBaseDevice): Device object.
+        details (ResponseDeviceDetailsModel): Device details from API call.
+        feature_map (DeviceMapTemplate): Device configuration map, will be specific
+            subclass of DeviceMapTemplate based on device type.
+
+    Attributes:
+        active_time (int | None): Active time of device.
+        connection_status (str): Connection status of device.
+        device (VeSyncBaseDevice): Device object.
+        device_status (str): Device status.
+        features (dict): Features of device.
+        last_update_ts (int | None): Last update timestamp of device.
+
+    Methods:
+        update_ts(): Update last update timestamp.
+        dumps(): Dump state to JSON.
+
+    Note:
+        This is not meant to be used directly. It should be inherited by the state class
+        of a specific product type.
+    """
 
     __slots__ = (
         "active_time",
@@ -314,7 +424,8 @@ class DeviceState(SerializableType):
 
     def __str__(self) -> str:
         """Return device state as string."""
-        return (f"{self.device.device_name}, Device Status:{self.device_status}, "
+        return (f"{self.device.device_name}, {self.device.product_type}, "
+                f"Device Status:{self.device_status}, "
                 f"Connection Status: {self.connection_status}")
 
     def __repr__(self) -> str:
@@ -327,29 +438,67 @@ class DeviceState(SerializableType):
         self.last_update_ts = int(dt.now(
             tz=ZoneInfo(self.device.manager.time_zone)).timestamp())
 
-    def _serialize(self) -> bytes:
-        """Dump state to JSON."""
-        state_dict = {}
-        for attr in self.__slots__:
-            if attr == 'device':
-                continue
-            if getattr(self, attr) in [IntFlag.NOT_SUPPORTED, StrFlag.NOT_SUPPORTED]:
-                continue
-            state_dict[attr] = getattr(self, attr)
-        return orjson.dumps(state_dict, option=orjson.OPT_NON_STR_KEYS)
+    @staticmethod
+    def __predicate(attr: Any) -> bool:
+        """Check if attribute should be serialized."""
+        return (
+            callable(attr)
+            or inspect.ismethod(attr)
+            or inspect.isbuiltin(attr)
+            or inspect.isfunction(attr)
+            or inspect.isroutine(attr)
+            or inspect.isclass(attr)
+        )
 
-    def dumps(self) -> str:
-        """Dump state to JSON."""
-        return self._serialize().decode()
+    def _serialize(self) -> dict[str, Any]:
+        """Get dictionary of state attributes."""
+        state_dict: dict[str, Any] = {}
+        for attr_name, attr_value in inspect.getmembers(
+                self, lambda a: not self.__predicate(a)):
+            # if attr_name in ignored_attr or attr_name.startswith('_'):
+            #     continue
+            if attr_name.startswith("_") or attr_name in ['features', 'device']:
+                continue
+            if attr_value in [IntFlag.NOT_SUPPORTED, StrFlag.NOT_SUPPORTED]:
+                continue
+            state_dict[attr_name] = attr_value
+        return state_dict
 
-    def display(self) -> None:
+    def dumps(self, indent: bool = False) -> str:
+        """Dump state to JSON string.
+
+        Args:
+            indent (bool): If True, indent JSON output, defaults to False.
+
+        Returns:
+            str: JSON formatted string of device state.
+        """
+        if indent:
+            return orjson.dumps(
+                self._serialize(), option=orjson.OPT_NON_STR_KEYS | orjson.OPT_INDENT_2
+            ).decode()
+        return orjson.dumps(self._serialize(), option=orjson.OPT_NON_STR_KEYS).decode()
+
+    def to_json(self, indent: bool = False) -> bytes:
+        """Convert state to JSON bytes."""
+        if indent:
+            return orjson.dumps(
+                self._serialize(), option=orjson.OPT_NON_STR_KEYS | orjson.OPT_INDENT_2
+            )
+        return orjson.dumps(self._serialize(), option=orjson.OPT_NON_STR_KEYS)
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert state to dictionary."""
+        return self._serialize()
+
+    def as_tuple(self) -> tuple[tuple[str, Any], ...]:
+        """Convert state to tuple of (name, value) tuples."""
+        return tuple((k, v) for k, v in self._serialize().items())
+
+    def display(self, state: bool = True) -> None:
         """Print formatted state to stdout."""
-        state_list = []
-        for attr in self.__slots__:
-            if attr == 'device':
-                continue
-            if getattr(self, attr) in [IntFlag.NOT_SUPPORTED, StrFlag.NOT_SUPPORTED]:
-                continue
-            state_list.append((attr, getattr(self, attr)))
-        for line in state_list:
-            print(f'{line[0]:.<30} {line[1]}')
+        state_dict = self._serialize()
+        for name, val in state_dict.items():
+            print(f'{name:.<30} {val}')
+        if state:
+            self.device.state.display()

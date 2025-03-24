@@ -1,7 +1,7 @@
 import copy
 import orjson
 import pyvesync.const
-import pyvesync.helper_utils.helpers as helpers
+import pyvesync.utils.helpers as helpers
 from defaults import Defaults
 import call_json_switches
 import call_json_outlets

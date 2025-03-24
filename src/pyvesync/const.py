@@ -1,4 +1,24 @@
-"""pyvesync library constants."""
+"""pyvesync library constants.
+
+All device states and information are defined by Enums in this module.
+
+Attributes:
+    DEFAULT_LANGUAGE (str): Default language for the VeSync app.
+    API_BASE_URL (str): Base URL for the VeSync API.
+    API_TIMEOUT (int): Timeout for API requests.
+    USER_AGENT (str): User agent for API requests.
+    DEFAULT_TZ (str): Default timezone for VeSync devices, updated by API after
+        login.
+    DEFAULT_REGION (str): Default region for VeSync devices,
+        updated by API when retrieving devices.
+    APP_VERSION (str): Version of the VeSync app.
+    PHONE_BRAND (str): Brand of the phone used to login to the VeSync app.
+    PHONE_OS (str): Operating system of the phone used to login to the VeSync app.
+    MOBILE_ID (str): Unique identifier for the phone used to login to the VeSync app.
+    USER_TYPE (str): User type for the VeSync app - internal app usage.
+    BYPASS_APP_V (str): Bypass app version
+    BYPASS_HEADER_UA (str): Bypass header user agent
+"""
 from random import randint
 
 from enum import StrEnum, IntEnum, Enum
@@ -23,6 +43,205 @@ USER_TYPE = "1"
 BYPASS_APP_V = "VeSync 3.0.51"
 BYPASS_HEADER_UA = "okhttp/3.12.1"
 
+
+# Generic Constants
+
+
+class ProductTypes(StrEnum):
+    """General device types enum."""
+    OUTLET = "Outlet"
+    BULB = "Bulb"
+    SWITCH = "Switch"
+    PURIFIER = "Purifier"
+    FAN = "Fan"
+    HUMIDIFIER = "Humidifier"
+    AIR_FRYER = "Air Fryer"
+    KITCHEN_THERMOMETER = "Kitchen Thermometer"
+
+
+class IntFlag(IntEnum):
+    """Integer flag to indicate if a device is not supported.
+
+    This is used by data models as a default value for feature attributes
+    that are not supported by all devices.
+
+    The default value is -999.
+    """
+    NOT_SUPPORTED = -999
+
+    def __str__(self) -> str:
+        """Return string representation of IntFlag."""
+        return str(self.name)
+
+
+class StrFlag(StrEnum):
+    """String flag to indicate if a device is not supported.
+
+    This is used by data models as a default value for feature attributes
+    that are not supported by all devices.
+
+    The default value is "not_supported".
+    """
+    NOT_SUPPORTED = "not_supported"
+
+
+class NightlightStatus(StrEnum):
+    """Nightlight status for VeSync devices.
+
+    Values can be converted to int and bool.
+
+    Attributes:
+        ON: Nightlight is on.
+        OFF: Nightlight is off.
+        AUTO: Nightlight is in auto mode.
+        UNKNOWN: Nightlight status is unknown.
+
+    Usage:
+        >>> NightlightStatus.ON
+        <NightlightStatus.ON: 'on'>
+        >>> int(NightlightStatus.ON)
+        1
+        >>> bool(NightlightStatus.ON)
+        True
+    """
+    ON = "on"
+    OFF = "off"
+    AUTO = "auto"
+    UNKNOWN = "unknown"
+
+    def __bool__(self) -> bool:
+        """Return True if nightlight is on or auto."""
+        return self in [NightlightStatus.ON, NightlightStatus.AUTO]
+
+    def __int__(self) -> int:
+        """Return integer representation of the enum."""
+        if self not in [NightlightStatus.ON, NightlightStatus.OFF]:
+            raise ValueError("Only ON and OFF are valid values for int conversion")
+        return int(self == NightlightStatus.ON)
+
+
+class DeviceStatus(StrEnum):
+    """VeSync device status enum.
+
+    In addition to converting to int and bool values,
+    this enum can be used to convert from bool and int values
+    to corresponding string values.
+
+    Attributes:
+        ON: Device is on.
+        OFF: Device is off.
+        PAUSED: Device is paused.
+        STANDBY: Device is in standby mode.
+        IDLE: Device is idle.
+        RUNNING: Device is running.
+        UNKNOWN: Device status is unknown.
+
+    Usage:
+        >>> DeviceStatus.ON
+        <DeviceStatus.ON: 'on'>
+        >>> bool(DeviceStatus.ON)
+        True
+        >>> int(DeviceStatus.ON)
+        1
+        >>> DeviceStatus.from_int(1)
+        'on'
+        >>> DeviceStatus.from_bool(True)
+        'on'
+    """
+    ON = "on"
+    OFF = "off"
+    PAUSED = "paused"
+    STANDBY = "standby"
+    IDLE = "idle"
+    RUNNING = "running"
+    UNKNOWN = "unknown"
+
+    def __bool__(self) -> bool:
+        """Return True if device is on or running."""
+        return self in [DeviceStatus.ON, DeviceStatus.RUNNING]
+
+    def __int__(self) -> int:
+        """Return integer representation of the enum."""
+        match self:
+            case DeviceStatus.ON | DeviceStatus.RUNNING:
+                return 1
+            case (
+                DeviceStatus.OFF
+                | DeviceStatus.PAUSED
+                | DeviceStatus.STANDBY
+                | DeviceStatus.IDLE
+            ):
+                return 0
+        return -1
+
+    @classmethod
+    def from_int(cls, value: int) -> str:
+        """Convert integer value to corresponding string."""
+        if value == 1:
+            return cls.ON
+        if value == 0:
+            return cls.OFF
+        if value == IntFlag.NOT_SUPPORTED:
+            return StrFlag.NOT_SUPPORTED
+        return cls.UNKNOWN
+
+    @classmethod
+    def from_bool(cls, value: bool) -> 'DeviceStatus':
+        """Convert boolean value to corresponding string."""
+        return cls.ON if value else cls.OFF
+
+
+class ConnectionStatus(StrEnum):
+    """VeSync device connection status enum.
+
+    Corresponding boolean value is True if device is online.
+
+    Attributes:
+        ONLINE: Device is online.
+        OFFLINE: Device is offline.
+        UNKNOWN: Device connection status is unknown.
+
+    Usage:
+        >>> ConnectionStatus.ONLINE
+        <ConnectionStatus.ONLINE: 'online'>
+        >>> bool(ConnectionStatus.ONLINE)
+        True
+        >>> ConnectionStatus.ONLINE == ConnectionStatus.ONLINE
+        True
+    """
+    ONLINE = "online"
+    OFFLINE = "offline"
+    UNKNOWN = "unknown"
+
+    def __bool__(self) -> bool:
+        """Return True if device is online."""
+        return self == ConnectionStatus.ONLINE
+
+
+class NightlightModes(StrEnum):
+    """Nightlight modes."""
+    ON = "on"
+    OFF = "off"
+    DIM = "dim"
+    AUTO = "auto"
+    UNKNOWN = "unknown"
+
+    def __bool__(self) -> bool:
+        """Return True if nightlight is on or auto."""
+        return self in [
+            NightlightModes.ON, NightlightModes.AUTO, NightlightModes.DIM
+            ]
+
+
+class ColorMode(StrEnum):
+    """VeSync bulb color modes."""
+    RGB = "rgb"
+    HSV = "hsv"
+    WHITE = "white"
+    COLOR = "color"
+
+
+# Purifier Constants
 
 class AirQualityLevel(Enum):
     """Representation of air quality levels as string and integers.
@@ -96,30 +315,34 @@ class AirQualityLevel(Enum):
         return cls.UNKNOWN
 
 
-class IntFlag(IntEnum):
-    """Integer flag to indicate if a device is not supported."""
-    NOT_SUPPORTED = -999
-
-    def __str__(self) -> str:
-        """Return string representation of IntFlag."""
-        return str(self.name)
-
-
-class StrFlag(StrEnum):
-    """String flag to indicate if a device is not supported."""
-    NOT_SUPPORTED = "not_supported"
-
-
 class PurifierAutoPreference(StrEnum):
-    """Preference Levels for Purifier Auto Mode."""
+    """Preference Levels for Purifier Auto Mode.
+
+    Attributes:
+        DEFAULT: Default preference level.
+        EFFICIENT: Efficient preference level.
+        QUIET: Quiet preference level.
+        UNKNOWN: Unknown preference level.
+    """
     DEFAULT = "default"
     EFFICIENT = "efficient"
     QUIET = "quiet"
     UNKNOWN = "unknown"
 
 
+# Fan Constants
+
 class FanSleepPreference(StrEnum):
-    """Sleep mode for VeSync fans."""
+    """Sleep mode preferences for VeSync fans.
+
+    Attributes:
+        DEFAULT: Default sleep mode.
+        ADVANCED: Advanced sleep mode.
+        TURBO: Turbo sleep mode.
+        EFFICIENT: Efficient sleep mode.
+        QUIET: Quiet sleep mode.
+        UNKNOWN: Unknown sleep mode.
+    """
     DEFAULT = "default"
     ADVANCED = "advanced"
     TURBO = "turbo"
@@ -128,121 +351,14 @@ class FanSleepPreference(StrEnum):
     UNKNOWN = "unknown"
 
 
-class NightlightStatus(StrEnum):
-    """Nightlight status for VeSync devices."""
-    ON = "on"
-    OFF = "off"
-    AUTO = "auto"
-    UNKNOWN = "unknown"
-
-    def __bool__(self) -> bool:
-        """Return True if nightlight is on or auto."""
-        return self in [NightlightStatus.ON, NightlightStatus.AUTO]
-
-    def __int__(self) -> int:
-        """Return integer representation of the enum."""
-        if self not in [NightlightStatus.ON, NightlightStatus.OFF]:
-            raise ValueError("Only ON and OFF are valid values for int conversion")
-        return int(self == NightlightStatus.ON)
-
-
-class DeviceStatus(StrEnum):
-    """VeSync device status enum."""
-    ON = "on"
-    OFF = "off"
-    PAUSED = "paused"
-    STANDBY = "standby"
-    IDLE = "idle"
-    RUNNING = "running"
-    UNKNOWN = "unknown"
-
-    def __bool__(self) -> bool:
-        """Return True if device is on or running."""
-        return self in [DeviceStatus.ON, DeviceStatus.RUNNING]
-
-    def __int__(self) -> int:
-        """Return integer representation of the enum."""
-        match self:
-            case DeviceStatus.ON | DeviceStatus.RUNNING:
-                return 1
-            case (
-                DeviceStatus.OFF
-                | DeviceStatus.PAUSED
-                | DeviceStatus.STANDBY
-                | DeviceStatus.IDLE
-            ):
-                return 0
-        return -1
-
-    @classmethod
-    def from_int(cls, value: int) -> str:
-        """Convert integer value to corresponding string."""
-        if value == 1:
-            return cls.ON
-        if value == 0:
-            return cls.OFF
-        if value == IntFlag.NOT_SUPPORTED:
-            return StrFlag.NOT_SUPPORTED
-        return cls.UNKNOWN
-
-    @classmethod
-    def from_bool(cls, value: bool) -> 'DeviceStatus':
-        """Convert boolean value to corresponding string."""
-        return cls.ON if value else cls.OFF
-
-
-class ConnectionStatus(StrEnum):
-    """VeSync device connection status enum."""
-    ONLINE = "online"
-    OFFLINE = "offline"
-    UNKNOWN = "unknown"
-
-    def __bool__(self) -> bool:
-        """Return True if device is online."""
-        return self == ConnectionStatus.ONLINE
-
-
-class ProductTypes(StrEnum):
-    """General device types enum."""
-    OUTLET = "Outlet"
-    BULB = "Bulb"
-    SWITCH = "Switch"
-    PURIFIER = "Purifier"
-    FAN = "Fan"
-    HUMIDIFIER = "Humidifier"
-    AIR_FRYER = "Air Fryer"
-    KITCHEN_THERMOMETER = "Kitchen Thermometer"
-
-
-class NightlightModes(StrEnum):
-    """Nightlight modes."""
-    ON = "on"
-    OFF = "off"
-    DIM = "dim"
-    AUTO = "auto"
-    UNKNOWN = "unknown"
-
-    def __bool__(self) -> bool:
-        """Return True if nightlight is on or auto."""
-        return self in [
-            NightlightModes.ON, NightlightModes.AUTO, NightlightModes.DIM
-            ]
-
+# Device Features
 
 class Features(StrEnum):
     """Base Class for Features Enum."""
 
 
-# Color Modes
-class ColorMode(StrEnum):
-    """VeSync bulb color modes."""
-    RGB = "rgb"
-    HSV = "hsv"
-    WHITE = "white"
-    COLOR = "color"
-
-
 # Device Features
+
 class HumidifierFeatures(Features):
     """VeSync humidifier features."""
     ONOFF = "onoff"
@@ -258,8 +374,12 @@ class PurifierFeatures(Features):
     CHILD_LOCK = "child_lock"
     NIGHTLIGHT = "night_light"
     AIR_QUALITY = "air_quality"
-    FAN_ROTATE = "fan_rotate"
+    VENT_ANGLE = "fan_rotate"
     LIGHT_DETECT = "light_detect"
+    PM25 = "pm25"
+    PM10 = "pm10"
+    PM1 = "pm1"
+    AQPERCENT = "aq_percent"
 
 
 class PurifierStringLevels(Features):
@@ -327,3 +447,12 @@ class FanModes(StrEnum):
     PET = "pet"
     UNKNOWN = "unknown"
     ADVANCED_SLEEP = "advancedSleep"
+
+
+# Air Fryer Constants
+
+AIRFRYER_PID_MAP = {
+    "WiFi_SKA_AirFryer137_US": "wnxwqs76gknqyzjn",
+    "WiFi_SKA_AirFryer158_US": "2cl8hmafsthl65bd",
+    "WiFi_AirFryer_CS158-AF_EU": "8t8op7pcvzlsbosm"
+}

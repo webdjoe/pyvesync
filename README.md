@@ -8,7 +8,17 @@ pyvesync is a library to manage VeSync compatible [smart home devices](#supporte
 
 The goal is to standardize the library across all devices to allow easier and consistent maintainability moving forward. The original library was created 8 years ago for supporting only a few outlets, it was not designed for supporting 20+ different devices.
 
-The two primary changes are aynchronous operation and strongly typed API requests and responses. Every API call is validated with a model, no more ad-hoc dictionaries being built in each method.
+Some of the changes are:
+
+- Asynchronous network requests with aiohttp.
+- Strong typing of all network requests and responses.
+- Created base classes for all devices for easier `isinstance` checks.
+- Separated the instantiated devices to a `DeviceContainer` class that acts as a mutable set with convenience methods.
+- Standardized the API for all device to follow a common naming convention. No more devices with different names for the same functionality.
+- Implemented custom exceptions and error (code) handling for API responses.
+- `const` module to hold all library constants
+- Built the `DeviceMap` class to hold the mapping and features of devices.
+- COMING SOON: Use API to pull device modes and operating features.
 
 If you submit a PR please ensure that it follows all conventions outlined in [CONTRIBUTING](CONTRIBUTING).
 
@@ -98,11 +108,26 @@ VeSync(
     password: str,
     session: ClientSession | None = None,
     time_zone: str = DEFAULT_TZ  # America/New_York
-    redact: bool = True
     )
 ```
 
-The VeSync class no longer accepts a `debug` argument. To set debug the library set `manager.debug = True` to the instance.
+The VeSync class no longer accepts a `debug` or `redact` argument. To set debug the library set `manager.debug = True` to the instance and `manager.redact = True`.
+
+### Product Types
+
+There is a new nomenclature for product types that defines the device class. The
+`device.product_type` attribute defines the product type based on the VeSync API. The product type is used to determine the device class and module. The currently supported product types are:
+
+1. `outlet` - Outlet devices
+2. `switch` - Wall switches
+3. `fan` - Fans (not air purifiers or humidifiers)
+4. `purifier` - Air purifiers (not humidifiers)
+5. `humidifier` - Humidifiers (not air purifiers)
+6. `bulb` - Light bulbs (not dimmers or switches)
+7. `airfryer` - Air fryers
+
+See [Supported Devices](#supported-devices) for a complete list of supported devices and models.
+
 
 ### Custom Exceptions
 
@@ -119,12 +144,11 @@ Custom Exceptions raised by all API calls:
 - `pyvesync.logs.VeSyncAPIStatusCodeError` - The API returned a non-200 status code.
 - `pyvesync.logs.VeSyncAPIResponseError` - The response from the API was not in an expected format.
 
-
 Login API Exceptions
 
 - `pyvesync.logs.VeSyncLoginError` - The username or password is incorrect.
 
-See [errors.py](src/pyvesync/errors.py) for a complete list of error codes and exceptions.
+See [errors.py](src/pyvesync/helper_utils/errors.py) for a complete list of error codes and exceptions.
 
 ### Input Validation
 
@@ -150,6 +174,12 @@ All methods that set RGB/HSV color now require all three inputs, red/green/blue 
 
 ## Table of Contents <!-- omit in toc -->
 
+- [What's new in pyvesync 3.0](#whats-new-in-pyvesync-30)
+  - [Asynchronous operation](#asynchronous-operation)
+  - [VeSync Class Signature](#vesync-class-signature)
+  - [Product Types](#product-types)
+  - [Custom Exceptions](#custom-exceptions)
+  - [Input Validation](#input-validation)
 - [Installation](#installation)
 - [Supported Devices](#supported-devices)
   - [Etekcity Outlets](#etekcity-outlets)
@@ -158,10 +188,12 @@ All methods that set RGB/HSV color now require all three inputs, red/green/blue 
   - [Etekcity Bulbs](#etekcity-bulbs)
   - [Valceno Bulbs](#valceno-bulbs)
   - [Levoit Humidifiers](#levoit-humidifiers)
+  - [Cosori Air Fryer](#cosori-air-fryer)
+  - [Fans](#fans)
 - [Usage](#usage)
 - [Configuration](#configuration)
   - [Time Zones](#time-zones)
-  - [Outlet energy data update interval](#outlet-energy-data-update-interval----removed-from-library)
+  - [Outlet energy data update interval](#outlet-energy-data-update-interval)
 - [Example Usage](#example-usage)
   - [Get electricity metrics of outlets](#get-electricity-metrics-of-outlets)
 - [API Details](#api-details)
@@ -175,9 +207,10 @@ All methods that set RGB/HSV color now require all three inputs, red/green/blue 
   - [Standard Air Purifier Properties \& Methods](#standard-air-purifier-properties--methods)
     - [Air Purifier Properties](#air-purifier-properties)
     - [Air Purifier Methods](#air-purifier-methods)
-    - [Levoit Purifier Core200S/300S/400S and Vital 100S/200S Properties](#levoit-purifier-core200s300s400s-vital-100s200s--everest-air-properties)
-    - [Levoit Purifier Core200S/300S/400S, Vital 100S/200S & Everest Air Methods](#levoit-purifier-core200s300s400s-vital-100s200s--everest-air-methods)
-    - [Levoit Vital 100S/200S Properties and Methods](#levoit-vital-100s200s--everest-air-properties-and-methods)
+    - [Levoit Purifier Core200S/300S/400S, Vital 100S/200S \& Everest Air Properties](#levoit-purifier-core200s300s400s-vital-100s200s--everest-air-properties)
+    - [Levoit Purifier Core200S/300S/400S, Vital 100S/200S \& Everest Air Methods](#levoit-purifier-core200s300s400s-vital-100s200s--everest-air-methods)
+    - [Levoit Vital 100S/200S \& Everest Air Properties and Methods](#levoit-vital-100s200s--everest-air-properties-and-methods)
+    - [Levoit Everest Air Properties \& Methods](#levoit-everest-air-properties--methods)
   - [Lights API Methods \& Properties](#lights-api-methods--properties)
     - [Brightness Light Bulb Method and Properties](#brightness-light-bulb-method-and-properties)
     - [Light Bulb Color Temperature Methods and Properties](#light-bulb-color-temperature-methods-and-properties)
@@ -206,6 +239,8 @@ All methods that set RGB/HSV color now require all three inputs, red/green/blue 
 - [Notes](#notes)
 - [Debug mode and redact](#debug-mode-and-redact)
 - [Feature Requests](#feature-requests)
+- [Device Requests](#device-requests)
+- [Contributing](#contributing)
 
 ## Installation
 

@@ -1,6 +1,6 @@
 import orjson
 from pyvesync.devices.vesyncoutlet import VeSyncOutlet15A
-from pyvesync.helper_utils.helpers import Helpers as Helpers
+from pyvesync.utils.helpers import Helpers as Helpers
 import call_json
 import utils
 import call_json_outlets

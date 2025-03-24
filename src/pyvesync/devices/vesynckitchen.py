@@ -3,16 +3,17 @@ from __future__ import annotations
 import logging
 import time
 from typing import TYPE_CHECKING, TypeVar
-from dataclasses import dataclass
+from typing_extensions import deprecated
 import orjson
-from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
-from pyvesync.helper_utils.helpers import Helpers
-from pyvesync.helper_utils.logs import LibraryLogger
-from pyvesync.const import DeviceStatus, ConnectionStatus
+from pyvesync.utils.helpers import Helpers
+from pyvesync.utils.logs import LibraryLogger
+from pyvesync.const import DeviceStatus, ConnectionStatus, AIRFRYER_PID_MAP
+from pyvesync.base_devices.fryer_base import FryerState, VeSyncFryer
+from pyvesync.utils.errors import VeSyncError
 
 if TYPE_CHECKING:
     from pyvesync import VeSync
-    from pyvesync.data_models.device_list_models import ResponseDeviceDetailsModel
+    from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
     from pyvesync.device_map import AirFryerMap
 
 T = TypeVar("T")
@@ -67,21 +68,25 @@ CUSTOM_RECIPE = 'Manual Cook'
 COOK_MODE = 'custom'
 
 
-@dataclass(init=False, eq=False, repr=False)
-class FryerStatus:
+class AirFryer158138State(FryerState):
     """Dataclass for air fryer status."""
-
-    ready_start: bool = False
-    preheat: bool = False
-    cook_status: str | None = None
-    current_temp: int | None = None
-    cook_set_temp: int | None = None
-    cook_set_time: int | None = None
-    cook_last_time: int | None = None
-    last_timestamp: int | None = None
-    preheat_set_time: int | None = None
-    preheat_last_time: int | None = None
-    _temp_unit: str | None = None
+    def __init__(self, device: VeSyncAirFryer158, details: ResponseDeviceDetailsModel,
+                 feature_map: AirFryerMap) -> None:
+        """Init the Air Fryer 158 class."""
+        super().__init__(device, details, feature_map)
+        self.device: VeSyncAirFryer158 = device
+        self.features: list[str] = feature_map.features
+        self.ready_start: bool = False
+        self.preheat: bool = False
+        self.cook_status: str | None = None
+        self.current_temp: int | None = None
+        self.cook_set_temp: int | None = None
+        self.cook_set_time: int | None = None
+        self.cook_last_time: int | None = None
+        self.last_timestamp: int | None = None
+        self.preheat_set_time: int | None = None
+        self.preheat_last_time: int | None = None
+        self._temp_unit: str | None = None
 
     @property
     def is_resumable(self) -> bool:
@@ -259,7 +264,7 @@ class FryerStatus:
             self.clear_preheat()
 
 
-class VeSyncAirFryer158(VeSyncBaseDevice):
+class VeSyncAirFryer158(VeSyncFryer):
     """Cosori Air Fryer Class."""
 
     __slots__ = (
@@ -280,12 +285,17 @@ class VeSyncAirFryer158(VeSyncBaseDevice):
         """
         super().__init__(details, manager, feature_map)
         self.features = feature_map.features
-
-        self.fryer_status = FryerStatus()
+        self.state: AirFryer158138State = AirFryer158138State(self, details, feature_map)
+        self.fryer_status = self.state
         self.last_update = int(time.time())
         self.refresh_interval = 0
         self.ready_start = False
+        if self.config_module not in AIRFRYER_PID_MAP:
+            raise VeSyncError(f"Report this error as an issue -"
+                              f"{self.config_module} not found in PID map for {self}")
+        self.pid = AIRFRYER_PID_MAP[self.config_module]
 
+    @deprecated("There is no on/off function for Air Fryers.")
     async def toggle_switch(self, toggle: bool | None = None) -> bool:
         """Turn on or off the air fryer."""
         return toggle if toggle is not None else not self.is_on

@@ -36,7 +36,7 @@ METHOD_RESPONSES['DEVTYPE'].default_factory = lambda: ({"code": 0, "msg": "succe
 from copy import deepcopy
 from pyvesync import vesyncfan
 from defaults import Defaults, FunctionResponses
-from pyvesync.helper_utils import helpers
+from pyvesync.utils import helpers
 
 HUMID_MODELS = []
 for model_type, model_dict in vesyncfan.humid_features.items():

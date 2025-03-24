@@ -11,7 +11,7 @@ Defaults: class
 from collections import defaultdict
 from requests.structures import CaseInsensitiveDict
 import pyvesync.const
-from pyvesync.helper_utils.colors import Color
+from pyvesync.utils.colors import Color
 
 
 FunctionResponses: defaultdict = defaultdict(lambda: ({"code": 0, "msg": None}, 200))

@@ -12,17 +12,17 @@ import logging
 from typing import TypeVar, TYPE_CHECKING
 from collections.abc import Iterator, MutableSet, Sequence
 from typing_extensions import Self
-from pyvesync.helper_utils.errors import VeSyncAPIResponseError
+from pyvesync.models.vesync_models import ResponseDeviceListModel
+from pyvesync.utils.errors import VeSyncAPIResponseError
 from pyvesync.const import ProductTypes
-from pyvesync.base_devices.outlet_base_device import VeSyncOutlet
-from pyvesync.base_devices.switch_base_device import VeSyncSwitch
-from pyvesync.base_devices.bulb_base_device import VeSyncBulb
-from pyvesync.base_devices.purifier_base_device import VeSyncPurifier
-from pyvesync.base_devices.fan_base_device import VeSyncFanBase
-from pyvesync.base_devices.humidifier_base_device import VeSyncHumidifier
-from pyvesync.data_models.device_list_models import (
-    ResponseDeviceDetailsModel,
-    ResponseDeviceListModel
+from pyvesync.base_devices.outlet_base import VeSyncOutlet
+from pyvesync.base_devices.switch_base import VeSyncSwitch
+from pyvesync.base_devices.bulb_base import VeSyncBulb
+from pyvesync.base_devices.purifier_base import VeSyncPurifier
+from pyvesync.base_devices.fan_base import VeSyncFanBase
+from pyvesync.base_devices.humidifier_base import VeSyncHumidifier
+from pyvesync.models.vesync_models import (
+    ResponseDeviceDetailsModel
     )
 from pyvesync.device_map import get_device_config
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
@@ -95,7 +95,8 @@ class DeviceContainer(DeviceContainerBase):
     The `DeviceContainer` class is a container for VeSync device instances that
     inherits behavior from `MutableSet`. The container contains all VeSync devices
     and is used to store and manage device instances. The container is a singleton
-    and is instantiated in the `pyvesync.vesync.VeSync` class.
+    and is instantiated in the `pyvesync.vesync.VeSync` class. This should not be
+    manually instantiated.
 
     Use the `DeviceContainer.add_new_devices(device_list_model)` class method to
     add devices from the device list model API response and `remove_stale_devices`
@@ -113,10 +114,9 @@ class DeviceContainer(DeviceContainerBase):
         use the classmethod :obj:`DeviceContainer.add_device_from_model()` to add a
         single device. The model must be :obj:`ResponseDeviceDetailsModel`.
 
-        The :obj:`DeviceContainer.remove(cid: str)` method accepts a device CID and
+        The :obj:`DeviceContainer.remove_by_cid(cid: str)` method accepts a device CID and
         removes the device from the container. The `cid_exists(cid: str)` method accepts a
         device CID and returns a boolean indicating if the device exists in the container.
-        The `get_by_cid()`
 
         Example usage:
         ```python

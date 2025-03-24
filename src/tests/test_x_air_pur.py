@@ -2,7 +2,7 @@
 import orjson
 from pyvesync.devices.vesyncpurifier import VeSyncAirBypass
 from pyvesync.devices.vesyncpurifier import VeSyncAir131
-from pyvesync.helper_utils.helpers import Helpers as Helpers
+from pyvesync.utils.helpers import Helpers as Helpers
 import call_json
 import call_json_fans
 from utils import TestBase

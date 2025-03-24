@@ -9,9 +9,9 @@ import pytest
 from unittest.mock import patch, MagicMock
 
 from pyvesync import VeSync
-from pyvesync.helper_utils.errors import VeSyncRateLimitError, VeSyncServerError, VesyncLoginError
-from pyvesync.helper_utils.helpers import Helpers, API_BASE_URL
-from pyvesync.helper_utils.errors import (
+from pyvesync.utils.errors import VeSyncRateLimitError, VeSyncServerError, VesyncLoginError
+from pyvesync.utils.helpers import Helpers, API_BASE_URL
+from pyvesync.utils.errors import (
     VeSyncAPIStatusCodeError
     )
 from defaults import Defaults
