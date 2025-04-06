@@ -22,6 +22,8 @@ class OutletState(DeviceState):
     """Base state class for Outlets.
 
     Attributes:
+        _exclude_serialization (list[str]): List of attributes to exclude from
+            serialization.
         energy (float): Energy usage in kWh.
         monthly_history (ResponseEnergyResult): Monthly energy history.
         nightlight_automode (str): Nightlight automode status.
@@ -59,6 +61,11 @@ class OutletState(DeviceState):
             feature_map (OutletMap): The feature map for the device.
         """
         super().__init__(device, details, feature_map)
+        self._exclude_serialization = [
+            "weakly_history",
+            "monthly_history",
+            "yearly_history",
+        ]
         self.device: VeSyncOutlet = device
         self.features: list[str] = feature_map.features
         self.active_time: int = 0
@@ -71,6 +78,36 @@ class OutletState(DeviceState):
         self.weekly_history: ResponseEnergyResult | None = None
         self.monthly_history: ResponseEnergyResult | None = None
         self.yearly_history: ResponseEnergyResult | None = None
+
+    def annual_history_to_json(self) -> None | str:
+        """Dump annual history."""
+        if not self.device.supports_energy:
+            logger.info("Device does not support energy monitoring.")
+            return None
+        if self.yearly_history is None:
+            logger.info("No yearly history available, run device.get_yearly_history().")
+            return None
+        return self.yearly_history.to_json()
+
+    def monthly_history_to_json(self) -> None | str:
+        """Dump monthly history."""
+        if not self.device.supports_energy:
+            logger.info("Device does not support energy monitoring.")
+            return None
+        if self.monthly_history is None:
+            logger.info("No monthly history available, run device.get_monthly_history().")
+            return None
+        return self.monthly_history.to_json()
+
+    def weekly_history_to_json(self) -> None | str:
+        """Dump weekly history."""
+        if not self.device.supports_energy:
+            logger.info("Device does not support energy monitoring.")
+            return None
+        if self.weekly_history is None:
+            logger.info("No weekly history available, run device.get_weekly_history().")
+            return None
+        return self.weekly_history.to_json()
 
 
 class VeSyncOutlet(VeSyncBaseToggleDevice):
@@ -199,35 +236,3 @@ class VeSyncOutlet(VeSyncBaseToggleDevice):
             await self.get_weekly_energy()
             await self.get_monthly_energy()
             await self.get_yearly_energy()
-
-    def display(self, state: bool = True) -> None:
-        super().display()
-        display_list = [
-            ('Active Time : ', self.state.active_time, ' minutes'),
-            ('Power: ', self.state.power, ' Watts'),
-            ('Voltage: ', self.state.voltage, ' Volts'),
-        ]
-        for line in display_list:
-            print(f'{line[0]:.<30} {line[1]} {line[2]}')
-        if state:
-            self.state.display()
-
-    def displayJSON(self) -> str:
-        """Return JSON details for outlet."""
-        return super().displayJSON()  # TODO: FIX THIS
-        # sup_val = orjson.loads(sup)
-        # sup_val.update(
-        #     {
-        #         'Active Time': str(self.active_time),
-        #         'Energy': str(self.energy_today),
-        #         'Power': str(self.power),
-        #         'Voltage': str(self.voltage),
-        #         'Energy Week': str(self.weekly_energy_total),
-        #         'Energy Month': str(self.monthly_energy_total),
-        #         'Energy Year': str(self.yearly_energy_total),
-        #     }
-        # )
-
-        # return orjson.dumps(
-        #     sup_val, option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS
-        #     ).decode()

@@ -6,12 +6,12 @@ import inspect
 from datetime import datetime as dt
 from zoneinfo import ZoneInfo
 from typing import TYPE_CHECKING, Any
-import warnings
+from typing_extensions import deprecated
+# import warnings
 import orjson
 
 from pyvesync.utils.helpers import Helpers
 from pyvesync.const import DeviceStatus, ConnectionStatus, IntFlag, StrFlag
-from pyvesync.utils.logs import LibraryLogger
 from pyvesync.models.base_models import DefaultValues, RequestBaseModel
 
 logger = logging.getLogger(__name__)
@@ -20,6 +20,7 @@ if TYPE_CHECKING:
     from pyvesync import VeSync
     from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
     from pyvesync.device_map import DeviceMapTemplate
+    from pyvesync.utils.helpers import Timer
     from pyvesync.utils.errors import ResponseInfo
 
 
@@ -74,6 +75,9 @@ class VeSyncBaseDevice(ABC):
     """
 
     __slots__ = (
+        "__base_exclusions",
+        "__weakref__",
+        "_exclude_serialization",
         "cid",
         "config_module",
         "connection_type",
@@ -108,6 +112,7 @@ class VeSyncBaseDevice(ABC):
             manager (VeSync): Manager object for API calls.
             feature_map (DeviceMapTemplate): Device configuration map, will be specific
         """
+        self._exclude_serialization: list[str] = []
         self.enabled: bool = True
         self.state: DeviceState = DeviceState(self, details, feature_map)
         self.last_response: ResponseInfo | None = None
@@ -203,20 +208,19 @@ class VeSyncBaseDevice(ABC):
             f"CID: {self.cid}"
         )
 
-    def __getattr__(self, attr: str) -> object:
-        """Return attribute from device state.
+    # def __getattr__(self, attr: str) -> object:
+    #     """Return attribute from device state.
 
-        This will be removed in the next release.
-        """
-        if hasattr(self.state, attr):
-            warnings.warn(
-                "Access device state through the self.state attribute. "
-                "Access to state in the device class will be removed in future releases.",
-                category=DeprecationWarning,
-                stacklevel=2,
-            )
-            return getattr(self.state, attr)
-        return object.__getattribute__(self, attr)
+    #     This will be removed in the next release.
+    #     """
+    #     if hasattr(self.state, attr):
+    #         warnings.warn(
+    #             "Access device state through the self.state attribute. ",
+    #             category=DeprecationWarning,
+    #             stacklevel=2,
+    #         )
+    #         return getattr(self.state, attr)
+    #     return object.__getattribute__(self, attr)
 
     @property
     def is_on(self) -> bool:
@@ -231,34 +235,37 @@ class VeSyncBaseDevice(ABC):
         """
         return False
 
-    async def get_pid(self) -> None:
-        """Get managed device configuration."""
-        body = Helpers.req_body(self.manager, 'devicedetail')
-        body['configModule'] = self.config_module
-        body['region'] = self.device_region
-        body['method'] = 'configInfo'
-        r_bytes, _ = await self.manager.async_call_api(
-            '/cloud/v1/deviceManaged/configInfo', 'post', json_object=body
-            )
-        if r_bytes is None or len(r_bytes) == 0:
-            LibraryLogger.log_device_api_response_error(
-                logger, self.device_name, self.device_type, 'get_pid', "Empty response"
-            )
-            return
-        try:
-            r = orjson.loads(r_bytes)
-        except orjson.JSONDecodeError as err:
-            LibraryLogger.log_device_api_response_error(
-                logger, self.device_name, self.device_type, 'get_pid', err.msg
-            )
-            return
-        if r.get('code') != 0:
-            LibraryLogger.log_device_return_code(
-                logger, 'get_pid', self.device_name, self.device_type,
-                r.get('code'), r.get('msg', '')
-                )
-            return
-        self.pid = r.get('result', {}).get('pid')
+    async def set_timer(self, duration: int, action: str | None = None) -> bool:
+        """Set timer for device.
+
+        Args:
+            duration (int): Duration in seconds.
+            action (str | None): Action to take when timer expires.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        del duration
+        del action
+        logger.debug('Not implemented - set_timer')
+        return False
+
+    async def get_timer(self) -> Timer | None:
+        """Get timer for device form API.
+
+        Returns None if no timer is set.
+        """
+        logger.debug('Not implemented - get_timer')
+        return None
+
+    async def clear_timer(self) -> bool:
+        """Clear timer for device from API.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        logger.debug('Not implemented - clear_timer')
+        return False
 
     def set_state(self, state_attr: str, stat_value: Any) -> None:  # noqa: ANN401
         """Set device state attribute."""
@@ -306,6 +313,7 @@ class VeSyncBaseDevice(ABC):
             ('Config Module: ', self.config_module),
             ('Connection Type: ', self.connection_type),
             ('Features', self.features),
+            ('Last Response: ', self.last_response),
         ]
         if self.uuid is not None:
             display_list.append(('UUID: ', self.uuid))
@@ -315,7 +323,12 @@ class VeSyncBaseDevice(ABC):
         if state:
             self.state.display()
 
+    @deprecated("Use to_json() instead")
     def displayJSON(self, state: bool = True, indent: bool = True) -> str:  # pylint: disable=invalid-name
+        """Return JSON details for device. - Deprecated use to_json()."""
+        return self.to_json(state, indent)
+
+    def to_json(self, state: bool = True, indent: bool = True) -> str:
         """JSON API for device details.
 
         Args:
@@ -337,11 +350,16 @@ class VeSyncBaseDevice(ABC):
         ```
         """
         device_dict = {
-            "Device Name": self.device_name,
-            "Model": self.device_type,
-            "Subdevice No": str(self.sub_device_no),
-            "Type": self.type,
-            "CID": self.cid,
+            "device_name": self.device_name,
+            "product_type": self.product_type,
+            "model": self.device_type,
+            "subdevice_no": str(self.sub_device_no),
+            "type": self.type,
+            "cid": self.cid,
+            "features:": self.features,
+            "config_module": self.config_module,
+            "connection_type": self.connection_type,
+            "last_response": self.last_response,
         }
         state_dict = self.state.to_dict() if state else {}
         if indent:
@@ -362,7 +380,14 @@ class VeSyncBaseToggleDevice(VeSyncBaseDevice):
 
     @abstractmethod
     async def toggle_switch(self, toggle: bool | None = None) -> bool:
-        """Toggle device power on or off."""
+        """Toggle device power on or off.
+
+        Args:
+            toggle (bool | None): True to turn on, False to turn off, None to toggle.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
 
     async def turn_on(self) -> bool:
         """Turn device on."""
@@ -383,6 +408,9 @@ class DeviceState:
             subclass of DeviceMapTemplate based on device type.
 
     Attributes:
+        __base_exclusions (list[str]): Base exclusions, should not be used directly.
+        _exclude_serialization (list[str]): List of attributes to exclude from
+            serialization.
         active_time (int | None): Active time of device.
         connection_status (str): Connection status of device.
         device (VeSyncBaseDevice): Device object.
@@ -400,12 +428,15 @@ class DeviceState:
     """
 
     __slots__ = (
+        "__base_exclusions",
+        "_exclude_serialization",
         "active_time",
         "connection_status",
         "device",
         "device_status",
         "features",
         "last_update_ts",
+        "timer",
     )
 
     def __init__(
@@ -415,12 +446,15 @@ class DeviceState:
         feature_map: DeviceMapTemplate
             ) -> None:
         """Initialize device state."""
+        self.__base_exclusions: list[str] = ['manager', 'device', 'state']
+        self._exclude_serialization: list[str] = []
         self.device = device
         self.device_status: str = details.deviceStatus or DeviceStatus.UNKNOWN
         self.connection_status: str = details.connectionStatus or ConnectionStatus.UNKNOWN
         self.features = feature_map.features
         self.last_update_ts: int | None = None
         self.active_time: int | None = None
+        self.timer: Timer | None = None
 
     def __str__(self) -> str:
         """Return device state as string."""
@@ -439,7 +473,7 @@ class DeviceState:
             tz=ZoneInfo(self.device.manager.time_zone)).timestamp())
 
     @staticmethod
-    def __predicate(attr: Any) -> bool:
+    def __predicate(attr: Any) -> bool:  # noqa: ANN401
         """Check if attribute should be serialized."""
         return (
             callable(attr)
@@ -454,17 +488,19 @@ class DeviceState:
         """Get dictionary of state attributes."""
         state_dict: dict[str, Any] = {}
         for attr_name, attr_value in inspect.getmembers(
-                self, lambda a: not self.__predicate(a)):
-            # if attr_name in ignored_attr or attr_name.startswith('_'):
-            #     continue
-            if attr_name.startswith("_") or attr_name in ['features', 'device']:
+            self, lambda a: not self.__predicate(a)
+        ):
+            if (
+                attr_name.startswith("_")
+                or attr_name in [*self.__base_exclusions, *self._exclude_serialization]
+            ):
                 continue
             if attr_value in [IntFlag.NOT_SUPPORTED, StrFlag.NOT_SUPPORTED]:
                 continue
             state_dict[attr_name] = attr_value
         return state_dict
 
-    def dumps(self, indent: bool = False) -> str:
+    def to_json(self, indent: bool = False) -> str:
         """Dump state to JSON string.
 
         Args:
@@ -473,13 +509,9 @@ class DeviceState:
         Returns:
             str: JSON formatted string of device state.
         """
-        if indent:
-            return orjson.dumps(
-                self._serialize(), option=orjson.OPT_NON_STR_KEYS | orjson.OPT_INDENT_2
-            ).decode()
-        return orjson.dumps(self._serialize(), option=orjson.OPT_NON_STR_KEYS).decode()
+        return self.to_jsonb(indent=indent).decode()
 
-    def to_json(self, indent: bool = False) -> bytes:
+    def to_jsonb(self, indent: bool = False) -> bytes:
         """Convert state to JSON bytes."""
         if indent:
             return orjson.dumps(
@@ -495,10 +527,7 @@ class DeviceState:
         """Convert state to tuple of (name, value) tuples."""
         return tuple((k, v) for k, v in self._serialize().items())
 
-    def display(self, state: bool = True) -> None:
+    def display(self) -> None:
         """Print formatted state to stdout."""
-        state_dict = self._serialize()
-        for name, val in state_dict.items():
+        for name, val in self._serialize().items():
             print(f'{name:.<30} {val}')
-        if state:
-            self.device.state.display()

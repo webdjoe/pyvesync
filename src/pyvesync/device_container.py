@@ -2,16 +2,19 @@
 
 `DeviceContainer` holds VeSync device instances in a singleton container
 that inherits from a `MutableSet`. The `DeviceContainer` class is instantiated
-in the `pyvesync.vesync.VeSync` class and is used to store and manage VeSync
-device instances. Use the `add_new_devices(dev_list_response: ResponseDeviceListModel)`
-method to add devices from the device list response model.
+in the `device_container` module and is imported into the `vesync` module. Use
+the `add_new_devices(dev_list_response: ResponseDeviceListModel)` method to add
+devices from the device list response model.
+
+Attributes:
+    DeviceContainerInstance (DeviceContainer): Singleton instance of the DeviceContainer
+        class. This is the attribute imported by the `vesync` module.
 """
 
 from __future__ import annotations
 import logging
 from typing import TypeVar, TYPE_CHECKING
 from collections.abc import Iterator, MutableSet, Sequence
-from typing_extensions import Self
 from pyvesync.models.vesync_models import ResponseDeviceListModel
 from pyvesync.utils.errors import VeSyncAPIResponseError
 from pyvesync.const import ProductTypes
@@ -36,21 +39,15 @@ logger = logging.getLogger(__name__)
 T = TypeVar('T')
 
 
-class DeviceContainerBase(MutableSet[VeSyncBaseDevice]):
-    """Base class for VeSync device containe.
+class _DeviceContainerBase(MutableSet[VeSyncBaseDevice]):
+    """Base class for VeSync device container.
 
     Inherits from `MutableSet` and is used to store VeSync device instances.
     This class enable singleton behavior and overrides all necessary abstract
     methods from `MutableSet`.
     """
-    _instance: Self | None = None
 
-    def __new__(cls: type[Self]) -> Self:
-        """Make DeviceContainer a singleton."""
-        if cls._instance is None:
-            print('Creating the object')
-            cls._instance = super().__new__(cls)
-        return cls._instance
+    __slots__ = ('__weakref__', '_data')
 
     def __init__(
             self, sequence: Sequence[VeSyncBaseDevice] | None = None,
@@ -89,24 +86,20 @@ class DeviceContainerBase(MutableSet[VeSyncBaseDevice]):
         return value in self._data
 
 
-class DeviceContainer(DeviceContainerBase):
+class DeviceContainer(_DeviceContainerBase):
     """Container for VeSync device instances.
 
     The `DeviceContainer` class is a container for VeSync device instances that
     inherits behavior from `MutableSet`. The container contains all VeSync devices
     and is used to store and manage device instances. The container is a singleton
-    and is instantiated in the `pyvesync.vesync.VeSync` class. This should not be
-    manually instantiated.
+    and is instantiated directly by the `DeviceContainerInstance` in the
+    `device_container` module and imported as needed.
 
     Use the `DeviceContainer.add_new_devices(device_list_model)` class method to
     add devices from the device list model API response and `remove_stale_devices`
     to remove stale devices from the device list API response model.
     The device list response model is built in the `pyvesync.vesync.VeSync.get_devices`
     method.
-
-    Attributes:
-        _instance ('DeviceContainer' | None): Singleton instance of the
-            DeviceContainer class
 
     Notes:
         The :obj:`DeviceContainer.add(device: VeSyncBaseDevice)` method accepts a valid
@@ -124,6 +117,9 @@ class DeviceContainer(DeviceContainerBase):
         container.add_device_from_model(device)
         ```
     """
+
+    __slots__ = ()
+
     def __init__(
             self, sequence: Sequence[VeSyncBaseDevice] | None = None,
             /,
@@ -198,10 +194,14 @@ class DeviceContainer(DeviceContainerBase):
 
     def remove_by_cid(self, cid: str) -> None:
         """Remove a device by cid."""
+        device_found: VeSyncBaseDevice | None = None
         for device in self._data:
             if device.cid == cid:
-                self.remove(device)
-                return
+                device_found = device
+                break
+        if device_found is not None:
+            self.remove(device_found)
+            return
 
     def discard(self, value: VeSyncBaseDevice) -> None:
         """Discard a device from the container."""
@@ -219,10 +219,13 @@ class DeviceContainer(DeviceContainerBase):
         """
         device_list = device_list_result.result.list
         new_hashes = [hash(device.cid+str(device.subDeviceNo)) for device in device_list]
+        remove_cids = []
         for device in self._data:
             if hash(device) not in new_hashes:
                 logger.debug("Removing stale device %s", device.device_name)
-                self.remove(device)
+                remove_cids.append(device.cid)
+        for cid in remove_cids:
+            self.remove_by_cid(cid)
 
     def add_new_devices(
         self, device_list_result: ResponseDeviceListModel, manager: VeSync
@@ -294,3 +297,6 @@ class DeviceContainer(DeviceContainerBase):
         """Return a list of devices that are air fryers."""
         return [device for device in self
                 if device.product_type == ProductTypes.AIR_FRYER]
+
+
+DeviceContainerInstance = DeviceContainer()

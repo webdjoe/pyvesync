@@ -22,14 +22,39 @@ if TYPE_CHECKING:
     from pyvesync import VeSync
     from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
     from pyvesync.device_map import PurifierMap
-    from pyvesync.utils.helpers import Timer
 
 
 logger = logging.getLogger(__name__)
 
 
 class PurifierState(DeviceState):
-    """Base state class for Purifiers."""
+    """Base state class for Purifiers.
+
+    Attributes:
+        mode (str): Current mode of the purifier.
+        fan_level (int): Current fan level of the purifier.
+        fan_set_level (int): Set fan level of the purifier.
+        filter_life (int): Filter life percentage of the purifier.
+        auto_preference_type (str): Auto preference type of the purifier.
+        auto_room_size (int): Auto room size of the purifier.
+        air_quality_level (AirQualityLevel): Air quality level of the purifier.
+        child_lock (bool): Child lock status of the purifier.
+        display_status (str): Display status of the purifier.
+        display_set_state (str): Display set state of the purifier.
+        display_forever (bool): Display forever status of the purifier.
+        timer (Timer): Timer object for the purifier.
+        pm25 (int): PM2.5 value of the purifier.
+        pm1 (int): PM1 value of the purifier.
+        pm10 (int): PM10 value of the purifier.
+        aq_percent (int): Air quality percentage of the purifier.
+        light_detection_switch (str): Light detection switch status of the purifier.
+        light_detection_status (str): Light detection status of the purifier.
+        nightlight_status (str): Nightlight status of the purifier.
+        fan_rotate_angle (int): Fan rotate angle of the purifier.
+
+    Note:
+        Not all attributes are supported by all models.
+    """
 
     __slots__ = (
         "_air_quality_level",
@@ -52,7 +77,6 @@ class PurifierState(DeviceState):
         "pm1",
         "pm10",
         "pm25",
-        "timer",
     )
 
     def __init__(
@@ -75,7 +99,6 @@ class PurifierState(DeviceState):
         self.display_status: str = DeviceStatus.UNKNOWN
         self.display_set_state: str = DeviceStatus.UNKNOWN
         self.display_forever: bool = False
-        self.timer: Timer | None = None
         # Attributes not supported by all purifiers
         # When update is first called, devices that support these attributes will
         # update them from NOT_SUPPORTED, whether to None or another value.

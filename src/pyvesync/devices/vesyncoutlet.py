@@ -5,22 +5,30 @@ import logging
 from typing import TYPE_CHECKING
 from deprecated import deprecated
 
-from pyvesync.base_devices.outlet_base import VeSyncOutlet
-from pyvesync.models.outlet_models import Response7AOutlet
-from pyvesync.utils.helpers import Helpers
+from pyvesync.utils.helpers import Helpers, Timer
 from pyvesync.utils.logs import LibraryLogger
-from pyvesync.models.base_models import RequestHeaders, DefaultValues
-from pyvesync.utils.device_mixins import BypassV1Mixin
+
 from pyvesync.const import DeviceStatus, ConnectionStatus, NightlightModes
+from pyvesync.base_devices.outlet_base import VeSyncOutlet
+from pyvesync.models.base_models import RequestHeaders, DefaultValues
+from pyvesync.utils.device_mixins import (
+    BypassV1Mixin,
+    process_bypassv1_result,
+    BypassV2Mixin,
+    process_bypassv2_results,
+)
+from pyvesync.models.outlet_models import Response7AOutlet
+from pyvesync.models.bypass_models import TimerModels
 from pyvesync.models.outlet_models import (
     Response10ADetails,
     Request15ADetails,
     Request15ANightlight,
     Response15ADetails,
     ResponseOutdoorDetails,
-    ResponseBSDGO1Details,
+    ResponseBSDGO1OutletResult,
     Request15AStatus,
     RequestOutdoorStatus,
+    Timer7AItem,
     )
 
 if TYPE_CHECKING:
@@ -71,26 +79,24 @@ class VeSyncOutlet7A(VeSyncOutlet):
         return headers
 
     async def get_details(self) -> None:
-        r_bytes, _ = await self.manager.async_call_api(
+        r_dict, _ = await self.manager.async_call_api(
             '/v1/device/' + self.cid + '/detail',
             'get',
             headers=self._build_headers(),
         )
 
-        r = Helpers.try_json_loads(r_bytes)
-
-        if not isinstance(r, dict):
+        if not isinstance(r_dict, dict):
             LibraryLogger.log_device_api_response_error(
                 logger, self.device_name, self.device_type,
                 'get_details', "Response is not valid JSON"
             )
             return
 
-        if 'error' in r:
-            r = Helpers.process_dev_response(logger, "get_details", self, r_bytes)
+        if 'error' in r_dict:
+            _ = Helpers.process_dev_response(logger, "get_details", self, r_dict)
             return
         self.state.update_ts()
-        resp_model = Response7AOutlet.from_dict(r)
+        resp_model = Response7AOutlet.from_dict(r_dict)
         self.state.connection_status = ConnectionStatus.ONLINE
         self.state.device_status = resp_model.deviceStatus
         self.state.active_time = resp_model.activeTime
@@ -115,7 +121,7 @@ class VeSyncOutlet7A(VeSyncOutlet):
         if toggle is None:
             toggle = self.state.device_status != DeviceStatus.ON
         toggle_str = DeviceStatus.ON if toggle else DeviceStatus.OFF
-        r_bytes, status_code = await self.manager.async_call_api(
+        r_dict, status_code = await self.manager.async_call_api(
             f'/v1/wifi-switch-1.3/{self.cid}/status/{toggle_str}',
             'put',
             headers=Helpers.req_headers(self.manager),
@@ -127,10 +133,8 @@ class VeSyncOutlet7A(VeSyncOutlet):
                 'toggle_switch', "Response code is not 200"
             )
 
-        r = Helpers.try_json_loads(r_bytes)
-
-        if isinstance(r, dict) and 'error' in r:
-            r = Helpers.process_dev_response(logger, "get_details", self, r_bytes)
+        if isinstance(r_dict, dict) and 'error' in r_dict:
+            _ = Helpers.process_dev_response(logger, "get_details", self, r_dict)
             return False
 
         self.state.update_ts()
@@ -138,11 +142,80 @@ class VeSyncOutlet7A(VeSyncOutlet):
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
-    async def turn_on(self) -> bool:
-        return await self.toggle_switch(True)
+    async def get_timer(self) -> None:
+        r_dict, status_code = await self.manager.async_call_api(
+            f"/v2/device/{self.cid}/timer",
+            "get",
+            headers=Helpers.req_headers(self.manager),
+        )
+        if not r_dict or status_code != 200:
+            logger.debug("No timer set.")
+            self.state.timer = None
+            return
+        if isinstance(r_dict, list) and len(r_dict) > 0:
+            timer = r_dict[0]
+            timer_model = Timer7AItem.from_dict(timer)
+            self.state.timer = Timer(
+                timer_duration=int(timer_model.counterTimer),
+                id=int(timer_model.timerID),
+                action=timer_model.action,
+            )
+            if timer_model.timerStatus == 'off':
+                self.state.timer.pause()
+            return
+        self.state.timer = None
 
-    async def turn_off(self) -> bool:
-        return await self.toggle_switch(False)
+    async def set_timer(self, duration: int, action: str | None = None) -> bool:
+        if action not in [DeviceStatus.ON, DeviceStatus.OFF]:
+            logger.error("Invalid action for timer - %s", action)
+            return False
+        update_dict = {
+            'action': action,
+            'counterTimer': duration,
+            "timerStatus": "start",
+            'conflictAwayIds': [],
+            'conflictScheduleIds': [],
+            'conflictTimerIds': [],
+        }
+        r_dict, status_code = await self.manager.async_call_api(
+            f"/v2/device/{self.cid}/timer",
+            "post",
+            headers=Helpers.req_headers(self.manager),
+            json_object=update_dict,
+        )
+        if status_code != 200:
+            logger.debug("Failed to set timer.")
+            return False
+        # r = Helpers.process_dev_response(logger, "set_timer", self, r_dict)
+
+        if not isinstance(r_dict, dict):
+            return False
+
+        if 'error' in r_dict:
+            logger.debug("Error in response: %s", r_dict['error'])
+            return False
+        result_model = TimerModels.ResultV1SetTimer.from_dict(r_dict)
+        if result_model.timerID == '':
+            logger.debug("Unable to set timer.")
+            if result_model.conflictTimerIds:
+                logger.debug("Conflicting timer IDs - %s", result_model.conflictTimerIds)
+            return False
+        self.state.timer = Timer(duration, action, int(result_model.timerID))
+        return True
+
+    async def clear_timer(self) -> bool:
+        if self.state.timer is None:
+            logger.debug("No timer set, nothing to clear, run get_timer().")
+            return False
+        _, status_code = await self.manager.async_call_api(
+            f"/v2/device/{self.cid}/timer/{self.state.timer.id}",
+            "delete",
+            headers=Helpers.req_headers(self.manager),
+        )
+        if status_code != 200:
+            return False
+        self.state.timer = None
+        return True
 
 
 class VeSyncOutlet10A(VeSyncOutlet):
@@ -196,13 +269,13 @@ class VeSyncOutlet10A(VeSyncOutlet):
     async def get_details(self) -> None:
         body = self._build_detail_request('devicedetail')
 
-        r_bytes, _ = await self.manager.async_call_api(
+        r_dict, _ = await self.manager.async_call_api(
             '/10a/v1/device/devicedetail',
             'post',
             headers=Helpers.req_headers(self.manager),
             json_object=body,
         )
-        r = Helpers.process_dev_response(logger, "get_details", self, r_bytes)
+        r = Helpers.process_dev_response(logger, "get_details", self, r_dict)
         if r is None:
             return
 
@@ -221,13 +294,13 @@ class VeSyncOutlet10A(VeSyncOutlet):
         body = self._build_status_request(toggle_str)
         headers = self._build_headers()
 
-        r_bytes, _ = await self.manager.async_call_api(
+        r_dict, _ = await self.manager.async_call_api(
             '/10a/v1/device/devicestatus',
             'put',
             headers=headers,
             json_object=body,
         )
-        response = Helpers.process_dev_response(logger, "toggle_switch", self, r_bytes)
+        response = Helpers.process_dev_response(logger, "toggle_switch", self, r_dict)
         if response is None:
             return False
 
@@ -247,21 +320,14 @@ class VeSyncOutlet15A(BypassV1Mixin, VeSyncOutlet):
         super().__init__(details, manager, feature_map)
 
     async def get_details(self) -> None:
-        # body = self._build_request('deviceDetail')
-        # r_bytes, _ = await self.manager.async_call_api(
-        #     '/cloud/v1/deviceManaged/deviceDetail',
-        #     'post',
-        #     headers=Helpers.req_header_bypass(),
-        #     json_object=body,
-        # )
 
-        r_bytes = await self.call_bypassv1_api(
+        r_dict = await self.call_bypassv1_api(
             Request15ADetails,
             method='deviceDetail',
             endpoint='deviceDetail'
         )
 
-        r = Helpers.process_dev_response(logger, "get_details", self, r_bytes)
+        r = Helpers.process_dev_response(logger, "get_details", self, r_dict)
         if r is None:
             return
 
@@ -281,13 +347,13 @@ class VeSyncOutlet15A(BypassV1Mixin, VeSyncOutlet):
         if toggle is None:
             toggle = self.state.device_status != DeviceStatus.ON
         toggle_str = DeviceStatus.ON if toggle else DeviceStatus.OFF
-        r_bytes = await self.call_bypassv1_api(
+        r_dict = await self.call_bypassv1_api(
             Request15AStatus,
             update_dict={'status': toggle_str},
             method='deviceStatus',
             endpoint='deviceStatus'
         )
-        response = Helpers.process_dev_response(logger, "toggle_switch", self, r_bytes)
+        response = Helpers.process_dev_response(logger, "toggle_switch", self, r_dict)
         if response is None:
             return False
 
@@ -301,7 +367,7 @@ class VeSyncOutlet15A(BypassV1Mixin, VeSyncOutlet):
             logger.error("Invalid nightlight mode - %s", mode)
             return False
         mode = mode.lower()
-        r_bytes = await self.call_bypassv1_api(
+        r_dict = await self.call_bypassv1_api(
             Request15ANightlight,
             update_dict={'mode': mode},
             method='outletNightLightCtl',
@@ -309,13 +375,86 @@ class VeSyncOutlet15A(BypassV1Mixin, VeSyncOutlet):
         )
 
         response = Helpers.process_dev_response(
-            logger, "set_nightlight_state", self, r_bytes
+            logger, "set_nightlight_state", self, r_dict
             )
         if response is None:
             return False
 
         self.state.nightlight_status = mode
         self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def get_timer(self) -> None:
+        method = 'getTimers'
+        endpoint = f'/timer/{method}'
+        r_dict = await self.call_bypassv1_api(
+            Request15ADetails,
+            method=method,
+            endpoint=endpoint
+        )
+
+        r = process_bypassv1_result(self, logger, "get_timer", r_dict)
+        if r is None:
+            return
+        result_model = TimerModels.ResultV1GetTimer.from_dict(r)
+        timers = result_model.timers
+        if not isinstance(timers, list) or len(timers) == 0:
+            self.state.timer = None
+            return
+        timer = timers[0]
+        if not isinstance(timer, TimerModels.TimerItemV1):
+            logger.debug("Invalid timer model - %s", timer)
+            return
+        self.state.timer = Timer(
+            timer_duration=int(timer.counterTimer),
+            id=int(timer.timerID),
+            action=timer.action,
+        )
+
+    async def set_timer(self, duration: int, action: str | None = None) -> bool:
+        if action not in [DeviceStatus.ON, DeviceStatus.OFF]:
+            logger.error("Invalid action for timer - %s", action)
+            return False
+        update_dict = {
+            'action': action,
+            'counterTime': str(duration),
+        }
+        r_dict = await self.call_bypassv1_api(
+            TimerModels.RequestV1SetTime,
+            update_dict=update_dict,
+            method='addTimer',
+            endpoint='timer/addTimer'
+        )
+        result = process_bypassv1_result(self, logger, "set_timer", r_dict)
+        if result is None:
+            return False
+        result_model = TimerModels.ResultV1SetTimer.from_dict(result)
+        self.state.timer = Timer(duration, action, int(result_model.timerID))
+        return True
+
+    async def clear_timer(self) -> bool:
+        if self.state.timer is None:
+            logger.debug("No timer set, nothing to clear, run get_timer().")
+            return False
+        if self.state.timer.time_remaining == 0:
+            logger.debug("Timer already ended.")
+            self.state.timer = None
+            return True
+        r_dict = await self.call_bypassv1_api(
+            TimerModels.RequestV1ClearTimer,
+            {'timerId': str(self.state.timer.id)},
+            method='deleteTimer',
+            endpoint='timer/deleteTimer'
+        )
+        r_dict = Helpers.process_dev_response(
+            logger, "clear_timer", self, r_dict
+        )
+        if r_dict is None:
+            if self.last_response is not None and \
+                    self.last_response.name == 'TIMER_NOT_EXISTS':
+                self.state.timer = None
+            return False
+        self.state.timer = None
         return True
 
     async def turn_on_nightlight(self) -> bool:
@@ -342,12 +481,12 @@ class VeSyncOutdoorPlug(BypassV1Mixin, VeSyncOutlet):
         super().__init__(details, manager, feature_map)
 
     async def get_details(self) -> None:
-        r_bytes = await self.call_bypassv1_api(
+        r_dict = await self.call_bypassv1_api(
             Request15ADetails,
             method='deviceDetail',
             endpoint='deviceDetail'
         )
-        r = Helpers.process_dev_response(logger, "get_details", self, r_bytes)
+        r = Helpers.process_dev_response(logger, "get_details", self, r_dict)
         if r is None:
             return
 
@@ -371,14 +510,14 @@ class VeSyncOutdoorPlug(BypassV1Mixin, VeSyncOutlet):
             toggle = self.state.device_status != DeviceStatus.ON
         status = DeviceStatus.ON if toggle else DeviceStatus.OFF
 
-        r_bytes = await self.call_bypassv1_api(
+        r_dict = await self.call_bypassv1_api(
             RequestOutdoorStatus,
             update_dict={'switchNo': self.sub_device_no, 'status': status},
             method='deviceStatus',
             endpoint='deviceStatus'
         )
 
-        response = Helpers.process_dev_response(logger, "toggle", self, r_bytes)
+        response = Helpers.process_dev_response(logger, "toggle", self, r_dict)
         if response is None:
             return False
 
@@ -386,8 +525,90 @@ class VeSyncOutdoorPlug(BypassV1Mixin, VeSyncOutlet):
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
+    async def get_timer(self) -> None:
+        method = 'getTimers'
+        endpoint = f'/timer/{method}'
+        r_dict = await self.call_bypassv1_api(
+            TimerModels.RequestV1GetTimer,
+            {'switchNo': self.sub_device_no},
+            method=method,
+            endpoint=endpoint
+        )
 
-class VeSyncOutletBSDGO1(VeSyncOutlet):
+        r = process_bypassv1_result(self, logger, "get_timer", r_dict)
+        if r is None:
+            return
+        result_model = TimerModels.ResultV1GetTimer.from_dict(r)
+        timers = result_model.timers
+        if not isinstance(timers, list) or len(timers) == 0:
+            self.state.timer = None
+            return
+        if len(timers) > 1:
+            logger.debug(
+                (
+                    (
+                        "Multiple timers found - %s, this method "
+                        "will only return the most recent timer created."
+                    ),
+                ),
+                timers,
+            )
+        timer = timers[0]
+        if not isinstance(timer, TimerModels.TimerItemV1):
+            logger.debug("Invalid timer model - %s", timer)
+            return
+        self.state.timer = Timer(
+            timer_duration=int(timer.counterTimer),
+            id=int(timer.timerID),
+            action=timer.action,
+        )
+
+    async def set_timer(self, duration: int, action: str | None = None) -> bool:
+        if action not in [DeviceStatus.ON, DeviceStatus.OFF]:
+            logger.error("Invalid action for timer - %s", action)
+            return False
+        update_dict = {
+            'action': action,
+            'counterTime': str(duration),
+            'switchNo': self.sub_device_no,
+        }
+        r_dict = await self.call_bypassv1_api(
+            TimerModels.RequestV1SetTime,
+            update_dict=update_dict,
+            method='addTimer',
+            endpoint='timer/addTimer'
+        )
+        result = process_bypassv1_result(self, logger, "set_timer", r_dict)
+        if result is None:
+            return False
+        result_model = TimerModels.ResultV1SetTimer.from_dict(result)
+        self.state.timer = Timer(duration, action, int(result_model.timerID))
+        return True
+
+    async def clear_timer(self) -> bool:
+        if self.state.timer is None:
+            logger.debug("No timer set, nothing to clear, run get_timer().")
+            return False
+        if self.state.timer.time_remaining == 0:
+            logger.debug("Timer already ended.")
+            self.state.timer = None
+            return True
+        r_dict = await self.call_bypassv1_api(
+            TimerModels.RequestV1ClearTimer,
+            {'timerId': str(self.state.timer.id)},
+            method='deleteTimer',
+            endpoint='timer/deleteTimer'
+        )
+        r_dict = Helpers.process_dev_response(
+            logger, "clear_timer", self, r_dict
+        )
+        if r_dict is None:
+            return False
+        self.state.timer = None
+        return True
+
+
+class VeSyncOutletBSDGO1(BypassV2Mixin, VeSyncOutlet):
     """VeSync BSDGO1 smart plug."""
 
     __slots__ = ()
@@ -396,79 +617,34 @@ class VeSyncOutletBSDGO1(VeSyncOutlet):
                  manager: VeSync, feature_map: OutletMap) -> None:
         """Initialize BSDGO1 smart plug class."""
         super().__init__(details, manager, feature_map)
-        self.request_keys = [
-            "acceptLanguage",
-            "accountID",
-            "appVersion",
-            "cid",
-            "configModule",
-            "deviceRegion",
-            "phoneBrand",
-            "phoneOS",
-            "timeZone",
-            "token",
-            "traceId",
-        ]
-
-    def _build_request(
-            self, method: str = "bypassV2", payload: dict | None = None
-            ) -> dict:
-        """Build request for BSDG01 Smart Plug."""
-        body = Helpers.get_class_attributes(DefaultValues, self.request_keys)
-        body.update(Helpers.get_class_attributes(self.manager, self.request_keys))
-        body.update(Helpers.get_class_attributes(self, self.request_keys))
-        body['payload'] = payload or {}
-        body['method'] = method
-        return body
 
     async def get_details(self) -> None:
-        payload = {
-            'method': 'getProperty',
-            'source': 'APP',
-            'data': {}
-        }
-        body = self._build_request(payload=payload)
+        r_dict = await self.call_bypassv2_api('getProperty')
 
-        r_bytes, _ = await self.manager.async_call_api(
-            '/cloud/v2/deviceManaged/bypassV2',
-            'post',
-            headers=Helpers.req_header_bypass(),
-            json_object=body,
-        )
-        r = Helpers.process_dev_response(logger, "get_details", self, r_bytes)
-        if r is None:
+        result = process_bypassv2_results(self, logger, 'get_details', r_dict)
+        if result is None:
             return
 
-        resp_model = ResponseBSDGO1Details.from_dict(r)
-        device_state = resp_model.result.powerSwitch_1
+        resp_model = ResponseBSDGO1OutletResult.from_dict(result)
+        device_state = resp_model.powerSwitch_1
         str_status = DeviceStatus.ON if device_state == 1 else DeviceStatus.OFF
         self.state.device_status = str_status
-        self.state.connection_status = resp_model.result.connectionStatus
-        self.state.active_time = resp_model.result.active_time
+        self.state.connection_status = resp_model.connectionStatus
+        self.state.active_time = resp_model.active_time
 
     async def toggle_switch(self, toggle: bool | None = None) -> bool:
         if toggle is None:
             toggle = self.state.device_status != DeviceStatus.ON
         toggle_int = 1 if toggle else 0
-
-        payload = {
-            'data': {'powerSwitch_1': toggle_int},
-            'method': 'setProperty',
-            'source': 'APP'
-        }
-        body = self._build_request(payload=payload)
-
-        r_bytes, _ = await self.manager.async_call_api(
-            '/cloud/v2/deviceManaged/bypassV2',
-            'post',
-            headers=Helpers.req_header_bypass(),
-            json_object=body,
+        r_dict = await self.call_bypassv2_api(
+            "setProperty", data={"powerSwitch_1": toggle_int}
         )
-        r = Helpers.process_dev_response(logger, "toggle_switch", self, r_bytes)
+        r = Helpers.process_dev_response(logger, "toggle_switch", self, r_dict)
         if r is None:
             return False
 
         self.state.device_status = DeviceStatus.ON if toggle else DeviceStatus.OFF
+        self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
     @deprecated(reason="Use toggle_switch(toggle: bool | None) instead")

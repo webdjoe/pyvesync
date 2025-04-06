@@ -5,50 +5,31 @@ These models inherit from `ResponseBaseModel` and `RequestBaseModel` from the
 """
 from __future__ import annotations
 from dataclasses import dataclass
-import orjson
-from mashumaro.types import Discriminator
-from mashumaro.config import BaseConfig
-from pyvesync.const import IntFlag
 from mashumaro.mixins.orjson import DataClassORJSONMixin
-from pyvesync.models.base_models import (
-    RequestBaseModel,
-    ResponseCodeModel,
-    )
+
+from pyvesync.const import IntFlag
+from pyvesync.models.bypass_models import (
+    RequestBypassV2,
+    BypassV2RequestPayload,
+    ResponseBypassV2,
+    BypassV2OuterResult,
+    BypassV2InnerResult,
+)
 
 
 @dataclass
-class ResponseFanBase(ResponseCodeModel):
+class ResponseFanBase(ResponseBypassV2):
     """Fan Base Response Dict."""
-    result: OuterBypassV2Result
-
-    class Config(BaseConfig):
-        """Config for mashumaro serialization."""
-        orjson_options = orjson.OPT_NON_STR_KEYS
-        forbid_extra_keys = False
 
 
 @dataclass
-class OuterBypassV2Result(DataClassORJSONMixin):
+class OuterBypassV2Result(BypassV2OuterResult):
     """Fan Result Dict."""
-    traceId: str
-    code: int
-    result: InnerFanBaseResult | None = None
-
-
-# Inner Fan Result Models for Core and Everest/Vital Fans
-# Correct subclass is determined by mashumaro's discriminator
-
-@dataclass
-class InnerFanBaseResult(DataClassORJSONMixin):
-    """Base class for inner purifier results model."""
-
-    class Config(BaseConfig):
-        """Configure the results model to use subclass discriminator."""
-        discriminator = Discriminator(include_subtypes=True)
+    result: BypassV2InnerResult | None = None
 
 
 @dataclass
-class TowerFanResult(InnerFanBaseResult):
+class TowerFanResult(BypassV2InnerResult):
     """Vital 100S/200S and Everest Fan Result Model."""
     powerSwitch: int
     filterLifePercent: int
@@ -84,29 +65,11 @@ class FanSleepPreferences(DataClassORJSONMixin):
 
 
 @dataclass
-class RequestFanStatus(RequestBaseModel):
+class RequestFanStatus(RequestBypassV2):
     """Fan Status Request Dict."""
-    acceptLanguage: str
-    accountID: str
-    appVersion: str
-    cid: str
-    configModule: str
-    debugMode: bool
-    method: str
-    phoneBrand: str
-    phoneOS: str
-    traceId: str
-    timeZone: str
-    token: str
-    userCountryCode: str
-    deviceId: str
-    configModel: str
     payload: RequestFanPayload
 
 
 @dataclass
-class RequestFanPayload(RequestBaseModel):
+class RequestFanPayload(BypassV2RequestPayload):
     """Fan Payload Request Dict."""
-    data: dict
-    method: str
-    source: str = "APP"

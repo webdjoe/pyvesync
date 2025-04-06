@@ -17,7 +17,6 @@ if TYPE_CHECKING:
     from pyvesync import VeSync
     from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
     from pyvesync.device_map import FanMap
-    from pyvesync.utils.helpers import Timer
 
 
 logger = logging.getLogger(__name__)
@@ -71,7 +70,6 @@ class FanState(DeviceState):
         "sleep_preference_type",
         "temperature",
         "thermal_comfort",
-        "timer",
     )
 
     def __init__(
@@ -105,7 +103,6 @@ class FanState(DeviceState):
         self.display_status: str = DeviceStatus.UNKNOWN
         self.display_set_state: str = DeviceStatus.UNKNOWN
         self.displaying_type: str = StrFlag.NOT_SUPPORTED
-        self.timer: Timer | None = None
 
 
 class VeSyncFanBase(VeSyncBaseToggleDevice):

@@ -5,7 +5,7 @@ import logging
 from typing import TYPE_CHECKING
 from typing_extensions import deprecated
 
-from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice, DeviceState
+from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseToggleDevice, DeviceState
 from pyvesync.const import (
     HumidifierFeatures,
     HumidifierModes,
@@ -18,7 +18,6 @@ if TYPE_CHECKING:
     from pyvesync import VeSync
     from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
     from pyvesync.device_map import HumidifierMap
-    from pyvesync.utils.helpers import Timer
 
 
 logger = logging.getLogger(__name__)
@@ -52,7 +51,6 @@ class HumidifierState(DeviceState):
         nightlight_brightness (int): Nightlight brightness level.
         nightlight_status (str): Nightlight status.
         temperature (int): Current temperature.
-        timer (Timer): Timer object.
         warm_mist_enabled (bool): Warm mist enabled status.
         warm_mist_level (int): Warm mist level.
         water_lacks (bool): Water lacks status.
@@ -80,7 +78,6 @@ class HumidifierState(DeviceState):
         "nightlight_brightness",
         "nightlight_status",
         "temperature",
-        "timer",
         "warm_mist_enabled",
         "warm_mist_level",
         "water_lacks",
@@ -116,7 +113,6 @@ class HumidifierState(DeviceState):
         self.water_lacks: bool = False
         self.water_tank_lifted: bool = False
         self.temperature: int = IntFlag.NOT_SUPPORTED
-        self.timer: Timer | None = None
         # Superior 6000S States
         self.auto_preference: int = IntFlag.NOT_SUPPORTED
         self.filter_life_percent: int = IntFlag.NOT_SUPPORTED
@@ -175,45 +171,37 @@ class HumidifierState(DeviceState):
         Returns:
             int | None: Humidity level.
         """
-        if self.humidity == IntFlag.NOT_SUPPORTED:
-            return None
         return self.humidity
 
     @property
-    def drying_mode_state(self) -> str | None:
+    def drying_mode_state(self) -> str:
         """Return the drying mode state.
 
         Returns:
             str | None: Drying mode state.
         """
-        if self.drying_mode_status == StrFlag.NOT_SUPPORTED:
-            return None
         return self.drying_mode_status
 
     @property
-    def drying_mode_seconds_remaining(self) -> int | None:
+    def drying_mode_seconds_remaining(self) -> int:
         """Return the drying mode seconds remaining.
 
         Return:
             int | None: Drying mode seconds remaining.
         """
-        if self.drying_mode_time_remain == IntFlag.NOT_SUPPORTED:
-            return None
         return self.drying_mode_time_remain
 
     @property
-    def drying_mode_enabled(self) -> bool | None:
+    def drying_mode_enabled(self) -> bool:
         """Return True if drying mode is enabled.
 
         Returns:
             bool | None: True if drying mode is enabled, False otherwise.
         """
-        if self.drying_mode_status == StrFlag.NOT_SUPPORTED:
-            return None
         return self.drying_mode_status == DeviceStatus.ON
 
 
-class VeSyncHumidifier(VeSyncBaseDevice):
+class VeSyncHumidifier(VeSyncBaseToggleDevice):
     """VeSyncHumdifier Base Class.
 
     This is the base device to be inherited by all Humidifier devices.

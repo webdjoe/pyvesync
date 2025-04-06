@@ -19,6 +19,7 @@ default values.
 """
 from __future__ import annotations
 from time import time
+from typing import ClassVar
 from dataclasses import dataclass
 import orjson
 from mashumaro.mixins.orjson import DataClassORJSONMixin
@@ -33,6 +34,7 @@ from pyvesync.const import (
     DEFAULT_LANGUAGE,
     DEFAULT_TZ,
     BYPASS_HEADER_UA,
+    TERMINAL_ID,
     )
 
 
@@ -42,6 +44,11 @@ RequestHeaders = {
 }
 
 
+class BaseModelConfig(BaseConfig):
+    """Base config for dataclasses."""
+    orjson_options = orjson.OPT_NON_STR_KEYS
+
+
 @dataclass
 class RequestBaseModel(DataClassORJSONMixin):
     """Base request model for API requests.
@@ -49,10 +56,10 @@ class RequestBaseModel(DataClassORJSONMixin):
     Forbids extra keys in the request JSON.
     """
 
-    class Config(BaseConfig):
+    class Config(BaseModelConfig):
         """orjson config for dataclasses."""
-        orjson_options = orjson.OPT_NON_STR_KEYS
         forbid_extra_keys = True
+        orjson_options = orjson.OPT_NON_STR_KEYS
 
 
 @dataclass
@@ -76,6 +83,7 @@ class DefaultValues:
     Attributes for the default values of the request fields
     and static methods for preparing calculated fields.
     """
+    _call_number: ClassVar[int] = 0
     userType: str = USER_TYPE
     appVersion: str = APP_VERSION
     phoneBrand: str = PHONE_BRAND
@@ -86,12 +94,19 @@ class DefaultValues:
     userCountryCode: str = DEFAULT_REGION
     acceptLanguage: str = DEFAULT_LANGUAGE
     timeZone: str = DEFAULT_TZ
+    terminalId: str = TERMINAL_ID
     debugMode: bool = False
 
     @staticmethod
     def traceId() -> str:
         """Trace ID CSRF token."""
         return str(int(time()))
+
+    @staticmethod
+    def newTraceId() -> str:
+        """Generate a new trace ID."""
+        DefaultValues._call_number += 1
+        return f'APP{TERMINAL_ID[-5:-1]}{int(time())}-{DefaultValues._call_number:0>5}'
 
 
 @dataclass

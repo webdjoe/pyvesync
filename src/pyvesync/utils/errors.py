@@ -300,6 +300,13 @@ class ErrorCodes:
                 device_online=True,
                 critical_error=True,
             ),
+            "11022000": ResponseInfo(
+                "BYPASS_CANNOT_SET_LEVEL",
+                ErrorTypes.DEVICE_ERROR,
+                "Cannot set level error",
+                critical_error=False,
+                device_online=True,
+            ),
             "11023000": ResponseInfo(
                 "BYPASS_NTC_BOTTOM_OPEN",
                 ErrorTypes.DEVICE_ERROR,
@@ -361,12 +368,12 @@ class ErrorCodes:
                 "Schedule does not exist",
             ),
             "11503000": ResponseInfo(
-                "BYPASS_TIMER_MAX",
+                "TIMER_MAX",
                 ErrorTypes.CONFIG_ERROR,
                 "Maximum number of timers reached",
             ),
             "11508000": ResponseInfo(
-                "BYPASS_TIMER_NOT_EXIST",
+                "TIMER_NOT_EXIST",
                 ErrorTypes.CONFIG_ERROR,
                 "Timer does not exist",
             ),
@@ -516,6 +523,28 @@ class ErrorCodes:
                 "Device UUID not found",
                 device_online=False,
             ),
+            "12102000": ResponseInfo(
+                "TEM_SENOR_ERROR",
+                ErrorTypes.DEVICE_ERROR,
+                "Temperature sensor error",
+                critical_error=True,
+                device_online=True,
+            ),
+            "12103000": ResponseInfo(
+                "HUM_SENOR_ERROR",
+                ErrorTypes.DEVICE_ERROR,
+                "Humidity sensor error",
+                critical_error=True,
+                device_online=True,
+            ),
+            "12101000": ResponseInfo(
+                "SENSOR_ERROR",
+                ErrorTypes.DEVICE_ERROR,
+                "Sensor error",
+                critical_error=True,
+                device_online=True,
+            ),
+
         }
     )
 
@@ -580,7 +609,7 @@ class VeSyncTokenError(VeSyncError):
 
     def __init__(self) -> None:
         """Initialize the exception with a message."""
-        super().__init__("Token expired or invalid")
+        super().__init__("Token expired or invalid - please re-authenticate")
 
 
 class VeSyncServerError(VeSyncError):
@@ -618,3 +647,26 @@ class VeSyncAPIStatusCodeError(VeSyncError):
         if status_code is not None:
             message = f"VeSync API returned status code {status_code}"
         super().__init__(message)
+
+
+def raise_api_errors(error_info: ResponseInfo) -> None:
+    """Raise the appropriate exception for API error code.
+
+    Raises:
+        VeSyncRateLimitError: Rate limit error
+        VesyncLoginError: Authentication error
+        VeSyncTokenError: Token error
+        VeSyncServerError: Server error
+    """
+    match error_info.error_type:
+        case ErrorTypes.RATE_LIMIT:
+            raise VeSyncRateLimitError
+        case ErrorTypes.AUTHENTICATION:
+            raise VesyncLoginError(error_info.message)
+        case ErrorTypes.TOKEN_ERROR:
+            raise VeSyncTokenError
+        case ErrorTypes.SERVER_ERROR:
+            raise VeSyncServerError(
+                f"{error_info.message} - "
+                "Please report error to github.com/webdjoe/pyvesync/issues"
+            )

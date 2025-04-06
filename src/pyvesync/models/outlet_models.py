@@ -1,7 +1,9 @@
 """Data models for VeSync outlets."""
 from __future__ import annotations
 from dataclasses import dataclass
-from pyvesync.models.bypass_models import RequestBypassV1
+from pyvesync.models.bypass_models import (
+    RequestBypassV1,
+)
 from pyvesync.models.base_models import (
     ResponseCodeModel,
     ResponseBaseModel,
@@ -175,3 +177,12 @@ class ResponseBSDGO1OutletResult(ResponseBaseModel):
     active_time: int
     connectionStatus: str
     code: int
+
+
+@dataclass
+class Timer7AItem(ResponseBaseModel):
+    """Timer item for 7A outlet."""
+    timerID: str
+    counterTimer: int
+    action: str
+    timerStatus: str

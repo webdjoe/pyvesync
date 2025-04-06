@@ -1,13 +1,16 @@
 """Helper functions for VeSync API."""
 from __future__ import annotations
-from collections.abc import Iterator
+
 import hashlib
 import logging
-import time
 import re
-from dataclasses import dataclass, InitVar
-from typing import Any, Literal, NamedTuple, Union, TYPE_CHECKING, TypeVar
+import time
+from collections.abc import Iterator
+from dataclasses import InitVar, dataclass, field
+from typing import TYPE_CHECKING, Any, TypeVar, Union
+
 import orjson
+
 from pyvesync.const import (
     APP_VERSION,
     BYPASS_HEADER_UA,
@@ -15,14 +18,16 @@ from pyvesync.const import (
     MOBILE_ID,
     PHONE_BRAND,
     PHONE_OS,
-    USER_TYPE
-    )
+    USER_TYPE,
+    ConnectionStatus,
+)
+from pyvesync.utils.errors import ErrorCodes, ErrorTypes, ResponseInfo
 from pyvesync.utils.logs import LibraryLogger
-from pyvesync.utils.errors import ErrorCodes
 
 if TYPE_CHECKING:
-    from pyvesync.vesync import VeSync
     from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
+    from pyvesync.vesync import VeSync
+
 
 T = TypeVar('T')
 
@@ -116,7 +121,12 @@ class Helpers:
 
     @staticmethod
     def bump_level(level: T | None, levels: list[T]) -> T:
-        """Increment level by one if not at max level."""
+        """Increment level by one returning to first level if at last.
+
+        Args:
+            level (T | None): Current level.
+            levels (list[T]): List of levels.
+        """
         if level in levels:
             idx = levels.index(level)
             if idx < len(levels) - 1:
@@ -132,13 +142,6 @@ class Helpers:
             return orjson.loads(data)
         except (orjson.JSONDecodeError, TypeError):
             return None
-
-    @staticmethod
-    def bool_to_string_status(status: bool | None | str) -> Literal['on', 'off']:
-        """Get string status from boolean or string."""
-        if isinstance(status, bool):
-            return 'on' if status else 'off'
-        return 'on' if status == 'on' else 'off'
 
     @staticmethod
     def get_class_attributes(target_class: object, keys: list[str]) -> dict[str, Any]:
@@ -395,24 +398,6 @@ class Helpers:
         return hashlib.md5(string.encode('utf-8')).hexdigest()  # noqa: S324
 
     @staticmethod
-    def nested_code_check(response: dict) -> bool:
-        """Return true if all code values are 0.
-
-        Args:
-            response (dict): API response.
-
-        Returns:
-            bool: True if all code values are 0, False otherwise.
-        """
-        if isinstance(response, dict):
-            for key, value in response.items():
-                if (key == 'code' and value != 0) or \
-                        (isinstance(value, dict) and
-                            not Helpers.nested_code_check(value)):
-                    return False
-        return True
-
-    @staticmethod
     def _get_internal_codes(response: dict) -> list[int]:
         """Get all error codes from nested dictionary.
 
@@ -446,75 +431,72 @@ class Helpers:
         logger: logging.Logger,
         method_name: str,
         device: VeSyncBaseDevice,
-        r_bytes: bytes | None,
+        r_dict: dict | None,
     ) -> dict | None:
         """Process JSON response from Bytes.
 
         Parses bytes and checks for errors common to all JSON
         responses, included checking the "code" key for non-zero
-        values. Outputs error to passed logger with formated string
+        values. Outputs error to passed logger with formatted string
         if an error is found.
 
         Args:
             logger (logging.Logger): Logger instance.
             method_name (str): Method used in API call.
-            r_bytes (bytes | None): JSON response from API.
+            r_dict (dict | None): JSON response from API.
             device (VeSyncBaseDevice): Instance of VeSyncBaseDevice.
 
         Returns:
             dict | None: Parsed JSON response or None if there was an error.
         """
         device.state.update_ts()
-        if r_bytes is None or len(r_bytes) == 0:
-            LibraryLogger.log_device_api_response_error(
-                logger,
-                device.device_name,
-                device.device_type,
-                method_name,
-                "Response empty",
+        if r_dict is None:
+            logger.error("No response from API for %s", method_name)
+            device.last_response = ResponseInfo(
+                name="INVALID_RESPONSE",
+                error_type=ErrorTypes.BAD_RESPONSE,
+                message=f"No response from API for {method_name}",
             )
             return None
 
-        try:
-            r = orjson.loads(r_bytes)
-        except (ValueError, orjson.JSONDecodeError):
-            LibraryLogger.log_device_api_response_error(
-                logger,
-                device.device_name,
-                device.device_type,
-                method_name,
-                "Error decoding JSON response",
-            )
-            return None
-
-        error_code = r.get('error', {}).get('code') if 'error' in r else r.get('code')
+        error_code = (
+            r_dict.get("error", {}).get("code")
+            if "error" in r_dict
+            else r_dict.get("code")
+        )
 
         # Get error codes from nested dictionaries.
         if error_code == 0:
-            internal_codes = cls._get_internal_codes(r)
-            if internal_codes:
-                error_code = internal_codes[0]
+            internal_codes = cls._get_internal_codes(r_dict)
+            for code in internal_codes:
+                if code != 0:
+                    error_code = code
+                    break
 
         try:
-            error_int = int(error_code)
+            if isinstance(error_code, str):
+                error_int = int(error_code)
+            elif isinstance(error_code, int):
+                error_int = error_code
+            else:
+                raise TypeError
         except TypeError:
             error_int = -999999999
         error_info = ErrorCodes.get_error_info(error_int)
-        if error_info.critical_error is True:
-            logger.warning("%s critical error - %s",
-                           device.device_name, error_info.message)
         if error_info.device_online is False:
-            device.state.device_status = "off"
-            device.state.connection_status = "offline"
+            device.state.connection_status = ConnectionStatus.OFFLINE
         LibraryLogger.log_device_return_code(
-            logger, method_name, device.device_name, device.device_type,
-            error_code,
-            f"{error_info.error_type} - {error_info.name} {error_info.message}"
-            )
+            logger,
+            method_name,
+            device.device_name,
+            device.device_type,
+            error_int,
+            f"{error_info.error_type} - {error_info.name} {error_info.message}",
+        )
         device.last_response = error_info
         if error_int != 0:
             return None
-        return r
+        return r_dict
 
     @staticmethod
     def code_check(r: dict | None) -> bool:
@@ -523,140 +505,6 @@ class Helpers:
             _LOGGER.error('No response from API')
             return False
         return (isinstance(r, dict) and r.get('code') == 0)
-
-    @staticmethod
-    def build_details_dict(r: dict) -> dict:
-        """Build details dictionary from API response.
-
-        Args:
-            r (dict): API response.
-
-        Returns:
-            dict: Details dictionary.
-
-        Examples:
-            >>> build_details_dict(r)
-            {
-                'active_time': 1234,
-                'energy': 168,
-                'night_light_status': 'on',
-                'night_light_brightness': 50,
-                'night_light_automode': 'on',
-                'power': 1,
-                'voltage': 120,
-            }
-
-        """
-        return {
-            'active_time': r.get('activeTime', 0),
-            'energy': r.get('energy', 0),
-            'night_light_status': r.get('nightLightStatus'),
-            'night_light_brightness': r.get('nightLightBrightness'),
-            'night_light_automode': r.get('nightLightAutomode'),
-            'power': r.get('power', 0),
-            'voltage': r.get('voltage', 0),
-        }
-
-    @staticmethod
-    def build_energy_dict(r: dict) -> dict:
-        """Build energy dictionary from API response.
-
-        Note:
-            For use with **Etekcity** outlets only
-
-        Args:
-            r (dict): API response.
-
-        Returns:
-            dict: Energy dictionary.
-        """
-        return {
-            'energy_consumption_of_today': r.get(
-                    'energyConsumptionOfToday', 0),
-            'cost_per_kwh': r.get('costPerKWH', 0),
-            'max_energy': r.get('maxEnergy', 0),
-            'total_energy': r.get('totalEnergy', 0),
-            'currency': r.get('currency', 0),
-            'data': r.get('data', 0),
-        }
-
-    @staticmethod
-    def build_config_dict(r: dict) -> dict:
-        """Build configuration dictionary from API response.
-
-        Contains firmware version, max power, threshold,
-        power protection status, and energy saving status.
-
-        Note:
-            Energy and power stats only available for **Etekcity**
-            outlets.
-
-        Args:
-            r (dict): API response.
-
-        Returns:
-            dict: Configuration dictionary.
-
-        Examples:
-            >>> build_config_dict(r)
-            {
-                'current_firmware_version': '1.2.3',
-                'latest_firmware_version': '1.2.4',
-                'max_power': 1000,
-                'threshold': 500,
-                'power_protection': 'on',
-                'energy_saving_status': 'on',
-            }
-
-        """
-        if r.get('threshold') is not None:
-            threshold = r.get('threshold')
-        else:
-            threshold = r.get('threshHold')
-        return {
-            'current_firmware_version': r.get('currentFirmVersion'),
-            'latest_firmware_version': r.get('latestFirmVersion'),
-            'maxPower': r.get('maxPower'),
-            'threshold': threshold,
-            'power_protection': r.get('powerProtectionStatus'),
-            'energy_saving_status': r.get('energySavingStatus'),
-        }
-
-    @classmethod
-    def bypass_body_v2(cls, manager: VeSync) -> dict:
-        """Build body dict for second version of bypass api calls.
-
-        Args:
-            manager (VeSyncManager): Instance of VeSyncManager.
-
-        Returns:
-            dict: Body dictionary for bypass api calls.
-
-        Examples:
-            >>> bypass_body_v2(manager)
-            {
-                'timeZone': manager.time_zone,
-                'acceptLanguage': 'en',
-                'accountID': manager.account_id,
-                'token': manager.token,
-                'appVersion': APP_VERSION,
-                'phoneBrand': PHONE_BRAND,
-                'phoneOS': PHONE_OS,
-                'traceId': str(int(time.time())),
-                'method': 'bypassV2',
-                'debugMode': False,
-                'deviceRegion': DEFAULT_REGION,
-            }
-
-        """
-        bdy: dict[str, str | bool] = {}
-        bdy.update(
-            **cls.req_body(manager, "bypass")
-        )
-        bdy['method'] = 'bypassV2'
-        bdy['debugMode'] = False
-        bdy['deviceRegion'] = DEFAULT_REGION
-        return bdy
 
     @staticmethod
     def bypass_header() -> dict:
@@ -678,27 +526,8 @@ class Helpers:
             'User-Agent': 'okhttp/3.12.1',
         }
 
-    @staticmethod
-    def named_tuple_to_str(named_tuple: NamedTuple) -> str:
-        """Convert named tuple to string.
 
-        Args:
-            named_tuple (namedtuple): Named tuple to convert to string.
-
-        Returns:
-            str: String representation of named tuple.
-
-        Examples:
-            >>> named_tuple_to_str(HSV(100, 50, 75))
-            'hue: 100, saturation: 50, value: 75, '
-        """
-        tuple_str = ''
-        for key, val in named_tuple._asdict().items():
-            tuple_str += f'{key}: {val}, '
-        return tuple_str
-
-
-@dataclass
+@dataclass(repr=False)
 class Timer:
     """Dataclass to hold state of timers.
 
@@ -726,9 +555,9 @@ class Timer:
     action: str
     id: int = 1
     remaining: InitVar[int | None] = None
-    _status: str = 'active'
-    _remain: int = 0
-    update_time: int | None = int(time.time())
+    _status: str = field(default='active', init=False, repr=False)
+    _remain: int = field(default=0, init=False, repr=False)
+    _update_time: int = int(time.time())
 
     def __post_init__(self, remaining: int | None) -> None:
         """Set remaining time if provided."""
@@ -737,65 +566,45 @@ class Timer:
         else:
             self._remain = self.timer_duration
 
+    def __repr__(self) -> str:
+        """Return string representation of the Timer object.
+
+        Returns:
+            str: String representation of the Timer object.
+        """
+        return (f'Timer(id={self.id}, duration={self.timer_duration}, '
+                f'status={self.status}, remaining={self.time_remaining})')
+
+    def update_ts(self) -> None:
+        """Update timestamp."""
+        self._update_time = int(time.time())
+
     @property
     def status(self) -> str:
         """Return status of timer."""
-        return self._status
-
-    @status.setter
-    def status(self, status: str) -> None:
-        """Set status of timer."""
-        if status not in ['active', 'paused', 'done']:
-            _LOGGER.error('Invalid status %s', status)
-            raise ValueError
-        self._internal_update()
-        if status == 'done' or self._status == 'done':
-            self.end()
-            return
-        if self.status == 'paused' and status == 'active':
-            self.update_time = int(time.time())
-        if self.status == 'active' and status == 'paused':
-            self.update_time = None
-        self._status = status
-
-    @property
-    def _seconds_since_check(self) -> int:
-        """Return seconds since last update."""
-        if self.update_time is None:
-            return 0
-        return int(time.time()) - self.update_time
+        if self._status in ('paused', 'done'):
+            return self._status
+        if self.time_remaining <= 0:
+            self._status = 'done'
+            return 'done'
+        return 'active'
 
     @property
     def time_remaining(self) -> int:
         """Return remaining seconds."""
-        self._internal_update()
-        return self._remain
+        if self._status == "paused":
+            return self._remain
+        if self._status == "done":
+            return 0
 
-    @time_remaining.setter
-    def time_remaining(self, remaining: int) -> None:
-        """Set time remaining in seconds."""
-        if remaining <= 0:
-            self.end()
-            return
-        self._internal_update()
-        if self._status == 'done':
-            self._remain = 0
-            return
-        self._remain = remaining
+        # 'active' state - compute how much time has ticked away
+        elapsed = time.time() - self._update_time
+        current_remaining = self._remain - elapsed
 
-    def _internal_update(self) -> None:
-        """Use time remaining update status."""
-        if self._status == 'paused':
-            self.update_time = None
-            return
-        if self._status == 'done' or (self._seconds_since_check > self._remain
-                                      and self._status == 'active'):
-            self._status = 'done'
-            self.update_time = None
-            self._remain = 0
-        if self._status == 'active':
-            self._remain = self._remain - self._seconds_since_check
-            self.update_time = int(time.time())
+        # If we've run out of time, mark it done
+        if current_remaining <= 0:
+            return 0
+        return int(current_remaining)
 
     @property
     def running(self) -> bool:
@@ -816,36 +625,29 @@ class Timer:
         """Change status of timer to done."""
         self._status = 'done'
         self._remain = 0
-        self.update_time = None
 
     def start(self) -> None:
         """Restart paused timer."""
         if self._status != 'paused':
             return
-        self.update_time = int(time.time())
-        self.status = 'active'
-
-    def update(self, *, time_remaining: int | None = None,
-               status: str | None = None) -> None:
-        """Update timer.
-
-        Accepts only KW args
-
-        Parameters:
-            time_remaining : int
-                Time remaining on timer in seconds
-            status : str
-                Status of timer, can be active, paused, or done
-        """
-        if time_remaining is not None:
-            self.time_remaining = time_remaining
-        if status is not None:
-            self.status = status
+        self._update_time = int(time.time())
+        self._status = 'active'
 
     def pause(self) -> None:
-        """Pause timer. NOTE - this does not stop the timer via API only locally."""
-        self._internal_update()
-        if self.status == 'done':
-            return
-        self.status = 'paused'
-        self.update_time = None
+        """Pauses the timer if it's active.
+
+        Performs the following steps:
+            - Calculate the up-to-date remaining time,
+            - Update internal counters,
+            - Set _status to 'paused'.
+        """
+        if self._status == "active":
+            # Update the time_remaining based on elapsed
+            current_remaining = self.time_remaining
+            if current_remaining <= 0:
+                self._status = "done"
+                self._remain = 0
+            else:
+                self._status = "paused"
+                self._remain = current_remaining
+            self._update_time = int(time.time())

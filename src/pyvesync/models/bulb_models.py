@@ -67,8 +67,6 @@ class ResponseESL100Detail(ResponseCodeModel):
     traceId: str
     code: int
     msg: str | None
-    module: str | None
-    stacktrace: str | None
     result: ResponseESL100DetailResult
 
 

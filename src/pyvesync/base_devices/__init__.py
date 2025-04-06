@@ -12,11 +12,13 @@ from .outlet_base import VeSyncOutlet, OutletState
 from .fan_base import VeSyncFanBase, FanState
 from .purifier_base import VeSyncPurifier, PurifierState
 from .humidifier_base import VeSyncHumidifier, HumidifierState
+from .fryer_base import VeSyncFryer, FryerState
 
 __all__ = [
     "BulbState",
     "DeviceState",
     "FanState",
+    "FryerState",
     "HumidifierState",
     "OutletState",
     "PurifierState",
@@ -25,6 +27,7 @@ __all__ = [
     "VeSyncBaseToggleDevice",
     "VeSyncBulb",
     "VeSyncFanBase",
+    "VeSyncFryer",
     "VeSyncHumidifier",
     "VeSyncOutlet",
     "VeSyncPurifier",

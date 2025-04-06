@@ -9,42 +9,52 @@ subclass when deserializing.
 """
 from __future__ import annotations
 from dataclasses import dataclass
-import orjson
-from mashumaro.types import Discriminator
+# import orjson
 from mashumaro.config import BaseConfig
-from mashumaro.mixins.orjson import DataClassORJSONMixin
+from mashumaro.types import Discriminator
 from pyvesync.const import IntFlag, StrFlag
+from pyvesync.models.bypass_models import (
+    RequestBypassV1,
+    RequestBypassV2,
+    BypassV2InnerResult,
+    BypassV1Result,
+    ResponseBypassV1,
+    ResponseBypassV2,
+)
 from pyvesync.models.base_models import (
     ResponseBaseModel,
     RequestBaseModel,
-    ResponseCodeModel,
+    # ResponseCodeModel,
     )
 
 
 @dataclass
-class ResponsePurifierBase(ResponseCodeModel):
+class ResponsePurifierBase(ResponseBypassV2):
     """Purifier Base Response Dict."""
-    result: OuterBypassResult
+    # result: OuterBypassResult
 
-    class Config(BaseConfig):
-        """Config for mashumaro serialization."""
-        orjson_options = orjson.OPT_NON_STR_KEYS
-        forbid_extra_keys = False
+    # class Config(BaseConfig):
+    #     """Config for mashumaro serialization."""
+    #     orjson_options = orjson.OPT_NON_STR_KEYS
+    #     forbid_extra_keys = False
 
 
-@dataclass
-class OuterBypassResult:
-    """Purifier Result Dict."""
-    traceId: str
-    code: int
-    result: InnerPurifierBaseResult | None = None
+# @dataclass
+# class OuterBypassResult:
+#     """Purifier Result Dict."""
+#     traceId: str
+#     code: int
+#     result: Union[PurifierV2DetailsResult,
+#                   InnerPurifierBaseResult,
+#                   PurifierCoreDetailsResult,
+#                   None] = None
 
 
 # Inner Purifier Result Models for Core and Everest/Vital Purifiers
 # Correct subclass is determined by mashumaro's discriminator
 
 @dataclass
-class InnerPurifierBaseResult(DataClassORJSONMixin):
+class InnerPurifierBaseResult(BypassV2InnerResult):
     """Base class for inner purifier results model."""
 
     class Config(BaseConfig):
@@ -116,7 +126,7 @@ class PurifierModifyTimerResult(InnerPurifierBaseResult):
 @dataclass
 class PurifierGetTimerResult(InnerPurifierBaseResult):
     """Purifier inner Timer Result Dict."""
-    timers: list[ResponsePurifierTimerItems]
+    timers: list[ResponsePurifierTimerItems] | None
 
 
 @dataclass
@@ -129,23 +139,23 @@ class ResponsePurifierTimerItems(ResponseBaseModel):
 
 
 @dataclass
-class RequestPurifierTimer(RequestBaseModel):
+class RequestPurifierTimer(RequestBypassV2):
     """Purifier Status Request Dict."""
-    acceptLanguage: str
-    accountID: str
-    appVersion: str
-    cid: str
-    configModule: str
-    debugMode: bool
-    deviceRegion: str
-    method: str
-    phoneBrand: str
-    phoneOS: str
-    traceId: str
-    timeZone: str
-    token: str
-    userCountryCode: str
-    payload: RequestPurifierPayload
+    # acceptLanguage: str
+    # accountID: str
+    # appVersion: str
+    # cid: str
+    # configModule: str
+    # debugMode: bool
+    # deviceRegion: str
+    # method: str
+    # phoneBrand: str
+    # phoneOS: str
+    # traceId: str
+    # timeZone: str
+    # token: str
+    # userCountryCode: str
+    # payload: RequestPurifierPayload
 
 
 @dataclass
@@ -153,7 +163,7 @@ class PurifierV2TimerPayloadData(RequestBaseModel):
     """Purifier Timer Payload Data Request Dict."""
     enabled: bool
     startAct: list[PurifierV2TimerActionItems]
-    tmgEvt: PurifierV2EventTiming
+    tmgEvt: PurifierV2EventTiming | None = None
     type: int = 0
     subDeviceNo: int = 0
     repeat: int = 0
@@ -176,32 +186,32 @@ class PurifierV2EventTiming(RequestBaseModel):
 
 
 @dataclass
-class RequestPurifierStatus(RequestBaseModel):
+class RequestPurifierStatus(RequestBypassV2):
     """Purifier Status Request Dict."""
-    acceptLanguage: str
-    accountID: str
-    appVersion: str
-    cid: str
-    configModule: str
-    debugMode: bool
-    method: str
-    phoneBrand: str
-    phoneOS: str
-    traceId: str
-    timeZone: str
-    token: str
-    userCountryCode: str
-    deviceId: str
-    configModel: str
-    payload: RequestPurifierPayload
+    # acceptLanguage: str
+    # accountID: str
+    # appVersion: str
+    # cid: str
+    # configModule: str
+    # debugMode: bool
+    # method: str
+    # phoneBrand: str
+    # phoneOS: str
+    # traceId: str
+    # timeZone: str
+    # token: str
+    # userCountryCode: str
+    # deviceId: str
+    # configModel: str
+    # payload: RequestPurifierPayload
 
 
-@dataclass
-class RequestPurifierPayload(RequestBaseModel):
-    """Purifier Payload Request Dict."""
-    data: dict
-    method: str
-    source: str = "APP"
+# @dataclass
+# class RequestPurifierPayload(RequestBaseModel):
+#     """Purifier Payload Request Dict."""
+#     data: dict
+#     method: str
+#     source: str = "APP"
 
 
 # Internal Purifier Details Models
@@ -231,42 +241,37 @@ class PurifierDetailsExtension(ResponseBaseModel):
 # LV - PUR131S Purifier Models
 
 @dataclass
-class ResponsePurifier131Base(ResponseCodeModel):
+class ResponsePurifier131Base(ResponseBypassV1):
     """Purifier 131 Base Response Dict."""
-    result: Purifier131Result | None = None
-
-    class Config(BaseConfig):
-        """Config for mashumaro serialization."""
-        orjson_options = orjson.OPT_NON_STR_KEYS
-        forbid_extra_keys = False
 
 
 @dataclass
-class RequestPurifier131(RequestBaseModel):
+class RequestPurifier131(RequestBypassV1):
     """Purifier 131 Request Dict."""
-    acceptLanguage: str
-    accountID: str
-    appVersion: str
-    debugMode: bool
-    method: str
-    phoneBrand: str
-    phoneOS: str
-    timeZone: str
-    token: str
-    traceId: str
-    userCountryCode: str
-    uuid: str
     status: str | None = None
+    # acceptLanguage: str
+    # accountID: str
+    # appVersion: str
+    # debugMode: bool
+    # method: str
+    # phoneBrand: str
+    # phoneOS: str
+    # timeZone: str
+    # token: str
+    # traceId: str
+    # userCountryCode: str
+    # uuid: str
+    # status: str | None = None
 
-    class Config(BaseConfig):
-        """Configure omit None value keys."""
-        omit_none = True
-        orjson_options = orjson.OPT_NON_STR_KEYS
-        forbid_extra_keys = True
+    # class Config(BaseConfig):
+    #     """Configure omit None value keys."""
+    #     omit_none = True
+    #     orjson_options = orjson.OPT_NON_STR_KEYS
+    #     forbid_extra_keys = True
 
 
 @dataclass
-class Purifier131Result(ResponseBaseModel):
+class Purifier131Result(BypassV1Result):
     """Purifier 131 Details Response Dict."""
     screenStatus: str
     filterLife: Purifier131Filter

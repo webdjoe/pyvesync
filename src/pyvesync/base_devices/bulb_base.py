@@ -31,6 +31,8 @@ class BulbState(DeviceState):
     bulb type.
 
     Attributes:
+        _exclude_serialization (list[str]): List of attributes to exclude from
+            serialization.
         brightness (int): Brightness of bulb (0-100).
         color_temp (int): White color temperature of bulb in percent (0-100).
         color_temp_kelvin (int): White color temperature of bulb in Kelvin.
@@ -67,6 +69,7 @@ class BulbState(DeviceState):
             - [`BulbMap`](pyvesync.device_map.BulbMap)
         """
         super().__init__(device, details, feature_map)
+        self._exclude_serialization = ['rgb', 'hsv']
         self.features = feature_map.features
         self.color_modes: list[str] = feature_map.color_modes
         self.device: VeSyncBulb = device
@@ -269,36 +272,47 @@ class VeSyncBulb(VeSyncBaseToggleDevice):
             raise NotImplementedError
         return False
 
-    async def update(self) -> None:
-        """Update bulb details.
+    async def set_brightness(self, brightness: int) -> bool:
+        """Set brightness if supported by bulb.
 
-        Calls `get_details()` method to retrieve status from API and
-        update the bulb attributes. `get_details()` is overriden by subclasses
-        to hit the respective API endpoints.
+        Args:
+            brightness (NUMERIC_T): Brightness 0-100
+
+        Returns:
+            bool: True if successful, False otherwise.
+
+        Raises:
+            NotImplementedError: If bulb supports brightness but has not been subclassed.
         """
-        await self.get_details()
+        del brightness
+        logger.warning("Brightness not supported/configured by this bulb")
+        return False
 
-    def display(self) -> None:
+    def display(self, state: bool = True) -> None:
         """Return formatted bulb info to stdout."""
         super().display()
-        if self.state.connection_status == 'online':
-            disp = []  # initiate list
+        if self.state.connection_status == "online":
+            display_list = []  # initiate list
             if self.supports_brightness:
-                disp.append(('Brightness: ', str(self.state.brightness), '%'))
+                display_list.append(("Brightness: ", str(self.state.brightness), "%"))
             if self.supports_color_temp:
-                disp.append(('White Temperature Pct: ',
-                             str(self.state.color_temp), '%'))
-                disp.append(('White Temperature Kelvin: ',
-                             str(self.state.color_temp_kelvin), 'K'))
+                display_list.append(
+                    ("White Temperature Pct: ", str(self.state.color_temp), "%")
+                )
+                display_list.append(
+                    ("White Temperature Kelvin: ", str(self.state.color_temp_kelvin), "K")
+                )
             if self.supports_multicolor and self.state.color is not None:
-                disp.append(('ColorHSV: ', str(self.state.color.hsv), ''))
-                disp.append(('ColorRGB: ', str(self.state.color.rgb), ''))
-                disp.append(('ColorMode: ', str(self.state.color_mode), ''))
-            if len(disp) > 0:
-                for line in disp:
-                    print(f'{line[0]:.<30} {line[1]} {line[2]}')
+                display_list.append(("ColorHSV: ", str(self.state.color.hsv), ""))
+                display_list.append(("ColorRGB: ", str(self.state.color.rgb), ""))
+                display_list.append(("ColorMode: ", str(self.state.color_mode), ""))
+            if len(display_list) > 0:
+                for line in display_list:
+                    print(f"{line[0]:.<30} {line[1]} {line[2]}")
+        if state:
+            self.state.display()
 
-    def displayJSON(self) -> str:
+    def displayJSON(self, state: bool = True, indent: bool = True) -> str:
         """Return bulb device info in JSON format.
 
         Returns:
@@ -337,9 +351,14 @@ class VeSyncBulb(VeSyncBaseToggleDevice):
                     sup_val.update({'ColorRGB': orjson.dumps(
                         dataclasses.asdict(self.state.rgb)).decode()})
                 sup_val.update({'ColorMode': str(self.state.color_mode)})
-        return orjson.dumps(sup_val,
-                            option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS
-                            ).decode()
+        if state:
+            sup_val.update(self.state.to_dict())
+        if indent:
+            return orjson.dumps(
+                sup_val, option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS
+            ).decode()
+        return orjson.dumps(
+            sup_val, option=orjson.OPT_NON_STR_KEYS).decode()
 
     @property
     @deprecated("color_value_rgb is deprecated, use color.rgb instead")

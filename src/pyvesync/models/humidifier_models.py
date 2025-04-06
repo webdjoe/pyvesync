@@ -11,13 +11,16 @@ from dataclasses import dataclass
 from typing import Annotated
 
 from mashumaro.config import BaseConfig
-from mashumaro.types import Discriminator, Alias
+from mashumaro.types import Alias
 
 from pyvesync.models.base_models import (
     ResponseBaseModel,
-    RequestBaseModel,
-    ResponseCodeModel
+    ResponseCodeModel,
     )
+from pyvesync.models.bypass_models import (
+    RequestBypassV2,
+    BypassV2RequestPayload,
+)
 from pyvesync.const import IntFlag
 
 
@@ -28,13 +31,14 @@ class ResponseHumidifierBase(ResponseCodeModel):
 
 
 @dataclass
-class OuterHumidifierResult(ResponseCodeModel):
+class OuterHumidifierResult(ResponseBaseModel):
     """Humidifier Result Dict."""
-    result: InnerHumidifierBaseResult | None = None
+    code: int
+    result: InnerHumidifierBaseResult
 
 
 @dataclass
-class InnerHumidifierBaseResult:
+class InnerHumidifierBaseResult(ResponseBaseModel):
     """Base class for inner humidifier results model.
 
     All inner results models inherit from this class and are
@@ -43,12 +47,18 @@ class InnerHumidifierBaseResult:
 
     class Config(BaseConfig):
         """Configure the results model to use subclass discriminator."""
-        discriminator = Discriminator(include_subtypes=True)
+        # discriminator = Discriminator(include_subtypes=True)
+        allow_deserialization_not_by_alias = True
 
+
+class BypassV2InnerErrorResult(InnerHumidifierBaseResult):
+    """Inner Error Result Model."""
+    msg: str
 
 # Inner Result models for individual devices inherit from InnerHumidifierBaseResult
 # and are used to parse the response from the API.
 # The correct subclass is determined by the mashumaro discriminator
+
 
 @dataclass
 class ClassicLVHumidResult(InnerHumidifierBaseResult):
@@ -60,10 +70,10 @@ class ClassicLVHumidResult(InnerHumidifierBaseResult):
     mist_virtual_level: int
     mist_level: int
     mode: str
-    water_lacks: bool = False
+    display: Annotated[bool, Alias("indicator_light_status")]
+    water_lacks: bool
     humidity: int | None = None
     humidity_high: bool = False
-    display: Annotated[bool, Alias("indicator_light_status")] = False
     automatic_stop_reach_target: bool = False
     water_tank_lifted: bool = False
     warm_enabled: bool = False
@@ -73,22 +83,28 @@ class ClassicLVHumidResult(InnerHumidifierBaseResult):
 
 
 @dataclass
-class ClassicConfig:
+class ClassicConfig(ResponseBaseModel):
     """Classic 200S Humidifier Configuration Model."""
+
     auto_target_humidity: int = 0
     display: Annotated[bool, Alias("indicator_light_status")] = False
     automatic_stop: bool = False
 
+    class Config(BaseConfig):
+        """Configure the results model to use subclass discriminator."""
+        allow_deserialization_not_by_alias = True
+        forbid_extra_keys = False
+
 
 @dataclass
-class LV600SConfig:
+class LV600SConfig(ResponseBaseModel):
     """LV 600S Humidifier Configuration Model."""
     auto_target_humidity: int = 0
     display: bool = False
 
 
 @dataclass
-class LV600SExtension:
+class LV600SExtension(ResponseBaseModel):
     """LV 600S Humidifier Configuration Model."""
     timer_remain: int = 0
     schedule_count: int = 0
@@ -108,7 +124,6 @@ class LV600SHumidResult(InnerHumidifierBaseResult):
     mist_level: int
     mist_virtual_level: int
     mode: str
-
     water_lacks: bool
     water_tank_lifted: bool
     extension: LV600SExtension | None = None
@@ -118,32 +133,14 @@ class LV600SHumidResult(InnerHumidifierBaseResult):
 # Bypass V2 Humidifier Request Models
 
 @dataclass
-class RequestHumidifierStatus(RequestBaseModel):
+class RequestHumidifierStatus(RequestBypassV2):
     """Humidifier Status Request Dict."""
-    acceptLanguage: str
-    accountID: str
-    appVersion: str
-    cid: str
-    configModule: str
-    debugMode: bool
-    method: str
-    phoneBrand: str
-    phoneOS: str
-    traceId: str
-    timeZone: str
-    token: str
-    userCountryCode: str
-    deviceId: str
-    configModel: str
     payload: HumidifierRequestPayload
 
 
 @dataclass
-class HumidifierRequestPayload(RequestBaseModel):
+class HumidifierRequestPayload(BypassV2RequestPayload):
     """Humidifier Payload Request Dict."""
-    data: dict
-    method: str
-    source: str = "APP"
 
 
 # Models for the VeSync Superior 6000S Humidifier

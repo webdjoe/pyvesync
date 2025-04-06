@@ -16,11 +16,12 @@ import logging
 from collections.abc import Mapping
 from typing import TYPE_CHECKING
 from deprecated import deprecated
-from pyvesync.base_devices.bulb_base import VeSyncBulb
+from pyvesync.base_devices import VeSyncBulb
 from pyvesync.const import DeviceStatus, ConnectionStatus
 from pyvesync.models.base_models import DefaultValues
-from pyvesync.utils.device_mixins import BypassV1Mixin
-from pyvesync.utils.helpers import Helpers, Validators
+from pyvesync.models.bypass_models import TimerModels
+from pyvesync.utils.device_mixins import BypassV1Mixin, process_bypassv1_result
+from pyvesync.utils.helpers import Helpers, Validators, Timer
 from pyvesync.utils.colors import Color
 from pyvesync.models import bulb_models
 
@@ -149,14 +150,14 @@ class VeSyncBulbESL100MC(VeSyncBulb):
         }
         body = self._build_request(payload)
 
-        r_bytes, _ = await self.manager.async_call_api(
+        r_dict, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
 
-        r = Helpers.process_dev_response(logger, "get_details", self, r_bytes)
+        r = Helpers.process_dev_response(logger, "get_details", self, r_dict)
         if r is None:
             return
 
@@ -278,14 +279,14 @@ class VeSyncBulbESL100MC(VeSyncBulb):
         }
         body = self._build_request(payload)
 
-        r_bytes, _ = await self.manager.async_call_api(
+        r_dict, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
 
-        r = Helpers.process_dev_response(logger, "set_status", self, r_bytes)
+        r = Helpers.process_dev_response(logger, "set_status", self, r_dict)
         if r is None:
             return False
 
@@ -324,14 +325,14 @@ class VeSyncBulbESL100MC(VeSyncBulb):
         }
         body = self._build_request(payload)
 
-        r_bytes, _ = await self.manager.async_call_api(
+        r_dict, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             method='post',
             headers=head,
             json_object=body,
         )
 
-        r = Helpers.process_dev_response(logger, "toggle", self, r_bytes)
+        r = Helpers.process_dev_response(logger, "toggle", self, r_dict)
         if r is None:
             return False
 
@@ -371,28 +372,28 @@ class VeSyncBulbESL100(BypassV1Mixin, VeSyncBulb):
         }
         # body = self._build_request(method_dict)
 
-        # r_bytes, _ = await self.manager.async_call_api(
+        # r_dict, _ = await self.manager.async_call_api(
         #     '/cloud/v1/deviceManaged/deviceDetail',
         #     'post',
         #     headers=Helpers.req_header_bypass(),
         #     json_object=body,
         # )
 
-        r_bytes = await self.call_bypassv1_api(
+        r_dict = await self.call_bypassv1_api(
             bulb_models.RequestESL100Detail,
             method_dict,
             'deviceDetail',
             'deviceDetail'
         )
 
-        # r_bytes, _ = await self.manager.async_call_api(
+        # r_dict, _ = await self.manager.async_call_api(
         #     '/SmartBulb/v1/device/devicedetail',
         #     'post',
         #     headers=Helpers.req_headers(self.manager),
         #     json_object=body,
         # )
 
-        r = Helpers.process_dev_response(logger, "get_details", self, r_bytes)
+        r = Helpers.process_dev_response(logger, "get_details", self, r_dict)
         if r is None:
             return
 
@@ -416,7 +417,7 @@ class VeSyncBulbESL100(BypassV1Mixin, VeSyncBulb):
         # body = Helpers.req_body(self.manager, 'devicestatus')
         # body['uuid'] = self.uuid
         # body['status'] = status
-        # r_bytes, _ = await self.manager.async_call_api(
+        # r_dict, _ = await self.manager.async_call_api(
         #     '/SmartBulb/v1/device/devicestatus',
         #     'put',
         #     headers=Helpers.req_headers(self.manager),
@@ -425,14 +426,14 @@ class VeSyncBulbESL100(BypassV1Mixin, VeSyncBulb):
         method_dict = {
             "status": status,
         }
-        r_bytes = await self.call_bypassv1_api(
+        r_dict = await self.call_bypassv1_api(
             bulb_models.RequestESL100Status,
             method_dict,
             'smartBulbPowerSwitchCtl',
             'smartBulbPowerSwitchCtl'
         )
 
-        r = Helpers.process_dev_response(logger, "toggle", self, r_bytes)
+        r = Helpers.process_dev_response(logger, "toggle", self, r_dict)
         if r is None:
             return False
 
@@ -476,20 +477,84 @@ class VeSyncBulbESL100(BypassV1Mixin, VeSyncBulb):
             "brightNess": str(brightness_update),
             "status": "on",
         }
-        r_bytes = await self.call_bypassv1_api(
+        r_dict = await self.call_bypassv1_api(
             bulb_models.RequestESL100Brightness,
             method_dict,
             'smartBulbBrightnessCtl',
             'smartBulbBrightnessCtl'
         )
 
-        r = Helpers.process_dev_response(logger, "set_brightness", self, r_bytes)
+        r = Helpers.process_dev_response(logger, "set_brightness", self, r_dict)
         if r is None:
             return False
 
         self.state.brightness = brightness_update
         self.state.device_status = DeviceStatus.ON
         self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def get_timer(self) -> None:
+        """Get timer for ESL100 bulb."""
+        r_dict = await self.call_bypassv1_api(
+            TimerModels.RequestV1GetTimer,
+            {},
+            'getTimers',
+            'timer/getTimers'
+        )
+        result = process_bypassv1_result(self, logger, 'get_timer', r_dict)
+        if result is None:
+            return
+        result_model = TimerModels.ResultV1GetTimer.from_dict(result)
+        if not isinstance(result_model.timers, list) or not result_model.timers:
+            logger.debug("No timers found")
+            return
+        timer = result_model.timers
+        if not isinstance(timer, TimerModels.TimerItemV1):
+            logger.debug("Invalid timer item type")
+            return
+        self.state.timer = Timer(
+            int(timer.counterTimer),
+            timer.action,
+            int(timer.timerID),
+        )
+
+    async def set_timer(self, duration: int, action: str | None = None) -> bool:
+        if action not in [DeviceStatus.ON, DeviceStatus.OFF]:
+            logger.debug("Invalid action value - must be 'on' or 'off'")
+            return False
+        update_dict = {
+            "action": action,
+            "counterTime": str(duration),
+            "status": "1",
+        }
+        r_dict = await self.call_bypassv1_api(
+            TimerModels.RequestV1SetTime,
+            update_dict,
+            'addTimer',
+            'timer/addTimer'
+        )
+        result = process_bypassv1_result(self, logger, 'set_timer', r_dict)
+        if result is None:
+            return False
+        result_model = TimerModels.ResultV1SetTimer.from_dict(result)
+        self.state.timer = Timer(duration, action, int(result_model.timerID))
+        return True
+
+    async def clear_timer(self) -> bool:
+        if self.state.timer is None:
+            logger.debug("No timer set - run get_timer() first")
+            return False
+        timer = self.state.timer
+        r_dict = await self.call_bypassv1_api(
+            TimerModels.RequestV1ClearTimer,
+            {"timerId": str(timer.id), 'status': "1"},
+            'deleteTimer',
+            'timer/deleteTimer'
+        )
+        result = process_bypassv1_result(self, logger, 'clear_timer', r_dict)
+        if result is None:
+            return False
+        self.state.timer = None
         return True
 
 
@@ -504,11 +569,11 @@ class VeSyncBulbESL100CW(BypassV1Mixin, VeSyncBulb):
         super().__init__(details, manager, feature_map)
 
     async def get_details(self) -> None:
-        r_bytes = await self.call_bypassv1_api(
+        r_dict = await self.call_bypassv1_api(
             bulb_models.RequestESL100CWBase, {"jsonCmd": {"getLightStatus": "get"}},
             )
 
-        r = Helpers.process_dev_response(logger, "get_details", self, r_bytes)
+        r = Helpers.process_dev_response(logger, "get_details", self, r_dict)
         if r is None:
             return
 
@@ -536,14 +601,14 @@ class VeSyncBulbESL100CW(BypassV1Mixin, VeSyncBulb):
             toggle = self.state.device_status == DeviceStatus.OFF
         status = DeviceStatus.ON if toggle else DeviceStatus.OFF
 
-        r_bytes = await self.call_bypassv1_api(
+        r_dict = await self.call_bypassv1_api(
             bulb_models.RequestESL100CWBase,
             {"jsonCmd": {"light": {"action": status}}},
             'bypass',
             'bypass'
         )
 
-        r = Helpers.process_dev_response(logger, "toggle", self, r_bytes)
+        r = Helpers.process_dev_response(logger, "toggle", self, r_dict)
         if r is None:
             logger.debug('%s offline', self.device_name)
             return False
@@ -587,21 +652,21 @@ class VeSyncBulbESL100CW(BypassV1Mixin, VeSyncBulb):
             'brightness': brightness_update,
             'action': DeviceStatus.ON}
         # body = self._build_request({'jsonCmd': {'light': light_dict}})
-        # r_bytes, _ = await self.manager.async_call_api(
+        # r_dict, _ = await self.manager.async_call_api(
         #     '/cloud/v1/deviceManaged/bypass',
         #     'post',
         #     headers=Helpers.bypass_header(),
         #     json_object=body,
         # )
 
-        r_bytes = await self.call_bypassv1_api(
+        r_dict = await self.call_bypassv1_api(
             bulb_models.RequestESL100CWBase,
             {"jsonCmd": {"light": light_dict}},
             'bypass',
             'bypass'
         )
 
-        r = Helpers.process_dev_response(logger, "set_brightness", self, r_bytes)
+        r = Helpers.process_dev_response(logger, "set_brightness", self, r_dict)
         if r is None:
             return False
 
@@ -614,6 +679,72 @@ class VeSyncBulbESL100CW(BypassV1Mixin, VeSyncBulb):
     async def set_color_temp(self, color_temp: int) -> bool:
         """Set Color Temperature of Bulb in pct (1 - 100)."""
         return await self.set_status(color_temp=color_temp)
+
+    async def get_timer(self) -> None:
+        r_dict = await self.call_bypassv1_api(
+            TimerModels.RequestV1GetTimer,
+            {},
+            'getTimers',
+            'timer/getTimers'
+        )
+        result = process_bypassv1_result(self, logger, 'get_timer', r_dict)
+        if result is None:
+            return
+        result_model = TimerModels.ResultV1GetTimer.from_dict(result)
+        if not isinstance(result_model.timers, list) or not result_model.timers:
+            logger.debug("No timers found")
+            return
+        timers = result_model.timers
+        if len(timers) > 1:
+            logger.debug("Multiple timers found, returning first timer")
+        timer = timers[0]
+        if not isinstance(timer, TimerModels.TimeItemV1):
+            logger.debug("Invalid timer item type")
+            return
+        self.state.timer = Timer(
+            int(timer.counterTime),
+            timer.action,
+            int(timer.timerID),
+        )
+
+    async def set_timer(self, duration: int, action: str | None = None) -> bool:
+        if action not in [DeviceStatus.ON, DeviceStatus.OFF]:
+            logger.debug("Invalid action value - must be 'on' or 'off'")
+            return False
+        update_dict = {
+            "action": action,
+            "counterTime": str(duration),
+            "status": "1",
+        }
+        r_dict = await self.call_bypassv1_api(
+            TimerModels.RequestV1SetTime,
+            update_dict,
+            'addTimer',
+            'timer/addTimer'
+        )
+        result = process_bypassv1_result(self, logger, 'set_timer', r_dict)
+        if result is None:
+            return False
+        result_model = TimerModels.ResultV1SetTimer.from_dict(result)
+        self.state.timer = Timer(duration, action, int(result_model.timerID))
+        return True
+
+    async def clear_timer(self) -> bool:
+        if self.state.timer is None:
+            logger.debug("No timer set - run get_timer() first")
+            return False
+        timer = self.state.timer
+        r_dict = await self.call_bypassv1_api(
+            TimerModels.RequestV1ClearTimer,
+            {"timerId": str(timer.id), 'status': "1"},
+            'deleteTimer',
+            'timer/deleteTimer'
+        )
+        r = Helpers.process_dev_response(logger, "clear_timer", self, r_dict)
+        if r is None:
+            return False
+        self.state.timer = None
+        return True
 
 
 class VeSyncBulbValcenoA19MC(VeSyncBulb):
@@ -703,7 +834,7 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
         return default_dict
 
     async def _call_valceno_api(
-            self, payload_method: str, payload_data: Mapping) -> bytes | None:
+            self, payload_method: str, payload_data: Mapping) -> dict | None:
         """Make API call to Valceno Smart Bulb.
 
         Args:
@@ -730,21 +861,21 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
             'data': payload_data
         }
         request_body = self._build_request(payload)
-        r_bytes, _ = await self.manager.async_call_api(
+        r_dict, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
             'post',
             headers=Helpers.req_header_bypass(),
             json_object=request_body,
         )
-        resp = Helpers.process_dev_response(logger, payload_method, self, r_bytes)
+        resp = Helpers.process_dev_response(logger, payload_method, self, r_dict)
         if resp is None:
             return None
-        return r_bytes
+        return r_dict
 
     async def get_details(self) -> None:
-        r_bytes = await self._call_valceno_api('getLightStatusV2', {})
+        r_dict = await self._call_valceno_api('getLightStatusV2', {})
 
-        r = Helpers.process_dev_response(logger, "get_details", self, r_bytes)
+        r = Helpers.process_dev_response(logger, "get_details", self, r_dict)
         if r is None:
             return
 
@@ -792,9 +923,9 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
                 }
         method = 'setSwitch'
 
-        r_bytes = await self._call_valceno_api(method, payload_data)
+        r_dict = await self._call_valceno_api(method, payload_data)
 
-        r = Helpers.process_dev_response(logger, "toggle", self, r_bytes)
+        r = Helpers.process_dev_response(logger, "toggle", self, r_dict)
         if r is None:
             self.state.connection_status = ConnectionStatus.OFFLINE
             self.state.device_status = DeviceStatus.OFF
@@ -915,11 +1046,11 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
             logger.debug("Invalid payload data")
             return False
 
-        r_bytes = await self._call_valceno_api('setLightStatus', payload_data)
-        if r_bytes is None:
+        r_dict = await self._call_valceno_api('setLightStatus', payload_data)
+        if r_dict is None:
             return False
 
-        r_dict = Helpers.process_dev_response(logger, "set_status", self, r_bytes)
+        r_dict = Helpers.process_dev_response(logger, "set_status", self, r_dict)
         if r_dict is None:
             return False
 

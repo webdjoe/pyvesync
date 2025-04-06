@@ -4,15 +4,11 @@ import logging
 from typing import TYPE_CHECKING
 
 from pyvesync.utils.helpers import Helpers, Timer
-from pyvesync.base_devices.fan_base import VeSyncFanBase
-from pyvesync.models.base_models import DefaultValues
+from pyvesync.base_devices import VeSyncFanBase
 from pyvesync.const import DeviceStatus, ConnectionStatus
-from pyvesync.models.fan_models import (
-    TowerFanResult,
-    RequestFanStatus,
-    ResponseFanBase
-    )
-
+from pyvesync.utils.device_mixins import BypassV2Mixin, process_bypassv2_results
+from pyvesync.models.fan_models import TowerFanResult
+from pyvesync.models.bypass_models import TimerModels
 if TYPE_CHECKING:
     from pyvesync.device_map import FanMap
     from pyvesync import VeSync
@@ -21,7 +17,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class VeSyncTowerFan(VeSyncFanBase):
+class VeSyncTowerFan(BypassV2Mixin, VeSyncFanBase):
     """Levoit Tower Fan Device Class."""
 
     __slots__ = ()
@@ -34,37 +30,6 @@ class VeSyncTowerFan(VeSyncFanBase):
     ) -> None:
         """Initialize the VeSync Base API V2 Fan Class."""
         super().__init__(details, manager, feature_map)
-        self.request_keys = [
-            "acceptLanguage",
-            "appVersion",
-            "phoneBrand",
-            "phoneOS",
-            "accountId",
-            "cid",
-            "configModule",
-            "debugMode",
-            "traceId",
-            "timeZone",
-            "token",
-            "userCountryCode",
-            "deviceId",
-            "configModel",
-        ]
-
-    def _build_request(
-            self, payload_method: str, data: dict | None = None, method: str = 'bypassV2'
-            ) -> RequestFanStatus:
-        """Build API request body for air purifier."""
-        body = Helpers.get_class_attributes(DefaultValues, self.request_keys)
-        body.update(Helpers.get_class_attributes(self.manager, self.request_keys))
-        body.update(Helpers.get_class_attributes(self, self.request_keys))
-        body['method'] = method
-        body['payload'] = {
-            "method": payload_method,
-            "source": "APP",
-            "data": data or {}
-        }
-        return RequestFanStatus.from_dict(body)
 
     def _set_fan_state(self, res: TowerFanResult) -> None:
         """Set fan state attributes from API response."""
@@ -106,25 +71,12 @@ class VeSyncTowerFan(VeSyncFanBase):
             )
 
     async def get_details(self) -> None:
-        body = self._build_request('getTowerFanStatus')
-        headers = Helpers.req_header_bypass()
-        r_bytes, _ = await self.manager.async_call_api(
-            '/cloud/v2/deviceManaged/bypassV2',
-            method='post',
-            headers=headers,
-            json_object=body.to_dict(),
-        )
-        r = Helpers.process_dev_response(logger, "get_details", self, r_bytes)
+        r_dict = await self.call_bypassv2_api("getTowerFanStatus")
+        r = process_bypassv2_results(self, logger, "get_details", r_dict)
         if r is None:
             return
 
-        r_model = ResponseFanBase.from_dict(r)
-        result = r_model.result.result
-
-        if result is None or not isinstance(result, TowerFanResult):
-            logger.debug('No result dict from purifier')
-            return
-
+        result = TowerFanResult.from_dict(r)
         self._set_fan_state(result)
 
     async def set_fan_speed(self, speed: int | None = None) -> bool:
@@ -143,16 +95,8 @@ class VeSyncTowerFan(VeSyncFanBase):
             "levelType": "wind",
             "levelIdx": 0
         }
-        body = self._build_request('setLevel', payload_data)
-        headers = Helpers.req_header_bypass()
-
-        r_bytes, _ = await self.manager.async_call_api(
-            '/cloud/v2/deviceManaged/bypassV2',
-            method='post',
-            headers=headers,
-            json_object=body.to_dict(),
-        )
-        r = Helpers.process_dev_response(logger, "set_fan_speed", self, r_bytes)
+        r_dict = await self.call_bypassv2_api("setLevel", payload_data)
+        r = Helpers.process_dev_response(logger, "set_fan_speed", self, r_dict)
         if r is None:
             return False
 
@@ -173,16 +117,8 @@ class VeSyncTowerFan(VeSyncFanBase):
         payload_data = {
             "workMode": mode
         }
-        body = self._build_request('setTowerFanStatus', payload_data)
-        headers = Helpers.req_header_bypass()
-
-        r_bytes, _ = await self.manager.async_call_api(
-            '/cloud/v2/deviceManaged/bypassV2',
-            method='post',
-            headers=headers,
-            json_object=body.to_dict(),
-        )
-        r = Helpers.process_dev_response(logger, "set_mode", self, r_bytes)
+        r_dict = await self.call_bypassv2_api("setTowerFanStatus", payload_data)
+        r = Helpers.process_dev_response(logger, "set_mode", self, r_dict)
         if r is None:
             return False
 
@@ -203,16 +139,8 @@ class VeSyncTowerFan(VeSyncFanBase):
         payload_data = {
             "oscillationSwitch": int(toggle)
         }
-        body = self._build_request('setOscillationSwitch', payload_data)
-        headers = Helpers.req_header_bypass()
-
-        r_bytes, _ = await self.manager.async_call_api(
-            '/cloud/v2/deviceManaged/bypassV2',
-            method='post',
-            headers=headers,
-            json_object=body.to_dict(),
-        )
-        r = Helpers.process_dev_response(logger, "toggle_oscillation", self, r_bytes)
+        r_dict = await self.call_bypassv2_api("setOscillationSwitch", payload_data)
+        r = Helpers.process_dev_response(logger, "toggle_oscillation", self, r_dict)
         if r is None:
             return False
 
@@ -233,16 +161,8 @@ class VeSyncTowerFan(VeSyncFanBase):
         payload_data = {
             "muteSwitch": int(toggle)
         }
-        body = self._build_request('setMuteSwitch', payload_data)
-        headers = Helpers.req_header_bypass()
-
-        r_bytes, _ = await self.manager.async_call_api(
-            '/cloud/v2/deviceManaged/bypassV2',
-            method='post',
-            headers=headers,
-            json_object=body.to_dict(),
-        )
-        r = Helpers.process_dev_response(logger, "toggle_mute", self, r_bytes)
+        r_dict = await self.call_bypassv2_api("setMuteSwitch", payload_data)
+        r = Helpers.process_dev_response(logger, "toggle_mute", self, r_dict)
         if r is None:
             return False
 
@@ -254,16 +174,8 @@ class VeSyncTowerFan(VeSyncFanBase):
         payload_data = {
             "screenSwitch": int(toggle)
         }
-        body = self._build_request('setDisplay', payload_data)
-        headers = Helpers.req_header_bypass()
-
-        r_bytes, _ = await self.manager.async_call_api(
-            '/cloud/v2/deviceManaged/bypassV2',
-            method='post',
-            headers=headers,
-            json_object=body.to_dict(),
-        )
-        r = Helpers.process_dev_response(logger, "toggle_display", self, r_bytes)
+        r_dict = await self.call_bypassv2_api("setDisplay", payload_data)
+        r = Helpers.process_dev_response(logger, "toggle_display", self, r_dict)
         if r is None:
             return False
 
@@ -276,19 +188,60 @@ class VeSyncTowerFan(VeSyncFanBase):
         payload_data = {
             "displayingType": int(toggle)
         }
-        body = self._build_request('setDisplayingType', payload_data)
-        headers = Helpers.req_header_bypass()
-
-        r_bytes, _ = await self.manager.async_call_api(
-            '/cloud/v2/deviceManaged/bypassV2',
-            method='post',
-            headers=headers,
-            json_object=body.to_dict(),
-        )
-        r = Helpers.process_dev_response(logger, "toggle_displaying_type", self, r_bytes)
+        r_dict = await self.call_bypassv2_api("setDisplayingType", payload_data)
+        r = Helpers.process_dev_response(logger, "toggle_displaying_type", self, r_dict)
         if r is None:
             return False
 
         self.state.displaying_type = DeviceStatus.from_bool(toggle)
         self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def get_timer(self) -> None:
+        r_dict = await self.call_bypassv2_api(
+            "getTimer",
+            {}
+        )
+        r = process_bypassv2_results(self, logger, "get_timer", r_dict)
+        if not r:
+            logger.debug('No timer found - run get_timer()')
+            return
+        timer = r[0]
+        if not isinstance(timer, TimerModels.TimerItemV2):
+            logger.debug('Invalid timer found for %s', self.device_name)
+            return
+        self.state.timer = Timer(
+            timer.remain, timer.action, timer.id
+        )
+
+    async def set_timer(self, duration: int, action: str | None = None) -> bool:
+        if action not in [DeviceStatus.ON, DeviceStatus.OFF]:
+            logger.debug('Invalid action used - %s', action)
+            return False
+        payload_data = {
+            'action': action,
+            'total': duration,
+        }
+        r_dict = await self.call_bypassv2_api("setTimer", payload_data)
+        result = process_bypassv2_results(self, logger, "set_timer", r_dict)
+        if result is None:
+            return False
+        r_model = TimerModels.ResultV2SetTimer.from_dict(result)
+        if r_model is None:
+            return False
+        self.state.timer = Timer(duration, action, r_model.id)
+        return True
+
+    async def clear_timer(self) -> bool:
+        if self.state.timer is None:
+            logger.debug('No timer found for - run get_timer()')
+            return False
+        payload_data = {
+            'id': self.state.timer.id,
+        }
+        r_dict = await self.call_bypassv2_api("clearTimer", payload_data)
+        result = process_bypassv2_results(self, logger, "clear_timer", r_dict)
+        if result is None:
+            return False
+        self.state.timer = None
         return True

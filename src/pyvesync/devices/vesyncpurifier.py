@@ -1,14 +1,12 @@
-"""VeSync API for controling air purifiers."""
+"""VeSync API for controlling air purifiers."""
 from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
 from typing_extensions import deprecated
-import orjson
 
 from pyvesync.base_devices.purifier_base import VeSyncPurifier
-from pyvesync.utils.device_mixins import BypassV2Mixin
-from pyvesync.utils.logs import LibraryLogger
+from pyvesync.utils.device_mixins import BypassV2Mixin, process_bypassv2_results
 from pyvesync.utils.helpers import Helpers, Timer
 from pyvesync.models.base_models import DefaultValues
 from pyvesync.const import (
@@ -20,18 +18,18 @@ from pyvesync.const import (
     AirQualityLevel,
     PurifierModes
     )
+from pyvesync.models.bypass_models import (
+    ResultV2GetTimer,
+    ResultV2SetTimer,
+)
 from pyvesync.models.purifier_models import (
     PurifierCoreDetailsResult,
-    PurifierGetTimerResult,
-    PurifierModifyTimerResult,
     PurifierV2DetailsResult,
     PurifierV2EventTiming,
     PurifierV2TimerActionItems,
     PurifierV2TimerPayloadData,
-    ResponsePurifierBase,
     RequestPurifier131,
     Purifier131Result,
-    ResponsePurifier131Base,
     )
 
 if TYPE_CHECKING:
@@ -40,7 +38,7 @@ if TYPE_CHECKING:
     from pyvesync.device_map import PurifierMap
 
 
-logger = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 
 class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
@@ -59,7 +57,7 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
         air_quality_feature (bool): True if device has air quality sensor
         details (dict): Dictionary of device details
         timer (Timer): Timer object for device, None if no timer exists. See
-            [pyveysnc.helpers.Timer][`Timer`] class
+            [pyvesync.helpers.Timer][`Timer`] class
         config (dict): Dictionary of device configuration
 
     Notes:
@@ -87,51 +85,6 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
                  manager: VeSync, feature_map: PurifierMap) -> None:
         """Initialize VeSync Air Purifier Bypass Base Class."""
         super().__init__(details, manager, feature_map)
-        # self.request_keys = [
-        #     "acceptLanguage",
-        #     "appVersion",
-        #     "phoneBrand",
-        #     "phoneOS",
-        #     "accountId",
-        #     "cid",
-        #     "configModule",
-        #     "debugMode"
-        #     "traceId",
-        #     "timeZone",
-        #     "token",
-        #     "userCountryCode",
-        # ]
-
-    # def _build_request(
-    #         self, payload_method: str, data: dict | None = None, method: str = 'bypassV2'  # noqa: E501
-    #         ) -> RequestPurifierStatus:
-    #     """Build API request body for air purifier."""
-    #     request_keys = [*self.request_keys, "devieId", "configModel"]
-    #     body = Helpers.get_class_attributes(DefaultValues, request_keys)
-    #     body.update(Helpers.get_class_attributes(self.manager, request_keys))
-    #     body.update(Helpers.get_class_attributes(self, request_keys))
-    #     body['method'] = method
-    #     body['payload'] = {
-    #         "method": payload_method,
-    #         "source": "APP",
-    #         "data": data or {}
-    #     }
-    #     return RequestPurifierStatus.from_dict(body)
-
-    # def _build_timer_request(
-    #         self, payload_method: str, data: dict | None = None) -> RequestPurifierTimer:  # noqa: E501
-    #     """Build API request body for air purifier timer."""
-    #     request_keys = [*self.request_keys, "deviceRegion"]
-    #     body = Helpers.get_class_attributes(DefaultValues, request_keys)
-    #     body.update(Helpers.get_class_attributes(self.manager, request_keys))
-    #     body.update(Helpers.get_class_attributes(self, request_keys))
-    #     body['method'] = 'bypassV2'
-    #     body['payload'] = {
-    #         "method": payload_method,
-    #         "source": "APP",
-    #         "data": data or {}
-    #     }
-    #     return RequestPurifierTimer.from_dict(body)
 
     def _set_purifier_state(self, result: PurifierCoreDetailsResult) -> None:
         """Populate PurifierState with details from API response.
@@ -166,36 +119,12 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
 
     async def get_details(self) -> None:
         """Build Bypass Purifier details dictionary."""
-        head = Helpers.bypass_header()
-        body = self._build_request('getPurifierStatus')
-
-        r_bytes, _ = await self.manager.async_call_api(
-            '/cloud/v2/deviceManaged/bypassV2',
-            method='post',
-            headers=head,
-            json_object=body.to_dict(),
-        )
-        r = Helpers.process_dev_response(logger, "get_details", self, r_bytes)
+        r_dict = await self.call_bypassv2_api('getPurifierStatus')
+        r = process_bypassv2_results(self, _LOGGER, "get_details", r_dict)
         if r is None:
             return
-        try:
-            resp_model = ResponsePurifierBase.from_dict(r)
-            inner_result = resp_model.result.result
-        except (TypeError, ValueError, LookupError, orjson.JSONDecodeError):
-            if not isinstance(r.get('result', {}).get("result"), dict):
-                LibraryLogger.log_device_api_response_error(
-                    logger,
-                    self.device_name,
-                    self.device_type,
-                    "get_details",
-                    "Error parsing response"
-                )
-                return
-        inner_result = resp_model.result.result
-        if inner_result is not None and isinstance(
-            inner_result, PurifierCoreDetailsResult
-        ):
-            self._set_purifier_state(inner_result)
+        resp_model = PurifierCoreDetailsResult.from_dict(r)
+        self._set_purifier_state(resp_model)
 
     async def get_timer(self) -> Timer | None:
         """Retrieve running timer from purifier.
@@ -216,94 +145,62 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
             [pyvesync.helpers.Time][`Timer`] : Timer object used to hold status of timer
 
         """
-        body = self._build_request('getTimer')
-        head = Helpers.bypass_header()
-        r_bytes, _ = await self.manager.async_call_api(
-            '/cloud/v2/deviceManaged/bypassV2',
-            method='post',
-            headers=head,
-            json_object=body.to_dict(),
-        )
-        r = Helpers.process_dev_response(logger, "get_timer", self, r_bytes)
+        r_bytes = await self.call_bypassv2_api('getTimer')
+        r = process_bypassv2_results(self, _LOGGER, "get_timer", r_bytes)
         if r is None:
             return None
 
-        try:
-            resp_model = ResponsePurifierBase.from_dict(r)
-            inner_result = resp_model.result.result
-            if isinstance(inner_result, PurifierGetTimerResult):
-                timer_list = inner_result.timers
-            else:
-                raise TypeError
-        except (TypeError, ValueError, LookupError, orjson.JSONDecodeError):
-            LibraryLogger.log_device_api_response_error(
-                logger,
-                self.device_name,
-                self.device_type,
-                "get_timer",
-                "Error Parsing timer response."
-            )
+        resp_model = ResultV2GetTimer.from_dict(r)
+        timers = resp_model.timers
+        if not timers:
+            _LOGGER.debug('No timers found')
             return None
-
-        if not timer_list:
-            logger.debug("No timer found for %s", self.device_name)
-            return None
-        timer = timer_list[0]
-        if self.state.timer is None:
-            self.state.timer = Timer(
-                timer_duration=timer.total,
-                action=timer.action,
-                id=timer.id,
-                remaining=timer.remain,
-            )
-        else:
-            self.state.timer.update(time_remaining=timer.remain)
+        timer = timers[0]
+        self.state.timer = Timer(
+            timer_duration=timer.total,
+            action=timer.action,
+            id=timer.id,
+            remaining=timer.remain,
+        )
         self.state.device_status = DeviceStatus.ON
         self.state.connection_status = ConnectionStatus.ONLINE
-        logger.debug('Timer found: %s', str(self.state.timer))
+        _LOGGER.debug("Timer found: %s", str(self.state.timer))
         return self.state.timer
 
-    async def set_timer(self, timer_duration: int) -> bool:
+    async def set_timer(self, duration: int, action: str | None = None) -> bool:
         """Set timer for Purifier.
 
+        Only currently supports 'off' action. API does not support
+        any other actions.
+
         Args:
-            timer_duration (int): Duration of timer in seconds
+            duration (int): Duration of timer in seconds
+            action (str | None): Action to perform, on or off, by default 'off'
 
         Returns:
             bool : True if timer is set, False if not
 
         """
+        action = DeviceStatus.OFF  # No other actions available for this device
         if self.state.device_status != DeviceStatus.ON:
-            logger.debug("Can't set timer when device is off")
+            _LOGGER.debug("Can't set timer when device is off")
         # head, body = self.build_api_dict('addTimer')
         payload_data = {
-            "action": "off",
-            "total": timer_duration
+            "action": str(action),
+            "total": duration
         }
-        body = self._build_request('addTimer', payload_data)
-        head = Helpers.bypass_header()
-
-        r_bytes, _ = await self.manager.async_call_api(
-            '/cloud/v2/deviceManaged/bypassV2',
-            method='post',
-            headers=head,
-            json_object=body.to_dict(),
-        )
-        r = Helpers.process_dev_response(logger, "set_timer", self, r_bytes)
+        r_dict = await self.call_bypassv2_api('addTimer', payload_data)
+        r = process_bypassv2_results(self, _LOGGER, "set_timer", r_dict)
         if r is None:
             return False
 
-        resp_model = ResponsePurifierBase.from_dict(r)
-        result = resp_model.result.result
-        if result is not None and isinstance(result, PurifierModifyTimerResult):
-            timer_id = result.id
-            self.state.timer = Timer(
-                timer_duration=timer_duration, action="off", id=timer_id)
-            self.state.device_status = DeviceStatus.ON
-            self.state.connection_status = ConnectionStatus.ONLINE
-            return True
-        logger.warning("Timer not set for %s", self.device_name)
-        return False
+        resp_model = ResultV2SetTimer.from_dict(r)
+        self.state.timer = Timer(
+                timer_duration=duration, action="off", id=resp_model.id
+                )
+        self.state.device_status = DeviceStatus.ON
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
 
     async def clear_timer(self) -> bool:
         """Clear timer.
@@ -314,25 +211,18 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
             bool : True if timer is cleared, False if not
         """
         if self.state.timer is None:
-            logger.debug('No timer to clear')
+            _LOGGER.debug('No timer to clear, run `get_timer()` to get active timer')
             return False
         payload_data = {
             "id": self.state.timer.id
         }
-        body = self._build_request('delTimer', payload_data)
-        head = Helpers.bypass_header()
 
-        r_bytes, _ = await self.manager.async_call_api(
-            '/cloud/v2/deviceManaged/bypassV2',
-            method='post',
-            headers=head,
-            json_object=body.to_dict(),
-        )
-        r = Helpers.process_dev_response(logger, "clear_timer", self, r_bytes)
+        r_dict = await self.call_bypassv2_api('delTimer', payload_data)
+        r = Helpers.process_dev_response(_LOGGER, "clear_timer", self, r_dict)
         if r is None:
             return False
 
-        logger.debug("Timer cleared")
+        _LOGGER.debug("Timer cleared")
         self.state.timer = None
         self.state.device_status = DeviceStatus.ON
         self.state.connection_status = ConnectionStatus.ONLINE
@@ -354,32 +244,25 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
 
         if speed is not None:
             if speed not in speeds:
-                logger.debug(
+                _LOGGER.debug(
                     "%s is invalid speed - valid speeds are %s", speed, str(speeds))
                 return False
             new_speed = speed
         else:
-            new_speed = speeds[(speeds.index(current_speed) + 1) % len(speeds)]
+            new_speed = Helpers.bump_level(current_speed, self.fan_levels)
 
         data = {
             "id": 0,
             "level": new_speed,
             "type": "wind",
         }
-        body = self._build_request('setLevel', data)
-        head = Helpers.bypass_header()
-
-        r_bytes, _ = await self.manager.async_call_api(
-            '/cloud/v2/deviceManaged/bypassV2',
-            method='post',
-            headers=head,
-            json_object=body.to_dict(),
-        )
-        r = Helpers.process_dev_response(logger, "set_fan_speed", self, r_bytes)
+        r_dict = await self.call_bypassv2_api('setLevel', data)
+        r = Helpers.process_dev_response(_LOGGER, "set_fan_speed", self, r_dict)
         if r is None:
             return False
 
         self.state.fan_level = new_speed
+        self.state.mode = PurifierModes.MANUAL  # Set mode to manual to set fan speed
         self.state.device_status = DeviceStatus.ON
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
@@ -410,23 +293,15 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
 
         """
         if mode not in (True, False):
-            logger.debug('Invalid mode passed to set_child_lock - %s', mode)
+            _LOGGER.debug('Invalid mode passed to set_child_lock - %s', mode)
             return False
 
         data = {
             "child_lock": mode
         }
 
-        body = self._build_request('setChildLock', data)
-        headers = Helpers.bypass_header()
-
-        r_bytes, _ = await self.manager.async_call_api(
-            '/cloud/v2/deviceManaged/bypassV2',
-            method='post',
-            headers=headers,
-            json_object=body.to_dict(),
-        )
-        r = Helpers.process_dev_response(logger, "set_child_lock", self, r_bytes)
+        r_dict = await self.call_bypassv2_api('setChildLock', data)
+        r = Helpers.process_dev_response(_LOGGER, "set_child_lock", self, r_dict)
         if r is None:
             return False
 
@@ -440,17 +315,8 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
         Returns:
             bool : True if filter is reset, False if not
         """
-        # head, body = self.build_api_dict('resetFilter')
-        body = self._build_request('resetFilter')
-        head = Helpers.bypass_header()
-
-        r_bytes, _ = await self.manager.async_call_api(
-            '/cloud/v2/deviceManaged/bypassV2',
-            method='post',
-            headers=head,
-            json_object=body.to_dict(),
-        )
-        r = Helpers.process_dev_response(logger, "reset_filter", self, r_bytes)
+        r_dict = await self.call_bypassv2_api('resetFilter')
+        r = Helpers.process_dev_response(_LOGGER, "reset_filter", self, r_dict)
         return bool(r)
 
     @deprecated("Use set_mode(mode: str) instead.")
@@ -471,27 +337,18 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
 
         """
         if mode.lower() not in self.modes:
-            logger.debug('Invalid purifier mode used - %s',
-                         mode)
+            _LOGGER.debug("Invalid purifier mode used - %s", mode)
             return False
 
-        if mode.lower() == 'manual':
+        if mode.lower() == PurifierModes.MANUAL:
             return await self.set_fan_speed(self.state.fan_level or 1)
 
         data = {
             "mode": mode,
         }
+        r_dict = await self.call_bypassv2_api('setPurifierMode', data)
 
-        body = self._build_request('setPurifierMode', data)
-        head = Helpers.bypass_header()
-
-        r_bytes, _ = await self.manager.async_call_api(
-            '/cloud/v2/deviceManaged/bypassV2',
-            method='post',
-            headers=head,
-            json_object=body.to_dict(),
-        )
-        r = Helpers.process_dev_response(logger, "mode_toggle", self, r_bytes)
+        r = Helpers.process_dev_response(_LOGGER, "set_mode", self, r_dict)
         if r is None:
             return False
 
@@ -514,23 +371,15 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
         if toggle is None:
             toggle = self.state.device_status != DeviceStatus.ON
         if not isinstance(toggle, bool):
-            logger.debug('Invalid toggle value for purifier switch')
+            _LOGGER.debug('Invalid toggle value for purifier switch')
             return False
+
         data = {
             "enabled": toggle,
             "id": 0
         }
-
-        body = self._build_request('setSwitch', data)
-        head = Helpers.bypass_header()
-
-        r_bytes, _ = await self.manager.async_call_api(
-            '/cloud/v2/deviceManaged/bypassV2',
-            method='post',
-            headers=head,
-            json_object=body.to_dict(),
-        )
-        r = Helpers.process_dev_response(logger, "toggle_switch", self, r_bytes)
+        r_dict = await self.call_bypassv2_api('setSwitch', data)
+        r = Helpers.process_dev_response(_LOGGER, "toggle_switch", self, r_dict)
         if r is None:
             return False
 
@@ -550,25 +399,18 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
             bool : True if display is toggled, False if not
         """
         if not isinstance(mode, bool):
-            logger.debug("Mode must be True or False")
+            _LOGGER.debug("Mode must be True or False")
             return False
 
-        head = Helpers.bypass_header()
         data = {
             "state": mode
         }
-        body = self._build_request('setDisplay', data)
-
-        r_bytes, _ = await self.manager.async_call_api(
-            '/cloud/v2/deviceManaged/bypassV2',
-            method='post',
-            headers=head,
-            json_object=body.to_dict(),
-        )
-        r = Helpers.process_dev_response(logger, "set_display", self, r_bytes)
+        r_dict = await self.call_bypassv2_api('setDisplay', data)
+        r = Helpers.process_dev_response(_LOGGER, "set_display", self, r_dict)
         if r is None:
             return False
         self.state.connection_status = ConnectionStatus.ONLINE
+        self.state.display_set_state = DeviceStatus.from_bool(mode)
         return True
 
     async def set_nightlight_mode(self, mode: str) -> bool:
@@ -583,23 +425,16 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
             bool : True if night light is set, False if not
         """
         if not self.supports_nightlight:
-            logger.debug("Device does not support night light")
+            _LOGGER.debug("Device does not support night light")
             return False
         if mode.lower() not in [self.nightlight_modes]:
-            logger.warning('Invalid nightlight mode used (on, off or dim)- %s',
-                           mode)
+            _LOGGER.warning("Invalid nightlight mode used (on, off or dim)- %s", mode)
             return False
 
-        headers = Helpers.bypass_header()
-        body = self._build_request('setNightLight', {'night_light': mode.lower()})
-
-        r_bytes, _ = await self.manager.async_call_api(
-            '/cloud/v2/deviceManaged/bypassV2',
-            method='post',
-            headers=headers,
-            json_object=body,
-        )
-        r = Helpers.process_dev_response(logger, "set_night_light", self, r_bytes)
+        r_dict = await self.call_bypassv2_api(
+            'setNightLight', {'night_light': mode.lower()}
+            )
+        r = Helpers.process_dev_response(_LOGGER, "set_night_light", self, r_dict)
         if r is None:
             return False
 
@@ -662,66 +497,6 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
         """
         return self.state.nightlight_status
 
-    def display(self) -> None:
-        """Print formatted device info to stdout.
-
-        Builds on the `display()` method from the `VeSyncBaseDevice` class.
-
-        See Also:
-            [pyvesync.VeSyncBaseDevice.display][`VeSyncBaseDevice.display`]
-        """
-        super().display()
-        disp = [
-            ('Mode: ', self.state.mode, ''),
-            ('Filter Life: ', self.state.filter_life, 'percent'),
-            ('Fan Level: ', self.state.fan_level, ''),
-            ('Display: ', self.state.display_status, ''),
-            ('Child Lock: ', self.state.child_lock, ''),
-            ('Night Light: ', self.state.night_light, ''),
-            ('Display Config: ', self.state.display_set_state, ''),
-            ('Display_Forever Config: ',
-             self.state.display_forever, '')
-        ]
-        if self.supports_air_quality:
-            disp.extend([
-                ('Air Quality Level: ',
-                    self.state.air_quality, ''),
-                ('Air Quality Value: ',
-                    self.state.air_quality_value, 'ug/m3')
-                ])
-        for line in disp:
-            print(f'{line[0]:.<30} {line[1]} {line[2]}')
-
-    def displayJSON(self) -> str:
-        """Return air purifier status and properties in JSON output.
-
-        Returns:
-            str : JSON formatted string of air purifier details
-        """
-        sup = super().displayJSON()
-        sup_val = orjson.loads(sup)
-        sup_val.update(
-            {
-                'Mode': self.state.mode,
-                'Filter Life': str(self.state.filter_life),
-                'Fan Level': str(self.state.fan_level),
-                'Display': self.state.display_status,
-                'Child Lock': self.state.child_lock,
-                'Night Light': str(self.state.night_light),
-                'Display Config': self.state.display_set_state,
-                'Display_Forever Config': self.state.display_forever,
-            }
-        )
-        if self.supports_air_quality is True:
-            sup_val.update(
-                {'Air Quality Level': str(self.state.air_quality)}
-            )
-            sup_val.update(
-                {'Air Quality Value': str(self.state.air_quality_value)}
-            )
-        return orjson.dumps(
-            sup_val, option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS).decode()
-
 
 class VeSyncAirBaseV2(VeSyncAirBypass):
     """Levoit V2 Air Purifier Class.
@@ -734,12 +509,12 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
 
     Attributes:
         set_speed_level (int): Set speed level for device
-        auto_prefences (list): List of auto preferences for device
+        auto_preferences (list): List of auto preferences for device
         modes (list): List of available operation modes for device
         air_quality_feature (bool): True if device has air quality sensor
         details (dict): Dictionary of device details
         timer (Timer): Timer object for device, None if no timer exists. See
-            [pyveysnc.helpers.Timer][`Timer`] class
+            [pyvesync.helpers.Timer][`Timer`] class
         config (dict): Dictionary of device configuration
 
     """
@@ -754,22 +529,6 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
     ) -> None:
         """Initialize the VeSync Base API V2 Air Purifier Class."""
         super().__init__(details, manager, feature_map)
-        # self.request_keys = [
-        #     "acceptLanguage",
-        #     "appVersion",
-        #     "phoneBrand",
-        #     "phoneOS",
-        #     "accountId",
-        #     "cid",
-        #     "configModule",
-        #     "debugMode",
-        #     "traceId",
-        #     "timeZone",
-        #     "token",
-        #     "userCountryCode",
-        #     "deviceId",
-        #     "configModel",
-        # ]
 
     def _set_state(self, details: PurifierV2DetailsResult) -> None:
         """Set Purifier state from details response."""
@@ -827,42 +586,13 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
 
     async def get_details(self) -> None:
         """Build API V2 Purifier details dictionary."""
-        # head, body = self.build_api_dict('getPurifierStatus')
-        headers = Helpers.bypass_header()
-        body = self._build_request('getPurifierStatus')
-
-        r_bytes, _ = await self.manager.async_call_api(
-            '/cloud/v2/deviceManaged/bypassV2',
-            method='post',
-            headers=headers,
-            json_object=body.to_dict(),
-        )
-        r = Helpers.process_dev_response(logger, "get_details", self, r_bytes)
+        r_dict = await self.call_bypassv2_api('getPurifierStatus')
+        r = process_bypassv2_results(self, _LOGGER, "get_details", r_dict)
         if r is None:
             return
 
-        r_model = ResponsePurifierBase.from_dict(r)
-        result = r_model.result.result
-        if result is None:
-            LibraryLogger.log_device_api_response_error(
-                logger,
-                self.device_name,
-                self.device_type,
-                "get_details",
-                "Error in response nested results"
-            )
-            return
-
-        if isinstance(result, PurifierV2DetailsResult):
-            self._set_state(result)
-        else:
-            LibraryLogger.log_device_api_response_error(
-                logger,
-                self.device_name,
-                self.device_type,
-                "get_details",
-                "Error in response nested results"
-            )
+        r_model = PurifierV2DetailsResult.from_dict(r)
+        self._set_state(r_model)
 
     @deprecated("Use toggle_light_detection(toggle) instead.")
     async def set_light_detection(self, toggle: bool) -> bool:
@@ -872,7 +602,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
     async def toggle_light_detection(self, toggle: bool) -> bool:
         """Enable/Disable Light Detection Feature."""
         if bool(self.state.light_detection_switch) == toggle:
-            logger.debug(
+            _LOGGER.debug(
                 "Light Detection is already set to %s", self.state.light_detection_switch
                 )
             return True
@@ -880,15 +610,8 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         payload_data = {
             "lightDetectionSwitch": int(toggle)
         }
-        body = self._build_request('setLightDetection', payload_data)
-        head = Helpers.bypass_header()
-        r_bytes, _ = await self.manager.async_call_api(
-            '/cloud/v2/deviceManaged/bypassV2',
-            method='post',
-            headers=head,
-            json_object=body.to_dict(),
-        )
-        r = Helpers.process_dev_response(logger, "set_light_detection", self, r_bytes)
+        r_dict = await self.call_bypassv2_api('setLightDetection', payload_data)
+        r = Helpers.process_dev_response(_LOGGER, "set_light_detection", self, r_dict)
         if r is None:
             return False
 
@@ -920,28 +643,18 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         if toggle is None:
             toggle = not bool(self.state.device_status)
         if not isinstance(toggle, bool):
-            logger.debug('Invalid toggle value for purifier switch')
+            _LOGGER.debug('Invalid toggle value for purifier switch')
             return False
         if toggle == bool(self.state.device_status):
-            logger.debug('Purifier is already %s', self.state.device_status)
+            _LOGGER.debug('Purifier is already %s', self.state.device_status)
             return True
 
-        # head, body = self.build_api_dict('setSwitch')
-        # power = int(toggle)
         payload_data = {
                 'powerSwitch': int(toggle),
                 'switchIdx': 0
             }
-        body = self._build_request('setSwitch', payload_data)
-        head = Helpers.bypass_header()
-
-        r_bytes, _ = await self.manager.async_call_api(
-            '/cloud/v2/deviceManaged/bypassV2',
-            method='post',
-            headers=head,
-            json_object=body.to_dict(),
-        )
-        r = Helpers.process_dev_response(logger, "toggle_switch", self, r_bytes)
+        r_dict = await self.call_bypassv2_api('setSwitch', payload_data)
+        r = Helpers.process_dev_response(_LOGGER, "toggle_switch", self, r_dict)
         if r is None:
             return False
 
@@ -959,22 +672,15 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
             bool : True if successful, False if not
         """
         if self.state.child_lock == mode:
-            logger.debug('Child lock is already %s', mode)
+            _LOGGER.debug('Child lock is already %s', mode)
             return True
 
         payload_data = {
             'childLockSwitch': int(mode)
         }
-        body = self._build_request('setChildLock', payload_data)
-        head = Helpers.bypass_header()
+        r_dict = await self.call_bypassv2_api('setChildLock', payload_data)
 
-        r_bytes, _ = await self.manager.async_call_api(
-            '/cloud/v2/deviceManaged/bypassV2',
-            method='post',
-            headers=head,
-            json_object=body.to_dict(),
-        )
-        r = Helpers.process_dev_response(logger, "set_child_lock", self, r_bytes)
+        r = Helpers.process_dev_response(_LOGGER, "set_child_lock", self, r_dict)
         if r is None:
             return False
 
@@ -985,22 +691,15 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
     async def toggle_display(self, mode: bool) -> bool:
         """Levoit Vital 100S/200S Set Display on/off with True/False."""
         if bool(self.state.display_set_state) == mode:
-            logger.debug('Display is already %s', mode)
+            _LOGGER.debug('Display is already %s', mode)
             return True
 
         payload_data = {
             'screenSwitch': int(mode)
         }
-        body = self._build_request('setDisplay', payload_data)
-        headers = Helpers.bypass_header()
+        r_dict = await self.call_bypassv2_api('setDisplay', payload_data)
 
-        r_bytes, _ = await self.manager.async_call_api(
-            '/cloud/v2/deviceManaged/bypassV2',
-            method='post',
-            headers=headers,
-            json_object=body.to_dict(),
-        )
-        r = Helpers.process_dev_response(logger, "set_display", self, r_bytes)
+        r = Helpers.process_dev_response(_LOGGER, "set_display", self, r_dict)
         if r is None:
             return False
 
@@ -1009,7 +708,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         return True
 
     async def set_timer(
-        self, timer_duration: int, action: str = DeviceStatus.OFF
+        self, duration: int, action: str | None = None
     ) -> bool:
         """Set timer for Levoit 100S.
 
@@ -1017,7 +716,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         DeviceStatus.ON or DeviceStatus.OFF.
 
         Parameters:
-            timer_duration (int):
+            duration (int):
                 Timer duration in seconds.
             action (str | None):
                 Action to perform, on or off, by default 'off'
@@ -1025,70 +724,41 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         Returns:
             bool : True if successful, False if not
         """
+        action = DeviceStatus.OFF  # No other actions available for this device
         if action not in [DeviceStatus.ON, DeviceStatus.OFF]:
-            logger.debug('Invalid action for timer')
+            _LOGGER.debug('Invalid action for timer')
             return False
 
         method = 'powerSwitch'
-
-        # head, body = self.build_api_dict('addTimerV2')
-        action_item = PurifierV2TimerActionItems(type=method, act=int(bool(action)))
-        timing = PurifierV2EventTiming(clkSec=timer_duration)
+        action_int = 1 if action == DeviceStatus.ON else 0
+        action_item = PurifierV2TimerActionItems(type=method, act=action_int)
+        timing = PurifierV2EventTiming(clkSec=duration)
         payload_data = PurifierV2TimerPayloadData(
             enabled=True, startAct=[action_item], tmgEvt=timing,
         )
 
-        body = self._build_request('addTimerV2', payload_data.to_dict())
-        headers = Helpers.bypass_header()
-
-        r_bytes, _ = await self.manager.async_call_api(
-            '/cloud/v2/deviceManaged/bypassV2',
-            method='post',
-            headers=headers,
-            json_object=body.to_dict(),
-        )
-        r = Helpers.process_dev_response(logger, "set_timer", self, r_bytes)
+        r_dict = await self.call_bypassv2_api('addTimerV2', payload_data.to_dict())
+        r = Helpers.process_dev_response(_LOGGER, "set_timer", self, r_dict)
         if r is None:
             return False
 
-        r_model = ResponsePurifierBase.from_dict(r)
-        result = r_model.result.result
-        if result is None or not isinstance(result, PurifierModifyTimerResult):
-            LibraryLogger.log_device_api_response_error(
-                logger,
-                self.device_name,
-                self.device_type,
-                "set_timer",
-                "Error in response nested results"
-            )
-            return False
+        r_model = ResultV2SetTimer.from_dict(r)
 
-        self.state.timer = Timer(timer_duration, action=action, id=result.id)
+        self.state.timer = Timer(duration, action=action, id=r_model.id)
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
     async def clear_timer(self) -> bool:
-        # head, body = self.build_api_dict('delTimerV2')
-        # body['payload']['subDeviceNo'] = 0
-        # body['payload']['data'] = {'id': 1, "subDeviceNo": 0}
-
         if self.state.timer is None:
-            logger.warning("No timer found, run get_timer() to retreive timer.")
+            _LOGGER.warning("No timer found, run get_timer() to retrieve timer.")
             return False
-        paylod_data = {
+
+        payload_data = {
             "id": self.state.timer.id,
             "subDeviceNo": 0
         }
-        body = self._build_request('delTimerV2', paylod_data)
-        headers = Helpers.bypass_header()
-
-        r_bytes, _ = await self.manager.async_call_api(
-            '/cloud/v2/deviceManaged/bypassV2',
-            method='post',
-            headers=headers,
-            json_object=body.to_dict(),
-        )
-        r = Helpers.process_dev_response(logger, "clear_timer", self, r_bytes)
+        r_dict = await self.call_bypassv2_api('delTimerV2', payload_data)
+        r = Helpers.process_dev_response(_LOGGER, "clear_timer", self, r_dict)
         if r is None:
             return False
 
@@ -1107,29 +777,18 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
                 Room size in square feet, by default 600
         """
         if preference not in self.auto_preferences:
-            logger.debug("%s is invalid preference -"
-                         " valid preferences are default, efficient, quiet",
-                         preference)
+            _LOGGER.debug(
+                "%s is invalid preference -"
+                " valid preferences are default, efficient, quiet",
+                preference,
+            )
             return False
-        # head, body = self.build_api_dict('setAutoPreference')
-        # body['payload']['data'] = {
-        #     'autoPreference': preference,
-        #     'roomSize': room_size,
-        # }
         payload_data = {
             "autoPreference": preference,
             "roomSize": room_size
         }
-        body = self._build_request('setAutoPreference', payload_data)
-        head = Helpers.bypass_header()
-
-        r_bytes, _ = await self.manager.async_call_api(
-            '/cloud/v2/deviceManaged/bypassV2',
-            method='post',
-            headers=head,
-            json_object=body.to_dict(),
-        )
-        r = Helpers.process_dev_response(logger, "set_auto_preference", self, r_bytes)
+        r_dict = await self.call_bypassv2_api('setAutoPreference', payload_data)
+        r = Helpers.process_dev_response(_LOGGER, "set_auto_preference", self, r_dict)
         if r is None:
             return False
 
@@ -1139,35 +798,27 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         return True
 
     async def set_fan_speed(self, speed: None | int = None) -> bool:
-        current_speed = self.state.fan_set_level or 0
-
         if speed is not None:
             if speed not in self.fan_levels:
-                logger.debug("%s is invalid speed - valid speeds are %s",
-                             speed, str(self.fan_levels))
+                _LOGGER.debug(
+                    "%s is invalid speed - valid speeds are %s",
+                    speed,
+                    str(self.fan_levels),
+                )
                 return False
             new_speed = speed
-        elif current_speed in [self.fan_levels[-1], 0]:
+        elif self.state.fan_level is None:
             new_speed = self.fan_levels[0]
         else:
-            current_index = self.fan_levels.index(current_speed)
-            new_speed = self.fan_levels[current_index + 1]
+            new_speed = Helpers.bump_level(self.state.fan_level, self.fan_levels)
 
         payload_data = {
             "levelIdx": 0,
             "manualSpeedLevel": new_speed,
             "levelType": "wind"
         }
-        body = self._build_request('setLevel', payload_data)
-        headers = Helpers.bypass_header()
-
-        r_bytes, _ = await self.manager.async_call_api(
-            '/cloud/v2/deviceManaged/bypassV2',
-            method='post',
-            headers=headers,
-            json_object=body.to_dict(),
-        )
-        r = Helpers.process_dev_response(logger, "change_fan_speed", self, r_bytes)
+        r_dict = await self.call_bypassv2_api('setLevel', payload_data)
+        r = Helpers.process_dev_response(_LOGGER, "set_fan_speed", self, r_dict)
         if r is None:
             return False
 
@@ -1179,8 +830,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
 
     async def set_mode(self, mode: str) -> bool:
         if mode.lower() not in self.modes:
-            logger.debug('Invalid purifier mode used - %s',
-                         mode)
+            _LOGGER.debug("Invalid purifier mode used - %s", mode)
             return False
 
         # Call change_fan_speed if mode is set to manual
@@ -1192,16 +842,8 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         payload_data = {
             "workMode": mode
         }
-        body = self._build_request('setPurifierMode', payload_data)
-        headers = Helpers.bypass_header()
-
-        r_bytes, _ = await self.manager.async_call_api(
-            '/cloud/v2/deviceManaged/bypassV2',
-            method='post',
-            headers=headers,
-            json_object=body.to_dict(),
-        )
-        r = Helpers.process_dev_response(logger, "mode_toggle", self, r_bytes)
+        r_dict = await self.call_bypassv2_api('setPurifierMode', payload_data)
+        r = Helpers.process_dev_response(_LOGGER, "mode_toggle", self, r_dict)
         if r is None:
             return False
 
@@ -1218,7 +860,7 @@ class VeSyncAir131(VeSyncPurifier):
 
     def __init__(self, details: ResponseDeviceDetailsModel,
                  manager: VeSync, feature_map: PurifierMap) -> None:
-        """Initilize air purifier class."""
+        """Initialize air purifier class."""
         super().__init__(details, manager, feature_map)
         self.request_keys = [
             "acceptLanguage",
@@ -1261,33 +903,21 @@ class VeSyncAir131(VeSyncPurifier):
         self.state.air_quality_level = AirQualityLevel(details.airQuality).value
 
     async def get_details(self) -> None:
-        # body = Helpers.req_body(self.manager, 'devicedetail')
-        # body['uuid'] = self.uuid
-        # head = Helpers.req_headers(self.manager)
         body = self._build_request('deviceDetail')
         headers = Helpers.req_headers(self.manager)
 
-        r_bytes, _ = await self.manager.async_call_api(
+        r_dict, _ = await self.manager.async_call_api(
             '/cloud/v1/deviceManaged/deviceDetail',
             method='post',
             headers=headers,
             json_object=body.to_dict(),
         )
-        r = Helpers.process_dev_response(logger, "get_details", self, r_bytes)
+        r = Helpers.process_dev_response(_LOGGER, "get_details", self, r_dict)
         if r is None:
             return
 
-        r_model = ResponsePurifier131Base.from_dict(r)
-        if r_model.result is not None:
-            self._set_state(r_model.result)
-        else:
-            LibraryLogger.log_device_api_response_error(
-                logger,
-                self.device_name,
-                self.device_type,
-                "get_details",
-                "Error in response nested results"
-            )
+        r_model = Purifier131Result.from_dict(r)
+        self._set_state(r_model)
 
     async def toggle_display(self, mode: bool) -> bool:
         update_dict = {
@@ -1296,11 +926,11 @@ class VeSyncAir131(VeSyncPurifier):
         body = self._build_request('airPurifierScreenCtl', update_dict=update_dict)
         headers = Helpers.req_headers(self.manager)
 
-        r_bytes, _ = await self.manager.async_call_api(
+        r_dict, _ = await self.manager.async_call_api(
             '/cloud/v1/deviceManaged/airPurifierScreenCtl', 'post',
             json_object=body.to_dict(), headers=headers
         )
-        r = Helpers.process_dev_response(logger, "toggle_display", self, r_bytes)
+        r = Helpers.process_dev_response(_LOGGER, "toggle_display", self, r_dict)
         if r is None:
             return False
 
@@ -1318,11 +948,11 @@ class VeSyncAir131(VeSyncPurifier):
         }
         body = self._build_request('airPurifierPowerSwitchCtl', update_dict=update_dict)
         headers = Helpers.req_header_bypass()
-        r_bytes, _ = await self.manager.async_call_api(
+        r_dict, _ = await self.manager.async_call_api(
             '/cloud/v1/deviceManaged/airPurifierPowerSwitchCtl', 'post',
             json_object=body.to_dict(), headers=headers
         )
-        r = Helpers.process_dev_response(logger, "toggle_switch", self, r_bytes)
+        r = Helpers.process_dev_response(_LOGGER, "toggle_switch", self, r_dict)
         if r is None:
             return False
 
@@ -1335,15 +965,15 @@ class VeSyncAir131(VeSyncPurifier):
 
         if speed is not None:
             if speed not in self.fan_levels:
-                logger.debug("%s is invalid speed - valid speeds are %s",
-                             speed, str(self.fan_levels))
+                _LOGGER.debug(
+                    "%s is invalid speed - valid speeds are %s",
+                    speed,
+                    str(self.fan_levels),
+                )
                 return False
             new_speed = speed
-        elif current_speed in [self.fan_levels[-1], 0]:
-            new_speed = self.fan_levels[0]
         else:
-            current_index = self.fan_levels.index(current_speed)
-            new_speed = self.fan_levels[current_index + 1]
+            new_speed = Helpers.bump_level(current_speed, self.fan_levels)
 
         update_dict = {
             "level": new_speed
@@ -1351,11 +981,11 @@ class VeSyncAir131(VeSyncPurifier):
         body = self._build_request('airPurifierSpeedCtl', update_dict=update_dict)
         headers = Helpers.req_header_bypass()
 
-        r_bytes, _ = await self.manager.async_call_api(
+        r_dict, _ = await self.manager.async_call_api(
             '/cloud/v1/deviceManaged/airPurifierSpeedCtl', 'post',
             json_object=body, headers=headers
         )
-        r = Helpers.process_dev_response(logger, "change_fan_speed", self, r_bytes)
+        r = Helpers.process_dev_response(_LOGGER, "change_fan_speed", self, r_dict)
         if r is None:
             return False
 
@@ -1367,7 +997,7 @@ class VeSyncAir131(VeSyncPurifier):
 
     async def set_mode(self, mode: str) -> bool:
         if mode not in self.modes:
-            logger.debug('Invalid purifier mode used - %s', mode)
+            _LOGGER.debug('Invalid purifier mode used - %s', mode)
             return False
 
         update_dict = {
@@ -1376,49 +1006,14 @@ class VeSyncAir131(VeSyncPurifier):
         body = self._build_request('airPurifierModeCtl', update_dict=update_dict)
         headers = Helpers.req_header_bypass()
 
-        r_bytes, _ = await self.manager.async_call_api(
+        r_dict, _ = await self.manager.async_call_api(
             '/cloud/v1/deviceManaged/airPurifierRunModeCtl', 'post',
             json_object=body.to_dict(), headers=headers
         )
-        r = Helpers.process_dev_response(logger, "mode_toggle", self, r_bytes)
+        r = Helpers.process_dev_response(_LOGGER, "mode_toggle", self, r_dict)
         if r is None:
             return False
 
         self.state.mode = mode
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
-
-    async def update(self) -> None:
-        await self.get_details()
-
-    # def display(self) -> None:
-    #     """Return formatted device info to stdout."""
-    #     super().display()
-    #     disp = [
-    #         ('Active Time : ', self.active_time, ' minutes'),
-    #         ('Fan Level: ', self.fan_level, ''),
-    #         ('Air Quality: ', self.air_quality, ''),
-    #         ('Mode: ', self.mode, ''),
-    #         ('Screen Status: ', self.screen_status, ''),
-    #         ('Filter Life: ', orjson.dumps(
-    #             self.filter_life, option=orjson.OPT_NON_STR_KEYS), ' percent')
-    #         ]
-    #     for line in disp:
-    #         print(f'{line[0]:.<30} {line[1]} {line[2]}')
-
-    # def displayJSON(self) -> str:
-    #     """Return air purifier status and properties in JSON output."""
-    #     sup = super().displayJSON()
-    #     sup_val = orjson.loads(sup)
-    #     sup_val.update(
-    #         {
-    #             'Active Time': str(self.active_time),
-    #             'Fan Level': self.fan_level,
-    #             'Air Quality': self.air_quality,
-    #             'Mode': self.mode,
-    #             'Screen Status': self.screen_status,
-    #             'Filter Life': str(self.filter_life)
-    #         }
-    #     )
-    #     return orjson.dumps(
-    #         sup_val, option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS).decode()

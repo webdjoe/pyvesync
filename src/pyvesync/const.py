@@ -18,9 +18,10 @@ Attributes:
     USER_TYPE (str): User type for the VeSync app - internal app usage.
     BYPASS_APP_V (str): Bypass app version
     BYPASS_HEADER_UA (str): Bypass header user agent
+    TERMINAL_ID (str): Unique identifier for new API calls
 """
 from random import randint
-
+from uuid import uuid1
 from enum import StrEnum, IntEnum, Enum
 from types import MappingProxyType
 
@@ -42,6 +43,7 @@ MOBILE_ID = str(randint(1000000000000000, 9999999999999999))  # noqa: S311
 USER_TYPE = "1"
 BYPASS_APP_V = "VeSync 3.0.51"
 BYPASS_HEADER_UA = "okhttp/3.12.1"
+TERMINAL_ID = '2' + uuid1().hex
 
 
 # Generic Constants
@@ -217,6 +219,11 @@ class ConnectionStatus(StrEnum):
         """Return True if device is online."""
         return self == ConnectionStatus.ONLINE
 
+    @classmethod
+    def from_bool(cls, value: bool | None) -> 'ConnectionStatus':
+        """Convert boolean value to corresponding string."""
+        return cls.ONLINE if value else cls.OFFLINE
+
 
 class NightlightModes(StrEnum):
     """Nightlight modes."""
@@ -348,6 +355,8 @@ class FanSleepPreference(StrEnum):
     TURBO = "turbo"
     EFFICIENT = "efficient"
     QUIET = "quiet"
+    TEMP_SENSE = "tempSense"
+    KIDS = "kids"
     UNKNOWN = "unknown"
 
 

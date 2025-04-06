@@ -29,20 +29,11 @@ from deprecated import deprecated
 
 from pyvesync.base_devices.switch_base import VeSyncSwitch
 from pyvesync.utils.colors import Color
-from pyvesync.utils.helpers import Helpers, Validators
-from pyvesync.utils.device_mixins import BypassV1Mixin
+from pyvesync.utils.helpers import Helpers, Validators, Timer
+from pyvesync.utils.device_mixins import BypassV1Mixin, process_bypassv1_result
 from pyvesync.const import ConnectionStatus, DeviceStatus
-from pyvesync.models.bypass_models import RequestBypassV1
-from pyvesync.models.switch_models import (
-    ResponseSwitchDetails,
-    InternalDimmerDetailsResult,
-    InternalSwitchResult,
-    RequestDimmerBrightness,
-    RequestSwitchStatus,
-    RequestDimmerDetails,
-    RequestDimmerStatus,
-    DimmerRGB,
-    )
+from pyvesync.models.bypass_models import RequestBypassV1, TimerModels
+from pyvesync.models import switch_models
 
 if TYPE_CHECKING:
     from pyvesync import VeSync
@@ -96,16 +87,16 @@ class VeSyncWallSwitch(BypassV1Mixin, VeSyncSwitch):
         super().__init__(details, manager, feature_map)
 
     async def get_details(self) -> None:
-        r_bytes = await self.call_bypassv1_api(
+        r_dict = await self.call_bypassv1_api(
             RequestBypassV1, method='deviceDetail', endpoint='deviceDetail'
             )
 
-        r = Helpers.process_dev_response(logger, "get_details", self, r_bytes)
+        r = Helpers.process_dev_response(logger, "get_details", self, r_dict)
         if r is None:
             return
-        resp_model = ResponseSwitchDetails.from_dict(r)
+        resp_model = switch_models.ResponseSwitchDetails.from_dict(r)
         result = resp_model.result
-        if not isinstance(result, InternalSwitchResult):
+        if not isinstance(result, switch_models.InternalSwitchResult):
             logger.warning("Invalid response model for switch details")
             return
         self.state.device_status = result.deviceStatus
@@ -118,19 +109,95 @@ class VeSyncWallSwitch(BypassV1Mixin, VeSyncSwitch):
             toggle = self.state.device_status != DeviceStatus.ON
         toggle_str = DeviceStatus.from_bool(toggle)
 
-        r_bytes = await self.call_bypassv1_api(
-            RequestSwitchStatus,
+        r_dict = await self.call_bypassv1_api(
+            switch_models.RequestSwitchStatus,
             {"status": toggle_str, "switchNo": 0},
             'deviceStatus',
             'deviceStatus'
             )
 
-        r = Helpers.process_dev_response(logger, "get_details", self, r_bytes)
+        r = Helpers.process_dev_response(logger, "get_details", self, r_dict)
         if r is None:
             return False
 
-        self.state.device_status = 'on' if toggle else 'off'
-        self.state.connection_status = 'online'
+        self.state.device_status = DeviceStatus.from_bool(toggle)
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def get_timer(self) -> None:
+        r_dict = await self.call_bypassv1_api(
+            TimerModels.RequestV1GetTimer,
+            method='getTimers',
+            endpoint='timer/getTimers'
+        )
+        if r_dict is None:
+            return
+        result = process_bypassv1_result(self, logger, "get_timer", r_dict)
+        if result is None:
+            return
+        result_model = TimerModels.ResultV1GetTimer.from_dict(result)
+        timers = result_model.timers
+        if not isinstance(timers, list) or len(timers) == 0:
+            logger.debug("No timers found")
+            return
+        if len(timers) > 1:
+            logger.debug("More than one timer found, using first timer")
+        timer = timers[0]
+        if not isinstance(timer, TimerModels.TimerItemV1):
+            logger.warning("Invalid timer model")
+            return
+        self.state.timer = Timer(
+            int(timer.counterTimer),
+            action=timer.action,
+            id=int(timer.timerID),
+        )
+
+    async def set_timer(self, duration: int, action: str | None = None) -> bool:
+        if action not in [DeviceStatus.ON, DeviceStatus.OFF]:
+            logger.warning("Invalid action for timer - on/off")
+            return False
+        update_dict = {
+            'action': action,
+            'counterTime': str(duration),
+        }
+        r_dict = await self.call_bypassv1_api(
+            TimerModels.RequestV1SetTime,
+            update_dict,
+            method='addTimer',
+            endpoint='timer/addTimer'
+        )
+        if r_dict is None:
+            return False
+        result = process_bypassv1_result(self, logger, "set_timer", r_dict)
+        if result is None:
+            return False
+        result_model = TimerModels.ResultV1SetTimer.from_dict(result)
+        self.state.timer = Timer(
+            int(duration),
+            action=action,
+            id=int(result_model.timerID),
+        )
+        return True
+
+    async def clear_timer(self) -> bool:
+        if self.state.timer is None:
+            logger.warning("No timer set, run get_timer() first.")
+            return False
+        update_dict = {
+            'timerId': str(self.state.timer.id),
+        }
+        r_dict = await self.call_bypassv1_api(
+            TimerModels.RequestV1ClearTimer,
+            update_dict,
+            method='deleteTimer',
+            endpoint='timer/deleteTimer'
+        )
+        if r_dict is None:
+            return False
+        result = Helpers.process_dev_response(logger, "clear_timer", self, r_dict)
+        if result is None:
+            return False
+        self.state.timer = None
         return True
 
 
@@ -155,16 +222,18 @@ class VeSyncDimmerSwitch(BypassV1Mixin, VeSyncSwitch):
 
     async def get_details(self) -> None:
         r_bytes = await self.call_bypassv1_api(
-            RequestDimmerDetails, method='deviceDetail', endpoint='deviceDetail'
-            )
+            switch_models.RequestDimmerDetails,
+            method="deviceDetail",
+            endpoint="deviceDetail",
+        )
 
         r = Helpers.process_dev_response(logger, "get_details", self, r_bytes)
         if r is None:
             return
 
-        resp_model = ResponseSwitchDetails.from_dict(r)
+        resp_model = switch_models.ResponseSwitchDetails.from_dict(r)
         result = resp_model.result
-        if not isinstance(result, InternalDimmerDetailsResult):
+        if not isinstance(result, switch_models.InternalDimmerDetailsResult):
             logger.warning("Invalid response model for dimmer details")
             return
         self.state.active_time = result.activeTime
@@ -172,7 +241,7 @@ class VeSyncDimmerSwitch(BypassV1Mixin, VeSyncSwitch):
         self.state.brightness = result.brightness
         self.state.backlight_status = result.rgbStatus
         new_color = result.rgbValue
-        if isinstance(new_color, DimmerRGB):
+        if isinstance(new_color, switch_models.DimmerRGB):
             self.state.backlight_color = Color.from_rgb(
                 new_color.red, new_color.green, new_color.blue
                 )
@@ -184,7 +253,7 @@ class VeSyncDimmerSwitch(BypassV1Mixin, VeSyncSwitch):
     )
     async def switch_toggle(self, status: str) -> bool:
         """Toggle switch status."""
-        return await self.toggle_switch(status == 'on')
+        return await self.toggle_switch(status == DeviceStatus.ON)
 
     async def toggle_switch(self, toggle: bool | None = None) -> bool:
         if toggle is None:
@@ -192,7 +261,7 @@ class VeSyncDimmerSwitch(BypassV1Mixin, VeSyncSwitch):
         toggle_status = DeviceStatus.from_bool(toggle)
 
         r_bytes = await self.call_bypassv1_api(
-            RequestDimmerStatus,
+            switch_models.RequestDimmerStatus,
             {"status": toggle_status},
             'dimmerPowerSwitchCtl',
             'dimmerPowerSwitchCtl'
@@ -212,7 +281,7 @@ class VeSyncDimmerSwitch(BypassV1Mixin, VeSyncSwitch):
         toggle_status = DeviceStatus.from_bool(toggle)
 
         r_bytes = await self.call_bypassv1_api(
-            RequestDimmerStatus,
+            switch_models.RequestDimmerStatus,
             {"status": toggle_status},
             'dimmerIndicatorLightCtl',
             'dimmerIndicatorLightCtl'
@@ -251,7 +320,7 @@ class VeSyncDimmerSwitch(BypassV1Mixin, VeSyncSwitch):
         if new_color is not None:
             update_dict['rgbValue'] = asdict(new_color.rgb)
         r_bytes = await self.call_bypassv1_api(
-            RequestDimmerStatus,
+            switch_models.RequestDimmerStatus,
             update_dict,
             'dimmerRgbValueCtl',
             'dimmerRgbValueCtl'
@@ -265,8 +334,8 @@ class VeSyncDimmerSwitch(BypassV1Mixin, VeSyncSwitch):
         if new_color is not None:
             self.state.backlight_color = new_color
         self.state.backlight_status = status_str
-        self.state.device_status = 'on'
-        self.state.connection_status = 'online'
+        self.state.device_status = DeviceStatus.ON
+        self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
     async def turn_rgb_backlight_off(self) -> bool:
@@ -292,7 +361,7 @@ class VeSyncDimmerSwitch(BypassV1Mixin, VeSyncSwitch):
             return False
 
         r_bytes = await self.call_bypassv1_api(
-            RequestDimmerBrightness,
+            switch_models.RequestDimmerBrightness,
             {"brightness": brightness},
             'dimmerBrightnessCtl',
             'dimmerBrightnessCtl'
@@ -305,4 +374,76 @@ class VeSyncDimmerSwitch(BypassV1Mixin, VeSyncSwitch):
         self.state.brightness = brightness
         self.state.device_status = DeviceStatus.ON
         self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def get_timer(self) -> None:
+        r_dict = await self.call_bypassv1_api(
+            TimerModels.RequestV1GetTimer,
+            method='getTimers',
+            endpoint='timer/getTimers'
+        )
+        result = process_bypassv1_result(self, logger, "get_timer", r_dict)
+        if result is None:
+            return
+        result_model = TimerModels.ResultV1GetTimer.from_dict(result)
+        timers = result_model.timers
+        if not isinstance(timers, list) or len(timers) == 0:
+            logger.info("No timers found")
+            return
+        if len(timers) > 1:
+            logger.debug("More than one timer found, using first timer")
+        timer = timers[0]
+        if not isinstance(timer, TimerModels.TimeItemV1):
+            logger.warning("Invalid timer model")
+            return
+        self.state.timer = Timer(
+            int(timer.counterTime),
+            action=timer.action,
+            id=int(timer.timerID),
+        )
+
+    async def set_timer(self, duration: int, action: str | None = None) -> bool:
+        if action not in [DeviceStatus.ON, DeviceStatus.OFF]:
+            logger.warning("Invalid action for timer - on/off")
+            return False
+        update_dict = {
+            'action': action,
+            'counterTime': str(duration),
+            'status': "1"
+        }
+        r_dict = await self.call_bypassv1_api(
+            TimerModels.RequestV1SetTime,
+            update_dict,
+            method='addTimer',
+            endpoint='timer/addTimer'
+        )
+        result = process_bypassv1_result(self, logger, "set_timer", r_dict)
+        if result is None:
+            return False
+        result_model = TimerModels.ResultV1SetTimer.from_dict(result)
+        self.state.timer = Timer(
+            int(duration),
+            action=action,
+            id=int(result_model.timerID),
+        )
+        return True
+
+    async def clear_timer(self) -> bool:
+        if self.state.timer is None:
+            logger.debug("No timer set, run get_timer() first.")
+            return False
+        update_dict = {
+            'timerId': str(self.state.timer.id),
+            'status': "1"
+        }
+        r_dict = await self.call_bypassv1_api(
+            TimerModels.RequestV1ClearTimer,
+            update_dict,
+            method='deleteTimer',
+            endpoint='timer/deleteTimer'
+        )
+        result = Helpers.process_dev_response(logger, "clear_timer", self, r_dict)
+        if result is None:
+            return False
+        self.state.timer = None
         return True
