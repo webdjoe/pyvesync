@@ -39,6 +39,10 @@ def process_bypassv1_result(
 ) -> dict | None:
     """Process the Bypass V1 API response.
 
+    This will gracefully handle errors in the response and error codes,
+    logging them as needed. The return dictionary is the result value of
+    the API response.
+
     Args:
         device (VeSyncBaseDevice): The device object.
         logger (Logger): The logger to use for logging.
@@ -145,13 +149,17 @@ def _get_inner_result(
     return inner_result
 
 
-def process_bypassv2_results(
+def process_bypassv2_result(
     device: VeSyncBaseDevice,
     logger: Logger,
     method: str,
     resp_dict: dict | None,
 ) -> dict | None:
     """Process the Bypass V1 API response.
+
+    This will gracefully handle errors in the response and error codes,
+    logging them as needed. The return dictionary is the **inner** result value of
+    the API response.
 
     Args:
         device (VeSyncBaseDevice): The device object.
@@ -266,8 +274,8 @@ class BypassV1Mixin:
 
     Overrides the `_build_request` method and `request_keys` attribute for devices
     that use the Bypass V1 API- /cloud/v1/deviceManaged/bypass. The primary method to
-    call is `call_bypassv1_api`, which is a wrapper for calling the API. The `bypass`
-    endpoint can also be overridden.
+    call is `call_bypassv1_api`, which is a wrapper for setting up the request body and
+    calling the API. The `bypass` endpoint can also be overridden for specific API calls.
     """
 
     if TYPE_CHECKING:

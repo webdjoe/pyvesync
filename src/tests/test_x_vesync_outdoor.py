@@ -69,7 +69,7 @@ class TestVesyncOutdoorPlug(TestBase):
         """Test Outdoor Outlet Device On/Off Methods."""
         self.mock_api.return_value = (orjson.dumps({'code': 0}), 200)
         outdoor_outlet = VeSyncOutdoorPlug(DEV_LIST_DETAIL, self.manager)
-        head = Helpers.req_headers(self.manager)
+        head = Helpers.req_legacy_headers(self.manager)
         body = Helpers.req_body(self.manager, 'devicestatus')
 
         body['status'] = 'on'
@@ -107,7 +107,7 @@ class TestVesyncOutdoorPlug(TestBase):
         self.mock_api.assert_called_with(
             '/outdoorsocket15a/v1/device/energyweek',
             'post',
-            headers=Helpers.req_headers(self.manager),
+            headers=Helpers.req_legacy_headers(self.manager),
             json_object=body,
         )
         energy_dict = outdoor_outlet.energy['week']
@@ -129,7 +129,7 @@ class TestVesyncOutdoorPlug(TestBase):
         self.mock_api.assert_called_with(
             '/outdoorsocket15a/v1/device/energymonth',
             'post',
-            headers=Helpers.req_headers(self.manager),
+            headers=Helpers.req_legacy_headers(self.manager),
             json_object=body,
         )
         energy_dict = outdoor_outlet.energy['month']
@@ -151,7 +151,7 @@ class TestVesyncOutdoorPlug(TestBase):
         self.mock_api.assert_called_with(
             '/outdoorsocket15a/v1/device/energyyear',
             'post',
-            headers=Helpers.req_headers(self.manager),
+            headers=Helpers.req_legacy_headers(self.manager),
             json_object=body,
         )
         energy_dict = outdoor_outlet.energy['year']

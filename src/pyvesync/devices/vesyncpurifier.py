@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 from typing_extensions import deprecated
 
 from pyvesync.base_devices.purifier_base import VeSyncPurifier
-from pyvesync.utils.device_mixins import BypassV2Mixin, process_bypassv2_results
+from pyvesync.utils.device_mixins import BypassV2Mixin, process_bypassv2_result
 from pyvesync.utils.helpers import Helpers, Timer
 from pyvesync.models.base_models import DefaultValues
 from pyvesync.const import (
@@ -120,7 +120,7 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
     async def get_details(self) -> None:
         """Build Bypass Purifier details dictionary."""
         r_dict = await self.call_bypassv2_api('getPurifierStatus')
-        r = process_bypassv2_results(self, _LOGGER, "get_details", r_dict)
+        r = process_bypassv2_result(self, _LOGGER, "get_details", r_dict)
         if r is None:
             return
         resp_model = PurifierCoreDetailsResult.from_dict(r)
@@ -146,7 +146,7 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
 
         """
         r_bytes = await self.call_bypassv2_api('getTimer')
-        r = process_bypassv2_results(self, _LOGGER, "get_timer", r_bytes)
+        r = process_bypassv2_result(self, _LOGGER, "get_timer", r_bytes)
         if r is None:
             return None
 
@@ -190,7 +190,7 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
             "total": duration
         }
         r_dict = await self.call_bypassv2_api('addTimer', payload_data)
-        r = process_bypassv2_results(self, _LOGGER, "set_timer", r_dict)
+        r = process_bypassv2_result(self, _LOGGER, "set_timer", r_dict)
         if r is None:
             return False
 
@@ -587,7 +587,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
     async def get_details(self) -> None:
         """Build API V2 Purifier details dictionary."""
         r_dict = await self.call_bypassv2_api('getPurifierStatus')
-        r = process_bypassv2_results(self, _LOGGER, "get_details", r_dict)
+        r = process_bypassv2_result(self, _LOGGER, "get_details", r_dict)
         if r is None:
             return
 
@@ -904,7 +904,7 @@ class VeSyncAir131(VeSyncPurifier):
 
     async def get_details(self) -> None:
         body = self._build_request('deviceDetail')
-        headers = Helpers.req_headers(self.manager)
+        headers = Helpers.req_header_bypass()
 
         r_dict, _ = await self.manager.async_call_api(
             '/cloud/v1/deviceManaged/deviceDetail',
@@ -924,7 +924,7 @@ class VeSyncAir131(VeSyncPurifier):
             "status": "on" if mode else "off"
         }
         body = self._build_request('airPurifierScreenCtl', update_dict=update_dict)
-        headers = Helpers.req_headers(self.manager)
+        headers = Helpers.req_header_bypass()
 
         r_dict, _ = await self.manager.async_call_api(
             '/cloud/v1/deviceManaged/airPurifierScreenCtl', 'post',

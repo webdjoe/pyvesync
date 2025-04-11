@@ -19,7 +19,19 @@ logger = logging.getLogger(__name__)
 
 
 class SwitchState(DeviceState):
-    """VeSync Switch State Base."""
+    """VeSync Switch State Base.
+
+    Args:
+        device (VeSyncSwitch): The switch device.
+        details (ResponseDeviceDetailsModel): The switch device details.
+        feature_map (SwitchMap): The switch feature map.
+
+    Attributes:
+        backlight_color (Color): The backlight color of the switch.
+        brightness (int): The brightness level of the switch.
+        backlight_status (str): The status of the backlight.
+        indicator_status (str): The status of the indicator light.
+    """
 
     __slots__ = (
         "_backlight_color",

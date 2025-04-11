@@ -4,7 +4,12 @@ Error codes are pulled from the VeSync app source code. If there are unknown err
 that are not found, please open an issue on GitHub.
 
 Errors are integers divided by 1000 and then multiplied by 1000 to
-get the base error code.
+get the base error code. It also tries to check if the absolute value matches
+as well.
+
+This is used by the `pyvesync.utils.helpers.Helpers.process_dev_response` method to
+retrieve response code information and store in the `last_response` device instance.
+
 
 The "check_device" key of the error dictionary is used to determine if the logger
 should emit a warning to the user for critical device errors, such as a short
@@ -17,15 +22,20 @@ other than the ErrorCodes error configuration.
 
 Example:
     Example of the error dictionary structure:
-    >>> pyvesync.errors.ErrorCodes.get_error_info("-11201022")
-    ErrorInfo(
+    ```python
+    pyvesync.errors.ErrorCodes.get_error_info("-11201022")
+    ResponseInfo(
         name="PASSWORD_ERROR",
         error_type=ErrorTypes.AUTHENTICATION,
         msg="Invalid password"
         critical_error=False,
         operational_error=False,
         device_online=None
-)
+    )
+
+    device.last_response
+    # Returns the ResponseInfo object.
+    ```
 """
 
 from dataclasses import dataclass
@@ -42,7 +52,9 @@ class ResponseInfo(DataClassORJSONMixin):
         name (str): Name of the error
         error_type (ErrorTypes): Type of the error see `ErrorTypes`
         message (str): Message for the error
-        check_device (bool): Whether to emit warning, optional
+        critical_error (bool): A major error, such as a short or voltage error
+        operational_error (bool): Device connected but API error
+        device_online (bool | None): Device online status
     """
 
     name: str
@@ -559,10 +571,12 @@ class ErrorCodes:
             dict: Error dictionary for the given error code.
 
         Example:
-            >>> ErrorCodes.get_error_info("-11201022")
+            ```python
+            ErrorCodes.get_error_info("-11201022")
             ErrorInfo(
                 "PASSWORD_ERROR", ErrorTypes.AUTHENTICATION, "Invalid password"
             )
+            ```
         """
         try:
             if error_code is None:
@@ -593,7 +607,11 @@ class ErrorCodes:
 
 
 class VeSyncError(Exception):
-    """Base exception for VeSync errors."""
+    """Base exception for VeSync errors.
+
+    These are raised based on API response codes and exceptions
+    that may be raised by the different handlers.
+    """
 
 
 class VesyncLoginError(VeSyncError):
@@ -651,6 +669,8 @@ class VeSyncAPIStatusCodeError(VeSyncError):
 
 def raise_api_errors(error_info: ResponseInfo) -> None:
     """Raise the appropriate exception for API error code.
+
+    Called by `VeSync.async_call_api` method.
 
     Raises:
         VeSyncRateLimitError: Rate limit error

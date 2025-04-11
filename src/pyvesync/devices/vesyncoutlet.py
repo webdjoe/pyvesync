@@ -15,7 +15,7 @@ from pyvesync.utils.device_mixins import (
     BypassV1Mixin,
     process_bypassv1_result,
     BypassV2Mixin,
-    process_bypassv2_results,
+    process_bypassv2_result,
 )
 from pyvesync.models.outlet_models import Response7AOutlet
 from pyvesync.models.bypass_models import TimerModels
@@ -55,11 +55,24 @@ outlet_config = {
 
 outlet_modules = {k: v['module'] for k, v in outlet_config.items()}
 
-__all__ = [*outlet_modules.values(), 'outlet_modules']  # noqa: PLE0604
+# __all__ = [*outlet_modules.values(), 'outlet_modules']
 
 
 class VeSyncOutlet7A(VeSyncOutlet):
-    """Etekcity 7A Round Outlet Class."""
+    """Etekcity 7A Round Outlet Class.
+
+    Methods:
+        set_timer: Set timer for device.
+        get_timer: Get timer for device from API.
+        clear_timer: Clear timer for device from API.
+        set_state: Set device state attribute.
+        get_state: Get device state attribute.
+        update: Update device details.
+        display: Print formatted static device info to stdout.
+        to_json: Print JSON API string
+        to_jsonb: JSON API bytes device details
+        to_dict: Return device information as a dictionary.
+    """
 
     __slots__ = ()
 
@@ -124,7 +137,7 @@ class VeSyncOutlet7A(VeSyncOutlet):
         r_dict, status_code = await self.manager.async_call_api(
             f'/v1/wifi-switch-1.3/{self.cid}/status/{toggle_str}',
             'put',
-            headers=Helpers.req_headers(self.manager),
+            headers=Helpers.req_legacy_headers(self.manager),
         )
 
         if status_code != 200:
@@ -146,7 +159,7 @@ class VeSyncOutlet7A(VeSyncOutlet):
         r_dict, status_code = await self.manager.async_call_api(
             f"/v2/device/{self.cid}/timer",
             "get",
-            headers=Helpers.req_headers(self.manager),
+            headers=Helpers.req_legacy_headers(self.manager),
         )
         if not r_dict or status_code != 200:
             logger.debug("No timer set.")
@@ -180,7 +193,7 @@ class VeSyncOutlet7A(VeSyncOutlet):
         r_dict, status_code = await self.manager.async_call_api(
             f"/v2/device/{self.cid}/timer",
             "post",
-            headers=Helpers.req_headers(self.manager),
+            headers=Helpers.req_legacy_headers(self.manager),
             json_object=update_dict,
         )
         if status_code != 200:
@@ -210,7 +223,7 @@ class VeSyncOutlet7A(VeSyncOutlet):
         _, status_code = await self.manager.async_call_api(
             f"/v2/device/{self.cid}/timer/{self.state.timer.id}",
             "delete",
-            headers=Helpers.req_headers(self.manager),
+            headers=Helpers.req_legacy_headers(self.manager),
         )
         if status_code != 200:
             return False
@@ -272,7 +285,7 @@ class VeSyncOutlet10A(VeSyncOutlet):
         r_dict, _ = await self.manager.async_call_api(
             '/10a/v1/device/devicedetail',
             'post',
-            headers=Helpers.req_headers(self.manager),
+            headers=Helpers.req_legacy_headers(self.manager),
             json_object=body,
         )
         r = Helpers.process_dev_response(logger, "get_details", self, r_dict)
@@ -621,7 +634,7 @@ class VeSyncOutletBSDGO1(BypassV2Mixin, VeSyncOutlet):
     async def get_details(self) -> None:
         r_dict = await self.call_bypassv2_api('getProperty')
 
-        result = process_bypassv2_results(self, logger, 'get_details', r_dict)
+        result = process_bypassv2_result(self, logger, 'get_details', r_dict)
         if result is None:
             return
 

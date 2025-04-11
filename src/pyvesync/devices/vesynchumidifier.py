@@ -7,7 +7,7 @@ import orjson
 
 from pyvesync.base_devices import VeSyncHumidifier
 from pyvesync.utils.helpers import Helpers, Validators, Timer
-from pyvesync.utils.device_mixins import BypassV2Mixin, process_bypassv2_results
+from pyvesync.utils.device_mixins import BypassV2Mixin, process_bypassv2_result
 from pyvesync.const import DeviceStatus, IntFlag, ConnectionStatus
 from pyvesync.models.bypass_models import ResultV2GetTimer
 from pyvesync.models.humidifier_models import (
@@ -72,7 +72,7 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
 
     async def get_details(self) -> None:
         r_dict = await self.call_bypassv2_api("getHumidifierStatus")
-        r_dict = process_bypassv2_results(
+        r_dict = process_bypassv2_result(
             self, logger, 'get_details', r_dict
             )
         if r_dict is None:
@@ -97,7 +97,7 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
 
     async def get_timer(self) -> Timer | None:
         r_dict = await self.call_bypassv2_api("getTimer")
-        result = process_bypassv2_results(
+        result = process_bypassv2_result(
             self, logger, "get_timer", r_dict
         )
         if result is None:
@@ -137,7 +137,7 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
             "total": duration,
         }
         r_dict = await self.call_bypassv2_api("addTimer", payload_data)
-        r = process_bypassv2_results(self, logger, "set_timer", r_dict)
+        r = process_bypassv2_result(self, logger, "set_timer", r_dict)
         if not isinstance(r, dict) or "id" not in r:
             logger.debug("Failed to set timer")
             return False
@@ -384,7 +384,7 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
 
     async def get_details(self) -> None:
         r_dict = await self.call_bypassv2_api("getHumidifierStatus")
-        r = process_bypassv2_results(self, logger, "get_details", r_dict)
+        r = process_bypassv2_result(self, logger, "get_details", r_dict)
         if r is None:
             return
 
@@ -547,7 +547,7 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
 
     async def get_details(self) -> None:
         r_dict = await self.call_bypassv2_api("getHumidifierStatus")
-        r_dict = process_bypassv2_results(
+        r_dict = process_bypassv2_result(
             self, logger, 'get_details', r_dict
             )
         if r_dict is None:

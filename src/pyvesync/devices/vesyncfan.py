@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 from pyvesync.utils.helpers import Helpers, Timer
 from pyvesync.base_devices import VeSyncFanBase
 from pyvesync.const import DeviceStatus, ConnectionStatus
-from pyvesync.utils.device_mixins import BypassV2Mixin, process_bypassv2_results
+from pyvesync.utils.device_mixins import BypassV2Mixin, process_bypassv2_result
 from pyvesync.models.fan_models import TowerFanResult
 from pyvesync.models.bypass_models import TimerModels
 if TYPE_CHECKING:
@@ -72,7 +72,7 @@ class VeSyncTowerFan(BypassV2Mixin, VeSyncFanBase):
 
     async def get_details(self) -> None:
         r_dict = await self.call_bypassv2_api("getTowerFanStatus")
-        r = process_bypassv2_results(self, logger, "get_details", r_dict)
+        r = process_bypassv2_result(self, logger, "get_details", r_dict)
         if r is None:
             return
 
@@ -202,7 +202,7 @@ class VeSyncTowerFan(BypassV2Mixin, VeSyncFanBase):
             "getTimer",
             {}
         )
-        r = process_bypassv2_results(self, logger, "get_timer", r_dict)
+        r = process_bypassv2_result(self, logger, "get_timer", r_dict)
         if not r:
             logger.debug('No timer found - run get_timer()')
             return
@@ -223,7 +223,7 @@ class VeSyncTowerFan(BypassV2Mixin, VeSyncFanBase):
             'total': duration,
         }
         r_dict = await self.call_bypassv2_api("setTimer", payload_data)
-        result = process_bypassv2_results(self, logger, "set_timer", r_dict)
+        result = process_bypassv2_result(self, logger, "set_timer", r_dict)
         if result is None:
             return False
         r_model = TimerModels.ResultV2SetTimer.from_dict(result)
@@ -240,7 +240,7 @@ class VeSyncTowerFan(BypassV2Mixin, VeSyncFanBase):
             'id': self.state.timer.id,
         }
         r_dict = await self.call_bypassv2_api("clearTimer", payload_data)
-        result = process_bypassv2_results(self, logger, "clear_timer", r_dict)
+        result = process_bypassv2_result(self, logger, "clear_timer", r_dict)
         if result is None:
             return False
         self.state.timer = None

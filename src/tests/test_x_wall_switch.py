@@ -76,7 +76,7 @@ class TestVesyncWallSwitch(TestBase):
         """Test 15A Device On/Off Methods"""
         self.mock_api.return_value = (orjson.dumps({'code': 0}), 200)
         wswitch = VeSyncWallSwitch(DEV_LIST_DETAIL, self.manager)
-        head = Helpers.req_headers(self.manager)
+        head = Helpers.req_legacy_headers(self.manager)
         body = Helpers.req_body(self.manager, 'devicestatus')
 
         body['status'] = 'on'

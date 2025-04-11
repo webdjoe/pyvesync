@@ -59,7 +59,7 @@ class HSV:
 
     Does not perform any validation and should not be used directly, only
     by the `Color` dataclass through the Color.from_hsv(hue, saturation, value)
-    classmethod.
+    classmethod or Color.rgb_to_hsv(red, green, blue) method.
 
     Attributes:
         hue (float): The hue component of the color, typically in the range [0, 360).
@@ -103,15 +103,9 @@ class HSV:
 class Color:
     """Dataclass for color values.
 
-    For HSV, pass hue as value in degrees 0-360, saturation and value as values
-    between 0 and 100. For RGB, pass red, green and blue as values between 0 and 255. This
-    dataclass provides validation and conversion methods for both HSV and RGB color spaces
-
-    Notes:
-        To instantiate pass kw arguments for colors with *either* **hue, saturation and
-        value** *or* **red, green and blue**. RGB will take precedence if both are
-        provided. Once instantiated, the named tuples `hsv` and `rgb` will be
-        available as attributes.
+    This class should be instantiated through the `from_rgb` or `from_hsv`
+    classmethods. It will return a `Color` object with the appropriate color
+    values in RGB and HSV.
 
     Args:
         color_object (HSV | RGB): Named tuple with color values.
@@ -140,6 +134,10 @@ class Color:
         """Return string representation."""
         return f"Color(hsv={self.hsv}, rgb={self.rgb})"
 
+    def __repr__(self) -> str:
+        """Return string representation."""
+        return f"Color(hsv={self.hsv}, rgb={self.rgb})"
+
     def as_dict(self) -> dict[str, dict]:
         """Return color values as dict."""
         return {
@@ -158,7 +156,20 @@ class Color:
     @classmethod
     def from_rgb(cls, red: NUMERIC_STRICT, green: NUMERIC_STRICT,
                  blue: NUMERIC_STRICT) -> Color | None:
-        """Create Color instance from RGB values."""
+        """Create Color instance from RGB values.
+
+        Args:
+            red (NUMERIC_STRICT): The red component of the color,
+                typically in the range [0, 255].
+            green (NUMERIC_STRICT): The green component of the color,
+                typically in the range [0, 255].
+            blue (NUMERIC_STRICT): The blue component of the color,
+                typically in the range [0, 255].
+
+        Returns:
+            Color | None: A Color object with the appropriate color values in RGB and HSV,
+                or None if the input values are invalid.
+        """
         if not Validators.validate_rgb(red, green, blue):
             _LOGGER.debug("Invalid RGB values")
             return None
@@ -167,7 +178,20 @@ class Color:
     @classmethod
     def from_hsv(cls, hue: NUMERIC_STRICT, saturation: NUMERIC_STRICT,
                  value: NUMERIC_STRICT) -> Color | None:
-        """Create Color instance from HSV values."""
+        """Create Color instance from HSV values.
+
+        Args:
+            hue (NUMERIC_STRICT): The hue component of the color,
+                in the range [0, 360).
+            saturation (NUMERIC_STRICT): The saturation component of the color,
+                typically in the range [0, 1].
+            value (NUMERIC_STRICT): The value (brightness) component of the color,
+                typically in the range [0, 1].
+
+        Returns:
+            Color | None: A Color object with the appropriate color values in RGB and HSV,
+                or None if the input values are invalid.
+        """
         if not Validators.validate_hsv(hue, saturation, value):
             _LOGGER.debug("Invalid HSV values")
             return None
@@ -175,7 +199,18 @@ class Color:
 
     @staticmethod
     def hsv_to_rgb(hue: float, saturation: float, value: float) -> RGB:
-        """Convert HSV to RGB."""
+        """Convert HSV to RGB.
+
+        Args:
+            hue (float): The hue component of the color, in the range [0, 360).
+            saturation (float): The saturation component of the color,
+                in the range [0, 1].
+            value (float): The value (brightness) component of the color,
+                in the range [0, 1].
+
+        Returns:
+            RGB: An RGB dataclass with red, green, and blue components.
+        """
         return RGB(
             *tuple(round(i * 255, 0) for i in colorsys.hsv_to_rgb(
                 hue / 360,
@@ -186,7 +221,16 @@ class Color:
 
     @staticmethod
     def rgb_to_hsv(red: float, green: float, blue: float) -> HSV:
-        """Convert RGB to HSV."""
+        """Convert RGB to HSV.
+
+        Args:
+            red (float): The red component of the color, in the range [0, 255].
+            green (float): The green component of the color, in the range [0, 255].
+            blue (float): The blue component of the color, in the range [0, 255].
+
+        Returns:
+            HSV: An HSV dataclass with hue, saturation, and value components.
+        """
         hsv_tuple = colorsys.rgb_to_hsv(
                 red / 255,
                 green / 255,

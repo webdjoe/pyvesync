@@ -10,9 +10,7 @@ from typing_extensions import deprecated
 # import warnings
 import orjson
 
-from pyvesync.utils.helpers import Helpers
 from pyvesync.const import DeviceStatus, ConnectionStatus, IntFlag, StrFlag
-from pyvesync.models.base_models import DefaultValues, RequestBaseModel
 
 logger = logging.getLogger(__name__)
 
@@ -58,10 +56,16 @@ class VeSyncBaseDevice(ABC):
         features (dict): Features of device.
 
     Methods:
-        is_on(): Return True if device is on.
-        firmware_update(): Return True if firmware update available.
-        display(): Print formatted device info to stdout.
-        displayJSON(): JSON API for device details.
+        set_timer: Set timer for device.
+        get_timer: Get timer for device from API.
+        clear_timer: Clear timer for device from API.
+        set_state: Set device state attribute.
+        get_state: Get device state attribute.
+        update: Update device details.
+        display: Print formatted static device info to stdout.
+        to_json: Print JSON API string
+        to_jsonb: JSON API bytes device details
+        to_dict: Return device information as a dictionary.
 
     Note:
         Device states are found in the `state` attribute in a subclass of DeviceState
@@ -71,7 +75,6 @@ class VeSyncBaseDevice(ABC):
         The `last_response` attribute is used to store the last response and error
         information from the API call. See the `pyvesync.errors` module for more
         information.
-
     """
 
     __slots__ = (
@@ -105,13 +108,7 @@ class VeSyncBaseDevice(ABC):
                  manager: VeSync,
                  feature_map: DeviceMapTemplate
                  ) -> None:
-        """Initialize VeSync device base class.
-
-        Args:
-            details (ResponseDeviceDetailsModel): Device details from API call.
-            manager (VeSync): Manager object for API calls.
-            feature_map (DeviceMapTemplate): Device configuration map, will be specific
-        """
+        """Initialize VeSync device base class."""
         self._exclude_serialization: list[str] = []
         self.enabled: bool = True
         self.state: DeviceState = DeviceState(self, details, feature_map)
@@ -133,49 +130,6 @@ class VeSyncBaseDevice(ABC):
         # From feature_map
         self.product_type: str = feature_map.product_type
         self.features = feature_map.features
-
-    def build_request_from_model(
-        self,
-        model: type[RequestBaseModel],
-        request_keys: list[str],
-        instances: list[object] | None = None,
-        update_dict: dict[str, Any] | None = None,
-    ) -> RequestBaseModel:
-        """Pass a model in to build a request.
-
-        The instances argument is a list of instances to build the request from.
-        No need to pass the device or VeSync instance. It automatically gets the
-        attributes from the device instance and VeSync instance.
-
-        Args:
-            model (SerializableType): Model to build request from.
-            request_keys (dict[str, str]): Dictionary of keys and type to use for request.
-            instances (list[object] | None): List of additional classes to get
-                attributes for the request model.
-            update_dict (dict[str, Any]): Optional dictionary to update dict.
-
-        Returns:
-            dict[str, Any] | None : Built dictionary of request from keys
-
-        Note:
-            Order of building the request is:
-            1. DefaultValues class
-            2. VeSync manager
-            3. Device
-            4. Other Instances
-            5. Update dict
-        """
-        request_dict: dict[str, Any] = {}
-        request_dict.update(Helpers.get_class_attributes(DefaultValues, request_keys))
-        request_dict.update(Helpers.get_class_attributes(self.manager, request_keys))
-        request_dict.update(Helpers.get_class_attributes(self, request_keys))
-        if instances is not None and len(instances) > 0:
-            for obj in instances:
-                request_dict.update(Helpers.get_class_attributes(obj, request_keys))
-
-        if update_dict is not None:
-            request_dict.update(update_dict)
-        return model.from_dict(request_dict)
 
     def __eq__(self, other: object) -> bool:
         """Use device CID and sub-device number to test equality."""
@@ -329,7 +283,7 @@ class VeSyncBaseDevice(ABC):
         return self.to_json(state, indent)
 
     def to_json(self, state: bool = True, indent: bool = True) -> str:
-        """JSON API for device details.
+        """Print JSON API string for device details.
 
         Args:
             state (bool): If True, include state in JSON output, defaults to True.
@@ -337,17 +291,17 @@ class VeSyncBaseDevice(ABC):
 
         Returns:
             str: JSON formatted string of device details.
+        """
+        return self.to_jsonb(state, indent).decode()
 
-        Example:
-        ```
-        {
-            "Device Name": "Living Room Lamp",
-            "Model": "ESL100",
-            "Subdevice No": "0",
-            "Type": "wifi",
-            "CID": "1234567890abcdef"
-        }
-        ```
+    def to_dict(self, state: bool = True) -> dict[str, Any]:
+        """Return device information as a dictionary.
+
+        Args:
+            state (bool): If True, include state in dictionary, defaults to True.
+
+        Returns:
+            dict[str, Any]: Dictionary containing device information.
         """
         device_dict = {
             "device_name": self.device_name,
@@ -362,15 +316,37 @@ class VeSyncBaseDevice(ABC):
             "last_response": self.last_response,
         }
         state_dict = self.state.to_dict() if state else {}
+        return device_dict | state_dict
+
+    def to_jsonb(self, state: bool = True, indent: bool = True) -> bytes:
+        """JSON API bytes for device details.
+
+        Args:
+            state (bool): If True, include state in JSON output, defaults to True.
+            indent (bool): If True, indent JSON output, defaults to True.
+
+        Returns:
+            bytes: JSON formatted bytes of device details.
+
+        Example:
+        ```
+        {
+            "Device Name": "Living Room Lamp",
+            "Model": "ESL100",
+            "Subdevice No": "0",
+            "Type": "wifi",
+            "CID": "1234567890abcdef"
+        }
+        ```
+        """
+        return_dict = self.to_dict(state=state)
         if indent:
             return orjson.dumps(
-                device_dict | state_dict,
+                return_dict,
                 option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS,
-            ).decode()
+            )
 
-        return orjson.dumps(
-            device_dict | state_dict, option=orjson.OPT_NON_STR_KEYS
-        ).decode()
+        return orjson.dumps(return_dict, option=orjson.OPT_NON_STR_KEYS)
 
 
 class VeSyncBaseToggleDevice(VeSyncBaseDevice):
@@ -408,22 +384,22 @@ class DeviceState:
             subclass of DeviceMapTemplate based on device type.
 
     Attributes:
-        __base_exclusions (list[str]): Base exclusions, should not be used directly.
-        _exclude_serialization (list[str]): List of attributes to exclude from
-            serialization.
-        active_time (int | None): Active time of device.
+        active_time (int): Active time of device, defaults to None.
         connection_status (str): Connection status of device.
         device (VeSyncBaseDevice): Device object.
         device_status (str): Device status.
         features (dict): Features of device.
-        last_update_ts (int | None): Last update timestamp of device.
+        last_update_ts (int): Last update timestamp of device, defaults to None.
 
     Methods:
-        update_ts(): Update last update timestamp.
-        dumps(): Dump state to JSON.
+        update_ts: Update last update timestamp.
+        to_dict: Dump state to JSON.
+        to_json: Dump state to JSON string.
+        to_jsonb: Dump state to JSON bytes.
+        as_tuple: Convert state to tuple of (name, value) tuples.
 
     Note:
-        This is not meant to be used directly. It should be inherited by the state class
+        This cannot be instantiated directly. It should be inherited by the state class
         of a specific product type.
     """
 

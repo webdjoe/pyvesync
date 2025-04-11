@@ -26,7 +26,7 @@ class BulbState(DeviceState):
 
     Abstract base class to provide methods for controlling and
     getting details of VeSync bulbs. Inherits from
-    [`DeviceState`][pyvesync.base_devices.DeviceState]. This
+    [`DeviceState`][pyvesync.base_devices.vesyncbasedevice.DeviceState]. This
     class should not be used directly for devices, but rather subclassed for each
     bulb type.
 
@@ -176,7 +176,7 @@ class VeSyncBulb(VeSyncBaseToggleDevice):
         color_value (float): Color value of bulb in percent (0-100).
         color (Color): Color of bulb in the form of a dataclass with two namedtuple
             attributes - `hsv` & `rgb`. See
-            [utils.colors.Colors][pyvesync.utils.colors.Color].
+            [utils.colors.Colors](pyvesync.utils.colors.Color).
     """
 
     __slots__ = ()

@@ -64,7 +64,7 @@ feature_dict: dict[str, dict[str, list | str]] = {
 switch_modules: dict = {k: v['module']
                         for k, v in feature_dict.items()}
 
-__all__: list = [*switch_modules.values(), 'switch_modules']  # noqa: PLE0604
+# __all__: list = [*switch_modules.values(), 'switch_modules']
 
 
 class VeSyncWallSwitch(BypassV1Mixin, VeSyncSwitch):

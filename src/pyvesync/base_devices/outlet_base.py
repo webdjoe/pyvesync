@@ -21,9 +21,23 @@ logger = logging.getLogger(__name__)
 class OutletState(DeviceState):
     """Base state class for Outlets.
 
+    This class holds all of the state information for the outlet devices. The state
+    instance is stored in the `state` attribute of the outlet device. This is only
+    for holding state information and does not contain any methods for controlling
+    the device or retrieving information from the API.
+
+    Args:
+        device (VeSyncOutlet): The device object.
+        details (ResponseDeviceDetailsModel): The device details.
+        feature_map (OutletMap): The feature map for the device.
+
     Attributes:
-        _exclude_serialization (list[str]): List of attributes to exclude from
-            serialization.
+        active_time (int): Active time of device, defaults to None.
+        connection_status (str): Connection status of device.
+        device (VeSyncBaseDevice): Device object.
+        device_status (str): Device status.
+        features (dict): Features of device.
+        last_update_ts (int): Last update timestamp of device, defaults to None.
         energy (float): Energy usage in kWh.
         monthly_history (ResponseEnergyResult): Monthly energy history.
         nightlight_automode (str): Nightlight automode status.
@@ -33,6 +47,13 @@ class OutletState(DeviceState):
         voltage (float): Voltage in Volts.
         weekly_history (ResponseEnergyResult): Weekly energy history.
         yearly_history (ResponseEnergyResult): Yearly energy history.
+
+    Methods:
+        update_ts: Update last update timestamp.
+        to_dict: Dump state to JSON.
+        to_json: Dump state to JSON string.
+        to_jsonb: Dump state to JSON bytes.
+        as_tuple: Convert state to tuple of (name, value) tuples.
     """
 
     __slots__ = (
@@ -53,13 +74,7 @@ class OutletState(DeviceState):
         details: ResponseDeviceDetailsModel,
         feature_map: OutletMap
             ) -> None:
-        """Initialize VeSync Switch State.
-
-        Args:
-            device (VeSyncOutlet): The device object.
-            details (ResponseDeviceDetailsModel): The device details.
-            feature_map (OutletMap): The feature map for the device.
-        """
+        """Initialize VeSync Switch State."""
         super().__init__(device, details, feature_map)
         self._exclude_serialization = [
             "weakly_history",
@@ -113,6 +128,11 @@ class OutletState(DeviceState):
 class VeSyncOutlet(VeSyncBaseToggleDevice):
     """Base class for Etekcity Outlets.
 
+    Args:
+        details (ResponseDeviceDetailsModel): The device details.
+        manager (VeSync): The VeSync manager.
+        feature_map (OutletMap): The feature map for the device.
+
     Attributes:
         state (OutletState): The state of the outlet.
         details (dict): The details of the outlet.
@@ -124,13 +144,7 @@ class VeSyncOutlet(VeSyncBaseToggleDevice):
 
     def __init__(self, details: ResponseDeviceDetailsModel,
                  manager: VeSync, feature_map: OutletMap) -> None:
-        """Initialize VeSync Outlet base class.
-
-        Args:
-            details (ResponseDeviceDetailsModel): The device details.
-            manager (VeSync): The VeSync manager.
-            feature_map (OutletMap): The feature map for the device.
-        """
+        """Initialize VeSync Outlet base class."""
         super().__init__(details, manager, feature_map)
         self.state: OutletState = OutletState(self, details, feature_map)
         self.nightlight_modes = feature_map.nightlight_modes

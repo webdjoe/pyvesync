@@ -9,6 +9,7 @@ from collections.abc import Iterator
 from dataclasses import InitVar, dataclass, field
 from typing import TYPE_CHECKING, Any, TypeVar, Union
 
+from typing_extensions import deprecated
 import orjson
 
 from pyvesync.const import (
@@ -135,295 +136,22 @@ class Helpers:
 
     @staticmethod
     def try_json_loads(data: str | bytes | None) -> dict | None:
-        """Try to load JSON data."""
+        """Try to load JSON data.
+
+        Gracefully handle errors and return None if loading fails.
+
+        Args:
+            data (str | bytes | None): JSON data to load.
+
+        Returns:
+            dict | None: Parsed JSON data or None if loading fails.
+        """
         if data is None:
             return None
         try:
             return orjson.loads(data)
         except (orjson.JSONDecodeError, TypeError):
             return None
-
-    @staticmethod
-    def get_class_attributes(target_class: object, keys: list[str]) -> dict[str, Any]:
-        """Find matching attributes, static methods, and class methods from list of keys.
-
-        This function is case insensitive and will remove underscores from the keys before
-        comparing them to the class attributes. The provided keys will be returned in the
-        same format if found
-
-        Args:
-            target_class (object): Class to search for attributes
-            keys (list[str]): List of keys to search for
-
-        Returns:
-            dict[str, Any]: Dictionary of keys and their values from the class
-        """
-        alias_map = {
-            'userCountryCode': 'countrycode',
-            'deviceId': 'cid',
-            'homeTimeZone': 'timezone',
-            'configModel': 'configmodule',
-            'region': 'countrycode',
-        }
-
-        def normalize_name(name: str) -> str:
-            """Normalize a string by removing underscores and making it lowercase."""
-            return re.sub(r'_', '', name).lower()
-
-        def get_value(attr_name: str) -> str | float | None:
-            """Get value from attribute."""
-            attr = getattr(target_class, attr_name)
-            try:
-                return attr() if callable(attr) else attr
-            except TypeError:
-                return None
-        result = {}
-        normalized_keys = {normalize_name(key): key for key in keys}
-        normalized_aliases = [normalize_name(key) for key in alias_map.values()]
-
-        for attr_name in dir(target_class):
-            normalized_attr = normalize_name(attr_name)
-            if normalized_attr in normalized_keys:
-                attr_val = get_value(attr_name)
-                if attr_val is not None:
-                    result[normalized_keys[normalized_attr]] = attr_val
-            if normalized_attr in normalized_aliases:
-                attr_val = get_value(attr_name)
-                if attr_val is not None:
-                    key_index = normalized_aliases.index(normalized_attr)
-                    key_val = list(alias_map.keys())[key_index]
-                    if key_val in keys:
-                        result[key_val] = attr_val
-
-        return result
-
-    @staticmethod
-    def req_headers(manager: VeSync) -> dict[str, str]:
-        """Build header for legacy api GET requests.
-
-        Args:
-            manager (VeSyncManager): Instance of VeSyncManager.
-
-        Returns:
-            dict: Header dictionary for api requests.
-
-        Examples:
-            >>> req_headers(manager)
-            {
-                'accept-language': 'en',
-                'accountId': manager.account_id,
-                'appVersion': APP_VERSION,
-                'content-type': 'application/json',
-                'tk': manager.token,
-                'tz': manager.time_zone,
-            }
-
-        """
-        return {
-            'accept-language': 'en',
-            'accountId': manager.account_id,  # type: ignore[dict-item]
-            'appVersion': APP_VERSION,
-            'content-type': 'application/json',
-            'tk': manager.token,  # type: ignore[dict-item]
-            'tz': manager.time_zone,
-        }
-
-    @staticmethod
-    def req_header_bypass() -> dict[str, str]:
-        """Build header for api requests on 'bypass' endpoint.
-
-        Returns:
-            dict: Header dictionary for api requests.
-
-        Examples:
-            >>> req_header_bypass()
-            {
-                'Content-Type': 'application/json; charset=UTF-8',
-                'User-Agent': BYPASS_HEADER_UA,
-            }
-        """
-        return {
-            'Content-Type': 'application/json; charset=UTF-8',
-            'User-Agent': BYPASS_HEADER_UA,
-            }
-
-    @staticmethod
-    def req_body_base(manager: VeSync) -> dict[str, str]:
-        """Return universal keys for body of api requests.
-
-        Args:
-            manager (VeSyncManager): Instance of VeSyncManager.
-
-        Returns:
-            dict: Body dictionary for api requests.
-
-        Examples:
-            >>> req_body_base(manager)
-            {
-                'timeZone': manager.time_zone,
-                'acceptLanguage': 'en',
-            }
-        """
-        return {'timeZone': manager.time_zone, 'acceptLanguage': 'en'}
-
-    @staticmethod
-    def req_body_auth(manager: VeSync) -> REQUEST_T:
-        """Keys for authenticating api requests.
-
-        Args:
-            manager (VeSyncManager): Instance of VeSyncManager.
-
-        Returns:
-            dict: Authentication keys for api requests.
-
-        Examples:
-            >>> req_body_auth(manager)
-            {
-                'accountID': manager.account_id,
-                'token': manager.token,
-            }
-        """
-        return {'accountID': manager.account_id, 'token': manager.token}
-
-    @staticmethod
-    def req_body_details() -> REQUEST_T:
-        """Detail keys for api requests.
-
-        Returns:
-            dict: Detail keys for api requests.
-
-        Examples:
-            >>> req_body_details()
-            {
-                'appVersion': APP_VERSION,
-                'phoneBrand': PHONE_BRAND,
-                'phoneOS': PHONE_OS,
-                'traceId': str(int(time.time())),
-            }
-        """
-        return {
-            'appVersion': APP_VERSION,
-            'phoneBrand': PHONE_BRAND,
-            'phoneOS': PHONE_OS,
-            'traceId': str(int(time.time())),
-        }
-
-    @classmethod
-    def req_body(cls, manager: VeSync, type_: str) -> REQUEST_T:  # noqa: C901
-        """Builder for body of api requests.
-
-        Args:
-            manager (VeSyncManager): Instance of VeSyncManager.
-            type_ (str): Type of request to build body for.
-
-        Returns:
-            dict: Body dictionary for api requests.
-
-        Note:
-            The body dictionary will be built based on the type of request.
-            The type of requests include:
-            - login
-            - devicestatus
-            - devicelist
-            - devicedetail
-            - energy_week
-            - energy_month
-            - energy_year
-            - bypass
-            - bypassV2
-            - bypass_config
-        """
-        body: REQUEST_T = cls.req_body_base(manager)
-
-        if type_ == 'login':
-            body |= cls.req_body_details()
-            body |= {
-                'email': manager.username,
-                'password': cls.hash_password(manager.password),
-                'devToken': '',
-                'userType': USER_TYPE,
-                'method': 'login'
-            }
-            return body
-
-        body |= cls.req_body_auth(manager)
-
-        if type_ == 'devicestatus':
-            return body
-
-        body |= cls.req_body_details()
-
-        if type_ == 'devicelist':
-            body['method'] = 'devices'
-            body['pageNo'] = '1'
-            body['pageSize'] = '100'
-
-        elif type_ == 'devicedetail':
-            body['method'] = 'devicedetail'
-            body['mobileId'] = MOBILE_ID
-
-        elif type_ == 'energy_week':
-            body['method'] = 'energyweek'
-            body['mobileId'] = MOBILE_ID
-
-        elif type_ == 'energy_month':
-            body['method'] = 'energymonth'
-            body['mobileId'] = MOBILE_ID
-
-        elif type_ == 'energy_year':
-            body['method'] = 'energyyear'
-            body['mobileId'] = MOBILE_ID
-
-        elif type_ == 'bypass':
-            body['method'] = 'bypass'
-
-        elif type_ == 'bypassV2':
-            body['deviceRegion'] = DEFAULT_REGION
-            body['method'] = 'bypassV2'
-
-        elif type_ == 'bypass_config':
-            body['method'] = 'firmwareUpdateInfo'
-
-        return body
-
-    @staticmethod
-    def calculate_hex(hex_string: str) -> float:
-        """Credit for conversion to itsnotlupus/vesync_wsproxy."""
-        hex_conv = hex_string.split(':')
-        return (int(hex_conv[0], 16) + int(hex_conv[1], 16)) / 8192
-
-    @staticmethod
-    def hash_password(string: str) -> str:
-        """Encode password."""
-        return hashlib.md5(string.encode('utf-8')).hexdigest()  # noqa: S324
-
-    @staticmethod
-    def _get_internal_codes(response: dict) -> list[int]:
-        """Get all error codes from nested dictionary.
-
-        Args:
-            response (dict): API response.
-
-        Returns:
-            list[int]: List of error codes.
-        """
-        error_keys = ['error', 'code', 'device_error_code', 'errorCode']
-
-        def extract_all_error_codes(key: str, var: dict) -> Iterator[int]:
-            """Find all error code keys in nested dictionary."""
-            if hasattr(var, 'items'):
-                for k, v in var.items():
-                    if k == key and int(v) != 0:
-                        yield v
-                    if isinstance(v, dict):
-                        yield from extract_all_error_codes(key, v)
-                    elif isinstance(v, list):
-                        for item in v:
-                            yield from extract_all_error_codes(key, item)
-        errors = []
-        for error_key in error_keys:
-            errors.extend(list(extract_all_error_codes(error_key, response)))
-        return errors
 
     @classmethod
     def process_dev_response(
@@ -438,7 +166,8 @@ class Helpers:
         Parses bytes and checks for errors common to all JSON
         responses, included checking the "code" key for non-zero
         values. Outputs error to passed logger with formatted string
-        if an error is found.
+        if an error is found. This also saves the response code information
+        to the `device.last_response` attribute.
 
         Args:
             logger (logging.Logger): Logger instance.
@@ -499,32 +228,295 @@ class Helpers:
         return r_dict
 
     @staticmethod
-    def code_check(r: dict | None) -> bool:
-        """Test if code == 0 for successful API call."""
-        if r is None:
-            _LOGGER.error('No response from API')
-            return False
-        return (isinstance(r, dict) and r.get('code') == 0)
+    def get_class_attributes(target_class: object, keys: list[str]) -> dict[str, Any]:
+        """Find matching attributes, static methods, and class methods from list of keys.
 
-    @staticmethod
-    def bypass_header() -> dict:
-        """Build bypass header dict.
+        This function is case insensitive and will remove underscores from the keys before
+        comparing them to the class attributes. The provided keys will be returned in the
+        same format if found
+
+        Args:
+            target_class (object): Class to search for attributes
+            keys (list[str]): List of keys to search for
 
         Returns:
-            dict: Header dictionary for bypass api calls.
+            dict[str, Any]: Dictionary of keys and their values from the class
+        """
+        alias_map = {
+            'userCountryCode': 'countrycode',
+            'deviceId': 'cid',
+            'homeTimeZone': 'timezone',
+            'configModel': 'configmodule',
+            'region': 'countrycode',
+        }
+
+        def normalize_name(name: str) -> str:
+            """Normalize a string by removing underscores and making it lowercase."""
+            return re.sub(r'_', '', name).lower()
+
+        def get_value(attr_name: str) -> str | float | None:
+            """Get value from attribute."""
+            attr = getattr(target_class, attr_name)
+            try:
+                return attr() if callable(attr) else attr
+            except TypeError:
+                return None
+        result = {}
+        normalized_keys = {normalize_name(key): key for key in keys}
+        normalized_aliases = [normalize_name(key) for key in alias_map.values()]
+
+        for attr_name in dir(target_class):
+            normalized_attr = normalize_name(attr_name)
+            if normalized_attr in normalized_keys:
+                attr_val = get_value(attr_name)
+                if attr_val is not None:
+                    result[normalized_keys[normalized_attr]] = attr_val
+            if normalized_attr in normalized_aliases:
+                attr_val = get_value(attr_name)
+                if attr_val is not None:
+                    key_index = normalized_aliases.index(normalized_attr)
+                    key_val = list(alias_map.keys())[key_index]
+                    if key_val in keys:
+                        result[key_val] = attr_val
+
+        return result
+
+    @staticmethod
+    def req_legacy_headers(manager: VeSync) -> dict[str, str]:
+        """Build header for legacy api GET requests.
+
+        Args:
+            manager (VeSyncManager): Instance of VeSyncManager.
+
+        Returns:
+            dict: Header dictionary for api requests.
 
         Examples:
-            >>> bypass_header()
+            >>> req_headers(manager)
             {
-                'Content-Type': 'application/json; charset=UTF-8',
-                'User-Agent': BYPASS_HEADER_UA,
+                'accept-language': 'en',
+                'accountId': manager.account_id,
+                'appVersion': APP_VERSION,
+                'content-type': 'application/json',
+                'tk': manager.token,
+                'tz': manager.time_zone,
             }
 
         """
         return {
-            'Content-Type': 'application/json; charset=UTF-8',
-            'User-Agent': 'okhttp/3.12.1',
+            'accept-language': 'en',
+            'accountId': manager.account_id,  # type: ignore[dict-item]
+            'appVersion': APP_VERSION,
+            'content-type': 'application/json',
+            'tk': manager.token,  # type: ignore[dict-item]
+            'tz': manager.time_zone,
         }
+
+    @staticmethod
+    def req_header_bypass() -> dict[str, str]:
+        """Build header for api requests on 'bypass' endpoint.
+
+        Returns:
+            dict: Header dictionary for api requests.
+
+        Examples:
+            >>> req_header_bypass()
+            {
+                'Content-Type': 'application/json; charset=UTF-8',
+                'User-Agent': BYPASS_HEADER_UA,
+            }
+        """
+        return {
+            'Content-Type': 'application/json; charset=UTF-8',
+            'User-Agent': BYPASS_HEADER_UA,
+            }
+
+    @staticmethod
+    def _req_body_base(manager: VeSync) -> dict[str, str]:
+        """Return universal keys for body of api requests.
+
+        Args:
+            manager (VeSyncManager): Instance of VeSyncManager.
+
+        Returns:
+            dict: Body dictionary for api requests.
+
+        Examples:
+            >>> req_body_base(manager)
+            {
+                'timeZone': manager.time_zone,
+                'acceptLanguage': 'en',
+            }
+        """
+        return {'timeZone': manager.time_zone, 'acceptLanguage': 'en'}
+
+    @staticmethod
+    def _req_body_auth(manager: VeSync) -> REQUEST_T:
+        """Keys for authenticating api requests.
+
+        Args:
+            manager (VeSyncManager): Instance of VeSyncManager.
+
+        Returns:
+            dict: Authentication keys for api requests.
+
+        Examples:
+            >>> req_body_auth(manager)
+            {
+                'accountID': manager.account_id,
+                'token': manager.token,
+            }
+        """
+        return {'accountID': manager.account_id, 'token': manager.token}
+
+    @staticmethod
+    @deprecated("This is a legacy function and will be removed in a future release.")
+    def _req_body_details() -> REQUEST_T:
+        """Detail keys for api requests.
+
+        This method is deprecated, use `get_class_attributes` instead.
+
+        Returns:
+            dict: Detail keys for api requests.
+
+        Examples:
+            >>> req_body_details()
+            {
+                'appVersion': APP_VERSION,
+                'phoneBrand': PHONE_BRAND,
+                'phoneOS': PHONE_OS,
+                'traceId': str(int(time.time())),
+            }
+        """
+        return {
+            'appVersion': APP_VERSION,
+            'phoneBrand': PHONE_BRAND,
+            'phoneOS': PHONE_OS,
+            'traceId': str(int(time.time())),
+        }
+
+    @classmethod
+    @deprecated("This is a legacy function and will be removed in a future release.")
+    def req_body(cls, manager: VeSync, type_: str) -> REQUEST_T:  # noqa: C901
+        """Builder for body of api requests.
+
+        This method is deprecated, use `get_class_attributes` instead.
+
+        Args:
+            manager (VeSyncManager): Instance of VeSyncManager.
+            type_ (str): Type of request to build body for.
+
+        Returns:
+            dict: Body dictionary for api requests.
+
+        Note:
+            The body dictionary will be built based on the type of request.
+            The type of requests include:
+            - login
+            - devicestatus
+            - devicelist
+            - devicedetail
+            - energy_week
+            - energy_month
+            - energy_year
+            - bypass
+            - bypassV2
+            - bypass_config
+        """
+        body: REQUEST_T = cls._req_body_base(manager)
+
+        if type_ == 'login':
+            body |= cls._req_body_details()
+            body |= {
+                'email': manager.username,
+                'password': cls.hash_password(manager.password),
+                'devToken': '',
+                'userType': USER_TYPE,
+                'method': 'login'
+            }
+            return body
+
+        body |= cls._req_body_auth(manager)
+
+        if type_ == 'devicestatus':
+            return body
+
+        body |= cls._req_body_details()
+
+        if type_ == 'devicelist':
+            body['method'] = 'devices'
+            body['pageNo'] = '1'
+            body['pageSize'] = '100'
+
+        elif type_ == 'devicedetail':
+            body['method'] = 'devicedetail'
+            body['mobileId'] = MOBILE_ID
+
+        elif type_ == 'energy_week':
+            body['method'] = 'energyweek'
+            body['mobileId'] = MOBILE_ID
+
+        elif type_ == 'energy_month':
+            body['method'] = 'energymonth'
+            body['mobileId'] = MOBILE_ID
+
+        elif type_ == 'energy_year':
+            body['method'] = 'energyyear'
+            body['mobileId'] = MOBILE_ID
+
+        elif type_ == 'bypass':
+            body['method'] = 'bypass'
+
+        elif type_ == 'bypassV2':
+            body['deviceRegion'] = DEFAULT_REGION
+            body['method'] = 'bypassV2'
+
+        elif type_ == 'bypass_config':
+            body['method'] = 'firmwareUpdateInfo'
+
+        return body
+
+    @staticmethod
+    def calculate_hex(hex_string: str) -> float:
+        """Credit for conversion to itsnotlupus/vesync_wsproxy.
+
+        Hex conversion for legacy outlet power and voltage.
+        """
+        hex_conv = hex_string.split(':')
+        return (int(hex_conv[0], 16) + int(hex_conv[1], 16)) / 8192
+
+    @staticmethod
+    def hash_password(string: str) -> str:
+        """Encode password."""
+        return hashlib.md5(string.encode('utf-8')).hexdigest()  # noqa: S324
+
+    @staticmethod
+    def _get_internal_codes(response: dict) -> list[int]:
+        """Get all error codes from nested dictionary.
+
+        Args:
+            response (dict): API response.
+
+        Returns:
+            list[int]: List of error codes.
+        """
+        error_keys = ['error', 'code', 'device_error_code', 'errorCode']
+
+        def extract_all_error_codes(key: str, var: dict) -> Iterator[int]:
+            """Find all error code keys in nested dictionary."""
+            if hasattr(var, 'items'):
+                for k, v in var.items():
+                    if k == key and int(v) != 0:
+                        yield v
+                    if isinstance(v, dict):
+                        yield from extract_all_error_codes(key, v)
+                    elif isinstance(v, list):
+                        for item in v:
+                            yield from extract_all_error_codes(key, item)
+        errors = []
+        for error_key in error_keys:
+            errors.extend(list(extract_all_error_codes(error_key, response)))
+        return errors
 
 
 @dataclass(repr=False)
