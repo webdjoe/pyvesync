@@ -405,6 +405,20 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
+    async def toggle_automatic_stop(self, toggle: bool | None = None) -> bool:
+        if toggle is None:
+            toggle = self.state.automatic_stop_config is not True
+
+        payload_data = {"autoStopSwitch": int(toggle)}
+        r_dict = await self.call_bypassv2_api("setAutoStopSwitch", payload_data)
+        r = Helpers.process_dev_response(logger, "toggle_automatic_stop", self, r_dict)
+        if r is None:
+            return False
+
+        self.state.device_status = DeviceStatus.from_bool(toggle)
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
     @deprecated("Use toggle_drying_mode() instead.")
     async def set_drying_mode_enabled(self, mode: bool) -> bool:
         """Set drying mode on/off."""

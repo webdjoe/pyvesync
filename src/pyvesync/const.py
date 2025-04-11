@@ -369,12 +369,23 @@ class Features(StrEnum):
 # Device Features
 
 class HumidifierFeatures(Features):
-    """VeSync humidifier features."""
+    """VeSync humidifier features.
+
+    Attributes:
+        ONOFF: Device on/off status.
+        CHILD_LOCK: Child lock status.
+        NIGHTLIGHT: Nightlight status.
+        WATER_LEVEL: Water level status.
+        WARM_MIST: Warm mist status.
+        AUTO_STOP: Auto stop when target humidity is reached.
+            Different from auto, which adjusts fan level to maintain humidity.
+    """
     ONOFF = "onoff"
     CHILD_LOCK = "child_lock"
     NIGHTLIGHT = "night_light"
     WATER_LEVEL = "water_level"
     WARM_MIST = "warm_mist"
+    AUTO_STOP = "auto_stop"
 
 
 class PurifierFeatures(Features):

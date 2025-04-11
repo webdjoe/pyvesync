@@ -427,7 +427,7 @@ humidifier_modules: list[HumidifierMap] = [
     HumidifierMap(
         class_name="VeSyncSuperior6000S",
         dev_types=["LEH-S601S-WUS", "LEH-S601S-WUSR", "LEH-S601S-WEUR"],
-        features=[],
+        features=[HumidifierFeatures.AUTO_STOP],
         mist_modes={
             HumidifierModes.AUTO: 'autoPro',
             HumidifierModes.SLEEP: 'sleep',
