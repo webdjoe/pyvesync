@@ -158,6 +158,12 @@ class ErrorCodes:
                 "Device offline",
                 device_online=False,
             ),
+            "-16906000": ResponseInfo(
+                "REQUEST_TOO_FREQUENT",
+                ErrorTypes.RATE_LIMIT,
+                "Request too frequent",
+                operational_error=True,
+            ),
             "-11902000": ResponseInfo(
                 "AUTHKEY_NOT_EXIST", ErrorTypes.CONFIG_ERROR, "Authkey does not exist"
             ),
@@ -191,6 +197,72 @@ class ErrorCodes:
             ),
             "11908000": ResponseInfo(
                 "BYPASS_COOK_TIMEOUT", ErrorTypes.DEVICE_ERROR, "Cook timeout error"
+            ),
+            "11909000": ResponseInfo(
+                "BYPASS_SMART_STOP",
+                ErrorTypes.DEVICE_ERROR,
+                "Smart stop error",
+                device_online=True,
+            ),
+            "11910000": ResponseInfo(
+                "BYPASS_LEFT_ZONE_COOKING",
+                ErrorTypes.DEVICE_ERROR,
+                "Left zone cooking error",
+                device_online=True
+            ),
+            "11911000": ResponseInfo(
+                "BYPASS_RIGHT_ZONE_COOKING",
+                ErrorTypes.DEVICE_ERROR,
+                "Right zone cooking error",
+                device_online=True
+            ),
+            "11912000": ResponseInfo(
+                "BYPASS_ALL_ZONE_COOKING",
+                ErrorTypes.DEVICE_ERROR,
+                "All zone cooking error",
+                device_online=True
+            ),
+            "11916000": ResponseInfo(
+                "BYPASS_NTC_RIGHT_TOP_SHORT",
+                ErrorTypes.DEVICE_ERROR,
+                "Right top short error",
+                critical_error=True,
+                device_online=True,
+                ),
+            "11917000": ResponseInfo(
+                "BYPASS_NTC_RIGHT_TOP_OPEN",
+                ErrorTypes.DEVICE_ERROR,
+                "Right top open error",
+                critical_error=True,
+                device_online=True,
+            ),
+            "11918000": ResponseInfo(
+                "BYPASS_NTC_BOTTOM_SHORT",
+                ErrorTypes.DEVICE_ERROR,
+                "Bottom short error",
+                critical_error=True,
+                device_online=True,
+            ),
+            "11919000": ResponseInfo(
+                "BYPASS_NTC_BOTTOM_OPEN",
+                ErrorTypes.DEVICE_ERROR,
+                "Bottom open error",
+                critical_error=True,
+                device_online=True,
+            ),
+            "11924000": ResponseInfo(
+                "BYPASS_RIGHT_TEMP_FAULT",
+                ErrorTypes.DEVICE_ERROR,
+                "Right temperature fault",
+                critical_error=True,
+                device_online=True,
+            ),
+            "11925000": ResponseInfo(
+                "BYPASS_ZONE_2_MOTOR_ABNORMAL",
+                ErrorTypes.DEVICE_ERROR,
+                "Zone 2 motor error",
+                critical_error=True,
+                device_online=True,
             ),
             "11021000": ResponseInfo(
                 "BYPASS_DEVICE_END",
@@ -260,6 +332,27 @@ class ErrorCodes:
                 ErrorTypes.DEVICE_ERROR,
                 "Humidifier connect message error",
             ),
+            "11317000": ResponseInfo(
+                "BYPASS_DIMMER_NCT",
+                ErrorTypes.DEVICE_ERROR,
+                "Dimmer NCT error",
+                critical_error=True,
+                device_online=True,
+            ),
+            "11608000": ResponseInfo(
+                "BYPASS_HUMIDIFIER_ERROR_WATER_PUMP",
+                ErrorTypes.DEVICE_ERROR,
+                "Humidifier water pump error",
+                critical_error=True,
+                device_online=True,
+            ),
+            "11609000": ResponseInfo(
+                "BYPASS_HUMIDIFIER_ERROR_FAN_MOTOR",
+                ErrorTypes.DEVICE_ERROR,
+                "Humidifier fan motor error",
+                critical_error=True,
+                device_online=True,
+            ),
             "11601000": ResponseInfo(
                 "BYPASS_HUMIDIFIER_ERROR_DRY_BURNING",
                 ErrorTypes.DEVICE_ERROR,
@@ -311,6 +404,55 @@ class ErrorCodes:
                 "No pot error",
                 device_online=True,
                 critical_error=True,
+            ),
+            "12001000": ResponseInfo(
+                "BYPASS_LACK_FOOD",
+                ErrorTypes.DEVICE_ERROR,
+                "Lack of food error",
+                device_online=True,
+                critical_error=True,
+            ),
+            "12002000": ResponseInfo(
+                "BYPASS_JAM_FOOD",
+                ErrorTypes.DEVICE_ERROR,
+                "Jam food error",
+                device_online=True,
+                critical_error=True,
+            ),
+            "12003000": ResponseInfo(
+                "BYPASS_BLOCK_FOOD",
+                ErrorTypes.DEVICE_ERROR,
+                "Block food error",
+                device_online=True,
+                critical_error=True,
+            ),
+            "12004000": ResponseInfo(
+                "BYPASS_PUMP_FAIL",
+                ErrorTypes.DEVICE_ERROR,
+                "Pump failure error",
+                device_online=True,
+                critical_error=True,
+            ),
+            "12005000": ResponseInfo(
+                "BYPASS_CALI_FAIL",
+                ErrorTypes.DEVICE_ERROR,
+                "Calibration failure error",
+                device_online=True,
+                critical_error=True,
+            ),
+            "11611000": ResponseInfo(
+                "BYPASS_FILTER_TRAY_ERROR",
+                ErrorTypes.DEVICE_ERROR,
+                "Filter tray error",
+                critical_error=True,
+                device_online=True,
+            ),
+            "11610000": ResponseInfo(
+                "BYPASS_VALUE_ERROR",
+                ErrorTypes.DEVICE_ERROR,
+                "Value error",
+                critical_error=True,
+                device_online=True,
             ),
             "11022000": ResponseInfo(
                 "BYPASS_CANNOT_SET_LEVEL",
@@ -403,6 +545,13 @@ class ErrorCodes:
                 "BY_PASS_ERROR_COOKING_158",
                 ErrorTypes.DEVICE_ERROR,
                 "Error setting cook mode, air fryer is already cooking",
+                device_online=True,
+            ),
+            "11035000": ResponseInfo(
+                "BYPASS_MOTOR_ABNORMAL_ERROR",
+                ErrorTypes.DEVICE_ERROR,
+                "Motor abnormal error",
+                critical_error=True,
                 device_online=True,
             ),
             "11903000": ResponseInfo(
@@ -556,6 +705,14 @@ class ErrorCodes:
                 critical_error=True,
                 device_online=True,
             ),
+            "11005000": ResponseInfo(
+                "BYPASS_DEVICE_IS_OFF",
+                ErrorTypes.DEVICE_ERROR, "Device is off"
+                "Device is off",
+                critical_error=True,
+                device_online=True,
+            ),
+
 
         }
     )

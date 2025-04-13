@@ -501,22 +501,6 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
-    @deprecated("Use turn_on_automatic_stop() instead.")
-    async def automatic_stop_on(self) -> bool:
-        """Set humidity mode to auto.
-
-        Deprecated, please use turn_on_automatic_stop() instead.
-        """
-        return await self.set_mode('auto')
-
-    @deprecated("Use turn_off_automatic_stop() instead.")
-    async def automatic_stop_off(self) -> bool:
-        """Set humidity mode to manual.
-
-        Deprecated, please use turn_off_automatic_stop() instead.
-        """
-        return await self.set_mode('manual')
-
     async def set_mist_level(self, level: int) -> bool:
         if level not in self.mist_levels:
             logger.debug("Humidifier mist level must be between 0 and 9")

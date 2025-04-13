@@ -378,9 +378,15 @@ class VeSyncHumidifier(VeSyncBaseToggleDevice):
         logger.debug("Sleep mode not supported for this device.")
         return await self.set_mode(HumidifierModes.SLEEP)
 
-    # async def set_humidity_mode(self) -> bool:
-    #     """Set Humidifier to Humidity Mode."""
-    #     if HumidifierModes.HUMIDITY in self.mist_modes:
-    #         return await self.set_mode(HumidifierModes.HUMIDITY)
-    #     logger.debug("Humidity mode not supported for this device.")
-    #     return await self.set_mode(HumidifierModes.HUMIDITY)
+    async def set_humidity(self, humidity: int) -> bool:
+        """Set Humidifier Target Humidity.
+
+        Args:
+            humidity (int): Target humidity level.
+
+        Returns:
+            bool: Success of request.
+        """
+        del humidity
+        logger.debug("Target humidity is not supported or configured for this device.")
+        return False

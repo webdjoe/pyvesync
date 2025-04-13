@@ -24,6 +24,7 @@ from random import randint
 from uuid import uuid1
 from enum import StrEnum, IntEnum, Enum
 from types import MappingProxyType
+from pyvesync.utils.enum_utils import IntEnumMixin
 
 DEFAULT_LANGUAGE = "en"
 API_BASE_URL = "https://smartapi.vesync.com"
@@ -59,6 +60,7 @@ class ProductTypes(StrEnum):
     HUMIDIFIER = "Humidifier"
     AIR_FRYER = "Air Fryer"
     KITCHEN_THERMOMETER = "Kitchen Thermometer"
+    THERMOSTAT = "Thermostat"
 
 
 class IntFlag(IntEnum):
@@ -476,3 +478,102 @@ AIRFRYER_PID_MAP = {
     "WiFi_SKA_AirFryer158_US": "2cl8hmafsthl65bd",
     "WiFi_AirFryer_CS158-AF_EU": "8t8op7pcvzlsbosm"
 }
+
+
+# Thermostat Constants
+
+class ThermostatWorkModes(IntEnum):
+    """Working modes for VeSync Aura thermostats."""
+    OFF = 0
+    HEAT = 1
+    COOL = 2
+    AUTO = 3
+    EM_HEAT = 4
+    SMART_AUTO = 5
+
+
+class ThermostatFanModes(IntEnum):
+    """Fan modes for VeSync Aura thermostats."""
+    AUTO = 1
+    ON = 2
+    CIRCULATE = 3
+
+
+class ThermostatHoldOptions(IntEnumMixin):
+    """Hold options for VeSync Aura thermostats."""
+    UNTIL_NEXT_SCHEDULED_ITEM = 2
+    TWO_HOURS = 3
+    FOUR_HOURS = 4
+    PERMANENTLY = 5
+
+
+class ThermostatHoldStatus(IntEnumMixin):
+    """Set the hold status of the thermostat."""
+    SET = 1
+    CANCEL = 0
+
+
+class ThermostatScheduleOrHoldOptions(IntEnumMixin):
+    """Schedule or hold options for VeSync Aura thermostats."""
+    NOT_SCHEDULE_NOT_HOLD = 0
+    ON_SCHEDULE = 1
+    ON_HOLD = 2
+    VACATION = 3
+
+
+class ThermostatEcoTypes(IntEnumMixin):
+    """Eco types for VeSync Aura thermostats."""
+    COMFORT_SECOND = 1
+    COMFORT_FIRST = 2
+    BALANCE = 3
+    ECO_FIRST = 4
+    ECO_SECOND = 5
+
+
+class ThermostatRoutineTypes(IntEnumMixin):
+    """Routine types for VeSync Aura thermostats."""
+    HOME = 2
+    AWAY = 1
+    SLEEP = 3
+    CUSTOM = 4
+
+
+class ThermostatAlarmCodes(IntEnumMixin):
+    """Alarm codes for VeSync Aura thermostats."""
+    HEAT_COOL = 100
+    ABOVE_SAFE_TEMP = 102
+    HEAT_RUNNING_TIME_TOO_LONG = 104
+
+
+class ThermostatReminderCodes(IntEnumMixin):
+    """Reminder codes for VeSync Aura thermostats."""
+    FILTER = 150
+    HVAC = 151
+
+
+class ThermostatWorkStatusCodes(IntEnumMixin):
+    """Work status codes for VeSync Aura thermostats."""
+    OFF = 0
+    HEATING = 1
+    COOLING = 2
+    EM_HEATING = 3
+
+
+class ThermostatFanStatus(IntEnumMixin):
+    """Fan Status Enum for Aura Thermostats."""
+    OFF = 0
+    ON = 1
+
+
+class ThermostatConst:
+    """Constants for VeSync Aura thermostats."""
+    ReminderCode = ThermostatReminderCodes
+    AlarmCode = ThermostatAlarmCodes
+    WorkMode = ThermostatWorkModes
+    FanStatus = ThermostatFanStatus
+    FanMode = ThermostatFanModes
+    HoldOption = ThermostatHoldOptions
+    EcoType = ThermostatEcoTypes
+    RoutineType = ThermostatRoutineTypes
+    ScheduleOrHoldOption = ThermostatScheduleOrHoldOptions
+    WorkStatus = ThermostatWorkStatusCodes

@@ -43,6 +43,7 @@ from pyvesync.devices import vesyncoutlet
 from pyvesync.devices import vesyncswitch
 from pyvesync.devices import vesyncfan, vesynchumidifier, vesyncpurifier
 from pyvesync.devices import vesynckitchen
+from pyvesync.devices import vesyncthermostat
 from pyvesync.const import (
     ColorMode,
     PurifierModes,
@@ -57,6 +58,11 @@ from pyvesync.const import (
     PurifierAutoPreference,
     FanSleepPreference,
     FanModes,
+    ThermostatEcoTypes,
+    ThermostatFanModes,
+    ThermostatWorkModes,
+    ThermostatHoldOptions,
+    ThermostatRoutineTypes,
 )
 
 T_MAPS = Union[
@@ -67,6 +73,7 @@ T_MAPS = Union[
     list["HumidifierMap"],
     list["PurifierMap"],
     list["AirFryerMap"],
+    list["ThermostatMap"]
     ]
 
 T_DEV_DETAILS = TypeVar("T_DEV_DETAILS")
@@ -152,6 +159,59 @@ class AirFryerMap(DeviceMapTemplate):
 
     product_type: str = ProductTypes.AIR_FRYER
     module: ModuleType = vesynckitchen
+
+
+@dataclass(kw_only=True)
+class ThermostatMap(DeviceMapTemplate):
+    """Template for Thermostat device mapping."""
+    product_type: str = ProductTypes.THERMOSTAT
+    module: ModuleType = vesyncthermostat
+    modes: list[int] = field(default_factory=list)
+    fan_modes: list[int] = field(default_factory=list)
+    eco_types: list[int] = field(default_factory=list)
+    hold_options: list[int] = field(default_factory=list)
+    routine_types: list[int] = field(default_factory=list)
+
+
+thermostat_modules = [
+    ThermostatMap(
+        dev_types=['LTM-A401S-WUS'],
+        class_name='VeSyncAuraThermostat',
+        fan_modes=[
+            ThermostatFanModes.AUTO,
+            ThermostatFanModes.CIRCULATE,
+            ThermostatFanModes.ON,
+        ],
+        modes=[
+            ThermostatWorkModes.HEAT,
+            ThermostatWorkModes.COOL,
+            ThermostatWorkModes.AUTO,
+            ThermostatWorkModes.OFF,
+        ],
+        eco_types=[
+            ThermostatEcoTypes.BALANCE,
+            ThermostatEcoTypes.COMFORT_FIRST,
+            ThermostatEcoTypes.COMFORT_SECOND,
+            ThermostatEcoTypes.ECO_FIRST,
+            ThermostatEcoTypes.ECO_SECOND,
+        ],
+        hold_options=[
+            ThermostatHoldOptions.PERMANENTLY,
+            ThermostatHoldOptions.FOUR_HOURS,
+            ThermostatHoldOptions.TWO_HOURS,
+            ThermostatHoldOptions.UNTIL_NEXT_SCHEDULED_ITEM,
+        ],
+        routine_types=[
+            ThermostatRoutineTypes.AWAY,
+            ThermostatRoutineTypes.CUSTOM,
+            ThermostatRoutineTypes.HOME,
+            ThermostatRoutineTypes.SLEEP,
+        ],
+        setup_entry='LTM-A401S-WUS',
+        model_display='LTM-A401S Series',
+        model_name='Aura Thermostat',
+    )
+]
 
 
 outlet_modules = [
@@ -659,6 +719,7 @@ def get_device_config(device_type: str) -> DeviceMapTemplate | None:
         purifier_modules,
         humidifier_modules,
         air_fryer_modules,
+        thermostat_modules,
     ]
     for module in chain(*all_modules):
         if device_type in module.dev_types:
@@ -758,6 +819,19 @@ def get_air_fryer(device_type: str) -> AirFryerMap | None:
     if device_type.count("-") > 1:
         device_type = "-".join(device_type.split("-")[:-1])
         for module in air_fryer_modules:
+            if any(device_type.lower() in dev.lower() for dev in module.dev_types):
+                return module
+    return None
+
+
+def get_thermostat(device_type: str) -> ThermostatMap | None:
+    """Get the device map for a thermostat."""
+    for module in thermostat_modules:
+        if device_type in module.dev_types:
+            return module
+    if device_type.count("-") > 1:
+        device_type = "-".join(device_type.split("-")[:-1])
+        for module in thermostat_modules:
             if any(device_type.lower() in dev.lower() for dev in module.dev_types):
                 return module
     return None

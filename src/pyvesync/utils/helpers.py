@@ -9,6 +9,7 @@ from collections.abc import Iterator
 from dataclasses import InitVar, dataclass, field
 from typing import TYPE_CHECKING, Any, TypeVar, Union
 
+
 from typing_extensions import deprecated
 import orjson
 
@@ -31,7 +32,6 @@ if TYPE_CHECKING:
 
 
 T = TypeVar('T')
-
 
 _LOGGER = logging.getLogger(__name__)
 

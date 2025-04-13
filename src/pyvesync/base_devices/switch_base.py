@@ -2,7 +2,7 @@
 from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
-from deprecated import deprecated
+from typing_extensions import deprecated
 
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseToggleDevice, DeviceState
 
