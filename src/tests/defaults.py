@@ -10,8 +10,8 @@ Defaults: class
 """
 from collections import defaultdict
 from requests.structures import CaseInsensitiveDict
-from pyvesync.helpers import Color
-import pyvesync.helpers as vs_helpers
+import pyvesync.const
+from pyvesync.utils.colors import Color
 
 
 FunctionResponses: defaultdict = defaultdict(lambda: ({"code": 0, "msg": None}, 200))
@@ -55,7 +55,7 @@ class Defaults:
     account_id = 'sample_id'
     trace_id = "TRACE_ID"
     active_time = 1
-    color = Color(red=50, green=100, blue=225)
+    color = Color.from_rgb(red=50, green=100, blue=225)
     brightness = 100
     color_temp = 100
     bool_toggle = True
@@ -130,12 +130,12 @@ class Defaults:
 API_DEFAULTS = CaseInsensitiveDict({
     'accountID': Defaults.account_id,
     'token': Defaults.token,
-    'timeZone': vs_helpers.DEFAULT_TZ,
+    'timeZone': pyvesync.const.DEFAULT_TZ,
     'acceptLanguage': 'en',
-    'appVersion': vs_helpers.APP_VERSION,
-    'phoneBrand': vs_helpers.PHONE_BRAND,
-    'phoneOS': vs_helpers.PHONE_OS,
-    'userType': vs_helpers.USER_TYPE,
+    'appVersion': pyvesync.const.APP_VERSION,
+    'phoneBrand': pyvesync.const.PHONE_BRAND,
+    'phoneOS': pyvesync.const.PHONE_OS,
+    'userType': pyvesync.const.USER_TYPE,
     "tk": Defaults.token,
     "traceId": "TRACE_ID",
     'verifyEmail': 'EMAIL',

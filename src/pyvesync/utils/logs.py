@@ -27,9 +27,6 @@ from aiohttp.client_exceptions import ClientResponseError
 from multidict import CIMultiDictProxy
 
 
-_LOGGER = logging.getLogger(__name__)
-
-
 class LibraryLogger:
     """Library Logging Interface.
 
@@ -77,7 +74,8 @@ class LibraryLogger:
                 }
     """
 
-    shouldredact = True
+    debug = False
+    shouldredact = False
 
     @classmethod
     def redactor(cls, stringvalue: str) -> str:
@@ -197,7 +195,32 @@ class LibraryLogger:
                 logger.setLevel(level)
 
     @classmethod
-    def log_api_response_parse_error(
+    def log_vs_api_response_error(
+        cls,
+        logger: logging.Logger,
+        method_name: str,
+        msg: str | None = None,
+    ) -> None:
+        """Log an error parsing API response.
+
+        Use this log message to indicate that the API response
+        is not in the expected format.
+
+        Args:
+            logger (logging.Logger): module logger
+            method_name (str): device name
+            msg (str | None, optional): optional description of error
+        """
+        if cls.debug is False:
+            return
+        logger.debug(
+            "%s API returned an unexpected response format: %s",
+            method_name,
+            msg if msg is not None else "",
+        )
+
+    @classmethod
+    def log_device_api_response_error(
         cls,
         logger: logging.Logger,
         device_name: str,
@@ -217,6 +240,8 @@ class LibraryLogger:
             method (str): method that caused the error
             msg (str | None, optional): optional description of error
         """
+        if cls.debug is False:
+            return
         logger.debug(
             "%s for %s API returned an unexpected response format in %s: %s",
             device_name,
@@ -226,7 +251,7 @@ class LibraryLogger:
         )
 
     @classmethod
-    def log_device_code_error(
+    def log_device_return_code(
         cls,
         logger: logging.Logger,
         method: str,
@@ -235,7 +260,7 @@ class LibraryLogger:
         code: int,
         message: str = '',
     ) -> None:
-        """Log device code error from device API call.
+        """Log return code from device API call.
 
         When API responds with JSON, if the code key is not 0,
         it indicates an error has occured.
@@ -248,11 +273,13 @@ class LibraryLogger:
             code (int): api response code
             message (str): api response message
         """
+        if cls.debug is False:
+            return
         try:
             code_str = str(code)
         except (TypeError, ValueError):
             code_str = "UNKNOWN"
-        logger.debug("%s for %s API from %s returned error code: %s, message: %s",
+        logger.debug("%s for %s API from %s returned code: %s, message: %s",
                      device_name, device_type, method, code_str, message)
 
     @classmethod
@@ -279,6 +306,8 @@ class LibraryLogger:
             flag is enabled. The method logs the endpoint, method, request headers,
             request body (if any), response headers, and response body (if any).
         """
+        if cls.debug is False:
+            return
         # Build the log message parts.
         parts = ["========API CALL========"]
         endpoint = response.url.path
@@ -330,6 +359,8 @@ class LibraryLogger:
                 containing the request information.
             response_bytes (bytes | None): KW only, The response body to log.
         """
+        if cls.debug is False:
+            return
         # Build the log message parts.
         parts = [f"Error in API CALL to endpoint: {response.url.path}"]
         parts.append(f"Response Status: {response.status}")
@@ -370,6 +401,8 @@ class LibraryLogger:
             exception (ClientResponseError): KW only, The request body to log.
             request_body (dict | None): KW only, The request body.
         """
+        if cls.debug is False:
+            return
         # Build the log message parts.
         parts = [f"Error in API CALL to endpoint: {exception.request_info.url.path}"]
         parts.append(f"Exception Raised: {exception}")
@@ -383,52 +416,3 @@ class LibraryLogger:
 
         full_message = os.linesep.join(parts)
         logger.debug(full_message)
-
-
-class VeSyncError(Exception):
-    """Base exception for VeSync errors."""
-
-
-class VesyncLoginError(VeSyncError):
-    """Exception raised for login authentication errors."""
-
-    def __init__(self, msg: str) -> None:
-        """Initialize the exception with a message."""
-        super().__init__(msg)
-
-
-class VeSyncServerError(VeSyncError):
-    """Exception raised for VeSync API server errors."""
-
-    def __init__(self, msg: str) -> None:
-        """Initialize the exception with a message."""
-        super().__init__(msg)
-
-
-class VeSyncRateLimitError(VeSyncError):
-    """Exception raised for VeSync API rate limit errors."""
-
-    def __init__(self) -> None:
-        """Initialize the exception with a message."""
-        super().__init__("VeSync API rate limit exceeded")
-
-
-class VeSyncAPIResponseError(VeSyncError):
-    """Exception raised for malformed VeSync API responses."""
-
-    def __init__(self, msg: None | str = None) -> None:
-        """Initialize the exception with a message."""
-        if msg is None:
-            msg = "Unexpected VeSync API response."
-        super().__init__(msg)
-
-
-class VeSyncAPIStatusCodeError(VeSyncError):
-    """Exception raised for malformed VeSync API responses."""
-
-    def __init__(self, status_code: str | None = None) -> None:
-        """Initialize the exception with a message."""
-        message = "VeSync API returned an unknown status code"
-        if status_code is not None:
-            message = f"VeSync API returned status code {status_code}"
-        super().__init__(message)

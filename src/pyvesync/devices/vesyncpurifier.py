@@ -1,0 +1,1019 @@
+"""VeSync API for controlling air purifiers."""
+from __future__ import annotations
+import logging
+from typing import TYPE_CHECKING
+
+from typing_extensions import deprecated
+
+from pyvesync.base_devices.purifier_base import VeSyncPurifier
+from pyvesync.utils.device_mixins import BypassV2Mixin, process_bypassv2_result
+from pyvesync.utils.helpers import Helpers, Timer
+from pyvesync.models.base_models import DefaultValues
+from pyvesync.const import (
+    IntFlag,
+    StrFlag,
+    PurifierAutoPreference,
+    DeviceStatus,
+    ConnectionStatus,
+    AirQualityLevel,
+    PurifierModes
+    )
+from pyvesync.models.bypass_models import (
+    ResultV2GetTimer,
+    ResultV2SetTimer,
+)
+from pyvesync.models.purifier_models import (
+    PurifierCoreDetailsResult,
+    PurifierV2DetailsResult,
+    PurifierV2EventTiming,
+    PurifierV2TimerActionItems,
+    PurifierV2TimerPayloadData,
+    RequestPurifier131,
+    Purifier131Result,
+    )
+
+if TYPE_CHECKING:
+    from pyvesync import VeSync
+    from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
+    from pyvesync.device_map import PurifierMap
+
+
+_LOGGER = logging.getLogger(__name__)
+
+
+class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
+    """Initialize air purifier devices.
+
+    Instantiated by VeSync manager object. Inherits from
+    VeSyncBaseDevice class.
+
+    Parameters:
+        details (dict): Dictionary of device details
+        manager (VeSync): Instantiated VeSync object used to make API calls
+        feature_map (PurifierMap): Device map template
+
+    Attributes:
+        modes (list): List of available operation modes for device
+        air_quality_feature (bool): True if device has air quality sensor
+        details (dict): Dictionary of device details
+        timer (Timer): Timer object for device, None if no timer exists. See
+            [pyvesync.helpers.Timer][`Timer`] class
+        config (dict): Dictionary of device configuration
+
+    Notes:
+        The `details` attribute holds device information that is updated when
+        the `update()` method is called. An example of the `details` attribute:
+    ```python
+    >>> json.dumps(self.details, indent=4)
+        {
+            'filter_life': 0,
+            'mode': 'manual',
+            'level': 0,
+            'display': False,
+            'child_lock': False,
+            'night_light': 'off',
+            'air_quality': 0 # air quality level
+            'air_quality_value': 0, # PM2.5 value from device,
+            'display_forever': False
+        }
+    ```
+    """
+
+    __slots__ = ()
+
+    def __init__(self, details: ResponseDeviceDetailsModel,
+                 manager: VeSync, feature_map: PurifierMap) -> None:
+        """Initialize VeSync Air Purifier Bypass Base Class."""
+        super().__init__(details, manager, feature_map)
+
+    def _set_purifier_state(self, result: PurifierCoreDetailsResult) -> None:
+        """Populate PurifierState with details from API response.
+
+        Populates `self.state` and instance variables with device details.
+
+        Args:
+            result (InnerPurifierResult): Data model for inner result in purifier
+                details response.
+        """
+        self.state.device_status = DeviceStatus.ON if result.enabled else DeviceStatus.OFF
+        self.state.filter_life = result.filter_life or 0
+        self.state.mode = result.mode
+        self.state.fan_level = result.level or 0
+        self.state.display_status = DeviceStatus.ON if result.display \
+            else DeviceStatus.OFF
+        self.state.child_lock = result.child_lock or False
+        config = result.configuration
+        if config is not None:
+            self.state.display_set_state = DeviceStatus.ON if config.display \
+                else DeviceStatus.OFF
+            self.state.display_forever = config.display_forever
+            if config.auto_preference is not None:
+                self.state.auto_preference_type = config.auto_preference.type
+                self.state.auto_room_size = config.auto_preference.room_size
+        if self.supports_air_quality is True:
+            self.state.pm25 = result.air_quality_value
+            self.state.set_air_quality_level(result.air_quality)
+        if result.night_light != StrFlag.NOT_SUPPORTED:
+            self.state.nightlight_status = DeviceStatus.ON if result.night_light \
+                else DeviceStatus.OFF
+
+    async def get_details(self) -> None:
+        """Build Bypass Purifier details dictionary."""
+        r_dict = await self.call_bypassv2_api('getPurifierStatus')
+        r = process_bypassv2_result(self, _LOGGER, "get_details", r_dict)
+        if r is None:
+            return
+        resp_model = PurifierCoreDetailsResult.from_dict(r)
+        self._set_purifier_state(resp_model)
+
+    async def get_timer(self) -> Timer | None:
+        """Retrieve running timer from purifier.
+
+        Returns Timer object if timer is running, None if no timer is running.
+
+        Returns:
+            Timer | None : Timer object if timer is running, None if no timer is running
+
+        Notes:
+            Timer object tracks the time remaining based on the last update. Timer
+            properties include `status`, `time_remaining`, `duration`, `action`,
+            `paused` and `done`. The methods `start()`, `end()` and `pause()`
+            are available but should be called through the purifier object
+            to update through the API.
+
+        See Also:
+            [pyvesync.helpers.Time][`Timer`] : Timer object used to hold status of timer
+
+        """
+        r_bytes = await self.call_bypassv2_api('getTimer')
+        r = process_bypassv2_result(self, _LOGGER, "get_timer", r_bytes)
+        if r is None:
+            return None
+
+        resp_model = ResultV2GetTimer.from_dict(r)
+        timers = resp_model.timers
+        if not timers:
+            _LOGGER.debug('No timers found')
+            return None
+        timer = timers[0]
+        self.state.timer = Timer(
+            timer_duration=timer.total,
+            action=timer.action,
+            id=timer.id,
+            remaining=timer.remain,
+        )
+        self.state.device_status = DeviceStatus.ON
+        self.state.connection_status = ConnectionStatus.ONLINE
+        _LOGGER.debug("Timer found: %s", str(self.state.timer))
+        return self.state.timer
+
+    async def set_timer(self, duration: int, action: str | None = None) -> bool:
+        """Set timer for Purifier.
+
+        Only currently supports 'off' action. API does not support
+        any other actions.
+
+        Args:
+            duration (int): Duration of timer in seconds
+            action (str | None): Action to perform, on or off, by default 'off'
+
+        Returns:
+            bool : True if timer is set, False if not
+
+        """
+        action = DeviceStatus.OFF  # No other actions available for this device
+        if self.state.device_status != DeviceStatus.ON:
+            _LOGGER.debug("Can't set timer when device is off")
+        # head, body = self.build_api_dict('addTimer')
+        payload_data = {
+            "action": str(action),
+            "total": duration
+        }
+        r_dict = await self.call_bypassv2_api('addTimer', payload_data)
+        r = process_bypassv2_result(self, _LOGGER, "set_timer", r_dict)
+        if r is None:
+            return False
+
+        resp_model = ResultV2SetTimer.from_dict(r)
+        self.state.timer = Timer(
+                timer_duration=duration, action="off", id=resp_model.id
+                )
+        self.state.device_status = DeviceStatus.ON
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def clear_timer(self) -> bool:
+        """Clear timer.
+
+        Returns True if no error is returned from API call.
+
+        Returns:
+            bool : True if timer is cleared, False if not
+        """
+        if self.state.timer is None:
+            _LOGGER.debug('No timer to clear, run `get_timer()` to get active timer')
+            return False
+        payload_data = {
+            "id": self.state.timer.id
+        }
+
+        r_dict = await self.call_bypassv2_api('delTimer', payload_data)
+        r = Helpers.process_dev_response(_LOGGER, "clear_timer", self, r_dict)
+        if r is None:
+            return False
+
+        _LOGGER.debug("Timer cleared")
+        self.state.timer = None
+        self.state.device_status = DeviceStatus.ON
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def set_fan_speed(self, speed: None | int = None) -> bool:
+        """Change fan speed based on levels in configuration dict.
+
+        If no value is passed, the next speed in the list is selected.
+
+        Args:
+            speed (int, optional): Speed to set fan. Defaults to None.
+
+        Returns:
+            bool : True if speed is set, False if not
+        """
+        speeds: list = self.fan_levels
+        current_speed = self.state.fan_level
+
+        if speed is not None:
+            if speed not in speeds:
+                _LOGGER.debug(
+                    "%s is invalid speed - valid speeds are %s", speed, str(speeds))
+                return False
+            new_speed = speed
+        else:
+            new_speed = Helpers.bump_level(current_speed, self.fan_levels)
+
+        data = {
+            "id": 0,
+            "level": new_speed,
+            "type": "wind",
+        }
+        r_dict = await self.call_bypassv2_api('setLevel', data)
+        r = Helpers.process_dev_response(_LOGGER, "set_fan_speed", self, r_dict)
+        if r is None:
+            return False
+
+        self.state.fan_level = new_speed
+        self.state.mode = PurifierModes.MANUAL  # Set mode to manual to set fan speed
+        self.state.device_status = DeviceStatus.ON
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def child_lock_on(self) -> bool:
+        """Turn Bypass child lock on."""
+        return await self.set_child_lock(True)
+
+    async def child_lock_off(self) -> bool:
+        """Turn Bypass child lock off.
+
+        Returns:
+            bool : True if child lock is turned off, False if not
+        """
+        return await self.set_child_lock(False)
+
+    async def set_child_lock(self, mode: bool) -> bool:
+        """Set Bypass child lock.
+
+        Set child lock to on or off. Internal method used by `child_lock_on` and
+        `child_lock_off`.
+
+        Args:
+            mode (bool): True to turn child lock on, False to turn off
+
+        Returns:
+            bool : True if child lock is set, False if not
+
+        """
+        if mode not in (True, False):
+            _LOGGER.debug('Invalid mode passed to set_child_lock - %s', mode)
+            return False
+
+        data = {
+            "child_lock": mode
+        }
+
+        r_dict = await self.call_bypassv2_api('setChildLock', data)
+        r = Helpers.process_dev_response(_LOGGER, "set_child_lock", self, r_dict)
+        if r is None:
+            return False
+
+        self.state.child_lock = mode
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def reset_filter(self) -> bool:
+        """Reset filter to 100%.
+
+        Returns:
+            bool : True if filter is reset, False if not
+        """
+        r_dict = await self.call_bypassv2_api('resetFilter')
+        r = Helpers.process_dev_response(_LOGGER, "reset_filter", self, r_dict)
+        return bool(r)
+
+    @deprecated("Use set_mode(mode: str) instead.")
+    async def mode_toggle(self, mode: str) -> bool:
+        """Deprecated method for setting purifier mode."""
+        return await self.set_mode(mode)
+
+    async def set_mode(self, mode: str) -> bool:
+        """Set purifier mode - sleep or manual.
+
+        Set purifier mode based on devices available modes.
+
+        Args:
+            mode (str): Mode to set purifier. Based on device modes in attribute `modes`
+
+        Returns:
+            bool : True if mode is set, False if not
+
+        """
+        if mode.lower() not in self.modes:
+            _LOGGER.debug("Invalid purifier mode used - %s", mode)
+            return False
+
+        if mode.lower() == PurifierModes.MANUAL:
+            return await self.set_fan_speed(self.state.fan_level or 1)
+
+        data = {
+            "mode": mode,
+        }
+        r_dict = await self.call_bypassv2_api('setPurifierMode', data)
+
+        r = Helpers.process_dev_response(_LOGGER, "set_mode", self, r_dict)
+        if r is None:
+            return False
+
+        self.state.mode = mode
+        self.state.device_status = DeviceStatus.ON
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def toggle_switch(self, toggle: bool | None = None) -> bool:
+        """Toggle purifier on/off.
+
+        Helper method for `turn_on()` and `turn_off()` methods.
+
+        Args:
+            toggle (bool): True to turn on, False to turn off, None to toggle
+
+        Returns:
+            bool : True if purifier is toggled, False if not
+        """
+        if toggle is None:
+            toggle = self.state.device_status != DeviceStatus.ON
+        if not isinstance(toggle, bool):
+            _LOGGER.debug('Invalid toggle value for purifier switch')
+            return False
+
+        data = {
+            "enabled": toggle,
+            "id": 0
+        }
+        r_dict = await self.call_bypassv2_api('setSwitch', data)
+        r = Helpers.process_dev_response(_LOGGER, "toggle_switch", self, r_dict)
+        if r is None:
+            return False
+
+        self.state.device_status = DeviceStatus.ON if toggle else DeviceStatus.OFF
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def toggle_display(self, mode: bool) -> bool:
+        """Toggle display on/off.
+
+        Called by `turn_on_display()` and `turn_off_display()` methods.
+
+        Args:
+            mode (bool): True to turn display on, False to turn off
+
+        Returns:
+            bool : True if display is toggled, False if not
+        """
+        if not isinstance(mode, bool):
+            _LOGGER.debug("Mode must be True or False")
+            return False
+
+        data = {
+            "state": mode
+        }
+        r_dict = await self.call_bypassv2_api('setDisplay', data)
+        r = Helpers.process_dev_response(_LOGGER, "set_display", self, r_dict)
+        if r is None:
+            return False
+        self.state.connection_status = ConnectionStatus.ONLINE
+        self.state.display_set_state = DeviceStatus.from_bool(mode)
+        return True
+
+    async def set_nightlight_mode(self, mode: str) -> bool:
+        """Set night light.
+
+        Possible modes are on, off or dim.
+
+        Args:
+            mode (str): Mode to set night light
+
+        Returns:
+            bool : True if night light is set, False if not
+        """
+        if not self.supports_nightlight:
+            _LOGGER.debug("Device does not support night light")
+            return False
+        if mode.lower() not in [self.nightlight_modes]:
+            _LOGGER.warning("Invalid nightlight mode used (on, off or dim)- %s", mode)
+            return False
+
+        r_dict = await self.call_bypassv2_api(
+            'setNightLight', {'night_light': mode.lower()}
+            )
+        r = Helpers.process_dev_response(_LOGGER, "set_night_light", self, r_dict)
+        if r is None:
+            return False
+
+        self.state.nightlight_status = mode
+        return True
+
+    @property
+    @deprecated("Use self.state.air_quality instead.")
+    def air_quality(self) -> int | None:
+        """Get air quality value PM2.5 (ug/m3)."""
+        return self.state.pm25
+
+    @property
+    @deprecated("Use self.state.fan_level instead.")
+    def fan_level(self) -> int | None:
+        """Get current fan level."""
+        return self.state.fan_level
+
+    @property
+    def filter_life(self) -> int | None:
+        """Get percentage of filter life remaining."""
+        return self.state.filter_life
+
+    @property
+    @deprecated("Use self.state.display_status instead.")
+    def display_state(self) -> bool:
+        """Get display state.
+
+        See [pyvesync.VeSyncAirBypass.display_status][`self.display_status`]
+        """
+        return self.state.display_status == DeviceStatus.ON
+
+    @property
+    @deprecated("Use self.state.display_status instead.")
+    def screen_status(self) -> bool:
+        """Get display status.
+
+        Returns:
+            bool : True if display is on, False if off
+        """
+        return self.state.display_status == DeviceStatus.ON
+
+    @property
+    @deprecated("Use self.state.child_lock instead.")
+    def child_lock(self) -> bool:
+        """Get child lock state.
+
+        Returns:
+            bool : True if child lock is enabled, False if not.
+        """
+        return self.state.child_lock
+
+    @property
+    @deprecated("Use self.state.nightlight_status instead.")
+    def night_light(self) -> str:
+        """Get night light state.
+
+        Returns:
+            str : Night light state (on, dim, off)
+        """
+        return self.state.nightlight_status
+
+
+class VeSyncAirBaseV2(VeSyncAirBypass):
+    """Levoit V2 Air Purifier Class.
+
+    Inherits from VeSyncAirBypass and VeSyncBaseDevice class.
+
+    Args:
+        details (dict): Dictionary of device details
+        manager (VeSync): Instantiated VeSync object
+
+    Attributes:
+        set_speed_level (int): Set speed level for device
+        auto_preferences (list): List of auto preferences for device
+        modes (list): List of available operation modes for device
+        air_quality_feature (bool): True if device has air quality sensor
+        details (dict): Dictionary of device details
+        timer (Timer): Timer object for device, None if no timer exists. See
+            [pyvesync.helpers.Timer][`Timer`] class
+        config (dict): Dictionary of device configuration
+
+    """
+
+    __slots__ = ()
+
+    def __init__(
+        self,
+        details: ResponseDeviceDetailsModel,
+        manager: VeSync,
+        feature_map: PurifierMap,
+    ) -> None:
+        """Initialize the VeSync Base API V2 Air Purifier Class."""
+        super().__init__(details, manager, feature_map)
+
+    def _set_state(self, details: PurifierV2DetailsResult) -> None:
+        """Set Purifier state from details response."""
+        self.state.connection_status = ConnectionStatus.ONLINE
+        self.state.device_status = DeviceStatus.from_int(details.powerSwitch)
+        self.state.mode = details.workMode
+        self.state.filter_life = details.filterLifePercent
+        if details.fanSpeedLevel == 255:
+            self.state.fan_level = 0
+        else:
+            self.state.fan_level = details.fanSpeedLevel
+        self.state.fan_set_level = details.manualSpeedLevel
+        self.state.child_lock = bool(details.childLockSwitch)
+        self.state.air_quality_level = details.AQLevel
+        self.state.pm25 = details.PM25
+        self.state.light_detection_switch = DeviceStatus.from_int(
+            details.lightDetectionSwitch
+            )
+        self.state.light_detection_status = DeviceStatus.from_int(
+            details.environmentLightState
+            )
+        self.state.display_set_state = DeviceStatus.from_int(details.screenSwitch)
+        self.state.display_status = DeviceStatus.from_int(details.screenState)
+        auto_pref = details.autoPreference
+        if auto_pref is not None:
+            self.state.auto_preference_type = auto_pref.autoPreferenceType
+            self.state.auto_room_size = auto_pref.roomSize
+
+        self.state.pm1 = details.PM1
+        self.state.pm10 = details.PM10
+        self.state.aq_percent = details.AQPercent
+        self.state.fan_rotate_angle = details.fanRotateAngle
+        if details.filterOpenState != IntFlag.NOT_SUPPORTED:
+            self.state.filter_open_state = bool(details.filterOpenState)
+        if details.timerRemain > 0:
+            self.state.timer = Timer(details.timerRemain, 'off')
+
+    @property
+    @deprecated("Use self.state.fan_set_level instead.")
+    def set_speed_level(self) -> int | None:
+        """Get set speed level."""
+        return self.state.fan_set_level
+
+    @property
+    @deprecated("Use self.state.light_detection_switch, this returns 'on' or 'off")
+    def light_detection(self) -> bool:
+        """Return true if light detection feature is enabled."""
+        return self.state.light_detection_switch == DeviceStatus.ON
+
+    @property
+    @deprecated("Use self.state.light_detection_status, this returns 'on' or 'off'")
+    def light_detection_state(self) -> bool:
+        """Return true if light is detected."""
+        return self.state.light_detection_status == DeviceStatus.ON
+
+    async def get_details(self) -> None:
+        """Build API V2 Purifier details dictionary."""
+        r_dict = await self.call_bypassv2_api('getPurifierStatus')
+        r = process_bypassv2_result(self, _LOGGER, "get_details", r_dict)
+        if r is None:
+            return
+
+        r_model = PurifierV2DetailsResult.from_dict(r)
+        self._set_state(r_model)
+
+    @deprecated("Use toggle_light_detection(toggle) instead.")
+    async def set_light_detection(self, toggle: bool) -> bool:
+        """Set light detection feature."""
+        return await self.toggle_light_detection(toggle)
+
+    async def toggle_light_detection(self, toggle: bool) -> bool:
+        """Enable/Disable Light Detection Feature."""
+        if bool(self.state.light_detection_switch) == toggle:
+            _LOGGER.debug(
+                "Light Detection is already set to %s", self.state.light_detection_switch
+                )
+            return True
+
+        payload_data = {
+            "lightDetectionSwitch": int(toggle)
+        }
+        r_dict = await self.call_bypassv2_api('setLightDetection', payload_data)
+        r = Helpers.process_dev_response(_LOGGER, "set_light_detection", self, r_dict)
+        if r is None:
+            return False
+
+        self.state.light_detection_switch = DeviceStatus.ON if toggle \
+            else DeviceStatus.OFF
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def turn_on_light_detection(self) -> bool:
+        """Turn on light detection feature."""
+        return await self.toggle_light_detection(True)
+
+    async def turn_off_light_detection(self) -> bool:
+        """Turn off light detection feature."""
+        return await self.toggle_light_detection(False)
+
+    @deprecated("Use turn_on_light_detection() instead.")
+    async def set_light_detection_on(self) -> bool:
+        """Turn on light detection feature."""
+        return await self.toggle_light_detection(True)
+
+    @deprecated("Use turn_off_light_detection() instead.")
+    async def set_light_detection_off(self) -> bool:
+        """Turn off light detection feature."""
+        return await self.toggle_light_detection(False)
+
+    async def toggle_switch(self, toggle: bool | None = None) -> bool:
+        """Toggle purifier on/off."""
+        if toggle is None:
+            toggle = not bool(self.state.device_status)
+        if not isinstance(toggle, bool):
+            _LOGGER.debug('Invalid toggle value for purifier switch')
+            return False
+        if toggle == bool(self.state.device_status):
+            _LOGGER.debug('Purifier is already %s', self.state.device_status)
+            return True
+
+        payload_data = {
+                'powerSwitch': int(toggle),
+                'switchIdx': 0
+            }
+        r_dict = await self.call_bypassv2_api('setSwitch', payload_data)
+        r = Helpers.process_dev_response(_LOGGER, "toggle_switch", self, r_dict)
+        if r is None:
+            return False
+
+        self.state.device_status = DeviceStatus.from_bool(toggle)
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def set_child_lock(self, mode: bool) -> bool:
+        """Levoit 100S/200S set Child Lock.
+
+        Parameters:
+            mode (bool): True to turn child lock on, False to turn off
+
+        Returns:
+            bool : True if successful, False if not
+        """
+        if self.state.child_lock == mode:
+            _LOGGER.debug('Child lock is already %s', mode)
+            return True
+
+        payload_data = {
+            'childLockSwitch': int(mode)
+        }
+        r_dict = await self.call_bypassv2_api('setChildLock', payload_data)
+
+        r = Helpers.process_dev_response(_LOGGER, "set_child_lock", self, r_dict)
+        if r is None:
+            return False
+
+        self.state.child_lock = mode
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def toggle_display(self, mode: bool) -> bool:
+        """Levoit Vital 100S/200S Set Display on/off with True/False."""
+        if bool(self.state.display_set_state) == mode:
+            _LOGGER.debug('Display is already %s', mode)
+            return True
+
+        payload_data = {
+            'screenSwitch': int(mode)
+        }
+        r_dict = await self.call_bypassv2_api('setDisplay', payload_data)
+
+        r = Helpers.process_dev_response(_LOGGER, "set_display", self, r_dict)
+        if r is None:
+            return False
+
+        self.state.display_set_state = DeviceStatus.from_bool(mode)
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def set_timer(
+        self, duration: int, action: str | None = None
+    ) -> bool:
+        """Set timer for Levoit 100S.
+
+        Only one timer can be set and only toggling power is supported by passing
+        DeviceStatus.ON or DeviceStatus.OFF.
+
+        Parameters:
+            duration (int):
+                Timer duration in seconds.
+            action (str | None):
+                Action to perform, on or off, by default 'off'
+
+        Returns:
+            bool : True if successful, False if not
+        """
+        action = DeviceStatus.OFF  # No other actions available for this device
+        if action not in [DeviceStatus.ON, DeviceStatus.OFF]:
+            _LOGGER.debug('Invalid action for timer')
+            return False
+
+        method = 'powerSwitch'
+        action_int = 1 if action == DeviceStatus.ON else 0
+        action_item = PurifierV2TimerActionItems(type=method, act=action_int)
+        timing = PurifierV2EventTiming(clkSec=duration)
+        payload_data = PurifierV2TimerPayloadData(
+            enabled=True, startAct=[action_item], tmgEvt=timing,
+        )
+
+        r_dict = await self.call_bypassv2_api('addTimerV2', payload_data.to_dict())
+        r = Helpers.process_dev_response(_LOGGER, "set_timer", self, r_dict)
+        if r is None:
+            return False
+
+        r_model = ResultV2SetTimer.from_dict(r)
+
+        self.state.timer = Timer(duration, action=action, id=r_model.id)
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def clear_timer(self) -> bool:
+        if self.state.timer is None:
+            _LOGGER.warning("No timer found, run get_timer() to retrieve timer.")
+            return False
+
+        payload_data = {
+            "id": self.state.timer.id,
+            "subDeviceNo": 0
+        }
+        r_dict = await self.call_bypassv2_api('delTimerV2', payload_data)
+        r = Helpers.process_dev_response(_LOGGER, "clear_timer", self, r_dict)
+        if r is None:
+            return False
+
+        self.state.timer = None
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def set_auto_preference(self, preference: str = PurifierAutoPreference.DEFAULT,
+                                  room_size: int = 600) -> bool:
+        """Set Levoit Vital 100S/200S auto mode.
+
+        Parameters:
+            preference (str | None | PurifierAutoPreference):
+                Preference for auto mode, default 'default' (default, efficient, quiet)
+            room_size (int | None):
+                Room size in square feet, by default 600
+        """
+        if preference not in self.auto_preferences:
+            _LOGGER.debug(
+                "%s is invalid preference -"
+                " valid preferences are default, efficient, quiet",
+                preference,
+            )
+            return False
+        payload_data = {
+            "autoPreference": preference,
+            "roomSize": room_size
+        }
+        r_dict = await self.call_bypassv2_api('setAutoPreference', payload_data)
+        r = Helpers.process_dev_response(_LOGGER, "set_auto_preference", self, r_dict)
+        if r is None:
+            return False
+
+        self.state.auto_preference_type = preference
+        self.state.auto_room_size = room_size
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def set_fan_speed(self, speed: None | int = None) -> bool:
+        if speed is not None:
+            if speed not in self.fan_levels:
+                _LOGGER.debug(
+                    "%s is invalid speed - valid speeds are %s",
+                    speed,
+                    str(self.fan_levels),
+                )
+                return False
+            new_speed = speed
+        elif self.state.fan_level is None:
+            new_speed = self.fan_levels[0]
+        else:
+            new_speed = Helpers.bump_level(self.state.fan_level, self.fan_levels)
+
+        payload_data = {
+            "levelIdx": 0,
+            "manualSpeedLevel": new_speed,
+            "levelType": "wind"
+        }
+        r_dict = await self.call_bypassv2_api('setLevel', payload_data)
+        r = Helpers.process_dev_response(_LOGGER, "set_fan_speed", self, r_dict)
+        if r is None:
+            return False
+
+        self.state.fan_set_level = new_speed
+        self.state.mode = PurifierModes.MANUAL
+        self.state.device_status = DeviceStatus.ON
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def set_mode(self, mode: str) -> bool:
+        if mode.lower() not in self.modes:
+            _LOGGER.debug("Invalid purifier mode used - %s", mode)
+            return False
+
+        # Call change_fan_speed if mode is set to manual
+        if mode == PurifierModes.MANUAL:
+            if self.state.fan_set_level is None or self.state.fan_level == 0:
+                return await self.set_fan_speed(1)
+            return await self.set_fan_speed(self.state.fan_set_level)
+
+        payload_data = {
+            "workMode": mode
+        }
+        r_dict = await self.call_bypassv2_api('setPurifierMode', payload_data)
+        r = Helpers.process_dev_response(_LOGGER, "mode_toggle", self, r_dict)
+        if r is None:
+            return False
+
+        self.state.mode = mode
+        self.state.connection_status = ConnectionStatus.ONLINE
+        self.state.device_status = DeviceStatus.ON
+        return True
+
+
+class VeSyncAir131(VeSyncPurifier):
+    """Levoit Air Purifier Class."""
+
+    __slots__ = ()
+
+    def __init__(self, details: ResponseDeviceDetailsModel,
+                 manager: VeSync, feature_map: PurifierMap) -> None:
+        """Initialize air purifier class."""
+        super().__init__(details, manager, feature_map)
+        self.request_keys = [
+            "acceptLanguage",
+            "appVersion",
+            "phoneBrand",
+            "phoneOS",
+            "accountId",
+            "debugMode"
+            "traceId",
+            "timeZone",
+            "token",
+            "userCountryCode",
+            "uuid"
+        ]
+
+    def _build_request(
+        self, method: str, update_dict: dict | None = None
+    ) -> RequestPurifier131:
+        """Build API request body for air purifier timer."""
+        body = Helpers.get_class_attributes(DefaultValues, self.request_keys)
+        body.update(Helpers.get_class_attributes(self.manager, self.request_keys))
+        body.update(Helpers.get_class_attributes(self, self.request_keys))
+        body["method"] = method
+        if update_dict is not None:
+            body.update(update_dict)
+        return RequestPurifier131.from_dict(body)
+
+    def _set_state(self, details: Purifier131Result) -> None:
+        """Set state from purifier API get_details() response."""
+        self.state.device_status = details.deviceStatus
+        self.state.connection_status = details.connectionStatus
+        self.state.active_time = details.activeTime
+        self.state.filter_life = details.filterLife.percent
+        self.state.display_status = details.screenStatus
+        self.state.display_set_state = details.screenStatus
+        self.state.child_lock = bool(DeviceStatus(details.childLock))
+        self.state.mode = details.mode
+        self.state.fan_level = details.level or 0
+        self.state.fan_set_level = details.levelNew
+        self.state.air_quality_level = AirQualityLevel(details.airQuality).value
+
+    async def get_details(self) -> None:
+        body = self._build_request('deviceDetail')
+        headers = Helpers.req_header_bypass()
+
+        r_dict, _ = await self.manager.async_call_api(
+            '/cloud/v1/deviceManaged/deviceDetail',
+            method='post',
+            headers=headers,
+            json_object=body.to_dict(),
+        )
+        r = Helpers.process_dev_response(_LOGGER, "get_details", self, r_dict)
+        if r is None:
+            return
+
+        r_model = Purifier131Result.from_dict(r)
+        self._set_state(r_model)
+
+    async def toggle_display(self, mode: bool) -> bool:
+        update_dict = {
+            "status": "on" if mode else "off"
+        }
+        body = self._build_request('airPurifierScreenCtl', update_dict=update_dict)
+        headers = Helpers.req_header_bypass()
+
+        r_dict, _ = await self.manager.async_call_api(
+            '/cloud/v1/deviceManaged/airPurifierScreenCtl', 'post',
+            json_object=body.to_dict(), headers=headers
+        )
+        r = Helpers.process_dev_response(_LOGGER, "toggle_display", self, r_dict)
+        if r is None:
+            return False
+
+        self.state.display_set_state = DeviceStatus.from_bool(mode)
+        self.state.display_status = DeviceStatus.from_bool(mode)
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def toggle_switch(self, toggle: bool | None = None) -> bool:
+        if toggle is None:
+            toggle = self.state.device_status != DeviceStatus.ON
+
+        update_dict = {
+            "status": DeviceStatus.from_bool(toggle).value
+        }
+        body = self._build_request('airPurifierPowerSwitchCtl', update_dict=update_dict)
+        headers = Helpers.req_header_bypass()
+        r_dict, _ = await self.manager.async_call_api(
+            '/cloud/v1/deviceManaged/airPurifierPowerSwitchCtl', 'post',
+            json_object=body.to_dict(), headers=headers
+        )
+        r = Helpers.process_dev_response(_LOGGER, "toggle_switch", self, r_dict)
+        if r is None:
+            return False
+
+        self.state.device_status = DeviceStatus.from_bool(toggle)
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def set_fan_speed(self, speed: int | None = None) -> bool:
+        current_speed = self.state.fan_set_level or 0
+
+        if speed is not None:
+            if speed not in self.fan_levels:
+                _LOGGER.debug(
+                    "%s is invalid speed - valid speeds are %s",
+                    speed,
+                    str(self.fan_levels),
+                )
+                return False
+            new_speed = speed
+        else:
+            new_speed = Helpers.bump_level(current_speed, self.fan_levels)
+
+        update_dict = {
+            "level": new_speed
+        }
+        body = self._build_request('airPurifierSpeedCtl', update_dict=update_dict)
+        headers = Helpers.req_header_bypass()
+
+        r_dict, _ = await self.manager.async_call_api(
+            '/cloud/v1/deviceManaged/airPurifierSpeedCtl', 'post',
+            json_object=body, headers=headers
+        )
+        r = Helpers.process_dev_response(_LOGGER, "change_fan_speed", self, r_dict)
+        if r is None:
+            return False
+
+        self.state.fan_level = new_speed
+        self.state.fan_set_level = new_speed
+        self.state.connection_status = 'online'
+        self.state.mode = PurifierModes.MANUAL
+        return True
+
+    async def set_mode(self, mode: str) -> bool:
+        if mode not in self.modes:
+            _LOGGER.debug('Invalid purifier mode used - %s', mode)
+            return False
+
+        update_dict = {
+            "mode": mode
+        }
+        body = self._build_request('airPurifierModeCtl', update_dict=update_dict)
+        headers = Helpers.req_header_bypass()
+
+        r_dict, _ = await self.manager.async_call_api(
+            '/cloud/v1/deviceManaged/airPurifierRunModeCtl', 'post',
+            json_object=body.to_dict(), headers=headers
+        )
+        r = Helpers.process_dev_response(_LOGGER, "mode_toggle", self, r_dict)
+        if r is None:
+            return False
+
+        self.state.mode = mode
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True

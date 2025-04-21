@@ -7,7 +7,7 @@ name = "pyvesync"
 version = "2.1.17"
 description = "pyvesync is a library to manage Etekcity Devices, Cosori Air Fryers, and Levoit Air Purifiers run on the VeSync app."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = { text = "MIT" }
 authors = [
     { name = "Joe Trabulsy", email = "webdjoe@gmail.com" },
@@ -24,7 +24,7 @@ dependencies = [
     "requests>=2.20.0",
     "aiohttp>=3.8.1",
     "mashumaro[orjson]>=3.13.1",
-    "Deprecated>=1.2.14"
+    "python-dateutil>=2.8.1"
 ]
 
 [project.urls]
@@ -36,6 +36,12 @@ dev = [
     "pytest-cov",
     "pyyaml",
     "tox"
+]
+docs = [
+    "mkdocstrings-python",
+    "mkdocs",
+    "mkdocs-material",
+    "mkdocstrings",
 ]
 
 [tool.setuptools.packages.find]

@@ -1,32 +1,32 @@
 exclude = [
-    ".bzr",
-    ".direnv",
-    ".eggs",
-    ".git",
-    ".git-rewrite",
-    ".hg",
-    ".ipynb_checkpoints",
-    ".mypy_cache",
-    ".nox",
-    ".pants.d",
-    ".pyenv",
-    ".pytest_cache",
-    ".pytype",
-    ".ruff_cache",
-    ".svn",
-    ".tox",
-    ".venv",
-    ".vscode",
-    "__pypackages__",
-    "_build",
-    "buck-out",
-    "build",
-    "dist",
-    "node_modules",
-    "site-packages",
-    "venv",
-    "test",
-    "tests",
+  ".bzr",
+  ".direnv",
+  ".eggs",
+  ".git",
+  ".git-rewrite",
+  ".hg",
+  ".ipynb_checkpoints",
+  ".mypy_cache",
+  ".nox",
+  ".pants.d",
+  ".pyenv",
+  ".pytest_cache",
+  ".pytype",
+  ".ruff_cache",
+  ".svn",
+  ".tox",
+  ".venv",
+  ".vscode",
+  "__pypackages__",
+  "_build",
+  "buck-out",
+  "build",
+  "dist",
+  "node_modules",
+  "site-packages",
+  "venv",
+  "test",
+  "tests",
 ]
 
 line-length = 90
@@ -34,32 +34,40 @@ indent-width = 4
 
 [lint]
 select = ["ALL"]
-ignore = ["T201",  # PRINT statement - IGNORE
-          "ERA001",  # Commented Code - IGNORE
-          "PERF203",  # Performance error of try/except in loop - IGNORE
-          "COM812",  # Missing trailing comma - IGNORE
-          "TRY003",  # Avoid specifying long messages outside the exception class - TODO: Add exception classes
-          "TRY301",  # raise within try - TODO: Fix this
-          "BLE001",  # Broad Exceptions are not allowed - TODO: Fix this
-          "EM102",  # Exception must not use an f-string literal, assign to variable first - TODO: add exception classes
-          "I001",  # Import sort - TODO: Fix this
-          "EM101",  # Exception must not use a string literal, assign to variable first - TODO: add exception classes
-          "FBT001",  # type hint positional argument - bool is not allowed - IGNORE
-          "FBT003", # Bool positional argument - IGNORE
-          "TD002",  # Todo error - IGNORE
-          "TD003",  # Todo error - IGNORE
-          "FIX002",  # Fixme error - IGNORE
-          "FA102",  # type compatibility warning - IGNORE
-          "FBT002",
-          "ANN401",
-          ]
+ignore = [
+  "T201",    # PRINT statement - IGNORE
+  "ERA001",  # Commented Code - IGNORE
+  "PERF203", # Performance error of try/except in loop - IGNORE
+  "COM812",  # Missing trailing comma - IGNORE
+  "TRY003",  # Avoid specifying long messages outside the exception class - TODO: Add exception classes
+  "TRY301",  # raise within try - TODO: Fix this
+  "BLE001",  # Broad Exceptions are not allowed - TODO: Fix this
+  "EM102",   # Exception must not use an f-string literal, assign to variable first - TODO: add exception classes
+  "I001",    # Import sort - TODO: Fix this
+  "EM101",   # Exception must not use a string literal, assign to variable first - TODO: add exception classes
+  "FBT001",  # type hint positional argument - bool is not allowed - IGNORE
+  "FBT003",  # Bool positional argument - IGNORE
+  "TD002",   # Todo error - IGNORE
+  "TD003",   # Todo error - IGNORE
+  "FIX002",  # Fixme error - IGNORE
+  "FA102",   # type compatibility warning - IGNORE
+  "FBT002",
+  #   "N815",  # mixed case variable name - IGNORE
+  #   "N802",  # function name should be lowercase - IGNORE
+  "INP001", # Implicit Namespace error  - IGNORE
+  "TC003",  # Bug in TYPE_CHECKING recommendation for dataclasses - IGNORE
+  "D102",  # Missing docstring in public method - HANDLED BY PYLINT
+]
 # Todo: Add exception classes EM102, BLE001, EM101
 # Todo: Fix import sorting issue I001
 unfixable = ["B"]
 
+
 [lint.per-file-ignores]
 "vesync.py" = ["F403"]
+"**/models/*" = ["N804", "N803", "ANN401", "N802", "N815"]
 "vesyncbulb.py" = ["PLR2004"]
+"**/errors.py" = ["S105"]
 
 [lint.pep8-naming]
 extend-ignore-names = ["displayJSON"]
@@ -72,8 +80,7 @@ max-public-methods = 30
 max-args = 6
 
 [format]
-quote-style =  "preserve"
+quote-style = "preserve"
 indent-style = "space"
 skip-magic-trailing-comma = false
 line-ending = "lf"
-

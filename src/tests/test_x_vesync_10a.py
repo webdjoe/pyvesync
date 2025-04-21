@@ -2,8 +2,8 @@
 
 import pytest
 import orjson
-from pyvesync.vesyncoutlet import VeSyncOutlet10A
-from pyvesync.helpers import Helpers as Helpers
+from pyvesync.devices.vesyncoutlet import VeSyncOutlet10A
+from pyvesync.utils.helpers import Helpers as Helpers
 import call_json
 import call_json_outlets
 from utils import TestBase
@@ -75,7 +75,7 @@ class TestVesync10ASwitch(TestBase):
         """Test 10A Device On/Off Methods."""
         self.mock_api.return_value = (orjson.dumps({'code': 0}), 200)
         out = VeSyncOutlet10A(DEV_LIST_DETAIL_EU, self.manager)
-        head = Helpers.req_headers(self.manager)
+        head = Helpers.req_legacy_headers(self.manager)
         body = Helpers.req_body(self.manager, 'devicestatus')
 
         body['status'] = 'on'
@@ -110,7 +110,7 @@ class TestVesync10ASwitch(TestBase):
         self.mock_api.assert_called_with(
             '/10a/v1/device/energyweek',
             'post',
-            headers=Helpers.req_headers(self.manager),
+            headers=Helpers.req_legacy_headers(self.manager),
             json_object=body,
         )
         energy_dict = out.energy['week']
@@ -132,7 +132,7 @@ class TestVesync10ASwitch(TestBase):
         self.mock_api.assert_called_with(
             '/10a/v1/device/energymonth',
             'post',
-            headers=Helpers.req_headers(self.manager),
+            headers=Helpers.req_legacy_headers(self.manager),
             json_object=body,
         )
         energy_dict = out.energy['month']
@@ -154,7 +154,7 @@ class TestVesync10ASwitch(TestBase):
         self.mock_api.assert_called_with(
             '/10a/v1/device/energyyear',
             'post',
-            headers=Helpers.req_headers(self.manager),
+            headers=Helpers.req_legacy_headers(self.manager),
             json_object=body,
         )
         energy_dict = out.energy['year']

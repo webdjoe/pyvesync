@@ -1,36 +1,34 @@
 """VeSync API Device Libary."""
 
+from __future__ import annotations
 import logging
-import re
-import time
 import asyncio
-from itertools import chain
-from typing import Any, TYPE_CHECKING, Optional
+from typing import Self
 from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientResponseError
-import orjson
-from deprecated import deprecated
+from mashumaro.mixins.orjson import DataClassORJSONMixin
 
-from pyvesync.helpers import Helpers
-import pyvesync.vesyncbulb as bulb_mods
-import pyvesync.vesyncfan as fan_mods
-import pyvesync.vesyncoutlet as outlet_mods
-import pyvesync.vesynckitchen as kitchen_mods
-import pyvesync.vesyncswitch as switch_mods
-from pyvesync.const import API_BASE_URL
-from pyvesync.errors import ErrorCodes, ErrorTypes
-from pyvesync.logs import (
-    LibraryLogger,
-    VeSyncError,
-    VesyncLoginError,
-    VeSyncRateLimitError,
-    VeSyncAPIStatusCodeError,
+from pyvesync.utils.helpers import Helpers
+from pyvesync.const import API_BASE_URL, DEFAULT_REGION
+from pyvesync.device_container import DeviceContainer, DeviceContainerInstance
+from pyvesync.utils.logs import LibraryLogger
+from pyvesync.models.vesync_models import (
+    RequestDeviceListModel,
+    ResponseDeviceListModel,
+    RequestLoginModel,
+    ResponseLoginModel
+    )
+from pyvesync.utils.errors import (
+    ErrorCodes,
+    ErrorTypes,
     VeSyncAPIResponseError,
-    VeSyncServerError
+    VeSyncAPIStatusCodeError,
+    VeSyncError,
+    VeSyncServerError,
+    VesyncLoginError,
+    raise_api_errors,
     )
 
-if TYPE_CHECKING:
-    from pyvesync.vesyncbasedevice import VeSyncBaseDevice  # ignore=F401
 
 logger = logging.getLogger(__name__)
 
@@ -40,80 +38,42 @@ DEFAULT_TZ: str = 'America/New_York'
 DEFAULT_ENER_UP_INT: int = 21600
 
 
-def object_factory(dev_model: str,
-                   config: dict,
-                   manager: 'VeSync') -> tuple[str, Optional['VeSyncBaseDevice']]:
-    """Get device type and instantiate class.
-
-    Pulls the device types from each module to determine the type of device and
-    instantiates the device object.
-
-    Args:
-        dev_model (str): Device model type returned from API
-        config (dict): Device configuration from `VeSync.get_devices()` API call
-        manager (VeSync): VeSync manager object
-
-    Returns:
-        Tuple[str, VeSyncBaseDevice]: Tuple of device type classification and
-        instantiated device object
-
-    Note:
-        Device types are pulled from the `*_mods` attribute of each device module.
-        See [pyvesync.vesyncbulb.bulb_mods], [pyvesync.vesyncfan.fan_mods],
-        [pyvesync.vesyncoutlet.outlet_mods], [pyvesync.vesyncswitch.switch_mods],
-        and [pyvesync.vesynckitchen.kitchen_mods] for more information.
-    """
-    device_handler: dict[str, dict[str, Any]] = {
-        'fans': {'device_dict': fan_mods.fan_modules, 'device_module': fan_mods},
-        'outlets': {
-            'device_dict': outlet_mods.outlet_modules,
-            'device_module': outlet_mods,
-        },
-        'switches': {
-            'device_dict': switch_mods.switch_modules,
-            'device_module': switch_mods,
-        },
-        'bulbs': {'device_dict': bulb_mods.bulb_modules, 'device_module': bulb_mods},
-        'kitchen': {
-            'device_dict': kitchen_mods.kitchen_modules,
-            'device_module': kitchen_mods,
-        },
-    }
-
-    for key, type_dict in device_handler.items():
-        if dev_model in type_dict['device_dict']:
-            device_type = key
-            dev_object = getattr(
-                type_dict['device_module'], type_dict['device_dict'][dev_model]
-            )
-            return device_type, dev_object(config, manager)
-
-    logger.debug(
-        'Unknown device named %s model %s',
-        config.get('deviceName', ''),
-        config.get('deviceType', ''),
-    )
-    return 'unknown', None
-
-
 class VeSync:  # pylint: disable=function-redefined
     """VeSync Manager Class."""
+
+    __slots__ = (
+        '__weakref__',
+        '_account_id',
+        '_close_session',
+        '_debug',
+        '_device_container',
+        '_redact',
+        '_token',
+        'country_code',
+        'enabled',
+        'in_process',
+        "language",
+        'password',
+        'session',
+        'time_zone',
+        'username'
+    )
 
     def __init__(self,
                  username: str,
                  password: str,
                  session: ClientSession | None = None,
-                 time_zone: str = DEFAULT_TZ,
-                 debug: bool = False,
-                 redact: bool = True) -> None:
+                 time_zone: str = DEFAULT_TZ) -> None:
         """Initialize VeSync Manager.
 
         This class is used as the manager for all VeSync objects, all methods and
         API calls are performed from this class. Time zone, debug and redact are
         optional. Time zone must be a string of an IANA time zone format. Once
-        class is instantiated, call `manager.login()` to log in to VeSync servers,
-        which returns `True` if successful. Once logged in, call `manager.update()`
-        to retrieve devices and update device details.
+        class is instantiated, call `await manager.login()` to log in to VeSync servers,
+        which returns `True` if successful. Once logged in, call
+        `await manager.get_devices()` to retrieve devices. Then `await `manager.update()`
+        to update all devices or `await manager.devices[0].update()` to
+        update a single device.
 
         Parameters:
             username : str
@@ -124,79 +84,83 @@ class VeSync:  # pylint: disable=function-redefined
                 aiohttp client session for API calls, by default None
             time_zone : str, optional
                 Time zone for device from IANA database, by default DEFAULT_TZ
-            debug : bool, optional
-                Enable debug logging, by default False
-            redact : bool, optional
-                Redact sensitive information in logs, by default True
 
         Attributes:
             session : ClientSession
                 Client session for API calls
-            fans : list
-                List of VeSyncFan objects for humidifiers and air purifiers
-            outlets : list
-                List of VeSyncOutlet objects for smart plugs
-            switches : list
-                List of VeSyncSwitch objects for wall switches
-            bulbs : list
-                List of VeSyncBulb objects for smart bulbs
-            kitchen : list
-                List of VeSyncKitchen objects for smart kitchen appliances
-            dev_list : dict
-                Dictionary of device lists
+            devices : DeviceContainer
+                Container for all VeSync devices, has functionality of set
             token : str
                 VeSync API token
             account_id : str
                 VeSync account ID
+            country_code : str
+                Country code for VeSync account pulled from API
+            time_zone : str
+                Time zone for VeSync account pulled from API
             enabled : bool
                 True if logged in to VeSync, False if not
+
+        Note:
+            This class is a context manager, use `async with VeSync() as manager:`
+            to manage the session context. The session will be closed when exiting
+            if no session is passed in.
+
+            The `manager.devices` attribute is a DeviceContainer object that contains
+            all VeSync devices. The `manager.devices` object has the functionality of
+            a set, and can be iterated over to access devices. See :obj:`DeviceContainer`
+            for more information.
+
+            If using a context manager is not convenient, `manager.__aenter__()` and
+            `manager.__aexit__()` can be called directly.
+
+        See Also:
+            :obj:`DeviceContainer`
+                Container object to store VeSync devices
+            :obj:`DeviceState`
+                Object to store device state information
         """
         self.session = session
         self._close_session = False
-        self.debug = debug
-        self._redact = redact
-        if redact:
-            self.redact = redact
+        self._debug = False
+        self._redact = True
+        if self._redact:
+            self.redact = self.redact
         self.username: str = username
         self.password: str = password
-        self.token: str | None = None
-        self.account_id: str | None = None
-        self.country_code: str | None = None
-        self.enabled = False
-        self.update_interval = API_RATE_LIMIT
-        self.last_update_ts: float | None = None
-        self.in_process = False
-        self._energy_update_interval = DEFAULT_ENER_UP_INT
-        self._energy_check = True
-        self.outlets: list[VeSyncBaseDevice] = []
-        self.switches: list[VeSyncBaseDevice] = []
-        self.fans: list[VeSyncBaseDevice] = []
-        self.bulbs: list[VeSyncBaseDevice] = []
-        self.scales: list[VeSyncBaseDevice] = []
-        self.kitchen: list[VeSyncBaseDevice] = []
-        self._dev_attr_names = [
-            'outlets', 'switches', 'fans', 'bulbs', 'kitchen'
-        ]
+        self._token: str | None = None
+        self._account_id: str | None = None
+        self.country_code: str = DEFAULT_REGION
+        self.time_zone: str = time_zone
+        self.language: str = 'en'
 
-        self._dev_list = {
-            'fans': self.fans,
-            'outlets': self.outlets,
-            'switches': self.switches,
-            'bulbs': self.bulbs,
-            'kitchen': self.kitchen
-        }
-        self.time_zone: str
-        if isinstance(time_zone, str) and time_zone:
-            reg_test = r'[^a-zA-Z/_]'
-            if bool(re.search(reg_test, time_zone)):
-                self.time_zone = DEFAULT_TZ
-                logger.debug('Invalid characters in time zone - %s',
-                             time_zone)
-            else:
-                self.time_zone = time_zone
-        else:
-            self.time_zone = DEFAULT_TZ
-            logger.debug('Time zone is not a string')
+        self.enabled = False
+        self.in_process = False
+        self._device_container: DeviceContainer = DeviceContainerInstance
+
+    @property
+    def devices(self) -> DeviceContainer:
+        """Return VeSync device container.
+
+        See Also:
+            The pyvesync.device_container.DeviceContainer object
+            for methods and properties.
+        """
+        return self._device_container
+
+    @property
+    def token(self) -> str:
+        """Return VeSync API token."""
+        if self._token is None:
+            raise AttributeError('Token not set, run login() method')
+        return self._token
+
+    @property
+    def account_id(self) -> str:
+        """Return VeSync account ID."""
+        if self._account_id is None:
+            raise AttributeError('Account ID not set, run login() method')
+        return self._account_id
 
     @property
     def debug(self) -> bool:
@@ -207,8 +171,10 @@ class VeSync:  # pylint: disable=function-redefined
     def debug(self, new_flag: bool) -> None:
         """Set debug flag."""
         if new_flag:
+            LibraryLogger.debug = True
             LibraryLogger.configure_logger(logging.DEBUG)
         else:
+            LibraryLogger.debug = False
             LibraryLogger.configure_logger(logging.WARNING)
         self._debug = new_flag
 
@@ -226,109 +192,34 @@ class VeSync:  # pylint: disable=function-redefined
             LibraryLogger.shouldredact = False
         self._redact = new_flag
 
-    @property
-    def energy_update_interval(self) -> int:
-        """Return energy update interval."""
-        return self._energy_update_interval
-
-    @energy_update_interval.setter
-    def energy_update_interval(self, new_energy_update: int) -> None:
-        """Set energy update interval in seconds."""
-        if new_energy_update > 0:
-            self._energy_update_interval = new_energy_update
-
-    def _remove_stale_devices(self, devices: list) -> None:
-        """Remove devices not found in device list return."""
-        new_dev_ids = {dev['cid'] for dev in devices}
-
-        # FIX THIS HACK - cannot modify _dev_list keys from instance attributes
-        dev_obj_list = {
-            "outlets": self.outlets,
-            "switches": self.switches,
-            "fans": self.fans,
-            "bulbs": self.bulbs,
-            "kitchen": self.kitchen
-        }
-
-        before = len(list(chain(*dev_obj_list)))
-        after = 0
-        for attr_name, obj_list in dev_obj_list.items():
-            obj_list[:] = [dev for dev in obj_list if dev.cid in new_dev_ids]
-            setattr(self, attr_name, obj_list)
-            after += len(obj_list)
-        if before != after:
-            logger.debug('%s removed', str(before - after))
-
-    def _find_new_devices(self, devices: list) -> list:
-        """Filter return list API for devices not in instance."""
-        dev_obj_list = {
-            "outlets": self.outlets,
-            "switches": self.switches,
-            "fans": self.fans,
-            "bulbs": self.bulbs,
-            "kitchen": self.kitchen
-        }
-        current_ids = {dev.cid for dev in chain(*dev_obj_list.values())}
-        return [dev for dev in devices if dev.get('cid') not in current_ids]
-
-    @staticmethod
-    def set_dev_id(devices: list) -> list:
-        """Correct devices without cid or uuid."""
-        clean_devices: list[dict[str, str | int]] = []
-        for d in devices:
-            d["cid"] = d.get("cid") or next(
-                (d.get(k) for k in ["macid", "uuid"] if d.get(k)), None)
-            if d.get("cid") is not None:
-                clean_devices.append(d)
-            else:
-                logger.debug('Device without cid, uuid, or macid found %s',
-                             d.get("deviceName"))
-        return clean_devices
-
-    def process_devices(self, dev_list: list) -> bool:
+    def process_devices(self, dev_list_resp: ResponseDeviceListModel) -> bool:
         """Instantiate Device Objects.
 
         Internal method run by `get_devices()` to instantiate device objects.
 
         """
-        devices = self.set_dev_id(dev_list)
-        if not devices:
-            logger.warning('No devices found in api return')
-            return False
+        current_device_count = len(self._device_container)
 
-        cur_dev_count = len(list(chain(*self._dev_list.values())))
+        self._device_container.remove_stale_devices(dev_list_resp)
 
-        if cur_dev_count == 0:
-            logger.debug('New device list initialized')
-        else:
-            self._remove_stale_devices(devices)
-
-        new_devices = self._find_new_devices(devices)
-
-        # Will be handled by validation
-        # detail_keys = ['deviceType', 'deviceName', 'deviceStatus']
-        for dev in new_devices:
-            # if not all(k in dev for k in detail_keys):
-            #     logger.debug('Error adding device')
-            #     continue
-            dev_type = dev.get('deviceType')
-            if dev_type is None:
-                logger.debug('Error adding device - Device without deviceType found')
-                continue
-            device_str, device_obj = object_factory(dev_type, dev, self)
-            device_list = getattr(self, device_str, None)
-            if device_list is not None and device_obj is not None:
-                device_list.append(device_obj)
-            else:
-                logger.debug('Error adding device %s', dev_type)
-            continue
-
+        new_device_count = len(self._device_container)
+        if new_device_count != current_device_count:
+            logger.debug(
+                'Removed %s devices', str(current_device_count - new_device_count)
+                )
+        current_device_count = new_device_count
+        self._device_container.add_new_devices(dev_list_resp, self)
+        new_device_count = len(self._device_container)
+        if new_device_count != current_device_count:
+            logger.debug(
+                'Added %s devices', str(new_device_count - current_device_count)
+                )
         return True
 
     async def get_devices(self) -> bool:
         """Return tuple listing outlets, switches, and fans of devices.
 
-        This is an internal method called by `update()`
+        This is also called by `VeSync.update()`
 
         Raises:
             VeSyncAPIResponseError: If API response is invalid.
@@ -339,27 +230,34 @@ class VeSync:  # pylint: disable=function-redefined
 
         self.in_process = True
         proc_return = False
-        response_bytes, _ = await self.async_call_api(
+        request_model = RequestDeviceListModel(
+            token=self.token,
+            accountID=self.account_id,
+            timeZone=self.time_zone
+        )
+        response_dict, _ = await self.async_call_api(
             '/cloud/v1/deviceManaged/devices',
             'post',
             headers=Helpers.req_header_bypass(),
-            json_object=Helpers.req_body(self, 'devicelist'),
+            json_object=request_model.to_dict(),
         )
 
-        if response_bytes is None or not LibraryLogger.is_json(response_bytes):
+        if response_dict is None:
             raise VeSyncAPIResponseError(
                 'Error receiving response to device list request')
 
-        response = orjson.loads(response_bytes)
+        response = ResponseDeviceListModel.from_dict(response_dict)
 
-        if response and Helpers.code_check(response):
-            if 'result' in response and 'list' in response['result']:
-                device_list = response['result']['list']
-                proc_return = self.process_devices(device_list)
-            else:
-                logger.error('Device list in response not found')
+        if response.code == 0:
+            proc_return = self.process_devices(response)
         else:
-            logger.warning('Error retrieving device list')
+            error_info = ErrorCodes.get_error_info(response.code)
+            resp_message = response.msg
+            info_msg = f'{error_info.message} ({resp_message})'
+            if error_info.error_type == ErrorTypes.SERVER_ERROR:
+                raise VeSyncServerError(info_msg)
+            raise VeSyncAPIResponseError(
+                'Error receiving response to device list request')
 
         self.in_process = False
 
@@ -381,38 +279,32 @@ class VeSync:  # pylint: disable=function-redefined
         if not isinstance(self.username, str) or len(self.username) == 0 \
                 or not isinstance(self.password, str) or len(self.password) == 0:
             raise VesyncLoginError('Username and password must be specified')
-
-        resp_bytes, _ = await self.async_call_api(
-            '/cloud/v1/user/login', 'post',
-            json_object=Helpers.req_body(self, 'login')
+        request_login = RequestLoginModel(
+            email=self.username,
+            method='login',
+            password=self.password,
         )
-        if resp_bytes is None or not LibraryLogger.is_json(resp_bytes):
+        resp_dict, _ = await self.async_call_api(
+            '/cloud/v1/user/login', 'post',
+            json_object=request_login
+        )
+        if resp_dict is None:
             raise VeSyncAPIResponseError('Error receiving response to login request')
-        response = orjson.loads(resp_bytes)
-        if response.get('code') == 0:
-            result = response['result']
-            self.token = result['token']
-            self.account_id = result['accountID']
-            self.country_code = result.get('countryCode')  # TODO: Fix Test defaults
+        if resp_dict.get('code') == 0:
+            response_model = ResponseLoginModel.from_dict(resp_dict)
+            result = response_model.result
+            self._token = result.token
+            self._account_id = result.accountID
+            self.country_code = result.countryCode
             self.enabled = True
             logger.debug('Login successful')
             return True
 
-        error_info = ErrorCodes.get_error_info(response.get('code'))
-        resp_message = response.get('msg', '')
-        info_msg = f'{error_info.message} ({resp_message})'
-        if error_info.error_type == ErrorTypes.AUTHENTICATION:
-            raise VesyncLoginError(info_msg)
-        if error_info.error_type == ErrorTypes.SERVER_ERROR:
-            raise VeSyncServerError(info_msg)
+        error_info = ErrorCodes.get_error_info(resp_dict.get("code"))
+        resp_message = resp_dict.get('msg')
+        if resp_message is not None:
+            error_info.message = f'{error_info.message} ({resp_message})'
         raise VeSyncAPIResponseError('Error receiving response to login request')
-
-    def device_time_check(self) -> bool:
-        """Test if update interval has been exceeded."""
-        return (
-            self.last_update_ts is None
-            or (time.time() - self.last_update_ts) > self.update_interval
-        )
 
     async def update(self) -> None:
         """Fetch updated information about devices and new device list.
@@ -428,27 +320,17 @@ class VeSync:  # pylint: disable=function-redefined
 
         await self.update_all_devices()
 
-    @deprecated('Energy history updates should be handled by each device')
-    async def update_energy(self, bypass_check: bool = False) -> None:
-        """Fetch updated energy information for outlet devices."""
-        if self.outlets:
-            for outlet in self.outlets:
-                if isinstance(outlet, outlet_mods.VeSyncOutlet):
-                    await outlet.update_energy(bypass_check)
-
     async def update_all_devices(self) -> None:
         """Run `get_details()` for each device and update state."""
-        devices = [getattr(self, attr) for attr in self._dev_attr_names]  # TO BE FIXED
-
         logger.debug('Start updating the device details one by one')
-        update_tasks = [device.update() for device in chain(*devices)]
+        update_tasks = [device.update() for device in self._device_container]
         for update_coro in asyncio.as_completed(update_tasks):
             try:
                 await update_coro
             except VeSyncError as exc:
                 logger.debug('Error updating device: %s', exc)
 
-    async def __aenter__(self) -> 'VeSync':
+    async def __aenter__(self) -> Self:
         """Asynchronous context manager enter."""
         return self
 
@@ -464,9 +346,9 @@ class VeSync:  # pylint: disable=function-redefined
         self,
         api: str,
         method: str,
-        json_object: dict | None = None,
+        json_object: dict | None | DataClassORJSONMixin = None,
         headers: dict | None = None,
-    ) -> tuple[bytes | None, int | None]:
+    ) -> tuple[dict | None, int | None]:
         """Make API calls by passing endpoint, header and body.
 
         api argument is appended to https://smartapi.vesync.com url.
@@ -475,7 +357,7 @@ class VeSync:  # pylint: disable=function-redefined
         Args:
             api (str): Endpoint to call with https://smartapi.vesync.com.
             method (str): HTTP method to use.
-            json_object (dict): JSON object to send in body.
+            json_object (dict | RequestBaseModel): JSON object to send in body.
             headers (dict): Headers to send with request.
 
         Returns:
@@ -485,48 +367,54 @@ class VeSync:  # pylint: disable=function-redefined
             VeSyncAPIStatusCodeError: If API returns an error status code.
             VeSyncRateLimitError: If API returns a rate limit error.
             VeSyncServerError: If API returns a server error.
+            VeSyncTokenError: If API returns an authentication error.
             ClientResponseError: If API returns a client response error.
+
+        Note:
+            Future releases will require the `json_object` argument to be a dataclass,
+            instead of dictionary.
         """
         if self.session is None:
             self.session = ClientSession()
             self._close_session = True
         response = None
         status_code = None
-
+        if isinstance(json_object, DataClassORJSONMixin):
+            req_dict = json_object.to_dict()
+        elif isinstance(json_object, dict):
+            req_dict = json_object
+        else:
+            req_dict = None
         try:
             async with self.session.request(
                 method,
                 url=API_BASE_URL + api,
-                json=json_object,
+                json=req_dict,
                 headers=headers,
                 raise_for_status=False,
             ) as response:
+
                 status_code = response.status
                 resp_bytes = await response.read()
                 if status_code != 200:
                     LibraryLogger.log_api_status_error(
                         logger,
-                        request_body=json_object,
+                        request_body=req_dict,
                         response=response,
                         response_bytes=resp_bytes,
                     )
                     raise VeSyncAPIStatusCodeError(str(status_code))
 
-                LibraryLogger.log_api_call(logger, response, resp_bytes, json_object)
-                if LibraryLogger.is_json(resp_bytes):
-                    resp_dict = orjson.loads(resp_bytes)
-                    resp_code = ErrorCodes.get_error_info(resp_dict.get("code"))
-                    match resp_code.error_type:
-                        case ErrorTypes.RATE_LIMIT:
-                            logger.error("Rate limit error in API call to %s", api)
-                            raise VeSyncRateLimitError
-                        case ErrorTypes.SERVER_ERROR:
-                            logger.error("Server error in API call to %s", api)
-                            raise VeSyncServerError(resp_code.message)
-                        case _:
-                            pass
-                return resp_bytes, status_code
+                LibraryLogger.log_api_call(logger, response, resp_bytes, req_dict)
+                resp_dict = Helpers.try_json_loads(resp_bytes)
+                if isinstance(resp_dict, dict):
+                    error_info = ErrorCodes.get_error_info(resp_dict.get("code"))
+                    if resp_dict.get("msg") is not None:
+                        error_info.message = f"{error_info.message} ({resp_dict['msg']})"
+                        raise_api_errors(error_info)
+
+                return resp_dict, status_code
 
         except ClientResponseError as e:
-            LibraryLogger.log_api_exception(logger, exception=e, request_body=json_object)
+            LibraryLogger.log_api_exception(logger, exception=e, request_body=req_dict)
             raise
