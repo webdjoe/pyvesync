@@ -12,9 +12,9 @@ Note:
 
 
 All models should inherit `ResponseBaseModel` or `RequestBaseModel`. Use
-[pyvesync.const](pyvesync.const) to set default values and import here.
+[pyvesync.const][pyvesync.const] to set default values and import here.
 
-Attributes are inherited from the [const](pyvesync.const) module for
+Attributes are inherited from the [const][pyvesync.const] module for
 default values.
 """
 from __future__ import annotations

@@ -1,0 +1,12 @@
+mkdocs
+mkdocs-material
+mkdocstrings
+mkdocstrings-python
+Pygments
+mkdocs-include-markdown-plugin
+mkdocs-material-extensions
+griffe-inherited-docstrings
+pymdown-extensions
+mike
+mkdocs-git-revision-date-localized-plugin
+docstring-inheritance

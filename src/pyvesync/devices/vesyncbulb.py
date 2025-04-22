@@ -8,7 +8,7 @@ This module provides classes for the following Etekcity/Valceno smart lights:
     4. ESL100MC: Multi-Color Bulb
 
 The classes all inherit from VeSyncBulb, which is a subclass of VeSyncBaseDevice and
-[VeSyncToggleDevice](pyvesync.base_devices.vesyncbasedevice.VeSyncToggleDevice).
+[VeSyncToggleDevice][pyvesync.base_devices.vesyncbasedevice.VeSyncBaseToggleDevice].
 """
 
 from __future__ import annotations
@@ -75,18 +75,38 @@ __all__: list = [*bulb_modules.values(), "bulb_modules"]  # noqa: PLE0604
 class VeSyncBulbESL100MC(VeSyncBulb):
     """Etekcity ESL100 Multi Color Bulb device.
 
-    Inherits from [VeSyncBulb](pyvesync.base_devices.vesyncbulb.VeSyncBulb)
-    and [VeSyncBaseDevice](pyvesync.base_devices.vesyncbasedevice.VeSyncBaseDevice).
+    Inherits from [VeSyncBulb][pyvesync.base_devices.bulb_base.VeSyncBulb]
+    and [VeSyncBaseDevice][pyvesync.base_devices.vesyncbasedevice.VeSyncBaseDevice].
 
     The state of the bulb is stored in the `state` attribute, which is an of
-    [BulbState](pyvesync.base_devices.BulbState). The `state` attribute
+    [BulbState][pyvesync.base_devices.bulb_base.BulbState]. The `state` attribute
     contains all settable states for the bulb.
 
-    Attributes:
-        state (BulbState): State of the bulb, contains all settable states.
-        device_status (str): Status of bulb, either 'on' or 'off'.
-        connection_status (str): Connection status of bulb, either 'online' or 'offline'.
+    Args:
         details (dict): Dictionary of bulb state details.
+        manager (VeSync): Manager class used to make API calls.
+        feature_map (BulbMap): Device configuration map.
+
+    Attributes:
+        state (BulbState): Device state object
+            Each device has a separate state base class in the base_devices module.
+        last_response (ResponseInfo): Last response from API call.
+        manager (VeSync): Manager object for API calls.
+        device_name (str): Name of device.
+        device_image (str): URL for device image.
+        cid (str): Device ID.
+        connection_type (str): Connection type of device.
+        device_type (str): Type of device.
+        type (str): Type of device.
+        uuid (str): UUID of device, not always present.
+        config_module (str): Configuration module of device.
+        mac_id (str): MAC ID of device.
+        current_firm_version (str): Current firmware version of device.
+        device_region (str): Region of device. (US, EU, etc.)
+        pid (str): Product ID of device, pulled by some devices on update.
+        sub_device_no (int): Sub-device number of device.
+        product_type (str): Product type of device.
+        features (dict): Features of device.
 
     Notes:
         The details dictionary contains the device information retreived by the
@@ -105,13 +125,7 @@ class VeSyncBulbESL100MC(VeSyncBulb):
 
     def __init__(self, details: ResponseDeviceDetailsModel,
                  manager: VeSync, feature_map: BulbMap) -> None:
-        """Instantiate ESL100MC Multicolor Bulb.
-
-        Args:
-            details (dict): Dictionary of bulb state details.
-            manager (VeSync): Manager class used to make API calls.
-            feature_map (BulbMap): Device configuration map.
-        """
+        """Instantiate ESL100MC Multicolor Bulb."""
         super().__init__(details, manager, feature_map)
         self.request_keys = [
             'acceptLanguage',
@@ -343,27 +357,46 @@ class VeSyncBulbESL100MC(VeSyncBulb):
 class VeSyncBulbESL100(BypassV1Mixin, VeSyncBulb):
     """Object to hold VeSync ESL100 light bulb.
 
-    This bulb only has the dimmable feature. Inherits from pyvesync.vesyncbulb.VeSyncBulb
-    and pyvesync.vesyncbasedevice.VeSyncBaseDevice.
+    Device state is held in the `state` attribute, which is an instance of
+    [BulbState][pyvesync.base_devices.bulb_base.BulbState]. The `state` attribute
+    contains all settable states for the bulb.
+
+    This bulb only has the dimmable feature. Inherits from
+    [VeSyncBulb][pyvesync.devices.vesyncbulb.VeSyncBulb] and
+    [VeSyncBaseToggleDevice][pyvesync.base_devices.vesyncbasedevice.VeSyncBaseToggleDevice].
+
+    Args:
+        details (dict): Dictionary of bulb state details.
+        manager (VeSync): Manager class used to make API calls
+        feature_map (BulbMap): Device configuration map.
 
     Attributes:
-        details (dict): Dictionary of bulb state details.
-        brightness (int): Brightness of bulb (0-100).
-        device_status (str): Status of bulb (on/off).
-        connection_status (str): Connection status of bulb (online/offline).
+        state (BulbState): Device state object
+            Each device has a separate state base class in the base_devices module.
+        last_response (ResponseInfo): Last response from API call.
+        manager (VeSync): Manager object for API calls.
+        device_name (str): Name of device.
+        device_image (str): URL for device image.
+        cid (str): Device ID.
+        connection_type (str): Connection type of device.
+        device_type (str): Type of device.
+        type (str): Type of device.
+        uuid (str): UUID of device, not always present.
+        config_module (str): Configuration module of device.
+        mac_id (str): MAC ID of device.
+        current_firm_version (str): Current firmware version of device.
+        device_region (str): Region of device. (US, EU, etc.)
+        pid (str): Product ID of device, pulled by some devices on update.
+        sub_device_no (int): Sub-device number of device.
+        product_type (str): Product type of device.
+        features (dict): Features of device.
     """
 
     __slots__ = ()
 
     def __init__(self, details: ResponseDeviceDetailsModel,
                  manager: VeSync, feature_map: BulbMap) -> None:
-        """Initialize Etekcity ESL100 Dimmable Bulb.
-
-        Args:
-            details (dict): Dictionary of bulb state details.
-            manager (VeSync): Manager class used to make API calls
-            feature_map (DeviceMapTemplate): Device configuration map.
-        """
+        """Initialize Etekcity ESL100 Dimmable Bulb."""
         super().__init__(details, manager, feature_map)
 
     async def get_details(self) -> None:
@@ -479,7 +512,6 @@ class VeSyncBulbESL100(BypassV1Mixin, VeSyncBulb):
         return True
 
     async def get_timer(self) -> None:
-        """Get timer for ESL100 bulb."""
         r_dict = await self.call_bypassv1_api(
             TimerModels.RequestV1GetTimer,
             {},
@@ -544,7 +576,42 @@ class VeSyncBulbESL100(BypassV1Mixin, VeSyncBulb):
 
 
 class VeSyncBulbESL100CW(BypassV1Mixin, VeSyncBulb):
-    """VeSync Tunable and Dimmable White Bulb."""
+    """VeSync Tunable and Dimmable White Bulb.
+
+    This bulb only has the dimmable feature. Inherits from
+    [VeSyncBulb][pyvesync.devices.vesyncbulb.VeSyncBulb] and
+    [VeSyncBaseToggleDevice][pyvesync.base_devices.vesyncbasedevice.VeSyncBaseToggleDevice].
+
+    Device state is held in the `state` attribute, which is an instance of
+    [BulbState][pyvesync.base_devices.bulb_base.BulbState]. The `state` attribute
+    contains all settable states for the bulb.
+
+    Args:
+        details (dict): Dictionary of bulb state details.
+        manager (VeSync): Manager class used to make API calls
+        feature_map (BulbMap): Device configuration map.
+
+    Attributes:
+        state (BulbState): Device state object
+            Each device has a separate state base class in the base_devices module.
+        last_response (ResponseInfo): Last response from API call.
+        manager (VeSync): Manager object for API calls.
+        device_name (str): Name of device.
+        device_image (str): URL for device image.
+        cid (str): Device ID.
+        connection_type (str): Connection type of device.
+        device_type (str): Type of device.
+        type (str): Type of device.
+        uuid (str): UUID of device, not always present.
+        config_module (str): Configuration module of device.
+        mac_id (str): MAC ID of device.
+        current_firm_version (str): Current firmware version of device.
+        device_region (str): Region of device. (US, EU, etc.)
+        pid (str): Product ID of device, pulled by some devices on update.
+        sub_device_no (int): Sub-device number of device.
+        product_type (str): Product type of device.
+        features (dict): Features of device.
+    """
 
     __slots__ = ()
 
@@ -726,7 +793,42 @@ class VeSyncBulbESL100CW(BypassV1Mixin, VeSyncBulb):
 
 
 class VeSyncBulbValcenoA19MC(VeSyncBulb):
-    """VeSync Multicolor Bulb."""
+    """VeSync Multicolor Bulb.
+
+    This bulb only has the dimmable feature. Inherits from
+    [VeSyncBulb][pyvesync.devices.vesyncbulb.VeSyncBulb] and
+    [VeSyncBaseToggleDevice][pyvesync.base_devices.vesyncbasedevice.VeSyncBaseToggleDevice].
+
+    Device state is held in the `state` attribute, which is an instance of
+    [BulbState][pyvesync.base_devices.bulb_base.BulbState]. The `state` attribute
+    contains all settable states for the bulb.
+
+    Args:
+        details (dict): Dictionary of bulb state details.
+        manager (VeSync): Manager class used to make API calls
+        feature_map (BulbMap): Device configuration map.
+
+    Attributes:
+        state (BulbState): Device state object
+            Each device has a separate state base class in the base_devices module.
+        last_response (ResponseInfo): Last response from API call.
+        manager (VeSync): Manager object for API calls.
+        device_name (str): Name of device.
+        device_image (str): URL for device image.
+        cid (str): Device ID.
+        connection_type (str): Connection type of device.
+        device_type (str): Type of device.
+        type (str): Type of device.
+        uuid (str): UUID of device, not always present.
+        config_module (str): Configuration module of device.
+        mac_id (str): MAC ID of device.
+        current_firm_version (str): Current firmware version of device.
+        device_region (str): Region of device. (US, EU, etc.)
+        pid (str): Product ID of device, pulled by some devices on update.
+        sub_device_no (int): Sub-device number of device.
+        product_type (str): Product type of device.
+        features (dict): Features of device.
+    """
 
     __slots__ = ()
 

@@ -314,4 +314,5 @@ class DeviceContainer(_DeviceContainerBase):
             and device.product_type == ProductTypes.THERMOSTAT
         ]
 
+
 DeviceContainerInstance = DeviceContainer()

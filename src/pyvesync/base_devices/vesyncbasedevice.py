@@ -192,6 +192,9 @@ class VeSyncBaseDevice(ABC):
     async def set_timer(self, duration: int, action: str | None = None) -> bool:
         """Set timer for device.
 
+        This may not be implemented for all devices. Please open an issue
+        if there is an error.
+
         Args:
             duration (int): Duration in seconds.
             action (str | None): Action to take when timer expires.
@@ -205,15 +208,23 @@ class VeSyncBaseDevice(ABC):
         return False
 
     async def get_timer(self) -> Timer | None:
-        """Get timer for device form API.
+        """Get timer for device from API and set the `state.Timer` attribute.
 
-        Returns None if no timer is set.
+        This may not be implemented for all devices. Please open an issue
+        if there is an error.
+
+        Note:
+            This method may not be implemented for all devices. Please
+            open an issue if there is an error.
         """
         logger.debug('Not implemented - get_timer')
         return None
 
     async def clear_timer(self) -> bool:
         """Clear timer for device from API.
+
+        This may not be implemented for all devices. Please open an issue
+        if there is an error.
 
         Returns:
             bool: True if successful, False otherwise.
@@ -234,7 +245,9 @@ class VeSyncBaseDevice(ABC):
         """Get device details.
 
         This method is defined in each device class to contain
-        the logic to pull the device state.
+        the logic to pull the device state from the API and update
+        the device's `state` attribute. The `update()` method should
+        be called to update the device state.
         """
 
     async def update(self) -> None:
@@ -350,7 +363,59 @@ class VeSyncBaseDevice(ABC):
 
 
 class VeSyncBaseToggleDevice(VeSyncBaseDevice):
-    """Base class for VeSync devices that can be toggled on and off."""
+    """Base class for VeSync devices that can be toggled on and off.
+
+    Parameters:
+        details (ResponseDeviceDetailsModel): Device details from API call.
+        manager (VeSync): Manager object for API calls.
+        feature_map (DeviceMapTemplate): Device configuration map, will be specific
+            subclass of DeviceMapTemplate based on device type.
+
+    Attributes:
+        state (pyvesync.base_devices.vesyncbasedevice.DeviceState): Device state object
+            Each device has a separate state base class in the base_devices module.
+        last_response (ResponseInfo): Last response from API call.
+        manager (VeSync): Manager object for API calls.
+        device_name (str): Name of device.
+        device_image (str): URL for device image.
+        cid (str): Device ID.
+        connection_type (str): Connection type of device.
+        device_type (str): Type of device.
+        type (str): Type of device.
+        uuid (str): UUID of device, not always present.
+        config_module (str): Configuration module of device.
+        mac_id (str): MAC ID of device.
+        current_firm_version (str): Current firmware version of device.
+        device_region (str): Region of device. (US, EU, etc.)
+        pid (str): Product ID of device, pulled by some devices on update.
+        sub_device_no (int): Sub-device number of device.
+        product_type (str): Product type of device.
+        features (dict): Features of device.
+
+    Methods:
+        set_timer: Set timer for device.
+        get_timer: Get timer for device from API.
+        clear_timer: Clear timer for device from API.
+        set_state: Set device state attribute.
+        get_state: Get device state attribute.
+        update: Update device details.
+        display: Print formatted static device info to stdout.
+        to_json: Print JSON API string
+        to_jsonb: JSON API bytes device details
+        to_dict: Return device information as a dictionary.
+        toggle_switch: Toggle device power on or off.
+        turn_on: Turn device on.
+        turn_off: Turn device off.
+
+    Note:
+        Device states are found in the `state` attribute in a subclass of DeviceState
+        based on the device type. The `DeviceState` subclass is located in device the
+        base_devices module.
+
+        The `last_response` attribute is used to store the last response and error
+        information from the API call. See the `pyvesync.errors` module for more
+        information.
+    """
 
     __slots__ = ()
 

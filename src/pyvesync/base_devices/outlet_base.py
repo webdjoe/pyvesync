@@ -34,7 +34,7 @@ class OutletState(DeviceState):
     Attributes:
         active_time (int): Active time of device, defaults to None.
         connection_status (str): Connection status of device.
-        device (VeSyncBaseDevice): Device object.
+        device (VeSyncOutlet): Device object.
         device_status (str): Device status.
         features (dict): Features of device.
         last_update_ts (int): Last update timestamp of device, defaults to None.
@@ -54,6 +54,11 @@ class OutletState(DeviceState):
         to_json: Dump state to JSON string.
         to_jsonb: Dump state to JSON bytes.
         as_tuple: Convert state to tuple of (name, value) tuples.
+
+    Note:
+        Not all attributes are available on all devices. Some attributes may be None or
+        not supported depending on the device type and features. The attributes are set
+        based on the device features and the API response.
     """
 
     __slots__ = (
@@ -128,6 +133,11 @@ class OutletState(DeviceState):
 class VeSyncOutlet(VeSyncBaseToggleDevice):
     """Base class for Etekcity Outlets.
 
+    State is stored in the `state` attribute of the device.
+    This is only for holding state information and does not
+    contain any methods for controlling the device or retrieving
+    information from the API.
+
     Args:
         details (ResponseDeviceDetailsModel): The device details.
         manager (VeSync): The VeSync manager.
@@ -135,9 +145,23 @@ class VeSyncOutlet(VeSyncBaseToggleDevice):
 
     Attributes:
         state (OutletState): The state of the outlet.
-        details (dict): The details of the outlet.
-        energy (dict): The energy usage of the outlet.
-        update_energy_ts (int): The timestamp for the last energy update.
+        last_response (ResponseInfo): Last response from API call.
+        manager (VeSync): Manager object for API calls.
+        device_name (str): Name of device.
+        device_image (str): URL for device image.
+        cid (str): Device ID.
+        connection_type (str): Connection type of device.
+        device_type (str): Type of device.
+        type (str): Type of device.
+        uuid (str): UUID of device, not always present.
+        config_module (str): Configuration module of device.
+        mac_id (str): MAC ID of device.
+        current_firm_version (str): Current firmware version of device.
+        device_region (str): Region of device. (US, EU, etc.)
+        pid (str): Product ID of device, pulled by some devices on update.
+        sub_device_no (int): Sub-device number of device.
+        product_type (str): Product type of device.
+        features (dict): Features of device.
     """
 
     # __metaclass__ = ABCMeta

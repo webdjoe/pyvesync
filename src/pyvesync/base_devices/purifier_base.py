@@ -31,6 +31,12 @@ class PurifierState(DeviceState):
     """Base state class for Purifiers.
 
     Attributes:
+        active_time (int): Active time of device, defaults to None.
+        connection_status (str): Connection status of device.
+        device (VeSyncOutlet): Device object.
+        device_status (str): Device status.
+        features (dict): Features of device.
+        last_update_ts (int): Last update timestamp of device, defaults to None.
         mode (str): Current mode of the purifier.
         fan_level (int): Current fan level of the purifier.
         fan_set_level (int): Set fan level of the purifier.
@@ -181,7 +187,37 @@ class PurifierState(DeviceState):
 
 
 class VeSyncPurifier(VeSyncBaseToggleDevice):
-    """Base device for vesync air purifiers."""
+    """Base device for vesync air purifiers.
+
+    Args:
+        details (ResponseDeviceDetailsModel): Device details from API.
+        manager (VeSync): VeSync manager instance.
+        feature_map (PurifierMap): Feature map for the device.
+
+    Attributes:
+        state (PurifierState): State of the device.
+        last_response (ResponseInfo): Last response from API call.
+        manager (VeSync): Manager object for API calls.
+        device_name (str): Name of device.
+        device_image (str): URL for device image.
+        cid (str): Device ID.
+        connection_type (str): Connection type of device.
+        device_type (str): Type of device.
+        type (str): Type of device.
+        uuid (str): UUID of device, not always present.
+        config_module (str): Configuration module of device.
+        mac_id (str): MAC ID of device.
+        current_firm_version (str): Current firmware version of device.
+        device_region (str): Region of device. (US, EU, etc.)
+        pid (str): Product ID of device, pulled by some devices on update.
+        sub_device_no (int): Sub-device number of device.
+        product_type (str): Product type of device.
+        features (dict): Features of device.
+        modes (list[str]): List of modes supported by the device.
+        fan_levels (list[int]): List of fan levels supported by the device.
+        nightlight_modes (list[str]): List of nightlight modes supported by the device.
+        auto_preferences (list[str]): List of auto preferences supported by the device.
+    """
 
     __slots__ = (
         "auto_preferences",
@@ -202,7 +238,7 @@ class VeSyncPurifier(VeSyncBaseToggleDevice):
         self.state: PurifierState = PurifierState(self, details, feature_map)
         self.modes: list[str] = feature_map.modes
         self.fan_levels: list[int] = feature_map.fan_levels
-        self.nightlight_modes = feature_map.nightlight_modes
+        self.nightlight_modes: list[str] = feature_map.nightlight_modes
         self.auto_preferences: list[str] = feature_map.auto_preferences
 
     @property
@@ -234,9 +270,18 @@ class VeSyncPurifier(VeSyncBaseToggleDevice):
         return await self.toggle_display(False)
 
     async def set_nightlight_mode(self, mode: str) -> bool:
-        """Set Nightlight Mode."""
+        """Set Nightlight Mode.
+
+        Modes are defined in the `device.nightlight_modes` attribute.
+
+        Args:
+            mode (str): Nightlight mode to set.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
         del mode
-        raise NotImplementedError
+        return False
 
     async def set_nightlight_dim(self) -> bool:
         """Set Nightlight Dim."""
@@ -252,11 +297,27 @@ class VeSyncPurifier(VeSyncBaseToggleDevice):
 
     @abstractmethod
     async def set_mode(self, mode: str) -> bool:
-        """Set Purifier Mode."""
+        """Set Purifier Mode.
+
+        Allowed modes are found in the `device.modes` attribute.
+
+        Args:
+            mode (str): Mode to set.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
 
     @abstractmethod
     async def set_fan_speed(self, speed: int | None = None) -> bool:
-        """Set Purifier Fan Speed."""
+        """Set Purifier Fan Speed.
+
+        Args:
+            speed (int | None): Fan speed to set. If None, use default speed.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
 
     async def set_auto_mode(self) -> bool:
         """Set Purifier to Auto Mode."""
