@@ -61,17 +61,30 @@ outlet_modules = {k: v['module'] for k, v in outlet_config.items()}
 class VeSyncOutlet7A(VeSyncOutlet):
     """Etekcity 7A Round Outlet Class.
 
-    Methods:
-        set_timer: Set timer for device.
-        get_timer: Get timer for device from API.
-        clear_timer: Clear timer for device from API.
-        set_state: Set device state attribute.
-        get_state: Get device state attribute.
-        update: Update device details.
-        display: Print formatted static device info to stdout.
-        to_json: Print JSON API string
-        to_jsonb: JSON API bytes device details
-        to_dict: Return device information as a dictionary.
+    Args:
+        details (ResponseDeviceDetailsModel): The device details.
+        manager (VeSync): The VeSync manager.
+        feature_map (OutletMap): The feature map for the device.
+
+    Attributes:
+        state (OutletState): The state of the outlet.
+        last_response (ResponseInfo): Last response from API call.
+        manager (VeSync): Manager object for API calls.
+        device_name (str): Name of device.
+        device_image (str): URL for device image.
+        cid (str): Device ID.
+        connection_type (str): Connection type of device.
+        device_type (str): Type of device.
+        type (str): Type of device.
+        uuid (str): UUID of device, not always present.
+        config_module (str): Configuration module of device.
+        mac_id (str): MAC ID of device.
+        current_firm_version (str): Current firmware version of device.
+        device_region (str): Region of device. (US, EU, etc.)
+        pid (str): Product ID of device, pulled by some devices on update.
+        sub_device_no (int): Sub-device number of device.
+        product_type (str): Product type of device.
+        features (dict): Features of device.
     """
 
     __slots__ = ()
@@ -232,7 +245,33 @@ class VeSyncOutlet7A(VeSyncOutlet):
 
 
 class VeSyncOutlet10A(VeSyncOutlet):
-    """Etekcity 10A Round Outlets."""
+    """Etekcity 10A Round Outlets.
+
+    Args:
+        details (ResponseDeviceDetailsModel): The device details.
+        manager (VeSync): The VeSync manager.
+        feature_map (OutletMap): The feature map for the device.
+
+    Attributes:
+        state (OutletState): The state of the outlet.
+        last_response (ResponseInfo): Last response from API call.
+        manager (VeSync): Manager object for API calls.
+        device_name (str): Name of device.
+        device_image (str): URL for device image.
+        cid (str): Device ID.
+        connection_type (str): Connection type of device.
+        device_type (str): Type of device.
+        type (str): Type of device.
+        uuid (str): UUID of device, not always present.
+        config_module (str): Configuration module of device.
+        mac_id (str): MAC ID of device.
+        current_firm_version (str): Current firmware version of device.
+        device_region (str): Region of device. (US, EU, etc.)
+        pid (str): Product ID of device, pulled by some devices on update.
+        sub_device_no (int): Sub-device number of device.
+        product_type (str): Product type of device.
+        features (dict): Features of device.
+    """
 
     __slots__ = ()
 
@@ -323,7 +362,33 @@ class VeSyncOutlet10A(VeSyncOutlet):
 
 
 class VeSyncOutlet15A(BypassV1Mixin, VeSyncOutlet):
-    """Class for Etekcity 15A Rectangular Outlets."""
+    """Class for Etekcity 15A Rectangular Outlets.
+
+    Args:
+        details (ResponseDeviceDetailsModel): The device details.
+        manager (VeSync): The VeSync manager.
+        feature_map (OutletMap): The feature map for the device.
+
+    Attributes:
+        state (OutletState): The state of the outlet.
+        last_response (ResponseInfo): Last response from API call.
+        manager (VeSync): Manager object for API calls.
+        device_name (str): Name of device.
+        device_image (str): URL for device image.
+        cid (str): Device ID.
+        connection_type (str): Connection type of device.
+        device_type (str): Type of device.
+        type (str): Type of device.
+        uuid (str): UUID of device, not always present.
+        config_module (str): Configuration module of device.
+        mac_id (str): MAC ID of device.
+        current_firm_version (str): Current firmware version of device.
+        device_region (str): Region of device. (US, EU, etc.)
+        pid (str): Product ID of device, pulled by some devices on update.
+        sub_device_no (int): Sub-device number of device.
+        product_type (str): Product type of device.
+        features (dict): Features of device.
+    """
 
     __slots__ = ()
 
@@ -484,7 +549,33 @@ class VeSyncOutlet15A(BypassV1Mixin, VeSyncOutlet):
 
 
 class VeSyncOutdoorPlug(BypassV1Mixin, VeSyncOutlet):
-    """Class to hold Etekcity outdoor outlets."""
+    """Class to hold Etekcity outdoor outlets.
+
+    Args:
+        details (ResponseDeviceDetailsModel): The device details.
+        manager (VeSync): The VeSync manager.
+        feature_map (OutletMap): The feature map for the device.
+
+    Attributes:
+        state (OutletState): The state of the outlet.
+        last_response (ResponseInfo): Last response from API call.
+        manager (VeSync): Manager object for API calls.
+        device_name (str): Name of device.
+        device_image (str): URL for device image.
+        cid (str): Device ID.
+        connection_type (str): Connection type of device.
+        device_type (str): Type of device.
+        type (str): Type of device.
+        uuid (str): UUID of device, not always present.
+        config_module (str): Configuration module of device.
+        mac_id (str): MAC ID of device.
+        current_firm_version (str): Current firmware version of device.
+        device_region (str): Region of device. (US, EU, etc.)
+        pid (str): Product ID of device, pulled by some devices on update.
+        sub_device_no (int): Sub-device number of device.
+        product_type (str): Product type of device.
+        features (dict): Features of device.
+    """
 
     __slots__ = ()
 
@@ -622,7 +713,35 @@ class VeSyncOutdoorPlug(BypassV1Mixin, VeSyncOutlet):
 
 
 class VeSyncOutletBSDGO1(BypassV2Mixin, VeSyncOutlet):
-    """VeSync BSDGO1 smart plug."""
+    """VeSync BSDGO1 smart plug.
+
+    Note that this device does not support energy monitoring.
+
+    Args:
+        details (ResponseDeviceDetailsModel): The device details.
+        manager (VeSync): The VeSync manager.
+        feature_map (OutletMap): The feature map for the device.
+
+    Attributes:
+        state (OutletState): The state of the outlet.
+        last_response (ResponseInfo): Last response from API call.
+        manager (VeSync): Manager object for API calls.
+        device_name (str): Name of device.
+        device_image (str): URL for device image.
+        cid (str): Device ID.
+        connection_type (str): Connection type of device.
+        device_type (str): Type of device.
+        type (str): Type of device.
+        uuid (str): UUID of device, not always present.
+        config_module (str): Configuration module of device.
+        mac_id (str): MAC ID of device.
+        current_firm_version (str): Current firmware version of device.
+        device_region (str): Region of device. (US, EU, etc.)
+        pid (str): Product ID of device, pulled by some devices on update.
+        sub_device_no (int): Sub-device number of device.
+        product_type (str): Product type of device.
+        features (dict): Features of device.
+    """
 
     __slots__ = ()
 

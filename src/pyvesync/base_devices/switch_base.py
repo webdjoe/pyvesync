@@ -27,6 +27,14 @@ class SwitchState(DeviceState):
         feature_map (SwitchMap): The switch feature map.
 
     Attributes:
+        _exclude_serialization (list[str]): List of attributes to exclude from
+            serialization.
+        active_time (int): Active time of device, defaults to None.
+        connection_status (str): Connection status of device.
+        device (VeSyncBaseDevice): Device object.
+        device_status (str): Device status.
+        features (dict): Features of device.
+        last_update_ts (int): Last update timestamp of device, defaults to None.
         backlight_color (Color): The backlight color of the switch.
         brightness (int): The brightness level of the switch.
         backlight_status (str): The status of the backlight.
@@ -98,9 +106,24 @@ class VeSyncSwitch(VeSyncBaseToggleDevice):
     subclassed by VeSyncWallSwitch and VeSyncDimmerSwitch.
 
     Attributes:
-        features (list): List of features supported by the switch device.
-        details (dict): Dictionary of switch device details.
         state (SwitchState): Switch state object.
+        last_response (ResponseInfo): Last response from API call.
+        manager (VeSync): Manager object for API calls.
+        device_name (str): Name of device.
+        device_image (str): URL for device image.
+        cid (str): Device ID.
+        connection_type (str): Connection type of device.
+        device_type (str): Type of device.
+        type (str): Type of device.
+        uuid (str): UUID of device, not always present.
+        config_module (str): Configuration module of device.
+        mac_id (str): MAC ID of device.
+        current_firm_version (str): Current firmware version of device.
+        device_region (str): Region of device. (US, EU, etc.)
+        pid (str): Product ID of device, pulled by some devices on update.
+        sub_device_no (int): Sub-device number of device.
+        product_type (str): Product type of device.
+        features (dict): Features of device.
     """
 
     __slots__ = ()

@@ -29,7 +29,39 @@ logger = logging.getLogger(__name__)
 
 
 class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
-    """200S/300S Humidifier Class."""
+    """300S Humidifier Class.
+
+    Primary class for VeSync humidifier devices.
+
+    Args:
+        details (ResponseDeviceDetailsModel): The device details.
+        manager (VeSync): The manager object for API calls.
+        feature_map (HumidifierMap): The feature map for the device.
+
+    Attributes:
+        state (HumidifierState): The state of the humidifier.
+        last_response (ResponseInfo): Last response from API call.
+        manager (VeSync): Manager object for API calls.
+        device_name (str): Name of device.
+        device_image (str): URL for device image.
+        cid (str): Device ID.
+        connection_type (str): Connection type of device.
+        device_type (str): Type of device.
+        type (str): Type of device.
+        uuid (str): UUID of device, not always present.
+        config_module (str): Configuration module of device.
+        mac_id (str): MAC ID of device.
+        current_firm_version (str): Current firmware version of device.
+        device_region (str): Region of device. (US, EU, etc.)
+        pid (str): Product ID of device, pulled by some devices on update.
+        sub_device_no (int): Sub-device number of device.
+        product_type (str): Product type of device.
+        features (dict): Features of device.
+        mist_levels (list): List of mist levels.
+        mist_modes (list): List of mist modes.
+        target_minmax (tuple): Tuple of target min and max values.
+        warm_mist_levels (list): List of warm mist levels.
+    """
 
     __slots__ = ()
 
@@ -194,14 +226,6 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
         return True
 
     async def set_humidity(self, humidity: int) -> bool:
-        """Set target 200S/300S Humidifier humidity.
-
-        Args:
-            humidity (int): Target humidity level.
-
-        Returns:
-            bool: Success of request.
-        """
         if not Validators.validate_range(humidity, *self.target_minmax):
             logger.debug(
                 "Invalid humidity, must be between %s and %s", *self.target_minmax
@@ -319,7 +343,40 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
 
 
 class VeSyncHumid200S(VeSyncHumid200300S):
-    """Levoit Classic 200S Specific class."""
+    """Levoit Classic 200S Specific class.
+
+    Overrides the `toggle_display(toggle: bool)` method of the
+    VeSyncHumid200300S class.
+
+    Args:
+        details (ResponseDeviceDetailsModel): The device details.
+        manager (VeSync): The manager object for API calls.
+        feature_map (HumidifierMap): The feature map for the device.
+
+    Attributes:
+        state (HumidifierState): The state of the humidifier.
+        last_response (ResponseInfo): Last response from API call.
+        manager (VeSync): Manager object for API calls.
+        device_name (str): Name of device.
+        device_image (str): URL for device image.
+        cid (str): Device ID.
+        connection_type (str): Connection type of device.
+        device_type (str): Type of device.
+        type (str): Type of device.
+        uuid (str): UUID of device, not always present.
+        config_module (str): Configuration module of device.
+        mac_id (str): MAC ID of device.
+        current_firm_version (str): Current firmware version of device.
+        device_region (str): Region of device. (US, EU, etc.)
+        pid (str): Product ID of device, pulled by some devices on update.
+        sub_device_no (int): Sub-device number of device.
+        product_type (str): Product type of device.
+        features (dict): Features of device.
+        mist_levels (list): List of mist levels.
+        mist_modes (list): List of mist modes.
+        target_minmax (tuple): Tuple of target min and max values.
+        warm_mist_levels (list): List of warm mist levels.
+    """
 
     def __init__(self, details: ResponseDeviceDetailsModel,
                  manager: VeSync, feature_map: HumidifierMap) -> None:
@@ -333,7 +390,7 @@ class VeSyncHumid200S(VeSyncHumid200300S):
     async def toggle_display(self, toggle: bool) -> bool:
         payload_data = {"enabled": toggle, "id": 0}
         r_dict = await self.call_bypassv2_api("setIndicatorLightSwitch", payload_data)
-        r = Helpers.process_dev_response(logger, "set_display", self, r_dict)
+        r = Helpers.process_dev_response(logger, "toggle_display", self, r_dict)
         if r is None:
             return False
 
@@ -343,7 +400,37 @@ class VeSyncHumid200S(VeSyncHumid200300S):
 
 
 class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
-    """Superior 6000S Humidifier."""
+    """Superior 6000S Humidifier.
+
+    Args:
+        details (ResponseDeviceDetailsModel): The device details.
+        manager (VeSync): The manager object for API calls.
+        feature_map (HumidifierMap): The feature map for the device.
+
+    Attributes:
+        state (HumidifierState): The state of the humidifier.
+        last_response (ResponseInfo): Last response from API call.
+        manager (VeSync): Manager object for API calls.
+        device_name (str): Name of device.
+        device_image (str): URL for device image.
+        cid (str): Device ID.
+        connection_type (str): Connection type of device.
+        device_type (str): Type of device.
+        type (str): Type of device.
+        uuid (str): UUID of device, not always present.
+        config_module (str): Configuration module of device.
+        mac_id (str): MAC ID of device.
+        current_firm_version (str): Current firmware version of device.
+        device_region (str): Region of device. (US, EU, etc.)
+        pid (str): Product ID of device, pulled by some devices on update.
+        sub_device_no (int): Sub-device number of device.
+        product_type (str): Product type of device.
+        features (dict): Features of device.
+        mist_levels (list): List of mist levels.
+        mist_modes (list): List of mist modes.
+        target_minmax (tuple): Tuple of target min and max values.
+        warm_mist_levels (list): List of warm mist levels.
+    """
 
     def __init__(self, details: ResponseDeviceDetailsModel,
                  manager: VeSync, feature_map: HumidifierMap) -> None:
@@ -459,7 +546,6 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
         return True
 
     async def set_humidity(self, humidity: int) -> bool:
-        """Set target humidity for humidity mode."""
         if Validators.validate_range(humidity, *self.target_minmax):
             logger.debug("Humidity value must be set between 30 and 80")
             return False
@@ -519,7 +605,37 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
 
 
 class VeSyncHumid1000S(VeSyncHumid200300S):
-    """Levoit OasisMist 1000S Specific class."""
+    """Levoit OasisMist 1000S Specific class.
+
+    Args:
+        details (ResponseDeviceDetailsModel): The device details.
+        manager (VeSync): The manager object for API calls.
+        feature_map (HumidifierMap): The feature map for the device.
+
+    Attributes:
+        state (HumidifierState): The state of the humidifier.
+        last_response (ResponseInfo): Last response from API call.
+        manager (VeSync): Manager object for API calls.
+        device_name (str): Name of device.
+        device_image (str): URL for device image.
+        cid (str): Device ID.
+        connection_type (str): Connection type of device.
+        device_type (str): Type of device.
+        type (str): Type of device.
+        uuid (str): UUID of device, not always present.
+        config_module (str): Configuration module of device.
+        mac_id (str): MAC ID of device.
+        current_firm_version (str): Current firmware version of device.
+        device_region (str): Region of device. (US, EU, etc.)
+        pid (str): Product ID of device, pulled by some devices on update.
+        sub_device_no (int): Sub-device number of device.
+        product_type (str): Product type of device.
+        features (dict): Features of device.
+        mist_levels (list): List of mist levels.
+        mist_modes (list): List of mist modes.
+        target_minmax (tuple): Tuple of target min and max values.
+        warm_mist_levels (list): List of warm mist levels.
+    """
 
     def __init__(self, details: ResponseDeviceDetailsModel,
                  manager: VeSync, feature_map: HumidifierMap) -> None:
@@ -589,7 +705,6 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
         return await self.set_mode(mode)
 
     async def set_mode(self, mode: str) -> bool:
-        """Set humidifier mode - sleep, auto or manual."""
         if mode.lower() not in self.mist_modes:
             logger.debug("Invalid humidity mode used - %s", mode)
             logger.debug(
@@ -611,7 +726,6 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
         return True
 
     async def set_mist_level(self, level: int) -> bool:
-        """Set humidifier mist level with int."""
         if level not in self.mist_levels:
             logger.debug('Humidifier mist level out of range')
             return False

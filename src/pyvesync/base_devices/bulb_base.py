@@ -1,11 +1,8 @@
 """Base classes for all VeSync bulbs."""
 from __future__ import annotations
-import dataclasses
 import logging
-from abc import abstractmethod
 from typing import TYPE_CHECKING
-import orjson
-from deprecated import deprecated
+from typing_extensions import deprecated
 
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseToggleDevice, DeviceState
 from pyvesync.utils.colors import HSV, RGB, Color
@@ -24,23 +21,46 @@ logger = logging.getLogger(__name__)
 class BulbState(DeviceState):
     """VeSync Bulb State Base.
 
-    Abstract base class to provide methods for controlling and
-    getting details of VeSync bulbs. Inherits from
+    Base class to hold all state attributes for bulb devices. Inherits from
     [`DeviceState`][pyvesync.base_devices.vesyncbasedevice.DeviceState]. This
     class should not be used directly for devices, but rather subclassed for each
     bulb type.
 
+    Args:
+        device (VeSyncBulb): VeSync Bulb device.
+        details (ResponseDeviceDetailsModel): Device details from API.
+        feature_map (BulbMap): Feature map for bulb.
+
     Attributes:
         _exclude_serialization (list[str]): List of attributes to exclude from
             serialization.
+        active_time (int): Active time of device, defaults to None.
+        connection_status (str): Connection status of device.
+        device (VeSyncBaseDevice): Device object.
+        device_status (str): Device status.
+        features (dict): Features of device.
+        last_update_ts (int): Last update timestamp of device, defaults to None.
         brightness (int): Brightness of bulb (0-100).
         color_temp (int): White color temperature of bulb in percent (0-100).
         color_temp_kelvin (int): White color temperature of bulb in Kelvin.
         color (Color): Color of bulb in the form of a dataclass with two namedtuple
             attributes - `hsv` & `rgb`. See
-            [utils.colors.Colors](pyvesync.utils.colors.Color).
+            [utils.colors.Colors][pyvesync.utils.colors.Color].
         color_mode (str): Color mode of bulb.
         color_modes (list[str]): List of color modes supported by bulb.
+
+    Methods:
+        update_ts: Update last update timestamp.
+        to_dict: Dump state to JSON.
+        to_json: Dump state to JSON string.
+        to_jsonb: Dump state to JSON bytes.
+        as_tuple: Convert state to tuple of (name, value) tuples.
+
+    See Also:
+        - [`VeSyncBulb`][pyvesync.base_devices.bulb_base.VeSyncBulb]
+        - [`ResponseDeviceDetailsModel`][
+            pyvesync.models.device_list_models.ResponseDeviceDetailsModel]
+        - [`BulbMap`][pyvesync.device_map.BulbMap]
     """
 
     __slots__ = (
@@ -55,22 +75,10 @@ class BulbState(DeviceState):
                  device: VeSyncBulb,
                  details: ResponseDeviceDetailsModel,
                  feature_map: BulbMap) -> None:
-        """Initialize VeSync Bulb State Base.
-
-        Args:
-            device (VeSyncBulb): VeSync Bulb device.
-            details (ResponseDeviceDetailsModel): Device details from API.
-            feature_map (BulbMap): Feature map for bulb.
-
-        See Also:
-            - [`VeSyncBulb`][pyvesync.base_devices.bulb_base.VeSyncBulb]
-            - [`ResponseDeviceDetailsModel`](
-                pyvesync.models.device_list_models.ResponseDeviceDetailsModel)
-            - [`BulbMap`](pyvesync.device_map.BulbMap)
-        """
+        """Initialize VeSync Bulb State Base."""
         super().__init__(device, details, feature_map)
-        self._exclude_serialization = ['rgb', 'hsv']
-        self.features = feature_map.features
+        self._exclude_serialization: list[str] = ['rgb', 'hsv']
+        self.features: list[str] = feature_map.features
         self.color_modes: list[str] = feature_map.color_modes
         self.device: VeSyncBulb = device
         self.color_mode: str | None = None
@@ -167,16 +175,31 @@ class VeSyncBulb(VeSyncBaseToggleDevice):
     [`VeSyncBaseDevice`][pyvesync.base_devices.vesyncbasedevice.VeSyncBaseDevice]. This
     class should not be used directly for devices, but rather subclassed for each bulb.
 
+    Args:
+        details (ResponseDeviceDetailsModel): Device details from API.
+        manager (VeSync): VeSync API manager.
+        feature_map (BulbMap): Feature map for bulb.
+
     Attributes:
-        brightness (int): Brightness of bulb (0-100).
-        color_temp_kelvin (int): White color temperature of bulb in Kelvin.
-        color_temp_pct (int): White color temperature of bulb in percent (0-100).
-        color_hue (float): Color hue of bulb (0-360).
-        color_saturation (float): Color saturation of bulb in percent (0-100).
-        color_value (float): Color value of bulb in percent (0-100).
-        color (Color): Color of bulb in the form of a dataclass with two namedtuple
-            attributes - `hsv` & `rgb`. See
-            [utils.colors.Colors](pyvesync.utils.colors.Color).
+        state (BulbState): Device state object
+            Each device has a separate state base class in the base_devices module.
+        last_response (ResponseInfo): Last response from API call.
+        manager (VeSync): Manager object for API calls.
+        device_name (str): Name of device.
+        device_image (str): URL for device image.
+        cid (str): Device ID.
+        connection_type (str): Connection type of device.
+        device_type (str): Type of device.
+        type (str): Type of device.
+        uuid (str): UUID of device, not always present.
+        config_module (str): Configuration module of device.
+        mac_id (str): MAC ID of device.
+        current_firm_version (str): Current firmware version of device.
+        device_region (str): Region of device. (US, EU, etc.)
+        pid (str): Product ID of device, pulled by some devices on update.
+        sub_device_no (int): Sub-device number of device.
+        product_type (str): Product type of device.
+        features (dict): Features of device.
     """
 
     __slots__ = ()
@@ -185,13 +208,7 @@ class VeSyncBulb(VeSyncBaseToggleDevice):
 
     def __init__(self, details: ResponseDeviceDetailsModel,
                  manager: VeSync, feature_map: BulbMap) -> None:
-        """Initialize VeSync smart bulb base class.
-
-        Args:
-            details (ResponseDeviceDetailsModel): Device details from API.
-            manager (VeSync): VeSync API manager.
-            feature_map (BulbMap): Feature map for bulb.
-        """
+        """Initialize VeSync smart bulb base class."""
         super().__init__(details, manager, feature_map)
         self.state: BulbState = BulbState(self, details, feature_map)
 
@@ -210,33 +227,7 @@ class VeSyncBulb(VeSyncBaseToggleDevice):
         """Return True if bulb supports backlight."""
         return BulbFeatures.MULTICOLOR in self.features
 
-    @property
-    def color(self) -> Color | None:
-        """Color Property for VeSync Bulb.
-
-        See [utils.colors.Color](pyvesync.utils.colors) for more information.
-
-        Accepts the Color object when setting and returns the color object
-        when getting. Wrapper for the `state.color` attribute.
-        """
-        return self.state.color
-
-    @color.setter
-    def color(self, color: Color) -> None:
-        self.state.color = color
-
-    @abstractmethod
-    async def get_details(self) -> None:
-        """Get vesync bulb details.
-
-        This is a legacy function to update devices, **updates should be
-        called by `update()`**
-
-        Returns:
-            None
-        """
-
-    async def set_hsv(self, hue: float, saturation: float, value: float) -> bool:  # noqa: ARG002
+    async def set_hsv(self, hue: float, saturation: float, value: float) -> bool:
         """Set HSV if supported by bulb.
 
         Args:
@@ -246,15 +237,12 @@ class VeSyncBulb(VeSyncBaseToggleDevice):
 
         Returns:
             bool: True if successful, False otherwise.
-
-        Raises:
-            NotImplementedError: If bulb supports multicolor but has not been subclassed.
         """
-        if self.supports_multicolor:
-            raise NotImplementedError
+        del hue, saturation, value
+        logger.info("HSV not supported/configured by this bulb")
         return False
 
-    async def set_rgb(self, red: float, green: float, blue: float) -> bool:  # noqa: ARG002
+    async def set_rgb(self, red: float, green: float, blue: float) -> bool:
         """Set RGB if supported by bulb.
 
         Args:
@@ -264,12 +252,9 @@ class VeSyncBulb(VeSyncBaseToggleDevice):
 
         Returns:
             bool: True if successful, False otherwise.
-
-        Raises:
-            NotImplementedError: If bulb supports multicolor but has not been subclassed.
         """
-        if self.supports_multicolor:
-            raise NotImplementedError
+        del red, green, blue
+        logger.info("RGB not supported/configured by this bulb")
         return False
 
     async def set_brightness(self, brightness: int) -> bool:
@@ -280,98 +265,23 @@ class VeSyncBulb(VeSyncBaseToggleDevice):
 
         Returns:
             bool: True if successful, False otherwise.
-
-        Raises:
-            NotImplementedError: If bulb supports brightness but has not been subclassed.
         """
         del brightness
         logger.warning("Brightness not supported/configured by this bulb")
         return False
 
-    def display(self, state: bool = True) -> None:
-        """Return formatted bulb info to stdout."""
-        super().display()
-        if self.state.connection_status == "online":
-            display_list = []  # initiate list
-            if self.supports_brightness:
-                display_list.append(("Brightness: ", str(self.state.brightness), "%"))
-            if self.supports_color_temp:
-                display_list.append(
-                    ("White Temperature Pct: ", str(self.state.color_temp), "%")
-                )
-                display_list.append(
-                    ("White Temperature Kelvin: ", str(self.state.color_temp_kelvin), "K")
-                )
-            if self.supports_multicolor and self.state.color is not None:
-                display_list.append(("ColorHSV: ", str(self.state.color.hsv), ""))
-                display_list.append(("ColorRGB: ", str(self.state.color.rgb), ""))
-                display_list.append(("ColorMode: ", str(self.state.color_mode), ""))
-            if len(display_list) > 0:
-                for line in display_list:
-                    print(f"{line[0]:.<30} {line[1]} {line[2]}")
-        if state:
-            self.state.display()
-
-    def displayJSON(self, state: bool = True, indent: bool = True) -> str:
-        """Return bulb device info in JSON format.
-
-        Returns:
-            str: JSON formatted string of bulb details.
-
-        Example:
-            ```json
-            {
-                "deviceName": "Bulb",
-                "deviceStatus": "on",
-                "connectionStatus": "online",
-                "Brightness": "100%",
-                "WhiteTemperaturePct": "100%",
-                "WhiteTemperatureKelvin": "6500K",
-                "ColorHSV": "{"hue": 0, "saturation": 0, "value": 0}",
-                "ColorRGB": "{"red": 0, "green": 0, "blue": 0}",
-                "ColorMode": "hsv"
-            }
-            ```
-        """
-        sup = super().displayJSON()
-        sup_val = orjson.loads(sup)
-        if self.state.connection_status == 'online':
-            if self.supports_brightness:
-                sup_val.update({'Brightness': str(self.state.brightness)})
-            if self.supports_color_temp:
-                sup_val.update(
-                    {'WhiteTemperaturePct': str(self.state.color_temp)})
-                sup_val.update(
-                    {'WhiteTemperatureKelvin': str(self.state.color_temp_kelvin)})
-            if self.supports_multicolor:
-                if self.state.hsv is not None:
-                    sup_val.update({'ColorHSV': orjson.dumps(
-                        dataclasses.asdict(self.state.hsv)).decode()})
-                if self.state.rgb is not None:
-                    sup_val.update({'ColorRGB': orjson.dumps(
-                        dataclasses.asdict(self.state.rgb)).decode()})
-                sup_val.update({'ColorMode': str(self.state.color_mode)})
-        if state:
-            sup_val.update(self.state.to_dict())
-        if indent:
-            return orjson.dumps(
-                sup_val, option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS
-            ).decode()
-        return orjson.dumps(
-            sup_val, option=orjson.OPT_NON_STR_KEYS).decode()
-
     @property
-    @deprecated("color_value_rgb is deprecated, use color.rgb instead")
+    @deprecated("Access state in `self.state` attribute, use `self.state.rgb`")
     def color_value_rgb(self) -> RGB | None:
-        """Legacy Method .... Depreciated."""
+        """DEPRECATED....use `self.state.rgb`."""
         if self.state.color is not None:
             return self.state.color.rgb
         return None
 
     @property
-    @deprecated("color_value_hsv is deprecated, use color.rgb")
+    @deprecated("Access state in `self.state` attribute, use `self.state.hsv`")
     def color_value_hsv(self) -> HSV | None:
-        """Legacy Method .... Depreciated."""
+        """DEPRECATED....use `self.state.hsv`."""
         if self.state.color is not None:
             return self.state.color.hsv
         return None

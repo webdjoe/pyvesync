@@ -331,7 +331,7 @@ class BypassV1Mixin:
         method: str = "bypass",
         endpoint: str = "bypass",
     ) -> dict | None:
-        """Send ByPass V2 API request.
+        """Send ByPass V1 API request.
 
         This uses the `_build_request` method to send API requests to the Bypass V1 API.
         The endpoint can be overridden with the `endpoint` argument.

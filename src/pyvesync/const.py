@@ -70,6 +70,9 @@ class IntFlag(IntEnum):
     that are not supported by all devices.
 
     The default value is -999.
+
+    Attributes:
+        NOT_SUPPORTED: Device is not supported, -999
     """
     NOT_SUPPORTED = -999
 
@@ -85,6 +88,9 @@ class StrFlag(StrEnum):
     that are not supported by all devices.
 
     The default value is "not_supported".
+
+    Attributes:
+        NOT_SUPPORTED: Device is not supported, "not_supported"
     """
     NOT_SUPPORTED = "not_supported"
 
@@ -101,12 +107,14 @@ class NightlightStatus(StrEnum):
         UNKNOWN: Nightlight status is unknown.
 
     Usage:
-        >>> NightlightStatus.ON
-        <NightlightStatus.ON: 'on'>
-        >>> int(NightlightStatus.ON)
-        1
-        >>> bool(NightlightStatus.ON)
-        True
+        ```python
+        NightlightStatus.ON
+        # <NightlightStatus.ON: 'on'>
+        int(NightlightStatus.ON)
+        # 1
+        bool(NightlightStatus.ON)
+        # True
+        ```
     """
     ON = "on"
     OFF = "off"
@@ -141,16 +149,18 @@ class DeviceStatus(StrEnum):
         UNKNOWN: Device status is unknown.
 
     Usage:
-        >>> DeviceStatus.ON
-        <DeviceStatus.ON: 'on'>
-        >>> bool(DeviceStatus.ON)
-        True
-        >>> int(DeviceStatus.ON)
-        1
-        >>> DeviceStatus.from_int(1)
-        'on'
-        >>> DeviceStatus.from_bool(True)
-        'on'
+        ```python
+        DeviceStatus.ON
+        # <DeviceStatus.ON: 'on'>
+        bool(DeviceStatus.ON)
+        # True
+        int(DeviceStatus.ON)
+        # 1
+        DeviceStatus.from_int(1)
+        # 'on'
+        DeviceStatus.from_bool(True)
+        # 'on'
+        ```
     """
     ON = "on"
     OFF = "off"
@@ -165,7 +175,11 @@ class DeviceStatus(StrEnum):
         return self in [DeviceStatus.ON, DeviceStatus.RUNNING]
 
     def __int__(self) -> int:
-        """Return integer representation of the enum."""
+        """Return integer representation of the enum.
+
+        1 is ON and RUNNING, 0 is OFF, PAUSED, STANDBY, IDLE.
+        -1 is UNKNOWN.
+        """
         match self:
             case DeviceStatus.ON | DeviceStatus.RUNNING:
                 return 1
@@ -180,7 +194,11 @@ class DeviceStatus(StrEnum):
 
     @classmethod
     def from_int(cls, value: int) -> str:
-        """Convert integer value to corresponding string."""
+        """Convert integer value to corresponding string.
+
+        If value is 1, return ON and if 0, return OFF.
+        If value is -999, return NOT_SUPPORTED.
+        """
         if value == 1:
             return cls.ON
         if value == 0:
@@ -205,13 +223,19 @@ class ConnectionStatus(StrEnum):
         OFFLINE: Device is offline.
         UNKNOWN: Device connection status is unknown.
 
+    Methods:
+        from_bool(value: bool | None) -> ConnectionStatus:
+            Convert boolean value to corresponding string.
+
     Usage:
-        >>> ConnectionStatus.ONLINE
-        <ConnectionStatus.ONLINE: 'online'>
-        >>> bool(ConnectionStatus.ONLINE)
-        True
-        >>> ConnectionStatus.ONLINE == ConnectionStatus.ONLINE
-        True
+        ```python
+        ConnectionStatus.ONLINE
+        # <ConnectionStatus.ONLINE: 'online'>
+        bool(ConnectionStatus.ONLINE)
+        # True
+        ConnectionStatus.ONLINE == ConnectionStatus.ONLINE
+        # True
+        ```
     """
     ONLINE = "online"
     OFFLINE = "offline"
@@ -223,12 +247,23 @@ class ConnectionStatus(StrEnum):
 
     @classmethod
     def from_bool(cls, value: bool | None) -> 'ConnectionStatus':
-        """Convert boolean value to corresponding string."""
+        """Convert boolean value to corresponding string.
+
+        Returns ConnectionStatus.ONLINE if True, else ConnectionStatus.OFFLINE.
+        """
         return cls.ONLINE if value else cls.OFFLINE
 
 
 class NightlightModes(StrEnum):
-    """Nightlight modes."""
+    """Nightlight modes.
+
+    Attributes:
+        ON: Nightlight is on.
+        OFF: Nightlight is off.
+        DIM: Nightlight is dimmed.
+        AUTO: Nightlight is in auto mode.
+        UNKNOWN: Nightlight status is unknown.
+    """
     ON = "on"
     OFF = "off"
     DIM = "dim"
@@ -236,14 +271,24 @@ class NightlightModes(StrEnum):
     UNKNOWN = "unknown"
 
     def __bool__(self) -> bool:
-        """Return True if nightlight is on or auto."""
+        """Return True if nightlight is on or auto.
+
+        Off and unknown are False, all other True.
+        """
         return self in [
             NightlightModes.ON, NightlightModes.AUTO, NightlightModes.DIM
             ]
 
 
 class ColorMode(StrEnum):
-    """VeSync bulb color modes."""
+    """VeSync bulb color modes.
+
+    Attributes:
+        RGB: RGB color mode.
+        HSV: HSV color mode.
+        WHITE: White color mode.
+        COLOR: Color mode.
+    """
     RGB = "rgb"
     HSV = "hsv"
     WHITE = "white"
@@ -262,21 +307,33 @@ class AirQualityLevel(Enum):
         POOR: Air quality is poor.
         UNKNOWN: Air quality is unknown.
 
+    Methods:
+        from_string(value: str | None) -> AirQualityLevel:
+            Convert string value to corresponding integer.
+        from_int(value: int | None) -> AirQualityLevel:
+            Convert integer value to corresponding string.
+
     Note:
         Alias for "very good" is "excellent".
         Alias for "bad" is "poor".
 
     Usage:
-        >>> AirQualityLevels.EXCELLENT
-        <AirQualityLevels.EXCELLENT: 1>
-        >>> AirQualityLevels.from_string("excellent")
-        1
-        >>> AirQualityLevels.from_int(1)
-        "excellent"
-        >>> int(AirQualityLevels.EXCELLENT)
-        1
-        >>> str(AirQualityLevels.EXCELLENT)
-        "excellent"
+        ```python
+        AirQualityLevels.EXCELLENT
+        # <AirQualityLevels.EXCELLENT: 1>
+        AirQualityLevels.from_string("excellent")
+        # 1
+        AirQualityLevels.from_int(1)
+        # "excellent"
+        int(AirQualityLevels.EXCELLENT)
+        # 1
+        str(AirQualityLevels.EXCELLENT)
+        # "excellent"
+        from_string("good")
+        # <AirQualityLevels.GOOD: 2>
+        from_int(2)
+        # "good"
+        ```
     """
     EXCELLENT = 1
     GOOD = 2
@@ -311,7 +368,16 @@ class AirQualityLevel(Enum):
 
     @classmethod
     def from_string(cls, value: str | None) -> 'AirQualityLevel':
-        """Convert string value to corresponding integer."""
+        """Convert string value to corresponding integer.
+
+        Get enum from string value to normalize different values of the same
+        format.
+
+        Note:
+            Values are excellent, good, moderate and poor. Aliases are:
+            very good for excellent and bad for poor. Unknown is returned
+            if value is None or not in the list.
+        """
         if isinstance(value, str) and value.lower() in cls._string_to_enum.value:
             return AirQualityLevel(cls._string_to_enum.value[value.lower()])
         return cls.UNKNOWN
@@ -365,7 +431,7 @@ class FanSleepPreference(StrEnum):
 # Device Features
 
 class Features(StrEnum):
-    """Base Class for Features Enum."""
+    """Base Class for Features Enum to appease typing."""
 
 
 # Device Features
@@ -391,7 +457,20 @@ class HumidifierFeatures(Features):
 
 
 class PurifierFeatures(Features):
-    """VeSync air purifier features."""
+    """VeSync air purifier features.
+
+    Attributes:
+        CHILD_LOCK: Child lock status.
+        NIGHTLIGHT: Nightlight status.
+        AIR_QUALITY: Air quality status.
+        VENT_ANGLE: Vent angle status.
+        LIGHT_DETECT: Light detection status.
+        PM25: PM2.5 level status.
+        PM10: PM10 level status.
+        PM1: PM1 level status.
+        AQPERCENT: Air quality percentage status.
+        RESET_FILTER: Reset filter status.
+    """
     RESET_FILTER = "reset_filter"
     CHILD_LOCK = "child_lock"
     NIGHTLIGHT = "night_light"
@@ -405,14 +484,27 @@ class PurifierFeatures(Features):
 
 
 class PurifierStringLevels(Features):
-    """String levels for Air Purifier fan speed."""
+    """String levels for Air Purifier fan speed.
+
+    Attributes:
+        LOW: Low fan speed.
+        MEDIUM: Medium fan speed.
+        HIGH: High fan speed.
+    """
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
 
 
 class BulbFeatures(Features):
-    """VeSync bulb features."""
+    """VeSync bulb features.
+
+    Attributes:
+        ONOFF: Device on/off status.
+        DIMMABLE: Dimmable status.
+        COLOR_TEMP: Color temperature status.
+        MULTICOLOR: Multicolor status.
+    """
     ONOFF = "onoff"
     DIMMABLE = "dimmable"
     COLOR_TEMP = "color_temp"
@@ -420,14 +512,28 @@ class BulbFeatures(Features):
 
 
 class OutletFeatures(Features):
-    """VeSync outlet features."""
+    """VeSync outlet features.
+
+    Attributes:
+        ONOFF: Device on/off status.
+        ENERGY_MONITOR: Energy monitor status.
+        NIGHTLIGHT: Nightlight status.
+    """
     ONOFF = "onoff"
     ENERGY_MONITOR = "energy_monitor"
     NIGHTLIGHT = "nightlight"
 
 
 class SwitchFeatures(Features):
-    """VeSync switch features."""
+    """VeSync switch features.
+
+    Attributes:
+        ONOFF: Device on/off status.
+        DIMMABLE: Dimmable status.
+        INDICATOR_LIGHT: Indicator light status.
+        BACKLIGHT: Backlight status.
+        BACKLIGHT_RGB: RGB backlight status.
+    """
     ONOFF = "onoff"
     DIMMABLE = "dimmable"
     INDICATOR_LIGHT = "indicator_light"
@@ -438,7 +544,16 @@ class SwitchFeatures(Features):
 # Modes
 
 class PurifierModes(Features):
-    """VeSync air purifier modes."""
+    """VeSync air purifier modes.
+
+    Attributes:
+        AUTO: Auto mode.
+        MANUAL: Manual mode.
+        SLEEP: Sleep mode.
+        TURBO: Turbo mode.
+        PET: Pet mode.
+        UNKNOWN: Unknown mode.
+    """
     AUTO = "auto"
     MANUAL = "manual"
     SLEEP = "sleep"
@@ -448,7 +563,18 @@ class PurifierModes(Features):
 
 
 class HumidifierModes(Features):
-    """VeSync humidifier modes."""
+    """VeSync humidifier modes.
+
+    Attributes:
+        AUTO: Auto mode.
+        MANUAL: Manual mode.
+        HUMIDITY: Humidity mode.
+        SLEEP: Sleep mode.
+        TURBO: Turbo mode.
+        PET: Pet mode.
+        UNKNOWN: Unknown mode.
+        AUTOPRO: AutoPro mode.
+    """
     AUTO = "auto"
     MANUAL = "manual"
     HUMIDITY = "humidity"
@@ -460,7 +586,18 @@ class HumidifierModes(Features):
 
 
 class FanModes(StrEnum):
-    """VeSync fan modes."""
+    """VeSync fan modes.
+
+    Attributes:
+        AUTO: Auto mode.
+        NORMAL: Normal mode.
+        MANUAL: Manual mode.
+        SLEEP: Sleep mode.
+        TURBO: Turbo mode.
+        PET: Pet mode.
+        UNKNOWN: Unknown mode.
+        ADVANCED_SLEEP: Advanced sleep mode.
+    """
     AUTO = "auto"
     NORMAL = "normal"
     MANUAL = "normal"
@@ -478,12 +615,24 @@ AIRFRYER_PID_MAP = {
     "WiFi_SKA_AirFryer158_US": "2cl8hmafsthl65bd",
     "WiFi_AirFryer_CS158-AF_EU": "8t8op7pcvzlsbosm"
 }
+"""PID's for VeSync Air Fryers based on ConfigModule."""
 
 
 # Thermostat Constants
 
 class ThermostatWorkModes(IntEnum):
-    """Working modes for VeSync Aura thermostats."""
+    """Working modes for VeSync Aura thermostats.
+
+    Based on the VeSync app and API values.
+
+    Attributes:
+        OFF: Thermostat is off (0).
+        HEAT: Thermostat is in heating mode (1).
+        COOL: Thermostat is in cooling mode (2).
+        AUTO: Thermostat is in auto mode (3).
+        EM_HEAT: Thermostat is in emergency heating mode (4).
+        SMART_AUTO: Thermostat is in smart auto mode (5).
+    """
     OFF = 0
     HEAT = 1
     COOL = 2
@@ -493,14 +642,29 @@ class ThermostatWorkModes(IntEnum):
 
 
 class ThermostatFanModes(IntEnum):
-    """Fan modes for VeSync Aura thermostats."""
+    """Fan modes for VeSync Aura thermostats.
+
+    Based on the VeSync app and API values.
+
+    Attributes:
+        AUTO: Fan is in auto mode (1).
+        ON: Fan is on (2).
+        CIRCULATE: Fan is in circulate mode (3).
+    """
     AUTO = 1
     ON = 2
     CIRCULATE = 3
 
 
 class ThermostatHoldOptions(IntEnumMixin):
-    """Hold options for VeSync Aura thermostats."""
+    """Hold options for VeSync Aura thermostats.
+
+    Attributes:
+        UNTIL_NEXT_SCHEDULED_ITEM: Hold until next scheduled item (2).
+        TWO_HOURS: Hold for two hours (3).
+        FOUR_HOURS: Hold for four hours (4).
+        PERMANENTLY: Hold permanently (5).
+    """
     UNTIL_NEXT_SCHEDULED_ITEM = 2
     TWO_HOURS = 3
     FOUR_HOURS = 4
@@ -508,7 +672,12 @@ class ThermostatHoldOptions(IntEnumMixin):
 
 
 class ThermostatHoldStatus(IntEnumMixin):
-    """Set the hold status of the thermostat."""
+    """Set the hold status of the thermostat.
+
+    Attributes:
+        SET: Set the hold status (1).
+        CANCEL: Cancel the hold status (0).
+    """
     SET = 1
     CANCEL = 0
 

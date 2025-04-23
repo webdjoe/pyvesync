@@ -27,8 +27,8 @@ class FanState(DeviceState):
 
     Not all attributes are supported by all devices. Attributes are set to
     UNKNOWN by default and attributes that are not supported by all devices are
-    set to [StrFlag.NOT_SUPPORTED](pyvesync.const.StrFlag) or
-    [IntFlag.NOT_SUPPORTED](pyvesync.const.IntFlag).
+    set to [StrFlag.NOT_SUPPORTED][pyvesync.const.StrFlag] or
+    [IntFlag.NOT_SUPPORTED][pyvesync.const.IntFlag].
 
 
     Attributes:
@@ -109,8 +109,8 @@ class VeSyncFanBase(VeSyncBaseToggleDevice):
     """Base device for VeSync tower fans.
 
     Inherits from
-    [VeSyncBaseToggleDevice](pyvesync.base_devices.vesyncbasedevice.VeSyncBaseToggleDevice)
-    and [VeSyncBaseDevice](pyvesync.base_devices.vesyncbasedevice.VeSyncBaseDevice).
+    [VeSyncBaseToggleDevice][pyvesync.base_devices.vesyncbasedevice.VeSyncBaseToggleDevice]
+    and [VeSyncBaseDevice][pyvesync.base_devices.vesyncbasedevice.VeSyncBaseDevice].
 
     Attributes:
         fan_levels (list[int]): Fan levels supported by device.
@@ -138,7 +138,7 @@ class VeSyncFanBase(VeSyncBaseToggleDevice):
             feature_map (FanMap): Feature map.
 
         See Also:
-            See [device_map](pyvesync.device_map) for configured features and modes.
+            See [device_map][pyvesync.device_map] for configured features and modes.
         """
         super().__init__(details, manager, feature_map)
         self.features: list[str] = feature_map.features

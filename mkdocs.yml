@@ -1,0 +1,124 @@
+site_name: "pyvesync"
+site_url: https://pyvesync.github.io/
+repo_name: webdjoe/pyvesync
+repo_url: https://github.com/webdjoe/pyvesync
+
+theme:
+  name: material
+  locale: en
+  icon:
+    logo: fontawesome/solid/house-signal
+  highlightjs: true
+  palette:
+    scheme: slate
+    primary: blue grey
+    accent: blue
+  show_bases: true
+  features:
+    - search.suggest
+    - navigation.indexes
+    - search.highlight
+    - toc.follow
+    - navigation.top
+
+nav:
+- Home: index.md
+- Supported Devices: supported_devices.md
+- pyvesync V3: pyvesync3.md
+- Usage: usage.md
+- Development:
+    - development/index.md
+    - VeSync API: development/vesync_api.md
+    - Data Models: development/data_models.md
+    - DeviceMap: development/device_map.md
+    - DeviceContainer: development/device_container.md
+    - VeSyncDevice Base: development/vesync_device_base.md
+    - Constants: development/constants.md
+    - Contributing: development/contributing.md
+    - Testing: development/testing.md
+    - Utils:
+      - Helpers: development/utils/helpers.md
+      - Colors: development/utils/colors.md
+      - Device Mixins: development/utils/device_mixins.md
+      - Errors & Exceptions: development/utils/errors.md
+      - Logging: development/utils/logging.md
+- Devices:
+    - devices/index.md
+    - Outlets: devices/outlets.md
+    - Switches: devices/switches.md
+    - Bulbs: devices/bulbs.md
+    - Air Purifiers: devices/air_purifiers.md
+    - Humidifiers: devices/humidifiers.md
+    - Fans: devices/fans.md
+    - Air Fryers: devices/kitchen.md
+    - Thermostats: devices/thermostats.md
+
+markdown_extensions:
+  - def_list
+  - toc:
+      permalink: ↲
+      permalink_class: toc-permalink
+      slugify: !!python/object/apply:pymdownx.slugs.slugify
+        kwds:
+          case: lower
+      baselevel: 1
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.inlinehilite
+  - pymdownx.fancylists
+  - pymdownx.saneheaders
+  - pymdownx.blocks.admonition
+  - pymdownx.blocks.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+      use_pygments: true
+  - attr_list
+
+# hooks:
+# - docs/hooks.py
+
+watch:
+- src/pyvesync
+
+extra_css:
+  - stylesheets/common.css
+
+extra:
+  version:
+    provider: mike
+    default: latest
+    alias: true
+
+plugins:
+  - mike:
+      # These fields are all optional; the defaults are as below...
+      alias_type: symlink
+      deploy_prefix: ''
+      canonical_version: latest
+      version_selector: true
+  # - git-revision-date-localized:
+  #     enable_creation_date: true
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          paths: ["src/"]
+          options:
+            show_submodules: true
+            show_signature_annotations: true
+            signature_crossrefs: true
+            separate_signature: true
+            extensions:
+            - griffe_inherited_docstrings:
+                merge: true
+            - docstring_inheritance.griffe
+            - scripts/docs_handler.py:InheritedNotation
+            - griffe_warnings_deprecated:
+                kind: danger
+                title: Deprecated
+  - search
+  - autorefs:
+      resolve_closest: true
+  - include-markdown:
+      preserve_includer_indent: false
+      dedent: true

@@ -532,7 +532,7 @@ class Timer:
         action (str): Action to perform when timer is done
         id (int): ID of timer, defaults to 1
         remaining (int): Time remaining on timer in seconds, defaults to None
-        update_time (int): Last updated unix timestamp in seconds, defaults to None
+        _update_time (int): Last updated unix timestamp in seconds, defaults to None
 
     Attributes:
         update_time (str): Timestamp of last update

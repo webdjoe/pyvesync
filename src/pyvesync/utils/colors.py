@@ -112,9 +112,9 @@ class Color:
 
     Attributes:
         hsv (namedtuple): hue (0-360), saturation (0-100), value (0-100)
-            see [`HSV dataclass`](pyvesync.utils.helpers.HSV)
+            see [`HSV dataclass`][pyvesync.utils.colors.HSV]
         rgb (namedtuple): red (0-255), green (0-255), blue (0-255)
-            see [`RGB dataclass`](pyvesync.utils.helpers.RGB)
+            see [`RGB dataclass`][pyvesync.utils.colors.RGB]
     """
     color_object: InitVar[HSV | RGB]
 
