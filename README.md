@@ -2,7 +2,7 @@
 
 pyvesync is a library to manage VeSync compatible [smart home devices](#supported-devices)
 
-**Check out the [pyvesync documentation](https://pyvesync.readthedocs.io/en/latest/) for more information.**
+**Check out the [pyvesync documentation](https://webdjoe.github.io/pyvesync/) for more information.**
 
 ## What's new in pyvesync 3.0
 
