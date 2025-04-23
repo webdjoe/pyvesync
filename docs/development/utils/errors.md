@@ -42,7 +42,7 @@ The `pyvesync` library parses the code provided in the API response to determine
     handler: python
     options:
       parameter_headings: true
-      toc_label: "BypassV2Mixin Class"
+      toc_label: "ErrorCodes"
       show_root_heading: true
       heading_level: 2
       show_source: true

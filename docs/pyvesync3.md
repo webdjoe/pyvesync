@@ -8,14 +8,16 @@ Some of the changes are:
 
 - Asynchronous network requests with aiohttp
 - Strong typing of all network requests and responses.
-- Product Type nomenclature to map with API.
-- Base classes for all devices for easier `isinstance` checks.
-- `DeviceContainer` instance holds devices with a mutable set-like structure.
-- Standardized the API for all device to follow a common naming convention. No more devices with different names for the same functionality.
+- New `product_type` nomenclature to map with API.
+- Base classes for all product types for easier `isinstance` checks.
+- Standardized the API for all device to follow a common naming convention.
 - Custom exceptions and error (code) handling for API responses.
-- `const` module to hold all library constants
-- `device_map` module contains the configuration of devices and features.
 - `last_response` attribute on device instances to hold information on the last API response.
+- [`DeviceContainer`][pyvesync.device_container] object holds all devices in a mutable set structure with additional convenience methods and properties for managing devices. This is located in the `VeSync.manager.devices` attribute.
+- Custom exceptions for better error handling - [`VeSyncError`][pyvesync.utils.errors.VeSyncError], `VeSyncAPIException`, `VeSyncLoginException`, `VeSyncRateLimitException`, `VeSyncNoDevicesException`
+- Device state has been separated from the device object and is now managed by the device specific subclasses of [`DeviceState`][pyvesync.base_devices.vesyncbasedevice.DeviceState]. The state object is located in the `state` attribute of the device object.
+- [`const`][pyvesync.const] module to hold all library constants.
+- [`device_map`][pyvesync.device_map] module holds all device type mappings and configuration.
 
 If you submit a PR please ensure that it follows all conventions outlined in [CONTRIBUTING](./development/contributing.md).
 
@@ -123,24 +125,24 @@ Exceptions are no longer caught by the library and must be handled by the user. 
 
 Errors that occur at the aiohttp level are raised automatically and propogated to the user. That means exceptions raised by aiohttp that inherit from `aiohttp.ClientError` are propogated.
 
-When the connection to the VeSync API succeeds but returns an error code that prevents the library from functioning a custom exception inherrited from `pyvesync.logs.VeSyncError` is raised.
+When the connection to the VeSync API succeeds but returns an error code that prevents the library from functioning a custom exception inherrited from `pyvesync.utils.errors.VeSyncError` is raised.
 
 Custom Exceptions raised by all API calls:
 
-- `pyvesync.logs.VeSyncServerError` - The API connected and returned a code indicated there is a server-side error.
-- `pyvesync.logs.VeSyncRateLimitError` - The API's rate limit has been exceeded.
-- `pyvesync.logs.VeSyncAPIStatusCodeError` - The API returned a non-200 status code.
-- `pyvesync.logs.VeSyncAPIResponseError` - The response from the API was not in an expected format.
+- [VeSyncServerError][pyvesync.utils.errors.VeSyncServerError] - The API connected and returned a code indicated there is a server-side error.
+- [VeSyncRateLimitError][pyvesync.utils.errors.VeSyncRateLimitError] - The API's rate limit has been exceeded.
+- [VeSyncAPIStatusCodeError][pyvesync.utils.errors.VeSyncAPIStatusCodeError] - The API returned a non-200 status code.
+- [VeSyncAPIResponseError][pyvesync.utils.errors.VeSyncAPIResponseError] - The response from the API was not in an expected format.
 
 Login API Exceptions
 
-- `pyvesync.logs.VeSyncLoginError` - The username or password is incorrect.
+- [VeSyncLoginError][pyvesync.utils.errors.VesyncLoginError] - The username or password is incorrect.
 
 See [errors](./development/utils/errors.md) documentation for a complete list of error codes and exceptions.
 
 ## Device Last Response Information
 
-If no exception is raised by the API, the response code and message of the last API call is stored in the `device.last_response` attribute. This is a `ResponseInfo` object that contains the following attributes:
+If no exception is raised by the API, the response code and message of the last API call is stored in the `device.last_response` attribute. This is a [`ResponseInfo`][pyvesync.utils.errors.ResponseInfo] object that contains the following attributes:
 
 ```python
 ResponseInfo(
@@ -181,7 +183,7 @@ All methods that set RGB/HSV color now require all three inputs, red/green/blue 
 
 All API requests and responses must be deserialized with a mashumaro dataclass. The dataclass is used to validate the response and ensure that the data is in the expected format. Requests are also serialized with a dataclass model to ensure that there are no breaking changes when changes are made to the library.
 
-The data models are located in the `models` folder in separate models. The `base_model` module contains a dataclass holding the default values that do not change between library changes. The `base_model` module is imported into all other models to ensure that the default values stay consistent. The `base_model` module also contains base models that can be inherited for easy configuration and common fields.
+The data models are located in the `models` folder in separate models. The [`base_models`][pyvesync.models.base_models] module contains a dataclass holding the default values that do not change between library changes. The `base_models` module is imported into all other models to ensure that the default values stay consistent. The `base_models` module also contains base models that can be inherited for easy configuration and common fields.
 
 ```python
 @dataclass
@@ -204,16 +206,19 @@ class ResponseCodeModel(ResponseBaseModel):
     code: int
     msg: str | None
 
-````
+```
 
 Models for each device should be kept in the `data_models` folder with the appropriate device name:
 
-- `bulb_models`
-- `humidifier_models`
-- `purifier_models`
-- `outlet_models`
-- `switch_models`
-- `fan_models`
+- [`bypass_models`][pyvesync.models.bypass_models] - See [`Development`](./development/index.md) for more information on bypass devices.
+- [`bulb_models`][pyvesync.models.bulb_models]
+- [`humidifier_models`][pyvesync.models.humidifier_models]
+- [`purifier_models`][pyvesync.models.purifier_models]
+- [`outlet_models`][pyvesync.models.outlet_models]
+- [`switch_models`][pyvesync.models.switch_models]
+- [`fan_models`][pyvesync.models.fan_models]
+- [`airfryer_models`][pyvesync.models.fryer_models]
+- [`thermostat_models`][pyvesync.models.thermostat_models]
 
 There are multiple levels to some requests with nested dictionaries. These must be defined in different classes:
 
@@ -302,11 +307,13 @@ manager_dict = get_class_attributes(manager, keys)
 
 ## Device Container
 
-Devices are held in the `pyvesync.device_container.DeviceContainer` class in the `manager.devices` attribute. The `DeviceContainer` class is a singleton class, so only one instance can exist. The class inherits from `MutableSet` so it contains unique objects, with the ability to add and remove devices using the `add`, `remove` and `clear` methods. However, these methods only accept device objects. To simplify removing devices, there is the `remove_by_cid(cid: str)` method.
+Devices are held in the [DeviceContainer][pyvesync.device_container.DeviceContainer] class in the `manager.devices` attribute. The `DeviceContainer` class is a singleton class, so only one instance can exist. The class inherits from `MutableSet` so it contains unique objects, with the ability to add and remove devices using the `add`, `remove` and `clear` methods. However, these methods only accept device objects. To simplify removing devices, there is the `remove_by_cid(cid: str)` method.
 
 To get devices by device name, use the `get_by_name(name: str)` method. There are two convenience methods `add_new_devices` and `remove_stale_devices` that accept the device list response model.
 
 The `DeviceContainer` object has a property for each product type that returns a list of devices. For example, `DeviceContainer.outlets` returns a list of all outlets product type devices.
+
+See [DeviceContainer](./development/device_container.md) for more information on the device container.
 
 ```python
 import asyncio
@@ -341,7 +348,7 @@ if __name__ == '__main__':
 
 ## Device Base Classes
 
-The device classes are now all inherited from their own product type specific base class. All base classes still inherit from `vesyncbasedevice`. The base class provides the common functionality for all devices and the device classes provide the specific functionality for each device. The `pyvesync.base_devices` module contains the base classes for all devices in their respective modules by product type.
+The device classes are now all inherited from their own product type specific base class. All base classes still inherit from [`vesyncbasedevice`][pyvesync.base_devices.vesyncbasedevice.VeSyncBaseDevice]. The base class provides the common functionality for all devices and the device classes provide the specific functionality for each device. The `pyvesync.base_devices` module contains the base classes for all devices in their respective modules by product type. The base state class is [`DeviceState`][pyvesync.base_devices.vesyncbasedevice.DeviceState]. Both `VeSyncBaseDevice` and `DeviceState` are inherited by device and their state classes.
 
 The base module should hold all properties and methods that are common to all devices. The base module also contains the base devices state class. The base device state class holds all state attributes for all underlying devices.
 
@@ -351,7 +358,7 @@ All features and configuration options for devices are held in the `pyveysnc.dev
 
 ## Constants
 
-All constants should be located in the `pyvesync.const` module, including default values. There should not be any constants defined in the code. Use `enum.StrEnum` or `enum.IntEnum` for Enum values.
+All constants should be located in the [const][pyvesync.const] module, including default values. There should not be any constants defined in the code. Use `enum.StrEnum` or `enum.IntEnum` for Enum values.
 
 All device modes and feature names are defined in this module.
 

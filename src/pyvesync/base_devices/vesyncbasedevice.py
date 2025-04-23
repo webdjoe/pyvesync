@@ -126,10 +126,10 @@ class VeSyncBaseDevice(ABC):
         self.current_firm_version = details.currentFirmVersion
         self.device_region: str | None = details.deviceRegion
         self.pid: str | None = None
-        self.sub_device_no = details.subDeviceNo
+        self.sub_device_no: int | None = details.subDeviceNo
         # From feature_map
         self.product_type: str = feature_map.product_type
-        self.features = feature_map.features
+        self.features: list[str] = feature_map.features
 
     def __eq__(self, other: object) -> bool:
         """Use device CID and sub-device number to test equality."""

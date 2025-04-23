@@ -1,4 +1,4 @@
-# Documentation for `VeSyncBaseDevice` module
+# Documentation for Base Devices
 
 This is the base device inherited by all device classes. This should *NOT* be instantiated directly.
 

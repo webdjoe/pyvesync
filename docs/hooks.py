@@ -1,8 +1,11 @@
+
+
 import re
 import urllib.request
 
 
-def replacer(match):
+def replacer(match: re.Match) -> str:
+    """Find and replace github links with code snippets."""
     filename = f'{match.group(3)}.{match.group(4)}'
     url = f'https://raw.githubusercontent.com/{match.group(1)}/{match.group(2)}/{filename}'
     code = urllib.request.urlopen(url).read().decode('utf-8')
@@ -14,7 +17,8 @@ def replacer(match):
     )
 
 
-def on_page_markdown(markdown, **kwargs):
+def on_page_markdown(markdown: str, **kwargs) -> str:
+    """Replace GitHub links with code snippets."""
     return re.sub(
         re.compile(
             r'^https://github.com/([\w/\-]+)/blob/([0-9a-f]+)/([\w\d\-/\.]+)\.(\w+)#L(\d+)-L(\d+)$',

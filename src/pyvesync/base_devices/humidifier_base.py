@@ -252,11 +252,11 @@ class VeSyncHumidifier(VeSyncBaseToggleDevice):
         """
         super().__init__(details, manager, feature_map)
         self.state: HumidifierState = HumidifierState(self, details, feature_map)
-        self.mist_modes = feature_map.mist_modes
-        self.mist_levels = feature_map.mist_levels
-        self.features = feature_map.features
-        self.warm_mist_levels = feature_map.warm_mist_levels
-        self.target_minmax = feature_map.target_minmax
+        self.mist_modes: dict[str, str] = feature_map.mist_modes
+        self.mist_levels: list[str | int] = feature_map.mist_levels
+        self.features: list[str] = feature_map.features
+        self.warm_mist_levels: list[int | str] = feature_map.warm_mist_levels
+        self.target_minmax: tuple[int, int] = feature_map.target_minmax
 
     @property
     def supports_warm_mist(self) -> bool:

@@ -2,6 +2,8 @@
 
 [![build status](https://img.shields.io/pypi/v/pyvesync.svg)](https://pypi.python.org/pypi/pyvesync) [![Build Status](https://dev.azure.com/webdjoe/pyvesync/_apis/build/status/webdjoe.pyvesync?branchName=master)](https://dev.azure.com/webdjoe/pyvesync/_build/latest?definitionId=4&branchName=master) [![Open Source? Yes!](https://badgen.net/badge/Open%20Source%20%3F/Yes%21/blue?icon=github)](https://github.com/Naereen/badges/) [![PyPI license](https://img.shields.io/pypi/l/ansicolortags.svg)](https://pypi.python.org/pypi/ansicolortags/) <!-- omit in toc -->
 
+**This is a work in progress, PR's greatly appreciated 🙂.**
+
 pyvesync is a python library that interacts with devices that are connected to the VeSync app. The library can pull state details and perform actions to devices once they are set up in the app. This is not a local connection, the pyvesync library connects the VeSync cloud API, which reads and sends commands to the device, so internet access is required for both the device and library. There is no current method to control locally.
 
 ## What's New
@@ -10,17 +12,19 @@ pyvesync is a python library that interacts with devices that are connected to t
 
 The goal is to standardize the library across all devices to allow easier and consistent maintainability moving forward. The original library was created 8 years ago for supporting only a few outlets, it was not designed for supporting 20+ different devices.
 
-This will likely cause breaking changes with existing code, but the new structure should be easier to work with and more consistent across all devices in the future.
+This will **DEFINITELY** cause breaking changes with existing code, but the new structure should be easier to work with and more consistent across all devices in the future.
 
 Some of the major structural changes include:
 
 - Asynchronous API calls through aiohttp
 - `DeviceContainer` object holds all devices in a mutable set structure with additional convenience methods and properties for managing devices. This is located in the `VeSync.manager` attribute.
 - Custom exceptions for better error handling - `VeSyncException`, `VeSyncAPIException`, `VeSyncLoginException`, `VeSyncRateLimitException`, `VeSyncNoDevicesException`
-- Device state has been separated from the device object and is now managed by the subclasses of `DeviceState`. The state object is located in the `state` attribute of the device object.
+- Device state has been separated from the device object and is now managed by the device specific subclasses of [`DeviceState`][pyvesync.base_devices.vesyncbasedevice.DeviceState]. The state object is located in the `state` attribute of the device object.
 - Device Classes have been refactored to be more consistent and easier to manage. No more random property and method names for different types of the same device.
+- [`const`][pyvesync.const] module to hold all library constants.
+- [`device_map`][pyvesync.device_map] module holds all device type mappings and configuration.
 
-See [pyvesync V2](./pyvesync3.md) for more details.
+See [pyvesync V3](./pyvesync3.md) for more details.
 
 ## Questions or Help?
 
@@ -50,7 +54,7 @@ For a full listing of supported devices, see [Supported Devices](./supported_dev
 
 ## General Usage
 
-The `pyvesync.VeSync` object is the primary class that is referred to as the `manager` because it provides all the methods and properties to control the library. This should be the only class that is directly instantiated, all devices will be automatically pulled into instance attributes.
+The [`pyvesync.vesync.VeSync`][pyvesync.vesync.VeSync] object is the primary class that is referred to as the `manager` because it provides all the methods and properties to control the library. This should be the only class that is directly instantiated. All devices will be instantiated and managed by the `VeSync` object.
 
 ### VeSync Manager
 
@@ -176,6 +180,7 @@ For a full listing of available device attributes and methods, see the individua
 5. [Humidifiers](./devices/humidifiers.md)
 6. [Fans](./devices/fans.md)
 7. [Air Fryers](./devices/kitchen.md)
+8. [Thermostats](./devices/thermostats.md)
 
 ## Development
 

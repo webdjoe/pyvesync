@@ -18,6 +18,8 @@ The `bypassv2_models` module is a generic mixin for the bypassv2 API calls.
   - [Outlet Models](#outlet-models)
   - [Purifier Models](#purifier-models)
   - [Switch Models](#switch-models)
+  - [Fryer Models](#fryer-models)
+  - [Thermostat Models](#thermostat-models)
 
 ## Data Models Module
 
@@ -215,6 +217,52 @@ The `bypassv2_models` module is a generic mixin for the bypassv2 API calls.
 ## Switch Models
 
 ::: pyvesync.models.switch_models
+    options:
+        show_signature_annotations: true
+        show_submodules: false
+        heading_level: 3
+        signature_crossrefs: true
+        show_root_heading: false
+        show_category_heading: true
+        show_root_toc_entry: true
+        inherited_members: false
+        show_source: true
+        filters:
+        - "!Config"
+        - "!^__.*"
+        - "!^_.*"
+        - "!IntFlag"
+        - "!StrFlag"
+        - "!RGB"
+        - "!Color"
+        - "!HSV"
+
+## Fryer Models
+
+::: pyvesync.models.fryer_models
+    options:
+        show_signature_annotations: true
+        show_submodules: false
+        heading_level: 3
+        signature_crossrefs: true
+        show_root_heading: false
+        show_category_heading: true
+        show_root_toc_entry: true
+        inherited_members: false
+        show_source: true
+        filters:
+        - "!Config"
+        - "!^__.*"
+        - "!^_.*"
+        - "!IntFlag"
+        - "!StrFlag"
+        - "!RGB"
+        - "!Color"
+        - "!HSV"
+
+## Thermostat Models
+
+::: pyvesync.models.thermostat_models
     options:
         show_signature_annotations: true
         show_submodules: false

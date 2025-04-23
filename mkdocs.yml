@@ -31,6 +31,7 @@ nav:
     - VeSync API: development/vesync_api.md
     - Data Models: development/data_models.md
     - DeviceMap: development/device_map.md
+    - DeviceContainer: development/device_container.md
     - VeSyncDevice Base: development/vesync_device_base.md
     - Constants: development/constants.md
     - Contributing: development/contributing.md
@@ -49,7 +50,8 @@ nav:
     - Air Purifiers: devices/air_purifiers.md
     - Humidifiers: devices/humidifiers.md
     - Fans: devices/fans.md
-    - Kitchen: devices/kitchen.md
+    - Air Fryers: devices/kitchen.md
+    - Thermostats: devices/thermostats.md
 
 markdown_extensions:
   - def_list
@@ -62,6 +64,7 @@ markdown_extensions:
       baselevel: 1
   - pymdownx.snippets
   - pymdownx.superfences
+  - pymdownx.inlinehilite
   - pymdownx.fancylists
   - pymdownx.saneheaders
   - pymdownx.blocks.admonition
@@ -71,8 +74,8 @@ markdown_extensions:
       use_pygments: true
   - attr_list
 
-hooks:
-- docs/hooks.py
+# hooks:
+# - docs/hooks.py
 
 watch:
 - src/pyvesync
@@ -115,7 +118,8 @@ plugins:
                 kind: danger
                 title: Deprecated
   - search
-  - autorefs
+  - autorefs:
+      resolve_closest: true
   - include-markdown:
       preserve_includer_indent: false
       dedent: true

@@ -47,7 +47,7 @@ class FryerState(DeviceState):
 class VeSyncFryer(VeSyncBaseDevice):
     """Base class for VeSync Air Fryer devices."""
 
-    slots = ()
+    __slots__ = ()
 
     def __init__(
         self,

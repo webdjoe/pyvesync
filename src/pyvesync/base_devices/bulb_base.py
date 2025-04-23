@@ -77,8 +77,8 @@ class BulbState(DeviceState):
                  feature_map: BulbMap) -> None:
         """Initialize VeSync Bulb State Base."""
         super().__init__(device, details, feature_map)
-        self._exclude_serialization = ['rgb', 'hsv']
-        self.features = feature_map.features
+        self._exclude_serialization: list[str] = ['rgb', 'hsv']
+        self.features: list[str] = feature_map.features
         self.color_modes: list[str] = feature_map.color_modes
         self.device: VeSyncBulb = device
         self.color_mode: str | None = None

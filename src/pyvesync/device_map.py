@@ -22,8 +22,8 @@ Attributes:
     fan_modules: list[FanMap]: List of Fan device mappings.
     purifier_modules: list[PurifierMap]: List of Purifier device mappings.
     humidifier_modules: list[HumidifierMap]: List of Humidifier device mappings.
-    AirFryer_modules: list[AirFryerMap]: List of Air Fryer device mappings.
-    Thermostat_modules: list[ThermostatMap]: List of Thermostat device mappings.
+    air_fryer_modules: list[AirFryerMap]: List of Air Fryer device mappings.
+    thermostat_modules: list[ThermostatMap]: List of Thermostat device mappings.
 
 Classes:
     ProductTypes: Enum: General device types enum.
@@ -607,7 +607,7 @@ humidifier_modules = [
         mist_levels=list(range(1, 10)),
         warm_mist_levels=list(range(4)),
         device_alias="OasisMist 450S EU",
-        model_name="OasisMist™ 4.5L",
+        model_name="OasisMist 4.5L",
         model_display="LUH-O451S Series",
         setup_entry="LUH-O451S-WUS",
     ),
@@ -625,7 +625,7 @@ humidifier_modules = [
         warm_mist_levels=list(range(4)),
         device_alias="OasisMist 450S",
         model_display="OasisMist 4.5L Series",
-        model_name="OasisMist™ 4.5L",
+        model_name="OasisMist 4.5L",
         setup_entry="LUH-O451S-WUS",
     ),
     HumidifierMap(
@@ -660,158 +660,6 @@ humidifier_modules = [
         model_name="Superior 6000S",
         setup_entry="LEH-S601S",
     ),
-]
-"""List of ['HumidifierMap'][pyvesync.device_map.HumidifierMap] configuration
-objects for humidifier devices."""
-
-
-test_modules = [
-    # HumidifierMap(
-    #     class_name="VeSyncHumid200300S",
-    #     dev_types=[
-    #         "Classic300S",
-    #         "LUH-A601S-WUSB",
-    #         "LUH-A601S-AUSW",
-    #     ],
-    #     features=[HumidifierFeatures.NIGHTLIGHT],
-    #     mist_modes={
-    #         HumidifierModes.AUTO: "auto",
-    #         HumidifierModes.SLEEP: "sleep",
-    #         HumidifierModes.MANUAL: "manual",
-    #     },
-    #     mist_levels=list(range(1, 10)),
-    #     device_alias="Classic 300S",
-    #     model_display="LUH-A601S Series",
-    #     model_name="Classic 300S",
-    #     setup_entry="Classic300S",
-    # ),
-    # HumidifierMap(
-    #     class_name="VeSyncHumid200S",
-    #     dev_types=["Classic200S"],
-    #     features=[],
-    #     mist_modes={
-    #         HumidifierModes.AUTO: "auto",
-    #         HumidifierModes.MANUAL: "manual",
-    #     },
-    #     mist_levels=list(range(1, 10)),
-    #     device_alias="Classic 200S",
-    #     model_display="Classic 200S Series",
-    #     model_name="Classic 200S",
-    #     setup_entry="Classic200S",
-    # ),
-    # HumidifierMap(
-    #     class_name="VeSyncHumid200300S",
-    #     dev_types=[
-    #         "Dual200S",
-    #         "LUH-D301S-WUSR",
-    #         "LUH-D301S-WJP",
-    #         "LUH-D301S-WEU"
-    #         ],
-    #     features=[],
-    #     mist_modes={
-    #         HumidifierModes.AUTO: "auto",
-    #         HumidifierModes.MANUAL: "manual",
-    #     },
-    #     mist_levels=list(range(1, 3)),
-    #     device_alias="Dual 200S",
-    #     model_display="LUH-D301S Series",
-    #     model_name="Dual 200S",
-    #     setup_entry="Dual200S",
-    # ),
-    # HumidifierMap(
-    #     class_name="VeSyncHumid200300S",
-    #     dev_types=[
-    #         "LUH-A602S-WUSR",
-    #         "LUH-A602S-WUS",
-    #         "LUH-A602S-WEUR",
-    #         "LUH-A602S-WEU",
-    #         "LUH-A602S-WJP",
-    #         "LUH-A602S-WUSC",
-    #     ],
-    #     features=[HumidifierFeatures.WARM_MIST, HumidifierFeatures.NIGHTLIGHT],
-    #     mist_modes={
-    #         HumidifierModes.AUTO: "auto",
-    #         HumidifierModes.SLEEP: "sleep",
-    #         HumidifierModes.MANUAL: "manual",
-    #     },
-    #     mist_levels=list(range(1, 10)),
-    #     warm_mist_levels=[0, 1, 2, 3],
-    #     device_alias="LV600S",
-    #     model_display="LUH-A602S Series",
-    #     model_name="LV600S",
-    #     setup_entry="LUH-A602S-WUS",
-    # ),
-    # HumidifierMap(
-    #     class_name="VeSyncHumid200300S",
-    #     dev_types=["LUH-O451S-WEU"],
-    #     features=[HumidifierFeatures.WARM_MIST, HumidifierFeatures.NIGHTLIGHT],
-    #     mist_modes={
-    #         HumidifierModes.AUTO: "auto",
-    #         HumidifierModes.SLEEP: "sleep",
-    #         HumidifierModes.MANUAL: "manual",
-    #     },
-    #     mist_levels=list(range(1, 10)),
-    #     warm_mist_levels=list(range(4)),
-    #     device_alias="OasisMist 450S EU",
-    #     model_name="OasisMist™ 4.5L",
-    #     model_display="LUH-O451S Series",
-    #     setup_entry="LUH-O451S-WUS",
-    # ),
-    HumidifierMap(
-        class_name="VeSyncHumid200300S",
-        dev_types=["LUH-O451S-WUS",
-                   "LUH-O451S-WUSR",
-                   "LUH-O601S-WUS",
-                   "LUH-O601S-KUS"
-                   ],
-        features=[HumidifierFeatures.WARM_MIST],
-        mist_levels=list(range(1, 10)),
-        warm_mist_levels=list(range(4)),
-        device_alias="OasisMist 450S",
-        model_display="OasisMist 4.5L Series",
-        model_name="OasisMist™ 4.5L",
-        setup_entry="LUH-O451S-WUS",
-    ),
-    # HumidifierMap(
-    #     class_name="VeSyncHumid1000S",
-    #     dev_types=[
-    #         "LUH-M101S-WUS",
-    #         "LUH-M101S-WEUR",
-    #         "LUH-M101S-WUSR"
-    #         ],
-    #     features=[],
-    #     mist_modes={
-    #         HumidifierModes.AUTO: "auto",
-    #         HumidifierModes.SLEEP: "sleep",
-    #         HumidifierModes.MANUAL: "manual",
-    #     },
-    #     mist_levels=list(range(1, 10)),
-    #     device_alias="Oasismist 1000S",
-    #     model_display="Oasismist Series",
-    #     model_name="Oasismist 1000S",
-    #     setup_entry="LUH-M101S",
-    # ),
-    # HumidifierMap(
-    #     class_name="VeSyncSuperior6000S",
-    #     dev_types=[
-    #         "LEH-S601S-WUS",
-    #         "LEH-S601S-WUSR",
-    #         "LEH-S601S-WEUR"
-    #         ],
-    #     features=[HumidifierFeatures.AUTO_STOP],
-    #     mist_modes={
-    #         HumidifierModes.AUTO: "autoPro",
-    #         HumidifierModes.SLEEP: "sleep",
-    #         HumidifierModes.HUMIDITY: "humidity",
-    #         HumidifierModes.MANUAL: "manual",
-    #         HumidifierModes.AUTOPRO: "autoPro",
-    #     },
-    #     mist_levels=list(range(1, 10)),
-    #     device_alias="Superior 6000S",
-    #     model_display="LEH-S601S Series",
-    #     model_name="Superior 6000S",
-    #     setup_entry="LEH-S601S",
-    # ),
 ]
 """List of ['HumidifierMap'][pyvesync.device_map.HumidifierMap] configuration
 objects for humidifier devices."""
