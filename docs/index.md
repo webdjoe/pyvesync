@@ -6,6 +6,20 @@
 
 pyvesync is a python library that interacts with devices that are connected to the VeSync app. The library can pull state details and perform actions to devices once they are set up in the app. This is not a local connection, the pyvesync library connects the VeSync cloud API, which reads and sends commands to the device, so internet access is required for both the device and library. There is no current method to control locally.
 
+## Supported devices
+
+The following product types are supported:
+
+1. `outlet` - Outlet devices
+2. `switch` - Wall switches
+3. `fan` - Fans (not air purifiers or humidifiers)
+4. `purifier` - Air purifiers (not humidifiers)
+5. `humidifier` - Humidifiers (not air purifiers)
+6. `bulb` - Light bulbs (not dimmers or switches)
+7. `airfryer` - Air fryers
+
+See [Supported Devices](supported_devices.md) for a complete list of supported devices and models.
+
 ## What's New
 
 **BREAKING CHANGES** - The release of pyvesync 3.0 comes with many improvements and new features, but as a result there are many breaking changes. The structure has been completely refactored, so please read through the documentation and thoroughly test before deploying.
@@ -17,8 +31,8 @@ This will **DEFINITELY** cause breaking changes with existing code, but the new 
 Some of the major structural changes include:
 
 - Asynchronous API calls through aiohttp
-- `DeviceContainer` object holds all devices in a mutable set structure with additional convenience methods and properties for managing devices. This is located in the `VeSync.manager` attribute.
-- Custom exceptions for better error handling - `VeSyncException`, `VeSyncAPIException`, `VeSyncLoginException`, `VeSyncRateLimitException`, `VeSyncNoDevicesException`
+- [`DeviceContainer`][pyvesync.device_container.DeviceContainer] object holds all devices in a mutable set structure with additional convenience methods and properties for managing devices. This is located in the `VeSync.manager` attribute.
+- Custom exceptions for better error handling there are custom exceptions that inherit from [`VeSyncError`][pyvesync.utils.errors.VeSyncError], `VeSyncAPIError`, `VeSyncLoginError`, `VeSyncRateLimitError`.
 - Device state has been separated from the device object and is now managed by the device specific subclasses of [`DeviceState`][pyvesync.base_devices.vesyncbasedevice.DeviceState]. The state object is located in the `state` attribute of the device object.
 - Device Classes have been refactored to be more consistent and easier to manage. No more random property and method names for different types of the same device.
 - [`const`][pyvesync.const] module to hold all library constants.
@@ -38,23 +52,11 @@ For home assistant issues, please submit on that repository.
 
 If you would like to add a new device, packet captures must be provided. The iOS and Android VeSync app implements certificate pinning to prevent standard MITM intercepts. Currently, the only known way is to patch the APK and run on a rooted android emulator with frida. This is a complex process that has had varying levels of success. If you successful in capturing packets, please capture all functionality, including the device list and configuraiton screen. Redact accountId and token keys or contact me for a more secure way to share.
 
-## Supported Devices
-
-The following product types are supported:
-
-1. `outlet` - Outlet devices
-2. `switch` - Wall switches
-3. `fan` - Fans (not air purifiers or humidifiers)
-4. `purifier` - Air purifiers (not humidifiers)
-5. `humidifier` - Humidifiers (not air purifiers)
-6. `bulb` - Light bulbs (not dimmers or switches)
-7. `airfryer` - Air fryers
-
-For a full listing of supported devices, see [Supported Devices](./supported_devices.md).
-
 ## General Usage
 
 The [`pyvesync.vesync.VeSync`][pyvesync.vesync.VeSync] object is the primary class that is referred to as the `manager` because it provides all the methods and properties to control the library. This should be the only class that is directly instantiated. All devices will be instantiated and managed by the `VeSync` object.
+
+See the [Usage](./usage.md) documentation for a quick start guide on how to use the library.
 
 ### VeSync Manager
 
@@ -125,6 +127,19 @@ Updating all devices without pulling a device list:
 manager.update_all_devices()
 ```
 
+Each product type is a property in the `devices` attribute:
+
+```python
+manager.devices.outlets = [VeSyncOutletInstances]
+manager.devices.switches = [VeSyncSwitchInstances]
+manager.devices.fans = [VeSyncFanInstances]
+manager.devices.bulbs = [VeSyncBulbInstances]
+manager.devices.purifiers = [VeSyncPurifierInstances]
+manager.devices.humidifiers = [VeSyncHumidifierInstances]
+manager.devices.air_fryers = [VeSyncAirFryerInstances]
+managers.devices.thermostats = [VeSyncThermostatInstances]
+```
+
 ### Device Usage
 
 Devices and their attributes and methods can be accessed via the device lists in the manager instance.
@@ -140,7 +155,7 @@ for devices in manager.outlets:
     print(outlet.state)
 ```
 
-The last response information is stored in the `last_response` attribute of the device and returns the `ResponseInfo` object.
+The last response information is stored in the `last_response` attribute of the device and returns the [`ResponseInfo`][pyvesync.utils.errors.ResponseInfo] object.
 
 ```python
 # Get the last response information
@@ -181,6 +196,61 @@ For a full listing of available device attributes and methods, see the individua
 6. [Fans](./devices/fans.md)
 7. [Air Fryers](./devices/kitchen.md)
 8. [Thermostats](./devices/thermostats.md)
+
+
+## Serializing/Deserializing devices and state
+
+All devices have the `to_json()` and `to_jsonb()` methods which will serialize the device and state to a JSON string or binary json string.
+
+```python
+
+device = manager.outlets[0]
+print(device.to_json(state=True, indent=True))  # JSON string
+# Setting `state=False` will only serialize the attributes in the device class and not the state class
+
+print(device.to_jsonb(state=True))  # Binary JSON string
+
+# State classes also have the `to_json()` and `to_jsonb()` methods but this does not include any device information, such as device_name, device_type, etc.
+print(device.state.to_json(indent=True))  # JSON string
+```
+
+Devices and state objects can also output to a dictionary using the `to_dict()` method or as a list of tuples with `as_tuple()`. This is useful for logging or debugging.
+
+```python
+device = manager.outlets[0]
+dev_dict = device.to_dict(state=True)  # Dictionary of device and state attributes
+dev_dict["device_name"]  # Get the device name from the dictionary
+dev_dict["device_status"] # Returns device status as a StrEnum
+```
+
+## Custom Exceptions
+
+Exceptions are no longer caught by the library and must be handled by the user. Exceptions are raised by server errors and aiohttp connection errors.
+
+Errors that occur at the aiohttp level are raised automatically and propogated to the user. That means exceptions raised by aiohttp that inherit from `aiohttp.ClientError` are propogated.
+
+When the connection to the VeSync API succeeds but returns an error code that prevents the library from functioning a custom exception inherrited from `pyvesync.logs.VeSyncError` is raised.
+
+Custom Exceptions raised by all API calls:
+
+- `pyvesync.logs.VeSyncServerError` - The API connected and returned a code indicated there is a server-side error.
+- `pyvesync.logs.VeSyncRateLimitError` - The API's rate limit has been exceeded.
+- `pyvesync.logs.VeSyncAPIStatusCodeError` - The API returned a non-200 status code.
+- `pyvesync.logs.VeSyncAPIResponseError` - The response from the API was not in an expected format.
+
+Login API Exceptions
+
+- `pyvesync.logs.VeSyncLoginError` - The username or password is incorrect.
+
+See [errors](https://webdjoe.github.io/pyvesync/latest/development/utils/errors) documentation for a complete list of error codes and exceptions.
+
+The [raise_api_errors()](https://webdjoe.github.io/pyvesync/latest/development/utils/errors/#pyvesync.utils.errors.raise_api_errors) function is called for every API call and checks for general response errors. It can raise the following exceptions:
+
+- `VeSyncServerError` - The API connected and returned a code indicated there is a server-side error.
+- `VeSyncRateLimitError` - The API's rate limit has been exceeded.
+- `VeSyncAPIStatusCodeError` - The API returned a non-200 status code.
+- `VeSyncTokenError` - The API returned a token error and requires `login()` to be called again.
+- `VeSyncLoginError` - The user name or password is incorrect.
 
 ## Development
 

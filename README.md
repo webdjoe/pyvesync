@@ -2,7 +2,20 @@
 
 pyvesync is a library to manage VeSync compatible [smart home devices](#supported-devices)
 
-**Check out the [pyvesync documentation](https://webdjoe.github.io/pyvesync/) for more information.**
+**Check out the new [pyvesync documentation](https://webdjoe.github.io/pyvesync/) for more information.**
+
+## Supported Product Types
+
+1. Outlets
+2. Switches
+3. Fans
+4. Air Purifiers
+5. Humidifiers
+6. Bulbs
+7. Air Fryers
+8. Thermostats
+
+See the [supported devices](https://webdjoe.github.io/pyvesync/latest/supported_devices/) page for a complete list of supported devices and device types.
 
 ## What's new in pyvesync 3.0
 
@@ -22,7 +35,7 @@ Some of the changes are:
 - Built the `DeviceMap` class to hold the mapping and features of devices.
 - COMING SOON: Use API to pull device modes and operating features.
 
-If you submit a PR please ensure that it follows all conventions outlined in [CONTRIBUTING](CONTRIBUTING).
+See [pyvesync V3](https://webdjoe.github.io/pyvesync/latest/pyvesync3/) for more information on the changes.
 
 ### Asynchronous operation
 
@@ -49,6 +62,8 @@ async def main():
         # manager.devices.bulbs is a list of VeSyncBulb objects
         # manager.devices.humidifiers is a list of VeSyncHumid objects
         # manager.devices.air_purifiers is a list of VeSyncAir objects
+        # manager.devices.air_fryers is a list of VeSyncAirFryer objects
+        # manager.devices.thermostats is a list of VeSyncThermostat objects
 
         for outlet in manager.devices.outlets:
             # The outlet object contain all action methods and static device attributes
@@ -149,29 +164,15 @@ Login API Exceptions
 
 - `pyvesync.logs.VeSyncLoginError` - The username or password is incorrect.
 
-See [errors.py](src/pyvesync/helper_utils/errors.py) for a complete list of error codes and exceptions.
+See [errors](https://webdjoe.github.io/pyvesync/latest/development/utils/errors) documentation for a complete list of error codes and exceptions.
 
-### Input Validation
+The [raise_api_errors()](https://webdjoe.github.io/pyvesync/latest/development/utils/errors/#pyvesync.utils.errors.raise_api_errors) function is called for every API call and checks for general response errors. It can raise the following exceptions:
 
-When values that are required to be in a range are input, such as RGB/HSV colors, fan levels, etc. the library will no longer automatically adjust values outside of that range. The function performing the operation will just return False, with a debug message in the log. This is to minimize complexity and utility of the underlying code. If an invalid input is provided, the library should not assume to correct it.
-
-For example, setting bulb RGB color:
-
-**OLD OPERATION** - Entering values outside the accepted range were corrected to the nearest extreme and the operation is performed.
-
-```python
-set_rgb = await bulb.set_rgb(300,0,-50)
-assert set_rgb == True # Bulb was set to the min/max RGB 255,0,0
-```
-
-**NEW OPERATION** - invalid values return false and operation is not performed.
-
-```python
-set_rgb = await bulb.set_rgb(300,0,-50)
-assert set_rgb == False
-```
-
-All methods that set RGB/HSV color now require all three inputs, red/green/blue or hue/saturation/value. I do not see the use in updating `red`, `green` or `blue`/`hue`, `saturation` or `value` individually. If you have a strong need for this, please open an issue with a detailed use case.
+- `VeSyncServerError` - The API connected and returned a code indicated there is a server-side error.
+- `VeSyncRateLimitError` - The API's rate limit has been exceeded.
+- `VeSyncAPIStatusCodeError` - The API returned a non-200 status code.
+- `VeSyncTokenError` - The API returned a token error and requires `login()` to be called again.
+- `VeSyncLoginError` - The user name or password is incorrect.
 
 ## Installation
 
@@ -192,8 +193,9 @@ pip install pyvesync
 1. Voltson Smart WiFi Outlet- Round (7A model ESW01-USA)
 2. Voltson Smart WiFi Outlet - Round (10A model ESW01-EU)
 3. Voltson Smart Wifi Outlet - Round (10A model ESW03-USA)
-4. Voltson Smart WiFi Outlet - Rectangle (15A model ESW15-USA)
-5. Two Plug Outdoor Outlet (ESO15-TB) (Each plug is a separate `VeSyncOutlet` object, energy readings are for both plugs combined)
+4. Voltson Smart Wifi Outlet - Round (10A model ESW10-USA)
+5. Voltson Smart WiFi Outlet - Rectangle (15A model ESW15-USA)
+6. Two Plug Outdoor Outlet (ESO15-TB) (Each plug is a separate `VeSyncOutlet` object, energy readings are for both plugs combined)
 
 <!--SUPPORTED OUTLETS END-->
 
@@ -246,7 +248,6 @@ pip install pyvesync
 <!--SUPPORTED DEVICES END-->
 
 ## Usage
-
 
 ```python
 import asyncio
@@ -312,29 +313,7 @@ for switch in manager.devices.switches:
     await switch.turn_on()   # Asynchronous
 ```
 
-## Configuration
-
-### Time Zones
-
-The `time_zone` argument is optional but the specified time zone must match time zone in the tz database (IANNA Time Zone Database), see this link for reference:
-[tz database](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones).
-The time zone determines how the energy history is generated for the smart outlets, i.e. for the week starts at 12:01AM Sunday morning at the specified time zone.  If no time zone or an invalid time zone is entered the default is America/New_York
-
-### Outlet energy data update interval
-
-**REMOVED FROM LIBRARY** - This feature has been removed. The library does not implement any api rate limiting, this must be done by the user.
-
-## Example Usage
-
-### Get electricity metrics of outlets
-
-Checking timing of updates is responsability of user, library will not check `update_interval`
-
-```python
-
-for s in manager.devices.outlets:
-  await s.update_energy() # Get energy history for each device
-```
+See the [device documentation](https://webdjoe.github.io/pyvesync/latest/devices/) for more information on the device classes and their methods/states.
 
 ## Debug mode and redact
 
@@ -348,7 +327,9 @@ import aiohttp
 from pyvesync.vesync import VeSync
 
 async def main():
-    async with VeSync("user", "password", debug=True, redact=True) as manager:
+    async with VeSync("user", "password") as manager:
+        manager.debug = True
+        manager.redact = True  # True by default
         await manager.login()  # Still returns true
         await manager.update()
 
@@ -369,7 +350,7 @@ Before filing an issue to request a new feature or device, please ensure that yo
 ```bash
 mkdir python_test && cd python_test
 
-# Check Python version is 3.8 or higher
+# Check Python version is 3.11 or higher
 python3 --version # or python --version or python3.8 --version
 # Create a new venv
 python3 -m venv pyvesync-venv
@@ -414,7 +395,7 @@ async def test_device():
       # Pull and update devices
       await manager.update()
 
-      for dev in chain(*manager._dev_list.values()):
+      for dev in manager.devices:
           # Print all device info
           logger.debug(dev.device_name + "\n")
           logger.debug(dev.display())
@@ -447,14 +428,16 @@ async def test_device():
           fan.sleep_mode()
           logger.debug("Current mode - %s", dev.details['mode'])
 
+          fan.auto_mode()
 
           logger.debug("Set Fan Speed - %s", dev.set_fan_speed)
           logger.debug("Current Fan Level - %s", dev.fan_level)
           logger.debug("Current mode - %s", dev.mode)
 
           # Display all device info
-          logger.debug(dev.display())
-          logger.debug(dev.displayJSON())
+          logger.debug(dev.display(state=True))
+          logger.debug(dev.to_json(state=True, indent=True))
+          dev_dict = dev.to_dict(state=True)
 
 if __name__ == "__main__":
     logger.debug("Testing device")

@@ -4,7 +4,7 @@
     options:
         filters:
             - "!^_.*"
-            - "__init__"
+            - "!__init__"
         summary:
             functions: false
         group_by_category: true
@@ -23,15 +23,14 @@
     options:
         filters:
             - "!^_.*"
-            - "__init__"
+            - "!__init__"
         summary:
             functions: false
         group_by_category: true
-        show_root_heading: false
-        show_root_toc_entry: false
+        show_root_heading: true
+        show_root_toc_entry: true
         show_category_heading: true
         show_source: false
-        heading_level: 3
         show_signature_annotations: true
         signature_crossrefs: true
         inherited_members: true
@@ -43,7 +42,7 @@
     options:
         filters:
             - "!^_.*"
-            - "__init__"
+            - "!__init__"
         summary:
             functions: false
         group_by_category: true
