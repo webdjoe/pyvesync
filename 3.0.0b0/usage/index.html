@@ -75,6 +75,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#quick-start-guide" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -305,6 +310,21 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Usage
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
         
@@ -317,6 +337,43 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#installing" class="md-nav__link">
+    <span class="md-ellipsis">
+      Installing
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#running-the-library" class="md-nav__link">
+    <span class="md-ellipsis">
+      Running the Library
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -1034,6 +1091,34 @@
   
   
   
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#installing" class="md-nav__link">
+    <span class="md-ellipsis">
+      Installing
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#running-the-library" class="md-nav__link">
+    <span class="md-ellipsis">
+      Running the Library
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -1052,9 +1137,85 @@
   
 
 
-  <h1>Usage</h1>
-
-
+<h1 id="quick-start-guide">Quick Start Guide<a class="toc-permalink" href="#quick-start-guide" title="Permanent link">↲</a></h1>
+<p>This is a quick start guide to get you up and running with the library. Each device has it's own properties and methods that can be found on the specific <a href="../devices/">device pages</a>.</p>
+<h2 id="installing">Installing<a class="toc-permalink" href="#installing" title="Permanent link">↲</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>mkdir<span class="w"> </span>python_test<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>python_test
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="c1"># Check Python version is 3.11 or higher</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>python3<span class="w"> </span>--version<span class="w"> </span><span class="c1"># or python --version or python3.11 --version</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="c1"># Create a new venv</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>python3<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>pyvesync-venv
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="c1"># Activate the venv on linux</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="nb">source</span><span class="w"> </span>pyvesync-venv/bin/activate
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="c1"># or ....</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>pyvesync-venv<span class="se">\S</span>cripts<span class="se">\a</span>ctivate.ps1<span class="w"> </span><span class="c1"># on powershell</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>pyvesync-venv<span class="se">\S</span>cripts<span class="se">\a</span>ctivate.bat<span class="w"> </span><span class="c1"># on command prompt</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="c1"># Install branch to be tested into new virtual environment:</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>pip<span class="w"> </span>install<span class="w"> </span>git+https://github.com/webdjoe/pyvesync.git@BRANCHNAME
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="c1"># Install a PR that has not been merged:</span>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>pip<span class="w"> </span>install<span class="w"> </span>git+https://github.com/webdjoe/pyvesync.git@refs/pull/PR_NUMBER/head
+</code></pre></div>
+<h2 id="running-the-library">Running the Library<a class="toc-permalink" href="#running-the-library" title="Permanent link">↲</a></h2>
+<p>The <code>pyvesync.VeSync</code> object is the main entrypoint of the library. It is an asynchronous context manager, so it must be used with <code>async with</code>. The <code>VeSync</code> object is the main object that is used to interact with the library. It is responsible for logging in, getting devices, and updating devices. It is referred to as <code>manager</code> in the examples.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pyvesync</span><span class="w"> </span><span class="kn">import</span> <span class="n">VeSync</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="c1"># Create a new VeSync object</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    <span class="k">async</span> <span class="k">with</span> <span class="n">VeSync</span><span class="p">(</span><span class="n">username</span><span class="o">=</span><span class="s2">&quot;EMAIL&quot;</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="s2">&quot;PASSWORD&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">manager</span><span class="p">:</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>        <span class="c1"># To enable debugging</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>        <span class="n">manager</span><span class="o">.</span><span class="n">debug</span> <span class="o">=</span> <span class="kc">True</span>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>        <span class="c1"># Login to the VeSync account</span>
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>        <span class="k">await</span> <span class="n">manager</span><span class="o">.</span><span class="n">login</span><span class="p">()</span>
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>        <span class="c1"># Check if logged in</span>
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>        <span class="k">assert</span> <span class="n">manager</span><span class="o">.</span><span class="n">enabled</span>
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>        <span class="c1"># Get devices</span>
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>        <span class="k">await</span> <span class="n">manager</span><span class="o">.</span><span class="n">get_devices</span><span class="p">()</span>
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>        <span class="c1"># Update all devices</span>
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>        <span class="k">await</span> <span class="n">manager</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>        <span class="c1"># OR Iterate through devices and update individually</span>
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>        <span class="k">for</span> <span class="n">device</span> <span class="ow">in</span> <span class="n">manager</span><span class="o">.</span><span class="n">outlets</span><span class="p">:</span>
+<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>            <span class="k">await</span> <span class="n">device</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+</code></pre></div>
+<p>Devices are held in the <code>manager.devices</code> attribute, which acts as a mutable set. There are properties for each product type that return a list of those device instances. For example, to get all the outlets, use <code>manager.devices.outlets</code> or <code>manager.devices.purifiers</code>.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    <span class="c1"># I&#39;ve excluded the login and get_devices methods for simplicity.</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="k">for</span> <span class="n">outlet</span> <span class="ow">in</span> <span class="n">manager</span><span class="o">.</span><span class="n">devices</span><span class="o">.</span><span class="n">outlets</span><span class="p">:</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>        <span class="nb">print</span><span class="p">(</span><span class="n">outlet</span><span class="p">)</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>        <span class="k">await</span> <span class="n">outlet</span><span class="o">.</span><span class="n">update</span><span class="p">()</span> <span class="c1"># Update the outlet state</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>        <span class="k">await</span> <span class="n">outlet</span><span class="o">.</span><span class="n">turn_on</span><span class="p">()</span> <span class="c1"># Turn on the outlet</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>        <span class="k">await</span> <span class="n">outlet</span><span class="o">.</span><span class="n">turn_off</span><span class="p">()</span> <span class="c1"># Turn off the outlet</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>        <span class="k">await</span> <span class="n">outlet</span><span class="o">.</span><span class="n">toggle</span><span class="p">()</span> <span class="c1"># Toggle the outlet state</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>        <span class="k">await</span> <span class="n">outlet</span><span class="o">.</span><span class="n">set_timer</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="n">DeviceStatus</span><span class="o">.</span><span class="n">OFF</span><span class="p">)</span> <span class="c1"># Set a timer to turn off the outlet in 10 seconds</span>
+</code></pre></div>
+<p>For more information on the device methods and properties, see the <a href="../devices/">device pages</a>.</p>
+<p>All devices have the ability to serialize the attributes and state with the <code>to_json()</code> and <code>to_jsonb()</code> methods. The <code>to_json()</code> method returns a JSON string, while the <code>to_jsonb()</code> method returns a JSON object. The <code>to_jsonb()</code> method is useful for storing the device state in a database or sending it to an API.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="c1"># I&#39;ve excluded the login and get_devices methods for simplicity.</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="k">for</span> <span class="n">outlet</span> <span class="ow">in</span> <span class="n">manager</span><span class="o">.</span><span class="n">devices</span><span class="o">.</span><span class="n">outlets</span><span class="p">:</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>        <span class="nb">print</span><span class="p">(</span><span class="n">outlet</span><span class="o">.</span><span class="n">to_json</span><span class="p">(</span><span class="n">state</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span> <span class="c1"># Print the JSON string of the outlet state</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>        <span class="nb">print</span><span class="p">(</span><span class="n">outlet</span><span class="o">.</span><span class="n">to_jsonb</span><span class="p">(</span><span class="n">state</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span> <span class="c1"># Print the JSON object of the outlet and state</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>        <span class="c1"># Setting `state=False` will only show the static device attributes</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>        <span class="c1"># State objects also have these methods</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>        <span class="nb">print</span><span class="p">(</span><span class="n">outlet</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">to_json</span><span class="p">(</span><span class="n">state</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span> <span class="c1"># Print the JSON string of the outlet state</span>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>        <span class="nb">print</span><span class="p">(</span><span class="n">outlet</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">to_jsonb</span><span class="p">(</span><span class="n">state</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span> <span class="c1"># Print the JSON object of the outlet state</span>
+</code></pre></div>
+<p>The <code>to_dict()</code> and <code>as_tuple()</code> methods are also available for each device and state object. The <code>to_dict()</code> method returns a dictionary of the device attributes, while the <code>as_tuple()</code> method returns a tuple of the device attributes.</p>
+<p>They have the same signature as the <code>to_json()</code> and <code>to_jsonb()</code> methods.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">device_dict</span> <span class="o">=</span> <span class="n">outlet</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="n">state</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># Returns a dictionary of the outlet attributes</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">device_tuple</span> <span class="o">=</span> <span class="n">outlet</span><span class="o">.</span><span class="n">as_tuple</span><span class="p">(</span><span class="n">state</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># Returns a tuple of the outlet attributes</span>
+</code></pre></div>
 
 
 
