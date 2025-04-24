@@ -376,14 +376,14 @@ outlet_modules = [
         model_display="ESW01-USA Series",
         setup_entry="wifi-switch-1.3",
     ),
-    # OutletMap(
-    #     dev_types=["ESW10-USA"],
-    #     class_name="VeSyncOutlet10A",
-    #     features=[OutletFeatures.ENERGY_MONITOR],
-    #     model_name="10A WiFi Outlet USA",
-    #     model_display="ESW10-USA Series",
-    #     setup_entry="ESW03-USA",
-    # ),
+    OutletMap(
+        dev_types=["ESW10-USA"],
+        class_name="VeSyncESW10USA",
+        features=[],
+        model_name="10A WiFi Outlet USA",
+        model_display="ESW10-USA Series",
+        setup_entry="ESW03-USA",
+    ),
     OutletMap(
         dev_types=["ESW01-EU"],
         class_name="VeSyncOutlet10A",

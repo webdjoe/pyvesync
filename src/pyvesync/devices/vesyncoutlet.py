@@ -69,6 +69,8 @@ class VeSyncOutlet7A(VeSyncOutlet):
     Attributes:
         state (OutletState): The state of the outlet.
         last_response (ResponseInfo): Last response from API call.
+        device_status (str): Device status.
+        connection_status (str): Connection status.
         manager (VeSync): Manager object for API calls.
         device_name (str): Name of device.
         device_image (str): URL for device image.
@@ -255,6 +257,8 @@ class VeSyncOutlet10A(VeSyncOutlet):
     Attributes:
         state (OutletState): The state of the outlet.
         last_response (ResponseInfo): Last response from API call.
+        device_status (str): Device status.
+        connection_status (str): Connection status.
         manager (VeSync): Manager object for API calls.
         device_name (str): Name of device.
         device_image (str): URL for device image.
@@ -372,6 +376,8 @@ class VeSyncOutlet15A(BypassV1Mixin, VeSyncOutlet):
     Attributes:
         state (OutletState): The state of the outlet.
         last_response (ResponseInfo): Last response from API call.
+        device_status (str): Device status.
+        connection_status (str): Connection status.
         manager (VeSync): Manager object for API calls.
         device_name (str): Name of device.
         device_image (str): URL for device image.
@@ -559,6 +565,8 @@ class VeSyncOutdoorPlug(BypassV1Mixin, VeSyncOutlet):
     Attributes:
         state (OutletState): The state of the outlet.
         last_response (ResponseInfo): Last response from API call.
+        device_status (str): Device status.
+        connection_status (str): Connection status.
         manager (VeSync): Manager object for API calls.
         device_name (str): Name of device.
         device_image (str): URL for device image.
@@ -725,6 +733,8 @@ class VeSyncOutletBSDGO1(BypassV2Mixin, VeSyncOutlet):
     Attributes:
         state (OutletState): The state of the outlet.
         last_response (ResponseInfo): Last response from API call.
+        device_status (str): Device status.
+        connection_status (str): Connection status.
         manager (VeSync): Manager object for API calls.
         device_name (str): Name of device.
         device_image (str): URL for device image.
@@ -783,3 +793,143 @@ class VeSyncOutletBSDGO1(BypassV2Mixin, VeSyncOutlet):
     async def _set_power(self, power: bool) -> bool:
         """Set power state of BSDGO1 outlet."""
         return await self.toggle_switch(power)
+
+
+class VeSyncESW10USA(BypassV2Mixin, VeSyncOutlet10A):
+    """VeSync ESW10 USA outlet.
+
+    Note that this device does not support energy monitoring.
+
+    Args:
+        details (ResponseDeviceDetailsModel): The device details.
+        manager (VeSync): The VeSync manager.
+        feature_map (OutletMap): The feature map for the device.
+
+    Attributes:
+        state (OutletState): The state of the outlet.
+        last_response (ResponseInfo): Last response from API call.
+        device_status (str): Device status.
+        connection_status (str): Connection status.
+        manager (VeSync): Manager object for API calls.
+        device_name (str): Name of device.
+        device_image (str): URL for device image.
+        cid (str): Device ID.
+        connection_type (str): Connection type of device.
+        device_type (str): Type of device.
+        type (str): Type of device.
+        uuid (str): UUID of device, not always present.
+        config_module (str): Configuration module of device.
+        mac_id (str): MAC ID of device.
+        current_firm_version (str): Current firmware version of device.
+        device_region (str): Region of device. (US, EU, etc.)
+        pid (str): Product ID of device, pulled by some devices on update.
+        sub_device_no (int): Sub-device number of device.
+        product_type (str): Product type of device.
+        features (dict): Features of device.
+    """
+
+    __slots__ = ()
+
+    def __init__(self, details: ResponseDeviceDetailsModel,
+                 manager: VeSync, feature_map: OutletMap) -> None:
+        """Initialize ESW10 USA outlet."""
+        super().__init__(details, manager, feature_map)
+
+    async def get_details(self) -> None:
+        payload_data = {
+            "id": 0,
+        }
+        payload_method = "getSwitch"
+        r_dict = await self.call_bypassv2_api(payload_method, payload_data)
+        result = process_bypassv2_result(self, logger, "get_details", r_dict)
+        if not isinstance(result, dict) or not isinstance(result.get("enabled"), bool):
+            logger.debug("Error getting %s details", self.device_name)
+            self.state.connection_status = ConnectionStatus.OFFLINE
+            return
+        self.state.device_status = DeviceStatus.from_bool(result["enabled"])
+        self.state.connection_status = ConnectionStatus.ONLINE
+
+    async def toggle_switch(self, toggle: bool | None = None) -> bool:
+        if toggle is None:
+            toggle = self.state.device_status != DeviceStatus.ON
+        payload_data = {
+            "id": 0,
+            "enabled": toggle,
+        }
+        payload_method = "setSwitch"
+        r_dict = await self.call_bypassv2_api(payload_method, payload_data)
+        result = Helpers.process_dev_response(logger, "toggle_switch", self, r_dict)
+        if not isinstance(result, dict):
+            logger.debug("Error toggling %s switch", self.device_name)
+            return False
+        self.state.device_status = DeviceStatus.from_bool(toggle)
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def get_timer(self) -> Timer | None:
+        r_dict = await self.call_bypassv2_api("getTimer")
+        result = process_bypassv2_result(self, logger, "get_timer", r_dict)
+        if result is None:
+            return None
+        result_model = TimerModels.ResultV2GetTimer.from_dict(result)
+        timers = result_model.timers
+        if not timers:
+            self.state.timer = None
+            return None
+        if len(timers) > 1:
+            logger.debug(
+                (
+                    "Multiple timers found - %s, this method "
+                    "will only return the most recent timer created."
+                ),
+                timers,
+            )
+        timer = timers[0]
+        self.state.timer = Timer(
+            timer_duration=int(timer.remain),
+            id=int(timer.id),
+            action=timer.action,
+        )
+        return self.state.timer
+
+    async def set_timer(self, duration: int, action: str | None = None) -> bool:
+        if action not in [DeviceStatus.ON, DeviceStatus.OFF]:
+            logger.error("Invalid action for timer - %s", action)
+            return False
+        payload_data = {
+            'action': action,
+            'total': duration
+        }
+        r_dict = await self.call_bypassv2_api(
+            payload_method='addTimer',
+            data=payload_data,
+        )
+        result = process_bypassv2_result(self, logger, "set_timer", r_dict)
+        if result is None:
+            return False
+        result_model = TimerModels.ResultV2SetTimer.from_dict(result)
+        if result_model.id is None:
+            logger.debug("Unable to set timer.")
+            return False
+        self.state.timer = Timer(duration, action, int(result_model.id))
+        return True
+
+    async def clear_timer(self) -> bool:
+        if self.state.timer is None:
+            logger.debug("No timer set, nothing to clear, run get_timer().")
+            return False
+        if self.state.timer.time_remaining == 0:
+            logger.debug("Timer already ended.")
+            self.state.timer = None
+            return True
+        r_dict = await self.call_bypassv2_api(
+            payload_method='delTimer',
+            data={"id": self.state.timer.id}
+        )
+        r_dict = Helpers.process_dev_response(
+            logger, "clear_timer", self, r_dict
+        )
+        if r_dict is None:
+            return False
+        self.state.timer = None
+        return True

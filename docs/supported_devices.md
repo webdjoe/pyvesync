@@ -9,7 +9,7 @@ The VeSync API supports a variety of devices. The following is a list of devices
       - Valceno Multicolor Smart Bulb
 2. Outlets
       - 7A Round Outlet
-      - 10A Round Outlet
+      - 10A Round Outlet - EU and USA
       - 15A Rectangle Outlet
       - 15A Outdoor Dual Outlet
       - Round Smart Outlet Series - WHOPLUG / GREENSUN
@@ -55,7 +55,8 @@ Switches have minimal features, the dimmer switch is the only switch that has ad
 | Device Name | Power Stats | Nightlight |
 | :------: | :----: | :----: |
 | 7A Round Outlet | ✔ | |
-| 10A Round Outlet | ✔ | |
+| 10A Round EU Outlet | ✔ | |
+| 10A Round US Outlet | | |
 | 15A Rectangle Outlet | ✔ | ✔ |
 | 15A Outdoor Dual Outlet | ✔ | |
 | Round Smart Series | | |
