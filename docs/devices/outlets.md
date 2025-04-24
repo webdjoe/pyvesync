@@ -6,9 +6,10 @@
 
 - [Outlet State Object][pyvesync.base_devices.outlet_base.OutletState]
 - [Etekcity 7A Outlet][pyvesync.devices.vesyncoutlet.VeSyncOutlet7A]
-- [Etekcity 10A Outlet][pyvesync.devices.vesyncoutlet.VeSyncOutlet10A]
+- [Etekcity 10A European Outlet][pyvesync.devices.vesyncoutlet.VeSyncOutlet10A]
 - [Etekcity 15A Outlet][pyvesync.devices.vesyncoutlet.VeSyncOutlet15A]
 - [Etekcity 15A Outdoor Dual Outlet][pyvesync.devices.vesyncoutlet.VeSyncOutdoorPlug]
+- [Etekcity 10A USA Outlet][pyvesync.devices.vesyncoutlet.VeSyncESW10USA]
 - [VeSync BSODG Smart Outlet][pyvesync.devices.vesyncoutlet.VeSyncOutletBSDGO1]
 - [VeSyncOutlet Base Class][pyvesync.base_devices.outlet_base.VeSyncOutlet]
 
@@ -92,6 +93,24 @@
             functions: false
         group_by_category: true
         toc_label: "VeSync Outdoor Outlet"
+        show_root_heading: true
+        show_root_toc_entry: true
+        show_category_heading: true
+        show_source: true
+        show_if_no_docstring: true
+        inherited_members: true
+        docstring_options:
+            ignore_init_summary: true
+        merge_init_into_class: false
+
+::: pyvesync.devices.vesyncoutlet.VeSyncESW10USA
+    options:
+        filters:
+            - "!^_.*"
+        summary:
+            functions: false
+        group_by_category: true
+        toc_label: "VeSyncOutlet BSDGO1"
         show_root_heading: true
         show_root_toc_entry: true
         show_category_heading: true
