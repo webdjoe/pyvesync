@@ -66,4 +66,4 @@ class VeSyncFryer(VeSyncBaseDevice):
             This is a bare class as there is only one supported air fryer model.
         """
         super().__init__(details, manager, feature_map)
-        self.state: FryerState = FryerState(self, details, feature_map)
+        # self.state: FryerState = FryerState(self, details, feature_map)

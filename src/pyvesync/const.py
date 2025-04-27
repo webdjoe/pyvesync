@@ -341,30 +341,13 @@ class AirQualityLevel(Enum):
     POOR = 4
     UNKNOWN = -1
 
-    _string_to_enum = MappingProxyType({
-        "excellent": EXCELLENT,
-        "very good": EXCELLENT,  # Alias
-        "good": GOOD,
-        "moderate": MODERATE,
-        "poor": POOR,
-        "bad": POOR,  # Alias
-        "unknown": UNKNOWN
-    })
-
-    _enum_to_string = MappingProxyType({
-        EXCELLENT: "excellent",
-        GOOD: "good",
-        MODERATE: "moderate",
-        POOR: "poor"
-    })
-
     def __int__(self) -> int:
         """Return integer representation of the enum."""
         return self.value
 
     def __str__(self) -> str:
         """Return string representation of the enum."""
-        return AirQualityLevel._enum_to_string.value[self.value]
+        return self.name.lower()
 
     @classmethod
     def from_string(cls, value: str | None) -> 'AirQualityLevel':
@@ -378,8 +361,17 @@ class AirQualityLevel(Enum):
             very good for excellent and bad for poor. Unknown is returned
             if value is None or not in the list.
         """
-        if isinstance(value, str) and value.lower() in cls._string_to_enum.value:
-            return AirQualityLevel(cls._string_to_enum.value[value.lower()])
+        _string_to_enum = MappingProxyType({
+            "excellent": cls.EXCELLENT,
+            "very good": cls.EXCELLENT,  # Alias
+            "good": cls.GOOD,
+            "moderate": cls.MODERATE,
+            "poor": cls.POOR,
+            "bad": cls.POOR,  # Alias
+            "unknown": cls.UNKNOWN
+        })
+        if isinstance(value, str) and value.lower() in _string_to_enum:
+            return AirQualityLevel(_string_to_enum[value.lower()])
         return cls.UNKNOWN
 
     @classmethod
@@ -454,6 +446,8 @@ class HumidifierFeatures(Features):
     WATER_LEVEL = "water_level"
     WARM_MIST = "warm_mist"
     AUTO_STOP = "auto_stop"
+    NIGHTLIGHT_BRIGHTNESS = "nightlight_brightness"
+    DRYING_MODE = "drying_mode"
 
 
 class PurifierFeatures(Features):
@@ -539,6 +533,13 @@ class SwitchFeatures(Features):
     INDICATOR_LIGHT = "indicator_light"
     BACKLIGHT = "backlight"
     BACKLIGHT_RGB = "backlight_rgb"
+
+
+class FanFeatures(Features):
+    """VeSync fan features."""
+    OSCILLATION = "oscillation"
+    SOUND = "sound"
+    DISPLAYING_TYPE = "displaying_type"  # Unknown functionality
 
 
 # Modes

@@ -21,7 +21,6 @@ classifiers = [
     "Topic :: Home Automation"
 ]
 dependencies = [
-    "requests>=2.20.0",
     "aiohttp>=3.8.1",
     "mashumaro[orjson]>=3.13.1",
     "python-dateutil>=2.8.1"

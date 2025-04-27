@@ -80,13 +80,13 @@ Switches have minimal features, the dimmer switch is the only switch that has ad
 ### Humidifiers
 
 | Device Name | Night Light | Warm Mist |
-| ------ | ----- | ----- |
-| Classic 200S | | |
-| Classic 300S | | ✔ |
-| Dual 200S | | |
-| LV600S | ✔ | ✔ |
-| OasisMist | ✔ | ✔ |
-| Superior 6000S | ✔ | ✔ |
+| ------ |-------------| ----- |
+| Classic 200S |             | |
+| Classic 300S | ✔           | ✔ |
+| Dual 200S |             | |
+| LV600S |             | ✔ |
+| OasisMist |             | ✔ |
+| Superior 6000S |            | ✔ |
 
 ### Fans
 

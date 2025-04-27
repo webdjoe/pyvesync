@@ -82,7 +82,7 @@ class RequestDimmerStatus(RequestBypassV1):
     status: str
     rgbValue: dict | None = None
 
-    class Config(BaseConfig):
+    class Config(BaseConfig):  # type: ignore[override]
         """Dimmer Indicator Control Config Dict."""
         omit_none = True
         omit_default = True

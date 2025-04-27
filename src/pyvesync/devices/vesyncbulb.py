@@ -69,7 +69,7 @@ feature_dict: dict = {
 
 bulb_modules: dict = {k: v['module'] for k, v in feature_dict.items()}
 
-__all__: list = [*bulb_modules.values(), "bulb_modules"]  # noqa: PLE0604
+# __all__: list = [*bulb_modules.values(), "bulb_modules"]
 
 
 class VeSyncBulbESL100MC(VeSyncBulb):
@@ -176,10 +176,10 @@ class VeSyncBulbESL100MC(VeSyncBulb):
             return
 
         status = bulb_models.ResponseESL100MCStatus.from_dict(r)
-        self._interpret_apicall_result(status)
+        self._set_state(status)
         return
 
-    def _interpret_apicall_result(
+    def _set_state(
             self, response: bulb_models.ResponseESL100MCStatus) -> None:
         """Build detail dictionary from response."""
         result = response.result.result
@@ -192,16 +192,6 @@ class VeSyncBulbESL100MC(VeSyncBulb):
         ))
 
     async def set_brightness(self, brightness: int) -> bool:
-        """Set brightness of bulb.
-
-        Calls the `set_status` method with the brightness value.
-
-        Args:
-            brightness (int): Brightness of bulb (0-100).
-
-        Returns:
-            bool: True if successful, False otherwise.
-        """
         return await self.set_status(brightness=brightness)
 
     async def set_rgb(self,
@@ -221,28 +211,23 @@ class VeSyncBulbESL100MC(VeSyncBulb):
         logger.debug("Invalid HSV values")
         return False
 
-    async def enable_white_mode(self) -> bool:
-        """Enable white mode on bulb.
-
-        Returns:
-            bool: True if successful, False otherwise.
-        """
+    async def set_white_mode(self) -> bool:
         return await self.set_status(brightness=100)
 
-    async def set_status(self, brightness: NUMERIC_OPT = None,
-                         red: NUMERIC_OPT = None,
-                         green: NUMERIC_OPT = None,
-                         blue: NUMERIC_OPT = None) -> bool:
+    async def set_status(self, brightness: float | None = None,
+                         red: float | None = None,
+                         green: float | None = None,
+                         blue: float | None = None) -> bool:
         """Set color of VeSync ESL100MC.
 
         Brightness or RGB values must be provided. If RGB values are provided,
         brightness is ignored.
 
         Args:
-            brightness (float): Brightness of bulb (0-100).
-            red (float): Red value of RGB color, 0-255.
-            green (float): Green value of RGB color, 0-255.
-            blue (float): Blue value of RGB color, 0-255.
+            brightness (float | None): Brightness of bulb (0-100).
+            red (float | None): Red value of RGB color, 0-255.
+            green (float | None): Green value of RGB color, 0-255.
+            blue (float | None): Blue value of RGB color, 0-255.
 
         Returns:
             bool: True if successful, False otherwise.
@@ -274,9 +259,6 @@ class VeSyncBulbESL100MC(VeSyncBulb):
                 return False
 
         head = Helpers.req_header_bypass()
-        # body = Helpers.bypass_body_v2(self.manager)
-        # body['cid'] = self.cid
-        # body['configModule'] = self.config_module
 
         payload = {
             'method': 'setLightStatus',
@@ -471,14 +453,6 @@ class VeSyncBulbESL100(BypassV1Mixin, VeSyncBulb):
         return await self.set_brightness(brightness=brightness)
 
     async def set_brightness(self, brightness: int) -> bool:
-        """Set brightness.
-
-        Args:
-            brightness (int): brightness between 1 and 100
-
-        Returns:
-            bool: True if successful, False if not
-        """
         if not self.supports_brightness:
             logger.warning('%s is not dimmable', self.device_name)
             return False
@@ -536,6 +510,9 @@ class VeSyncBulbESL100(BypassV1Mixin, VeSyncBulb):
         )
 
     async def set_timer(self, duration: int, action: str | None = None) -> bool:
+        if action is None:
+            action = DeviceStatus.ON if self.state.device_status == DeviceStatus.OFF \
+                else DeviceStatus.OFF
         if action not in [DeviceStatus.ON, DeviceStatus.OFF]:
             logger.debug("Invalid action value - must be 'on' or 'off'")
             return False
@@ -568,7 +545,9 @@ class VeSyncBulbESL100(BypassV1Mixin, VeSyncBulb):
             'deleteTimer',
             'timer/deleteTimer'
         )
-        result = process_bypassv1_result(self, logger, 'clear_timer', r_dict)
+        result = Helpers.process_dev_response(
+            logger, "clear_timer", self, r_dict
+            )
         if result is None:
             return False
         self.state.timer = None
@@ -722,7 +701,6 @@ class VeSyncBulbESL100CW(BypassV1Mixin, VeSyncBulb):
         return True
 
     async def set_color_temp(self, color_temp: int) -> bool:
-        """Set Color Temperature of Bulb in pct (1 - 100)."""
         return await self.set_status(color_temp=color_temp)
 
     async def get_timer(self) -> None:
@@ -753,6 +731,9 @@ class VeSyncBulbESL100CW(BypassV1Mixin, VeSyncBulb):
         )
 
     async def set_timer(self, duration: int, action: str | None = None) -> bool:
+        if action is None:
+            action = DeviceStatus.ON if self.state.device_status == DeviceStatus.OFF \
+                else DeviceStatus.OFF
         if action not in [DeviceStatus.ON, DeviceStatus.OFF]:
             logger.debug("Invalid action value - must be 'on' or 'off'")
             return False
@@ -986,6 +967,7 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
         "toggle() is deprecated, use toggle_switch(toggle: bool | None = None) instead"
         )
     async def toggle(self, status: str) -> bool:
+        """Deprecated, use toggle_switch() instead."""
         status_bool = status == DeviceStatus.ON
         return await self.toggle_switch(status_bool)
 
@@ -1079,8 +1061,7 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
         self._interpret_apicall_result(status)
         return True
 
-    async def enable_white_mode(self) -> bool:
-        """Enable white color mode."""
+    async def set_white_mode(self) -> bool:
         return await self.set_status(color_mode='white')
 
     async def set_status(

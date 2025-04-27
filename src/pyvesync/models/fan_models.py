@@ -9,23 +9,8 @@ from mashumaro.mixins.orjson import DataClassORJSONMixin
 
 from pyvesync.const import IntFlag
 from pyvesync.models.bypass_models import (
-    RequestBypassV2,
-    BypassV2RequestPayload,
-    ResponseBypassV2,
-    BypassV2OuterResult,
     BypassV2InnerResult,
 )
-
-
-@dataclass
-class ResponseFanBase(ResponseBypassV2):
-    """Fan Base Response Dict."""
-
-
-@dataclass
-class OuterBypassV2Result(BypassV2OuterResult):
-    """Fan Result Dict."""
-    result: BypassV2InnerResult | None = None
 
 
 @dataclass
@@ -59,17 +44,3 @@ class FanSleepPreferences(DataClassORJSONMixin):
     oscillationSwitch: int
     fallAsleepRemain: int
     autoChangeFanLevelSwitch: int
-
-
-# Fan Request Models
-
-
-@dataclass
-class RequestFanStatus(RequestBypassV2):
-    """Fan Status Request Dict."""
-    payload: RequestFanPayload
-
-
-@dataclass
-class RequestFanPayload(BypassV2RequestPayload):
-    """Fan Payload Request Dict."""

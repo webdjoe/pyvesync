@@ -276,6 +276,16 @@ class VeSyncHumidifier(VeSyncBaseToggleDevice):
         """
         return HumidifierFeatures.NIGHTLIGHT in self.features
 
+    @property
+    def supports_nightlight_brightness(self) -> bool:
+        """Return True if the humidifier supports nightlight brightness."""
+        return HumidifierFeatures.NIGHTLIGHT_BRIGHTNESS in self.features
+
+    @property
+    def supports_drying_mode(self) -> bool:
+        """Return True if the humidifier supports drying mode."""
+        return HumidifierFeatures.DRYING_MODE in self.features
+
     async def toggle_automatic_stop(self, toggle: bool | None = None) -> bool:
         """Toggle automatic stop.
 
@@ -406,4 +416,45 @@ class VeSyncHumidifier(VeSyncBaseToggleDevice):
         """
         del humidity
         logger.debug("Target humidity is not supported or configured for this device.")
+        return False
+
+    async def set_nightlight_brightness(self, brightness: int) -> bool:
+        """Set Humidifier night light brightness.
+
+        Args:
+            brightness (int): Target night light brightness.
+
+        Returns:
+            bool: Success of request.
+        """
+        del brightness
+        if not self.supports_nightlight_brightness:
+            logger.debug("Nightlight brightness is not supported for this device.")
+            return False
+        logger.debug("Nightlight brightness has not been configured.")
+        return False
+
+    async def set_warm_level(self, warm_level: int) -> bool:
+        """Set Humidifier Warm Level.
+
+        Args:
+            warm_level (int): Target warm level.
+
+        Returns:
+            bool: Success of request.
+        """
+        del warm_level
+        if self.supports_warm_mist:
+            logger.debug("Warm level has not been configured.")
+            return False
+        logger.debug("Warm level is not supported for this device.")
+        return False
+
+    async def toggle_drying_mode(self, toggle: bool | None = None) -> bool:
+        """enable/disable drying filters after turning off."""
+        del toggle
+        if self.supports_drying_mode:
+            logger.debug("Drying mode is not configured for this device.")
+            return False
+        logger.debug("Drying mode is not supported for this device.")
         return False

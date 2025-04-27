@@ -35,8 +35,11 @@ class LibraryLogger:
     such as API call logs.
 
     Attributes:
+        debug (bool): Class attribute to enable or disable debug logging,
+            prints API requests & responses that return an error.
         shouldredact (bool): Class attribute whether to redact
             sensitive information from logs.
+        verbose (bool): Class attribute to print all request & response content.
 
     Examples:
         Logging an API call:
@@ -75,7 +78,12 @@ class LibraryLogger:
     """
 
     debug = False
-    shouldredact = False
+    """Class attribute to enable or disable debug logging -
+        prints request and response content for errors only."""
+    shouldredact = True
+    """Class attribute to determine if sensitive information should be redacted."""
+    verbose = False
+    """Class attribute to print all request & response content."""
 
     @classmethod
     def redactor(cls, stringvalue: str) -> str:
@@ -110,6 +118,7 @@ class LibraryLogger:
                     r'(?<=email":\s")|'
                     r'(?<=tk":\s")|'
                     r'(?<=accountId":\s")|'
+                    r'(?<=accountID":\s")|'
                     r'(?<=authKey":\s")|'
                     r'(?<=uuid":\s")|'
                     r'(?<=cid":\s")|'
@@ -166,19 +175,23 @@ class LibraryLogger:
 
     @staticmethod
     def configure_logger(
-        level: str | int = logging.INFO
+        level: str | int = logging.INFO, file_name: str | None = None
     ) -> None:
         """Configure pyvesync library logger with a specific log level.
 
         Args:
-            level (str, int): The log level to set the logger to, can be
+            level (str | int): The log level to set the logger to, can be
                 in form of enum `logging.DEBUG` or string `DEBUG`.
+            file_name (str | None): The name of the file to log to. If None,
+                logs will only be printed to the console.
 
         Note:
             This method configures the pyvesync base logger and prevents
             propagation of log messages to the root logger to avoid duplicate
             messages.
         """
+        if level in (logging.DEBUG, "DEBUG"):
+            LibraryLogger.debug = True
         root_logger = logging.getLogger()
         if root_logger.handlers:
             for handler in root_logger.handlers:
@@ -190,6 +203,10 @@ class LibraryLogger:
         )
         handler.setFormatter(formatter)
         root_logger.addHandler(handler)
+        if file_name:
+            file_handler = logging.FileHandler(file_name)
+            file_handler.setFormatter(formatter)
+            root_logger.addHandler(file_handler)
         for log_name, logger in root_logger.manager.loggerDict.items():
             if isinstance(logger, logging.Logger) and log_name.startswith('pyvesync'):
                 logger.setLevel(level)
@@ -211,8 +228,6 @@ class LibraryLogger:
             method_name (str): device name
             msg (str | None, optional): optional description of error
         """
-        if cls.debug is False:
-            return
         logger.debug(
             "%s API returned an unexpected response format: %s",
             method_name,
@@ -240,8 +255,6 @@ class LibraryLogger:
             method (str): method that caused the error
             msg (str | None, optional): optional description of error
         """
-        if cls.debug is False:
-            return
         logger.debug(
             "%s for %s API returned an unexpected response format in %s: %s",
             device_name,
@@ -273,8 +286,6 @@ class LibraryLogger:
             code (int): api response code
             message (str): api response message
         """
-        if cls.debug is False:
-            return
         try:
             code_str = str(code)
         except (TypeError, ValueError):
@@ -306,7 +317,7 @@ class LibraryLogger:
             flag is enabled. The method logs the endpoint, method, request headers,
             request body (if any), response headers, and response body (if any).
         """
-        if cls.debug is False:
+        if cls.verbose is False:
             return
         # Build the log message parts.
         parts = ["========API CALL========"]
@@ -330,9 +341,8 @@ class LibraryLogger:
         if cls.is_json(response_body):
             response_str = cls.api_printer(response_body)
             parts.append(f"Response Body: {os.linesep} {response_str}")
-        else:
-            if isinstance(response_body, bytes):
-                response_str = response_body.decode("utf-8")
+        elif isinstance(response_body, bytes):
+            response_str = response_body.decode("utf-8")
             parts.append(f"Response Body: {os.linesep} {response_str}")
 
         full_message = os.linesep.join(parts)

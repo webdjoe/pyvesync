@@ -153,6 +153,12 @@ class VeSyncWallSwitch(BypassV1Mixin, VeSyncSwitch):
         )
 
     async def set_timer(self, duration: int, action: str | None = None) -> bool:
+        if action is None:
+            action = (
+                DeviceStatus.ON
+                if self.state.device_status == DeviceStatus.OFF
+                else DeviceStatus.OFF
+            )
         if action not in [DeviceStatus.ON, DeviceStatus.OFF]:
             logger.warning("Invalid action for timer - on/off")
             return False
@@ -274,7 +280,7 @@ class VeSyncDimmerSwitch(BypassV1Mixin, VeSyncSwitch):
         self.state.device_status = toggle_status
         return True
 
-    async def indicator_light_toggle(self, toggle: bool | None = None) -> bool:
+    async def toggle_indicator_light(self, toggle: bool | None = None) -> bool:
         """Toggle indicator light."""
         if toggle is None:
             toggle = self.state.indicator_status == 'off'
@@ -287,29 +293,20 @@ class VeSyncDimmerSwitch(BypassV1Mixin, VeSyncSwitch):
             'dimmerIndicatorLightCtl'
             )
 
-        r = Helpers.process_dev_response(logger, "indicator_light_toggle", self, r_bytes)
+        r = Helpers.process_dev_response(logger, "toggle_indicator_light", self, r_bytes)
         if r is None:
             return False
 
         self.state.indicator_status = toggle_status
         return True
 
-    async def turn_indicator_light_on(self) -> bool:
-        """Turn Indicator light on."""
-        return await self.indicator_light_toggle(True)
-
-    async def turn_indicator_light_off(self) -> bool:
-        """Turn indicator light off."""
-        return await self.indicator_light_toggle(False)
-
     async def set_backlight_status(
         self,
         status: bool,
         red: int | None = None,
-        blue: int | None = None,
         green: int | None = None,
+        blue: int | None = None,
     ) -> bool:
-        """Set faceplate RGB color."""
         if red is not None and blue is not None and green is not None:
             new_color = Color.from_rgb(red, green, blue)
         else:
@@ -337,22 +334,6 @@ class VeSyncDimmerSwitch(BypassV1Mixin, VeSyncSwitch):
         self.state.device_status = DeviceStatus.ON
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
-
-    async def turn_rgb_backlight_off(self) -> bool:
-        """Turn RGB Color Off."""
-        return await self.set_backlight_status(False)
-
-    async def turn_rgb_backlight_on(self) -> bool:
-        """Turn RGB Color Off."""
-        return await self.set_backlight_status(True)
-
-    async def set_backlight_color(self, red: int, green: int, blue: int) -> bool:
-        """Set RGB color of faceplate."""
-        new_color = Color.from_rgb(red, green, blue)
-        if new_color is None:
-            logger.warning("Invalid RGB values")
-            return False
-        return await self.set_backlight_status(True, red, blue, green)
 
     async def set_brightness(self, brightness: int) -> bool:
         """Set brightness of dimmer - 1 - 100."""
@@ -403,6 +384,12 @@ class VeSyncDimmerSwitch(BypassV1Mixin, VeSyncSwitch):
         )
 
     async def set_timer(self, duration: int, action: str | None = None) -> bool:
+        if action is None:
+            action = (
+                DeviceStatus.ON
+                if self.state.device_status == DeviceStatus.OFF
+                else DeviceStatus.OFF
+            )
         if action not in [DeviceStatus.ON, DeviceStatus.OFF]:
             logger.warning("Invalid action for timer - on/off")
             return False

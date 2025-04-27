@@ -80,7 +80,6 @@ class VeSyncTowerFan(BypassV2Mixin, VeSyncFanBase):
         self._set_fan_state(result)
 
     async def set_fan_speed(self, speed: int | None = None) -> bool:
-        """Set Levoit Tower Fan speed level."""
         if speed is None:
             new_speed = Helpers.bump_level(self.state.fan_level, self.fan_levels)
         else:
@@ -127,15 +126,6 @@ class VeSyncTowerFan(BypassV2Mixin, VeSyncFanBase):
         return True
 
     async def toggle_oscillation(self, toggle: bool) -> bool:
-        """Toggle oscillation on/off.
-
-        Parameters:
-            toggle : bool
-                True to turn oscillation on, False to turn off
-
-        Returns:
-            bool : True if successful, False if not
-        """
         payload_data = {
             "oscillationSwitch": int(toggle)
         }
@@ -149,15 +139,6 @@ class VeSyncTowerFan(BypassV2Mixin, VeSyncFanBase):
         return True
 
     async def toggle_mute(self, toggle: bool) -> bool:
-        """Toggle mute on/off.
-
-        Parameters:
-            toggle : bool
-                True to turn mute on, False to turn off
-
-        Returns:
-            bool : True if successful, False if not
-        """
         payload_data = {
             "muteSwitch": int(toggle)
         }
@@ -215,6 +196,12 @@ class VeSyncTowerFan(BypassV2Mixin, VeSyncFanBase):
         )
 
     async def set_timer(self, duration: int, action: str | None = None) -> bool:
+        if action is None:
+            action = (
+                DeviceStatus.OFF
+                if self.state.device_status == DeviceStatus.ON
+                else DeviceStatus.ON
+            )
         if action not in [DeviceStatus.ON, DeviceStatus.OFF]:
             logger.debug('Invalid action used - %s', action)
             return False

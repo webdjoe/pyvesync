@@ -15,49 +15,20 @@ from mashumaro.types import Discriminator
 from pyvesync.const import IntFlag, StrFlag
 from pyvesync.models.bypass_models import (
     RequestBypassV1,
-    RequestBypassV2,
     BypassV2InnerResult,
     BypassV1Result,
-    ResponseBypassV1,
-    ResponseBypassV2,
 )
 from pyvesync.models.base_models import (
     ResponseBaseModel,
     RequestBaseModel,
-    # ResponseCodeModel,
     )
 
-
-@dataclass
-class ResponsePurifierBase(ResponseBypassV2):
-    """Purifier Base Response Dict."""
-    # result: OuterBypassResult
-
-    # class Config(BaseConfig):
-    #     """Config for mashumaro serialization."""
-    #     orjson_options = orjson.OPT_NON_STR_KEYS
-    #     forbid_extra_keys = False
-
-
-# @dataclass
-# class OuterBypassResult:
-#     """Purifier Result Dict."""
-#     traceId: str
-#     code: int
-#     result: Union[PurifierV2DetailsResult,
-#                   InnerPurifierBaseResult,
-#                   PurifierCoreDetailsResult,
-#                   None] = None
-
-
-# Inner Purifier Result Models for Core and Everest/Vital Purifiers
-# Correct subclass is determined by mashumaro's discriminator
 
 @dataclass
 class InnerPurifierBaseResult(BypassV2InnerResult):
     """Base class for inner purifier results model."""
 
-    class Config(BaseConfig):
+    class Config(BaseConfig):  # type: ignore[override]
         """Configure the results model to use subclass discriminator."""
         discriminator = Discriminator(include_subtypes=True)
 
@@ -139,26 +110,6 @@ class ResponsePurifierTimerItems(ResponseBaseModel):
 
 
 @dataclass
-class RequestPurifierTimer(RequestBypassV2):
-    """Purifier Status Request Dict."""
-    # acceptLanguage: str
-    # accountID: str
-    # appVersion: str
-    # cid: str
-    # configModule: str
-    # debugMode: bool
-    # deviceRegion: str
-    # method: str
-    # phoneBrand: str
-    # phoneOS: str
-    # traceId: str
-    # timeZone: str
-    # token: str
-    # userCountryCode: str
-    # payload: RequestPurifierPayload
-
-
-@dataclass
 class PurifierV2TimerPayloadData(RequestBaseModel):
     """Purifier Timer Payload Data Request Dict."""
     enabled: bool
@@ -182,39 +133,9 @@ class PurifierV2EventTiming(RequestBaseModel):
     """Purifier Event Timing Request Dict."""
     clkSec: int
 
-# Purifier Request Models
-
-
-@dataclass
-class RequestPurifierStatus(RequestBypassV2):
-    """Purifier Status Request Dict."""
-    # acceptLanguage: str
-    # accountID: str
-    # appVersion: str
-    # cid: str
-    # configModule: str
-    # debugMode: bool
-    # method: str
-    # phoneBrand: str
-    # phoneOS: str
-    # traceId: str
-    # timeZone: str
-    # token: str
-    # userCountryCode: str
-    # deviceId: str
-    # configModel: str
-    # payload: RequestPurifierPayload
-
-
-# @dataclass
-# class RequestPurifierPayload(RequestBaseModel):
-#     """Purifier Payload Request Dict."""
-#     data: dict
-#     method: str
-#     source: str = "APP"
-
 
 # Internal Purifier Details Models
+
 
 @dataclass
 class PurifierCoreDetailsConfig(ResponseBaseModel):
@@ -240,34 +161,11 @@ class PurifierDetailsExtension(ResponseBaseModel):
 
 # LV - PUR131S Purifier Models
 
-@dataclass
-class ResponsePurifier131Base(ResponseBypassV1):
-    """Purifier 131 Base Response Dict."""
-
 
 @dataclass
 class RequestPurifier131(RequestBypassV1):
     """Purifier 131 Request Dict."""
     status: str | None = None
-    # acceptLanguage: str
-    # accountID: str
-    # appVersion: str
-    # debugMode: bool
-    # method: str
-    # phoneBrand: str
-    # phoneOS: str
-    # timeZone: str
-    # token: str
-    # traceId: str
-    # userCountryCode: str
-    # uuid: str
-    # status: str | None = None
-
-    # class Config(BaseConfig):
-    #     """Configure omit None value keys."""
-    #     omit_none = True
-    #     orjson_options = orjson.OPT_NON_STR_KEYS
-    #     forbid_extra_keys = True
 
 
 @dataclass

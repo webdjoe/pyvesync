@@ -75,7 +75,7 @@ class RequestBypassV1(RequestBaseModel):
     deviceId: str
     configModel: str
 
-    class Config(BaseConfig):
+    class Config(BaseConfig):   # type: ignore[override]
         """Configure omit None value keys."""
         omit_none = True
         orjson_options = orjson.OPT_NON_STR_KEYS

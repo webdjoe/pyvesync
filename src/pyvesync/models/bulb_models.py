@@ -6,7 +6,7 @@ type hints and data validation.
 """
 from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import TypedDict
+from typing import Self, TypedDict
 from mashumaro import field_options
 from mashumaro.config import BaseConfig
 from mashumaro.mixins.orjson import DataClassORJSONMixin
@@ -81,8 +81,8 @@ class ResponseESL100DetailResult(ResponseBaseModel):
     connectionStatus: str = "offline"
 
     @classmethod
-    def __post_deserialize__(
-            cls, obj: ResponseESL100DetailResult) -> ResponseESL100DetailResult:
+    def __post_deserialize__(  # type: ignore[override]
+            cls, obj: Self) -> Self:
         """Set values depending on color or white mode."""
         if obj.brightness is None:
             obj.brightness = 0

@@ -15,7 +15,6 @@ from pyvesync.const import (
     PurifierAutoPreference,
     DeviceStatus,
     ConnectionStatus,
-    AirQualityLevel,
     PurifierModes
     )
 from pyvesync.models.bypass_models import (
@@ -81,7 +80,7 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
         The `details` attribute holds device information that is updated when
         the `update()` method is called. An example of the `details` attribute:
     ```python
-    >>> json.dumps(self.details, indent=4)
+        json.dumps(self.details, indent=4)
         {
             'filter_life': 0,
             'mode': 'manual',
@@ -206,6 +205,22 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
+    async def set_auto_preference(self, preference: str, room_size: int = 800) -> bool:
+        if self.state.device_status != DeviceStatus.ON:
+            _LOGGER.debug("Can't set auto preference when device is off")
+        payload_data = {
+            "type": preference,
+            "room_size": room_size
+        }
+        r_dict = await self.call_bypassv2_api('setAutoPreference', payload_data)
+        r = Helpers.process_dev_response(_LOGGER, "set_auto_preference", self, r_dict)
+        if r is None:
+            return False
+        self.state.connection_status = ConnectionStatus.ONLINE
+        self.state.auto_preference_type = preference
+        self.state.auto_room_size = room_size
+        return True
+
     async def set_fan_speed(self, speed: None | int = None) -> bool:
         speeds: list = self.fan_levels
         current_speed = self.state.fan_level
@@ -235,44 +250,28 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
-    async def child_lock_on(self) -> bool:
-        """Turn Bypass child lock on."""
-        return await self.set_child_lock(True)
-
-    async def child_lock_off(self) -> bool:
-        """Turn Bypass child lock off.
-
-        Returns:
-            bool : True if child lock is turned off, False if not
-        """
-        return await self.set_child_lock(False)
-
-    async def set_child_lock(self, mode: bool) -> bool:
+    async def toggle_child_lock(self, toggle: bool | None = None) -> bool:
         """Toggle child lock.
 
-        Set child lock to on or off. Internal method used by `child_lock_on` and
-        `child_lock_off`.
+        Set child lock to on or off. Internal method used by `turn_on_child_lock` and
+        `turn_off_child_lock`.
 
         Args:
-            mode (bool): True to turn child lock on, False to turn off
+            toggle (bool): True to turn child lock on, False to turn off
 
         Returns:
             bool : True if child lock is set, False if not
         """
-        if mode not in (True, False):
-            _LOGGER.debug('Invalid mode passed to set_child_lock - %s', mode)
-            return False
-
-        data = {
-            "child_lock": mode
-        }
+        if toggle is None:
+            toggle = self.state.child_lock is False
+        data = {"child_lock": toggle}
 
         r_dict = await self.call_bypassv2_api('setChildLock', data)
-        r = Helpers.process_dev_response(_LOGGER, "set_child_lock", self, r_dict)
+        r = Helpers.process_dev_response(_LOGGER, "toggle_child_lock", self, r_dict)
         if r is None:
             return False
 
-        self.state.child_lock = mode
+        self.state.child_lock = toggle
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
@@ -353,7 +352,7 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
         if not self.supports_nightlight:
             _LOGGER.debug("Device does not support night light")
             return False
-        if mode.lower() not in [self.nightlight_modes]:
+        if mode.lower() not in self.nightlight_modes:
             _LOGGER.warning("Invalid nightlight mode used (on, off or dim)- %s", mode)
             return False
 
@@ -403,26 +402,6 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
             bool : True if display is on, False if off
         """
         return self.state.display_status == DeviceStatus.ON
-
-    @property
-    @deprecated("Use self.state.child_lock instead.")
-    def child_lock(self) -> bool:
-        """Get child lock state.
-
-        Returns:
-            bool : True if child lock is enabled, False if not.
-        """
-        return self.state.child_lock
-
-    @property
-    @deprecated("Use self.state.nightlight_status instead.")
-    def night_light(self) -> str:
-        """Get night light state.
-
-        Returns:
-            str : Night light state (on, dim, off)
-        """
-        return self.state.nightlight_status
 
 
 class VeSyncAirBaseV2(VeSyncAirBypass):
@@ -541,17 +520,11 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         """Set light detection feature."""
         return await self.toggle_light_detection(toggle)
 
-    async def toggle_light_detection(self, toggle: bool) -> bool:
+    async def toggle_light_detection(self, toggle: bool | None = None) -> bool:
         """Enable/Disable Light Detection Feature."""
-        if bool(self.state.light_detection_switch) == toggle:
-            _LOGGER.debug(
-                "Light Detection is already set to %s", self.state.light_detection_switch
-                )
-            return True
-
-        payload_data = {
-            "lightDetectionSwitch": int(toggle)
-        }
+        if toggle is None:
+            toggle = not bool(self.state.light_detection_status)
+        payload_data = {"lightDetectionSwitch": int(toggle)}
         r_dict = await self.call_bypassv2_api('setLightDetection', payload_data)
         r = Helpers.process_dev_response(_LOGGER, "set_light_detection", self, r_dict)
         if r is None:
@@ -561,24 +534,6 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
             else DeviceStatus.OFF
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
-
-    async def turn_on_light_detection(self) -> bool:
-        """Turn on light detection feature."""
-        return await self.toggle_light_detection(True)
-
-    async def turn_off_light_detection(self) -> bool:
-        """Turn off light detection feature."""
-        return await self.toggle_light_detection(False)
-
-    @deprecated("Use turn_on_light_detection() instead.")
-    async def set_light_detection_on(self) -> bool:
-        """Turn on light detection feature."""
-        return await self.toggle_light_detection(True)
-
-    @deprecated("Use turn_off_light_detection() instead.")
-    async def set_light_detection_off(self) -> bool:
-        """Turn off light detection feature."""
-        return await self.toggle_light_detection(False)
 
     async def toggle_switch(self, toggle: bool | None = None) -> bool:
         if toggle is None:
@@ -603,29 +558,25 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
-    async def set_child_lock(self, mode: bool) -> bool:
+    async def toggle_child_lock(self, toggle: bool | None = None) -> bool:
         """Levoit 100S/200S set Child Lock.
 
         Parameters:
-            mode (bool): True to turn child lock on, False to turn off
+            toggle (bool): True to turn child lock on, False to turn off
 
         Returns:
             bool : True if successful, False if not
         """
-        if self.state.child_lock == mode:
-            _LOGGER.debug('Child lock is already %s', mode)
-            return True
-
-        payload_data = {
-            'childLockSwitch': int(mode)
-        }
+        if toggle is None:
+            toggle = not bool(self.state.child_lock)
+        payload_data = {'childLockSwitch': int(toggle)}
         r_dict = await self.call_bypassv2_api('setChildLock', payload_data)
 
-        r = Helpers.process_dev_response(_LOGGER, "set_child_lock", self, r_dict)
+        r = Helpers.process_dev_response(_LOGGER, "toggle_child_lock", self, r_dict)
         if r is None:
             return False
 
-        self.state.child_lock = mode
+        self.state.child_lock = toggle
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
@@ -853,7 +804,7 @@ class VeSyncAir131(VeSyncPurifier):
         self.state.mode = details.mode
         self.state.fan_level = details.level or 0
         self.state.fan_set_level = details.levelNew
-        self.state.air_quality_level = AirQualityLevel(details.airQuality).value
+        self.state.set_air_quality_level(details.airQuality)
 
     async def get_details(self) -> None:
         body = self._build_request('deviceDetail')

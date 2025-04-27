@@ -49,6 +49,7 @@ class VeSync:  # pylint: disable=function-redefined
         '_device_container',
         '_redact',
         '_token',
+        '_verbose',
         'country_code',
         'enabled',
         'in_process',
@@ -75,31 +76,26 @@ class VeSync:  # pylint: disable=function-redefined
         to update all devices or `await manager.devices[0].update()` to
         update a single device.
 
-        Parameters:
-            username : str
-                VeSync account username (usually email address)
-            password : str
-                VeSync account password
-            session : ClientSession, optional
-                aiohttp client session for API calls, by default None
-            time_zone : str, optional
-                Time zone for device from IANA database, by default DEFAULT_TZ
+        Args:
+            username (str): VeSync account username (usually email address)
+            password (str): VeSync account password
+            session (ClientSession): aiohttp client session for
+                API calls, by default None
+            time_zone (str): Time zone for device from IANA database, by default
+                DEFAULT_TZ. This is automatically set to the time zone of the
+                VeSync account during login.
 
         Attributes:
-            session : ClientSession
-                Client session for API calls
-            devices : DeviceContainer
-                Container for all VeSync devices, has functionality of set
-            token : str
-                VeSync API token
-            account_id : str
-                VeSync account ID
-            country_code : str
-                Country code for VeSync account pulled from API
-            time_zone : str
-                Time zone for VeSync account pulled from API
-            enabled : bool
-                True if logged in to VeSync, False if not
+            session (ClientSession):  Client session for API calls
+            devices (DeviceContainer): Container for all VeSync devices,
+                has functionality of a mutable set. See
+                [`DeviceContainer`][pyvesync.device_container.DeviceContainer] for
+                more information
+            token (str): VeSync API token
+            account_id (str): VeSync account ID
+            country_code (str): Country code for VeSync account pulled from API
+            time_zone (str): Time zone for VeSync account pulled from API
+            enabled (bool): True if logged in to VeSync, False if not
 
         Note:
             This class is a context manager, use `async with VeSync() as manager:`
@@ -131,6 +127,7 @@ class VeSync:  # pylint: disable=function-redefined
         self._token: str | None = None
         self._account_id: str | None = None
         self.country_code: str = DEFAULT_REGION
+        self._verbose: bool = False
         self.time_zone: str = time_zone
         self.language: str = 'en'
 
@@ -179,6 +176,21 @@ class VeSync:  # pylint: disable=function-redefined
         self._debug = new_flag
 
     @property
+    def verbose_logging(self) -> bool:
+        """Enable verbose logging."""
+        return LibraryLogger.verbose
+
+    @verbose_logging.setter
+    def verbose_logging(self, new_flag: bool) -> None:
+        """Set verbose logging."""
+        if new_flag:
+            LibraryLogger.verbose = True
+            LibraryLogger.configure_logger(logging.DEBUG)
+        else:
+            LibraryLogger.verbose = False
+        self._verbose = new_flag
+
+    @property
     def redact(self) -> bool:
         """Return debug flag."""
         return self._redact
@@ -191,6 +203,12 @@ class VeSync:  # pylint: disable=function-redefined
         elif new_flag is False:
             LibraryLogger.shouldredact = False
         self._redact = new_flag
+
+    def log_to_file(self, filename: str) -> None:
+        """Log to file and enable debug logging."""
+        self.debug = True
+        LibraryLogger.configure_logger(logging.DEBUG, file_name=filename)
+        logger.debug('Logging to file: %s', filename)
 
     def process_devices(self, dev_list_resp: ResponseDeviceListModel) -> bool:
         """Instantiate Device Objects.
@@ -361,7 +379,8 @@ class VeSync:  # pylint: disable=function-redefined
             headers (dict): Headers to send with request.
 
         Returns:
-            tuple: Response and status code.
+            tuple[dict | None, int]: Response and status code. Attempts to parse
+                response as JSON, if not possible returns None.
 
         Raises:
             VeSyncAPIStatusCodeError: If API returns an error status code.

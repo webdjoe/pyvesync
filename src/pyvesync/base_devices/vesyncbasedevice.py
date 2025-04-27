@@ -5,7 +5,7 @@ import logging
 import inspect
 from datetime import datetime as dt
 from zoneinfo import ZoneInfo
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Generic, TypeVar
 from typing_extensions import deprecated
 # import warnings
 import orjson
@@ -22,7 +22,11 @@ if TYPE_CHECKING:
     from pyvesync.utils.errors import ResponseInfo
 
 
-class VeSyncBaseDevice(ABC):
+VS_TYPE = TypeVar("VS_TYPE", bound="VeSyncBaseDevice")
+VS_STATE_T = TypeVar("VS_STATE_T", bound="DeviceState")
+
+
+class VeSyncBaseDevice(ABC, Generic[VS_STATE_T]):
     """Properties shared across all VeSync devices.
 
     Abstract Base Class for all VeSync devices. The device class is used solely
@@ -103,6 +107,8 @@ class VeSyncBaseDevice(ABC):
         "uuid",
     )
 
+    state: VS_STATE_T
+
     def __init__(self,
                  details: ResponseDeviceDetailsModel,
                  manager: VeSync,
@@ -111,7 +117,6 @@ class VeSyncBaseDevice(ABC):
         """Initialize VeSync device base class."""
         self._exclude_serialization: list[str] = []
         self.enabled: bool = True
-        self.state: DeviceState = DeviceState(self, details, feature_map)
         self.last_response: ResponseInfo | None = None
         self.manager = manager
         self.device_name: str = details.deviceName
@@ -342,15 +347,16 @@ class VeSyncBaseDevice(ABC):
             bytes: JSON formatted bytes of device details.
 
         Example:
-        ```
-        {
-            "Device Name": "Living Room Lamp",
-            "Model": "ESL100",
-            "Subdevice No": "0",
-            "Type": "wifi",
-            "CID": "1234567890abcdef"
-        }
-        ```
+            This is an example without state.
+            ```
+            {
+                "Device Name": "Living Room Lamp",
+                "Model": "ESL100",
+                "Subdevice No": "0",
+                "Type": "wifi",
+                "CID": "1234567890abcdef"
+            }
+            ```
         """
         return_dict = self.to_dict(state=state)
         if indent:
@@ -362,7 +368,7 @@ class VeSyncBaseDevice(ABC):
         return orjson.dumps(return_dict, option=orjson.OPT_NON_STR_KEYS)
 
 
-class VeSyncBaseToggleDevice(VeSyncBaseDevice):
+class VeSyncBaseToggleDevice(VeSyncBaseDevice, Generic[VS_STATE_T]):
     """Base class for VeSync devices that can be toggled on and off.
 
     Parameters:

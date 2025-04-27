@@ -57,9 +57,9 @@ class SwitchState(DeviceState):
         """Initialize VeSync Switch State."""
         super().__init__(device, details, feature_map)
         self.device: VeSyncSwitch = device
-        self._backlight_color: Color | str = StrFlag.NOT_SUPPORTED
+        self._backlight_color: Color | str | None = StrFlag.NOT_SUPPORTED
         self.brightness: int = IntFlag.NOT_SUPPORTED
-        self.active_time: int = 0
+        self.active_time: int | None = 0
         self.backlight_status: str = StrFlag.NOT_SUPPORTED
         self.indicator_status: str = StrFlag.NOT_SUPPORTED
 
@@ -90,7 +90,7 @@ class SwitchState(DeviceState):
         return None
 
     @backlight_color.setter
-    def backlight_color(self, color: Color) -> None:
+    def backlight_color(self, color: Color | None) -> None:
         """Set backlight color."""
         if not self.device.supports_backlight_color:
             logger.warning("Backlight color not supported.")
@@ -159,3 +159,112 @@ class VeSyncSwitch(VeSyncBaseToggleDevice):
     def supports_dimmable(self) -> bool:
         """Return True if switch is dimmable."""
         return bool(SwitchFeatures.DIMMABLE in self.features)
+
+    async def toggle_indicator_light(self, toggle: bool | None = None) -> bool:
+        """Toggle indicator light on or off.
+
+        Args:
+            toggle (bool): True to turn on, False to turn off. If None, toggles the state
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        del toggle
+        if self.supports_indicator_light:
+            logger.debug("toggle_indicator_light not configured for %s", self.device_name)
+        else:
+            logger.debug("toggle_indicator_light not supported for %s", self.device_name)
+        return False
+
+    async def turn_on_indicator_light(self) -> bool:
+        """Turn on indicator light if supported."""
+        return await self.toggle_indicator_light(True)
+
+    async def turn_off_indicator_light(self) -> bool:
+        """Turn off indicator light if supported."""
+        return await self.toggle_indicator_light(False)
+
+    async def set_backlight_status(
+            self,
+            status: bool,
+            red: int | None = None,
+            green: int | None = None,
+            blue: int | None = None
+    ) -> bool:
+        """Sets the backlight status and optionally its color if supported by the device.
+
+        Args:
+            status (bool): Backlight status (True for ON, False for OFF).
+            red (int | None): RGB green value (0-255), defaults to None.
+            green (int | None): RGB green value (0-255), defaults to None.
+            blue (int | None): RGB blue value (0-255), defaults to None.
+
+        Returns:
+            bool: True if successful, False otherwise.
+
+        """
+        del status, red, green, blue
+        if self.supports_backlight:
+            logger.debug("set_backlight_status not configured for %s", self.device_name)
+        else:
+            logger.debug("set_backlight_status not supported for %s", self.device_name)
+        return False
+
+    async def turn_on_rgb_backlight(self) -> bool:
+        """Turn on backlight if supported."""
+        return await self.set_backlight_status(True)
+
+    async def turn_off_rgb_backlight(self) -> bool:
+        """Turn off backlight if supported."""
+        return await self.set_backlight_status(False)
+
+    @deprecated("Use `turn_on_rgb_backlight()` instead.")
+    async def turn_rgb_backlight_on(self) -> bool:
+        """Turn on RGB backlight if supported."""
+        return await self.set_backlight_status(True)
+
+    @deprecated("Use `turn_off_rgb_backlight()` instead.")
+    async def turn_rgb_backlight_off(self) -> bool:
+        """Turn off RGB backlight if supported."""
+        return await self.set_backlight_status(False)
+
+    async def set_backlight_color(self, red: int, green: int, blue: int) -> bool:
+        """Set the color of the backlight using RGB.
+
+        Args:
+            red (int): Red value (0-255).
+            green (int): Green value (0-255).
+            blue (int): Blue value (0-255).
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        return await self.set_backlight_status(
+            True, red=red, green=green, blue=blue
+        )
+
+    async def set_brightness(self, brightness: int) -> bool:
+        """Set the brightness of the switch if supported.
+
+        Args:
+            brightness (int): Brightness value (0-100).
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        del brightness
+        if self.supports_dimmable:
+            logger.debug("set_brightness not configured for %s", self.device_name)
+        else:
+            logger.debug("set_brightness not supported for %s", self.device_name)
+        return False
+
+    @deprecated("Use `turn_on_indicator_light` instead.")
+    async def turn_indicator_light_on(self) -> bool:
+        """Deprecated, use turn_on_indicator_light."""
+        return await self.toggle_indicator_light(True)
+
+    @deprecated("Use `turn_off_indicator_light` instead.")
+    async def turn_indicator_light_off(self) -> bool:
+        """Deprecated, use turn_off_indicator_light."""
+        return await self.toggle_indicator_light(False)

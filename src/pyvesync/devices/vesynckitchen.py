@@ -78,7 +78,7 @@ kitchen_classes: set[str] = {v['module'] for k, v in kitchen_features.items()}
 kitchen_modules: dict = model_dict()
 
 
-__all__ = list(kitchen_classes)
+# __all__ = list(kitchen_classes)
 
 
 # Status refresh interval in seconds
@@ -132,7 +132,7 @@ class AirFryer158138State(FryerState):
                  feature_map: AirFryerMap) -> None:
         """Init the Air Fryer 158 class."""
         super().__init__(device, details, feature_map)
-        self.device: VeSyncAirFryer158 = device
+        self.device: VeSyncFryer = device
         self.features: list[str] = feature_map.features
         self.ready_start: bool = False
         self.preheat: bool = False

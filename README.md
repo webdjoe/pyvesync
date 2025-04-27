@@ -2,7 +2,9 @@
 
 pyvesync is a library to manage VeSync compatible [smart home devices](#supported-devices)
 
-**Check out the new [pyvesync documentation](https://webdjoe.github.io/pyvesync/) for more information.**
+<a href="https://webdjoe.github.io/pyvesync/latest"><img src="./docs/assets/docs.svg"></a>
+
+**Check out the new [pyvesync documentation](https://webdjoe.github.io/pyvesync/) for usage and full API details.**
 
 ## Supported Product Types
 
@@ -48,6 +50,19 @@ from pyvesync.vesync import VeSync
 
 async def main():
     async with VeSync("user", "password") as manager:
+
+        # To enable debug mode - prints request and response content for
+        # api calls that return an error code
+        manager.debug = True
+        # Redact mode is enabled by default, set to False to disable
+        manager.redact = False
+
+        # To print request & response content for all API calls enable verbose mode
+        manager.verbose = True
+
+        # To print logs to file
+        manager.log_to_file("pyvesync.log")
+
         await manager.login()  # Still returns true
         if not manager.enabled:
             print("Not logged in.")

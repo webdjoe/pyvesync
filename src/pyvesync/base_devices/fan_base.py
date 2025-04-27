@@ -8,6 +8,7 @@ from typing_extensions import deprecated
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseToggleDevice, DeviceState
 from pyvesync.const import (
     FanModes,
+    FanFeatures,
     DeviceStatus,
     FanSleepPreference,
     StrFlag,
@@ -146,6 +147,21 @@ class VeSyncFanBase(VeSyncBaseToggleDevice):
         self.modes: list[str] = feature_map.modes
         self.fan_levels: list[int] = feature_map.fan_levels
         self.sleep_preferences: list[str] = feature_map.sleep_preferences
+
+    @property
+    def supports_oscillation(self) -> bool:
+        """Return True if device supports oscillation."""
+        return FanFeatures.OSCILLATION in self.features
+
+    @property
+    def supports_mute(self) -> bool:
+        """Return True if device supports mute."""
+        return FanFeatures.SOUND in self.features
+
+    @property
+    def supports_displaying_type(self) -> bool:
+        """Return True if device supports displaying type."""
+        return FanFeatures.DISPLAYING_TYPE in self.features
 
     async def toggle_display(self, toggle: bool) -> bool:
         """Toggle Display on/off.
@@ -287,6 +303,73 @@ class VeSyncFanBase(VeSyncBaseToggleDevice):
         if FanModes.TURBO in self.modes:
             return await self.set_mode(FanModes.TURBO)
         logger.warning("Turbo mode not supported for this device.")
+        return False
+
+    async def toggle_oscillation(self, toggle: bool) -> bool:
+        """Toggle Oscillation on/off.
+
+        Args:
+            toggle (bool): Oscillation state.
+
+        Returns:
+            bool: true if success.
+        """
+        del toggle
+        if self.supports_oscillation:
+            logger.debug("Oscillation not configured for this device.")
+        else:
+            logger.debug("Oscillation not supported for this device.")
+        return False
+
+    async def turn_on_oscillation(self) -> bool:
+        """Set toggle_oscillation to on."""
+        return await self.toggle_oscillation(True)
+
+    async def turn_off_oscillation(self) -> bool:
+        """Set toggle_oscillation to off."""
+        return await self.toggle_oscillation(False)
+
+    async def toggle_mute(self, toggle: bool) -> bool:
+        """Toggle mute on/off.
+
+        Parameters:
+            toggle : bool
+                True to turn mute on, False to turn off
+
+        Returns:
+            bool : True if successful, False if not
+        """
+        del toggle
+        if self.supports_mute:
+            logger.debug("Mute not configured for this device.")
+        else:
+            logger.debug("Mute not supported for this device.")
+        return False
+
+    async def turn_on_mute(self) -> bool:
+        """Set toggle_mute to on."""
+        return await self.toggle_mute(True)
+
+    async def turn_off_mute(self) -> bool:
+        """Set toggle_mute to off."""
+        return await self.toggle_mute(False)
+
+    async def toggle_displaying_type(self, toggle: bool) -> bool:
+        """Toggle displaying type on/off.
+
+        This functionality is unknown but was in the API calls.
+
+        Args:
+            toggle (bool): Displaying type state.
+
+        Returns:
+            bool: true if success.
+        """
+        del toggle
+        if self.supports_displaying_type:
+            logger.debug("Displaying type not configured for this device.")
+        else:
+            logger.debug("Displaying type not supported for this device.")
         return False
 
     @deprecated("Use `set_normal_mode` method instead")
