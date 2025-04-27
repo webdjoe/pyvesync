@@ -194,12 +194,14 @@ class Helpers:
             else r_dict.get("code")
         )
 
+        new_msg = None
         # Get error codes from nested dictionaries.
         if error_code == 0:
             internal_codes = cls._get_internal_codes(r_dict)
-            for code in internal_codes:
-                if code != 0:
-                    error_code = code
+            for code_tuple in internal_codes:
+                if code_tuple[0] != 0:
+                    error_code = code_tuple[0]
+                    new_msg = code_tuple[1] if code_tuple[1] else None
                     break
 
         try:
@@ -212,6 +214,11 @@ class Helpers:
         except TypeError:
             error_int = -999999999
         error_info = ErrorCodes.get_error_info(error_int)
+        if new_msg is not None:
+            if error_info.error_type == ErrorTypes.UNKNOWN_ERROR:
+                error_info.message = new_msg
+            else:
+                error_info.message = f"{error_info.message} - {new_msg}"
         if error_info.device_online is False:
             device.state.connection_status = ConnectionStatus.OFFLINE
         LibraryLogger.log_device_return_code(
@@ -491,7 +498,7 @@ class Helpers:
         return hashlib.md5(string.encode('utf-8')).hexdigest()  # noqa: S324
 
     @staticmethod
-    def _get_internal_codes(response: dict) -> list[int]:
+    def _get_internal_codes(response: dict) -> list[tuple[int, str | None]]:
         """Get all error codes from nested dictionary.
 
         Args:
@@ -502,12 +509,15 @@ class Helpers:
         """
         error_keys = ['error', 'code', 'device_error_code', 'errorCode']
 
-        def extract_all_error_codes(key: str, var: dict) -> Iterator[int]:
+        def extract_all_error_codes(
+            key: str, var: dict
+        ) -> Iterator[tuple[int, str | None]]:
             """Find all error code keys in nested dictionary."""
             if hasattr(var, 'items'):
                 for k, v in var.items():
                     if k == key and int(v) != 0:
-                        yield v
+                        msg = var.get('msg') or var.get('result', {}).get('msg')
+                        yield v, msg
                     if isinstance(v, dict):
                         yield from extract_all_error_codes(key, v)
                     elif isinstance(v, list):

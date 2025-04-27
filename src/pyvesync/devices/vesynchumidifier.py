@@ -155,7 +155,10 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
         }
         r_dict = await self.call_bypassv2_api("delTimer", payload)
         r = Helpers.process_dev_response(logger, "clear_timer", self, r_dict)
-        return r is not None
+        if r is None:
+            return False
+        self.state.timer = None
+        return True
 
     async def set_timer(self, duration: int, action: str | None = None) -> bool:
         if action is None:

@@ -97,7 +97,7 @@ class ThermostatReminder(DataClassORJSONMixin):
     )
 
     @classmethod
-    def __post_deserialize__(cls, obj: ThermostatReminder) -> ThermostatReminder:
+    def __post_deserialize__(cls, obj: ThermostatReminder) -> ThermostatReminder:  # type: ignore[override]
         """Post-deserialization processing."""
         if isinstance(obj.code, int):
             obj.code_name = ThermostatConst.ReminderCode(obj.code).name
@@ -115,7 +115,7 @@ class ThermostatAlarm(DataClassORJSONMixin):
     )
 
     @classmethod
-    def __post_deserialize__(cls, obj: ThermostatAlarm) -> ThermostatAlarm:
+    def __post_deserialize__(cls, obj: ThermostatAlarm) -> ThermostatAlarm:  # type: ignore[override]
         """Post-deserialization processing."""
         if obj.code is not None:
             obj.code_name = ThermostatConst.AlarmCode(obj.code).name

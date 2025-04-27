@@ -533,7 +533,10 @@ humidifier_modules = [
             "LUH-A601S-WUSB",
             "LUH-A601S-AUSW",
         ],
-        features=[HumidifierFeatures.NIGHTLIGHT, HumidifierFeatures.NIGHTLIGHT_BRIGHTNESS],
+        features=[
+            HumidifierFeatures.NIGHTLIGHT,
+            HumidifierFeatures.NIGHTLIGHT_BRIGHTNESS,
+        ],
         mist_modes={
             HumidifierModes.AUTO: "auto",
             HumidifierModes.SLEEP: "sleep",
@@ -856,9 +859,13 @@ fan_modules: list[FanMap] = [
             FanModes.TURBO,
             FanModes.AUTO,
             FanModes.ADVANCED_SLEEP,
-            ],
+        ],
         set_mode_method="setTowerFanMode",
-        features=[FanFeatures.OSCILLATION, FanFeatures.DISPLAYING_TYPE, FanFeatures.SOUND],
+        features=[
+            FanFeatures.OSCILLATION,
+            FanFeatures.DISPLAYING_TYPE,
+            FanFeatures.SOUND,
+        ],
         fan_levels=list(range(1, 13)),
         device_alias="Tower Fan",
         sleep_preferences=[

@@ -545,7 +545,9 @@ class VeSyncBulbESL100(BypassV1Mixin, VeSyncBulb):
             'deleteTimer',
             'timer/deleteTimer'
         )
-        result = process_bypassv1_result(self, logger, 'clear_timer', r_dict)
+        result = Helpers.process_dev_response(
+            logger, "clear_timer", self, r_dict
+            )
         if result is None:
             return False
         self.state.timer = None

@@ -313,6 +313,12 @@ class ErrorCodes:
                 critical_error=True,
                 device_online=True,
             ),
+            "11018000": ResponseInfo(
+                "BYPASS_SET_MIST_LEVEL",
+                ErrorTypes.DEVICE_ERROR,
+                "Cannot set mist level error",
+                device_online=True,
+            ),
             "11019000": ResponseInfo(
                 "BYPASS_E6_VOLTAGE_LOW",
                 ErrorTypes.DEVICE_ERROR,

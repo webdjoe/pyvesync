@@ -17,10 +17,6 @@ from pyvesync.models.base_models import (
     ResponseBaseModel,
     ResponseCodeModel,
     )
-from pyvesync.models.bypass_models import (
-    RequestBypassV2,
-    BypassV2RequestPayload,
-)
 from pyvesync.const import IntFlag
 
 
@@ -45,7 +41,7 @@ class InnerHumidifierBaseResult(ResponseBaseModel):
     correctly subclassed by the mashumaro discriminator.
     """
 
-    class Config(BaseConfig):
+    class Config(BaseConfig):  # type: ignore[override]
         """Configure the results model to use subclass discriminator."""
         # discriminator = Discriminator(include_subtypes=True)
         allow_deserialization_not_by_alias = True
@@ -90,7 +86,7 @@ class ClassicConfig(ResponseBaseModel):
     display: Annotated[bool, Alias("indicator_light_status")] = False
     automatic_stop: bool = False
 
-    class Config(BaseConfig):
+    class Config(BaseConfig):  # type: ignore[override]
         """Configure the results model to use subclass discriminator."""
         allow_deserialization_not_by_alias = True
         forbid_extra_keys = False
@@ -129,21 +125,8 @@ class LV600SHumidResult(InnerHumidifierBaseResult):
     extension: LV600SExtension | None = None
     configuration: LV600SConfig | None = None
 
-
-# Bypass V2 Humidifier Request Models
-
-@dataclass
-class RequestHumidifierStatus(RequestBypassV2):
-    """Humidifier Status Request Dict."""
-    payload: HumidifierRequestPayload
-
-
-@dataclass
-class HumidifierRequestPayload(BypassV2RequestPayload):
-    """Humidifier Payload Request Dict."""
-
-
 # Models for the VeSync Superior 6000S Humidifier
+
 
 @dataclass
 class Superior6000SResult(InnerHumidifierBaseResult):
