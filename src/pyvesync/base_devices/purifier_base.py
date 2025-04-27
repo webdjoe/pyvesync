@@ -123,7 +123,9 @@ class PurifierState(DeviceState):
 
         Returns -1 if unknown.
         """
-        return self._air_quality_level.value
+        if self._air_quality_level is None:
+            return -1
+        return int(self._air_quality_level)
 
     @air_quality_level.setter
     def air_quality_level(self, value: int | None) -> None:
@@ -256,6 +258,11 @@ class VeSyncPurifier(VeSyncBaseToggleDevice):
         """Return True if device supports nightlight."""
         return PurifierFeatures.NIGHTLIGHT in self.features
 
+    @property
+    def supports_light_detection(self) -> bool:
+        """Returns True if device supports light detection."""
+        return PurifierFeatures.LIGHT_DETECT in self.features
+
     async def toggle_display(self, mode: bool) -> bool:
         """Set Display Mode."""
         del mode
@@ -294,6 +301,24 @@ class VeSyncPurifier(VeSyncBaseToggleDevice):
     async def turn_off_nightlight(self) -> bool:
         """Turn off Nightlight."""
         return await self.set_nightlight_mode(NightlightModes.OFF)
+
+    async def toggle_child_lock(self, toggle: bool | None = None) -> bool:
+        """Toggle Child Lock (Display Lock).
+
+        Args:
+            toggle (bool | None): Toggle child lock. If None, toggle state.
+        """
+        del toggle
+        logger.debug("Child lock not configured for this device.")
+        return False
+
+    async def turn_on_child_lock(self) -> bool:
+        """Set child lock (display lock) to ON."""
+        return await self.toggle_child_lock(True)
+
+    async def turn_off_child_lock(self) -> bool:
+        """Set child lock (display lock) to OFF."""
+        return await self.toggle_child_lock(False)
 
     @abstractmethod
     async def set_mode(self, mode: str) -> bool:
@@ -354,6 +379,50 @@ class VeSyncPurifier(VeSyncBaseToggleDevice):
         logger.error("Pet mode not supported for this device.")
         return False
 
+    async def set_auto_preference(self, preference: str, room_size: int = 800) -> bool:
+        """Set auto preference.
+
+        Args:
+            preference (str): Auto preference to set, available preference is
+                found in `self.auto_preferences`.
+            room_size (int): Room size to set, defaults to 800ft2.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        del preference, room_size
+        logger.debug("Auto preference not configured for this device.")
+        return False
+
+    async def toggle_light_detection(self, toggle: bool | None = None) -> bool:
+        """Set Light Detection Mode.
+
+        Args:
+            toggle (bool | None): Toggle light detection. If None, toggle state.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        del toggle
+        if not self.supports_light_detection:
+            logger.debug("Light detection not supported for this device.")
+        else:
+            logger.debug("Light detection not configured for this device.")
+        return False
+
+    async def turn_on_light_detection(self) -> bool:
+        """Turn on Light Detection."""
+        return await self.toggle_light_detection(True)
+
+    async def turn_off_light_detection(self) -> bool:
+        """Turn off Light Detection."""
+        return await self.toggle_light_detection(False)
+
+    async def reset_filter(self) -> bool:
+        """Reset filter life."""
+        logger.debug("Filter life reset not configured for this device.")
+        return False
+
     @deprecated("Use set_auto_mode instead.")
     async def auto_mode(self) -> bool:
         """Set Purifier to Auto Mode."""
@@ -393,3 +462,57 @@ class VeSyncPurifier(VeSyncBaseToggleDevice):
     async def change_mode(self, mode: str) -> bool:
         """Deprecated method for changing purifier mode."""
         return await self.set_mode(mode)
+
+    @deprecated("Use `toggle_child_lock()` instead.")
+    async def set_child_lock(self, toggle: bool) -> bool:
+        """Set child lock (display lock).
+
+        This has been deprecated in favor of `toggle_child_lock()`.
+        """
+        return await self.toggle_child_lock(toggle)
+
+    @deprecated("Use `turn_on_child_lock()` instead.")
+    async def child_lock_on(self) -> bool:
+        """Turn on child lock (display lock).
+
+        This has been deprecated, use `turn_on_child_lock()` instead.
+        """
+        return await self.toggle_child_lock(True)
+
+    @deprecated("Use `turn_off_child_lock()` instead.")
+    async def child_lock_off(self) -> bool:
+        """Turn off child lock (display lock).
+
+        This has been deprecated, use `turn_off_child_lock()` instead.
+        """
+        return await self.toggle_child_lock(False)
+
+    @property
+    @deprecated("Use self.state.child_lock instead.")
+    def child_lock(self) -> bool:
+        """Get child lock state.
+
+        Returns:
+            bool : True if child lock is enabled, False if not.
+        """
+        return self.state.child_lock
+
+    @property
+    @deprecated("Use self.state.nightlight_status instead.")
+    def night_light(self) -> str:
+        """Get night light state.
+
+        Returns:
+            str : Night light state (on, dim, off)
+        """
+        return self.state.nightlight_status
+
+    @deprecated("Use turn_on_light_detection() instead.")
+    async def set_light_detection_on(self) -> bool:
+        """Turn on light detection feature."""
+        return await self.toggle_light_detection(True)
+
+    @deprecated("Use turn_off_light_detection() instead.")
+    async def set_light_detection_off(self) -> bool:
+        """Turn off light detection feature."""
+        return await self.toggle_light_detection(False)

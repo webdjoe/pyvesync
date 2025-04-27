@@ -8,7 +8,7 @@ from deprecated import deprecated
 from pyvesync.utils.helpers import Helpers, Timer
 from pyvesync.utils.logs import LibraryLogger
 
-from pyvesync.const import DeviceStatus, ConnectionStatus, NightlightModes
+from pyvesync.const import DeviceStatus, ConnectionStatus
 from pyvesync.base_devices.outlet_base import VeSyncOutlet
 from pyvesync.models.base_models import RequestHeaders, DefaultValues
 from pyvesync.utils.device_mixins import (
@@ -194,7 +194,14 @@ class VeSyncOutlet7A(VeSyncOutlet):
         self.state.timer = None
 
     async def set_timer(self, duration: int, action: str | None = None) -> bool:
-        if action not in [DeviceStatus.ON, DeviceStatus.OFF]:
+        if action is None:
+            action = (
+                DeviceStatus.ON
+                if self.state.device_status == DeviceStatus.OFF
+                else DeviceStatus.OFF
+            )
+        if not isinstance(action, str) or \
+                action not in [DeviceStatus.ON, DeviceStatus.OFF]:
             logger.error("Invalid action for timer - %s", action)
             return False
         update_dict = {
@@ -496,7 +503,14 @@ class VeSyncOutlet15A(BypassV1Mixin, VeSyncOutlet):
         )
 
     async def set_timer(self, duration: int, action: str | None = None) -> bool:
-        if action not in [DeviceStatus.ON, DeviceStatus.OFF]:
+        if action is None:
+            action = (
+                DeviceStatus.ON
+                if self.state.device_status == DeviceStatus.OFF
+                else DeviceStatus.OFF
+            )
+        if not isinstance(action, str) or \
+                action not in [DeviceStatus.ON, DeviceStatus.OFF]:
             logger.error("Invalid action for timer - %s", action)
             return False
         update_dict = {
@@ -540,18 +554,6 @@ class VeSyncOutlet15A(BypassV1Mixin, VeSyncOutlet):
             return False
         self.state.timer = None
         return True
-
-    async def turn_on_nightlight(self) -> bool:
-        """Turn on nightlight."""
-        return await self.set_nightlight_state(NightlightModes.ON)
-
-    async def set_nightlight_auto(self) -> bool:
-        """Set auto mode on nightlight."""
-        return await self.set_nightlight_state(NightlightModes.AUTO)
-
-    async def turn_off_nightlight(self) -> bool:
-        """Turn Off Nightlight."""
-        return await self.set_nightlight_state(NightlightModes.OFF)
 
 
 class VeSyncOutdoorPlug(BypassV1Mixin, VeSyncOutlet):
@@ -614,6 +616,7 @@ class VeSyncOutdoorPlug(BypassV1Mixin, VeSyncOutlet):
 
     @deprecated(reason="Use toggle_switch(toggle: bool | None) instead")
     async def toggle(self, status: str) -> bool:
+        """Deprecated, use toggle_switch() instead."""
         toggle = status != DeviceStatus.ON
         return await self.toggle_switch(toggle)
 
@@ -676,7 +679,14 @@ class VeSyncOutdoorPlug(BypassV1Mixin, VeSyncOutlet):
         )
 
     async def set_timer(self, duration: int, action: str | None = None) -> bool:
-        if action not in [DeviceStatus.ON, DeviceStatus.OFF]:
+        if action is None:
+            action = (
+                DeviceStatus.ON
+                if self.state.device_status == DeviceStatus.OFF
+                else DeviceStatus.OFF
+            )
+        if not isinstance(action, str) or \
+                action not in [DeviceStatus.ON, DeviceStatus.OFF]:
             logger.error("Invalid action for timer - %s", action)
             return False
         update_dict = {
@@ -789,7 +799,6 @@ class VeSyncOutletBSDGO1(BypassV2Mixin, VeSyncOutlet):
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
-    @deprecated(reason="Use toggle_switch(toggle: bool | None) instead")
     async def _set_power(self, power: bool) -> bool:
         """Set power state of BSDGO1 outlet."""
         return await self.toggle_switch(power)
@@ -893,6 +902,12 @@ class VeSyncESW10USA(BypassV2Mixin, VeSyncOutlet10A):
         return self.state.timer
 
     async def set_timer(self, duration: int, action: str | None = None) -> bool:
+        if action is None:
+            action = (
+                DeviceStatus.ON
+                if self.state.device_status == DeviceStatus.OFF
+                else DeviceStatus.OFF
+            )
         if action not in [DeviceStatus.ON, DeviceStatus.OFF]:
             logger.error("Invalid action for timer - %s", action)
             return False

@@ -92,9 +92,9 @@ class BulbState(DeviceState):
         return self._color
 
     @color.setter
-    def color(self, color: Color) -> None:
+    def color(self, color: Color | None) -> None:
         """Set color of bulb."""
-        self.color = color
+        self._color = color
 
     @property
     def hsv(self) -> HSV | None:
@@ -131,12 +131,14 @@ class BulbState(DeviceState):
         return self._brightness
 
     @brightness.setter
-    def brightness(self, value: int) -> None:
+    def brightness(self, value: int | None) -> None:
         if not self.device.supports_brightness:
             logger.warning("Brightness not supported by this bulb")
             return
         if Validators.validate_zero_to_hundred(value):
             self._brightness = value
+        else:
+            self._brightness = None
 
     @property
     def color_temp(self) -> int | None:
@@ -167,7 +169,7 @@ class BulbState(DeviceState):
         return None
 
 
-class VeSyncBulb(VeSyncBaseToggleDevice):
+class VeSyncBulb(VeSyncBaseToggleDevice[BulbState]):
     """Base class for VeSync Bulbs.
 
     Abstract base class to provide methods for controlling and
@@ -231,31 +233,41 @@ class VeSyncBulb(VeSyncBaseToggleDevice):
         """Set HSV if supported by bulb.
 
         Args:
-            hue (NUMERIC_T): Hue 0-360
-            saturation (NUMERIC_T): Saturation 0-100
-            value (NUMERIC_T): Value 0-100
+            hue (float): Hue 0-360
+            saturation (float): Saturation 0-100
+            value (float): Value 0-100
 
         Returns:
             bool: True if successful, False otherwise.
         """
-        del hue, saturation, value
-        logger.info("HSV not supported/configured by this bulb")
-        return False
+        if not self.supports_multicolor:
+            logger.debug("Color mode is not supported on this bulb.")
+            return False
+        new_color = Color.from_hsv(hue, saturation, value)
+        if new_color is None:
+            logger.warning("Invalid color value")
+            return False
+        return await self.set_hsv(*new_color.rgb.to_tuple())
 
     async def set_rgb(self, red: float, green: float, blue: float) -> bool:
         """Set RGB if supported by bulb.
 
         Args:
-            red (NUMERIC_T): Red 0-255
-            green (NUMERIC_T): green 0-255
-            blue (NUMERIC_T): blue 0-255
+            red (float): Red 0-255
+            green (float): green 0-255
+            blue (float): blue 0-255
 
         Returns:
             bool: True if successful, False otherwise.
         """
-        del red, green, blue
-        logger.info("RGB not supported/configured by this bulb")
-        return False
+        if not self.supports_multicolor:
+            logger.debug("Color mode is not supported on this bulb.")
+            return False
+        new_color = Color.from_rgb(red, green, blue)
+        if new_color is None:
+            logger.warning("Invalid color value")
+            return False
+        return await self.set_hsv(*new_color.hsv.to_tuple())
 
     async def set_brightness(self, brightness: int) -> bool:
         """Set brightness if supported by bulb.
@@ -285,3 +297,52 @@ class VeSyncBulb(VeSyncBaseToggleDevice):
         if self.state.color is not None:
             return self.state.color.hsv
         return None
+
+    async def set_color_temp(self, color_temp: int) -> bool:
+        """Set color temperature if supported by bulb.
+
+        Args:
+            color_temp (int): Color temperature 0-100
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        del color_temp
+        if self.supports_color_temp:
+            logger.debug("Color temperature is not configured on this bulb.")
+        else:
+            logger.debug("Color temperature not supported by this bulb")
+        return False
+
+    async def set_white_mode(self) -> bool:
+        """Set white mode if supported by bulb.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        if self.supports_multicolor:
+            logger.debug("White mode is not configured on this bulb.")
+        else:
+            logger.warning("White mode not supported by this bulb")
+        return False
+
+    async def set_color_mode(self, color_mode: str) -> bool:
+        """Set color mode if supported by bulb.
+
+        Args:
+            color_mode (str): Color mode to set.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        del color_mode
+        if self.supports_multicolor:
+            logger.debug("Color mode is not configured on this bulb.")
+        else:
+            logger.warning("Color mode not supported by this bulb")
+        return False
+
+    @deprecated("Use `set_white_mode` instead.")
+    async def enable_white_mode(self) -> bool:
+        """Enable white mode if supported by bulb."""
+        return await self.set_white_mode()

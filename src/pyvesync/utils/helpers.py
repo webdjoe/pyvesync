@@ -258,7 +258,7 @@ class Helpers:
             """Get value from attribute."""
             attr = getattr(target_class, attr_name)
             try:
-                return attr() if callable(attr) else attr
+                return attr() if callable(attr) else attr  # type: ignore[no-any-return]
             except TypeError:
                 return None
         result = {}

@@ -78,6 +78,7 @@ from pyvesync.const import (
     PurifierAutoPreference,
     FanSleepPreference,
     FanModes,
+    FanFeatures,
     ThermostatEcoTypes,
     ThermostatFanModes,
     ThermostatWorkModes,
@@ -532,7 +533,7 @@ humidifier_modules = [
             "LUH-A601S-WUSB",
             "LUH-A601S-AUSW",
         ],
-        features=[HumidifierFeatures.NIGHTLIGHT],
+        features=[HumidifierFeatures.NIGHTLIGHT, HumidifierFeatures.NIGHTLIGHT_BRIGHTNESS],
         mist_modes={
             HumidifierModes.AUTO: "auto",
             HumidifierModes.SLEEP: "sleep",
@@ -582,7 +583,7 @@ humidifier_modules = [
             "LUH-A602S-WJP",
             "LUH-A602S-WUSC",
         ],
-        features=[HumidifierFeatures.WARM_MIST, HumidifierFeatures.NIGHTLIGHT],
+        features=[HumidifierFeatures.WARM_MIST],
         mist_modes={
             HumidifierModes.AUTO: "auto",
             HumidifierModes.SLEEP: "sleep",
@@ -598,7 +599,7 @@ humidifier_modules = [
     HumidifierMap(
         class_name="VeSyncHumid200300S",
         dev_types=["LUH-O451S-WEU"],
-        features=[HumidifierFeatures.WARM_MIST, HumidifierFeatures.NIGHTLIGHT],
+        features=[HumidifierFeatures.WARM_MIST],
         mist_modes={
             HumidifierModes.AUTO: "auto",
             HumidifierModes.SLEEP: "sleep",
@@ -646,7 +647,7 @@ humidifier_modules = [
     HumidifierMap(
         class_name="VeSyncSuperior6000S",
         dev_types=["LEH-S601S-WUS", "LEH-S601S-WUSR", "LEH-S601S-WEUR"],
-        features=[HumidifierFeatures.AUTO_STOP],
+        features=[HumidifierFeatures.DRYING_MODE],
         mist_modes={
             HumidifierModes.AUTO: "autoPro",
             HumidifierModes.SLEEP: "sleep",
@@ -671,6 +672,11 @@ purifier_modules: list[PurifierMap] = [
         dev_types=["Core200S", "LAP-C201S-AUSR", "LAP-C202S-WUSR"],
         modes=[PurifierModes.SLEEP, PurifierModes.MANUAL],
         features=[PurifierFeatures.RESET_FILTER, PurifierFeatures.NIGHTLIGHT],
+        auto_preferences=[
+            PurifierAutoPreference.DEFAULT,
+            PurifierAutoPreference.EFFICIENT,
+            PurifierAutoPreference.QUIET
+        ],
         fan_levels=list(range(1, 4)),
         nightlight_modes=[NightlightModes.ON, NightlightModes.OFF, NightlightModes.DIM],
         device_alias="Core 200S",
@@ -688,6 +694,11 @@ purifier_modules: list[PurifierMap] = [
             "LAP-C302S-WGC",
             ],
         modes=[PurifierModes.SLEEP, PurifierModes.MANUAL, PurifierModes.AUTO],
+        auto_preferences=[
+            PurifierAutoPreference.DEFAULT,
+            PurifierAutoPreference.EFFICIENT,
+            PurifierAutoPreference.QUIET
+        ],
         features=[PurifierFeatures.AIR_QUALITY],
         fan_levels=list(range(1, 5)),
         device_alias="Core 300S",
@@ -716,6 +727,11 @@ purifier_modules: list[PurifierMap] = [
         dev_types=["Core600S", "LAP-C601S-WUS", "LAP-C601S-WUSR", "LAP-C601S-WEU"],
         modes=[PurifierModes.SLEEP, PurifierModes.MANUAL, PurifierModes.AUTO],
         features=[PurifierFeatures.AIR_QUALITY],
+        auto_preferences=[
+            PurifierAutoPreference.DEFAULT,
+            PurifierAutoPreference.EFFICIENT,
+            PurifierAutoPreference.QUIET
+        ],
         fan_levels=list(range(1, 5)),
         device_alias="Core 600S",
         model_display="Core 600S",
@@ -842,7 +858,7 @@ fan_modules: list[FanMap] = [
             FanModes.ADVANCED_SLEEP,
             ],
         set_mode_method="setTowerFanMode",
-        features=["fan_speed"],
+        features=[FanFeatures.OSCILLATION, FanFeatures.DISPLAYING_TYPE, FanFeatures.SOUND],
         fan_levels=list(range(1, 13)),
         device_alias="Tower Fan",
         sleep_preferences=[

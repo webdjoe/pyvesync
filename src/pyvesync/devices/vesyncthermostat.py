@@ -89,13 +89,14 @@ class VeSyncAuraThermostat(BypassV2Mixin, VeSyncThermostat):
         if key is None and temp is None and hold_status is None:
             _LOGGER.debug("At least one of key, temp, or hold_status must be provided.")
             return False
+        payload_data: dict[str, str | float] = {}
         if hold_status is not None and hold_status.value == ThermostatHoldStatus.CANCEL:
             payload_data = {"holdStatus": ThermostatHoldStatus.CANCEL}
         else:
-            if None in (key, temp):
+            if key is None or temp is None:
                 _LOGGER.debug("Either key or temp must be provided.")
                 return False
-            payload_data = {key: temp, "holdStatus": ThermostatHoldStatus.SET}
+            payload_data = {key: temp, "holdStatus": ThermostatHoldStatus.SET.value}
         r_dict = await self.call_bypassv2_api("setHoldStatus", data=payload_data)
         result = Helpers.process_dev_response(
             _LOGGER, "setHoldStatus", self, r_dict
@@ -103,7 +104,6 @@ class VeSyncAuraThermostat(BypassV2Mixin, VeSyncThermostat):
         return bool(result)
 
     async def set_temp_point(self, temperature: float) -> bool:
-        """Set temperature point."""
         return await self._set_hold_status_api("setTempPoint", temperature)
 
     async def cancel_hold(self) -> bool:
@@ -160,14 +160,6 @@ class VeSyncAuraThermostat(BypassV2Mixin, VeSyncThermostat):
         )
         return bool(result)
 
-    async def turn_on_lock(self, pin: int | str) -> bool:
-        """Turn on thermostat lock."""
-        return await self.toggle_lock(True, pin)
-
-    async def turn_off_lock(self) -> bool:
-        """Turn off thermostat lock."""
-        return await self.toggle_lock(False)
-
     async def set_eco_type(self, eco_type: ThermostatEcoTypes) -> bool:
         """Set thermostat eco type."""
         if eco_type not in self.eco_types:
@@ -179,19 +171,3 @@ class VeSyncAuraThermostat(BypassV2Mixin, VeSyncThermostat):
             _LOGGER, "setEcoType", self, r_dict
         )
         return bool(result)
-
-    async def set_eco_first(self) -> bool:
-        """Set eco first."""
-        return await self.set_eco_type(ThermostatEcoTypes.ECO_FIRST)
-
-    async def set_eco_second(self) -> bool:
-        """Set eco second."""
-        return await self.set_eco_type(ThermostatEcoTypes.ECO_SECOND)
-
-    async def set_eco_comfort_first(self) -> bool:
-        """Set eco comfort."""
-        return await self.set_eco_type(ThermostatEcoTypes.COMFORT_FIRST)
-
-    async def set_eco_comfort_second(self) -> bool:
-        """Set eco comfort."""
-        return await self.set_eco_type(ThermostatEcoTypes.COMFORT_SECOND)

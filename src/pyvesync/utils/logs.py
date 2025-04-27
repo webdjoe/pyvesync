@@ -330,9 +330,8 @@ class LibraryLogger:
         if cls.is_json(response_body):
             response_str = cls.api_printer(response_body)
             parts.append(f"Response Body: {os.linesep} {response_str}")
-        else:
-            if isinstance(response_body, bytes):
-                response_str = response_body.decode("utf-8")
+        elif isinstance(response_body, bytes):
+            response_str = response_body.decode("utf-8")
             parts.append(f"Response Body: {os.linesep} {response_str}")
 
         full_message = os.linesep.join(parts)

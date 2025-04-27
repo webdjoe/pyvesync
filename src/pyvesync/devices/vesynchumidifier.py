@@ -40,7 +40,7 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
 
     Attributes:
         state (HumidifierState): The state of the humidifier.
-        last_response (ResponseInfo): Last response from API call.
+        last_response (ResponseInfo): Last response info from API call.
         manager (VeSync): Manager object for API calls.
         device_name (str): Name of device.
         device_image (str): URL for device image.
@@ -241,12 +241,7 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
-    async def set_night_light_brightness(self, brightness: int) -> bool:
-        """Set 200S/300S Humidifier night light brightness.
-
-        Args:
-            brightness (int): Target night light brightness.
-        """
+    async def set_nightlight_brightness(self, brightness: int) -> bool:
         if not self.supports_nightlight:
             logger.debug('%s is a %s does not have a nightlight',
                          self.device_name, self.device_type)
@@ -299,7 +294,6 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
         return True
 
     async def set_warm_level(self, warm_level: int) -> bool:
-        """Set target 600S Humidifier mist warmth."""
         if not self.supports_warm_mist:
             logger.debug('%s is a %s does not have a mist warmer',
                          self.device_name, self.device_type)
@@ -512,7 +506,6 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
         return await self.toggle_drying_mode(mode)
 
     async def toggle_drying_mode(self, toggle: bool | None = None) -> bool:
-        """enable/disable drying filters after turning off."""
         if toggle is None:
             toggle = self.state.drying_mode_status != DeviceStatus.ON
 
@@ -528,7 +521,10 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
 
     @deprecated("Use toggle_display() instead.")
     async def set_display_enabled(self, mode: bool) -> bool:
-        """Set display on/off."""
+        """Set display on/off.
+
+        Deprecated method, please use toggle_display() instead.
+        """
         return await self.toggle_display(mode)
 
     async def toggle_display(self, toggle: bool | None = None) -> bool:

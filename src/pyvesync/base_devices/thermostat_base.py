@@ -183,3 +183,95 @@ class VeSyncThermostat(VeSyncBaseDevice):
     async def set_fan_on(self) -> bool:
         """Set fan on."""
         return await self.set_fan_mode(ThermostatConst.FanMode.ON)
+
+    async def get_configuration(self) -> None:
+        """Retrieves configuration from API."""
+        _LOGGER.debug("get configuration not implemented for %s", self.device_type)
+
+    async def set_temp_point(self, temperature: float) -> bool:
+        """Sets the temperature point."""
+        del temperature
+        _LOGGER.debug("set temp point not implemented for %s", self.device_type)
+        return False
+
+    async def cancel_hold(self) -> bool:
+        """Cancels the scheduled hold."""
+        _LOGGER.debug("cancel hold not implemented for %s", self.device_type)
+        return False
+
+    async def set_cool_to_temp(self, temperature: float) -> bool:
+        """Sets the cool to temperature.
+
+        Args:
+            temperature (float): The cool to temperature.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        del temperature
+        _LOGGER.debug("set cool to temp not implemented for %s", self.device_type)
+        return False
+
+    async def set_heat_to_temp(self, temperature: float) -> bool:
+        """Set the heat to temperature.
+
+        Args:
+            temperature (float): The heat to temperature.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        del temperature
+        _LOGGER.debug("set heat to temp not implemented for %s", self.device_type)
+        return False
+
+    async def toggle_lock(self, toggle: bool, pin: int | str | None = None) -> bool:
+        """Toggle the thermostat lock status."""
+        del toggle, pin
+        _LOGGER.debug("toggle lock not implemented for %s", self.device_type)
+        return False
+
+    async def turn_on_lock(self, pin: int | str) -> bool:
+        """Turn on the thermostat lock.
+
+        Args:
+            pin (int | str): The 4-digit PIN code.
+        """
+        return await self.toggle_lock(True, pin)
+
+    async def turn_off_lock(self) -> bool:
+        """Turn off the thermostat lock."""
+        return await self.toggle_lock(False)
+
+    async def set_eco_type(self, eco_type: ThermostatEcoTypes) -> bool:
+        """Set thermostat eco type.
+
+        Args:
+            eco_type (ThermostatEcoTypes): The eco type to set, options are found in
+                self.eco_types.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        del eco_type
+        if not self.eco_types:
+            _LOGGER.debug("No eco types available for %s", self.device_type)
+        else:
+            _LOGGER.debug("set_eco_type not configured for %s", self.device_name)
+        return False
+
+    async def set_eco_first(self) -> bool:
+        """Set eco first."""
+        return await self.set_eco_type(ThermostatEcoTypes.ECO_FIRST)
+
+    async def set_eco_second(self) -> bool:
+        """Set eco second."""
+        return await self.set_eco_type(ThermostatEcoTypes.ECO_SECOND)
+
+    async def set_eco_comfort_first(self) -> bool:
+        """Set eco comfort."""
+        return await self.set_eco_type(ThermostatEcoTypes.COMFORT_FIRST)
+
+    async def set_eco_comfort_second(self) -> bool:
+        """Set eco comfort."""
+        return await self.set_eco_type(ThermostatEcoTypes.COMFORT_SECOND)

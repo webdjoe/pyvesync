@@ -454,6 +454,8 @@ class HumidifierFeatures(Features):
     WATER_LEVEL = "water_level"
     WARM_MIST = "warm_mist"
     AUTO_STOP = "auto_stop"
+    NIGHTLIGHT_BRIGHTNESS = "nightlight_brightness"
+    DRYING_MODE = "drying_mode"
 
 
 class PurifierFeatures(Features):
@@ -539,6 +541,13 @@ class SwitchFeatures(Features):
     INDICATOR_LIGHT = "indicator_light"
     BACKLIGHT = "backlight"
     BACKLIGHT_RGB = "backlight_rgb"
+
+
+class FanFeatures(Features):
+    """VeSync fan features."""
+    OSCILLATION = "oscillation"
+    SOUND = "sound"
+    DISPLAYING_TYPE = "displaying_type"  # Unknown functionality
 
 
 # Modes

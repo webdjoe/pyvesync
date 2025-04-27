@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
-from pyvesync.const import OutletFeatures, IntFlag, StrFlag
+from pyvesync.const import OutletFeatures, IntFlag, StrFlag, NightlightModes
 from pyvesync.utils.helpers import Helpers
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseToggleDevice, DeviceState
 from pyvesync.models.outlet_models import RequestEnergyHistory, ResponseEnergyHistory
@@ -88,7 +88,7 @@ class OutletState(DeviceState):
         ]
         self.device: VeSyncOutlet = device
         self.features: list[str] = feature_map.features
-        self.active_time: int = 0
+        self.active_time: int | None = 0
         self.power: float = IntFlag.NOT_SUPPORTED
         self.energy: float = IntFlag.NOT_SUPPORTED
         self.voltage: float = IntFlag.NOT_SUPPORTED
@@ -274,3 +274,42 @@ class VeSyncOutlet(VeSyncBaseToggleDevice):
             await self.get_weekly_energy()
             await self.get_monthly_energy()
             await self.get_yearly_energy()
+
+    async def set_nightlight_state(self, mode: str) -> bool:
+        """Set nightlight mode.
+
+        Available nightlight states are found in the `device.nightlight_modes` attribute.
+
+        Args:
+            mode (str): Nightlight mode to set.
+
+        Returns:
+            bool: True if nightlight mode set successfully, False otherwise.
+        """
+        del mode  # unused
+        if not self.supports_nightlight:
+            logger.debug("Device does not support nightlight.")
+        else:
+            logger.debug("Nightlight mode not configured for %s", self.device_name)
+        return False
+
+    async def turn_on_nightlight(self) -> bool:
+        """Turn on nightlight if supported."""
+        if not self.supports_nightlight:
+            logger.debug("Device does not support nightlight.")
+            return False
+        return await self.set_nightlight_state(NightlightModes.ON)
+
+    async def turn_off_nightlight(self) -> bool:
+        """Turn off nightlight if supported."""
+        if not self.supports_nightlight:
+            logger.debug("Device does not support nightlight.")
+            return False
+        return await self.set_nightlight_state(NightlightModes.OFF)
+
+    async def set_nightlight_auto(self) -> bool:
+        """Set nightlight to auto mode."""
+        if not self.supports_nightlight:
+            logger.debug("Device does not support nightlight.")
+            return False
+        return await self.set_nightlight_state(NightlightModes.AUTO)
