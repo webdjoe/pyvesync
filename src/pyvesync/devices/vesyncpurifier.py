@@ -771,7 +771,7 @@ class VeSyncAir131(VeSyncPurifier):
             "appVersion",
             "phoneBrand",
             "phoneOS",
-            "accountId",
+            "accountID",
             "debugMode"
             "traceId",
             "timeZone",
