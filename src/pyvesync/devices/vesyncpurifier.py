@@ -6,9 +6,13 @@ from typing import TYPE_CHECKING
 from typing_extensions import deprecated
 
 from pyvesync.base_devices.purifier_base import VeSyncPurifier
-from pyvesync.utils.device_mixins import BypassV2Mixin, process_bypassv2_result
+from pyvesync.utils.device_mixins import (
+    BypassV1Mixin,
+    BypassV2Mixin,
+    process_bypassv2_result
+    )
 from pyvesync.utils.helpers import Helpers, Timer
-from pyvesync.models.base_models import DefaultValues
+# from pyvesync.models.base_models import DefaultValues
 from pyvesync.const import (
     IntFlag,
     StrFlag,
@@ -28,6 +32,8 @@ from pyvesync.models.purifier_models import (
     PurifierV2TimerActionItems,
     PurifierV2TimerPayloadData,
     RequestPurifier131,
+    RequestPurifier131Mode,
+    RequestPurifier131Level,
     Purifier131Result,
     )
 
@@ -730,7 +736,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         return True
 
 
-class VeSyncAir131(VeSyncPurifier):
+class VeSyncAir131(BypassV1Mixin, VeSyncPurifier):
     """Levoit Air Purifier Class.
 
     Class for LV-PUR131S, using BypassV1 API.
@@ -766,31 +772,31 @@ class VeSyncAir131(VeSyncPurifier):
                  manager: VeSync, feature_map: PurifierMap) -> None:
         """Initialize air purifier class."""
         super().__init__(details, manager, feature_map)
-        self.request_keys = [
-            "acceptLanguage",
-            "appVersion",
-            "phoneBrand",
-            "phoneOS",
-            "accountID",
-            "debugMode"
-            "traceId",
-            "timeZone",
-            "token",
-            "userCountryCode",
-            "uuid"
-        ]
+        # self.request_keys = [
+        #     "acceptLanguage",
+        #     "appVersion",
+        #     "phoneBrand",
+        #     "phoneOS",
+        #     "accountID",
+        #     "debugMode"
+        #     "traceId",
+        #     "timeZone",
+        #     "token",
+        #     "userCountryCode",
+        #     "uuid"
+        # ]
 
-    def _build_request(
-        self, method: str, update_dict: dict | None = None
-    ) -> RequestPurifier131:
-        """Build API request body for air purifier timer."""
-        body = Helpers.get_class_attributes(DefaultValues, self.request_keys)
-        body.update(Helpers.get_class_attributes(self.manager, self.request_keys))
-        body.update(Helpers.get_class_attributes(self, self.request_keys))
-        body["method"] = method
-        if update_dict is not None:
-            body.update(update_dict)
-        return RequestPurifier131.from_dict(body)
+    # def _build_request(
+    #     self, method: str, update_dict: dict | None = None
+    # ) -> RequestPurifier131:
+    #     """Build API request body for air purifier timer."""
+    #     body = Helpers.get_class_attributes(DefaultValues, self.request_keys)
+    #     body.update(Helpers.get_class_attributes(self.manager, self.request_keys))
+    #     body.update(Helpers.get_class_attributes(self, self.request_keys))
+    #     body["method"] = method
+    #     if update_dict is not None:
+    #         body.update(update_dict)
+    #     return RequestPurifier131.from_dict(body)
 
     def _set_state(self, details: Purifier131Result) -> None:
         """Set state from purifier API get_details() response."""
@@ -807,14 +813,17 @@ class VeSyncAir131(VeSyncPurifier):
         self.state.set_air_quality_level(details.airQuality)
 
     async def get_details(self) -> None:
-        body = self._build_request('deviceDetail')
-        headers = Helpers.req_header_bypass()
+        # body = self._build_request('deviceDetail')
+        # headers = Helpers.req_header_bypass()
 
-        r_dict, _ = await self.manager.async_call_api(
-            '/cloud/v1/deviceManaged/deviceDetail',
-            method='post',
-            headers=headers,
-            json_object=body.to_dict(),
+        # r_dict, _ = await self.manager.async_call_api(
+        #     '/cloud/v1/deviceManaged/deviceDetail',
+        #     method='post',
+        #     headers=headers,
+        #     json_object=body.to_dict(),
+        # )
+        r_dict = await self.call_bypassv1_api(
+            RequestPurifier131, method="deviceDetail", endpoint="deviceDetail"
         )
         r = Helpers.process_dev_response(_LOGGER, "get_details", self, r_dict)
         if r is None:
@@ -827,12 +836,16 @@ class VeSyncAir131(VeSyncPurifier):
         update_dict = {
             "status": "on" if mode else "off"
         }
-        body = self._build_request('airPurifierScreenCtl', update_dict=update_dict)
-        headers = Helpers.req_header_bypass()
+        # body = self._build_request('airPurifierScreenCtl', update_dict=update_dict)
+        # headers = Helpers.req_header_bypass()
 
-        r_dict, _ = await self.manager.async_call_api(
-            '/cloud/v1/deviceManaged/airPurifierScreenCtl', 'post',
-            json_object=body.to_dict(), headers=headers
+        # r_dict, _ = await self.manager.async_call_api(
+        #     '/cloud/v1/deviceManaged/airPurifierScreenCtl', 'post',
+        #     json_object=body.to_dict(), headers=headers
+        # )
+        r_dict = await self.call_bypassv1_api(
+            RequestPurifier131, method="airPurifierScreenCtl",
+            endpoint="airPurifierScreenCtl", update_dict=update_dict
         )
         r = Helpers.process_dev_response(_LOGGER, "toggle_display", self, r_dict)
         if r is None:
@@ -850,11 +863,15 @@ class VeSyncAir131(VeSyncPurifier):
         update_dict = {
             "status": DeviceStatus.from_bool(toggle).value
         }
-        body = self._build_request('airPurifierPowerSwitchCtl', update_dict=update_dict)
-        headers = Helpers.req_header_bypass()
-        r_dict, _ = await self.manager.async_call_api(
-            '/cloud/v1/deviceManaged/airPurifierPowerSwitchCtl', 'post',
-            json_object=body.to_dict(), headers=headers
+        # body = self._build_request('airPurifierPowerSwitchCtl', update_dict=update_dict)
+        # headers = Helpers.req_header_bypass()
+        # r_dict, _ = await self.manager.async_call_api(
+        #     '/cloud/v1/deviceManaged/airPurifierPowerSwitchCtl', 'post',
+        #     json_object=body.to_dict(), headers=headers
+        # )
+        r_dict = await self.call_bypassv1_api(
+            RequestPurifier131, method="airPurifierPowerSwitchCtl",
+            endpoint="airPurifierPowerSwitchCtl", update_dict=update_dict
         )
         r = Helpers.process_dev_response(_LOGGER, "toggle_switch", self, r_dict)
         if r is None:
@@ -882,14 +899,18 @@ class VeSyncAir131(VeSyncPurifier):
         update_dict = {
             "level": new_speed
         }
-        body = self._build_request('airPurifierSpeedCtl', update_dict=update_dict)
-        headers = Helpers.req_header_bypass()
+        # body = self._build_request('airPurifierSpeedCtl', update_dict=update_dict)
+        # headers = Helpers.req_header_bypass()
 
-        r_dict, _ = await self.manager.async_call_api(
-            '/cloud/v1/deviceManaged/airPurifierSpeedCtl', 'post',
-            json_object=body, headers=headers
+        # r_dict, _ = await self.manager.async_call_api(
+        #     '/cloud/v1/deviceManaged/airPurifierSpeedCtl', 'post',
+        #     json_object=body, headers=headers
+        # )
+        r_dict = await self.call_bypassv1_api(
+            RequestPurifier131Level, method="airPurifierSpeedCtl",
+            endpoint="airPurifierSpeedCtl", update_dict=update_dict
         )
-        r = Helpers.process_dev_response(_LOGGER, "change_fan_speed", self, r_dict)
+        r = Helpers.process_dev_response(_LOGGER, "set_fan_speed", self, r_dict)
         if r is None:
             return False
 
@@ -907,12 +928,16 @@ class VeSyncAir131(VeSyncPurifier):
         update_dict = {
             "mode": mode
         }
-        body = self._build_request('airPurifierModeCtl', update_dict=update_dict)
-        headers = Helpers.req_header_bypass()
+        # body = self._build_request('airPurifierModeCtl', update_dict=update_dict)
+        # headers = Helpers.req_header_bypass()
 
-        r_dict, _ = await self.manager.async_call_api(
-            '/cloud/v1/deviceManaged/airPurifierRunModeCtl', 'post',
-            json_object=body.to_dict(), headers=headers
+        # r_dict, _ = await self.manager.async_call_api(
+        #     '/cloud/v1/deviceManaged/airPurifierRunModeCtl', 'post',
+        #     json_object=body.to_dict(), headers=headers
+        # )
+        r_dict = await self.call_bypassv1_api(
+            RequestPurifier131Mode, method="airPurifierRunModeCtl",
+            endpoint="airPurifierRunModeCtl", update_dict=update_dict
         )
         r = Helpers.process_dev_response(_LOGGER, "mode_toggle", self, r_dict)
         if r is None:

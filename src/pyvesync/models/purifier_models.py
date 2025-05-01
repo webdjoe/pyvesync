@@ -169,6 +169,18 @@ class RequestPurifier131(RequestBypassV1):
 
 
 @dataclass
+class RequestPurifier131Mode(RequestBypassV1):
+    """Purifier 131 Request Dict."""
+    mode: str
+
+
+@dataclass
+class RequestPurifier131Level(RequestBypassV1):
+    """Purifier 131 Request Dict."""
+    level: int
+
+
+@dataclass
 class Purifier131Result(BypassV1Result):
     """Purifier 131 Details Response Dict."""
     screenStatus: str
