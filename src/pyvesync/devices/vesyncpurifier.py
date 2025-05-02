@@ -829,7 +829,7 @@ class VeSyncAir131(BypassV1Mixin, VeSyncPurifier):
         if r is None:
             return
 
-        r_model = Purifier131Result.from_dict(r)
+        r_model = Purifier131Result.from_dict(r.get('result', {}))
         self._set_state(r_model)
 
     async def toggle_display(self, mode: bool) -> bool:
