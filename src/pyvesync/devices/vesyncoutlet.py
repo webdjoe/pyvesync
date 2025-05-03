@@ -29,6 +29,7 @@ from pyvesync.models.outlet_models import (
     Request15AStatus,
     RequestOutdoorStatus,
     Timer7AItem,
+    ResultESW10Details,
     )
 
 if TYPE_CHECKING:
@@ -483,11 +484,11 @@ class VeSyncOutlet15A(BypassV1Mixin, VeSyncOutlet):
             method=method,
             endpoint=endpoint
         )
-
-        r = process_bypassv1_result(self, logger, "get_timer", r_dict)
-        if r is None:
+        result_model = process_bypassv1_result(
+            self, logger, "get_timer", r_dict, TimerModels.ResultV1GetTimer
+        )
+        if result_model is None:
             return
-        result_model = TimerModels.ResultV1GetTimer.from_dict(r)
         timers = result_model.timers
         if not isinstance(timers, list) or len(timers) == 0:
             self.state.timer = None
@@ -523,10 +524,11 @@ class VeSyncOutlet15A(BypassV1Mixin, VeSyncOutlet):
             method='addTimer',
             endpoint='timer/addTimer'
         )
-        result = process_bypassv1_result(self, logger, "set_timer", r_dict)
-        if result is None:
+        result_model = process_bypassv1_result(
+            self, logger, "set_timer", r_dict, TimerModels.ResultV1SetTimer
+        )
+        if result_model is None:
             return False
-        result_model = TimerModels.ResultV1SetTimer.from_dict(result)
         self.state.timer = Timer(duration, action, int(result_model.timerID))
         return True
 
@@ -649,11 +651,11 @@ class VeSyncOutdoorPlug(BypassV1Mixin, VeSyncOutlet):
             method=method,
             endpoint=endpoint
         )
-
-        r = process_bypassv1_result(self, logger, "get_timer", r_dict)
-        if r is None:
+        result_model = process_bypassv1_result(
+            self, logger, "get_timer", r_dict, TimerModels.ResultV1GetTimer
+        )
+        if result_model is None:
             return
-        result_model = TimerModels.ResultV1GetTimer.from_dict(r)
         timers = result_model.timers
         if not isinstance(timers, list) or len(timers) == 0:
             self.state.timer = None
@@ -700,10 +702,11 @@ class VeSyncOutdoorPlug(BypassV1Mixin, VeSyncOutlet):
             method='addTimer',
             endpoint='timer/addTimer'
         )
-        result = process_bypassv1_result(self, logger, "set_timer", r_dict)
-        if result is None:
+        result_model = process_bypassv1_result(
+            self, logger, "set_timer", r_dict, TimerModels.ResultV1SetTimer
+        )
+        if result_model is None:
             return False
-        result_model = TimerModels.ResultV1SetTimer.from_dict(result)
         self.state.timer = Timer(duration, action, int(result_model.timerID))
         return True
 
@@ -773,11 +776,12 @@ class VeSyncOutletBSDGO1(BypassV2Mixin, VeSyncOutlet):
     async def get_details(self) -> None:
         r_dict = await self.call_bypassv2_api('getProperty')
 
-        result = process_bypassv2_result(self, logger, 'get_details', r_dict)
-        if result is None:
+        resp_model = process_bypassv2_result(
+            self, logger, "get_details", r_dict, ResponseBSDGO1OutletResult
+        )
+        if resp_model is None:
             return
 
-        resp_model = ResponseBSDGO1OutletResult.from_dict(result)
         device_state = resp_model.powerSwitch_1
         str_status = DeviceStatus.ON if device_state == 1 else DeviceStatus.OFF
         self.state.device_status = str_status
@@ -850,12 +854,14 @@ class VeSyncESW10USA(BypassV2Mixin, VeSyncOutlet10A):
         }
         payload_method = "getSwitch"
         r_dict = await self.call_bypassv2_api(payload_method, payload_data)
-        result = process_bypassv2_result(self, logger, "get_details", r_dict)
+        result = process_bypassv2_result(
+            self, logger, "get_details", r_dict, ResultESW10Details
+        )
         if not isinstance(result, dict) or not isinstance(result.get("enabled"), bool):
             logger.debug("Error getting %s details", self.device_name)
             self.state.connection_status = ConnectionStatus.OFFLINE
             return
-        self.state.device_status = DeviceStatus.from_bool(result["enabled"])
+        self.state.device_status = DeviceStatus.from_bool(result.enabled)
         self.state.connection_status = ConnectionStatus.ONLINE
 
     async def toggle_switch(self, toggle: bool | None = None) -> bool:
@@ -877,10 +883,11 @@ class VeSyncESW10USA(BypassV2Mixin, VeSyncOutlet10A):
 
     async def get_timer(self) -> Timer | None:
         r_dict = await self.call_bypassv2_api("getTimer")
-        result = process_bypassv2_result(self, logger, "get_timer", r_dict)
-        if result is None:
+        result_model = process_bypassv2_result(
+            self, logger, "get_timer", r_dict, TimerModels.ResultV2GetTimer
+        )
+        if result_model is None:
             return None
-        result_model = TimerModels.ResultV2GetTimer.from_dict(result)
         timers = result_model.timers
         if not timers:
             self.state.timer = None
@@ -919,10 +926,11 @@ class VeSyncESW10USA(BypassV2Mixin, VeSyncOutlet10A):
             payload_method='addTimer',
             data=payload_data,
         )
-        result = process_bypassv2_result(self, logger, "set_timer", r_dict)
-        if result is None:
+        result_model = process_bypassv2_result(
+            self, logger, "set_timer", r_dict, TimerModels.ResultV2SetTimer
+        )
+        if result_model is None:
             return False
-        result_model = TimerModels.ResultV2SetTimer.from_dict(result)
         if result_model.id is None:
             logger.debug("Unable to set timer.")
             return False

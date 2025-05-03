@@ -141,22 +141,24 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
 
     async def get_details(self) -> None:
         r_dict = await self.call_bypassv2_api('getPurifierStatus')
-        r = process_bypassv2_result(self, _LOGGER, "get_details", r_dict)
-        if r is None:
+        resp_model = process_bypassv2_result(
+            self, _LOGGER, "get_details", r_dict, PurifierCoreDetailsResult
+        )
+        if resp_model is None:
             return
-        resp_model = PurifierCoreDetailsResult.from_dict(r)
         self._set_purifier_state(resp_model)
 
     async def get_timer(self) -> Timer | None:
         r_bytes = await self.call_bypassv2_api('getTimer')
-        r = process_bypassv2_result(self, _LOGGER, "get_timer", r_bytes)
-        if r is None:
+        resp_model = process_bypassv2_result(
+            self, _LOGGER, "get_timer", r_bytes, ResultV2GetTimer
+        )
+        if resp_model is None:
             return None
-
-        resp_model = ResultV2GetTimer.from_dict(r)
         timers = resp_model.timers
         if not timers:
             _LOGGER.debug('No timers found')
+            self.state.timer = None
             return None
         timer = timers[0]
         self.state.timer = Timer(
@@ -180,11 +182,11 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
             "total": duration
         }
         r_dict = await self.call_bypassv2_api('addTimer', payload_data)
-        r = process_bypassv2_result(self, _LOGGER, "set_timer", r_dict)
-        if r is None:
+        resp_model = process_bypassv2_result(
+            self, _LOGGER, "set_timer", r_dict, ResultV2SetTimer
+        )
+        if resp_model is None:
             return False
-
-        resp_model = ResultV2SetTimer.from_dict(r)
         self.state.timer = Timer(
                 timer_duration=duration, action="off", id=resp_model.id
                 )
@@ -514,11 +516,12 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
     async def get_details(self) -> None:
         """Build API V2 Purifier details dictionary."""
         r_dict = await self.call_bypassv2_api('getPurifierStatus')
-        r = process_bypassv2_result(self, _LOGGER, "get_details", r_dict)
-        if r is None:
+        r_model = process_bypassv2_result(
+            self, _LOGGER, "get_details", r_dict, PurifierV2DetailsResult
+        )
+        if r_model is None:
             return
 
-        r_model = PurifierV2DetailsResult.from_dict(r)
         self._set_state(r_model)
 
     @deprecated("Use toggle_light_detection(toggle) instead.")

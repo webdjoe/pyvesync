@@ -1,10 +1,13 @@
 """Data structures for handling colors."""
 
 from __future__ import annotations
+import logging
 from dataclasses import InitVar, dataclass
 
 import colorsys
-from pyvesync.utils.helpers import _LOGGER, Validators, NUMERIC_STRICT
+from pyvesync.utils.helpers import Validators, NUMERIC_STRICT
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass

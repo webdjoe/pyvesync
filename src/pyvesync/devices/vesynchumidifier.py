@@ -9,7 +9,7 @@ from pyvesync.base_devices import VeSyncHumidifier
 from pyvesync.utils.helpers import Helpers, Validators, Timer
 from pyvesync.utils.device_mixins import BypassV2Mixin, process_bypassv2_result
 from pyvesync.const import DeviceStatus, IntFlag, ConnectionStatus
-from pyvesync.models.bypass_models import ResultV2GetTimer
+from pyvesync.models.bypass_models import ResultV2GetTimer, ResultV2SetTimer
 from pyvesync.models.humidifier_models import (
     ClassicLVHumidResult,
     Levoit1000SResult,
@@ -104,13 +104,11 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
 
     async def get_details(self) -> None:
         r_dict = await self.call_bypassv2_api("getHumidifierStatus")
-        r_dict = process_bypassv2_result(
-            self, logger, 'get_details', r_dict
+        r_model = process_bypassv2_result(
+            self, logger, 'get_details', r_dict, ClassicLVHumidResult
             )
-        if r_dict is None:
+        if r_model is None:
             return
-
-        r_model = ClassicLVHumidResult.from_dict(r_dict)
         self._set_state(r_model)
 
     async def toggle_switch(self, toggle: bool | None = None) -> bool:
@@ -129,12 +127,11 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
 
     async def get_timer(self) -> Timer | None:
         r_dict = await self.call_bypassv2_api("getTimer")
-        result = process_bypassv2_result(
-            self, logger, "get_timer", r_dict
+        result_model = process_bypassv2_result(
+            self, logger, "get_timer", r_dict, ResultV2GetTimer
         )
-        if result is None:
+        if result_model is None:
             return None
-        result_model = ResultV2GetTimer.from_dict(result)
         if not result_model.timers:
             logger.debug("No timers found")
             return None
@@ -172,13 +169,12 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
             "total": duration,
         }
         r_dict = await self.call_bypassv2_api("addTimer", payload_data)
-        r = process_bypassv2_result(self, logger, "set_timer", r_dict)
-        if not isinstance(r, dict) or "id" not in r:
-            logger.debug("Failed to set timer")
+        r = process_bypassv2_result(self, logger, "set_timer", r_dict, ResultV2SetTimer)
+        if r is None:
             return False
 
         self.state.timer = Timer(
-            timer_duration=duration, action=action, id=r['id'], remaining=0
+            timer_duration=duration, action=action, id=r.id, remaining=0
         )
         return True
 
@@ -468,11 +464,12 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
 
     async def get_details(self) -> None:
         r_dict = await self.call_bypassv2_api("getHumidifierStatus")
-        r = process_bypassv2_result(self, logger, "get_details", r_dict)
-        if r is None:
+        r_model = process_bypassv2_result(
+            self, logger, "get_details", r_dict, Superior6000SResult
+        )
+        if r_model is None:
             return
 
-        r_model = Superior6000SResult.from_dict(r)
         self._set_state(r_model)
 
     async def toggle_switch(self, toggle: bool | None = None) -> bool:
@@ -660,13 +657,12 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
 
     async def get_details(self) -> None:
         r_dict = await self.call_bypassv2_api("getHumidifierStatus")
-        r_dict = process_bypassv2_result(
-            self, logger, 'get_details', r_dict
+        r_model = process_bypassv2_result(
+            self, logger, 'get_details', r_dict, Levoit1000SResult
             )
-        if r_dict is None:
+        if r_model is None:
             return
 
-        r_model = Levoit1000SResult.from_dict(r_dict)
         self._set_state(r_model)
 
     @deprecated("Use toggle_switch() instead.")

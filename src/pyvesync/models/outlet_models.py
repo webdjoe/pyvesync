@@ -186,3 +186,9 @@ class Timer7AItem(ResponseBaseModel):
     counterTimer: int
     action: str
     timerStatus: str
+
+
+@dataclass
+class ResultESW10Details(ResponseBaseModel):
+    """Response model for ESW10 outlet."""
+    enabled: bool

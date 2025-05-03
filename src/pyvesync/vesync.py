@@ -176,12 +176,12 @@ class VeSync:  # pylint: disable=function-redefined
         self._debug = new_flag
 
     @property
-    def verbose_logging(self) -> bool:
+    def verbose(self) -> bool:
         """Enable verbose logging."""
         return LibraryLogger.verbose
 
-    @verbose_logging.setter
-    def verbose_logging(self, new_flag: bool) -> None:
+    @verbose.setter
+    def verbose(self, new_flag: bool) -> None:
         """Set verbose logging."""
         if new_flag:
             LibraryLogger.verbose = True
@@ -309,7 +309,13 @@ class VeSync:  # pylint: disable=function-redefined
         if resp_dict is None:
             raise VeSyncAPIResponseError('Error receiving response to login request')
         if resp_dict.get('code') == 0:
-            response_model = ResponseLoginModel.from_dict(resp_dict)
+            try:
+                response_model = ResponseLoginModel.from_dict(resp_dict)
+            except Exception as exc:
+                logger.debug('Error parsing login response: %s', exc)
+                raise VeSyncAPIResponseError(
+                    'Error receiving response to login request'
+                    ) from exc
             result = response_model.result
             self._token = result.token
             self._account_id = result.accountID

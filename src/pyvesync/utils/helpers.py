@@ -11,6 +11,8 @@ from typing import TYPE_CHECKING, Any, TypeVar, Union
 
 
 from typing_extensions import deprecated
+from mashumaro.exceptions import MissingField, InvalidFieldValue, UnserializableField
+from mashumaro.mixins.orjson import DataClassORJSONMixin
 import orjson
 
 from pyvesync.const import (
@@ -32,6 +34,7 @@ if TYPE_CHECKING:
 
 
 T = TypeVar('T')
+T_MODEL = TypeVar('T_MODEL', bound=DataClassORJSONMixin)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -121,6 +124,44 @@ class Helpers:
     """VeSync Helper Functions."""
 
     @staticmethod
+    def model_maker(
+        logger: logging.Logger,
+        model: type[T_MODEL],
+        method_name: str,
+        data: dict[str, Any],
+        device: VeSyncBaseDevice | None = None,
+    ) -> T_MODEL | None:
+        """Create a model instance from a dictionary.
+
+        This method catches common errors that occur when parsing the
+        API response and returns None if the data is invalid. Enable debug
+        or verbose logging to see more information.
+
+
+        Args:
+            logger (logging.Logger): Logger instance.
+            model (type[T_MODEL]): Model class to create an instance of.
+            method_name (str): Name of the method used in API call.
+            device (VeSyncBaseDevice): Instance of VeSyncBaseDevice.
+            data (dict[str, Any] | None): Dictionary to create the model from.
+
+        Returns:
+            T_MODEL: Instance of the model class.
+        """
+        try:
+            model_instance = model.from_dict(data)
+        except (MissingField, UnserializableField, InvalidFieldValue) as err:
+            LibraryLogger.log_mashumaro_response_error(
+                logger,
+                method_name,
+                data,
+                err,
+                device,
+            )
+            return None
+        return model_instance
+
+    @staticmethod
     def bump_level(level: T | None, levels: list[T]) -> T:
         """Increment level by one returning to first level if at last.
 
@@ -154,7 +195,7 @@ class Helpers:
             return None
 
     @classmethod
-    def process_dev_response(
+    def process_dev_response(  # noqa: C901,PLR0912
         cls,
         logger: logging.Logger,
         method_name: str,
@@ -201,7 +242,7 @@ class Helpers:
             for code_tuple in internal_codes:
                 if code_tuple[0] != 0:
                     error_code = code_tuple[0]
-                    new_msg = code_tuple[1] if code_tuple[1] else None
+                    new_msg = code_tuple[1]
                     break
 
         try:

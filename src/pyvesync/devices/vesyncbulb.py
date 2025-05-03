@@ -20,10 +20,14 @@ from pyvesync.base_devices import VeSyncBulb
 from pyvesync.const import DeviceStatus, ConnectionStatus
 from pyvesync.models.base_models import DefaultValues
 from pyvesync.models.bypass_models import TimerModels
-from pyvesync.utils.device_mixins import BypassV1Mixin, process_bypassv1_result
 from pyvesync.utils.helpers import Helpers, Validators, Timer
 from pyvesync.utils.colors import Color
 from pyvesync.models import bulb_models
+from pyvesync.utils.device_mixins import (
+    BypassV1Mixin,
+    process_bypassv1_result,
+    process_bypassv2_result,
+)
 
 
 if TYPE_CHECKING:
@@ -171,12 +175,12 @@ class VeSyncBulbESL100MC(VeSyncBulb):
             json_object=body,
         )
 
-        r = Helpers.process_dev_response(logger, "get_details", self, r_dict)
-        if r is None:
+        result_model = process_bypassv2_result(
+            self, logger, "get_details", r_dict, bulb_models.ResponseESL100MCStatus
+        )
+        if result_model is None:
             return
-
-        status = bulb_models.ResponseESL100MCStatus.from_dict(r)
-        self._set_state(status)
+        self._set_state(result_model)
         return
 
     def _set_state(
@@ -392,12 +396,13 @@ class VeSyncBulbESL100(BypassV1Mixin, VeSyncBulb):
             'deviceDetail',
             'deviceDetail'
         )
+        model = process_bypassv1_result(
+            self, logger, "get_details", r_dict, bulb_models.ResponseESL100Detail
+        )
 
-        r = Helpers.process_dev_response(logger, "get_details", self, r_dict)
-        if r is None:
+        if model is None:
+            self.state.connection_status = ConnectionStatus.OFFLINE
             return
-
-        model = bulb_models.ResponseESL100Detail.from_dict(r)
         self.state.brightness = model.result.brightness
         self.state.device_status = model.result.deviceStatus
         self.state.connection_status = model.result.connectionStatus
@@ -492,11 +497,13 @@ class VeSyncBulbESL100(BypassV1Mixin, VeSyncBulb):
             'getTimers',
             'timer/getTimers'
         )
-        result = process_bypassv1_result(self, logger, 'get_timer', r_dict)
-        if result is None:
+        result_model = process_bypassv1_result(
+            self, logger, "get_timer", r_dict, TimerModels.ResultV1GetTimer
+        )
+        if result_model is None:
             return
-        result_model = TimerModels.ResultV1GetTimer.from_dict(result)
         if not isinstance(result_model.timers, list) or not result_model.timers:
+            self.state.timer = None
             logger.debug("No timers found")
             return
         timer = result_model.timers
@@ -527,10 +534,11 @@ class VeSyncBulbESL100(BypassV1Mixin, VeSyncBulb):
             'addTimer',
             'timer/addTimer'
         )
-        result = process_bypassv1_result(self, logger, 'set_timer', r_dict)
-        if result is None:
+        result_model = process_bypassv1_result(
+            self, logger, "set_timer", r_dict, TimerModels.ResultV1SetTimer
+        )
+        if result_model is None:
             return False
-        result_model = TimerModels.ResultV1SetTimer.from_dict(result)
         self.state.timer = Timer(duration, action, int(result_model.timerID))
         return True
 
@@ -710,10 +718,11 @@ class VeSyncBulbESL100CW(BypassV1Mixin, VeSyncBulb):
             'getTimers',
             'timer/getTimers'
         )
-        result = process_bypassv1_result(self, logger, 'get_timer', r_dict)
-        if result is None:
+        result_model = process_bypassv1_result(
+            self, logger, "get_timer", r_dict, TimerModels.ResultV1GetTimer
+        )
+        if result_model is None:
             return
-        result_model = TimerModels.ResultV1GetTimer.from_dict(result)
         if not isinstance(result_model.timers, list) or not result_model.timers:
             logger.debug("No timers found")
             return
@@ -748,10 +757,11 @@ class VeSyncBulbESL100CW(BypassV1Mixin, VeSyncBulb):
             'addTimer',
             'timer/addTimer'
         )
-        result = process_bypassv1_result(self, logger, 'set_timer', r_dict)
-        if result is None:
+        result_model = process_bypassv1_result(
+            self, logger, "set_timer", r_dict, TimerModels.ResultV1SetTimer
+        )
+        if result_model is None:
             return False
-        result_model = TimerModels.ResultV1SetTimer.from_dict(result)
         self.state.timer = Timer(duration, action, int(result_model.timerID))
         return True
 

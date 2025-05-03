@@ -15,16 +15,22 @@ Usage:
     # Use `LibraryLogger.log_api_exception` to log API exceptions.
     LibraryLogger.log_api_exception(logger, request_dict, exception)
 """
-
+from __future__ import annotations
 import logging
 import os
 import re
 from collections.abc import Mapping
-
+from dataclasses import fields, is_dataclass
+from typing import TYPE_CHECKING
+from mashumaro.exceptions import MissingField, InvalidFieldValue, UnserializableField
 import orjson
-from aiohttp import ClientResponse
-from aiohttp.client_exceptions import ClientResponseError
+
 from multidict import CIMultiDictProxy
+
+if TYPE_CHECKING:
+    from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
+    from aiohttp import ClientResponse
+    from aiohttp.client_exceptions import ClientResponseError
 
 
 class LibraryLogger:
@@ -210,6 +216,72 @@ class LibraryLogger:
         for log_name, logger in root_logger.manager.loggerDict.items():
             if isinstance(logger, logging.Logger) and log_name.startswith('pyvesync'):
                 logger.setLevel(level)
+
+    @classmethod
+    def log_mashumaro_response_error(
+        cls,
+        logger: logging.Logger,
+        method_name: str,
+        resp_dict: dict,
+        exc: MissingField | InvalidFieldValue | UnserializableField,
+        device: VeSyncBaseDevice | None = None,
+    ) -> None:
+        """Log an error parsing API response.
+
+        Use this log message to indicate that the API response
+        is not in the expected format.
+
+        Args:
+            logger (logging.Logger): module logger
+            method_name (str): device name
+            resp_dict (dict): API response dictionary
+            exc (MissingField | InvalidFieldValue | UnserializableField): mashumaro
+                exception caught
+            device (VeSyncBaseDevice | None): device if a device method was called
+        """
+        if device is not None:
+            msg = (
+                f"Error parsing {device.product_type} {device.device_name} {method_name} "
+                f"response with data model {exc.holder_class_name}"
+            )
+        else:
+            msg = (
+                f"Error parsing {method_name} response with "
+                f"data model {exc.holder_class_name}"
+            )
+        if isinstance(exc, MissingField):
+            msg += f"Missing field: {exc.field_name} of type {exc.field_type_name}"
+        elif isinstance(exc, InvalidFieldValue):
+            msg += f"Invalid field value: {exc.field_name} of type {exc.field_type_name}"
+        elif isinstance(exc, UnserializableField):
+            msg += f"Unserializable field: {exc.field_name} of type {exc.field_type_name}"
+        msg += "\n\n Please resport this issue to https://github.com/webdjoe/pyvesync/issues"
+        logger.warning(msg)
+        if not cls.debug:
+            return
+        msg = ""
+        if is_dataclass(exc.holder_class):
+            holder = exc.holder_class
+            field_tuple = fields(holder)
+            resp_f = sorted(resp_dict.keys())
+            field_f = sorted([f.name for f in field_tuple])
+            dif = set(field_f) - set(resp_f)
+            if dif:
+                msg += "\n\n-------------------------------------"
+                msg += "\n Expected Fields:"
+                msg += f"\n({", ".join(field_f)})"
+                msg += "\n Response Fields:"
+                msg += f"\n({", ".join(resp_f)})"
+                msg += "\n Missing Fields:"
+                msg += f"\n({", ".join(dif)})"
+
+        msg += "\n\n Full Response:"
+        msg += f"\n{orjson.dumps(resp_dict, option=orjson.OPT_INDENT_2).decode('utf-8')}"
+        if cls.verbose:
+            msg += "\n\n---------------------------------"
+            msg += "\n\n Exception:"
+            msg += f"\n{exc.__traceback__}"
+        logger.debug(msg)
 
     @classmethod
     def log_vs_api_response_error(

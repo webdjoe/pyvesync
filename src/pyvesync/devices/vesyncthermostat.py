@@ -64,20 +64,22 @@ class VeSyncAuraThermostat(BypassV2Mixin, VeSyncThermostat):
     async def get_details(self) -> None:
         """Get the details of the thermostat."""
         r_dict = await self.call_bypassv2_api("getTsStatus")
-        result = process_bypassv2_result(self, _LOGGER, 'get_details', r_dict)
-        if result is None:
+        r_model = process_bypassv2_result(
+            self, _LOGGER, "get_details", r_dict, ResultThermostatDetails
+        )
+        if r_model is None:
             return
-        r_model = ResultThermostatDetails.from_dict(result)
         self._process_details(r_model)
 
     async def get_configuration(self) -> None:
         """Get configuration or 'minor details'."""
         r_dict = await self.call_bypassv2_api("getTsMinorInfo")
-        result = process_bypassv2_result(self, _LOGGER, 'get_configuration', r_dict)
+        result = process_bypassv2_result(
+            self, _LOGGER, "get_configuration", r_dict, ThermostatMinorDetails
+        )
         if result is None:
             return
-        r_model = ThermostatMinorDetails.from_dict(result)
-        self.state.configuration = r_model
+        self.state.configuration = result
 
     async def _set_hold_status_api(
         self,

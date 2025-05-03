@@ -55,6 +55,9 @@ class ResponseInfo(DataClassORJSONMixin):
         critical_error (bool): A major error, such as a short or voltage error
         operational_error (bool): Device connected but API error
         device_online (bool | None): Device online status
+        response_data (dict | None): Response data from API - populated by the
+            process_dev_response method in the Helpers class and bypass mixin
+            methods.
     """
 
     name: str
@@ -63,6 +66,7 @@ class ResponseInfo(DataClassORJSONMixin):
     critical_error: bool = False
     operational_error: bool = False  # Device connected but API error
     device_online: bool | None = None  # Defaults to connected
+    response_data: dict | None = None  # Response data from API
 
 
 class ErrorTypes(StrEnum):

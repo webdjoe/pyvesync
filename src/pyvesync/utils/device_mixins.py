@@ -9,7 +9,9 @@ devices that use the `/cloud/v2/deviceManaged/bypassV2` endpoint, while the
 
 from __future__ import annotations
 from logging import Logger
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, ClassVar, TypeVar
+
+from mashumaro.mixins.orjson import DataClassORJSONMixin
 
 from pyvesync.models.base_models import DefaultValues
 from pyvesync.models.bypass_models import (
@@ -26,6 +28,7 @@ if TYPE_CHECKING:
     from pyvesync.utils.errors import ResponseInfo
     from pyvesync.base_devices import VeSyncBaseDevice
 
+T_MODEL = TypeVar("T_MODEL", bound=DataClassORJSONMixin)
 
 BYPASS_V1_PATH = "/cloud/v1/deviceManaged/"
 BYPASS_V2_BASE = "/cloud/v2/deviceManaged/"
@@ -36,18 +39,19 @@ def process_bypassv1_result(
     logger: Logger,
     method: str,
     resp_dict: dict | None,
-) -> dict | None:
+    model: type[T_MODEL]
+) -> T_MODEL | None:
     """Process the Bypass V1 API response.
 
     This will gracefully handle errors in the response and error codes,
-    logging them as needed. The return dictionary is the result value of
-    the API response.
+    logging them as needed. The return value is the built model.
 
     Args:
         device (VeSyncBaseDevice): The device object.
         logger (Logger): The logger to use for logging.
         method (str): The method used in the payload.
         resp_dict (dict | str): The api response.
+        model (type[T_MODEL]): The model to use for the response.
 
     Returns:
         dict: The response data
@@ -69,7 +73,10 @@ def process_bypassv1_result(
             logger, device, method, error_info, resp_dict['code']
         )
         return None
-    return resp_dict.get("result")
+    result = resp_dict.get("result")
+    if not isinstance(result, dict):
+        return None
+    return Helpers.model_maker(logger, model, method, result, device)
 
 
 def _handle_bypass_error(
@@ -154,7 +161,8 @@ def process_bypassv2_result(
     logger: Logger,
     method: str,
     resp_dict: dict | None,
-) -> dict | None:
+    model: type[T_MODEL]
+) -> T_MODEL | None:
     """Process the Bypass V1 API response.
 
     This will gracefully handle errors in the response and error codes,
@@ -166,9 +174,10 @@ def process_bypassv2_result(
         logger (Logger): The logger to use for logging.
         method (str): The method used in the payload.
         resp_dict (dict | str): The api response.
+        model (type[T_MODEL]): The model to use for the response.
 
     Returns:
-        dict: The response data from the model.
+        T_MODEL: An instance of the inner result model.
     """
     if not isinstance(resp_dict, dict) or 'code' not in resp_dict:
         LibraryLogger.log_device_api_response_error(
@@ -188,9 +197,9 @@ def process_bypassv2_result(
         )
         return None
     result = _get_inner_result(device, logger, method, resp_dict)
-    if isinstance(result, dict):
-        return result
-    return None
+    if not isinstance(result, dict):
+        return None
+    return Helpers.model_maker(logger, model, method, result, device)
 
 
 class BypassV2Mixin:
