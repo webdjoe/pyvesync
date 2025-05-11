@@ -612,11 +612,12 @@ class VeSyncBulbESL100CW(BypassV1Mixin, VeSyncBulb):
             bulb_models.RequestESL100CWBase, {"jsonCmd": {"getLightStatus": "get"}},
             )
 
-        r = Helpers.process_dev_response(logger, "get_details", self, r_dict)
-        if r is None:
+        light_resp = process_bypassv1_result(
+            self, logger, "get_details", r_dict, bulb_models.ResponseESL100CWDetail
+        )
+        if light_resp is None:
+            self.state.connection_status = ConnectionStatus.OFFLINE
             return
-
-        light_resp = bulb_models.ResponseESL100CWDetail.from_dict(r)
         self._interpret_apicall_result(light_resp)
 
     def _interpret_apicall_result(

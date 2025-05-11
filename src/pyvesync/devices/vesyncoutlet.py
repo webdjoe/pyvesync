@@ -182,8 +182,10 @@ class VeSyncOutlet7A(VeSyncOutlet):
             self.state.timer = None
             return
         if isinstance(r_dict, list) and len(r_dict) > 0:
-            timer = r_dict[0]
-            timer_model = Timer7AItem.from_dict(timer)
+            timer_model = Helpers.model_maker(logger, Timer7AItem, "get_timer", r_dict[0])
+            if timer_model is None:
+                self.state.timer = None
+                return
             self.state.timer = Timer(
                 timer_duration=int(timer_model.counterTimer),
                 id=int(timer_model.timerID),
@@ -219,18 +221,20 @@ class VeSyncOutlet7A(VeSyncOutlet):
             headers=Helpers.req_legacy_headers(self.manager),
             json_object=update_dict,
         )
-        if status_code != 200:
+        if status_code != 200 or not isinstance(r_dict, dict):
             logger.debug("Failed to set timer.")
-            return False
-        # r = Helpers.process_dev_response(logger, "set_timer", self, r_dict)
-
-        if not isinstance(r_dict, dict):
             return False
 
         if 'error' in r_dict:
             logger.debug("Error in response: %s", r_dict['error'])
             return False
-        result_model = TimerModels.ResultV1SetTimer.from_dict(r_dict)
+
+        result_model = Helpers.model_maker(
+            logger, TimerModels.ResultV1SetTimer, "set_timer", r_dict, self
+        )
+        if result_model is None:
+            logger.debug("Failed to set timer.")
+            return False
         if result_model.timerID == '':
             logger.debug("Unable to set timer.")
             if result_model.conflictTimerIds:

@@ -68,6 +68,7 @@ def process_bypassv1_result(
 
     error_info = ErrorCodes.get_error_info(resp_dict['code'])
     device.last_response = error_info
+    device.last_response.response_data = resp_dict
     if error_info.error_type != ErrorTypes.SUCCESS:
         _handle_bypass_error(
             logger, device, method, error_info, resp_dict['code']
@@ -191,6 +192,7 @@ def process_bypassv2_result(
 
     error_info = ErrorCodes.get_error_info(resp_dict['code'])
     device.last_response = error_info
+    device.last_response.response_data = resp_dict
     if error_info.error_type != ErrorTypes.SUCCESS:
         _handle_bypass_error(
             logger, device, method, error_info, resp_dict['code']
