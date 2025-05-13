@@ -4,7 +4,7 @@ import logging
 from typing import TYPE_CHECKING
 from abc import abstractmethod
 
-from deprecated import deprecated
+from typing_extensions import deprecated
 
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseToggleDevice, DeviceState
 from pyvesync.const import (
