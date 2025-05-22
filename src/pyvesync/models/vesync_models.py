@@ -154,7 +154,7 @@ class ResponseDeviceDetailsModel(ResponseBaseModel):
     subDeviceType: str | None
     subDeviceList: None | str
     extension: None | InternalDeviceListExtension
-    subDeviceNo: int = 0
+    subDeviceNo: int | None = None
     deviceStatus: str = "off"
     connectionStatus: str = "offline"
     productType: str | None = None
@@ -182,8 +182,6 @@ class ResponseDeviceDetailsModel(ResponseBaseModel):
         """
         super().__pre_deserialize__(d)
         d = _flatten_device_prop(d)
-        if d.get('subDeviceNo') is None:
-            d['subDeviceNo'] = 0
         if d.get('cid') is None:
             d['cid'] = d.get('uuid') if d.get('uuid') is not None else d.get("macID")
         return d

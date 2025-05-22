@@ -131,7 +131,7 @@ class VeSyncBaseDevice(ABC, Generic[VS_STATE_T]):
         self.current_firm_version = details.currentFirmVersion
         self.device_region: str | None = details.deviceRegion
         self.pid: str | None = None
-        self.sub_device_no: int = details.subDeviceNo
+        self.sub_device_no: int | None = details.subDeviceNo
         # From feature_map
         self.product_type: str = feature_map.product_type
         self.features: list[str] = feature_map.features
