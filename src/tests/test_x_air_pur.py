@@ -5,7 +5,7 @@ from pyvesync.devices.vesyncpurifier import VeSyncAir131
 from pyvesync.utils.helpers import Helpers as Helpers
 import call_json
 import call_json_fans
-from utils import TestBase
+from base_test_cases import TestBase
 from defaults import Defaults
 
 LVPUR131S = 'LV-PUR131S'

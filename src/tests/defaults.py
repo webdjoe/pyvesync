@@ -21,6 +21,49 @@ CALL_API_ARGS = ['url', 'method', 'data', 'headers']
 ID_KEYS = ['CID', 'UUID', 'MACID']
 
 
+def build_base_response(
+    code: int = 0, msg: str | None = None, merge_dict: dict | None = None
+) -> tuple[dict, int]:
+    """Build the standard response response tuple."""
+    resp_dict = {
+        "code": code,
+        "msg": msg,
+        "stacktrace": None,
+        "module": None,
+        "traceId": Defaults.trace_id,
+    }
+    resp_dict |= merge_dict or {}
+    return (resp_dict, 200)
+
+
+def build_bypass_v1_response(
+    code: int = 0, msg: str | None = None, result_dict: dict | None = None
+) -> tuple[dict, int]:
+    """Build the standard response response tuple."""
+    resp_dict = {
+        "code": code,
+        "msg": msg,
+        "stacktrace": None,
+        "module": None,
+        "traceId": Defaults.trace_id,
+        "result": result_dict or {},
+    }
+    return (resp_dict, 200)
+
+
+def build_bypass_v2_response(
+    code: int = 0, msg: str | None = None, inner_code: int = 0, inner_result: dict | None = None
+) -> tuple[dict, int]:
+    """Build the standard response response tuple for BypassV2 endpoints."""
+    resp_dict, _ = build_base_response(code, msg)
+    resp_dict['result'] = {
+        "traceId": Defaults.trace_id,
+        "code": inner_code,
+        "result": inner_result or {},
+    }
+    return (resp_dict, 200)
+
+
 class Defaults:
     """General defaults for API responses and requests.
 
@@ -55,12 +98,14 @@ class Defaults:
     account_id = 'sample_id'
     trace_id = "TRACE_ID"
     active_time = 1
+    time_zone = pyvesync.const.DEFAULT_TZ
     color = Color.from_rgb(red=50, green=100, blue=225)
     brightness = 100
     color_temp = 100
     bool_toggle = True
     str_toggle = 'on'
     bin_toggle = 1
+    country_code = 'US'
 
     @staticmethod
     def name(dev_type: str = 'NA'):

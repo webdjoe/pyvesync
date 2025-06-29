@@ -1,15 +1,13 @@
 import copy
 import orjson
 import pyvesync.const
-import pyvesync.utils.helpers as helpers
 from defaults import Defaults
 import call_json_switches
 import call_json_outlets
 import call_json_bulbs
 import call_json_fans
 
-API_BASE_URL = helpers.API_BASE_URL
-API_RATE_LIMIT = helpers.API_RATE_LIMIT
+API_BASE_URL = pyvesync.const.API_BASE_URL
 API_TIMEOUT = pyvesync.const.API_TIMEOUT
 DEFAULT_TZ = pyvesync.const.DEFAULT_TZ
 APP_VERSION = pyvesync.const.APP_VERSION
@@ -95,39 +93,6 @@ def BYPASS_V1_BODY(cid: str, config_module: str, json_cmd: dict):
         "configModule": config_module,
         "jsonCmd": json_cmd
     }
-
-
-DEFAULT_BODY = {
-    'acceptLanguage': 'en',
-    'accountID': Defaults.account_id,
-    'appVersion': APP_VERSION,
-    'pageNo': 1,
-    'pageSize': 100,
-    'phoneBrand': PHONE_BRAND,
-    'phoneOS': PHONE_OS,
-    'timeZone': DEFAULT_TZ,
-    'token': Defaults.token,
-    'traceId': Defaults.trace_id,
-}
-
-
-LOGIN_RET_BODY = (
-    orjson.dumps({
-        'traceId': Defaults.trace_id,
-        'msg': '',
-        'result': {
-            'accountID': Defaults.account_id,
-            'avatarIcon': '',
-            'acceptLanguage': 'en',
-            'gdprStatus': True,
-            'nickName': 'nick',
-            'userType': '1',
-            'token': Defaults.token,
-        },
-        'code': 0,
-    }),
-    200,
-)
 
 
 def login_call_body(email, password):
@@ -607,20 +572,6 @@ class DeviceDetails:
         'fans': fans,
         'bulbs': bulbs
         }
-
-
-def get_devices_body():
-    """Build device body dictionary."""
-    body = DEFAULT_BODY
-    body['method'] = 'devices'
-    return body, 200
-
-
-def get_details_body():
-    body = DEFAULT_BODY
-    body['method'] = 'deviceDetail'
-    return body, 200
-
 
 DETAILS_BADCODE = (
     {

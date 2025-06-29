@@ -90,7 +90,7 @@ class AiohttpClientMockResponse:
         """
         if json is not None:
             text = dumps(json)
-        if text is not None:
+        if isinstance(text, str):
             response = text.encode("utf-8")
         if response is None:
             response = b""
@@ -195,7 +195,7 @@ class AiohttpClientMockResponse:
             request_info = mock.Mock(real_url="http://example.com")
             raise ClientResponseError(
                 request_info=request_info,
-                history=None,
+                history=None,  # type: ignore
                 status=self.status,
                 headers=self.headers,
             )

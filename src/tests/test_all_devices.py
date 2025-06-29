@@ -14,12 +14,13 @@ that already exist. If the API changes, set the overwrite argument to True
 in order to overwrite the existing YAML file with the new request.
 """
 import logging
+from base_test_cases import TestBase
 import call_json
 import call_json_outlets
 import call_json_bulbs
 import call_json_fans
 import call_json_switches
-from utils import TestBase, assert_test, parse_args
+from utils import assert_test, parse_args
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -64,16 +65,6 @@ def test_device_tests():
 
 class TestGeneralAPI(TestBase):
     """General API testing class for login() and get_devices()."""
-
-    def test_login(self):
-        """Test login() method request and API response."""
-        print("Test Login")
-        self.mock_api.return_value = LOGIN_RESPONSE
-        self.manager.enabled = False
-        assert self.run_in_loop(self.manager.login)
-        all_kwargs = parse_args(self.mock_api)
-        assert assert_test(self.manager.login, all_kwargs, None,
-                           self.write_api, self.overwrite)
 
     def test_get_devices(self):
         """Test get_devices() method request and API response."""

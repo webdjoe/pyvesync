@@ -54,7 +54,7 @@ class RequestLoginModel(RequestBaseModel):
 class IntRespLoginResultModel(ResponseBaseModel):
     """Model for the 'result' field in login response containing token and account ID.
 
-    This class is inherited by the `ResponseLoginModel` class.
+    This class is referenced by the `ResponseLoginModel` class.
     """
     accountID: str
     acceptLanguage: str
@@ -93,8 +93,6 @@ class ResponseLoginModel(ResponseCodeModel):
         ```
     """
     result: IntRespLoginResultModel
-    stacktrace: str | None
-    module: str | None
 
 
 @dataclass

@@ -2,7 +2,7 @@ import orjson
 from pyvesync.devices.vesyncoutlet import VeSyncOutlet15A
 from pyvesync.utils.helpers import Helpers as Helpers
 import call_json
-import utils
+import base_test_cases
 import call_json_outlets
 
 DEVICE_TYPE = 'ESW15-USA'
@@ -18,7 +18,7 @@ CORRECT_15A_DETAILS = call_json_outlets.DETAILS_RESPONSES[DEVICE_TYPE]
 BAD_15A_LIST = call_json.DETAILS_BADCODE
 
 
-class TestVeSyncSwitch(utils.TestBase):
+class TestVeSyncSwitch(base_test_cases.TestBase):
 
     def test_15aswitch_conf(self):
         """Tests that 15A Outlet is instantiated properly"""
@@ -52,7 +52,7 @@ class TestVeSyncSwitch(utils.TestBase):
         assert vswitch15a.energy_today == 1
 
 
-class TestVesync15ASwitch(utils.TestBase):
+class TestVesync15ASwitch(base_test_cases.TestBase):
 
     def test_15aswitch_conf(self):
         """Tests that 15A Outlet is instantiated properly"""

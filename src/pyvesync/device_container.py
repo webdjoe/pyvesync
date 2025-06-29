@@ -184,7 +184,7 @@ class DeviceContainer(_DeviceContainerBase):
         if device_obj is not None:
             self.add(device_obj)
 
-    def device_exists(self, cid: str, sub_device_no: int = 0) -> bool:
+    def device_exists(self, cid: str, sub_device_no: int | None = None) -> bool:
         """Check if a device with the given cid & sub_dev_no exists.
 
         Args:

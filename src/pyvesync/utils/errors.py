@@ -794,7 +794,7 @@ class VeSyncTokenError(VeSyncError):
 
     def __init__(self) -> None:
         """Initialize the exception with a message."""
-        super().__init__("Token expired or invalid - please re-authenticate")
+        super().__init__("Token expired or invalid - please re-authenticate with login()")
 
 
 class VeSyncServerError(VeSyncError):

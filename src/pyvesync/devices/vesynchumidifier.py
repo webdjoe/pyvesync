@@ -388,6 +388,7 @@ class VeSyncHumid200S(VeSyncHumid200300S):
             return False
 
         self.state.display_set_status = DeviceStatus.from_bool(toggle)
+        self.state.display_status = DeviceStatus.from_bool(toggle)
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 

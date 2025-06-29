@@ -5,7 +5,7 @@ from pyvesync.devices.vesyncoutlet import VeSyncOutlet7A
 from pyvesync.utils.helpers import Helpers as Helpers
 import call_json
 import call_json_outlets
-from utils import TestBase
+from base_test_cases import TestBase
 
 DEVICE_TYPE = 'wifi-switch-1.3'
 

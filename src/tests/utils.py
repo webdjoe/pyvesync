@@ -10,15 +10,11 @@ parse_args: function
 assert_test: function
     Test pyvesync API calls against existing API
 """
-import asyncio
 import logging
 from pathlib import Path
 from typing import Any
-import pytest
 import yaml
-from unittest.mock import patch
-from pyvesync.vesync import VeSync
-from defaults import Defaults, CALL_API_ARGS, ID_KEYS, API_DEFAULTS
+from defaults import CALL_API_ARGS, ID_KEYS, API_DEFAULTS
 
 logger = logging.getLogger(__name__)
 
@@ -174,61 +170,6 @@ def api_scrub(api_dict, device_type=None):
             return nested
         return mapper(last_key, nested)
     return nested_dict_iter(api_dict, id_cleaner)
-
-
-class TestBase:
-    """Base class for all tests.
-
-    Contains instantiated VeSync object and mocked
-    API call for call_api() function.
-
-    Attributes
-    ----------
-    self.mock_api : Mock
-        Mock for call_api() function
-    self.manager : VeSync
-        Instantiated VeSync object that is logged in
-    self.caplog : LogCaptureFixture
-        Pytest fixture for capturing logs
-    """
-    overwrite = False
-    write_api = False
-
-    @pytest.fixture(autouse=True, scope='function')
-    def setup(self, caplog):
-        """Fixture to instantiate VeSync object, start logging and start Mock.
-
-        Attributes
-        ----------
-        self.mock_api : Mock
-        self.manager : VeSync
-        self.caplog : LogCaptureFixture
-
-        Yields
-        ------
-        Class instance with mocked call_api() function and VeSync object
-        """
-        self.loop = asyncio.new_event_loop()
-        self.mock_api_call = patch('pyvesync.vesync.VeSync.async_call_api')
-        self.caplog = caplog
-        self.caplog.set_level(logging.DEBUG)
-        self.mock_api = self.mock_api_call.start()
-        self.mock_api.return_value.ok = True
-        self.manager = VeSync('EMAIL', 'PASSWORD', debug=True)
-        self.manager.enabled = True
-        self.manager.token = Defaults.token
-        self.manager.account_id = Defaults.account_id
-        caplog.set_level(logging.DEBUG)
-        yield
-        self.mock_api_call.stop()
-
-    async def run_coro(self, coro):
-        """Run a coroutine in the event loop."""
-        return await coro
-
-    def run_in_loop(self, func, *args, **kwargs):
-        """Run a function in the event loop."""
-        return self.loop.run_until_complete(self.run_coro(func(*args, **kwargs)))
 
 
 def parse_args(mock_api):

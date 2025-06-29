@@ -38,8 +38,6 @@ T_MODEL = TypeVar('T_MODEL', bound=DataClassORJSONMixin)
 
 _LOGGER = logging.getLogger(__name__)
 
-API_BASE_URL = 'https://smartapi.vesync.com'
-API_RATE_LIMIT = 30
 NUMERIC_OPT = Union[float, str, None]
 
 NUMERIC_STRICT = Union[float, str]

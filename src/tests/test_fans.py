@@ -30,8 +30,9 @@ import logging
 from dataclasses import asdict
 import orjson
 import pytest
+from base_test_cases import TestBase
 from pyvesync.vesync import object_factory
-from utils import TestBase, assert_test, parse_args
+from utils import assert_test, parse_args
 from defaults import Defaults
 import call_json
 import call_json_fans

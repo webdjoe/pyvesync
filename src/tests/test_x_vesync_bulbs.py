@@ -5,7 +5,7 @@ from pyvesync.devices.vesyncbulb import (VeSyncBulbESL100, VeSyncBulbESL100CW,
                                  VeSyncBulbESL100MC, VeSyncBulbValcenoA19MC)
 import call_json
 import call_json_bulbs
-from utils import TestBase
+from base_test_cases import TestBase
 
 DEV_LIST = call_json.DeviceList.device_list_response('ESL100')
 
