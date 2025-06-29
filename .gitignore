@@ -34,3 +34,4 @@ pyvesync.und
 
 site/
 overrides/
+*.log

@@ -812,7 +812,7 @@ class VeSyncAir131(BypassV1Mixin, VeSyncPurifier):
         self.state.child_lock = bool(DeviceStatus(details.childLock))
         self.state.mode = details.mode
         self.state.fan_level = details.level or 0
-        self.state.fan_set_level = details.levelNew
+        self.state.fan_set_level = details.level or 0
         self.state.set_air_quality_level(details.airQuality)
 
     async def get_details(self) -> None:
@@ -927,6 +927,12 @@ class VeSyncAir131(BypassV1Mixin, VeSyncPurifier):
         if mode not in self.modes:
             _LOGGER.debug('Invalid purifier mode used - %s', mode)
             return False
+
+        if mode == PurifierModes.MANUAL:
+            set_level = (
+                1 if self.state.fan_set_level in [0, None] else self.state.fan_set_level
+            )
+            return await self.set_fan_speed(set_level)
 
         update_dict = {
             "mode": mode
