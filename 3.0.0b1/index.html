@@ -347,6 +347,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#debugging-and-getting-help" class="md-nav__link">
+    <span class="md-ellipsis">
+      Debugging and Getting Help
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#device-usage" class="md-nav__link">
     <span class="md-ellipsis">
       Device Usage
@@ -1253,6 +1262,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#debugging-and-getting-help" class="md-nav__link">
+    <span class="md-ellipsis">
+      Debugging and Getting Help
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#device-usage" class="md-nav__link">
     <span class="md-ellipsis">
       Device Usage
@@ -1429,15 +1447,45 @@
 <a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="n">manager</span><span class="o">.</span><span class="n">devices</span><span class="o">.</span><span class="n">air_fryers</span> <span class="o">=</span> <span class="p">[</span><span class="n">VeSyncAirFryerInstances</span><span class="p">]</span>
 <a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="n">managers</span><span class="o">.</span><span class="n">devices</span><span class="o">.</span><span class="n">thermostats</span> <span class="o">=</span> <span class="p">[</span><span class="n">VeSyncThermostatInstances</span><span class="p">]</span>
 </code></pre></div>
+<h3 id="debugging-and-getting-help">Debugging and Getting Help<a class="toc-permalink" href="#debugging-and-getting-help" title="Permanent link">↲</a></h3>
+<p>The library has built-in debug logging that can be enabled by setting the <code>debug</code> attribute of the <code>VeSync</code> object to <code>True</code>. This will log the API calls and response codes to the console. This will not log the actual API calls.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pyvesync</span><span class="w"> </span><span class="kn">import</span> <span class="n">VeSync</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="k">async</span> <span class="k">with</span> <span class="n">VeSync</span><span class="p">(</span><span class="n">username</span><span class="o">=</span><span class="s2">&quot;EMAIL&quot;</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="s2">&quot;PASSWORD&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">manager</span><span class="p">:</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="n">manager</span><span class="o">.</span><span class="n">debug</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># Enable debug logging</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="k">await</span> <span class="n">manager</span><span class="o">.</span><span class="n">login</span><span class="p">()</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    <span class="k">await</span> <span class="n">manager</span><span class="o">.</span><span class="n">get_devices</span><span class="p">()</span>
+</code></pre></div>
+<p>To log the full API request and response, set the <code>verbose</code> attribute to <code>True</code>. This will log the full request and response, including headers and body. This is useful for debugging issues with the API calls. Setting the <code>redact</code> attribute to <code>False</code> will not redact the sensitive information in the logs, such as the username and password. <code>redact</code> is <code>True</code> by default.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pyvesync</span><span class="w"> </span><span class="kn">import</span> <span class="n">VeSync</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="k">async</span> <span class="k">with</span> <span class="n">VeSync</span><span class="p">(</span><span class="n">username</span><span class="o">=</span><span class="s2">&quot;EMAIL&quot;</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="s2">&quot;PASSWORD&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">manager</span><span class="p">:</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="n">manager</span><span class="o">.</span><span class="n">debug</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># Enable debug logging</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="n">manager</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># Enable verbose logging</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    <span class="k">await</span> <span class="n">manager</span><span class="o">.</span><span class="n">login</span><span class="p">()</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    <span class="k">await</span> <span class="n">manager</span><span class="o">.</span><span class="n">get_devices</span><span class="p">()</span>
+</code></pre></div>
+<p>Since verbose debugging can output a lot of information, there is a helper function to log to a file instead of the console.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pyvesync</span><span class="w"> </span><span class="kn">import</span> <span class="n">VeSync</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="k">async</span> <span class="k">with</span> <span class="n">VeSync</span><span class="p">(</span><span class="n">username</span><span class="o">=</span><span class="s2">&quot;EMAIL&quot;</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="s2">&quot;PASSWORD&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">manager</span><span class="p">:</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>    <span class="n">manager</span><span class="o">.</span><span class="n">debug</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># Enable debug logging</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    <span class="n">manager</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># Enable verbose logging</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>    <span class="k">await</span> <span class="n">manager</span><span class="o">.</span><span class="n">log_to_file</span><span class="p">(</span><span class="s2">&quot;debug.log&quot;</span><span class="p">)</span>  <span class="c1"># Can be an absolute or path relative to the current working directory</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>    <span class="k">await</span> <span class="n">manager</span><span class="o">.</span><span class="n">login</span><span class="p">()</span>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>    <span class="k">await</span> <span class="n">manager</span><span class="o">.</span><span class="n">get_devices</span><span class="p">()</span>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>    <span class="c1"># Log to a file instead of the console</span>
+</code></pre></div>
 <h3 id="device-usage">Device Usage<a class="toc-permalink" href="#device-usage" title="Permanent link">↲</a></h3>
 <p>Devices and their attributes and methods can be accessed via the device lists in the manager instance.</p>
 <p>One device is simple to access, an outlet for example:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">for</span> <span class="n">devices</span> <span class="ow">in</span> <span class="n">manager</span><span class="o">.</span><span class="n">outlets</span><span class="p">:</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">outlet</span><span class="p">)</span>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">outlet</span><span class="o">.</span><span class="n">device_name</span><span class="p">)</span>
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">outlet</span><span class="o">.</span><span class="n">device_type</span><span class="p">)</span>
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">outlet</span><span class="o">.</span><span class="n">sub_device_no</span><span class="p">)</span>
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">outlet</span><span class="o">.</span><span class="n">state</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">for</span> <span class="n">devices</span> <span class="ow">in</span> <span class="n">manager</span><span class="o">.</span><span class="n">outlets</span><span class="p">:</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">outlet</span><span class="p">)</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">outlet</span><span class="o">.</span><span class="n">device_name</span><span class="p">)</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">outlet</span><span class="o">.</span><span class="n">device_type</span><span class="p">)</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">outlet</span><span class="o">.</span><span class="n">sub_device_no</span><span class="p">)</span>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">outlet</span><span class="o">.</span><span class="n">state</span><span class="p">)</span>
 </code></pre></div>
 <p>The last response information is stored in the <code>last_response</code> attribute of the device and returns the <a class="autorefs autorefs-internal" title="pyvesync.utils.errors.ResponseInfo
 
@@ -1445,27 +1493,27 @@
   
       dataclass
   " href="development/utils/errors/#pyvesync.utils.errors.ResponseInfo"><code>ResponseInfo</code></a> object.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Get the last response information</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nb">print</span><span class="p">(</span><span class="n">outlet</span><span class="o">.</span><span class="n">last_response</span><span class="p">)</span>
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">ResponseInfo</span><span class="p">(</span>
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="n">error_name</span><span class="o">=</span><span class="s2">&quot;SUCCESS&quot;</span><span class="p">,</span>
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="n">error_type</span><span class="o">=</span><span class="n">SUCCESS</span><span class="p">,</span>  <span class="c1"># StrEnum from ErrorTypes class</span>
-<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    <span class="n">message</span><span class="o">=</span><span class="s2">&quot;Success&quot;</span><span class="p">,</span>
-<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    <span class="n">critical_error</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>    <span class="n">operational_error</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>    <span class="n">device_online</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># Get the last response information</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="nb">print</span><span class="p">(</span><span class="n">outlet</span><span class="o">.</span><span class="n">last_response</span><span class="p">)</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="n">ResponseInfo</span><span class="p">(</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>    <span class="n">error_name</span><span class="o">=</span><span class="s2">&quot;SUCCESS&quot;</span><span class="p">,</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>    <span class="n">error_type</span><span class="o">=</span><span class="n">SUCCESS</span><span class="p">,</span>  <span class="c1"># StrEnum from ErrorTypes class</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>    <span class="n">message</span><span class="o">=</span><span class="s2">&quot;Success&quot;</span><span class="p">,</span>
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>    <span class="n">critical_error</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>    <span class="n">operational_error</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>    <span class="n">device_online</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="p">)</span>
 </code></pre></div>
 <h3 id="device-state">Device State<a class="toc-permalink" href="#device-state" title="Permanent link">↲</a></h3>
 <p>All device state information is stored in a separate object in the <code>device.state</code> attribute. Each device has it's own state class that inherits from the <code>pyvesync.base_devices.vesyncbasedevice.DeviceState</code> class. The state object is updated when the device is updated, so it will always be the most recent state of the device. Each product type has it's own state class that hold all available attribute for every device type supported for that product type. For example, purifiers have the <code>PurifierState</code> class, which holds all attributes, some of which may not be supported by all devices.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nb">print</span><span class="p">(</span><span class="n">outlet</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">device_status</span><span class="p">)</span>
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">DeviceStatus</span><span class="o">.</span><span class="n">ON</span>  <span class="c1"># StrEnum representing the &quot;on&quot; state</span>
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="nb">print</span><span class="p">(</span><span class="n">outlet</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">connection_status</span><span class="p">)</span>
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="n">ConnectionStatus</span><span class="o">.</span><span class="n">ONLINE</span>  <span class="c1"># StrEnum representing the &quot;online&quot; state</span>
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>
-<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="nb">print</span><span class="p">(</span><span class="n">outlet</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">voltage</span><span class="p">)</span>
-<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="mf">120.0</span>  <span class="c1"># Voltage of the device</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nb">print</span><span class="p">(</span><span class="n">outlet</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">device_status</span><span class="p">)</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="n">DeviceStatus</span><span class="o">.</span><span class="n">ON</span>  <span class="c1"># StrEnum representing the &quot;on&quot; state</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="nb">print</span><span class="p">(</span><span class="n">outlet</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">connection_status</span><span class="p">)</span>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="n">ConnectionStatus</span><span class="o">.</span><span class="n">ONLINE</span>  <span class="c1"># StrEnum representing the &quot;online&quot; state</span>
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="nb">print</span><span class="p">(</span><span class="n">outlet</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">voltage</span><span class="p">)</span>
+<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="mf">120.0</span>  <span class="c1"># Voltage of the device</span>
 </code></pre></div>
 <p>For a full listing of available device attributes and methods, see the individual device documentation:</p>
 <ol type="1">
@@ -1480,20 +1528,20 @@
 </ol>
 <h2 id="serializingdeserializing-devices-and-state">Serializing/Deserializing devices and state<a class="toc-permalink" href="#serializingdeserializing-devices-and-state" title="Permanent link">↲</a></h2>
 <p>All devices have the <code>to_json()</code> and <code>to_jsonb()</code> methods which will serialize the device and state to a JSON string or binary json string.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">device</span> <span class="o">=</span> <span class="n">manager</span><span class="o">.</span><span class="n">outlets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="nb">print</span><span class="p">(</span><span class="n">device</span><span class="o">.</span><span class="n">to_json</span><span class="p">(</span><span class="n">state</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>  <span class="c1"># JSON string</span>
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="c1"># Setting `state=False` will only serialize the attributes in the device class and not the state class</span>
-<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>
-<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="nb">print</span><span class="p">(</span><span class="n">device</span><span class="o">.</span><span class="n">to_jsonb</span><span class="p">(</span><span class="n">state</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>  <span class="c1"># Binary JSON string</span>
-<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>
-<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="c1"># State classes also have the `to_json()` and `to_jsonb()` methods but this does not include any device information, such as device_name, device_type, etc.</span>
-<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="nb">print</span><span class="p">(</span><span class="n">device</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">to_json</span><span class="p">(</span><span class="n">indent</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>  <span class="c1"># JSON string</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">device</span> <span class="o">=</span> <span class="n">manager</span><span class="o">.</span><span class="n">outlets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="nb">print</span><span class="p">(</span><span class="n">device</span><span class="o">.</span><span class="n">to_json</span><span class="p">(</span><span class="n">state</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>  <span class="c1"># JSON string</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="c1"># Setting `state=False` will only serialize the attributes in the device class and not the state class</span>
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="nb">print</span><span class="p">(</span><span class="n">device</span><span class="o">.</span><span class="n">to_jsonb</span><span class="p">(</span><span class="n">state</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>  <span class="c1"># Binary JSON string</span>
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>
+<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="c1"># State classes also have the `to_json()` and `to_jsonb()` methods but this does not include any device information, such as device_name, device_type, etc.</span>
+<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="nb">print</span><span class="p">(</span><span class="n">device</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">to_json</span><span class="p">(</span><span class="n">indent</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>  <span class="c1"># JSON string</span>
 </code></pre></div>
 <p>Devices and state objects can also output to a dictionary using the <code>to_dict()</code> method or as a list of tuples with <code>as_tuple()</code>. This is useful for logging or debugging.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">device</span> <span class="o">=</span> <span class="n">manager</span><span class="o">.</span><span class="n">outlets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="n">dev_dict</span> <span class="o">=</span> <span class="n">device</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="n">state</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># Dictionary of device and state attributes</span>
-<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="n">dev_dict</span><span class="p">[</span><span class="s2">&quot;device_name&quot;</span><span class="p">]</span>  <span class="c1"># Get the device name from the dictionary</span>
-<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="n">dev_dict</span><span class="p">[</span><span class="s2">&quot;device_status&quot;</span><span class="p">]</span> <span class="c1"># Returns device status as a StrEnum</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="n">device</span> <span class="o">=</span> <span class="n">manager</span><span class="o">.</span><span class="n">outlets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="n">dev_dict</span> <span class="o">=</span> <span class="n">device</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="n">state</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># Dictionary of device and state attributes</span>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="n">dev_dict</span><span class="p">[</span><span class="s2">&quot;device_name&quot;</span><span class="p">]</span>  <span class="c1"># Get the device name from the dictionary</span>
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="n">dev_dict</span><span class="p">[</span><span class="s2">&quot;device_status&quot;</span><span class="p">]</span> <span class="c1"># Returns device status as a StrEnum</span>
 </code></pre></div>
 <h2 id="custom-exceptions">Custom Exceptions<a class="toc-permalink" href="#custom-exceptions" title="Permanent link">↲</a></h2>
 <p>Exceptions are no longer caught by the library and must be handled by the user. Exceptions are raised by server errors and aiohttp connection errors.</p>
