@@ -140,6 +140,48 @@ manager.devices.air_fryers = [VeSyncAirFryerInstances]
 managers.devices.thermostats = [VeSyncThermostatInstances]
 ```
 
+### Debugging and Getting Help
+
+The library has built-in debug logging that can be enabled by setting the `debug` attribute of the `VeSync` object to `True`. This will log the API calls and response codes to the console. This will not log the actual API calls.
+
+```python
+from pyvesync import VeSync
+
+async with VeSync(username="EMAIL", password="PASSWORD") as manager:
+    manager.debug = True  # Enable debug logging
+    await manager.login()
+    await manager.get_devices()
+```
+
+To log the full API request and response, set the `verbose` attribute to `True`. This will log the full request and response, including headers and body. This is useful for debugging issues with the API calls. Setting the `redact` attribute to `False` will not redact the sensitive information in the logs, such as the username and password. `redact` is `True` by default.
+
+```python
+from pyvesync import VeSync
+
+async with VeSync(username="EMAIL", password="PASSWORD") as manager:
+    manager.debug = True  # Enable debug logging
+    manager.verbose = True  # Enable verbose logging
+    await manager.login()
+    await manager.get_devices()
+```
+
+Since verbose debugging can output a lot of information, there is a helper function to log to a file instead of the console.
+
+```python
+from pyvesync import VeSync
+
+async with VeSync(username="EMAIL", password="PASSWORD") as manager:
+    manager.debug = True  # Enable debug logging
+    manager.verbose = True  # Enable verbose logging
+    await manager.log_to_file("debug.log")  # Can be an absolute or path relative to the current working directory
+    await manager.login()
+    await manager.get_devices()
+
+    # Log to a file instead of the console
+
+
+```
+
 ### Device Usage
 
 Devices and their attributes and methods can be accessed via the device lists in the manager instance.

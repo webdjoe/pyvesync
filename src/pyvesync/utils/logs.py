@@ -19,6 +19,7 @@ from __future__ import annotations
 import logging
 import os
 import re
+from pathlib import Path
 from collections.abc import Mapping
 from dataclasses import fields, is_dataclass
 from typing import TYPE_CHECKING
@@ -210,7 +211,11 @@ class LibraryLogger:
         handler.setFormatter(formatter)
         root_logger.addHandler(handler)
         if file_name:
-            file_handler = logging.FileHandler(file_name)
+            if not Path(file_name).is_absolute():
+                file_name_path = Path(file_name).joinpath(Path.cwd(), file_name)
+            else:
+                file_name_path = Path(file_name)
+            file_handler = logging.FileHandler(file_name_path)
             file_handler.setFormatter(formatter)
             root_logger.addHandler(file_handler)
         for log_name, logger in root_logger.manager.loggerDict.items():
