@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
-from pyvesync.const import OutletFeatures, IntFlag, StrFlag, NightlightModes
+from pyvesync.const import OutletFeatures, NightlightModes
 from pyvesync.utils.helpers import Helpers
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseToggleDevice, DeviceState
 from pyvesync.models.outlet_models import RequestEnergyHistory, ResponseEnergyHistory
@@ -89,12 +89,12 @@ class OutletState(DeviceState):
         self.device: VeSyncOutlet = device
         self.features: list[str] = feature_map.features
         self.active_time: int | None = 0
-        self.power: float = IntFlag.NOT_SUPPORTED
-        self.energy: float = IntFlag.NOT_SUPPORTED
-        self.voltage: float = IntFlag.NOT_SUPPORTED
-        self.nightlight_status: str | None = StrFlag.NOT_SUPPORTED
-        self.nightlight_brightness: int | None = IntFlag.NOT_SUPPORTED
-        self.nightlight_automode: str | None = StrFlag.NOT_SUPPORTED
+        self.power: float | None = None
+        self.energy: float | None = None
+        self.voltage: float | None = None
+        self.nightlight_status: str | None = None
+        self.nightlight_brightness: int | None = None
+        self.nightlight_automode: str | None = None
         self.weekly_history: ResponseEnergyResult | None = None
         self.monthly_history: ResponseEnergyResult | None = None
         self.yearly_history: ResponseEnergyResult | None = None

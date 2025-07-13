@@ -14,8 +14,6 @@ from pyvesync.utils.device_mixins import (
 from pyvesync.utils.helpers import Helpers, Timer
 # from pyvesync.models.base_models import DefaultValues
 from pyvesync.const import (
-    IntFlag,
-    StrFlag,
     PurifierAutoPreference,
     DeviceStatus,
     ConnectionStatus,
@@ -135,7 +133,7 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
         if self.supports_air_quality is True:
             self.state.pm25 = result.air_quality_value
             self.state.set_air_quality_level(result.air_quality)
-        if result.night_light != StrFlag.NOT_SUPPORTED:
+        if result.night_light is not None:
             self.state.nightlight_status = DeviceStatus.ON if result.night_light \
                 else DeviceStatus.OFF
 
@@ -490,7 +488,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         self.state.pm10 = details.PM10
         self.state.aq_percent = details.AQPercent
         self.state.fan_rotate_angle = details.fanRotateAngle
-        if details.filterOpenState != IntFlag.NOT_SUPPORTED:
+        if details.filterOpenState is not None:
             self.state.filter_open_state = bool(details.filterOpenState)
         if details.timerRemain > 0:
             self.state.timer = Timer(details.timerRemain, 'off')

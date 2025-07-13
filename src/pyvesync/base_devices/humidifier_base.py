@@ -9,9 +9,7 @@ from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseToggleDevice, Devic
 from pyvesync.const import (
     HumidifierFeatures,
     HumidifierModes,
-    DeviceStatus,
-    IntFlag,
-    StrFlag
+    DeviceStatus
     )
 
 if TYPE_CHECKING:
@@ -27,8 +25,7 @@ class HumidifierState(DeviceState):
     """State Class for VeSync Humidifiers.
 
     This is the state class for all vesync humidifiers. If there are
-    new features or state attributes, they should be added directly to
-    this class and be set to the default `NOT_SUPPORTED` flag.
+    new features or state attributes.
 
     Attributes:
         auto_preference (int): Auto preference level.
@@ -97,29 +94,29 @@ class HumidifierState(DeviceState):
         """
         super().__init__(device, details, feature_map)
         self.auto_stop_target_reached: bool = False
-        self.auto_target_humidity: int = IntFlag.NOT_SUPPORTED
+        self.auto_target_humidity: int | None = None
         self.automatic_stop_config: bool = False
         self.display_set_status: str = DeviceStatus.UNKNOWN
         self.display_status: str = DeviceStatus.UNKNOWN
-        self.humidity: int = IntFlag.NOT_SUPPORTED
+        self.humidity: int | None = None
         self.humidity_high: bool = False
         self.mist_level: int | None = None
         self.mist_virtual_level: int | None = None
-        self.mode: str = HumidifierModes.UNKNOWN
-        self.nightlight_brightness: int = IntFlag.NOT_SUPPORTED
-        self.nightlight_status: str = StrFlag.NOT_SUPPORTED
+        self.mode: str | None = None
+        self.nightlight_brightness: int | None = None
+        self.nightlight_status: str | None = None
         self.warm_mist_enabled: bool | None = None
-        self.warm_mist_level: int = IntFlag.NOT_SUPPORTED
+        self.warm_mist_level: int | None = None
         self.water_lacks: bool = False
         self.water_tank_lifted: bool = False
-        self.temperature: int = IntFlag.NOT_SUPPORTED
+        self.temperature: int | None = None
         # Superior 6000S States
-        self.auto_preference: int = IntFlag.NOT_SUPPORTED
-        self.filter_life_percent: int = IntFlag.NOT_SUPPORTED
-        self.drying_mode_level: int = IntFlag.NOT_SUPPORTED
-        self.drying_mode_auto_switch: str = StrFlag.NOT_SUPPORTED
-        self.drying_mode_status: str = StrFlag.NOT_SUPPORTED
-        self.drying_mode_time_remain: int = IntFlag.NOT_SUPPORTED
+        self.auto_preference: int | None = None
+        self.filter_life_percent: int | None = None
+        self.drying_mode_level: int | None = None
+        self.drying_mode_auto_switch: str | None = None
+        self.drying_mode_status: str | None = None
+        self.drying_mode_time_remain: int | None = None
 
     @property
     def automatic_stop(self) -> bool:
@@ -141,7 +138,7 @@ class HumidifierState(DeviceState):
         return self.auto_stop_target_reached
 
     @property
-    def target_humidity(self) -> int:
+    def target_humidity(self) -> int | None:
         """Return the target humidity level.
 
         Returns:
@@ -150,7 +147,7 @@ class HumidifierState(DeviceState):
         return self.auto_target_humidity
 
     @property
-    def auto_humidity(self) -> int:
+    def auto_humidity(self) -> int | None:
         """Return the auto humidity level.
 
         Returns:
@@ -174,7 +171,7 @@ class HumidifierState(DeviceState):
         return self.humidity
 
     @property
-    def drying_mode_state(self) -> str:
+    def drying_mode_state(self) -> str | None:
         """Return the drying mode state.
 
         Returns:
@@ -183,7 +180,7 @@ class HumidifierState(DeviceState):
         return self.drying_mode_status
 
     @property
-    def drying_mode_seconds_remaining(self) -> int:
+    def drying_mode_seconds_remaining(self) -> int | None:
         """Return the drying mode seconds remaining.
 
         Return:

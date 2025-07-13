@@ -8,7 +8,7 @@ import orjson
 from pyvesync.base_devices import VeSyncHumidifier
 from pyvesync.utils.helpers import Helpers, Validators, Timer
 from pyvesync.utils.device_mixins import BypassV2Mixin, process_bypassv2_result
-from pyvesync.const import DeviceStatus, IntFlag, ConnectionStatus
+from pyvesync.const import DeviceStatus, ConnectionStatus
 from pyvesync.models.bypass_models import ResultV2GetTimer, ResultV2SetTimer
 from pyvesync.models.humidifier_models import (
     ClassicLVHumidResult,
@@ -75,7 +75,7 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
         self.state.connection_status = ConnectionStatus.ONLINE
         self.state.device_status = DeviceStatus.from_bool(resp_model.enabled)
         self.state.mode = resp_model.mode
-        self.state.humidity = resp_model.humidity or IntFlag.NOT_SUPPORTED
+        self.state.humidity = resp_model.humidity
         self.state.mist_virtual_level = resp_model.mist_virtual_level or 0
         self.state.mist_level = resp_model.mist_level or 0
         self.state.water_lacks = resp_model.water_lacks
@@ -84,7 +84,7 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
         self.state.auto_stop_target_reached = resp_model.automatic_stop_reach_target
         if (
             self.supports_nightlight
-            and resp_model.night_light_brightness != IntFlag.NOT_SUPPORTED
+            and resp_model.night_light_brightness is not None
         ):
             self.state.nightlight_brightness = resp_model.night_light_brightness
             self.state.nightlight_status = (
@@ -93,7 +93,7 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
                 else DeviceStatus.OFF
             )
         self.state.display_status = DeviceStatus.from_bool(resp_model.display)
-        if self.supports_warm_mist and resp_model.warm_level != IntFlag.NOT_SUPPORTED:
+        if self.supports_warm_mist and resp_model.warm_level is not None:
             self.state.warm_mist_level = resp_model.warm_level
             self.state.warm_mist_enabled = resp_model.warm_enabled
         config = resp_model.configuration

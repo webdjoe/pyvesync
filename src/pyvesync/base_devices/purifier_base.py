@@ -12,10 +12,7 @@ from pyvesync.const import (
     PurifierFeatures,
     PurifierModes,
     DeviceStatus,
-    NightlightModes,
-    PurifierAutoPreference,
-    IntFlag,
-    StrFlag,
+    NightlightModes
     )
 
 if TYPE_CHECKING:
@@ -97,25 +94,23 @@ class PurifierState(DeviceState):
         self.fan_level: int | None = None
         self.fan_set_level: int | None = None
         self.filter_life: int | None = None
-        self.auto_preference_type: str | None = PurifierAutoPreference.UNKNOWN
+        self.auto_preference_type: str | None = None
         self.auto_room_size: int | None = None
-        self._air_quality_level: AirQualityLevel = AirQualityLevel.UNKNOWN
+        self._air_quality_level: AirQualityLevel | None = None
         self.child_lock: bool = False
         self.filter_open_state: bool = False
-        self.display_status: str = DeviceStatus.UNKNOWN
-        self.display_set_state: str = DeviceStatus.UNKNOWN
+        self.display_status: str | None = None
+        self.display_set_state: str | None = None
         self.display_forever: bool = False
         # Attributes not supported by all purifiers
-        # When update is first called, devices that support these attributes will
-        # update them from NOT_SUPPORTED, whether to None or another value.
-        self.pm25: int | None = IntFlag.NOT_SUPPORTED
-        self.pm1: int | None = IntFlag.NOT_SUPPORTED
-        self.pm10: int | None = IntFlag.NOT_SUPPORTED
-        self.aq_percent: int | None = IntFlag.NOT_SUPPORTED
-        self.light_detection_switch: str = StrFlag.NOT_SUPPORTED
-        self.light_detection_status: str = StrFlag.NOT_SUPPORTED
-        self.nightlight_status: str = StrFlag.NOT_SUPPORTED
-        self.fan_rotate_angle: int | None = IntFlag.NOT_SUPPORTED
+        self.pm25: int | None = None
+        self.pm1: int | None = None
+        self.pm10: int | None = None
+        self.aq_percent: int | None = None
+        self.light_detection_switch: str | None = None
+        self.light_detection_status: str | None = None
+        self.nightlight_status: str | None = None
+        self.fan_rotate_angle: int | None = None
 
     @property
     def air_quality_level(self) -> int:
@@ -171,19 +166,19 @@ class PurifierState(DeviceState):
 
     @property
     @deprecated("Use PurifierState.nightlight_status instead.")
-    def night_light(self) -> str:
+    def night_light(self) -> str | None:
         """Return night light status."""
         return self.nightlight_status
 
     @property
     @deprecated("Use display_status instead.")
-    def display_state(self) -> str:
+    def display_state(self) -> str | None:
         """Return display status."""
         return self.display_status
 
     @property
     @deprecated("Use display_set_state instead.")
-    def display_switch(self) -> str:
+    def display_switch(self) -> str | None:
         """Return display switch status."""
         return self.display_set_state
 
@@ -499,7 +494,7 @@ class VeSyncPurifier(VeSyncBaseToggleDevice):
 
     @property
     @deprecated("Use self.state.nightlight_status instead.")
-    def night_light(self) -> str:
+    def night_light(self) -> str | None:
         """Get night light state.
 
         Returns:

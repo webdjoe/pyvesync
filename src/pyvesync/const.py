@@ -64,7 +64,7 @@ class ProductTypes(StrEnum):
 
 
 class IntFlag(IntEnum):
-    """Integer flag to indicate if a device is not supported.
+    """DEPRECATED. Integer flag to indicate if a device is not supported.
 
     This is used by data models as a default value for feature attributes
     that are not supported by all devices.
@@ -82,7 +82,7 @@ class IntFlag(IntEnum):
 
 
 class StrFlag(StrEnum):
-    """String flag to indicate if a device is not supported.
+    """DEPRECATED. String flag to indicate if a device is not supported.
 
     This is used by data models as a default value for feature attributes
     that are not supported by all devices.

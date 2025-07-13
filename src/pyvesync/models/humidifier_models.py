@@ -73,8 +73,8 @@ class ClassicLVHumidResult(InnerHumidifierBaseResult):
     automatic_stop_reach_target: bool = False
     water_tank_lifted: bool = False
     warm_enabled: bool = False
-    warm_level: int = IntFlag.NOT_SUPPORTED
-    night_light_brightness: int = IntFlag.NOT_SUPPORTED
+    warm_level: int | None = None
+    night_light_brightness: int | None = None
     configuration: ClassicConfig | None = None
 
 

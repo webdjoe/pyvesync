@@ -12,7 +12,6 @@ from dataclasses import dataclass
 # import orjson
 from mashumaro.config import BaseConfig
 from mashumaro.types import Discriminator
-from pyvesync.const import IntFlag, StrFlag
 from pyvesync.models.bypass_models import (
     RequestBypassV1,
     BypassV2InnerResult,
@@ -53,11 +52,11 @@ class PurifierV2DetailsResult(InnerPurifierBaseResult):
     efficientModeTimeRemain: int
     errorCode: int
     autoPreference: VitalAutoPreferences | None = None
-    fanRotateAngle: int | None = IntFlag.NOT_SUPPORTED
-    filterOpenState: int | None = IntFlag.NOT_SUPPORTED
-    PM1: int | None = IntFlag.NOT_SUPPORTED
-    PM10: int | None = IntFlag.NOT_SUPPORTED
-    AQPercent: int | None = IntFlag.NOT_SUPPORTED
+    fanRotateAngle: int | None = None
+    filterOpenState: int | None = None
+    PM1: int | None = None
+    PM10: int | None = None
+    AQPercent: int | None = None
 
 
 @dataclass
@@ -81,8 +80,8 @@ class PurifierCoreDetailsResult(InnerPurifierBaseResult):
     configuration: PurifierCoreDetailsConfig | None = None
     extension: dict | None = None
     air_quality_value: int | None = None
-    night_light: str | None = StrFlag.NOT_SUPPORTED
-    fan_rotate: str | None = StrFlag.NOT_SUPPORTED
+    night_light: str | None = None
+    fan_rotate: str | None = None
 
 
 # Purifier Timer Models

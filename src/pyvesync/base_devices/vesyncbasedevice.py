@@ -10,7 +10,7 @@ from typing_extensions import deprecated
 # import warnings
 import orjson
 
-from pyvesync.const import DeviceStatus, ConnectionStatus, IntFlag, StrFlag
+from pyvesync.const import DeviceStatus, ConnectionStatus
 
 logger = logging.getLogger(__name__)
 
@@ -541,8 +541,6 @@ class DeviceState:
                 attr_name.startswith("_")
                 or attr_name in [*self.__base_exclusions, *self._exclude_serialization]
             ):
-                continue
-            if attr_value in [IntFlag.NOT_SUPPORTED, StrFlag.NOT_SUPPORTED]:
                 continue
             state_dict[attr_name] = attr_value
         return state_dict

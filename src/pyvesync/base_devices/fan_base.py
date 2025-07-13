@@ -6,13 +6,7 @@ from abc import abstractmethod
 from typing_extensions import deprecated
 
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseToggleDevice, DeviceState
-from pyvesync.const import (
-    FanModes,
-    FanFeatures,
-    DeviceStatus,
-    FanSleepPreference,
-    StrFlag,
-    )
+from pyvesync.const import FanModes, FanFeatures
 
 if TYPE_CHECKING:
     from pyvesync import VeSync
@@ -93,17 +87,17 @@ class FanState(DeviceState):
         self.humidity: int | None = None
         self.temperature: int | None = None
         self.thermal_comfort: int | None = None
-        self.sleep_preference_type: str | None = FanSleepPreference.UNKNOWN
-        self.sleep_fallasleep_remain: str | None = DeviceStatus.UNKNOWN
-        self.sleep_oscillation_switch: str | None = DeviceStatus.UNKNOWN
-        self.sleep_change_fan_level: str | None = DeviceStatus.UNKNOWN
-        self.mute_status: str = DeviceStatus.UNKNOWN
-        self.mute_set_state: str = DeviceStatus.UNKNOWN
-        self.oscillation_status: str = DeviceStatus.UNKNOWN
-        self.oscillation_set_state: str = DeviceStatus.UNKNOWN
-        self.display_status: str = DeviceStatus.UNKNOWN
-        self.display_set_state: str = DeviceStatus.UNKNOWN
-        self.displaying_type: str = StrFlag.NOT_SUPPORTED
+        self.sleep_preference_type: str | None = None
+        self.sleep_fallasleep_remain: str | None = None
+        self.sleep_oscillation_switch: str | None = None
+        self.sleep_change_fan_level: str | None = None
+        self.mute_status: str | None = None
+        self.mute_set_state: str | None = None
+        self.oscillation_status: str | None = None
+        self.oscillation_set_state: str | None = None
+        self.display_status: str | None = None
+        self.display_set_state: str | None = None
+        self.displaying_type: str | None = None
 
 
 class VeSyncFanBase(VeSyncBaseToggleDevice):

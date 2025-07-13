@@ -7,7 +7,7 @@ from typing_extensions import deprecated
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseToggleDevice, DeviceState
 
 from pyvesync.utils.colors import Color
-from pyvesync.const import SwitchFeatures, StrFlag, IntFlag
+from pyvesync.const import SwitchFeatures
 
 if TYPE_CHECKING:
     from pyvesync import VeSync
@@ -57,11 +57,11 @@ class SwitchState(DeviceState):
         """Initialize VeSync Switch State."""
         super().__init__(device, details, feature_map)
         self.device: VeSyncSwitch = device
-        self._backlight_color: Color | str | None = StrFlag.NOT_SUPPORTED
-        self.brightness: int = IntFlag.NOT_SUPPORTED
+        self._backlight_color: Color | None = None
+        self.brightness: int | None = None
         self.active_time: int | None = 0
-        self.backlight_status: str = StrFlag.NOT_SUPPORTED
-        self.indicator_status: str = StrFlag.NOT_SUPPORTED
+        self.backlight_status: str | None = None
+        self.indicator_status: str | None = None
 
     @property
     def backlight_rgb(self) -> RGB | None:

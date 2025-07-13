@@ -33,7 +33,7 @@ class TowerFanResult(BypassV2InnerResult):
     thermalComfort: int
     errorCode: int
     scheduleCount: int
-    displayingType: int = IntFlag.NOT_SUPPORTED
+    displayingType: int | None = None
     sleepPreference: FanSleepPreferences | None = None
 
 
