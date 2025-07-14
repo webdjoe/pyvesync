@@ -20,10 +20,7 @@ logger = logging.getLogger(__name__)
 class FanState(DeviceState):
     """Base state class for Purifiers.
 
-    Not all attributes are supported by all devices. Attributes are set to
-    UNKNOWN by default and attributes that are not supported by all devices are
-    set to [StrFlag.NOT_SUPPORTED][pyvesync.const.StrFlag] or
-    [IntFlag.NOT_SUPPORTED][pyvesync.const.IntFlag].
+    Not all attributes are supported by all devices.
 
 
     Attributes:

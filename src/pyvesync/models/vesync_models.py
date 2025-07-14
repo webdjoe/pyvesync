@@ -31,14 +31,19 @@ class RequestLoginModel(RequestBaseModel):
     password: str
     # default values
     acceptLanguage: str = DefaultValues.acceptLanguage
-    appVersion: str = DefaultValues.appVersion
+    accountID: str = ''
+    clientInfo: str = DefaultValues.phoneBrand
+    clientType: str = "vesyncApp"
+    clientVersion: str = f"VeSync {DefaultValues.appVersion}"
+    debugMode: bool = False
+    osInfo: str = DefaultValues.phoneOS
+    terminalId: str = DefaultValues.terminalId
     timeZone: str = DefaultValues.timeZone
-    phoneBrand: str = DefaultValues.phoneBrand
-    phoneOS: str = DefaultValues.phoneOS
-    traceId: str = field(default_factory=DefaultValues.traceId)
-    # Non-default constants
-    userType: str = '1'
+    token: str = ''
+    userCountryCode: str = ''
     devToken: str = ''
+    userType: str = DefaultValues.userType
+    traceId: str = field(default_factory=DefaultValues.newTraceId)
 
     def __post_init__(self) -> None:
         """Set the method field."""
@@ -85,6 +90,7 @@ class ResponseLoginModel(ResponseCodeModel):
                 "accountID": "123456",
                 "acceptLanguage": "en",
                 "countryCode": "US",
+                "token": "abcdef1234567890"
                 }
         }
         b = ResponseLoginModel.from_dict(a)

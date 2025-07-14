@@ -130,7 +130,6 @@ class VeSync:  # pylint: disable=function-redefined
         self._verbose: bool = False
         self.time_zone: str = time_zone
         self.language: str = 'en'
-
         self.enabled = False
         self.in_process = False
         self._device_container: DeviceContainer = DeviceContainerInstance
@@ -299,11 +298,11 @@ class VeSync:  # pylint: disable=function-redefined
             raise VesyncLoginError('Username and password must be specified')
         request_login = RequestLoginModel(
             email=self.username,
-            method='login',
+            method='appLoginV3',
             password=self.password,
         )
         resp_dict, _ = await self.async_call_api(
-            '/cloud/v1/user/login', 'post',
+            '/user/api/accountManage/v3/appLoginV3', 'post',
             json_object=request_login
         )
         if resp_dict is None:

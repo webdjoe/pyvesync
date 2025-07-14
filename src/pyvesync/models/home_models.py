@@ -20,7 +20,6 @@ from dataclasses import dataclass, field
 
 from pyvesync.models.base_models import (
     ResponseCodeModel,
-    ResponseBaseModel,
     RequestBaseModel,
     DefaultValues,
     )
@@ -36,9 +35,9 @@ class RequestHomeModel(RequestBaseModel):
     """
     # Arguments set by Manager Instance by passing kw_argument manager
     # these fields should be set to init=False
-    accountID: str = field(init=False)
-    token: str = field(init=False)
-    userCountryCode: str = field(init=False)
+    accountID: str
+    token: str
+    userCountryCode: str
     # Non-default constants
     method: str = 'getHomeList'
     # default values
@@ -52,17 +51,17 @@ class RequestHomeModel(RequestBaseModel):
 
 
 @dataclass
-class ResponseHomeModel(ResponseBaseModel):
+class ResponseHomeModel(ResponseCodeModel):
     """Model for the home data response.
 
-    Inherits from `ResponseBaseModel`. The `ResponseBaseModel` class provides the
+    Inherits from `ResponseCodeModel`. The `ResponseCodeModel` class provides the
     `code` and `msg` fields. The `ResponseHomeModel` class provides the `result`
     field containing the home data.
 
     Attributes:
         result: dict: The home data.
     """
-    result: IntResponseHomeResultModel
+    result: IntResponseHomeResultModel | IntResponseHomeInfoResultModel | None
 
 
 @dataclass
@@ -154,5 +153,6 @@ class IntResponseHomeResultModel:
 @dataclass
 class IntResponseHomeListModel:
     """Internal model for the 'homeList' field in home response result."""
-    homeID: str
+    homeId: int
     homeName: str
+    nickname: str | None = None

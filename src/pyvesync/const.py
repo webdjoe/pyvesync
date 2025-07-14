@@ -21,7 +21,7 @@ Attributes:
     TERMINAL_ID (str): Unique identifier for new API calls
 """
 from random import randint
-from uuid import uuid1
+from uuid import uuid4
 from enum import StrEnum, IntEnum, Enum
 from types import MappingProxyType
 from pyvesync.utils.enum_utils import IntEnumMixin
@@ -36,15 +36,15 @@ USER_AGENT = (
 )
 DEFAULT_TZ = "America/New_York"
 DEFAULT_REGION = "US"
-APP_VERSION = "2.8.6"
+APP_VERSION = "5.5.60"
 PHONE_BRAND = "SM N9005"
 PHONE_OS = "Android"
 # MOBILE_ID = "1234567890123456"
 MOBILE_ID = str(randint(1000000000000000, 9999999999999999))  # noqa: S311
 USER_TYPE = "1"
-BYPASS_APP_V = "VeSync 3.0.51"
+BYPASS_APP_V = f"VeSync {APP_VERSION}"
 BYPASS_HEADER_UA = "okhttp/3.12.1"
-TERMINAL_ID = '2' + uuid1().hex
+TERMINAL_ID = '2' + str(uuid4()).replace('-', '')
 
 
 # Generic Constants
