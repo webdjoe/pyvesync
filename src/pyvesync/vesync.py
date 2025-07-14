@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 import asyncio
 from typing import Self
+from dataclasses import fields, MISSING
 from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientResponseError
 from mashumaro.mixins.orjson import DataClassORJSONMixin
@@ -16,7 +17,10 @@ from pyvesync.models.vesync_models import (
     RequestDeviceListModel,
     ResponseDeviceListModel,
     RequestLoginModel,
-    ResponseLoginModel
+    ResponseLoginModel,
+    RequestFirmwareModel,
+    ResponseFirmwareModel,
+    FirmwareDeviceItemModel
     )
 from pyvesync.utils.errors import (
     ErrorCodes,
@@ -442,3 +446,69 @@ class VeSync:  # pylint: disable=function-redefined
         except ClientResponseError as e:
             LibraryLogger.log_api_exception(logger, exception=e, request_body=req_dict)
             raise
+
+    def _update_fw_version(self, info_list: list[FirmwareDeviceItemModel]) -> bool:
+        """Update device firmware versions from API response."""
+        if not info_list:
+            logger.debug('No devices found in firmware response')
+            return False
+        update_dict = {}
+        for device in info_list:
+            if not device.firmUpdateInfos:
+                if device.code != 0:
+                    logger.debug(
+                        'Device %s has error code %s with message: %s',
+                        device.deviceName, device.code, device.msg
+                    )
+                else:
+                    logger.debug(
+                        'Device %s has no firmware updates available',
+                        device.deviceName
+                    )
+                continue
+            for update_info in device.firmUpdateInfos:
+                update_dict[device.deviceCid] = (
+                    update_info.currentVersion, update_info.latestVersion
+                    )
+                if update_info.isMainFw is True:
+                    break
+        for device_obj in self._device_container:
+            if device_obj.cid in update_dict:
+                device_obj.latest_firm_version = update_dict[device_obj.cid][1]
+                device_obj.current_firm_version = update_dict[device_obj.cid][0]
+        return True
+
+    async def check_firmware(self) -> bool:
+        """Check for firmware updates for all devices.
+
+        This method will check for firmware updates for all devices in the
+        device container. It will call the `get_firmware_update()` method on
+        each device and log the results.
+        """
+        if len(self._device_container) == 0:
+            logger.debug('No devices to check for firmware updates')
+            return False
+        body_fields = [
+            field.name for field in fields(RequestFirmwareModel)
+            if field.default_factory is MISSING and field.default is MISSING
+        ]
+        body = Helpers.get_class_attributes(self, body_fields)
+        body['cidList'] = [device.cid for device in self._device_container]
+        resp_dict, _ = await self.async_call_api(
+            '/cloud/v2/deviceManaged/getFirmwareUpdateInfoList',
+            'post',
+            json_object=RequestFirmwareModel(**body),
+        )
+        if resp_dict is None:
+            raise VeSyncAPIResponseError(
+                'Error receiving response to firmware update request')
+        resp_model = ResponseFirmwareModel.from_dict(resp_dict)
+        if resp_model.code != 0:
+            error_info = ErrorCodes.get_error_info(resp_model.code)
+            resp_message = resp_model.msg
+            if resp_message is not None:
+                error_info.message = f'{error_info.message} ({resp_message})'
+            logger.debug('Error in firmware update response: %s', error_info.message)
+            return False
+        info_list = resp_model.result.cidFwInfoList
+        return self._update_fw_version(info_list)

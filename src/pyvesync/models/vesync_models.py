@@ -252,3 +252,52 @@ class RequestPID(RequestBaseModel):
     mobileID: str
     configModule: str
     region: str
+
+
+@dataclass
+class RequestFirmwareModel(RequestBaseModel):
+    """Model for the firmware request."""
+    accountID: str
+    timeZone: str
+    token: str
+    userCountryCode: str
+    cidList: list[str]
+    acceptLanguage: str = DefaultValues.acceptLanguage
+    traceId: str = field(default_factory=DefaultValues.traceId)
+    appVersion: str = DefaultValues.appVersion
+    phoneBrand: str = DefaultValues.phoneBrand
+    phoneOS: str = DefaultValues.phoneOS
+    method: str = "getFirmwareUpdateInfoList"
+    debugMode: bool = False
+
+
+@dataclass
+class ResponseFirmwareModel(ResponseCodeModel):
+    """Model for the firmware response."""
+    result: FirmwareResultModel
+
+
+@dataclass
+class FirmwareUpdateInfoModel(ResponseBaseModel):
+    """Firmware update information model."""
+    currentVersion: str
+    latestVersion: str
+    releaseNotes: str
+    pluginName: str
+    isMainFw: bool
+
+
+@dataclass
+class FirmwareDeviceItemModel(ResponseBaseModel):
+    """Model for the firmware device item in the firmware response."""
+    deviceCid: str
+    deviceName: str
+    code: int
+    msg: str | None
+    firmUpdateInfos: list[FirmwareUpdateInfoModel]
+
+
+@dataclass
+class FirmwareResultModel(ResponseBaseModel):
+    """Model for the firmware response result."""
+    cidFwInfoList: list[FirmwareDeviceItemModel]

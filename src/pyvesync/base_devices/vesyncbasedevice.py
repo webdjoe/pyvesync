@@ -53,6 +53,7 @@ class VeSyncBaseDevice(ABC, Generic[VS_STATE_T]):
         config_module (str): Configuration module of device.
         mac_id (str): MAC ID of device.
         current_firm_version (str): Current firmware version of device.
+        latest_firm_version (str | None): Latest firmware version of device.
         device_region (str): Region of device. (US, EU, etc.)
         pid (str): Product ID of device, pulled by some devices on update.
         sub_device_no (int): Sub-device number of device.
@@ -96,6 +97,7 @@ class VeSyncBaseDevice(ABC, Generic[VS_STATE_T]):
         "enabled",
         "features",
         "last_response",
+        "latest_firm_version",
         "mac_id",
         "manager",
         "pid",
@@ -129,6 +131,7 @@ class VeSyncBaseDevice(ABC, Generic[VS_STATE_T]):
         self.config_module: str = details.configModule
         self.mac_id: str | None = details.macID
         self.current_firm_version = details.currentFirmVersion
+        self.latest_firm_version: str | None = None
         self.device_region: str | None = details.deviceRegion
         self.pid: str | None = None
         self.sub_device_no: int | None = details.subDeviceNo
@@ -192,7 +195,7 @@ class VeSyncBaseDevice(ABC, Generic[VS_STATE_T]):
 
         This is going to be updated.
         """
-        return False
+        return self.latest_firm_version != self.current_firm_version
 
     async def set_timer(self, duration: int, action: str | None = None) -> bool:
         """Set timer for device.
