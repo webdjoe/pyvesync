@@ -182,7 +182,9 @@ class LibraryLogger:
 
     @staticmethod
     def configure_logger(
-        level: str | int = logging.INFO, file_name: str | None = None
+        level: str | int = logging.INFO,
+        file_name: str | Path | None = None,
+        std_out: bool = True,
     ) -> None:
         """Configure pyvesync library logger with a specific log level.
 
@@ -191,6 +193,7 @@ class LibraryLogger:
                 in form of enum `logging.DEBUG` or string `DEBUG`.
             file_name (str | None): The name of the file to log to. If None,
                 logs will only be printed to the console.
+            std_out (bool): If True, logs will be printed to standard output.
 
         Note:
             This method configures the pyvesync base logger and prevents
@@ -203,18 +206,22 @@ class LibraryLogger:
         if root_logger.handlers:
             for handler in root_logger.handlers:
                 root_logger.removeHandler(handler)
-        handler = logging.StreamHandler()
+
         formatter = logging.Formatter(
             fmt="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
             datefmt="%Y-%m-%d %H:%M:%S",
         )
-        handler.setFormatter(formatter)
-        root_logger.addHandler(handler)
-        if file_name:
-            if not Path(file_name).is_absolute():
-                file_name_path = Path(file_name).joinpath(Path.cwd(), file_name)
-            else:
-                file_name_path = Path(file_name)
+        if std_out is True:
+            str_handler = logging.StreamHandler()
+            str_handler.setFormatter(formatter)
+            root_logger.addHandler(str_handler)
+        if isinstance(file_name, str):
+            file_name_path = Path(file_name).resolve()
+        elif isinstance(file_name, Path):
+            file_name_path = file_name.resolve()
+        else:
+            file_name_path = None
+        if file_name_path:
             file_handler = logging.FileHandler(file_name_path)
             file_handler.setFormatter(formatter)
             root_logger.addHandler(file_handler)

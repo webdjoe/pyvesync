@@ -3,6 +3,7 @@
 from __future__ import annotations
 import logging
 import asyncio
+from pathlib import Path
 from typing import Self
 from dataclasses import fields, MISSING
 from aiohttp import ClientSession
@@ -207,10 +208,15 @@ class VeSync:  # pylint: disable=function-redefined
             LibraryLogger.shouldredact = False
         self._redact = new_flag
 
-    def log_to_file(self, filename: str) -> None:
-        """Log to file and enable debug logging."""
+    def log_to_file(self, filename: str | Path, std_out: bool = True) -> None:
+        """Log to file and enable debug logging.
+
+        Args:
+            filename (str | Path): The name of the file to log to.
+            std_out (bool): If False, logs will not print to std out.
+        """
         self.debug = True
-        LibraryLogger.configure_logger(logging.DEBUG, file_name=filename)
+        LibraryLogger.configure_logger(logging.DEBUG, file_name=filename, std_out=std_out)
         logger.debug('Logging to file: %s', filename)
 
     def process_devices(self, dev_list_resp: ResponseDeviceListModel) -> bool:
@@ -331,7 +337,9 @@ class VeSync:  # pylint: disable=function-redefined
         resp_message = resp_dict.get('msg')
         if resp_message is not None:
             error_info.message = f'{error_info.message} ({resp_message})'
-        raise VeSyncAPIResponseError('Error receiving response to login request')
+        raise VeSyncAPIResponseError(
+            f"Error receiving response to login request - {error_info.message}"
+        )
 
     async def update(self) -> None:
         """Fetch updated information about devices and new device list.
