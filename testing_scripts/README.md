@@ -89,7 +89,13 @@ CONFIGURING VIA COMMAND LINE:
 You can also configure the script via command line arguments:
 
 ```bash
-python vs_console_script.py --email <your_email> --password <your_password> [optional arguments]
+python vs_console_script.py \
+   --email <your_email> \
+   --password <your_password> \
+   --test-devices \  # Include device methods in the test
+   --test-timers \  # Include timer methods in the test
+   --output-file <output_file> \
+   --test-dev-type <device_type> # Options: "bulbs", "switchs", "outlets", "humidifiers", "air_purifiers", "fans"
 ```
 
 ## Logging
