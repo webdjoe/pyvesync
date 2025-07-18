@@ -89,7 +89,7 @@ CONFIGURING VIA COMMAND LINE:
 You can also configure the script via command line arguments:
 
 ```bash
-python vs_console_script.py \
+python vs_console_script.py \  # or testing_scripts/vs_console_script.py if using repository method
    --email <your_email> \
    --password <your_password> \
    --test-devices \  # Include device methods in the test

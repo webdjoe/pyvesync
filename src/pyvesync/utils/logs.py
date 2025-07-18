@@ -281,11 +281,11 @@ class LibraryLogger:
             if dif:
                 msg += "\n\n-------------------------------------"
                 msg += "\n Expected Fields:"
-                msg += f"\n({", ".join(field_f)})"
+                msg += f"\n({', '.join(field_f)})"
                 msg += "\n Response Fields:"
-                msg += f"\n({", ".join(resp_f)})"
+                msg += f"\n({', '.join(resp_f)})"
                 msg += "\n Missing Fields:"
-                msg += f"\n({", ".join(dif)})"
+                msg += f"\n({', '.join(dif)})"
 
         msg += "\n\n Full Response:"
         msg += f"\n{orjson.dumps(resp_dict, option=orjson.OPT_INDENT_2).decode('utf-8')}"
