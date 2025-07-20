@@ -205,7 +205,7 @@ class FryerStatus:
                 self.cook_set_time = cook.get('cookSetTime', self.cook_set_time)
                 self.cook_set_temp = cook.get('cookSetTemp', self.cook_set_temp)
                 self.current_temp = cook.get('currentTemp', self.current_temp)
-                self.temp_unit = str(cook.get('tempUnit', self.temp_unit))
+                self.temp_unit = cook.get('tempUnit', self.temp_unit)
             elif cook.get('cookStatus') == 'end':
                 self.set_standby()
                 self.cook_status = 'cookEnd'
@@ -251,7 +251,7 @@ class FryerStatus:
         self.current_temp = return_status.get('curentTemp')
         self.cook_set_temp = return_status.get('targetTemp',
                                                return_status.get('cookSetTemp'))
-        self.temp_unit = str(return_status.get('tempUnit', self.temp_unit))  # Always keep set
+        self.temp_unit = return_status.get('tempUnit', self.temp_unit)  # Always keep set
         self.preheat_set_time = return_status.get('preheatSetTime')
         self.preheat_last_time = return_status.get('preheatLastTime')
 
