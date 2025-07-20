@@ -367,10 +367,74 @@ class FanDetails:
                 "scheduleCount": 0,
                 "displayingType": 0,
                 "errorCode": 0,
-            }                
+            }
         },
     }, 200)
 
+    details_sprout = ({
+                        "traceId": Defaults.trace_id,
+                        "code": 0,
+                        "msg": "request success",
+                        "module": None,
+                        "stacktrace": None,
+                        "result": {
+                          "traceId": Defaults.trace_id,
+                          "code": 0,
+                          "result": {
+                            "powerSwitch": Defaults.bin_toggle,
+                            "workMode": "auto",
+                            "manualSpeedLevel": 1,
+                            "fanSpeedLevel": 2,
+                            "PM25": 14,
+                            "PM1": 1,
+                            "PM10": 27,
+                            "screenState": Defaults.bin_toggle,
+                            "childLockSwitch": Defaults.bin_toggle,
+                            "screenSwitch": Defaults.bin_toggle,
+                            "lampType": 0,
+                            "roomSize": 242,
+                            "lampSwitch": Defaults.bin_toggle,
+                            "autoPreference": {
+                              "autoPreferenceType": "default",
+                              "roomSize": 630
+                            },
+                            "scheduleCount": 0,
+                            "timerRemain": 0,
+                            "efficientModeTimeRemain": 1182,
+                            "humidity": 53,
+                            "AQI": 65,
+                            "AQLevel": 2,
+                            "VOC": 120,
+                            "CO2": 669,
+                            "temperature": 791,
+                            "nightLight": {
+                              "nightLightSwitch": Defaults.bin_toggle,
+                              "brightness": 50,
+                              "colorTemperature": 2750
+                            },
+                            "breathingLamp": {
+                              "breathingLampSwitch": Defaults.bin_toggle,
+                              "colorTemperature": 2750,
+                              "timeInterval": 5,
+                              "brightnessStart": 10,
+                              "brightnessEnd": 90
+                            },
+                            "errorCode": 0,
+                            "dumpedState": 0,
+                            "whiteNoiseInfo": {
+                              "playStatus": 0,
+                              "soundId": 100006,
+                              "countDown": 1800,
+                              "countingDown": 1800,
+                              "downloadStatus": 2
+                            },
+                            "guardingInfo": {
+                              "guarding": 0,
+                              "remainTS": 100
+                            }
+                          }
+                        },
+                      }, 200)
 
 DETAILS_RESPONSES = {
     "LV-PUR131S": FanDetails.details_air,
@@ -390,6 +454,7 @@ DETAILS_RESPONSES = {
     "LEH-S601S-WUS": FanDetails.details_superior6000S,
     "LAP-EL551S-AUS": FanDetails.details_everest,
     "LTF-F422S-KEU": FanDetails.details_towerfan42,
+    "LAP-B851S-WEU": FanDetails.details_sprout,
 }
 
 FunctionResponses.default_factory = lambda: (

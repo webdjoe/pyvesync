@@ -162,8 +162,8 @@ class TestAirPurifiers(TestBase):
         each device type.
 
         Example:
-            >>> base_methods = [['turn_on'], ['turn_off'], ['update']]
-            >>> device_methods = {
+            base_methods = [['turn_on'], ['turn_off'], ['update']]
+            device_methods = {
                 'dev_type': [['method1'], ['method2', {'kwargs': 'value'}]]
                 }
 

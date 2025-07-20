@@ -125,8 +125,8 @@ air_features: dict = {
     },
     'Sprout': {
         'module': 'VeSyncAirBaseV2',
-        'models': ['LAP-B851S', 'LAP-B851S-WEU'],
-        'modes': ['manual', 'auto', 'off'],
+        'models': ['LAP-B851S-WEU'],
+        'modes': ['manual', 'auto', 'sleep', 'off'],
         'features': ['air_quality'],
         'levels': list(range(1, 4))
     },
