@@ -25,7 +25,7 @@ from dataclasses import asdict
 import logging
 # from abc import ABCMeta, abstractmethod
 from typing import TYPE_CHECKING
-from deprecated import deprecated
+from typing_extensions import deprecated
 
 from pyvesync.base_devices.switch_base import VeSyncSwitch
 from pyvesync.utils.colors import Color
