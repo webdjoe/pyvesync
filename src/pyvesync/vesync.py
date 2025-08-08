@@ -368,7 +368,6 @@ class VeSync:  # pylint: disable=function-redefined
             authorizeCode=auth_code,
             bizToken=region_change_token,
             userCountryCode=self.country_code,
-            regionChange='lastRegion' if region_change_token is not None else ''
         )
         resp_dict, _ = await self.async_call_api(
             '/user/api/accountManage/v1/loginByAuthorizeCode4Vesync', 'post',
