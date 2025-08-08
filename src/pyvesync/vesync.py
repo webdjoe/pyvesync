@@ -58,6 +58,7 @@ class VeSync:  # pylint: disable=function-redefined
         '_token',
         '_verbose',
         'country_code',
+        'region',
         'enabled',
         'in_process',
         "language",
@@ -101,6 +102,7 @@ class VeSync:  # pylint: disable=function-redefined
             token (str): VeSync API token
             account_id (str): VeSync account ID
             country_code (str): Country code for VeSync account pulled from API
+            region (str): Country code for VeSync account pulled from API
             time_zone (str): Time zone for VeSync account pulled from API
             enabled (bool): True if logged in to VeSync, False if not
 
@@ -134,6 +136,7 @@ class VeSync:  # pylint: disable=function-redefined
         self._token: str | None = None
         self._account_id: str | None = None
         self.country_code: str = DEFAULT_REGION
+        self.region: str = DEFAULT_REGION
         self._verbose: bool = False
         self.time_zone: str = time_zone
         self.language: str = 'en'
@@ -327,33 +330,79 @@ class VeSync:  # pylint: disable=function-redefined
                 raise VeSyncAPIResponseError(
                     'Error receiving response to auth request'
                     ) from exc
-            auth_result = response_model.result
+            result = response_model.result
 
-            request_login = RequestLoginModel(
-                method='loginByAuthorizeCode4Vesync',
-                authorizeCode=auth_result.authorizeCode,
-            )
-            resp_dict, _ = await self.async_call_api(
-                '/user/api/accountManage/v1/loginByAuthorizeCode4Vesync', 'post',
-                json_object=request_login
-            )
-            if resp_dict is None:
-                raise VeSyncAPIResponseError('Error receiving response to login request')
-            if resp_dict.get('code') == 0:
-                try:
-                    response_model = ResponseLoginModel.from_dict(resp_dict)
-                except Exception as exc:
-                    logger.debug('Error parsing login response: %s', exc)
-                    raise VeSyncAPIResponseError(
-                        'Error receiving response to login request'
-                        ) from exc
-                result = response_model.result
-                self._token = result.token
-                self._account_id = result.accountID
-                self.country_code = result.countryCode
-                self.enabled = True
-                logger.debug('Login successful')
-                return True
+            return await self.login_token(auth_code=result.authorizeCode)
+
+        error_info = ErrorCodes.get_error_info(resp_dict.get("code"))
+        resp_message = resp_dict.get('msg')
+        if resp_message is not None:
+            error_info.message = f'{error_info.message} ({resp_message})'
+        raise VeSyncAPIResponseError(
+            f"Error receiving response to auth request - {error_info.message}"
+        )
+
+    async def login_token(
+            self,
+            auth_code: str = None,
+            region_change_token: str = None,
+    ) -> bool:  # pylint: disable=W9006 # pylint mult docstring raises
+        """Exchanges the authorization code for a token. This completes the login process.
+        If the initial call fails with `"login trigger cross region error."`, the region is adjusted and another attempt is made.
+
+        Args:
+            auth_code (str): Auth code to use for logging in.
+            region_change_token (str): "bizToken" to use when calling this endpoint for a second time with a different region.
+
+        Returns:
+            True if login successful, False if not.
+
+        Raises:
+            VeSyncLoginError: If login fails due to invalid username or password.
+            VeSyncAPIResponseError: If API response is invalid.
+            VeSyncServerError: If server returns an error.
+        """
+
+        request_login = RequestLoginModel(
+            method='loginByAuthorizeCode4Vesync',
+            authorizeCode=auth_code,
+            bizToken=region_change_token,
+            userCountryCode=self.country_code,
+            regionChange='lastRegion' if region_change_token is not None else ''
+        )
+        resp_dict, _ = await self.async_call_api(
+            '/user/api/accountManage/v1/loginByAuthorizeCode4Vesync', 'post',
+            json_object=request_login
+        )
+        if resp_dict is None:
+            raise VeSyncAPIResponseError('Error receiving response to login request')
+        if resp_dict.get('code') == 0:
+            try:
+                response_model = ResponseLoginModel.from_dict(resp_dict)
+            except Exception as exc:
+                logger.debug('Error parsing login response: %s', exc)
+                raise VeSyncAPIResponseError(
+                    'Error receiving response to login request'
+                    ) from exc
+            result = response_model.result
+            self._token = result.token
+            self._account_id = result.accountID
+            self.country_code = result.countryCode
+            self.enabled = True
+            logger.debug('Login successful')
+            return True
+        if resp_dict.get('code') == -11260022: # "login trigger cross region error."
+            try:
+                response_model = ResponseLoginModel.from_dict(resp_dict)
+            except Exception as exc:
+                logger.debug('Error parsing login response: %s', exc)
+                raise VeSyncAPIResponseError(
+                    'Error receiving response to login request'
+                    ) from exc
+            result = response_model.result
+            self.region = result.currentRegion
+            self.country_code = result.countryCode
+            return await self.login_token(region_change_token=result.bizToken)
 
         error_info = ErrorCodes.get_error_info(resp_dict.get("code"))
         resp_message = resp_dict.get('msg')
@@ -362,6 +411,7 @@ class VeSync:  # pylint: disable=function-redefined
         raise VeSyncAPIResponseError(
             f"Error receiving response to login request - {error_info.message}"
         )
+
 
     async def update(self) -> None:
         """Fetch updated information about devices and new device list.
@@ -408,11 +458,11 @@ class VeSync:  # pylint: disable=function-redefined
     ) -> tuple[dict | None, int | None]:
         """Make API calls by passing endpoint, header and body.
 
-        api argument is appended to https://smartapi.vesync.com url.
+        api argument is appended to `API_BASE_URL`.
         Raises VeSyncRateLimitError if API returns a rate limit error.
 
         Args:
-            api (str): Endpoint to call with https://smartapi.vesync.com.
+            api (str): Endpoint to call with `API_BASE_URL`.
             method (str): HTTP method to use.
             json_object (dict | RequestBaseModel): JSON object to send in body.
             headers (dict): Headers to send with request.
@@ -446,7 +496,7 @@ class VeSync:  # pylint: disable=function-redefined
         try:
             async with self.session.request(
                 method,
-                url=API_BASE_URL + api,
+                url=('https://smartapi.vesync.eu' if self.region == 'EU' else API_BASE_URL) + api,
                 json=req_dict,
                 headers=headers,
                 raise_for_status=False,

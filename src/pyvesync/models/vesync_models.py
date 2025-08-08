@@ -57,6 +57,16 @@ class RequestAuthModel(RequestBaseModel):
 
 
 @dataclass
+class IntRespAuthResultModel(ResponseBaseModel):
+    """Model for the 'result' field in auth response containing authorizeCode and account ID.
+
+    This class is referenced by the `ResponseAuthModel` class.
+    """
+    accountID: str
+    authorizeCode: str
+
+
+@dataclass
 class RequestLoginModel(RequestBaseModel):
     """Request model for login."""
     # Arguments to set
@@ -74,18 +84,10 @@ class RequestLoginModel(RequestBaseModel):
     terminalId: str = DefaultValues.terminalId
     timeZone: str = DefaultValues.timeZone
     token: str = ''
+    bizToken: str = ''
+    regionChange: str = ''
     userCountryCode: str = DefaultValues.userCountryCode
     traceId: str = field(default_factory=DefaultValues.newTraceId)
-
-
-@dataclass
-class IntRespAuthResultModel(ResponseBaseModel):
-    """Model for the 'result' field in auth response containing authorizeCode and account ID.
-
-    This class is referenced by the `ResponseAuthModel` class.
-    """
-    accountID: str
-    authorizeCode: str
 
 
 @dataclass
@@ -98,7 +100,8 @@ class IntRespLoginResultModel(ResponseBaseModel):
     acceptLanguage: str
     countryCode: str
     token: str
-
+    bizToken: str = ''
+    currentRegion: str = ''
 
 @dataclass
 class ResponseAuthModel(ResponseCodeModel):
