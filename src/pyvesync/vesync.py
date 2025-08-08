@@ -332,7 +332,7 @@ class VeSync:  # pylint: disable=function-redefined
                     ) from exc
             result = response_model.result
 
-            return await self.login_token(auth_code=result.authorizeCode)
+            return await self._login_token(auth_code=result.authorizeCode)
 
         error_info = ErrorCodes.get_error_info(resp_dict.get("code"))
         resp_message = resp_dict.get('msg')
@@ -342,7 +342,7 @@ class VeSync:  # pylint: disable=function-redefined
             f"Error receiving response to auth request - {error_info.message}"
         )
 
-    async def login_token(
+    async def _login_token(
             self,
             auth_code: str = None,
             region_change_token: str = None,
@@ -401,7 +401,7 @@ class VeSync:  # pylint: disable=function-redefined
             result = response_model.result
             self.region = result.currentRegion
             self.country_code = result.countryCode
-            return await self.login_token(region_change_token=result.bizToken)
+            return await self._login_token(region_change_token=result.bizToken)
 
         error_info = ErrorCodes.get_error_info(resp_dict.get("code"))
         resp_message = resp_dict.get('msg')
