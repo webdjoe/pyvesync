@@ -12,6 +12,7 @@ Attributes:
     DEFAULT_REGION (str): Default region for VeSync devices,
         updated by API when retrieving devices.
     APP_VERSION (str): Version of the VeSync app.
+    APP_ID (str): ID of the app. VeSync uses a random 8-letter string, but any non-empty string works.
     PHONE_BRAND (str): Brand of the phone used to login to the VeSync app.
     PHONE_OS (str): Operating system of the phone used to login to the VeSync app.
     MOBILE_ID (str): Unique identifier for the phone used to login to the VeSync app.
@@ -37,7 +38,7 @@ USER_AGENT = (
 DEFAULT_TZ = "America/New_York"
 DEFAULT_REGION = "US"
 APP_VERSION = "5.6.60"
-APP_ID = "eldodkfj"
+APP_ID = "pyvesync"
 PHONE_BRAND = "SM N9005"
 PHONE_OS = "Android"
 # MOBILE_ID = "1234567890123456"
