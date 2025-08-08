@@ -495,7 +495,7 @@ class VeSync:  # pylint: disable=function-redefined
         try:
             async with self.session.request(
                 method,
-                url=('https://smartapi.vesync.eu' if self.region == 'EU' else API_BASE_URL) + api,
+                url=self._api_base_url_for_current_region() + api,
                 json=req_dict,
                 headers=headers,
                 raise_for_status=False,
@@ -525,6 +525,16 @@ class VeSync:  # pylint: disable=function-redefined
         except ClientResponseError as e:
             LibraryLogger.log_api_exception(logger, exception=e, request_body=req_dict)
             raise
+
+    def _api_base_url_for_current_region(self) -> str:
+        """Retrieve the API base url for the current region.
+
+        At this point, only two different URLs exist: One for `EU` region,
+        and one for all others (`US`, `CA`, `MX`, `JP`).
+
+        If `API_BASE_URL` is set, it will take precedence over the determined URL.
+        """
+        return API_BASE_URL or 'https://smartapi.vesync.eu' if self.region == 'EU' else 'https://smartapi.vesync.com'
 
     def _update_fw_version(self, info_list: list[FirmwareDeviceItemModel]) -> bool:
         """Update device firmware versions from API response."""

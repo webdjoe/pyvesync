@@ -4,7 +4,8 @@ All device states and information are defined by Enums in this module.
 
 Attributes:
     DEFAULT_LANGUAGE (str): Default language for the VeSync app.
-    API_BASE_URL (str): Base URL for the VeSync API.
+    API_BASE_URL (str): Base URL for the VeSync API. If not specified,
+        a region-specific API URL is automatically selected.
     API_TIMEOUT (int): Timeout for API requests.
     USER_AGENT (str): User agent for API requests.
     DEFAULT_TZ (str): Default timezone for VeSync devices, updated by API after
@@ -28,7 +29,7 @@ from types import MappingProxyType
 from pyvesync.utils.enum_utils import IntEnumMixin
 
 DEFAULT_LANGUAGE = "en"
-API_BASE_URL = "https://smartapi.vesync.com"
+API_BASE_URL = None # Global URL (non-EU regions): "https://smartapi.vesync.com"
 # If device is out of reach, the cloud api sends a timeout response after 7 seconds,
 # using 8 here so there is time enough to catch that message
 API_TIMEOUT = 8
