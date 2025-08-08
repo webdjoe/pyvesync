@@ -17,7 +17,9 @@ from pyvesync.utils.logs import LibraryLogger
 from pyvesync.models.vesync_models import (
     RequestDeviceListModel,
     ResponseDeviceListModel,
+    RequestAuthModel,
     RequestLoginModel,
+    ResponseAuthModel,
     ResponseLoginModel,
     RequestFirmwareModel,
     ResponseFirmwareModel,
@@ -306,32 +308,52 @@ class VeSync:  # pylint: disable=function-redefined
         if not isinstance(self.username, str) or len(self.username) == 0 \
                 or not isinstance(self.password, str) or len(self.password) == 0:
             raise VesyncLoginError('Username and password must be specified')
-        request_login = RequestLoginModel(
+        request_auth = RequestAuthModel(
             email=self.username,
-            method='appLoginV3',
+            method='authByPWDOrOTM',
             password=self.password,
         )
         resp_dict, _ = await self.async_call_api(
-            '/user/api/accountManage/v3/appLoginV3', 'post',
-            json_object=request_login
+            '/globalPlatform/api/accountAuth/v1/authByPWDOrOTM', 'post',
+            json_object=request_auth
         )
         if resp_dict is None:
-            raise VeSyncAPIResponseError('Error receiving response to login request')
+            raise VeSyncAPIResponseError('Error receiving response to auth request')
         if resp_dict.get('code') == 0:
             try:
-                response_model = ResponseLoginModel.from_dict(resp_dict)
+                response_model = ResponseAuthModel.from_dict(resp_dict)
             except Exception as exc:
-                logger.debug('Error parsing login response: %s', exc)
+                logger.debug('Error parsing auth response: %s', exc)
                 raise VeSyncAPIResponseError(
-                    'Error receiving response to login request'
+                    'Error receiving response to auth request'
                     ) from exc
-            result = response_model.result
-            self._token = result.token
-            self._account_id = result.accountID
-            self.country_code = result.countryCode
-            self.enabled = True
-            logger.debug('Login successful')
-            return True
+            auth_result = response_model.result
+
+            request_login = RequestLoginModel(
+                method='loginByAuthorizeCode4Vesync',
+                authorizeCode=auth_result.authorizeCode,
+            )
+            resp_dict, _ = await self.async_call_api(
+                '/user/api/accountManage/v1/loginByAuthorizeCode4Vesync', 'post',
+                json_object=request_login
+            )
+            if resp_dict is None:
+                raise VeSyncAPIResponseError('Error receiving response to login request')
+            if resp_dict.get('code') == 0:
+                try:
+                    response_model = ResponseLoginModel.from_dict(resp_dict)
+                except Exception as exc:
+                    logger.debug('Error parsing login response: %s', exc)
+                    raise VeSyncAPIResponseError(
+                        'Error receiving response to login request'
+                        ) from exc
+                result = response_model.result
+                self._token = result.token
+                self._account_id = result.accountID
+                self.country_code = result.countryCode
+                self.enabled = True
+                logger.debug('Login successful')
+                return True
 
         error_info = ErrorCodes.get_error_info(resp_dict.get("code"))
         resp_message = resp_dict.get('msg')

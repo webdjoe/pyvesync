@@ -27,6 +27,7 @@ from mashumaro.config import BaseConfig
 from pyvesync.const import (
     USER_TYPE,
     APP_VERSION,
+    APP_ID,
     PHONE_BRAND,
     PHONE_OS,
     MOBILE_ID,
@@ -86,6 +87,7 @@ class DefaultValues:
     _call_number: ClassVar[int] = 0
     userType: str = USER_TYPE
     appVersion: str = APP_VERSION
+    appId: str = APP_ID
     phoneBrand: str = PHONE_BRAND
     phoneOS: str = PHONE_OS
     mobileId: str = MOBILE_ID
