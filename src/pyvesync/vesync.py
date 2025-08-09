@@ -58,7 +58,6 @@ class VeSync:  # pylint: disable=function-redefined
         '_token',
         '_verbose',
         'country_code',
-        'region',
         'enabled',
         'in_process',
         "language",
@@ -71,6 +70,7 @@ class VeSync:  # pylint: disable=function-redefined
     def __init__(self,
                  username: str,
                  password: str,
+                 country_code: str = DEFAULT_REGION,
                  session: ClientSession | None = None,
                  time_zone: str = DEFAULT_TZ) -> None:
         """Initialize VeSync Manager.
@@ -87,6 +87,11 @@ class VeSync:  # pylint: disable=function-redefined
         Args:
             username (str): VeSync account username (usually email address)
             password (str): VeSync account password
+            country_code (str): VeSync account country in ISO 3166 Alpha-2 format.
+                By default, the account region is detected automatically at the login step.
+                If your account country is different from the default `US`,
+                a second login attempt may be necessary - in this case
+                you should specify the country directly to speed up the login process.
             session (ClientSession): aiohttp client session for
                 API calls, by default None
             time_zone (str): Time zone for device from IANA database, by default
@@ -102,7 +107,6 @@ class VeSync:  # pylint: disable=function-redefined
             token (str): VeSync API token
             account_id (str): VeSync account ID
             country_code (str): Country code for VeSync account pulled from API
-            region (str): Country code for VeSync account pulled from API
             time_zone (str): Time zone for VeSync account pulled from API
             enabled (bool): True if logged in to VeSync, False if not
 
@@ -135,8 +139,7 @@ class VeSync:  # pylint: disable=function-redefined
         self.password: str = password
         self._token: str | None = None
         self._account_id: str | None = None
-        self.country_code: str = DEFAULT_REGION
-        self.region: str = DEFAULT_REGION
+        self.country_code: str = country_code
         self._verbose: bool = False
         self.time_zone: str = time_zone
         self.language: str = 'en'
@@ -399,7 +402,6 @@ class VeSync:  # pylint: disable=function-redefined
                     'Error receiving response to login request'
                     ) from exc
             result = response_model.result
-            self.region = result.currentRegion
             self.country_code = result.countryCode
             return await self._login_token(region_change_token=result.bizToken)
 
@@ -529,12 +531,13 @@ class VeSync:  # pylint: disable=function-redefined
     def _api_base_url_for_current_region(self) -> str:
         """Retrieve the API base url for the current region.
 
-        At this point, only two different URLs exist: One for `EU` region,
-        and one for all others (`US`, `CA`, `MX`, `JP`).
+        At this point, only two different URLs exist: One for `EU` region (for all EU countries),
+        and one for all others (currently `US`, `CA`, `MX`, `JP` - also used as a fallback).
 
         If `API_BASE_URL` is set, it will take precedence over the determined URL.
         """
-        return API_BASE_URL or 'https://smartapi.vesync.eu' if self.region == 'EU' else 'https://smartapi.vesync.com'
+        countries_eu = ['AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE', 'TR', 'NO']
+        return API_BASE_URL or ('https://smartapi.vesync.eu' if self.country_code in countries_eu else 'https://smartapi.vesync.com')
 
     def _update_fw_version(self, info_list: list[FirmwareDeviceItemModel]) -> bool:
         """Update device firmware versions from API response."""

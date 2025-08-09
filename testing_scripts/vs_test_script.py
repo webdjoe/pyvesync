@@ -46,6 +46,7 @@ _T_DEVS = Literal["bulbs", "switchs", "outlets", "humidifiers", "air_purifiers",
 # Manually configure script arguments
 USERNAME: str | None = None
 PASSWORD: str | None = None
+REGION: str | None = None
 TEST_DEVICES: bool | None = None
 TEST_TIMERS: bool | None = None
 OUTPUT_FILE: str | None = None
@@ -79,7 +80,7 @@ async def _random_await() -> None:
 
 
 async def vesync_test(
-    username: str, password: str, output_file: str, test_devices: bool = False,
+    username: str, password: str, country_code: str, output_file: str, test_devices: bool = False,
     test_timers: bool = False, test_dev_type: _T_DEVS | None = None
 ) -> None:
     """Main function to test VeSync devices.
@@ -91,6 +92,7 @@ async def vesync_test(
     Args:
         username (str): VeSync account email.
         password (str): VeSync account password.
+        country_code (str): VeSync account region.
         output_file (str): Path to the output file for logging.
         test_devices (bool): If True, run tests on devices.
         test_timers (bool): If True, run tests on timers.
@@ -105,7 +107,7 @@ async def vesync_test(
     logger.addHandler(file_handler)
 
     # Instantiate VeSync object
-    vs = await VeSync(username, password).__aenter__()
+    vs = await VeSync(username, password, country_code or 'US').__aenter__()
     # vs.debug = True  # Enable debug mode
     vs.verbose = True  # Enable verbose mode
     # vs.redact = True  # Redact sensitive information in logs
@@ -564,6 +566,9 @@ if __name__ == "__main__":
         "--password", default=PASSWORD, help="Password for VeSync account"
     )
     parser.add_argument(
+        "--country-code", default=REGION, help="Country of the VeSync account in ISO 3166 Alpha-2 format"
+    )
+    parser.add_argument(
         "--test_devices",
         action="store_true",
         default=TEST_DEVICES,
@@ -601,6 +606,7 @@ if __name__ == "__main__":
         vesync_test(
             args.email,
             args.password,
+            args.country_code,
             args.output_file,
             args.test_devices,
             args.test_timers,
