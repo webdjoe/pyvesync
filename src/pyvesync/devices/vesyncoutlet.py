@@ -3,7 +3,7 @@
 from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
-from deprecated import deprecated
+from typing_extensions import deprecated
 
 from pyvesync.utils.helpers import Helpers, Timer
 from pyvesync.utils.logs import LibraryLogger
@@ -620,7 +620,7 @@ class VeSyncOutdoorPlug(BypassV1Mixin, VeSyncOutlet):
             if int(self.sub_device_no) == int(outlet.subDeviceNo):
                 self.state.device_status = outlet.subDeviceStatus
 
-    @deprecated(reason="Use toggle_switch(toggle: bool | None) instead")
+    @deprecated("Use toggle_switch(toggle: bool | None) instead")
     async def toggle(self, status: str) -> bool:
         """Deprecated, use toggle_switch() instead."""
         toggle = status != DeviceStatus.ON

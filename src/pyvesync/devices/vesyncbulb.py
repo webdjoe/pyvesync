@@ -15,7 +15,7 @@ from __future__ import annotations
 import logging
 from collections.abc import Mapping
 from typing import TYPE_CHECKING
-from deprecated import deprecated
+from typing_extensions import deprecated
 from pyvesync.base_devices import VeSyncBulb
 from pyvesync.const import DeviceStatus, ConnectionStatus
 from pyvesync.models.base_models import DefaultValues
