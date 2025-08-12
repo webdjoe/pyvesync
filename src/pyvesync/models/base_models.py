@@ -36,6 +36,7 @@ from pyvesync.const import (
     DEFAULT_TZ,
     BYPASS_HEADER_UA,
     TERMINAL_ID,
+    CLIENT_TYPE
     )
 
 
@@ -87,6 +88,7 @@ class DefaultValues:
     _call_number: ClassVar[int] = 0
     userType: str = USER_TYPE
     appVersion: str = APP_VERSION
+    clientType: str = CLIENT_TYPE
     appId: str = APP_ID
     phoneBrand: str = PHONE_BRAND
     phoneOS: str = PHONE_OS

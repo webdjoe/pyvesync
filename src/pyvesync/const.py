@@ -13,7 +13,8 @@ Attributes:
     DEFAULT_REGION (str): Default region for VeSync devices,
         updated by API when retrieving devices.
     APP_VERSION (str): Version of the VeSync app.
-    APP_ID (str): ID of the app. VeSync uses a random 8-letter string, but any non-empty string works.
+    APP_ID (str): ID of the app. VeSync uses a random 8-letter string, but any non-empty
+        string works.
     PHONE_BRAND (str): Brand of the phone used to login to the VeSync app.
     PHONE_OS (str): Operating system of the phone used to login to the VeSync app.
     MOBILE_ID (str): Unique identifier for the phone used to login to the VeSync app.
@@ -22,16 +23,20 @@ Attributes:
     BYPASS_HEADER_UA (str): Bypass header user agent
     TERMINAL_ID (str): Unique identifier for new API calls
 """
-from random import randint
+from random import randint, choices
 from uuid import uuid4
+import string
 from enum import StrEnum, IntEnum, Enum
 from types import MappingProxyType
 from pyvesync.utils.enum_utils import IntEnumMixin
 
 DEFAULT_LANGUAGE = "en"
-API_BASE_URL = None # Global URL (non-EU regions): "https://smartapi.vesync.com"
+API_BASE_URL = None  # Global URL (non-EU regions): "https://smartapi.vesync.com"
 # If device is out of reach, the cloud api sends a timeout response after 7 seconds,
 # using 8 here so there is time enough to catch that message
+API_BASE_URL_US = "https://smartapi.vesync.com"
+API_BASE_URL_EU = "https://smartapi.vesync.eu"
+NON_EU_REGIONS = ['US', 'CA', 'MX', 'JP']
 API_TIMEOUT = 8
 USER_AGENT = (
     "VeSync/3.2.39 (com.etekcity.vesyncPlatform; build:5; iOS 15.5.0) Alamofire/5.2.1"
@@ -39,7 +44,7 @@ USER_AGENT = (
 DEFAULT_TZ = "America/New_York"
 DEFAULT_REGION = "US"
 APP_VERSION = "5.6.60"
-APP_ID = "pyvesync"
+APP_ID = ''.join(choices(string.ascii_lowercase + string.digits, k=8))  # noqa: S311
 PHONE_BRAND = "SM N9005"
 PHONE_OS = "Android"
 # MOBILE_ID = "1234567890123456"
@@ -48,6 +53,7 @@ USER_TYPE = "1"
 BYPASS_APP_V = f"VeSync {APP_VERSION}"
 BYPASS_HEADER_UA = "okhttp/3.12.1"
 TERMINAL_ID = '2' + str(uuid4()).replace('-', '')
+CLIENT_TYPE = "vesyncApp"
 
 
 # Generic Constants

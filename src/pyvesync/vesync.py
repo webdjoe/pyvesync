@@ -9,18 +9,25 @@ from dataclasses import fields, MISSING
 from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientResponseError
 from mashumaro.mixins.orjson import DataClassORJSONMixin
+from mashumaro.exceptions import UnserializableDataError, MissingField
 
 from pyvesync.utils.helpers import Helpers
-from pyvesync.const import API_BASE_URL, DEFAULT_REGION
+from pyvesync.const import (
+    API_BASE_URL_US,
+    API_BASE_URL_EU,
+    DEFAULT_REGION,
+    NON_EU_REGIONS,
+)
 from pyvesync.device_container import DeviceContainer, DeviceContainerInstance
 from pyvesync.utils.logs import LibraryLogger
 from pyvesync.models.vesync_models import (
     RequestDeviceListModel,
     ResponseDeviceListModel,
     RequestAuthModel,
+    IntRespAuthResultModel,
     RequestLoginModel,
-    ResponseAuthModel,
     ResponseLoginModel,
+    IntRespLoginResultModel,
     RequestFirmwareModel,
     ResponseFirmwareModel,
     FirmwareDeviceItemModel
@@ -88,7 +95,7 @@ class VeSync:  # pylint: disable=function-redefined
             username (str): VeSync account username (usually email address)
             password (str): VeSync account password
             country_code (str): VeSync account country in ISO 3166 Alpha-2 format.
-                By default, the account region is detected automatically at the login step.
+                By default, the account region is detected automatically at the login step
                 If your account country is different from the default `US`,
                 a second login attempt may be necessary - in this case
                 you should specify the country directly to speed up the login process.
@@ -139,7 +146,7 @@ class VeSync:  # pylint: disable=function-redefined
         self.password: str = password
         self._token: str | None = None
         self._account_id: str | None = None
-        self.country_code: str = country_code
+        self.country_code: str = country_code.upper()
         self._verbose: bool = False
         self.time_zone: str = time_zone
         self.language: str = 'en'
@@ -327,15 +334,17 @@ class VeSync:  # pylint: disable=function-redefined
             raise VeSyncAPIResponseError('Error receiving response to auth request')
         if resp_dict.get('code') == 0:
             try:
-                response_model = ResponseAuthModel.from_dict(resp_dict)
+                response_model = ResponseLoginModel.from_dict(resp_dict)
             except Exception as exc:
                 logger.debug('Error parsing auth response: %s', exc)
                 raise VeSyncAPIResponseError(
                     'Error receiving response to auth request'
                     ) from exc
             result = response_model.result
-
-            return await self._login_token(auth_code=result.authorizeCode)
+            if isinstance(result, IntRespAuthResultModel):
+                # If the result is an IntRespAuthResultModel,
+                # we need to log in with the auth code
+                return await self._login_token(auth_code=result.authorizeCode)
 
         error_info = ErrorCodes.get_error_info(resp_dict.get("code"))
         resp_message = resp_dict.get('msg')
@@ -347,15 +356,19 @@ class VeSync:  # pylint: disable=function-redefined
 
     async def _login_token(
             self,
-            auth_code: str = None,
-            region_change_token: str = None,
+            auth_code: str | None = None,
+            region_change_token: str | None = None,
     ) -> bool:  # pylint: disable=W9006 # pylint mult docstring raises
-        """Exchanges the authorization code for a token. This completes the login process.
-        If the initial call fails with `"login trigger cross region error."`, the region is adjusted and another attempt is made.
+        """Exchanges the authorization code for a token.
+
+        This completes the login process. If the initial call fails with
+        `"login trigger cross region error."`, the region is adjusted and
+        another attempt is made.
 
         Args:
             auth_code (str): Auth code to use for logging in.
-            region_change_token (str): "bizToken" to use when calling this endpoint for a second time with a different region.
+            region_change_token (str): "bizToken" to use when calling this endpoint
+                for a second time with a different region.
 
         Returns:
             True if login successful, False if not.
@@ -365,12 +378,12 @@ class VeSync:  # pylint: disable=function-redefined
             VeSyncAPIResponseError: If API response is invalid.
             VeSyncServerError: If server returns an error.
         """
-
         request_login = RequestLoginModel(
             method='loginByAuthorizeCode4Vesync',
             authorizeCode=auth_code,
             bizToken=region_change_token,
             userCountryCode=self.country_code,
+            regionChange="last_region" if region_change_token else None,
         )
         resp_dict, _ = await self.async_call_api(
             '/user/api/accountManage/v1/loginByAuthorizeCode4Vesync', 'post',
@@ -378,41 +391,42 @@ class VeSync:  # pylint: disable=function-redefined
         )
         if resp_dict is None:
             raise VeSyncAPIResponseError('Error receiving response to login request')
-        if resp_dict.get('code') == 0:
-            try:
-                response_model = ResponseLoginModel.from_dict(resp_dict)
-            except Exception as exc:
-                logger.debug('Error parsing login response: %s', exc)
+        try:
+            response_model = ResponseLoginModel.from_dict(resp_dict)
+            if not isinstance(response_model.result, IntRespLoginResultModel):
                 raise VeSyncAPIResponseError(
-                    'Error receiving response to login request'
-                    ) from exc
-            result = response_model.result
-            self._token = result.token
-            self._account_id = result.accountID
-            self.country_code = result.countryCode
-            self.enabled = True
-            logger.debug('Login successful')
-            return True
-        if resp_dict.get('code') == -11260022: # "login trigger cross region error."
-            try:
-                response_model = ResponseLoginModel.from_dict(resp_dict)
-            except Exception as exc:
-                logger.debug('Error parsing login response: %s', exc)
-                raise VeSyncAPIResponseError(
-                    'Error receiving response to login request'
-                    ) from exc
-            result = response_model.result
-            self.country_code = result.countryCode
-            return await self._login_token(region_change_token=result.bizToken)
-
-        error_info = ErrorCodes.get_error_info(resp_dict.get("code"))
-        resp_message = resp_dict.get('msg')
-        if resp_message is not None:
-            error_info.message = f'{error_info.message} ({resp_message})'
-        raise VeSyncAPIResponseError(
-            f"Error receiving response to login request - {error_info.message}"
-        )
-
+                    "Error receiving response to login request -"
+                    "result is not IntRespLoginResultModel"
+                )
+            if response_model.code == 0:
+                result = response_model.result
+                if not isinstance(result, IntRespLoginResultModel):
+                    raise VeSyncAPIResponseError(
+                        "Error receiving response to login request -"
+                        " result is not IntRespLoginResultModel"
+                    )
+                self._token = result.token
+                self._account_id = result.accountID
+                self.country_code = result.countryCode
+                self.enabled = True
+                logger.debug('Login successful')
+                return True
+            error_info = ErrorCodes.get_error_info(resp_dict.get("code"))
+            if error_info.error_type == ErrorTypes.CROSS_REGION:  # "cross region error."
+                result = response_model.result
+                self.country_code = result.countryCode
+                return await self._login_token(region_change_token=result.bizToken)
+            resp_message = resp_dict.get('msg')
+            if resp_message is not None:
+                error_info.message = f'{error_info.message} ({resp_message})'
+            raise VesyncLoginError(
+                f"Error receiving response to login request - {error_info.message}"
+            )
+        except (MissingField, UnserializableDataError) as exc:
+            logger.debug('Error parsing login response: %s', exc)
+            raise VeSyncAPIResponseError(
+                'Error receiving response to login request'
+            ) from exc
 
     async def update(self) -> None:
         """Fetch updated information about devices and new device list.
@@ -531,13 +545,15 @@ class VeSync:  # pylint: disable=function-redefined
     def _api_base_url_for_current_region(self) -> str:
         """Retrieve the API base url for the current region.
 
-        At this point, only two different URLs exist: One for `EU` region (for all EU countries),
-        and one for all others (currently `US`, `CA`, `MX`, `JP` - also used as a fallback).
+        At this point, only two different URLs exist: One for `EU` region
+        (for all EU countries), and one for all others
+        (currently `US`, `CA`, `MX`, `JP` - also used as a fallback).
 
         If `API_BASE_URL` is set, it will take precedence over the determined URL.
         """
-        countries_eu = ['AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE', 'TR', 'NO']
-        return API_BASE_URL or ('https://smartapi.vesync.eu' if self.country_code in countries_eu else 'https://smartapi.vesync.com')
+        if self.country_code in NON_EU_REGIONS:
+            return API_BASE_URL_US
+        return API_BASE_URL_EU
 
     def _update_fw_version(self, info_list: list[FirmwareDeviceItemModel]) -> bool:
         """Update device firmware versions from API response."""
