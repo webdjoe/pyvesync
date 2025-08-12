@@ -9,16 +9,25 @@ from dataclasses import fields, MISSING
 from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientResponseError
 from mashumaro.mixins.orjson import DataClassORJSONMixin
+from mashumaro.exceptions import UnserializableDataError, MissingField
 
 from pyvesync.utils.helpers import Helpers
-from pyvesync.const import API_BASE_URL, DEFAULT_REGION
+from pyvesync.const import (
+    API_BASE_URL_US,
+    API_BASE_URL_EU,
+    DEFAULT_REGION,
+    NON_EU_REGIONS,
+)
 from pyvesync.device_container import DeviceContainer, DeviceContainerInstance
 from pyvesync.utils.logs import LibraryLogger
 from pyvesync.models.vesync_models import (
     RequestDeviceListModel,
     ResponseDeviceListModel,
+    RequestAuthModel,
+    IntRespAuthResultModel,
     RequestLoginModel,
     ResponseLoginModel,
+    IntRespLoginResultModel,
     RequestFirmwareModel,
     ResponseFirmwareModel,
     FirmwareDeviceItemModel
@@ -68,6 +77,7 @@ class VeSync:  # pylint: disable=function-redefined
     def __init__(self,
                  username: str,
                  password: str,
+                 country_code: str = DEFAULT_REGION,
                  session: ClientSession | None = None,
                  time_zone: str = DEFAULT_TZ) -> None:
         """Initialize VeSync Manager.
@@ -84,6 +94,11 @@ class VeSync:  # pylint: disable=function-redefined
         Args:
             username (str): VeSync account username (usually email address)
             password (str): VeSync account password
+            country_code (str): VeSync account country in ISO 3166 Alpha-2 format.
+                By default, the account region is detected automatically at the login step
+                If your account country is different from the default `US`,
+                a second login attempt may be necessary - in this case
+                you should specify the country directly to speed up the login process.
             session (ClientSession): aiohttp client session for
                 API calls, by default None
             time_zone (str): Time zone for device from IANA database, by default
@@ -131,7 +146,7 @@ class VeSync:  # pylint: disable=function-redefined
         self.password: str = password
         self._token: str | None = None
         self._account_id: str | None = None
-        self.country_code: str = DEFAULT_REGION
+        self.country_code: str = country_code.upper()
         self._verbose: bool = False
         self.time_zone: str = time_zone
         self.language: str = 'en'
@@ -306,40 +321,112 @@ class VeSync:  # pylint: disable=function-redefined
         if not isinstance(self.username, str) or len(self.username) == 0 \
                 or not isinstance(self.password, str) or len(self.password) == 0:
             raise VesyncLoginError('Username and password must be specified')
-        request_login = RequestLoginModel(
+        request_auth = RequestAuthModel(
             email=self.username,
-            method='appLoginV3',
+            method='authByPWDOrOTM',
             password=self.password,
         )
         resp_dict, _ = await self.async_call_api(
-            '/user/api/accountManage/v3/appLoginV3', 'post',
-            json_object=request_login
+            '/globalPlatform/api/accountAuth/v1/authByPWDOrOTM', 'post',
+            json_object=request_auth
         )
         if resp_dict is None:
-            raise VeSyncAPIResponseError('Error receiving response to login request')
+            raise VeSyncAPIResponseError('Error receiving response to auth request')
         if resp_dict.get('code') == 0:
             try:
                 response_model = ResponseLoginModel.from_dict(resp_dict)
             except Exception as exc:
-                logger.debug('Error parsing login response: %s', exc)
+                logger.debug('Error parsing auth response: %s', exc)
                 raise VeSyncAPIResponseError(
-                    'Error receiving response to login request'
+                    'Error receiving response to auth request'
                     ) from exc
             result = response_model.result
-            self._token = result.token
-            self._account_id = result.accountID
-            self.country_code = result.countryCode
-            self.enabled = True
-            logger.debug('Login successful')
-            return True
+            if isinstance(result, IntRespAuthResultModel):
+                # If the result is an IntRespAuthResultModel,
+                # we need to log in with the auth code
+                return await self._login_token(auth_code=result.authorizeCode)
 
         error_info = ErrorCodes.get_error_info(resp_dict.get("code"))
         resp_message = resp_dict.get('msg')
         if resp_message is not None:
             error_info.message = f'{error_info.message} ({resp_message})'
         raise VeSyncAPIResponseError(
-            f"Error receiving response to login request - {error_info.message}"
+            f"Error receiving response to auth request - {error_info.message}"
         )
+
+    async def _login_token(
+            self,
+            auth_code: str | None = None,
+            region_change_token: str | None = None,
+    ) -> bool:  # pylint: disable=W9006 # pylint mult docstring raises
+        """Exchanges the authorization code for a token.
+
+        This completes the login process. If the initial call fails with
+        `"login trigger cross region error."`, the region is adjusted and
+        another attempt is made.
+
+        Args:
+            auth_code (str): Auth code to use for logging in.
+            region_change_token (str): "bizToken" to use when calling this endpoint
+                for a second time with a different region.
+
+        Returns:
+            True if login successful, False if not.
+
+        Raises:
+            VeSyncLoginError: If login fails due to invalid username or password.
+            VeSyncAPIResponseError: If API response is invalid.
+            VeSyncServerError: If server returns an error.
+        """
+        request_login = RequestLoginModel(
+            method='loginByAuthorizeCode4Vesync',
+            authorizeCode=auth_code,
+            bizToken=region_change_token,
+            userCountryCode=self.country_code,
+            regionChange="last_region" if region_change_token else None,
+        )
+        resp_dict, _ = await self.async_call_api(
+            '/user/api/accountManage/v1/loginByAuthorizeCode4Vesync', 'post',
+            json_object=request_login
+        )
+        if resp_dict is None:
+            raise VeSyncAPIResponseError('Error receiving response to login request')
+        try:
+            response_model = ResponseLoginModel.from_dict(resp_dict)
+            if not isinstance(response_model.result, IntRespLoginResultModel):
+                raise VeSyncAPIResponseError(
+                    "Error receiving response to login request -"
+                    "result is not IntRespLoginResultModel"
+                )
+            if response_model.code == 0:
+                result = response_model.result
+                if not isinstance(result, IntRespLoginResultModel):
+                    raise VeSyncAPIResponseError(
+                        "Error receiving response to login request -"
+                        " result is not IntRespLoginResultModel"
+                    )
+                self._token = result.token
+                self._account_id = result.accountID
+                self.country_code = result.countryCode
+                self.enabled = True
+                logger.debug('Login successful')
+                return True
+            error_info = ErrorCodes.get_error_info(resp_dict.get("code"))
+            if error_info.error_type == ErrorTypes.CROSS_REGION:  # "cross region error."
+                result = response_model.result
+                self.country_code = result.countryCode
+                return await self._login_token(region_change_token=result.bizToken)
+            resp_message = resp_dict.get('msg')
+            if resp_message is not None:
+                error_info.message = f'{error_info.message} ({resp_message})'
+            raise VesyncLoginError(
+                f"Error receiving response to login request - {error_info.message}"
+            )
+        except (MissingField, UnserializableDataError) as exc:
+            logger.debug('Error parsing login response: %s', exc)
+            raise VeSyncAPIResponseError(
+                'Error receiving response to login request'
+            ) from exc
 
     async def update(self) -> None:
         """Fetch updated information about devices and new device list.
@@ -386,11 +473,11 @@ class VeSync:  # pylint: disable=function-redefined
     ) -> tuple[dict | None, int | None]:
         """Make API calls by passing endpoint, header and body.
 
-        api argument is appended to https://smartapi.vesync.com url.
+        api argument is appended to `API_BASE_URL`.
         Raises VeSyncRateLimitError if API returns a rate limit error.
 
         Args:
-            api (str): Endpoint to call with https://smartapi.vesync.com.
+            api (str): Endpoint to call with `API_BASE_URL`.
             method (str): HTTP method to use.
             json_object (dict | RequestBaseModel): JSON object to send in body.
             headers (dict): Headers to send with request.
@@ -424,7 +511,7 @@ class VeSync:  # pylint: disable=function-redefined
         try:
             async with self.session.request(
                 method,
-                url=API_BASE_URL + api,
+                url=self._api_base_url_for_current_region() + api,
                 json=req_dict,
                 headers=headers,
                 raise_for_status=False,
@@ -454,6 +541,19 @@ class VeSync:  # pylint: disable=function-redefined
         except ClientResponseError as e:
             LibraryLogger.log_api_exception(logger, exception=e, request_body=req_dict)
             raise
+
+    def _api_base_url_for_current_region(self) -> str:
+        """Retrieve the API base url for the current region.
+
+        At this point, only two different URLs exist: One for `EU` region
+        (for all EU countries), and one for all others
+        (currently `US`, `CA`, `MX`, `JP` - also used as a fallback).
+
+        If `API_BASE_URL` is set, it will take precedence over the determined URL.
+        """
+        if self.country_code in NON_EU_REGIONS:
+            return API_BASE_URL_US
+        return API_BASE_URL_EU
 
     def _update_fw_version(self, info_list: list[FirmwareDeviceItemModel]) -> bool:
         """Update device firmware versions from API response."""

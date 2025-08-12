@@ -100,6 +100,7 @@ class LibraryLogger:
         their values with '##_REDACTED_##'. The keys that are redacted include:
 
         - token
+        - authorizeCode
         - password
         - email
         - tk
@@ -130,6 +131,7 @@ class LibraryLogger:
                     r'(?<=uuid":\s")|'
                     r'(?<=cid":\s")|'
                     r"(?<=token\s)|"
+                    r"(?<=authorizeCode\s)|"
                     r"(?<=account_id\s))"
                     r'[^"\s]+'
                 ),
