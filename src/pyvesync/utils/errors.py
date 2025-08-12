@@ -97,6 +97,7 @@ class ErrorTypes(StrEnum):
     UNKNOWN_ERROR = "unknown_error"
     TOKEN_ERROR = "token_error"
     BAD_RESPONSE = "bad_response"
+    CROSS_REGION = "cross_region"
 
 
 class ErrorCodes:
@@ -135,6 +136,11 @@ class ErrorCodes:
 
     errors: MappingProxyType[str, ResponseInfo] = MappingProxyType(
         {
+            "-11260022": ResponseInfo(
+                "CROSS_REGION_ERROR",
+                ErrorTypes.CROSS_REGION,
+                "Cross region error",
+            ),
             "11": ResponseInfo(
                 "DEVICE_OFFLINE",
                 ErrorTypes.DEVICE_OFFLINE,

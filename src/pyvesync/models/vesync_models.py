@@ -34,7 +34,7 @@ class RequestAuthModel(RequestBaseModel):
     accountID: str = ''
     authProtocolType: str = "generic"
     clientInfo: str = DefaultValues.phoneBrand
-    clientType: str = "vesyncApp"
+    clientType: str = DefaultValues.clientType
     clientVersion: str = f"VeSync {DefaultValues.appVersion}"
     debugMode: bool = False
     osInfo: str = DefaultValues.phoneOS
@@ -58,7 +58,7 @@ class RequestAuthModel(RequestBaseModel):
 
 @dataclass
 class IntRespAuthResultModel(ResponseBaseModel):
-    """Model for the 'result' field in auth response containing authorizeCode and account ID.
+    """Model for the 'result' field in auth response with authorizeCode and account ID.
 
     This class is referenced by the `ResponseAuthModel` class.
     """
@@ -71,23 +71,33 @@ class RequestLoginModel(RequestBaseModel):
     """Request model for login."""
     # Arguments to set
     method: str
-    authorizeCode: str
+    authorizeCode: str | None
     # default values
     acceptLanguage: str = DefaultValues.acceptLanguage
     accountID: str = ''
     clientInfo: str = DefaultValues.phoneBrand
-    clientType: str = "vesyncApp"
+    clientType: str = DefaultValues.clientType
     clientVersion: str = f"VeSync {DefaultValues.appVersion}"
     debugMode: bool = False
     emailSubscriptions: bool = False
     osInfo: str = DefaultValues.phoneOS
     terminalId: str = DefaultValues.terminalId
     timeZone: str = DefaultValues.timeZone
-    token: str = ''
-    bizToken: str = ''
-    regionChange: str = ''
+    token: str = ""
+    bizToken: str | None = None
+    regionChange: str | None = None
     userCountryCode: str = DefaultValues.userCountryCode
     traceId: str = field(default_factory=DefaultValues.newTraceId)
+
+    def __post_serialize__(self, d: dict[Any, Any]) -> dict[Any, Any]:
+        """Remove null keys."""
+        if d['regionChange'] is None:
+            d.pop('regionChange')
+        if d['authorizeCode'] is None:
+            d.pop('authorizeCode')
+        if d['bizToken'] is None:
+            d.pop('bizToken')
+        return d
 
 
 @dataclass
@@ -103,36 +113,37 @@ class IntRespLoginResultModel(ResponseBaseModel):
     bizToken: str = ''
     currentRegion: str = ''
 
-@dataclass
-class ResponseAuthModel(ResponseCodeModel):
-    """Model for the auth response.
 
-    Inherits from `BaseResultModel`. The `BaseResultModel` class provides the
-    defaults "code" and "msg" fields for the response.
+# @dataclass
+# class ResponseAuthModel(ResponseCodeModel):
+#     """Model for the auth response.
 
-    Attributes:
-        result: ResponseAuthResultModel
-            The inner model for the 'result' field in the auth response.
+#     Inherits from `BaseResultModel`. The `BaseResultModel` class provides the
+#     defaults "code" and "msg" fields for the response.
 
-    Examples:
-        ```python
-        a = {
-            "code": 0,
-            "msg": "success",
-            "stacktrace": null,
-            "module": null,
-            "traceId": "123456",
-            "result": {
-                "accountID": "123456",
-                "authorizeCode": "abcdef1234567890"
-            }
-        }
-        b = ResponseAuthModel.from_dict(a)
-        account_id = b.result.accountId
-        authorizeCode = b.result.authorizeCode
-        ```
-    """
-    result: IntRespAuthResultModel
+#     Attributes:
+#         result: ResponseAuthResultModel
+#             The inner model for the 'result' field in the auth response.
+
+#     Examples:
+#         ```python
+#         a = {
+#             "code": 0,
+#             "msg": "success",
+#             "stacktrace": null,
+#             "module": null,
+#             "traceId": "123456",
+#             "result": {
+#                 "accountID": "123456",
+#                 "authorizeCode": "abcdef1234567890"
+#             }
+#         }
+#         b = ResponseAuthModel.from_dict(a)
+#         account_id = b.result.accountId
+#         authorizeCode = b.result.authorizeCode
+#         ```
+#     """
+#     result: IntRespAuthResultModel
 
 
 @dataclass
@@ -166,7 +177,7 @@ class ResponseLoginModel(ResponseCodeModel):
         token = b.result.token
         ```
     """
-    result: IntRespLoginResultModel
+    result: IntRespLoginResultModel | IntRespAuthResultModel
 
 
 @dataclass
