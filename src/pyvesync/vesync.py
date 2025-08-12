@@ -72,7 +72,9 @@ class VeSync:  # pylint: disable=function-redefined
                  password: str,
                  country_code: str = DEFAULT_REGION,
                  session: ClientSession | None = None,
-                 time_zone: str = DEFAULT_TZ) -> None:
+                 time_zone: str = DEFAULT_TZ,
+                 debug: bool = False,
+                 redact: bool = True) -> None:
         """Initialize VeSync Manager.
 
         This class is used as the manager for all VeSync objects, all methods and
@@ -131,10 +133,8 @@ class VeSync:  # pylint: disable=function-redefined
         """
         self.session = session
         self._close_session = False
-        self._debug = False
-        self._redact = True
-        if self._redact:
-            self.redact = self.redact
+        self._debug = debug
+        self.redact = redact
         self.username: str = username
         self.password: str = password
         self._token: str | None = None

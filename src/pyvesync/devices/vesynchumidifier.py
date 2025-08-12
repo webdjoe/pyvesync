@@ -666,7 +666,7 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
 
         self._set_state(r_model)
 
-    @deprecated("Use toggle_switch() instead.")
+    @deprecated("Use toggle_display() instead.")
     async def set_display(self, toggle: bool) -> bool:
         """Toggle display on/off.
 
