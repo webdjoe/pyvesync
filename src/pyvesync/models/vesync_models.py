@@ -230,13 +230,13 @@ class ResponseDeviceDetailsModel(ResponseBaseModel):
     type: str
     uuid: str | None
     configModule: str
-    macID: str
-    mode: str
-    speed: str | None
-    currentFirmVersion: str
-    subDeviceType: str | None
-    subDeviceList: None | str
-    extension: None | InternalDeviceListExtension
+    macID: str = ""
+    mode: str = ""
+    speed: str | None = None
+    currentFirmVersion: str | None = None
+    subDeviceType: str | None = None
+    subDeviceList: str | None = None
+    extension: InternalDeviceListExtension | None = None
     subDeviceNo: int | None = None
     deviceStatus: str = "off"
     connectionStatus: str = "offline"
