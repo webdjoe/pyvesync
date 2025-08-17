@@ -246,7 +246,7 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
                          self.device_name, self.device_type)
             return False
 
-        if Validators.validate_zero_to_hundred(brightness):
+        if not Validators.validate_zero_to_hundred(brightness):
             logger.debug("Brightness value must be set between 0 and 100")
             return False
 
