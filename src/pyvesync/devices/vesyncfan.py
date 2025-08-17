@@ -125,6 +125,20 @@ class VeSyncTowerFan(BypassV2Mixin, VeSyncFanBase):
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
+    async def toggle_switch(self, toggle: bool | None = None) -> bool:
+        payload_data = {
+            'powerSwitch': int(toggle),
+            'switchIdx': 0,
+        }
+        r_dict = await self.call_bypassv2_api("setSwitch", payload_data)
+        r = Helpers.process_dev_response(logger, "toggle_switch", self, r_dict)
+        if r is None:
+            return False
+
+        self.state.device_status = DeviceStatus.from_bool(toggle)
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
     async def toggle_oscillation(self, toggle: bool) -> bool:
         payload_data = {
             "oscillationSwitch": int(toggle)
