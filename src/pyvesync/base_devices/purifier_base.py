@@ -125,7 +125,7 @@ class PurifierState(DeviceState):
     @air_quality_level.setter
     def air_quality_level(self, value: int | None) -> None:
         """Set air quality level."""
-        if isinstance(value, str):
+        if isinstance(value, int):
             self._air_quality_level = AirQualityLevel.from_int(value)
 
     def set_air_quality_level(self, value: int | str | None) -> None:

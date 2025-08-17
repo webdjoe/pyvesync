@@ -206,7 +206,7 @@ def _flatten_device_prop(d: dict[str, Any]) -> dict[str, Any]:
             d['connectionStatus'] = device_prop['connectionStatus']
         if device_prop.get('wifiMac') is not None:
             d['macID'] = device_prop['wifiMac']
-    del d['deviceProp']
+    d.pop("deviceProp", None)
     return d
 
 
@@ -230,38 +230,25 @@ class ResponseDeviceDetailsModel(ResponseBaseModel):
     type: str
     uuid: str | None
     configModule: str
-    macID: str
-    mode: str
-    speed: str | None
-    currentFirmVersion: str
-    subDeviceType: str | None
-    subDeviceList: None | str
-    extension: None | InternalDeviceListExtension
+    macID: str = ""
+    mode: str = ""
+    speed: str | None = None
+    currentFirmVersion: str | None = None
+    subDeviceType: str | None = None
+    subDeviceList: str | None = None
+    extension: InternalDeviceListExtension | None = None
     subDeviceNo: int | None = None
     deviceStatus: str = "off"
     connectionStatus: str = "offline"
     productType: str | None = None
-    # deviceProp: InitVar[None | InternalDevicePropModel] = None
-
-    # def __post_init__(self, deviceProp: None | IntRespDevicePropModel) -> None:
-    #     """Set productType based on deviceType."""
-    #     if deviceProp is not None:
-    #         if deviceProp.powerSwitch == 1:
-    #             self.deviceStatus = "on"
-    #         elif deviceProp.powerSwitch == 0:
-    #             self.deviceStatus = "off"
-    #         if isinstance(deviceProp.connectionStatus, str) and \
-    #                 self.connectionStatus != deviceProp.connectionStatus:
-    #             self.connectionStatus = deviceProp.connectionStatus
 
     @classmethod
     def __pre_deserialize__(cls, d: dict[Any, Any]) -> dict[Any, Any]:
         """Perform device_list pre-deserialization processes.
 
         This performs the following:
-            - Flattens the deviceProp field into deviceStatus and connectionStatus fields
-            - Sets subDeviceNo to 0 if not present
-            - Sets cid to uuid or macID if null
+            - Flattens the `deviceProp` field into `deviceStatus`, `connectionStatus` and `macID`
+            - Sets `cid` to `uuid` or `macID` if null
         """
         super().__pre_deserialize__(d)
         d = _flatten_device_prop(d)
