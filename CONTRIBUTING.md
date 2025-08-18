@@ -52,8 +52,7 @@ tox -e mypy # type checkings
 
 Tests are run based off of the API calls recorded in the [api](src/tests/api) directory. Please read the [Test Readme](src/tests/README.md) for further details on the structure of the tests.
 
-
-# Ensure new devices are Integrated in Tests
+## Ensure new devices are Integrated in Tests
 
 If you integrate a new device, please read the [testing README](src/tests/README.md) to ensure that your device is tested.
 
