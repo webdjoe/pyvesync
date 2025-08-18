@@ -63,7 +63,7 @@ async def main():
         # To print logs to file
         manager.log_to_file("pyvesync.log")
 
-        await manager.login()  # Still returns true
+        await manager.login()
         if not manager.enabled:
             print("Not logged in.")
             return
@@ -187,7 +187,7 @@ The [raise_api_errors()](https://webdjoe.github.io/pyvesync/latest/development/u
 - `VeSyncRateLimitError` - The API's rate limit has been exceeded.
 - `VeSyncAPIStatusCodeError` - The API returned a non-200 status code.
 - `VeSyncTokenError` - The API returned a token error and requires `login()` to be called again.
-- `VeSyncLoginError` - The user name or password is incorrect.
+- `VeSyncLoginError` - The username or password is incorrect.
 
 ## Installation
 
@@ -274,7 +274,7 @@ from pyvesync.logs import VeSyncLoginError
 
 async def main():
     async with VeSync("user", "password") as manager:
-        await manager.login()  # Still returns true
+        await manager.login()
         await manager.update()
 
         # Acts as a set of device instances
@@ -345,7 +345,7 @@ async def main():
     async with VeSync("user", "password") as manager:
         manager.debug = True
         manager.redact = True  # True by default
-        await manager.login()  # Still returns true
+        await manager.login()
         await manager.update()
 
         outlet = manager.outlets[0]
@@ -405,7 +405,7 @@ DEVICE_NAME = "Device" # Device to test
 async def test_device():
     # Instantiate VeSync class and login
   async with VeSync(USERNAME, PASSWORD, debug=True, redact=True) as manager:
-      login = await manager.login()
+      await manager.login()
 
       # Pull and update devices
       await manager.update()
