@@ -494,3 +494,20 @@ After:
 All [contributions](CONTRIBUTING.md) are welcome.
 
 This project is licensed under [MIT](LICENSE).
+
+## Contributors
+
+This is an open source project and cannot exist without the contributions of its community. Thank you to all the contributors who have helped make this project better!
+
+A special thanks for helping with V3 go live:
+
+| [<img src="https://github.com/cdninja.png" width="60px;"/><br /><sub><a href="https://github.com/cdninja">cdninja</a></sub>](https://github.com/cdninja) | [<img src="https://github.com/sapuseven.png" width="60px;"/><br /><sub><a href="https://github.com/sapuseven">sapuseven</a></sub>](https://github.com/sapuseven) | [<img src="https://github.com/sdrapha.png" width="60px;"/><br /><sub><a href="https://github.com/sdrapha">sdrapha</a></sub>](https://github.com/sdrapha) |
+| :------- | :------- | :------- |
+
+And to all of those that contributed to the project:
+
+<a href="https://github.com/webdjoe/pyvesync/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=webdjoe/pyvesync" />
+</a>
+
+Made with [contrib.rocks](https://contrib.rocks).
