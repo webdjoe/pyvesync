@@ -115,10 +115,7 @@ async def vesync_test(
     logger.info("VeSync instance created, logging to %s", output_path)
     # Login to VeSync account and check for success
     logger.info("Logging in to VeSync account...")
-    success = await vs.login()
-    if not success:
-        logger.error("Login failed.")
-        return
+    await vs.login()
     logger.info("Login successful, pulling device list...")
     await _random_await()
 

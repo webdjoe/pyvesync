@@ -2,7 +2,7 @@
 import pytest
 import orjson
 
-from pyvesync.utils.errors import VesyncLoginError
+from pyvesync.utils.errors import VeSyncLoginError
 from pyvesync import const
 from pyvesync.models.vesync_models import ResponseLoginModel
 
@@ -49,7 +49,7 @@ class TestLogin(TestApiFunc):
             status=200,
             response=orjson.dumps(INVALID_PASSWORD_RESP),
         )
-        with pytest.raises(VesyncLoginError):
+        with pytest.raises(VeSyncLoginError):
             self.run_in_loop(self.manager.login)
 
     def test_good_login_response(self):
