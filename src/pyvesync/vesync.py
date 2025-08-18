@@ -39,7 +39,7 @@ from pyvesync.utils.errors import (
     VeSyncAPIStatusCodeError,
     VeSyncError,
     VeSyncServerError,
-    VesyncLoginError,
+    VeSyncLoginError,
     raise_api_errors,
     )
 
@@ -317,7 +317,7 @@ class VeSync:  # pylint: disable=function-redefined
         """
         if not isinstance(self.username, str) or len(self.username) == 0 \
                 or not isinstance(self.password, str) or len(self.password) == 0:
-            raise VesyncLoginError('Username and password must be specified')
+            raise VeSyncLoginError('Username and password must be specified')
 
         request_auth = RequestAuthModel(
             email=self.username,
@@ -408,7 +408,7 @@ class VeSync:  # pylint: disable=function-redefined
                 resp_message = resp_dict.get('msg')
                 if resp_message is not None:
                     error_info.message = f'{error_info.message} ({resp_message})'
-                raise VesyncLoginError(
+                raise VeSyncLoginError(
                     f"Error receiving response to login request - {error_info.message}"
                 )
 

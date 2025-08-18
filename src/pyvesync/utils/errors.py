@@ -787,7 +787,7 @@ class VeSyncError(Exception):
     """
 
 
-class VesyncLoginError(VeSyncError):
+class VeSyncLoginError(VeSyncError):
     """Exception raised for login authentication errors."""
 
     def __init__(self, msg: str) -> None:
@@ -855,7 +855,7 @@ def raise_api_errors(error_info: ResponseInfo) -> None:
         case ErrorTypes.RATE_LIMIT:
             raise VeSyncRateLimitError
         case ErrorTypes.AUTHENTICATION:
-            raise VesyncLoginError(error_info.message)
+            raise VeSyncLoginError(error_info.message)
         case ErrorTypes.TOKEN_ERROR:
             raise VeSyncTokenError
         case ErrorTypes.SERVER_ERROR:
