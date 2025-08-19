@@ -4,8 +4,20 @@ on:
     # Triggers the workflow on push or pull request events but only for the master branch
     schedule:
       - cron: "0 8 * * Sun"
-    workflow_dispatch:
+on:
+  schedule:
+    - cron: "0 8 * * Sun"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
+  # … rest of your jobs …
     build:
         runs-on: ubuntu-latest
         steps:
