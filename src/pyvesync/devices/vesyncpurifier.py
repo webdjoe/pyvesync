@@ -12,7 +12,6 @@ from pyvesync.utils.device_mixins import (
     process_bypassv2_result
     )
 from pyvesync.utils.helpers import Helpers, Timer
-# from pyvesync.models.base_models import DefaultValues
 from pyvesync.const import (
     PurifierAutoPreference,
     DeviceStatus,
@@ -124,7 +123,7 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
         self.state.child_lock = result.child_lock or False
         config = result.configuration
         if config is not None:
-            self.state.display_set_state = DeviceStatus.ON if config.display \
+            self.state.display_set_status = DeviceStatus.ON if config.display \
                 else DeviceStatus.OFF
             self.state.display_forever = config.display_forever
             if config.auto_preference is not None:
@@ -250,6 +249,7 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
             return False
 
         self.state.fan_level = new_speed
+        self.state.fan_set_level = new_speed
         self.state.mode = PurifierModes.MANUAL  # Set mode to manual to set fan speed
         self.state.device_status = DeviceStatus.ON
         self.state.connection_status = ConnectionStatus.ONLINE
@@ -350,7 +350,7 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
         if r is None:
             return False
         self.state.connection_status = ConnectionStatus.ONLINE
-        self.state.display_set_state = DeviceStatus.from_bool(mode)
+        self.state.display_set_status = DeviceStatus.from_bool(mode)
         return True
 
     async def set_nightlight_mode(self, mode: str) -> bool:
@@ -476,7 +476,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         self.state.light_detection_status = DeviceStatus.from_int(
             details.environmentLightState
             )
-        self.state.display_set_state = DeviceStatus.from_int(details.screenSwitch)
+        self.state.display_set_status = DeviceStatus.from_int(details.screenSwitch)
         self.state.display_status = DeviceStatus.from_int(details.screenState)
         auto_pref = details.autoPreference
         if auto_pref is not None:
@@ -587,7 +587,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         return True
 
     async def toggle_display(self, mode: bool) -> bool:
-        if bool(self.state.display_set_state) == mode:
+        if bool(self.state.display_set_status) == mode:
             _LOGGER.debug('Display is already %s', mode)
             return True
 
@@ -600,7 +600,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         if r is None:
             return False
 
-        self.state.display_set_state = DeviceStatus.from_bool(mode)
+        self.state.display_set_status = DeviceStatus.from_bool(mode)
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
@@ -706,6 +706,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
             return False
 
         self.state.fan_set_level = new_speed
+        self.state.fan_level = new_speed
         self.state.mode = PurifierModes.MANUAL
         self.state.device_status = DeviceStatus.ON
         self.state.connection_status = ConnectionStatus.ONLINE
@@ -805,7 +806,7 @@ class VeSyncAir131(BypassV1Mixin, VeSyncPurifier):
         self.state.active_time = details.activeTime
         self.state.filter_life = details.filterLife.percent
         self.state.display_status = details.screenStatus
-        self.state.display_set_state = details.screenStatus
+        self.state.display_set_status = details.screenStatus
         self.state.child_lock = bool(DeviceStatus(details.childLock))
         self.state.mode = details.mode
         self.state.fan_level = details.level or 0
@@ -813,15 +814,6 @@ class VeSyncAir131(BypassV1Mixin, VeSyncPurifier):
         self.state.set_air_quality_level(details.airQuality)
 
     async def get_details(self) -> None:
-        # body = self._build_request('deviceDetail')
-        # headers = Helpers.req_header_bypass()
-
-        # r_dict, _ = await self.manager.async_call_api(
-        #     '/cloud/v1/deviceManaged/deviceDetail',
-        #     method='post',
-        #     headers=headers,
-        #     json_object=body.to_dict(),
-        # )
         r_dict = await self.call_bypassv1_api(
             RequestPurifier131, method="deviceDetail", endpoint="deviceDetail"
         )
@@ -836,13 +828,6 @@ class VeSyncAir131(BypassV1Mixin, VeSyncPurifier):
         update_dict = {
             "status": "on" if mode else "off"
         }
-        # body = self._build_request('airPurifierScreenCtl', update_dict=update_dict)
-        # headers = Helpers.req_header_bypass()
-
-        # r_dict, _ = await self.manager.async_call_api(
-        #     '/cloud/v1/deviceManaged/airPurifierScreenCtl', 'post',
-        #     json_object=body.to_dict(), headers=headers
-        # )
         r_dict = await self.call_bypassv1_api(
             RequestPurifier131, method="airPurifierScreenCtl",
             endpoint="airPurifierScreenCtl", update_dict=update_dict
@@ -851,7 +836,7 @@ class VeSyncAir131(BypassV1Mixin, VeSyncPurifier):
         if r is None:
             return False
 
-        self.state.display_set_state = DeviceStatus.from_bool(mode)
+        self.state.display_set_status = DeviceStatus.from_bool(mode)
         self.state.display_status = DeviceStatus.from_bool(mode)
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
@@ -863,12 +848,6 @@ class VeSyncAir131(BypassV1Mixin, VeSyncPurifier):
         update_dict = {
             "status": DeviceStatus.from_bool(toggle).value
         }
-        # body = self._build_request('airPurifierPowerSwitchCtl', update_dict=update_dict)
-        # headers = Helpers.req_header_bypass()
-        # r_dict, _ = await self.manager.async_call_api(
-        #     '/cloud/v1/deviceManaged/airPurifierPowerSwitchCtl', 'post',
-        #     json_object=body.to_dict(), headers=headers
-        # )
         r_dict = await self.call_bypassv1_api(
             RequestPurifier131, method="airPurifierPowerSwitchCtl",
             endpoint="airPurifierPowerSwitchCtl", update_dict=update_dict
@@ -899,13 +878,6 @@ class VeSyncAir131(BypassV1Mixin, VeSyncPurifier):
         update_dict = {
             "level": new_speed
         }
-        # body = self._build_request('airPurifierSpeedCtl', update_dict=update_dict)
-        # headers = Helpers.req_header_bypass()
-
-        # r_dict, _ = await self.manager.async_call_api(
-        #     '/cloud/v1/deviceManaged/airPurifierSpeedCtl', 'post',
-        #     json_object=body, headers=headers
-        # )
         r_dict = await self.call_bypassv1_api(
             RequestPurifier131Level, method="airPurifierSpeedCtl",
             endpoint="airPurifierSpeedCtl", update_dict=update_dict
@@ -934,13 +906,6 @@ class VeSyncAir131(BypassV1Mixin, VeSyncPurifier):
         update_dict = {
             "mode": mode
         }
-        # body = self._build_request('airPurifierModeCtl', update_dict=update_dict)
-        # headers = Helpers.req_header_bypass()
-
-        # r_dict, _ = await self.manager.async_call_api(
-        #     '/cloud/v1/deviceManaged/airPurifierRunModeCtl', 'post',
-        #     json_object=body.to_dict(), headers=headers
-        # )
         r_dict = await self.call_bypassv1_api(
             RequestPurifier131Mode, method="airPurifierRunModeCtl",
             endpoint="airPurifierRunModeCtl", update_dict=update_dict

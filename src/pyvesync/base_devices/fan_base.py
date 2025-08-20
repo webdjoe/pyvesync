@@ -24,16 +24,16 @@ class FanState(DeviceState):
 
 
     Attributes:
-        display_set_state (str): Display set state.
+        display_set_status (str): Display set status.
         display_status (str): Display status.
         displaying_type (str): Displaying type.
         fan_level (int): Fan level.
         fan_set_level (int): Fan set level.
         humidity (int): Humidity level.
         mode (str): Mode of device.
-        mute_set_state (str): Mute set state.
+        mute_set_status (str): Mute set status.
         mute_status (str): Mute status.
-        oscillation_set_state (str): Oscillation set state.
+        oscillation_set_status (str): Oscillation set status.
         oscillation_status (str): Oscillation status.
         sleep_change_fan_level (str): Sleep change fan level.
         sleep_fallasleep_remain (str): Sleep fall asleep remain.
@@ -45,16 +45,16 @@ class FanState(DeviceState):
     """
 
     __slots__ = (
-        "display_set_state",
+        "display_set_status",
         "display_status",
         "displaying_type",
         "fan_level",
         "fan_set_level",
         "humidity",
         "mode",
-        "mute_set_state",
+        "mute_set_status",
         "mute_status",
-        "oscillation_set_state",
+        "oscillation_set_status",
         "oscillation_status",
         "sleep_change_fan_level",
         "sleep_fallasleep_remain",
@@ -89,11 +89,11 @@ class FanState(DeviceState):
         self.sleep_oscillation_switch: str | None = None
         self.sleep_change_fan_level: str | None = None
         self.mute_status: str | None = None
-        self.mute_set_state: str | None = None
+        self.mute_set_status: str | None = None
         self.oscillation_status: str | None = None
-        self.oscillation_set_state: str | None = None
+        self.oscillation_set_status: str | None = None
         self.display_status: str | None = None
-        self.display_set_state: str | None = None
+        self.display_set_status: str | None = None
         self.displaying_type: str | None = None
 
 

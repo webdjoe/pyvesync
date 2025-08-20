@@ -74,7 +74,7 @@ class VeSync:  # pylint: disable=function-redefined
         'username'
     )
 
-    def __init__(self,
+    def __init__(self,  # noqa: PLR0913
                  username: str,
                  password: str,
                  country_code: str = DEFAULT_REGION,
@@ -106,6 +106,8 @@ class VeSync:  # pylint: disable=function-redefined
             time_zone (str): Time zone for device from IANA database, by default
                 DEFAULT_TZ. This is automatically set to the time zone of the
                 VeSync account during login.
+            debug (bool): Enable debug logging, by default False.
+            redact (bool): Enable redaction of sensitive information, by default True.
 
         Attributes:
             session (ClientSession):  Client session for API calls
@@ -311,7 +313,8 @@ class VeSync:  # pylint: disable=function-redefined
         Username and password are provided when class is instantiated.
 
         Raises:
-            VeSyncLoginError: If login fails, for example due to invalid username or password.
+            VeSyncLoginError: If login fails, for example due to invalid username
+                or password.
             VeSyncAPIResponseError: If API response is invalid.
             VeSyncServerError: If server returns an error.
         """
@@ -331,7 +334,7 @@ class VeSync:  # pylint: disable=function-redefined
         if resp_dict is None:
             raise VeSyncAPIResponseError('Error receiving response to auth request')
 
-        if not resp_dict.get('code') == 0:
+        if resp_dict.get('code') != 0:
             error_info = ErrorCodes.get_error_info(resp_dict.get("code"))
             resp_message = resp_dict.get('msg')
             if resp_message is not None:
@@ -355,8 +358,7 @@ class VeSync:  # pylint: disable=function-redefined
                 " result is not IntRespAuthResultModel"
             )
 
-        await self._login_token(auth_code=result.authorizeCode)
-
+        return await self._login_token(auth_code=result.authorizeCode)
 
     async def _login_token(
             self,
@@ -375,7 +377,8 @@ class VeSync:  # pylint: disable=function-redefined
                 for a second time with a different region.
 
         Raises:
-            VeSyncLoginError: If login fails, for example due to invalid username or password.
+            VeSyncLoginError: If login fails, for example due to invalid username
+                or password.
             VeSyncAPIResponseError: If API response is invalid.
             VeSyncServerError: If server returns an error.
         """
@@ -399,9 +402,9 @@ class VeSync:  # pylint: disable=function-redefined
                     "Error receiving response to login request -"
                     "result is not IntRespLoginResultModel"
                 )
-            if not response_model.code == 0:
+            if response_model.code != 0:
                 error_info = ErrorCodes.get_error_info(resp_dict.get("code"))
-                if error_info.error_type == ErrorTypes.CROSS_REGION:  # "cross region error."
+                if error_info.error_type == ErrorTypes.CROSS_REGION:  # cross region error
                     result = response_model.result
                     self.country_code = result.countryCode
                     await self._login_token(region_change_token=result.bizToken)
@@ -430,6 +433,7 @@ class VeSync:  # pylint: disable=function-redefined
             raise VeSyncAPIResponseError(
                 'Error receiving response to login request'
             ) from exc
+        return True
 
     async def update(self) -> None:
         """Fetch updated information about devices and new device list.

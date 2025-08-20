@@ -247,7 +247,8 @@ class ResponseDeviceDetailsModel(ResponseBaseModel):
         """Perform device_list pre-deserialization processes.
 
         This performs the following:
-            - Flattens the `deviceProp` field into `deviceStatus`, `connectionStatus` and `macID`
+            - Flattens the `deviceProp` field into `deviceStatus`, `connectionStatus`
+                and `macID`
             - Sets `cid` to `uuid` or `macID` if null
         """
         super().__pre_deserialize__(d)
