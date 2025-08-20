@@ -19,7 +19,7 @@ RETYPE = type(re.compile(""))
 REQUEST_INFO = namedtuple("REQUEST_INFO", ["url", "method", "headers", "real_url"])
 
 
-def mock_stream(data):
+def mock_stream(data) -> StreamReader:
     """Mock a stream with data."""
     protocol = mock.Mock(_reading_paused=False)
     stream = StreamReader(protocol, limit=2**16)

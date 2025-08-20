@@ -43,7 +43,7 @@ class PurifierState(DeviceState):
         air_quality_level (AirQualityLevel): Air quality level of the purifier.
         child_lock (bool): Child lock status of the purifier.
         display_status (str): Display status of the purifier.
-        display_set_state (str): Display set state of the purifier.
+        display_set_status (str): Display set status of the purifier.
         display_forever (bool): Display forever status of the purifier.
         timer (Timer): Timer object for the purifier.
         pm25 (int): PM2.5 value of the purifier.
@@ -66,7 +66,7 @@ class PurifierState(DeviceState):
         "auto_room_size",
         "child_lock",
         "display_forever",
-        "display_set_state",
+        "display_set_status",
         "display_status",
         "fan_level",
         "fan_rotate_angle",
@@ -100,7 +100,7 @@ class PurifierState(DeviceState):
         self.child_lock: bool = False
         self.filter_open_state: bool = False
         self.display_status: str | None = None
-        self.display_set_state: str | None = None
+        self.display_set_status: str | None = None
         self.display_forever: bool = False
         # Attributes not supported by all purifiers
         self.pm25: int | None = None
@@ -177,10 +177,10 @@ class PurifierState(DeviceState):
         return self.display_status
 
     @property
-    @deprecated("Use display_set_state instead.")
+    @deprecated("Use display_set_status instead.")
     def display_switch(self) -> str | None:
         """Return display switch status."""
-        return self.display_set_state
+        return self.display_set_status
 
 
 class VeSyncPurifier(VeSyncBaseToggleDevice):

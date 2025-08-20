@@ -221,6 +221,7 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
         if r is None:
             return False
         self.state.display_set_status = DeviceStatus.from_bool(toggle)
+        self.state.display_status = DeviceStatus.from_bool(toggle)
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 

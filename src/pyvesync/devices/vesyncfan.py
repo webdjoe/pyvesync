@@ -43,11 +43,11 @@ class VeSyncTowerFan(BypassV2Mixin, VeSyncFanBase):
         self.state.thermal_comfort = res.thermalComfort
 
         self.state.mute_status = DeviceStatus.from_int(res.muteState)
-        self.state.mute_set_state = DeviceStatus.from_int(res.muteSwitch)
+        self.state.mute_set_status = DeviceStatus.from_int(res.muteSwitch)
         self.state.oscillation_status = DeviceStatus.from_int(res.oscillationState)
-        self.state.oscillation_set_state = DeviceStatus.from_int(res.oscillationSwitch)
+        self.state.oscillation_set_status = DeviceStatus.from_int(res.oscillationSwitch)
         self.state.display_status = DeviceStatus.from_int(res.screenState)
-        self.state.display_set_state = DeviceStatus.from_int(res.screenSwitch)
+        self.state.display_set_status = DeviceStatus.from_int(res.screenSwitch)
         self.state.displaying_type = DeviceStatus.from_int(res.displayingType)
 
         if res.timerRemain is not None and res.timerRemain > 0:
@@ -126,6 +126,8 @@ class VeSyncTowerFan(BypassV2Mixin, VeSyncFanBase):
         return True
 
     async def toggle_switch(self, toggle: bool | None = None) -> bool:
+        if toggle is None:
+            toggle = self.state.device_status == DeviceStatus.OFF
         payload_data = {
             'powerSwitch': int(toggle),
             'switchIdx': 0,

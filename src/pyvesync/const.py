@@ -202,7 +202,7 @@ class DeviceStatus(StrEnum):
         return -1
 
     @classmethod
-    def from_int(cls, value: int) -> str:
+    def from_int(cls, value: int | None) -> str:
         """Convert integer value to corresponding string.
 
         If value is 1, return ON and if 0, return OFF.
@@ -219,7 +219,7 @@ class DeviceStatus(StrEnum):
     @classmethod
     def from_bool(cls, value: bool) -> 'DeviceStatus':
         """Convert boolean value to corresponding string."""
-        return cls.ON if value else cls.OFF
+        return cls.ON if value is True else cls.OFF
 
 
 class ConnectionStatus(StrEnum):
