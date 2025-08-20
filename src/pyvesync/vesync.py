@@ -307,7 +307,7 @@ class VeSync:  # pylint: disable=function-redefined
 
         return proc_return
 
-    async def login(self) -> bool:  # pylint: disable=W9006 # pylint mult docstring raises
+    async def login(self) -> None:  # pylint: disable=W9006 # pylint mult docstring raises
         """Log into VeSync server.
 
         Username and password are provided when class is instantiated.
@@ -364,7 +364,7 @@ class VeSync:  # pylint: disable=function-redefined
             self,
             auth_code: str | None = None,
             region_change_token: str | None = None,
-    ) -> bool:  # pylint: disable=W9006 # pylint mult docstring raises
+    ) -> None:  # pylint: disable=W9006 # pylint mult docstring raises
         """Exchanges the authorization code for a token.
 
         This completes the login process. If the initial call fails with
@@ -407,7 +407,7 @@ class VeSync:  # pylint: disable=function-redefined
                 if error_info.error_type == ErrorTypes.CROSS_REGION:  # cross region error
                     result = response_model.result
                     self.country_code = result.countryCode
-                    await self._login_token(region_change_token=result.bizToken)
+                    return await self._login_token(region_change_token=result.bizToken)
                 resp_message = resp_dict.get('msg')
                 if resp_message is not None:
                     error_info.message = f'{error_info.message} ({resp_message})'
@@ -427,6 +427,7 @@ class VeSync:  # pylint: disable=function-redefined
             self.country_code = result.countryCode
             self.enabled = True
             logger.debug('Login successful')
+            return None
 
         except (MissingField, UnserializableDataError) as exc:
             logger.debug('Error parsing login response: %s', exc)
