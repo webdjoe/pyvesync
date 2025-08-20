@@ -148,9 +148,7 @@ class VeSyncBaseDevice(ABC, Generic[VS_STATE_T]):
 
     def __hash__(self) -> int:
         """Use CID and sub-device number to make device hash."""
-        if isinstance(self.sub_device_no, int) and self.sub_device_no > 0:
-            return hash(self.cid + str(self.sub_device_no))
-        return hash(self.cid)
+        return hash(self.cid + str(self.sub_device_no))
 
     def __str__(self) -> str:
         """Use device info for string representation of class."""

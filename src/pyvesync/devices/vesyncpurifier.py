@@ -12,7 +12,6 @@ from pyvesync.utils.device_mixins import (
     process_bypassv2_result
     )
 from pyvesync.utils.helpers import Helpers, Timer
-# from pyvesync.models.base_models import DefaultValues
 from pyvesync.const import (
     PurifierAutoPreference,
     DeviceStatus,

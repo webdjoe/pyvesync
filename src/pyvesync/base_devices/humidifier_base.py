@@ -32,7 +32,6 @@ class HumidifierState(DeviceState):
         auto_stop_target_reached (bool): Automatic stop target reached.
         auto_target_humidity (int): Target humidity level.
         automatic_stop_config (bool): Automatic stop configuration.
-        child_lock_status (bool): Child lock status.
         display_set_status (str): Display set status.
         display_status (str): Display status.
         drying_mode_auto_switch (str): Drying mode auto switch status.
@@ -59,7 +58,6 @@ class HumidifierState(DeviceState):
         "auto_stop_target_reached",
         "auto_target_humidity",
         "automatic_stop_config",
-        "child_lock_status",
         "display_set_status",
         "display_status",
         "drying_mode_auto_switch",
