@@ -249,6 +249,7 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
             return False
 
         self.state.fan_level = new_speed
+        self.state.fan_set_level = new_speed
         self.state.mode = PurifierModes.MANUAL  # Set mode to manual to set fan speed
         self.state.device_status = DeviceStatus.ON
         self.state.connection_status = ConnectionStatus.ONLINE
@@ -705,6 +706,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
             return False
 
         self.state.fan_set_level = new_speed
+        self.state.fan_level = new_speed
         self.state.mode = PurifierModes.MANUAL
         self.state.device_status = DeviceStatus.ON
         self.state.connection_status = ConnectionStatus.ONLINE
