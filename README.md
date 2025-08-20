@@ -67,7 +67,7 @@ async def main():
         if not manager.enabled:
             print("Not logged in.")
             return
-        await manager.get_devices() # Instantiates supported devices in device list
+        await manager.get_devices() # Instantiates supported devices in device list, automatically called by login, only needed if you would like updates
         await manager.update() # Updates the state of all devices
 
         # manager.devices is a DeviceContainer object
