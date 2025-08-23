@@ -853,9 +853,7 @@ fan_modules: list[FanMap] = [
         class_name="VeSyncTowerFan",
         dev_types=["LTF-F422S-KEU", "LTF-F422S-WUSR", "LTF-F422_WJP", "LTF-F422S-WUS"],
         modes=[
-            FanModes.SLEEP,  # Alias for Advanced sleep mode
             FanModes.NORMAL,
-            FanModes.MANUAL,
             FanModes.TURBO,
             FanModes.AUTO,
             FanModes.ADVANCED_SLEEP,
