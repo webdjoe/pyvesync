@@ -427,7 +427,6 @@ class VeSync:  # pylint: disable=function-redefined
             self.country_code = result.countryCode
             self.enabled = True
             logger.debug('Login successful')
-            return None
 
         except (MissingField, UnserializableDataError) as exc:
             logger.debug('Error parsing login response: %s', exc)
