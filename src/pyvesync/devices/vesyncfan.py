@@ -116,7 +116,7 @@ class VeSyncTowerFan(BypassV2Mixin, VeSyncFanBase):
         payload_data = {
             "workMode": mode
         }
-        r_dict = await self.call_bypassv2_api("setTowerFanStatus", payload_data)
+        r_dict = await self.call_bypassv2_api("setTowerFanMode", payload_data)
         r = Helpers.process_dev_response(logger, "set_mode", self, r_dict)
         if r is None:
             return False
