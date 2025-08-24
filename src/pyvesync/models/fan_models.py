@@ -15,9 +15,8 @@ from pyvesync.models.bypass_models import (
 
 @dataclass
 class TowerFanResult(BypassV2InnerResult):
-    """Vital 100S/200S and Everest Fan Result Model."""
+    """Tower Fan Result Model."""
     powerSwitch: int
-    filterLifePercent: int
     workMode: str
     manualSpeedLevel: int
     fanSpeedLevel: int
