@@ -28,7 +28,6 @@ class TowerFanResult(BypassV2InnerResult):
     muteState: int
     timerRemain: int
     temperature: int
-    thermalComfort: int
     errorCode: int
     scheduleCount: int
     displayingType: int | None = None
