@@ -1,7 +1,6 @@
 """VeSync API for controlling air purifiers."""
 from __future__ import annotations
 import logging
-import asyncio
 from typing import TYPE_CHECKING
 
 from typing_extensions import deprecated
@@ -592,8 +591,8 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
 
     async def toggle_display(self, mode: bool) -> bool:
         if bool(self.state.light_detection_status):
-            await self.toggle_light_detection(False)  # Ensure light detection is off
-            await asyncio.sleep(1) # Wait for a second - the setDisplay call fails when called immediately after disabling light detection
+            _LOGGER.error('Cannot set display when light detection is enabled')
+            return False
 
         if bool(self.state.display_set_status) == mode:
             _LOGGER.debug('Display is already %s', mode)
