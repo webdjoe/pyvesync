@@ -528,6 +528,10 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
 
     async def toggle_light_detection(self, toggle: bool | None = None) -> bool:
         """Enable/Disable Light Detection Feature."""
+        if bool(self.state.light_detection_status) == toggle:
+            _LOGGER.debug('Light detection is already %s', self.state.light_detection_status)
+            return True
+
         if toggle is None:
             toggle = not bool(self.state.light_detection_status)
         payload_data = {"lightDetectionSwitch": int(toggle)}
@@ -536,8 +540,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         if r is None:
             return False
 
-        self.state.light_detection_switch = DeviceStatus.ON if toggle \
-            else DeviceStatus.OFF
+        self.state.light_detection_switch = DeviceStatus.from_bool(toggle)
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
@@ -587,6 +590,10 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         return True
 
     async def toggle_display(self, mode: bool) -> bool:
+        if bool(self.state.light_detection_status):
+            _LOGGER.error('Cannot set display when light detection is enabled')
+            return False
+
         if bool(self.state.display_set_status) == mode:
             _LOGGER.debug('Display is already %s', mode)
             return True
