@@ -847,7 +847,7 @@ def raise_api_errors(error_info: ResponseInfo) -> None:
 
     Raises:
         VeSyncRateLimitError: Rate limit error
-        VesyncLoginError: Authentication error
+        VeSyncLoginError: Authentication error
         VeSyncTokenError: Token error
         VeSyncServerError: Server error
     """

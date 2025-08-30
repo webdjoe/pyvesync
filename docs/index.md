@@ -70,7 +70,15 @@ from pyvesync import VeSync
 # debug and redact are optional arguments, the above values are
 # the defaults. The library will try to automatically pull in
 # the correct time zone from the API responses.
-async with VeSync(username="EMAIL", password="PASSWORD", time_zone=DEFAULT_TZ):
+    async with VeSync(
+        username="user",
+        password="password",
+        country_code="US",  # Optional - country Code to select correct server
+        session=session,  # Optional - aiohttp.ClientSession
+        time_zone="America/New_York",  # Optional - Timezone, defaults to America/New_York
+        debug=False,  # Optional - Debug output
+        redact=True  # Optional - Redact sensitive information from logs
+        ) as manager:
 
     # VeSync object is now instantiated
     await manager.login()

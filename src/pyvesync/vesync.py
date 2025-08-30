@@ -433,7 +433,6 @@ class VeSync:  # pylint: disable=function-redefined
             raise VeSyncAPIResponseError(
                 'Error receiving response to login request'
             ) from exc
-        return True
 
     async def update(self) -> None:
         """Fetch updated information about devices and new device list.

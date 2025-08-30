@@ -10,7 +10,7 @@ from typing import Self, TypedDict
 from mashumaro import field_options
 from mashumaro.config import BaseConfig
 from mashumaro.mixins.orjson import DataClassORJSONMixin
-from pyvesync.models.bypass_models import RequestBypassV1
+from pyvesync.models.bypass_models import RequestBypassV1, BypassV2InnerResult
 from pyvesync.models.base_models import ResponseCodeModel, ResponseBaseModel
 
 
@@ -126,7 +126,7 @@ class ResponseESL100MCOuterResult:
 
 
 @dataclass
-class ResponseESL100MCResult:
+class ResponseESL100MCResult(BypassV2InnerResult):
     """ESL100MC Multi-Color Bulb Status Response."""
     colorMode: str
     action: str

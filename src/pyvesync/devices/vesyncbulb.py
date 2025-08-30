@@ -176,7 +176,7 @@ class VeSyncBulbESL100MC(VeSyncBulb):
         )
 
         result_model = process_bypassv2_result(
-            self, logger, "get_details", r_dict, bulb_models.ResponseESL100MCStatus
+            self, logger, "get_details", r_dict, bulb_models.ResponseESL100MCResult
         )
         if result_model is None:
             return
@@ -184,15 +184,14 @@ class VeSyncBulbESL100MC(VeSyncBulb):
         return
 
     def _set_state(
-            self, response: bulb_models.ResponseESL100MCStatus) -> None:
+            self, response: bulb_models.ResponseESL100MCResult) -> None:
         """Build detail dictionary from response."""
-        result = response.result.result
-        self.state.brightness = result.brightness
-        self.state.color_mode = result.colorMode
+        self.state.brightness = response.brightness
+        self.state.color_mode = response.colorMode
         self.set_state("color", Color.from_rgb(
-            red=result.red,
-            green=result.green,
-            blue=result.blue
+            red=response.red,
+            green=response.green,
+            blue=response.blue
         ))
 
     async def set_brightness(self, brightness: int) -> bool:
@@ -397,15 +396,15 @@ class VeSyncBulbESL100(BypassV1Mixin, VeSyncBulb):
             'deviceDetail'
         )
         model = process_bypassv1_result(
-            self, logger, "get_details", r_dict, bulb_models.ResponseESL100Detail
+            self, logger, "get_details", r_dict, bulb_models.ResponseESL100DetailResult
         )
 
         if model is None:
             self.state.connection_status = ConnectionStatus.OFFLINE
             return
-        self.state.brightness = model.result.brightness
-        self.state.device_status = model.result.deviceStatus
-        self.state.connection_status = model.result.connectionStatus
+        self.state.brightness = model.brightness
+        self.state.device_status = model.deviceStatus
+        self.state.connection_status = model.connectionStatus
 
     @deprecated(
         "toggle() is deprecated, use toggle_switch(toggle: bool | None = None) instead"
@@ -613,7 +612,7 @@ class VeSyncBulbESL100CW(BypassV1Mixin, VeSyncBulb):
             )
 
         light_resp = process_bypassv1_result(
-            self, logger, "get_details", r_dict, bulb_models.ResponseESL100CWDetail
+            self, logger, "get_details", r_dict, bulb_models.ResponseESL100CWDetailResult
         )
         if light_resp is None:
             self.state.connection_status = ConnectionStatus.OFFLINE
@@ -621,9 +620,9 @@ class VeSyncBulbESL100CW(BypassV1Mixin, VeSyncBulb):
         self._interpret_apicall_result(light_resp)
 
     def _interpret_apicall_result(
-            self, response: bulb_models.ResponseESL100CWDetail) -> None:
+            self, response: bulb_models.ResponseESL100CWDetailResult) -> None:
         self.state.connection_status = ConnectionStatus.ONLINE
-        result = response.result.light
+        result = response.light
         self.state.device_status = result.action
         self.state.brightness = result.brightness
         self.state.color_temp = result.colorTempe

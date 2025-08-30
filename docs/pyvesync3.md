@@ -136,7 +136,7 @@ Custom Exceptions raised by all API calls:
 
 Login API Exceptions
 
-- [VeSyncLoginError][pyvesync.utils.errors.VesyncLoginError] - The username or password is incorrect.
+- [VeSyncLoginError][pyvesync.utils.errors.VeSyncLoginError] - The username or password is incorrect.
 
 See [errors](./development/utils/errors.md) documentation for a complete list of error codes and exceptions.
 

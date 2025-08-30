@@ -49,7 +49,15 @@ import aiohttp
 from pyvesync.vesync import VeSync
 
 async def main():
-    async with VeSync("user", "password") as manager:
+    async with VeSync(
+        username="user",
+        password="password",
+        country_code="US",  # Optional - country Code to select correct server
+        session=session,  # Optional - aiohttp.ClientSession
+        time_zone="America/New_York",  # Optional - Timezone, defaults to America/New_York
+        debug=False,  # Optional - Debug output
+        redact=True  # Optional - Redact sensitive information from logs
+        ) as manager:
 
         # To enable debug mode - prints request and response content for
         # api calls that return an error code

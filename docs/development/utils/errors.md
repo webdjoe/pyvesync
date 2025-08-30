@@ -75,7 +75,7 @@ The `pyvesync` library parses the code provided in the API response to determine
         - "!.*pid"
         - "!^__*"
 
-::: pyvesync.utils.errors.VesyncLoginError
+::: pyvesync.utils.errors.VeSyncLoginError
     handler: python
     options:
       parameter_headings: true
