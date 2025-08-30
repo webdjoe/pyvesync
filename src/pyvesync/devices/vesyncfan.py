@@ -38,9 +38,7 @@ class VeSyncTowerFan(BypassV2Mixin, VeSyncFanBase):
         self.state.mode = res.workMode
         self.state.fan_level = res.fanSpeedLevel
         self.state.fan_set_level = res.manualSpeedLevel
-        self.state.humidity = res.humidity
         self.state.temperature = res.temperature
-        self.state.thermal_comfort = res.thermalComfort
 
         self.state.mute_status = DeviceStatus.from_int(res.muteState)
         self.state.mute_set_status = DeviceStatus.from_int(res.muteSwitch)
