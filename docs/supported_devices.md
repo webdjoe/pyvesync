@@ -40,7 +40,7 @@ The VeSync API supports a variety of devices. The following is a list of devices
       - [CS137][pyvesync.devices.vesynckitchen.VeSyncAirFryer158] - 3.7qt Air Fryer
       - [CS158][pyvesync.devices.vesynckitchen.VeSyncAirFryer158] - 5.8qt Air Fryer
 8. Thermostats
-      - [Aura][pyvesync.devices.vesyncthermostat] Thermostat
+      - [Aura][pyvesync.devices.vesyncthermostat] Thermostat **Needs testing**
 
 ## Device Features
 
