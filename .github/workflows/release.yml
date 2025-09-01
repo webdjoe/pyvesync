@@ -38,16 +38,17 @@ jobs:
                   github_token: ${{ github.token }}
                   tags: true
             - name: Create GitHub Release
-              if: ${{steps.semantic_release_info.outputs.version != ''}}
-              uses: actions/create-release@v1
-              env:
-                  GITHUB_TOKEN: ${{ github.token }}
-              with:
-                  tag_name: ${{ steps.semantic_release_info.outputs.git_tag }}
-                  release_name: ${{ steps.semantic_release_info.outputs.git_tag }}
-                  body: ${{ steps.semantic_release_info.outputs.notes }}
-                  draft: false
-                  prerelease: false
+      - name: Create GitHub Release
+        if: ${{ steps.semantic_release_info.outputs.version != '' }}
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.semantic_release_info.outputs.git_tag }}
+          name: ${{ steps.semantic_release_info.outputs.git_tag }}
+          body: ${{ steps.semantic_release_info.outputs.notes }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
             - name: Install dependencies
               if: ${{steps.semantic_release_info.outputs.version != ''}}
               run: |
