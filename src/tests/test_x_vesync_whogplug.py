@@ -43,7 +43,7 @@ class TestVeSyncWhogPlugSwitch(TestBase):
         whogplug_outlet = VeSyncOutletWhogPlug(DEV_LIST_DETAIL, self.manager)
         whogplug_outlet.get_details()
         response = CORRECT_WHOGPLUG_DETAILS[0]
-        result = response.get('result', {})
+        result = response.get('result', {}).get('result', {})
         
         expected_status = 'on' if result.get('enabled') else 'off'
         assert whogplug_outlet.device_status == expected_status
