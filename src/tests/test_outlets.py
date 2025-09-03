@@ -272,7 +272,7 @@ class TestOutlets(TestBase):
             return
         assert method_call() is False
 
-    @pytest.mark.parametrize('dev_type', [d for d in OUTLET_DEV_TYPES if d != 'BSDOG01'])
+    @pytest.mark.parametrize('dev_type', [d for d in OUTLET_DEV_TYPES if d not in ['BSDOG01', 'WHOGPLUG']])
     def test_power(self, dev_type):
         """Test outlets power history methods."""
         self.mock_api.return_value = call_json_outlets.ENERGY_HISTORY

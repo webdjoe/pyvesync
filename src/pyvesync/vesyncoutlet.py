@@ -23,6 +23,8 @@ outlet_config = {
         'module': 'VeSyncOutdoorPlug'},
     'BSDOG01': {
         'module': 'VeSyncOutletBSDGO1'},
+    'WHOGPLUG': {
+        'module': 'VeSyncOutletWhogPlug'},
 }
 
 outlet_modules = {k: v['module'] for k, v in outlet_config.items()}
@@ -789,6 +791,73 @@ class VeSyncOutletBSDGO1(VeSyncOutlet):
         body['payload'] = {
             'data': {'powerSwitch_1': 1 if power else 0},
             'method': 'setProperty',
+            'source': 'APP'
+        }
+
+        r, _ = Helpers.call_api(
+            '/cloud/v2/deviceManaged/bypassV2',
+            'post',
+            headers=Helpers.req_header_bypass(),
+            json_object=body,
+        )
+
+        if Helpers.code_check(r):
+            self.device_status = 'on' if power else 'off'
+            return True
+        logger.warning('Error turning %s %s', self.device_name, 'on' if power else 'off')
+        return False
+
+
+class VeSyncOutletWhogPlug(VeSyncOutlet):
+    """VeSync WhogPlug smart plug."""
+
+    def __init__(self, details, manager):
+        """Initialize WhogPlug smart plug class."""
+        super().__init__(details, manager)
+
+    def get_details(self) -> None:
+        """Get WhogPlug device details."""
+        body = Helpers.req_body(self.manager, 'bypassV2')
+        body['cid'] = self.cid
+        body['configModule'] = self.config_module
+        body['payload'] = {
+            'method': 'getOutletStatus',
+            'source': 'APP',
+            'data': {}
+        }
+
+        r, _ = Helpers.call_api(
+            '/cloud/v2/deviceManaged/bypassV2',
+            'post',
+            headers=Helpers.req_header_bypass(),
+            json_object=body,
+        )
+
+        if Helpers.code_check(r) and (r := r.get('result', {}).get('result', {})) != {}:
+            self.device_status = 'on' if r.get('enabled', False) else 'off'
+            self.details = Helpers.build_details_dict(r)
+        else:
+            logger.debug('Error getting %s details', self.device_name)
+
+    def turn_on(self) -> bool:
+        """Turn WhogPlug outlet on."""
+        return self._set_power(True)
+
+    def turn_off(self) -> bool:
+        """Turn WhogPlug outlet off."""
+        return self._set_power(False)
+
+    def _set_power(self, power: bool) -> bool:
+        """Set power state of WhogPlug outlet."""
+        body = Helpers.req_body(self.manager, 'bypassV2')
+        body['cid'] = self.cid
+        body['configModule'] = self.config_module
+        body['payload'] = {
+            'data': {
+                'enabled': bool(power),
+                'id': 0
+            },
+            'method': 'setSwitch',
             'source': 'APP'
         }
 

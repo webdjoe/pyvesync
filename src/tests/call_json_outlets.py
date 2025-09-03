@@ -142,6 +142,27 @@ class OutletDetails:
         }
     }, 200)
 
+    whogplug_details = ({
+        "traceId": "1756897836280",
+        "code": 0,
+        "msg": "request success",
+        "module": None,
+        "stacktrace": None,
+        "result": {
+            "traceId": "1756897836280",
+            "code": 0,
+            "result": {
+                "enabled": False,
+                "voltage": 1,
+                "energy": 1,
+                "power": 1,
+                "current": 1,
+                "highestVoltage": 1,
+                "voltagePtStatus": False
+            }
+        }
+    }, 200)
+
 
 DETAILS_RESPONSES = {
     'wifi-switch-1.3': OutletDetails.details_7a,
@@ -149,7 +170,8 @@ DETAILS_RESPONSES = {
     'ESW01-EU': OutletDetails.details_10a,
     'ESW15-USA': OutletDetails.details_15a,
     'ESO15-TB': OutletDetails.details_outdoor,
-    'BSDOG01': OutletDetails.bsdgo1_details
+    'BSDOG01': OutletDetails.bsdgo1_details,
+    'WHOGPLUG': OutletDetails.whogplug_details
 }
 
 ENERGY_HISTORY = (
@@ -177,6 +199,16 @@ for k in METHOD_RESPONSES:
 
 # Add BSDGO1 specific responses
 METHOD_RESPONSES['BSDOG01'] = defaultdict(lambda: ({
+    "code": 0,
+    "msg": "request success",
+    "result": {
+        "traceId": Defaults.trace_id,
+        "code": 0
+    }
+}, 200))
+
+# Add WhogPlug specific responses
+METHOD_RESPONSES['WHOGPLUG'] = defaultdict(lambda: ({
     "code": 0,
     "msg": "request success",
     "result": {
