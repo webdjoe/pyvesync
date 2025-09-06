@@ -17,7 +17,6 @@ from pyvesync.models.base_models import (
     ResponseBaseModel,
     ResponseCodeModel,
     )
-from pyvesync.const import IntFlag
 
 
 @dataclass

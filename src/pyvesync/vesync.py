@@ -23,11 +23,11 @@ from pyvesync.utils.logs import LibraryLogger
 from pyvesync.models.vesync_models import (
     RequestDeviceListModel,
     ResponseDeviceListModel,
-    RequestAuthModel,
-    IntRespAuthResultModel,
-    RequestLoginModel,
+    RequestGetTokenModel,
+    RespGetTokenResultModel,
+    RequestLoginTokenModel,
     ResponseLoginModel,
-    IntRespLoginResultModel,
+    RespLoginTokenResultModel,
     RequestFirmwareModel,
     ResponseFirmwareModel,
     FirmwareDeviceItemModel
@@ -322,7 +322,7 @@ class VeSync:  # pylint: disable=function-redefined
                 or not isinstance(self.password, str) or len(self.password) == 0:
             raise VeSyncLoginError('Username and password must be specified')
 
-        request_auth = RequestAuthModel(
+        request_auth = RequestGetTokenModel(
             email=self.username,
             method='authByPWDOrOTM',
             password=self.password,
@@ -352,7 +352,7 @@ class VeSync:  # pylint: disable=function-redefined
             ) from exc
 
         result = response_model.result
-        if not isinstance(result, IntRespAuthResultModel):
+        if not isinstance(result, RespGetTokenResultModel):
             raise VeSyncAPIResponseError(
                 "Error receiving response to login request -"
                 " result is not IntRespAuthResultModel"
@@ -382,7 +382,7 @@ class VeSync:  # pylint: disable=function-redefined
             VeSyncAPIResponseError: If API response is invalid.
             VeSyncServerError: If server returns an error.
         """
-        request_login = RequestLoginModel(
+        request_login = RequestLoginTokenModel(
             method='loginByAuthorizeCode4Vesync',
             authorizeCode=auth_code,
             bizToken=region_change_token,
@@ -397,14 +397,16 @@ class VeSync:  # pylint: disable=function-redefined
             raise VeSyncAPIResponseError('Error receiving response to login request')
         try:
             response_model = ResponseLoginModel.from_dict(resp_dict)
-            if not isinstance(response_model.result, IntRespLoginResultModel):
+            if not isinstance(response_model.result, RespLoginTokenResultModel):
                 raise VeSyncAPIResponseError(
                     "Error receiving response to login request -"
-                    "result is not IntRespLoginResultModel"
+                    "result is not RespLoginTokenResultModel"
                 )
             if response_model.code != 0:
                 error_info = ErrorCodes.get_error_info(resp_dict.get("code"))
-                if error_info.error_type == ErrorTypes.CROSS_REGION:  # cross region error
+
+                # Handle cross region error by retrying login with new region
+                if error_info.error_type == ErrorTypes.CROSS_REGION:
                     result = response_model.result
                     self.country_code = result.countryCode
                     return await self._login_token(region_change_token=result.bizToken)
@@ -416,10 +418,10 @@ class VeSync:  # pylint: disable=function-redefined
                 )
 
             result = response_model.result
-            if not isinstance(result, IntRespLoginResultModel):
+            if not isinstance(result, RespLoginTokenResultModel):
                 raise VeSyncAPIResponseError(
                     "Error receiving response to login request -"
-                    " result is not IntRespLoginResultModel"
+                    " result is not RespLoginTokenResultModel"
                 )
 
             self._token = result.token

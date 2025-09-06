@@ -118,6 +118,7 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
         self.state.filter_life = result.filter_life or 0
         self.state.mode = result.mode
         self.state.fan_level = result.level or 0
+        self.state.fan_set_level = result.levelNew or 0
         self.state.display_status = DeviceStatus.ON if result.display \
             else DeviceStatus.OFF
         self.state.child_lock = result.child_lock or False
@@ -529,7 +530,9 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
     async def toggle_light_detection(self, toggle: bool | None = None) -> bool:
         """Enable/Disable Light Detection Feature."""
         if bool(self.state.light_detection_status) == toggle:
-            _LOGGER.debug('Light detection is already %s', self.state.light_detection_status)
+            _LOGGER.debug(
+                "Light detection is already %s", self.state.light_detection_status
+            )
             return True
 
         if toggle is None:

@@ -74,6 +74,7 @@ class PurifierCoreDetailsResult(InnerPurifierBaseResult):
     mode: str
     level: int
     device_error_code: int
+    levelNew: int | None = None
     air_quality: int | None = None
     display: bool | None = None
     child_lock: bool | None = None

@@ -23,7 +23,7 @@ from pyvesync.models.base_models import (
 
 
 @dataclass
-class RequestAuthModel(RequestBaseModel):
+class RequestGetTokenModel(RequestBaseModel):
     """Request model for requesting auth token (used for login)."""
     # Arguments to set
     email: str
@@ -57,7 +57,7 @@ class RequestAuthModel(RequestBaseModel):
 
 
 @dataclass
-class IntRespAuthResultModel(ResponseBaseModel):
+class RespGetTokenResultModel(ResponseBaseModel):
     """Model for the 'result' field in auth response with authorizeCode and account ID.
 
     This class is referenced by the `ResponseAuthModel` class.
@@ -67,7 +67,7 @@ class IntRespAuthResultModel(ResponseBaseModel):
 
 
 @dataclass
-class RequestLoginModel(RequestBaseModel):
+class RequestLoginTokenModel(RequestBaseModel):
     """Request model for login."""
     # Arguments to set
     method: str
@@ -101,7 +101,7 @@ class RequestLoginModel(RequestBaseModel):
 
 
 @dataclass
-class IntRespLoginResultModel(ResponseBaseModel):
+class RespLoginTokenResultModel(ResponseBaseModel):
     """Model for the 'result' field in login response containing token and account ID.
 
     This class is referenced by the `ResponseLoginModel` class.
@@ -177,7 +177,7 @@ class ResponseLoginModel(ResponseCodeModel):
         token = b.result.token
         ```
     """
-    result: IntRespLoginResultModel | IntRespAuthResultModel
+    result: RespLoginTokenResultModel | RespGetTokenResultModel
 
 
 @dataclass
@@ -223,15 +223,15 @@ class ResponseDeviceDetailsModel(ResponseBaseModel):
     deviceRegion: str
     isOwner: bool
     deviceName: str
-    deviceImg: str
     cid: str
     connectionType: str
     deviceType: str
     type: str
-    uuid: str | None
     configModule: str
+    uuid: str | None = None
     macID: str = ""
     mode: str = ""
+    deviceImg: str = ""
     speed: str | None = None
     currentFirmVersion: str | None = None
     subDeviceType: str | None = None

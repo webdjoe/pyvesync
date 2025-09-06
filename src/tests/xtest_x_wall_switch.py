@@ -19,7 +19,7 @@ CORRECT_WS_DETAILS = call_json_switches.DETAILS_RESPONSES[DEVICE_TYPE]
 
 BAD_LIST = call_json.DETAILS_BADCODE
 
-DEFAULTS = call_json.Defaults
+DEFAULTS = call_json.TestDefaults
 
 
 class TestVesyncWallSwitch(TestBase):

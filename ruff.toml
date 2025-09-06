@@ -57,6 +57,9 @@ ignore = [
   "INP001", # Implicit Namespace error  - IGNORE
   "TC003",  # Bug in TYPE_CHECKING recommendation for dataclasses - IGNORE
   "D102",  # Missing docstring in public method - HANDLED BY PYLINT
+  "Q000", # Quotes
+
+
 ]
 # Todo: Add exception classes EM102, BLE001, EM101
 # Todo: Fix import sorting issue I001

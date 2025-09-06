@@ -27,7 +27,7 @@ DEVICE_DETAILS = call_json_bulbs.DETAILS_RESPONSES['ESL100']
 
 DEVICE_DETAILS_CW = call_json_bulbs.DETAILS_RESPONSES['ESL100CW']
 
-DEFAULTS = call_json.Defaults
+DEFAULTS = call_json.TestDefaults
 
 SUCCESS_RETURN = (orjson.dumps({'code': 0}), 200)
 
@@ -44,10 +44,10 @@ class TestVeSyncBulbESL100(TestBase):
         assert len(bulbs) == 1
         bulb = bulbs[0]
         assert isinstance(bulb, VeSyncBulbESL100)
-        assert bulb.device_name == call_json.Defaults.name(self.device_type)
+        assert bulb.device_name == call_json.TestDefaults.name(self.device_type)
         assert bulb.device_type == self.device_type
-        assert bulb.cid == call_json.Defaults.cid(self.device_type)
-        assert bulb.uuid == call_json.Defaults.uuid(self.device_type)
+        assert bulb.cid == call_json.TestDefaults.cid(self.device_type)
+        assert bulb.uuid == call_json.TestDefaults.uuid(self.device_type)
 
     def test_esl100_details(self):
         """Test WS get_details()."""

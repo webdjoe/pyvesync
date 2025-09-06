@@ -1,13 +1,18 @@
 """Contains base test cases for mocking devices and API calls."""
 
-
+from __future__ import annotations
+from typing import TYPE_CHECKING
 import asyncio
 import logging
 import pytest
 from unittest.mock import MagicMock, patch
 
 from pyvesync import VeSync
-from defaults import Defaults, API_DEFAULTS
+from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
+from defaults import TestDefaults, API_DEFAULTS
+
+if TYPE_CHECKING:
+    from pyvesync.base_devices import VeSyncBaseDevice
 
 
 class TestApiFunc:
@@ -18,6 +23,7 @@ class TestApiFunc:
     def setup(self, caplog):
         """Fixture to instantiate VeSync object, start logging and start Mock.
 
+        This fixture mocks the ClientSession object directly.
 
         Yields:
             self: Class instance with mocked session object to test response handling.
@@ -32,8 +38,8 @@ class TestApiFunc:
         self.manager.verbose = True
         self.manager.enabled = True
         self.manager.redact = False
-        self.manager._token = Defaults.token
-        self.manager._account_id = Defaults.account_id
+        self.manager._token = TestDefaults.token
+        self.manager._account_id = TestDefaults.account_id
         caplog.set_level(logging.DEBUG)
         yield
         self.mock.stop()
@@ -81,14 +87,14 @@ class TestBase:
         self.caplog.set_level(logging.DEBUG)
         self.mock_api = self.mock_api_call.start()
         self.mock_api.return_value.ok = True
-        self.manager = VeSync('EMAIL', 'PASSWORD')
+        self.manager = VeSync(TestDefaults.email, TestDefaults.password)
         self.manager.debug = True
         self.manager.verbose = True
         self.manager.redact = False
-        self.manager.time_zone = Defaults.time_zone
+        self.manager.time_zone = TestDefaults.time_zone
         self.manager.enabled = True
-        self.manager._token = Defaults.token
-        self.manager._account_id = Defaults.account_id
+        self.manager._token = TestDefaults.token
+        self.manager._account_id = TestDefaults.account_id
         caplog.set_level(logging.DEBUG)
         yield
         self.mock_api_call.stop()
@@ -97,6 +103,24 @@ class TestBase:
         """Run a coroutine in the event loop."""
         return await coro
 
-    def run_in_loop(self, func, *args, **kwargs):
+    def run_in_loop(self, func, *args, **kwargs) -> VeSyncBaseDevice | None:
         """Run a function in the event loop."""
         return self.loop.run_until_complete(self.run_coro(func(*args, **kwargs)))
+
+    def get_device(self, product_type: str, device_details: dict) -> VeSyncBaseDevice:
+        """Get device from device details dict.
+
+        Args:
+            device_details (dict): Device details dictionary from call_json module.
+
+        Returns:
+            Device object from VeSync.devices
+        """
+        if len(self.manager.devices) > 0:
+            self.manager.devices.clear()
+        self.manager.devices.add_device_from_model(
+            ResponseDeviceDetailsModel.from_dict(device_details), self.manager
+        )
+        device_list = getattr(self.manager.devices, product_type)
+        assert len(device_list) == 1, f"Could not instantiate {product_type} device."
+        return device_list[0]

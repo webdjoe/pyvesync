@@ -84,6 +84,7 @@ from pyvesync.const import (
     ThermostatWorkModes,
     ThermostatHoldOptions,
     ThermostatRoutineTypes,
+    ProductLines
 )
 
 T_MAPS = Union[
@@ -107,7 +108,8 @@ class DeviceMapTemplate:
         class_name (str): Class name of the device.
         product_type (str): Product type of the device.
         module (ModuleType): Module for the device.
-        setup_entry (str): Setup entry for the device.
+        setup_entry (str): Setup entry for the device, if unknown use the device_type
+            base without region
         model_display (str): Display name of the model.
         model_name (str): Name of the model.
         device_alias (str | None): Alias for the device, if any.
@@ -117,6 +119,7 @@ class DeviceMapTemplate:
     dev_types: list[str]
     class_name: str
     product_type: str
+    product_line: str
     module: ModuleType
     setup_entry: str
     model_display: str
@@ -134,7 +137,8 @@ class OutletMap(DeviceMapTemplate):
         class_name (str): Class name of the device.
         product_type (str): Product type of the device - ProductTypes.OUTLET
         module (ModuleType): Module for the device.
-        setup_entry (str): Setup entry for the device.
+        setup_entry (str): Setup entry for the device, if unknown use the device_type
+            base without region
         model_display (str): Display name of the model.
         model_name (str): Name of the model.
         device_alias (str | None): Alias for the device, if any.
@@ -143,6 +147,7 @@ class OutletMap(DeviceMapTemplate):
         module (ModuleType): Module for the device.
         nightlight_modes (list[str]): List of nightlight modes for the device.
     """
+    product_line: str = ProductLines.WIFI_LIGHT
     product_type: str = ProductTypes.OUTLET
     module: ModuleType = vesyncoutlet
     nightlight_modes: list[NightlightModes] = field(default_factory=list)
@@ -157,7 +162,8 @@ class SwitchMap(DeviceMapTemplate):
         class_name (str): Class name of the device.
         product_type (str): Product type of the device - ProductTypes.SWITCH
         module (ModuleType): Module for the device.
-        setup_entry (str): Setup entry for the device.
+        setup_entry (str): Setup entry for the device, if unknown use the device_type
+            base without region
         model_display (str): Display name of the model.
         model_name (str): Name of the model.
         device_alias (str | None): Alias for the device, if any.
@@ -165,6 +171,7 @@ class SwitchMap(DeviceMapTemplate):
         product_type (str): Product type of the device.
         module (ModuleType): Module for the device.
     """
+    product_line: str = ProductLines.SWITCHES
     product_type: str = ProductTypes.SWITCH
     module: ModuleType = vesyncswitch
 
@@ -178,7 +185,8 @@ class BulbMap(DeviceMapTemplate):
         class_name (str): Class name of the device.
         product_type (str): Product type of the device - ProductTypes.BULB
         module (ModuleType): Module for the device.
-        setup_entry (str): Setup entry for the device.
+        setup_entry (str): Setup entry for the device, if unknown use the device_type
+            base without region
         model_display (str): Display name of the model.
         model_name (str): Name of the model.
         device_alias (str | None): Alias for the device, if any.
@@ -186,6 +194,7 @@ class BulbMap(DeviceMapTemplate):
         color_model (str | None): Color model for the device.
         color_modes (list[str]): List of color modes for the device.
     """
+    product_line: str = ProductLines.WIFI_LIGHT
     color_model: str | None = None
     product_type: str = ProductTypes.BULB
     module: ModuleType = vesyncbulb
@@ -201,7 +210,8 @@ class FanMap(DeviceMapTemplate):
         class_name (str): Class name of the device.
         product_type (str): Product type of the device - ProductTypes.FAN
         module (ModuleType): Module for the device.
-        setup_entry (str): Setup entry for the device.
+        setup_entry (str): Setup entry for the device, if unknown use the device_type
+            base without region
         model_display (str): Display name of the model.
         model_name (str): Name of the model.
         device_alias (str | None): Alias for the device, if any.
@@ -211,6 +221,7 @@ class FanMap(DeviceMapTemplate):
         sleep_preferences (list[str]): List of sleep preferences for the device.
         set_mode_method (str): Method to set the mode for the device.
     """
+    product_line: str = ProductLines.WIFI_AIR
     product_type: str = ProductTypes.FAN
     module: ModuleType = vesyncfan
     fan_levels: list[int] = field(default_factory=list)
@@ -228,7 +239,8 @@ class HumidifierMap(DeviceMapTemplate):
         class_name (str): Class name of the device.
         product_type (str): Product type of the device - ProductTypes.HUMIDIFIER
         module (ModuleType): Module for the device.
-        setup_entry (str): Setup entry for the device.
+        setup_entry (str): Setup entry for the device, if unknown use the device_type
+            base without region
         model_display (str): Display name of the model.
         model_name (str): Name of the model.
         device_alias (str | None): Alias for the device, if any.
@@ -238,7 +250,7 @@ class HumidifierMap(DeviceMapTemplate):
         target_minmax (tuple[int, int]): Minimum and maximum target humidity levels.
         warm_mist_levels (list[int | str]): List of warm mist levels for the device.
     """
-
+    product_line: str = ProductLines.WIFI_AIR
     mist_modes: dict[str, str] = field(default_factory=dict)
     mist_levels: list[int | str] = field(default_factory=list)
     product_type: str = ProductTypes.HUMIDIFIER
@@ -257,7 +269,8 @@ class PurifierMap(DeviceMapTemplate):
         product_type (str): Product type of the device - ProductTypes.PURIFIER
 
         module (ModuleType): Module for the device.
-        setup_entry (str): Setup entry for the device.
+        setup_entry (str): Setup entry for the device, if unknown use the device_type
+            base without region
         model_display (str): Display name of the model.
         model_name (str): Name of the model.
         device_alias (str | None): Alias for the device, if any.
@@ -267,7 +280,7 @@ class PurifierMap(DeviceMapTemplate):
         nightlight_modes (list[str]): List of nightlight modes for the device.
         auto_preferences (list[str]): List of auto preferences for the device.
     """
-
+    product_line: str = ProductLines.WIFI_AIR
     product_type: str = ProductTypes.PURIFIER
     module: ModuleType = vesyncpurifier
     fan_levels: list[int] = field(default_factory=list)
@@ -285,7 +298,8 @@ class AirFryerMap(DeviceMapTemplate):
         class_name (str): Class name of the device.
         product_type (str): Product type of the device - ProductTypes.AIR_FRYER
         module (ModuleType): Module for the device.
-        setup_entry (str): Setup entry for the device.
+        setup_entry (str): Setup entry for the device, if unknown use the device_type
+            base without region
         model_display (str): Display name of the model.
         model_name (str): Name of the model.
         device_alias (str | None): Alias for the device, if any.
@@ -293,7 +307,7 @@ class AirFryerMap(DeviceMapTemplate):
         product_type (str): Product type of the device.
         module (ModuleType): Module for the device.
     """
-
+    product_line: str = ProductLines.WIFI_KITCHEN
     product_type: str = ProductTypes.AIR_FRYER
     module: ModuleType = vesynckitchen
 
@@ -307,7 +321,8 @@ class ThermostatMap(DeviceMapTemplate):
         class_name (str): Class name of the device.
         product_type (str): Product type of the device.
         module (ModuleType): Module for the device.
-        setup_entry (str): Setup entry for the device.
+        setup_entry (str): Setup entry for the device, if unknown use the device_type
+            base without region
         model_display (str): Display name of the model.
         model_name (str): Name of the model.
         device_alias (str | None): Alias for the device, if any.
@@ -318,6 +333,7 @@ class ThermostatMap(DeviceMapTemplate):
         hold_options (list[int]): List of hold options for the device.
         routine_types (list[int]): List of routine types for the device.
     """
+    product_line: str = ProductLines.THERMOSTAT
     product_type: str = ProductTypes.THERMOSTAT
     module: ModuleType = vesyncthermostat
     modes: list[int] = field(default_factory=list)
@@ -411,7 +427,18 @@ outlet_modules = [
         setup_entry="ESO15-TB",
     ),
     OutletMap(
-        dev_types=["BSDOG01"],
+        dev_types=[
+            "BSDOG01",
+            "WYSMTOD16A",
+            "WHOGPLUG",
+            "WM-PLUG",
+            "JXUK13APLUG",
+            "WYZYOGMINIPLUG",
+            "BSDOG02",
+            "HWPLUG16A",
+            "FY-PLUG",
+            "HWPLUG16"
+        ],
         class_name="VeSyncOutletBSDGO1",
         features=[OutletFeatures.ONOFF],
         model_name="Smart Plug",
@@ -895,6 +922,16 @@ air_fryer_modules: list[AirFryerMap] = [
 ]
 """List of ['AirFryerMap'][pyvesync.device_map.AirFryerMap] configuration
 for air fryer devices."""
+
+
+full_device_list = [
+    *fan_modules,
+    *purifier_modules,
+    *humidifier_modules,
+    *air_fryer_modules,
+    *thermostat_modules,
+]
+"""List of all device configuration objects."""
 
 
 def get_device_config(device_type: str) -> DeviceMapTemplate | None:

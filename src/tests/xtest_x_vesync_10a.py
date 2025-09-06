@@ -7,7 +7,7 @@ from pyvesync.utils.helpers import Helpers as Helpers
 import call_json
 import call_json_outlets
 from base_test_cases import TestBase
-from defaults import Defaults
+from defaults import TestDefaults
 
 OutletDefaults = call_json_outlets.OutletDefaults
 
@@ -41,10 +41,10 @@ class TestVesync10ASwitch(TestBase):
         assert len(outlets) == 1
         outlet = outlets[0]
         assert isinstance(outlet, VeSyncOutlet10A)
-        assert outlet.device_name == Defaults.name(devtype)
+        assert outlet.device_name == TestDefaults.name(devtype)
         assert outlet.device_type == devtype
-        assert outlet.cid == Defaults.cid(devtype)
-        assert outlet.uuid == Defaults.uuid(devtype)
+        assert outlet.cid == TestDefaults.cid(devtype)
+        assert outlet.uuid == TestDefaults.uuid(devtype)
 
     def test_10a_details(self):
         """Test 10A get_details()."""
@@ -55,7 +55,7 @@ class TestVesync10ASwitch(TestBase):
         dev_details = outlet.details
         assert outlet.device_status == 'on'
         assert isinstance(dev_details, dict)
-        assert dev_details['active_time'] == Defaults.active_time
+        assert dev_details['active_time'] == TestDefaults.active_time
         assert dev_details['energy'] == OutletDefaults.energy
         assert dev_details['power'] == OutletDefaults.power
         assert dev_details['voltage'] == OutletDefaults.voltage

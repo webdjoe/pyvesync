@@ -102,8 +102,8 @@ class VeSyncSwitch(VeSyncBaseToggleDevice):
     """Etekcity Switch Base Class.
 
     Abstract Base Class for Etekcity Switch Devices, inheriting from
-    pyvesync.base_devices.vesyncbasedevice.VeSyncBaseDevice. Should not be instantiated directly,
-    subclassed by VeSyncWallSwitch and VeSyncDimmerSwitch.
+    pyvesync.base_devices.vesyncbasedevice.VeSyncBaseDevice. Should not be
+    instantiated directly, subclassed by VeSyncWallSwitch and VeSyncDimmerSwitch.
 
     Attributes:
         state (SwitchState): Switch state object.

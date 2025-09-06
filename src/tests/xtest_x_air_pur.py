@@ -6,7 +6,7 @@ from pyvesync.utils.helpers import Helpers as Helpers
 import call_json
 import call_json_fans
 from base_test_cases import TestBase
-from defaults import Defaults
+from defaults import TestDefaults
 
 LVPUR131S = 'LV-PUR131S'
 CORE200S = 'Core200S'
@@ -32,10 +32,10 @@ class TestVesyncAirPurifier(TestBase):
         assert len(fans) == 1
         fan = fans[0]
         assert isinstance(fan, VeSyncAir131)
-        assert fan.device_name == Defaults.name(LVPUR131S)
+        assert fan.device_name == TestDefaults.name(LVPUR131S)
         assert fan.device_type == LVPUR131S
-        assert fan.cid == Defaults.cid(LVPUR131S)
-        assert fan.uuid == Defaults.uuid(LVPUR131S)
+        assert fan.cid == TestDefaults.cid(LVPUR131S)
+        assert fan.uuid == TestDefaults.uuid(LVPUR131S)
 
     def test_airpur_details(self):
         """Test Air Purifier get_details()."""
@@ -48,7 +48,7 @@ class TestVesyncAirPurifier(TestBase):
         assert isinstance(dev_details, dict)
         assert dev_details['active_time'] == 1
         assert fan.filter_life == call_json_fans.FanDefaults.filter_life
-        assert dev_details['screen_status'] == Defaults.str_toggle
+        assert dev_details['screen_status'] == TestDefaults.str_toggle
         assert fan.mode == 'manual'
         assert dev_details['level'] == call_json_fans.FanDefaults.fan_level
         assert fan.fan_level == call_json_fans.FanDefaults.fan_level

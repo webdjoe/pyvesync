@@ -34,114 +34,156 @@ METHOD_RESPONSES['XYD0001'].default_factory = lambda: ({"code": 0, "msg": "succe
 
 """
 from copy import deepcopy
-from defaults import FunctionResponses, Defaults
-from pyvesync.devices.vesyncbulb import bulb_modules
-TRACE_ID = "TRACE_ID"
+from pyvesync.device_map import bulb_modules
+from pyvesync.const import DeviceStatus, ConnectionStatus
+from defaults import (
+    TestDefaults,
+    FunctionResponsesV2,
+    FunctionResponsesV1,
+    build_bypass_v1_response,
+    build_bypass_v2_response,
+)
 
 # BULBS = ['ESL100', 'ESL100CW', 'ESL100MC', 'XYD0001']
-BULBS = bulb_modules.keys()
+BULBS = [m.setup_entry for m in bulb_modules]
 BULBS_NUM = len(BULBS)
 
 
-class BulbDetails:
-    details_esl100 = ({
-        'code': 0,
-        'msg': None,
-        'deviceStatus': 'on',
-        'connectionStatus': 'online',
-        'name': Defaults.name('ESL100'),
-        'brightNess': Defaults.brightness,
-        'timer': None,
-        'away': None,
-        'schedule': None,
-        'ownerShip': '1',
-        'scheduleCount': 0,
-    }, 200)
-
-    details_esl100cw = ({
-        "traceId": TRACE_ID,
-        "code": 0,
-        "msg": None,
-        "module": None,
-        "stacktrace": None,
-        "result": {
-            "light": {
-                "action": "on",
-                "brightness": Defaults.brightness,
-                "colorTempe": Defaults.color_temp,
-            }
+BULB_DETAILS: dict[str, dict[str, str | float | dict | None]] = {
+    "ESL100": {
+        "deviceName": "Dimmable",
+        "name": "Dimmable",
+        "brightNess": str(TestDefaults.brightness),
+        "deviceStatus": DeviceStatus.ON.value,
+        "activeTime": TestDefaults.active_time,
+        "defaultDeviceImg": "",
+        "timer": None,
+        "scheduleCount": 0,
+        "away": None,
+        "schedule": None,
+        "ownerShip": "1",
+        "deviceImg": "",
+        "connectionStatus": ConnectionStatus.ONLINE.value,
+    },
+    "ESL100CW": {
+        "light": {
+            "action": DeviceStatus.ON.value,
+            "brightness": TestDefaults.brightness,
+            "colorTempe": TestDefaults.color_temp,
         }
-    }, 200)
+    },
+    "ESL100MC": {
+        "action": DeviceStatus.ON.value,
+        "brightness": TestDefaults.brightness,
+        "colorMode": "color",
+        "speed": 0,
+        "red": TestDefaults.color.rgb.red,
+        "green": TestDefaults.color.rgb.green,
+        "blue": TestDefaults.color.rgb.blue,
+    },
+    "XYD0001": {
+        "enabled": DeviceStatus.ON.value,
+        "colorMode": "color",
+        "brightness": TestDefaults.brightness,
+        "colorTemp": TestDefaults.color_temp,
+        "hue": TestDefaults.color.hsv.hue * 27.7778,
+        "saturation": TestDefaults.color.hsv.saturation * 100,
+        "value": TestDefaults.color.hsv.value,
+    },
+}
 
-    details_esl100mc = ({
-        "traceId": Defaults.trace_id,
-        "code": 0,
-        "msg": "request success",
-        "result": {
-            "traceId": Defaults.trace_id,
-            "code": 0,
-            "result": {
-                "action": "on",
-                "brightness": Defaults.brightness,
-                "colorMode": "color",
-                "speed": 0,
-                "red": Defaults.color.rgb.red,
-                "green": Defaults.color.rgb.green,
-                "blue": Defaults.color.rgb.blue,
-            }
-        }
-    }, 200)
+# class BulbDetails:
+#     details_esl100 = ({
+#         'code': 0,
+#         'msg': None,
+#         'deviceStatus': 'on',
+#         'connectionStatus': 'online',
+#         'name': Defaults.name('ESL100'),
+#         'brightNess': Defaults.brightness,
+#         'timer': None,
+#         'away': None,
+#         'schedule': None,
+#         'ownerShip': '1',
+#         'scheduleCount': 0,
+#     }, 200)
 
-    details_valceno = (
-            {
-                "traceId": TRACE_ID,
-                "code": 0,
-                "msg": "request success",
-                "result": {
-                    "traceId": TRACE_ID,
-                    "code": 0,
-                    "result": {
-                        "enabled": "on",
-                        "colorMode": "color",
-                        "brightness": Defaults.brightness,
-                        "colorTemp": Defaults.color_temp,
-                        "hue": Defaults.color.hsv.hue*27.7778,
-                        "saturation": Defaults.color.hsv.saturation*100,
-                        "value": Defaults.color.hsv.value,
-                    }
-                }
-            }, 200
-        )
+#     details_esl100cw = {
+# 		"light": {
+# 			"action": "off",
+# 			"brightness": 4,
+# 			"colorTempe": 50
+# 		}
+# 	}
+
+#     details_esl100mc = ({
+#         "traceId": Defaults.trace_id,
+#         "code": 0,
+#         "msg": "request success",
+#         "result": {
+#             "traceId": Defaults.trace_id,
+#             "code": 0,
+#             "result": {
+#                 "action": "on",
+#                 "brightness": Defaults.brightness,
+#                 "colorMode": "color",
+#                 "speed": 0,
+#                 "red": Defaults.color.rgb.red,
+#                 "green": Defaults.color.rgb.green,
+#                 "blue": Defaults.color.rgb.blue,
+#             }
+#         }
+#     }, 200)
+
+#     details_valceno = (
+#             {
+#                 "traceId": TRACE_ID,
+#                 "code": 0,
+#                 "msg": "request success",
+#                 "result": {
+#                     "traceId": TRACE_ID,
+#                     "code": 0,
+#                     "result": {
+#                         "enabled": "on",
+#                         "colorMode": "color",
+#                         "brightness": Defaults.brightness,
+#                         "colorTemp": Defaults.color_temp,
+#                         "hue": Defaults.color.hsv.hue*27.7778,
+#                         "saturation": Defaults.color.hsv.saturation*100,
+#                         "value": Defaults.color.hsv.value,
+#                     }
+#                 }
+#             }, 200
+#         )
 
 
 DETAILS_RESPONSES = {
-    'ESL100': BulbDetails.details_esl100,
-    'ESL100CW': BulbDetails.details_esl100cw,
-    'ESL100MC': BulbDetails.details_esl100mc,
-    'XYD0001': BulbDetails.details_valceno,
+    'ESL100': build_bypass_v1_response(result_dict=BULB_DETAILS['ESL100']),
+    'ESL100CW': build_bypass_v1_response(result_dict=BULB_DETAILS['ESL100CW']),
+    'ESL100MC': build_bypass_v2_response(inner_result=BULB_DETAILS['ESL100MC']),
+    'XYD0001': build_bypass_v2_response(inner_result=BULB_DETAILS['XYD0001']),
 }
 
 
 def valceno_set_status_response(kwargs=None):
     default_resp = {
-        "traceId": Defaults.trace_id,
+        "traceId": TestDefaults.trace_id,
         "code": 0,
         "msg": "request success",
         "result": {
-            "traceId": Defaults.trace_id,
+            "traceId": TestDefaults.trace_id,
             "code": 0,
             "result": {
                 "enabled": "on",
                 "colorMode": "hsv",
-                "brightness": Defaults.brightness,
-                "colorTemp": Defaults.color_temp,
-                "hue": Defaults.color.hsv.hue*27.7778,
-                "saturation": Defaults.color.hsv.saturation*100,
-                "value": Defaults.color.hsv.value
+                "brightness": TestDefaults.brightness,
+                "colorTemp": TestDefaults.color_temp,
+                "hue": TestDefaults.color.hsv.hue*27.7778,
+                "saturation": TestDefaults.color.hsv.saturation*100,
+                "value": TestDefaults.color.hsv.value
             }
         }
     }
-    if kwargs is not None and isinstance(kwargs, dict):
+    if isinstance(kwargs, dict):
         if kwargs.get('hue') is not None:
             default_resp['result']['result']['hue'] = kwargs['hue'] * 27.7778
         if kwargs.get('saturation') is not None:
@@ -151,27 +193,32 @@ def valceno_set_status_response(kwargs=None):
     return default_resp, 200
 
 
-METHOD_RESPONSES = {k: deepcopy(FunctionResponses) for k in BULBS}
+METHOD_RESPONSES = {
+    'ESL100': deepcopy(FunctionResponsesV1),
+    'ESL100CW': deepcopy(FunctionResponsesV1),
+    'ESL100MC': deepcopy(FunctionResponsesV2),
+    'XYD0001': deepcopy(FunctionResponsesV2),
+}
 
-METHOD_RESPONSES['XYD0001'].default_factory = lambda: ({
-                                                "traceId": Defaults.trace_id,
-                                                "code": 0,
-                                                "msg": "request success",
-                                                "result": {
-                                                    "traceId": Defaults.trace_id,
-                                                    "code": 0
-                                                }
-                                            }, 200)
+# METHOD_RESPONSES['XYD0001'].default_factory = lambda: ({
+#                                                 "traceId": Defaults.trace_id,
+#                                                 "code": 0,
+#                                                 "msg": "request success",
+#                                                 "result": {
+#                                                     "traceId": Defaults.trace_id,
+#                                                     "code": 0
+#                                                 }
+#                                             }, 200)
 
-METHOD_RESPONSES['ESL100MC'].default_factory = lambda: ({
-                                                "traceId": Defaults.trace_id,
-                                                "code": 0,
-                                                "msg": "request success",
-                                                "result": {
-                                                    "traceId": Defaults.trace_id,
-                                                    "code": 0
-                                                }
-                                            }, 200)
+# METHOD_RESPONSES['ESL100MC'].default_factory = lambda: ({
+#                                                 "traceId": Defaults.trace_id,
+#                                                 "code": 0,
+#                                                 "msg": "request success",
+#                                                 "result": {
+#                                                     "traceId": Defaults.trace_id,
+#                                                     "code": 0
+#                                                 }
+#                                             }, 200)
 
 XYD0001_RESP = {
     'set_brightness': valceno_set_status_response,

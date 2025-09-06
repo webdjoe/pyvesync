@@ -37,9 +37,9 @@ class TestVesync7ASwitch(TestBase):
         assert len(outlets) == 1
         vswitch7a = outlets[0]
         assert isinstance(vswitch7a, VeSyncOutlet7A)
-        assert vswitch7a.device_name == call_json.Defaults.name(DEVICE_TYPE)
+        assert vswitch7a.device_name == call_json.TestDefaults.name(DEVICE_TYPE)
         assert vswitch7a.device_type == DEVICE_TYPE
-        assert vswitch7a.cid == call_json.Defaults.cid(DEVICE_TYPE)
+        assert vswitch7a.cid == call_json.TestDefaults.cid(DEVICE_TYPE)
         assert vswitch7a.is_on
 
     def test_7a_details(self):

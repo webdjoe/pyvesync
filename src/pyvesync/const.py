@@ -59,17 +59,27 @@ CLIENT_TYPE = "vesyncApp"
 # Generic Constants
 
 
+class ProductLines(StrEnum):
+    """High level product line."""
+    WIFI_LIGHT = "wifi-light"
+    WIFI_AIR = "wifi-air"
+    WIFI_KITCHEN = "wifi-kitchen"
+    SWITCHES = "Switches"
+    WIFI_SWITCH = "wifi-switch"
+    THERMOSTAT = "thermostat"
+
+
 class ProductTypes(StrEnum):
     """General device types enum."""
-    OUTLET = "Outlet"
-    BULB = "Bulb"
-    SWITCH = "Switch"
-    PURIFIER = "Purifier"
-    FAN = "Fan"
-    HUMIDIFIER = "Humidifier"
-    AIR_FRYER = "Air Fryer"
-    KITCHEN_THERMOMETER = "Kitchen Thermometer"
-    THERMOSTAT = "Thermostat"
+    OUTLET = "outlet"
+    BULB = "bulb"
+    SWITCH = "switch"
+    PURIFIER = "purifier"
+    FAN = "fan"
+    HUMIDIFIER = "humidifier"
+    AIR_FRYER = "air fryer"
+    KITCHEN_THERMOMETER = "kitchen thermometer"
+    THERMOSTAT = "thermostat"
 
 
 class IntFlag(IntEnum):

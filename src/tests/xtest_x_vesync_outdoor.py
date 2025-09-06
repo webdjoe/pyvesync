@@ -7,7 +7,7 @@ from pyvesync.utils.helpers import Helpers as Helpers
 import call_json
 import call_json_outlets
 from base_test_cases import TestBase
-from defaults import Defaults
+from defaults import TestDefaults
 
 DEVICE_TYPE = 'ESO15-TB'
 
@@ -27,7 +27,7 @@ CORRECT_OUTDOOR_DETAILS = call_json_outlets.DETAILS_RESPONSES[DEVICE_TYPE]
 
 BAD_OUTDOOR_LIST: tuple = call_json.DETAILS_BADCODE
 
-DEFAULTS = Defaults
+DEFAULTS = TestDefaults
 
 
 class TestVesyncOutdoorPlug(TestBase):

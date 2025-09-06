@@ -265,7 +265,7 @@ class VeSyncDimmerSwitch(BypassV1Mixin, VeSyncSwitch):
         self.state.indicator_status = result.indicatorlightStatus
         self.state.device_status = result.deviceStatus
 
-    @deprecated("switch_toggle() deprecated, use toggle_switch(toggle: bool | None = None)")
+    @deprecated("switch_toggle() deprecated, use toggle_switch(toggle: bool | None)")
     async def switch_toggle(self, status: str) -> bool:
         """Toggle switch status."""
         return await self.toggle_switch(status == DeviceStatus.ON)

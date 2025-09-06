@@ -8,11 +8,11 @@ from unittest.mock import patch, MagicMock
 
 from pyvesync import VeSync
 from pyvesync.utils.errors import VeSyncRateLimitError, VeSyncServerError
-from pyvesync.const import API_BASE_URL
+from pyvesync.const import API_BASE_URL_US
 from pyvesync.utils.errors import (
     VeSyncAPIStatusCodeError
     )
-from defaults import Defaults
+from defaults import TestDefaults
 from aiohttp_mocker import AiohttpMockSession
 
 DEFAULT_ENDPOINT = '/endpoint'
@@ -83,8 +83,8 @@ class TestApiFunc:
         self.manager = VeSync('EMAIL', 'PASSWORD')
         self.manager.verbose = True
         self.manager.enabled = True
-        self.manager._token = Defaults.token
-        self.manager._account_id = Defaults.account_id
+        self.manager._token = TestDefaults.token
+        self.manager._account_id = TestDefaults.account_id
         caplog.set_level(logging.DEBUG)
         yield
         self.mock.stop()
@@ -103,7 +103,7 @@ class TestApiFunc:
         """Test successful api call - returns tuple of response bytes and status code."""
         mock.return_value.request.return_value = AiohttpMockSession(
             method='post',
-            url=API_BASE_URL + DEFAULT_ENDPOINT,
+            url=API_BASE_URL_US + DEFAULT_ENDPOINT,
             status=200,
             response=orjson.dumps(SUCCESS_RESP),
         )
@@ -119,7 +119,7 @@ class TestApiFunc:
         rate_limit_resp = response_dict(RATE_LIMIT_CODE, "Rate limit exceeded")
         mock.return_value.request.return_value = AiohttpMockSession(
             method="post",
-            url=API_BASE_URL + DEFAULT_ENDPOINT,
+            url=API_BASE_URL_US + DEFAULT_ENDPOINT,
             status=200,
             response=orjson.dumps(rate_limit_resp),
         )
@@ -131,7 +131,7 @@ class TestApiFunc:
         """Test server error - raises `VeSyncServerError` from `VeSync.async_call_api`."""
         mock.return_value.request.return_value = AiohttpMockSession(
             method='post',
-            url=API_BASE_URL + DEFAULT_ENDPOINT,
+            url=API_BASE_URL_US + DEFAULT_ENDPOINT,
             status=200,
             response=orjson.dumps(SERVER_ERROR_RESP),
         )
@@ -143,7 +143,7 @@ class TestApiFunc:
         """Test status code error - raises `VeSyncAPIStatusCodeError` from `VeSync.async_call_api`."""
         mock.return_value.request.return_value = AiohttpMockSession(
             method='get',
-            url=API_BASE_URL + DEFAULT_ENDPOINT,
+            url=API_BASE_URL_US + DEFAULT_ENDPOINT,
             status=404,
             response=None,
         )

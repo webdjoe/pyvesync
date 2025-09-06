@@ -28,10 +28,10 @@ class TestVeSyncSwitch(base_test_cases.TestBase):
         assert len(outlets) == 1
         vswitch15a = outlets[0]
         assert isinstance(vswitch15a, VeSyncOutlet15A)
-        assert vswitch15a.device_name == call_json.Defaults.name(DEVICE_TYPE)
+        assert vswitch15a.device_name == call_json.TestDefaults.name(DEVICE_TYPE)
         assert vswitch15a.device_type == DEVICE_TYPE
-        assert vswitch15a.cid == call_json.Defaults.cid(DEVICE_TYPE)
-        assert vswitch15a.uuid == call_json.Defaults.uuid(DEVICE_TYPE)
+        assert vswitch15a.cid == call_json.TestDefaults.cid(DEVICE_TYPE)
+        assert vswitch15a.uuid == call_json.TestDefaults.uuid(DEVICE_TYPE)
 
     def test_15a_details(self):
         """Test 15A get_details() """
@@ -62,10 +62,10 @@ class TestVesync15ASwitch(base_test_cases.TestBase):
         assert len(outlets) == 1
         vswitch15a = outlets[0]
         assert isinstance(vswitch15a, VeSyncOutlet15A)
-        assert vswitch15a.device_name == call_json.Defaults.name(DEVICE_TYPE)
+        assert vswitch15a.device_name == call_json.TestDefaults.name(DEVICE_TYPE)
         assert vswitch15a.device_type == DEVICE_TYPE
-        assert vswitch15a.cid == call_json.Defaults.cid(DEVICE_TYPE)
-        assert vswitch15a.uuid == call_json.Defaults.uuid(DEVICE_TYPE)
+        assert vswitch15a.cid == call_json.TestDefaults.cid(DEVICE_TYPE)
+        assert vswitch15a.uuid == call_json.TestDefaults.uuid(DEVICE_TYPE)
 
     def test_15a_details_fail(self):
         """Test 15A get_details with Code>0"""

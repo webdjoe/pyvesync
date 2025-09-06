@@ -49,10 +49,10 @@ def details_generator(metafunc, gen_type, devices):
     """Parametrize device tests for get_details()."""
     id_list = []
     argvalues = []
-    for dev_type in devices:
-        id_list.append(f"{gen_type}.{dev_type}.update")
-        argvalues.append([dev_type, 'update'])
-    metafunc.parametrize("dev_type, method", argvalues, ids=id_list)
+    for setup_entry in devices:
+        id_list.append(f"{gen_type}.{setup_entry}.update")
+        argvalues.append([setup_entry, 'update'])
+    metafunc.parametrize("setup_entry, method", argvalues, ids=id_list)
 
 
 def method_generator(metafunc, gen_type, devices):
@@ -73,5 +73,5 @@ def method_generator(metafunc, gen_type, devices):
         for method in methods:
             id_list.append(f'{gen_type}.{dev}.{method}')
             argvalues.append([dev, method])
-    metafunc.parametrize("dev_type, method", argvalues, ids=id_list)
+    metafunc.parametrize("setup_entry, method", argvalues, ids=id_list)
     return

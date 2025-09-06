@@ -27,11 +27,11 @@ See Also
 """
 
 import logging
-import orjson
+from pyvesync.base_devices.switch_base import VeSyncSwitch
+import pyvesync.const as const
 from base_test_cases import TestBase
-from pyvesync.vesync import object_factory
 from utils import assert_test, parse_args
-from defaults import Defaults
+from defaults import TestDefaults
 import call_json
 import call_json_switches
 
@@ -39,7 +39,7 @@ import call_json_switches
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-DEFAULT_COLOR = Defaults.color.rgb
+DEFAULT_COLOR = TestDefaults.color.rgb
 COLOR_DICT = {
     'red': DEFAULT_COLOR.red,
     'blue': DEFAULT_COLOR.blue,
@@ -100,13 +100,13 @@ class TestSwitches(TestBase):
     switches = call_json_switches.SWITCHES
     base_methods = [['turn_on'], ['turn_off']]
     device_methods = {
-        'ESWD16': [['indicator_light_on'],
-                   ['rgb_color_on'],
-                   ['rgb_color_set', COLOR_DICT],
-                   ['set_brightness', {'brightness': Defaults.brightness}]],
+        'ESWD16': [['turn_on_indicator_light'],
+                   ['turn_on_rgb_backlight'],
+                   ['set_backlight_color', COLOR_DICT],
+                   ['set_brightness', {'brightness': TestDefaults.brightness}]],
     }
 
-    def test_details(self, dev_type, method):
+    def test_details(self, setup_entry, method):
         """Test the device details API request and response.
 
         This method is automatically parametrized by `pytest_generate_tests`
@@ -128,37 +128,37 @@ class TestSwitches(TestBase):
         method. The device details contain the default values set in `utils.Defaults`
         """
         # Set return value for call_api based on call_json_bulb.DETAILS_RESPONSES
-        resp_dict, status = call_json_switches.DETAILS_RESPONSES[dev_type]
-        self.mock_api.return_value = orjson.dumps(resp_dict), status
+        resp_dict = call_json_switches.DETAILS_RESPONSES[setup_entry]
+        self.mock_api.return_value = resp_dict, 200
 
         # Instantiate device from device list return item
-        device_config = call_json.DeviceList.device_list_item(dev_type)
-        _, switch_obj = object_factory(dev_type,
-                                       device_config,
-                                       self.manager)
-        method_call = getattr(switch_obj, method)
-        self.run_in_loop(method_call)
+        device_map = call_json.ALL_DEVICE_MAP_DICT[setup_entry]
+        device_config = call_json.DeviceList.device_list_item(device_map)
+        switch_obj = self.get_device("switches", device_config)
+        assert isinstance(switch_obj, VeSyncSwitch)
+
+        self.run_in_loop(switch_obj.get_details)
 
         # Parse mock_api args tuple from arg, kwargs to kwargs
         all_kwargs = parse_args(self.mock_api)
 
         # Assert request matches recored request or write new records
-        assert_test(method_call, all_kwargs, dev_type, self.write_api, self.overwrite)
+        assert_test(switch_obj.get_details, all_kwargs, setup_entry, self.write_api, self.overwrite)
 
         # Assert device details match expected values
-        assert switch_obj.active_time == Defaults.active_time
-        if switch_obj.is_dimmable():
-            assert switch_obj.brightness == str(Defaults.brightness)
-            assert switch_obj.indicator_light_status == 'on'
-            assert switch_obj.rgb_light_status == 'on'
-            assert switch_obj.rgb_light_value == COLOR_DICT
+        if switch_obj.supports_dimmable:
+            assert switch_obj.state.brightness == str(TestDefaults.brightness)
+            assert switch_obj.state.indicator_status == 'on'
+            assert switch_obj.state.backlight_status == 'on'
+            assert switch_obj.state.backlight_color is not None
+            assert switch_obj.state.backlight_color.rgb.to_dict() == COLOR_DICT
         self.mock_api.reset_mock()
         bad_dict, status = call_json.DETAILS_BADCODE
-        self.mock_api.return_value = orjson.dumps(bad_dict), status
-        self.run_in_loop(method_call)
+        self.mock_api.return_value = bad_dict, status
+        self.run_in_loop(switch_obj.get_details)
         assert 'details' in self.caplog.records[-1].message
 
-    def test_methods(self, dev_type, method):
+    def test_methods(self, setup_entry, method):
         """Test switch methods API request and response.
 
         This method is automatically parametrized by `pytest_generate_tests`
@@ -194,31 +194,29 @@ class TestSwitches(TestBase):
             method_kwargs = {}
 
         # Set return value for call_api based on call_json_switches.METHOD_RESPONSES
-        method_response = call_json_switches.METHOD_RESPONSES[dev_type][method_name]
+        method_response = call_json_switches.METHOD_RESPONSES[setup_entry][method_name]
         if callable(method_response):
             if method_kwargs:
-                resp_dict, status = method_response(**method_kwargs)
+                resp_dict = method_response(**method_kwargs)
             else:
-                resp_dict, status = method_response()
+                resp_dict = method_response()
         else:
-            resp_dict, status = method_response
-        self.mock_api.return_value = orjson.dumps(resp_dict), status
+            resp_dict = method_response
+        self.mock_api.return_value = resp_dict, 200
         # Get device configuration from call_json.DeviceList.device_list_item()
-        device_config = call_json.DeviceList.device_list_item(dev_type)
-
-        # Instantiate device from device list return item
-        _, switch_obj = object_factory(dev_type,
-                                       device_config,
-                                       self.manager)
+        device_map = call_json.ALL_DEVICE_MAP_DICT[setup_entry]
+        device_config = call_json.DeviceList.device_list_item(device_map)
+        switch_obj = self.get_device("switches", device_config)
+        assert isinstance(switch_obj, VeSyncSwitch)
 
         # Get method from device object
         method_call = getattr(switch_obj, method[0])
 
         # Ensure method runs based on device configuration
         if method[0] == 'turn_on':
-            switch_obj.device_status = 'off'
+            switch_obj.state.device_status = const.DeviceStatus.OFF
         elif method[0] == 'turn_off':
-            switch_obj.device_status = 'on'
+            switch_obj.state.device_status = const.DeviceStatus.ON
 
         # Call method with kwargs if defined
         if method_kwargs:
@@ -230,12 +228,12 @@ class TestSwitches(TestBase):
         all_kwargs = parse_args(self.mock_api)
 
         # Assert request matches recored request or write new records
-        assert_test(method_call, all_kwargs, dev_type,
+        assert_test(method_call, all_kwargs, setup_entry,
                     self.write_api, self.overwrite)
 
         self.mock_api.reset_mock()
         resp_dict, status = call_json.DETAILS_BADCODE
-        self.mock_api.return_value = orjson.dumps(resp_dict), status
+        self.mock_api.return_value = resp_dict, status
         if method_kwargs:
             return_val = self.run_in_loop(method_call, **method_kwargs)
             assert return_val is False

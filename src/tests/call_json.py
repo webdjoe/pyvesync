@@ -1,21 +1,38 @@
 import copy
+from typing import Any
 import orjson
-import pyvesync.const
-from defaults import Defaults
+import pyvesync.const as const
+from defaults import TestDefaults
+from pyvesync.device_map import DeviceMapTemplate
 import call_json_switches
 import call_json_outlets
 import call_json_bulbs
 import call_json_fans
+import call_json_humidifiers
+import call_json_purifiers
 
-API_BASE_URL = pyvesync.const.API_BASE_URL
-API_TIMEOUT = pyvesync.const.API_TIMEOUT
-DEFAULT_TZ = pyvesync.const.DEFAULT_TZ
-APP_VERSION = pyvesync.const.APP_VERSION
-PHONE_BRAND = pyvesync.const.PHONE_BRAND
-PHONE_OS = pyvesync.const.PHONE_OS
-MOBILE_ID = pyvesync.const.MOBILE_ID
-USER_TYPE = pyvesync.const.USER_TYPE
 
+API_BASE_URL = const.API_BASE_URL
+API_TIMEOUT = const.API_TIMEOUT
+DEFAULT_TZ = const.DEFAULT_TZ
+APP_VERSION = const.APP_VERSION
+PHONE_BRAND = const.PHONE_BRAND
+PHONE_OS = const.PHONE_OS
+MOBILE_ID = const.MOBILE_ID
+USER_TYPE = const.USER_TYPE
+
+ALL_DEVICE_MAP_MODULES: list[DeviceMapTemplate] = [
+    *call_json_bulbs.bulb_modules,
+    *call_json_fans.fan_modules,
+    *call_json_outlets.outlet_modules,
+    *call_json_switches.switch_modules,
+    *call_json_humidifiers.humidifier_modules,
+    *call_json_purifiers.purifier_modules
+]
+
+ALL_DEVICE_MAP_DICT: dict[str, DeviceMapTemplate] = {
+    module.setup_entry: module for module in ALL_DEVICE_MAP_MODULES
+}
 
 """
 DEFAULT_BODY = Standard body for new device calls
@@ -65,10 +82,10 @@ SWITCHES = call_json_switches.SWITCHES
 
 DEFAULT_HEADER = {
     'accept-language': 'en',
-    'accountId': Defaults.account_id,
+    'accountId': TestDefaults.account_id,
     'appVersion': APP_VERSION,
     'content-type': 'application/json',
-    'tk': Defaults.token,
+    'tk': TestDefaults.token,
     'tz': DEFAULT_TZ,
 }
 
@@ -78,12 +95,172 @@ DEFAULT_HEADER_BYPASS = {
 }
 
 
+class LoginResponses:
+    GET_TOKEN_RESPONSE_SUCCESS = {
+        "traceId": TestDefaults.trace_id,
+        "code": 0,
+        "msg": None,
+        "result": {
+            "accountID": TestDefaults.account_id,
+            "avatarIcon": "",
+            "nickName": "",
+            "mailConfirmation": True,
+            "registerSourceDetail": None,
+            "verifyEmail": TestDefaults.email,
+            "bizToken": None,
+            "mfaMethodList": None,
+            "authorizeCode": TestDefaults.authorization_code,
+            "userType": "1",
+        },
+    }
+
+    LOGIN_RESPONSE_SUCCESS = {
+        "traceId": TestDefaults.trace_id,
+        "code": 0,
+        "msg": "request success",
+        "module": None,
+        "stacktrace": None,
+        "result": {
+            "birthday": "",
+            "gender": "",
+            "acceptLanguage": "en",
+            "measureUnit": "Imperial",
+            "weightG": 0.0,
+            "heightCm": 0.0,
+            "weightTargetSt": 0.0,
+            "heightUnit": "FT",
+            "heightFt": 0.0,
+            "weightTargetKg": 0.0,
+            "weightTargetLb": 0.0,
+            "weightUnit": "LB",
+            "maximalHeartRate": 0,
+            "targetBfr": 0.0,
+            "displayFlag": [],
+            "targetStatus": 0,
+            "realWeightKg": 0.0,
+            "realWeightLb": 0.0,
+            "realWeightUnit": "lb",
+            "heartRateZones": 0.0,
+            "runStepLongCm": 0.0,
+            "walkStepLongCm": 0.0,
+            "stepTarget": 0.0,
+            "sleepTargetMins": 0.0,
+            "regionType": 1,
+            "currentRegion": TestDefaults.region,
+            "token": TestDefaults.token,
+            "countryCode": TestDefaults.country_code,
+            "accountID": TestDefaults.account_id,
+            "bizToken": None,
+        },
+    }
+
+    LOGIN_RESPONSE_CROSS_REGION = {
+        "traceId": "TRACE_ID",
+        "code": -11260022,
+        "msg": "login trigger cross region error.",
+        "module": None,
+        "stacktrace": None,
+        "result": {
+            "birthday": None,
+            "gender": None,
+            "acceptLanguage": None,
+            "measureUnit": None,
+            "weightG": None,
+            "heightCm": None,
+            "weightTargetSt": None,
+            "heightUnit": None,
+            "heightFt": None,
+            "weightTargetKg": None,
+            "weightTargetLb": None,
+            "weightUnit": None,
+            "maximalHeartRate": None,
+            "targetBfr": None,
+            "displayFlag": None,
+            "targetStatus": None,
+            "realWeightKg": None,
+            "realWeightLb": None,
+            "realWeightUnit": None,
+            "heartRateZones": None,
+            "runStepLongCm": None,
+            "walkStepLongCm": None,
+            "stepTarget": None,
+            "sleepTargetMins": None,
+            "regionType": 1,
+            "currentRegion": TestDefaults.region,
+            "token": None,
+            "countryCode": TestDefaults.country_code,
+            "accountID": TestDefaults.account_id,
+            "bizToken": TestDefaults.biz_token,
+        },
+    }
+
+
+class LoginRequests:
+    authentication_success = {
+        "acceptLanguage": "en",
+        "accountID": "",
+        "clientInfo": const.PHONE_BRAND,
+        "clientType": const.CLIENT_TYPE,
+        "clientVersion": const.APP_VERSION,
+        "debugMode": False,
+        "method": "authByPWDOrOTM",
+        "osInfo": const.PHONE_OS,
+        "terminalId": TestDefaults.terminal_id,
+        "timeZone": const.DEFAULT_TZ,
+        "token": "",
+        "traceId": TestDefaults.trace_id,
+        "userCountryCode": TestDefaults.country_code,
+        "sourceAppID": TestDefaults.app_id,
+        "appID": TestDefaults.app_id,
+        "authProtocolType": "generic",
+        "email": TestDefaults.email,
+        "password": TestDefaults.password,
+    }
+
+    login_success = {
+        "acceptLanguage": "en",
+        "accountID": "",
+        "clientInfo": const.PHONE_BRAND,
+        "clientType": const.CLIENT_TYPE,
+        "clientVersion": const.APP_VERSION,
+        "debugMode": False,
+        "method": "loginByAuthorizeCode4Vesync",
+        "osInfo": const.PHONE_OS,
+        "terminalId": TestDefaults.terminal_id,
+        "timeZone": const.DEFAULT_TZ,
+        "token": "",
+        "traceId": TestDefaults.trace_id,
+        "userCountryCode": TestDefaults.country_code,
+        "authorizeCode": TestDefaults.authorization_code,
+        "emailSubscriptions": False,
+    }
+
+    login_cross_region = {
+        "acceptLanguage": "en",
+        "accountID": "",
+        "clientInfo": const.PHONE_BRAND,
+        "clientType": const.CLIENT_TYPE,
+        "clientVersion": const.APP_VERSION,
+        "debugMode": False,
+        "method": "loginByAuthorizeCode4Vesync",
+        "osInfo": const.PHONE_OS,
+        "terminalId": "2124569cc4905328aac52b39669b1b15e",
+        "timeZone": const.DEFAULT_TZ,
+        "token": "",
+        "traceId": TestDefaults.trace_id,
+        "userCountryCode": TestDefaults.country_code,
+        "bizToken": TestDefaults.biz_token,
+        "emailSubscriptions": False,
+        "regionChange": "lastRegion",
+    }
+
+
 def BYPASS_V1_BODY(cid: str, config_module: str, json_cmd: dict):
     return {
-        "traceId": Defaults.trace_id,
+        "traceId": TestDefaults.trace_id,
         "method": "bypass",
-        "token": Defaults.token,
-        "accountID": Defaults.account_id,
+        "token": TestDefaults.token,
+        "accountID": TestDefaults.account_id,
         "timeZone": DEFAULT_TZ,
         "acceptLanguage": "en",
         "appVersion": APP_VERSION,
@@ -106,14 +283,51 @@ def login_call_body(email, password):
         'phoneBrand': PHONE_BRAND,
         'phoneOS': PHONE_OS,
         'timeZone': DEFAULT_TZ,
-        'traceId': Defaults.trace_id,
+        'traceId': TestDefaults.trace_id,
         'userType': '1',
     }
     return json_object
 
 
+def device_list_item(device_map: DeviceMapTemplate) -> dict:
+    """Create a device list item from a device map.
+
+    Parameters
+    ----------
+    device_map : DeviceMapTemplate
+        Device map to create device list item from
+
+    Returns
+    -------
+    dict
+        Device list item dictionary
+    """
+    return {
+        "deviceType": device_map.dev_types[0],
+        "isOwner": True,
+        "deviceName": TestDefaults.name(device_map.setup_entry),
+        "deviceImg": "",
+        "cid": TestDefaults.cid(device_map.setup_entry),
+        "uuid": TestDefaults.uuid(device_map.setup_entry),
+        "macID": TestDefaults.macid(device_map.setup_entry),
+        "connectionType": "wifi",
+        "type": device_map.product_type,
+        "configModule": TestDefaults.config_module(device_map.setup_entry),
+        "mode": None,
+        "speed": None,
+        "currentFirmVersion": None,
+        "speed": None,
+        "subDeviceNo": None,
+        "extension": None,
+        "deviceProps": None,
+        "deviceStatus": const.DeviceStatus.ON,
+        "connectionStatus": const.ConnectionStatus.ONLINE,
+        "product_type": device_map.product_type
+    }
+
+
 class DeviceList:
-    list_response_base = {
+    list_response_base: dict[str, Any] = {
         'code': 0,
         'msg': 'Success',
         'result': {
@@ -123,7 +337,7 @@ class DeviceList:
             'list': [],
         }
     }
-    device_list_base = {
+    device_list_base: dict[str, Any] = {
         'extension': None,
         'isOwner': True,
         'authKey': None,
@@ -134,62 +348,62 @@ class DeviceList:
         'speed': None,
         'deviceProps': None,
         'configModule': 'ConfigModule',
+        'deviceRegion': TestDefaults.country_code,
+
     }
 
     bulbs = dict.fromkeys(call_json_bulbs.BULBS, "wifi-light")
     outlets = dict.fromkeys(call_json_outlets.OUTLETS, "wifi-switch")
     fans = dict.fromkeys(call_json_fans.FANS, "wifi-air")
     switches = dict.fromkeys(call_json_switches.SWITCHES, "Switches")
+    # purifiers = dict.fromkeys(call_json_purifiers.)
 
     @classmethod
-    def device_list_item(cls, model, sub_device_no=0):
+    def device_list_item(cls, module: DeviceMapTemplate):
         model_types = {**cls.bulbs, **cls.outlets, **cls.fans, **cls.switches}
 
         device_dict = cls.device_list_base
         model_dict = device_dict.copy()
-        model_dict['deviceType'] = model
-        model_dict['deviceName'] = Defaults.name(model)
-        model_dict['type'] = model_types.get(model)
-        model_dict['cid'] = Defaults.cid(model)
-        model_dict['uuid'] = Defaults.uuid(model)
-        model_dict['macID'] = Defaults.macid(model)
-        if model == 'ESO15-TB':
+        # model_dict['deviceType'] = setup_entry
+        model_dict['deviceName'] = TestDefaults.name(module.setup_entry)
+        model_dict['type'] = model_types.get(module.setup_entry)
+        model_dict['cid'] = TestDefaults.cid(module.setup_entry)
+        model_dict['uuid'] = TestDefaults.uuid(module.setup_entry)
+        model_dict['macID'] = TestDefaults.macid(module.setup_entry)
+        model_dict['deviceType'] = module.setup_entry
+        if module.setup_entry == 'ESO15-TB':
             model_dict['subDeviceNo'] = 1
         return model_dict
 
     @classmethod
-    def device_list_response(cls, device_types=None, _types=None):
+    def device_list_response(
+        cls,
+        setup_entrys: list[str] | str | None = None,
+    ):
         """Class method that returns the api get_devices response
 
         Args:
-            _types (list, str, optional): Can be one or list of types of devices.
-                Defaults to None. can be bulb, fans, switches, outlets in list or string
-            device_types (list, str optional): List or string of device_type(s)
+            setup_entrys (list, str optional): List or string of setup_entry(s)
                 to return. Defaults to None.
-
         """
-
+        if setup_entrys is None:
+            entry_list = ALL_DEVICE_MAP_DICT
+        elif isinstance(setup_entrys, str):
+            entry_list = {
+                k: v for k, v in ALL_DEVICE_MAP_DICT.items() if k == setup_entrys
+            }
+        elif isinstance(setup_entrys, list):
+            entry_list = {
+                k: v for k, v in ALL_DEVICE_MAP_DICT.items() if k in setup_entrys
+            }
         response_base = copy.deepcopy(cls.list_response_base)
-        if _types is not None:
-            if isinstance(_types, list):
-                full_model_list = {}
-                for _type in _types:
-                    device_types = full_model_list.update(cls.__dict__[_type])
-            else:
-                full_model_list = cls.__dict__[_types]
-        else:
-            full_model_list = {**cls.bulbs, **cls.outlets, **cls.fans, **cls.switches}
-        if device_types is not None:
-            if isinstance(device_types, list):
-                full_model_list = {k: v for k, v in full_model_list.items()
-                                   if k in device_types}
-            else:
-                full_model_list = {k: v for k, v in full_model_list.items()
-                                   if k == device_types}
-        for model in full_model_list:
-            response_base['result']['list'].append(cls.device_list_item(model))
+
+        response_base['result']['list'] = []
+        response_base['result']['total'] = 0
+        for module in entry_list.values():
+            response_base['result']['list'].append(cls.device_list_item(module))
             response_base['result']['total'] += 1
-        return orjson.dumps(response_base), 200
+        return response_base
 
     LIST_CONF_7A = {
         'deviceType': 'wifi-switch-1.3',
@@ -573,21 +787,20 @@ class DeviceDetails:
         'bulbs': bulbs
         }
 
-DETAILS_BADCODE = (
-    {
-        'code': 1,
-        'deviceImg': '',
-        'activeTime': 1,
-        'energy': 1,
-        'power': '1',
-        'voltage': '1',
-    },
-    200,
-)
+
+DETAILS_BADCODE = {
+    "code": 1,
+    "deviceImg": "",
+    "activeTime": 1,
+    "energy": 1,
+    "power": "1",
+    "voltage": "1",
+}
+
 
 STATUS_BODY = {
-    'accountID': Defaults.account_id,
-    'token': Defaults.token,
+    'accountID': TestDefaults.account_id,
+    'token': TestDefaults.token,
     'uuid': 'UUID',
     'timeZone': DEFAULT_TZ,
 }
