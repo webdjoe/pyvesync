@@ -7,7 +7,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from mashumaro.mixins.orjson import DataClassORJSONMixin
 
-from pyvesync.const import IntFlag
 from pyvesync.models.bypass_models import (
     BypassV2InnerResult,
 )
@@ -37,7 +36,7 @@ class TowerFanResult(BypassV2InnerResult):
 @dataclass
 class FanSleepPreferences(DataClassORJSONMixin):
     """Fan Sleep Preferences."""
-    sleepPreferenceType: int
+    sleepPreferenceType: str
     oscillationSwitch: int
     fallAsleepRemain: int
     autoChangeFanLevelSwitch: int

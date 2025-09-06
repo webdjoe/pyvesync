@@ -46,6 +46,9 @@ COLOR_DICT = {
     'green': DEFAULT_COLOR.green,
 }
 
+NEW_BRIGHTNESS = 75
+NEW_COLOR_TEMP = 40
+
 
 class TestSwitches(TestBase):
     """Switches testing class.
@@ -103,7 +106,7 @@ class TestSwitches(TestBase):
         'ESWD16': [['turn_on_indicator_light'],
                    ['turn_on_rgb_backlight'],
                    ['set_backlight_color', COLOR_DICT],
-                   ['set_brightness', {'brightness': TestDefaults.brightness}]],
+                   ['set_brightness', {'brightness': NEW_BRIGHTNESS}]],
     }
 
     def test_details(self, setup_entry, method):
@@ -132,9 +135,7 @@ class TestSwitches(TestBase):
         self.mock_api.return_value = resp_dict, 200
 
         # Instantiate device from device list return item
-        device_map = call_json.ALL_DEVICE_MAP_DICT[setup_entry]
-        device_config = call_json.DeviceList.device_list_item(device_map)
-        switch_obj = self.get_device("switches", device_config)
+        switch_obj = self.get_device("switches", setup_entry)
         assert isinstance(switch_obj, VeSyncSwitch)
 
         self.run_in_loop(switch_obj.get_details)
@@ -156,7 +157,7 @@ class TestSwitches(TestBase):
         bad_dict, status = call_json.DETAILS_BADCODE
         self.mock_api.return_value = bad_dict, status
         self.run_in_loop(switch_obj.get_details)
-        assert 'details' in self.caplog.records[-1].message
+        assert 'Unknown error' in self.caplog.records[-1].message
 
     def test_methods(self, setup_entry, method):
         """Test switch methods API request and response.
@@ -204,9 +205,7 @@ class TestSwitches(TestBase):
             resp_dict = method_response
         self.mock_api.return_value = resp_dict, 200
         # Get device configuration from call_json.DeviceList.device_list_item()
-        device_map = call_json.ALL_DEVICE_MAP_DICT[setup_entry]
-        device_config = call_json.DeviceList.device_list_item(device_map)
-        switch_obj = self.get_device("switches", device_config)
+        switch_obj = self.get_device("switches", setup_entry)
         assert isinstance(switch_obj, VeSyncSwitch)
 
         # Get method from device object

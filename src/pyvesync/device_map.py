@@ -1,5 +1,8 @@
 """Device and module mappings for VeSync devices.
 
+**To add a new device type to existing module: Add the device_type to the end
+of the existing dev_types list.**
+
 This module contains mappings for VeSync devices to their respective classes.
 The mappings are used to create instances of the appropriate device class
 based on the device type and define features and modes. The device type is taken
@@ -147,6 +150,7 @@ class OutletMap(DeviceMapTemplate):
         module (ModuleType): Module for the device.
         nightlight_modes (list[str]): List of nightlight modes for the device.
     """
+
     product_line: str = ProductLines.WIFI_LIGHT
     product_type: str = ProductTypes.OUTLET
     module: ModuleType = vesyncoutlet
@@ -171,6 +175,7 @@ class SwitchMap(DeviceMapTemplate):
         product_type (str): Product type of the device.
         module (ModuleType): Module for the device.
     """
+
     product_line: str = ProductLines.SWITCHES
     product_type: str = ProductTypes.SWITCH
     module: ModuleType = vesyncswitch
@@ -194,6 +199,7 @@ class BulbMap(DeviceMapTemplate):
         color_model (str | None): Color model for the device.
         color_modes (list[str]): List of color modes for the device.
     """
+
     product_line: str = ProductLines.WIFI_LIGHT
     color_model: str | None = None
     product_type: str = ProductTypes.BULB
@@ -221,6 +227,7 @@ class FanMap(DeviceMapTemplate):
         sleep_preferences (list[str]): List of sleep preferences for the device.
         set_mode_method (str): Method to set the mode for the device.
     """
+
     product_line: str = ProductLines.WIFI_AIR
     product_type: str = ProductTypes.FAN
     module: ModuleType = vesyncfan
@@ -250,6 +257,7 @@ class HumidifierMap(DeviceMapTemplate):
         target_minmax (tuple[int, int]): Minimum and maximum target humidity levels.
         warm_mist_levels (list[int | str]): List of warm mist levels for the device.
     """
+
     product_line: str = ProductLines.WIFI_AIR
     mist_modes: dict[str, str] = field(default_factory=dict)
     mist_levels: list[int | str] = field(default_factory=list)
@@ -280,6 +288,7 @@ class PurifierMap(DeviceMapTemplate):
         nightlight_modes (list[str]): List of nightlight modes for the device.
         auto_preferences (list[str]): List of auto preferences for the device.
     """
+
     product_line: str = ProductLines.WIFI_AIR
     product_type: str = ProductTypes.PURIFIER
     module: ModuleType = vesyncpurifier
@@ -307,6 +316,7 @@ class AirFryerMap(DeviceMapTemplate):
         product_type (str): Product type of the device.
         module (ModuleType): Module for the device.
     """
+
     product_line: str = ProductLines.WIFI_KITCHEN
     product_type: str = ProductTypes.AIR_FRYER
     module: ModuleType = vesynckitchen
@@ -333,6 +343,7 @@ class ThermostatMap(DeviceMapTemplate):
         hold_options (list[int]): List of hold options for the device.
         routine_types (list[int]): List of routine types for the device.
     """
+
     product_line: str = ProductLines.THERMOSTAT
     product_type: str = ProductTypes.THERMOSTAT
     module: ModuleType = vesyncthermostat
@@ -393,7 +404,7 @@ outlet_modules = [
         model_display="ESW01-USA Series",
         setup_entry="wifi-switch-1.3",
     ),
-    OutletMap(
+    OutletMap(  # TODO: Add energy
         dev_types=["ESW10-USA"],
         class_name="VeSyncESW10USA",
         features=[],

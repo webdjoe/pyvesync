@@ -33,7 +33,6 @@ from pyvesync.base_devices.humidifier_base import VeSyncHumidifier
 from base_test_cases import TestBase
 from utils import assert_test, parse_args
 from defaults import TestDefaults
-import call_json
 import call_json_humidifiers
 
 
@@ -107,7 +106,7 @@ class TestHumidifiers(TestBase):
     device = 'humidifiers'
     humidifiers = call_json_humidifiers.HUMIDIFIERS
     base_methods = [['turn_on'], ['turn_off'], ['turn_on_display'], ['turn_off_display'],
-                    ['automatic_stop_on'], ['automatic_stop_off'],
+                    ['turn_on_automatic_stop'], ['turn_off_automatic_stop'],
                     ['set_humidity', {'humidity': 50}], ['set_auto_mode'],
                     ['set_manual_mode'], ['set_mist_level', {'level': 2}]
                     ]
@@ -143,8 +142,7 @@ class TestHumidifiers(TestBase):
         self.mock_api.return_value = return_val
 
         # Instantiate device from device list return item
-        device_config = call_json.DeviceList.device_list_item(setup_entry)
-        fan_obj = self.get_device("humidifiers", device_config)
+        fan_obj = self.get_device("humidifiers", setup_entry)
         assert isinstance(fan_obj, VeSyncHumidifier)
 
         method_call = getattr(fan_obj, method)
@@ -203,8 +201,7 @@ class TestHumidifiers(TestBase):
             self.mock_api.return_value = method_response, 200
 
         # Get device configuration from call_json.DeviceList.device_list_item()
-        device_config = call_json.DeviceList.device_list_item(setup_entry)
-        fan_obj = self.get_device("humidifiers", device_config)
+        fan_obj = self.get_device("humidifiers", setup_entry)
         assert isinstance(fan_obj, VeSyncHumidifier)
 
         # Get method from device object

@@ -1,6 +1,8 @@
 """Data models for VeSync outlets."""
 from __future__ import annotations
 from dataclasses import dataclass
+
+from mashumaro.mixins.orjson import DataClassORJSONMixin
 from pyvesync.models.bypass_models import (
     RequestBypassV1,
 )
@@ -46,8 +48,10 @@ class EnergyInfo:
 
 
 @dataclass
-class Response10ADetails(ResponseCodeModel):
+class Response10ADetails(DataClassORJSONMixin):
     """Response model for Etekcity outlet details."""
+    code: int
+    msg: str | None
     deviceStatus: str
     connectionStatus: str
     activeTime: int

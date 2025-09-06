@@ -161,6 +161,7 @@ class VeSyncOutlet7A(VeSyncOutlet):
                 logger, self.device_name, self.device_type,
                 'toggle_switch', "Response code is not 200"
             )
+            return False
 
         if isinstance(r_dict, dict) and 'error' in r_dict:
             _ = Helpers.process_dev_response(logger, "get_details", self, r_dict)
@@ -814,7 +815,7 @@ class VeSyncOutletBSDGO1(BypassV2Mixin, VeSyncOutlet):
         return await self.toggle_switch(power)
 
 
-class VeSyncESW10USA(BypassV2Mixin, VeSyncOutlet10A):
+class VeSyncESW10USA(BypassV2Mixin, VeSyncOutlet):
     """VeSync ESW10 USA outlet.
 
     Note that this device does not support energy monitoring.

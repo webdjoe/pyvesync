@@ -61,6 +61,7 @@ CLIENT_TYPE = "vesyncApp"
 
 class ProductLines(StrEnum):
     """High level product line."""
+
     WIFI_LIGHT = "wifi-light"
     WIFI_AIR = "wifi-air"
     WIFI_KITCHEN = "wifi-kitchen"
@@ -71,6 +72,7 @@ class ProductLines(StrEnum):
 
 class ProductTypes(StrEnum):
     """General device types enum."""
+
     OUTLET = "outlet"
     BULB = "bulb"
     SWITCH = "switch"
@@ -93,6 +95,7 @@ class IntFlag(IntEnum):
     Attributes:
         NOT_SUPPORTED: Device is not supported, -999
     """
+
     NOT_SUPPORTED = -999
 
     def __str__(self) -> str:
@@ -111,6 +114,7 @@ class StrFlag(StrEnum):
     Attributes:
         NOT_SUPPORTED: Device is not supported, "not_supported"
     """
+
     NOT_SUPPORTED = "not_supported"
 
 
@@ -135,6 +139,7 @@ class NightlightStatus(StrEnum):
         # True
         ```
     """
+
     ON = "on"
     OFF = "off"
     AUTO = "auto"
@@ -181,6 +186,7 @@ class DeviceStatus(StrEnum):
         # 'on'
         ```
     """
+
     ON = "on"
     OFF = "off"
     PAUSED = "paused"
@@ -256,6 +262,7 @@ class ConnectionStatus(StrEnum):
         # True
         ```
     """
+
     ONLINE = "online"
     OFFLINE = "offline"
     UNKNOWN = "unknown"
@@ -308,6 +315,7 @@ class ColorMode(StrEnum):
         WHITE: White color mode.
         COLOR: Color mode.
     """
+
     RGB = "rgb"
     HSV = "hsv"
     WHITE = "white"
@@ -354,6 +362,7 @@ class AirQualityLevel(Enum):
         # "good"
         ```
     """
+
     EXCELLENT = 1
     GOOD = 2
     MODERATE = 3
@@ -429,6 +438,7 @@ class FanSleepPreference(StrEnum):
         QUIET: Quiet sleep mode.
         UNKNOWN: Unknown sleep mode.
     """
+
     DEFAULT = "default"
     ADVANCED = "advanced"
     TURBO = "turbo"
@@ -459,6 +469,7 @@ class HumidifierFeatures(Features):
         AUTO_STOP: Auto stop when target humidity is reached.
             Different from auto, which adjusts fan level to maintain humidity.
     """
+
     ONOFF = "onoff"
     CHILD_LOCK = "child_lock"
     NIGHTLIGHT = "night_light"
@@ -484,6 +495,7 @@ class PurifierFeatures(Features):
         AQPERCENT: Air quality percentage status.
         RESET_FILTER: Reset filter status.
     """
+
     RESET_FILTER = "reset_filter"
     CHILD_LOCK = "child_lock"
     NIGHTLIGHT = "night_light"
@@ -504,6 +516,7 @@ class PurifierStringLevels(Features):
         MEDIUM: Medium fan speed.
         HIGH: High fan speed.
     """
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -518,6 +531,7 @@ class BulbFeatures(Features):
         COLOR_TEMP: Color temperature status.
         MULTICOLOR: Multicolor status.
     """
+
     ONOFF = "onoff"
     DIMMABLE = "dimmable"
     COLOR_TEMP = "color_temp"
@@ -532,6 +546,7 @@ class OutletFeatures(Features):
         ENERGY_MONITOR: Energy monitor status.
         NIGHTLIGHT: Nightlight status.
     """
+
     ONOFF = "onoff"
     ENERGY_MONITOR = "energy_monitor"
     NIGHTLIGHT = "nightlight"
@@ -547,6 +562,7 @@ class SwitchFeatures(Features):
         BACKLIGHT: Backlight status.
         BACKLIGHT_RGB: RGB backlight status.
     """
+
     ONOFF = "onoff"
     DIMMABLE = "dimmable"
     INDICATOR_LIGHT = "indicator_light"
@@ -556,6 +572,7 @@ class SwitchFeatures(Features):
 
 class FanFeatures(Features):
     """VeSync fan features."""
+
     OSCILLATION = "oscillation"
     SOUND = "sound"
     DISPLAYING_TYPE = "displaying_type"  # Unknown functionality
@@ -574,6 +591,7 @@ class PurifierModes(Features):
         PET: Pet mode.
         UNKNOWN: Unknown mode.
     """
+
     AUTO = "auto"
     MANUAL = "manual"
     SLEEP = "sleep"
@@ -595,6 +613,7 @@ class HumidifierModes(Features):
         UNKNOWN: Unknown mode.
         AUTOPRO: AutoPro mode.
     """
+
     AUTO = "auto"
     MANUAL = "manual"
     HUMIDITY = "humidity"
@@ -618,6 +637,7 @@ class FanModes(StrEnum):
         UNKNOWN: Unknown mode.
         ADVANCED_SLEEP: Advanced sleep mode.
     """
+
     AUTO = "auto"
     NORMAL = "normal"
     MANUAL = "normal"
@@ -653,6 +673,7 @@ class ThermostatWorkModes(IntEnum):
         EM_HEAT: Thermostat is in emergency heating mode (4).
         SMART_AUTO: Thermostat is in smart auto mode (5).
     """
+
     OFF = 0
     HEAT = 1
     COOL = 2
@@ -671,6 +692,7 @@ class ThermostatFanModes(IntEnum):
         ON: Fan is on (2).
         CIRCULATE: Fan is in circulate mode (3).
     """
+
     AUTO = 1
     ON = 2
     CIRCULATE = 3
@@ -685,6 +707,7 @@ class ThermostatHoldOptions(IntEnumMixin):
         FOUR_HOURS: Hold for four hours (4).
         PERMANENTLY: Hold permanently (5).
     """
+
     UNTIL_NEXT_SCHEDULED_ITEM = 2
     TWO_HOURS = 3
     FOUR_HOURS = 4
@@ -698,12 +721,14 @@ class ThermostatHoldStatus(IntEnumMixin):
         SET: Set the hold status (1).
         CANCEL: Cancel the hold status (0).
     """
+
     SET = 1
     CANCEL = 0
 
 
 class ThermostatScheduleOrHoldOptions(IntEnumMixin):
     """Schedule or hold options for VeSync Aura thermostats."""
+
     NOT_SCHEDULE_NOT_HOLD = 0
     ON_SCHEDULE = 1
     ON_HOLD = 2
@@ -712,6 +737,7 @@ class ThermostatScheduleOrHoldOptions(IntEnumMixin):
 
 class ThermostatEcoTypes(IntEnumMixin):
     """Eco types for VeSync Aura thermostats."""
+
     COMFORT_SECOND = 1
     COMFORT_FIRST = 2
     BALANCE = 3
@@ -721,6 +747,7 @@ class ThermostatEcoTypes(IntEnumMixin):
 
 class ThermostatRoutineTypes(IntEnumMixin):
     """Routine types for VeSync Aura thermostats."""
+
     HOME = 2
     AWAY = 1
     SLEEP = 3
@@ -729,6 +756,7 @@ class ThermostatRoutineTypes(IntEnumMixin):
 
 class ThermostatAlarmCodes(IntEnumMixin):
     """Alarm codes for VeSync Aura thermostats."""
+
     HEAT_COOL = 100
     ABOVE_SAFE_TEMP = 102
     HEAT_RUNNING_TIME_TOO_LONG = 104
@@ -736,12 +764,14 @@ class ThermostatAlarmCodes(IntEnumMixin):
 
 class ThermostatReminderCodes(IntEnumMixin):
     """Reminder codes for VeSync Aura thermostats."""
+
     FILTER = 150
     HVAC = 151
 
 
 class ThermostatWorkStatusCodes(IntEnumMixin):
     """Work status codes for VeSync Aura thermostats."""
+
     OFF = 0
     HEATING = 1
     COOLING = 2
@@ -750,12 +780,14 @@ class ThermostatWorkStatusCodes(IntEnumMixin):
 
 class ThermostatFanStatus(IntEnumMixin):
     """Fan Status Enum for Aura Thermostats."""
+
     OFF = 0
     ON = 1
 
 
 class ThermostatConst:
     """Constants for VeSync Aura thermostats."""
+
     ReminderCode = ThermostatReminderCodes
     AlarmCode = ThermostatAlarmCodes
     WorkMode = ThermostatWorkModes

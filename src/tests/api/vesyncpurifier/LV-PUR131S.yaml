@@ -2,7 +2,7 @@ change_fan_speed:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 5.6.60
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
@@ -19,7 +19,7 @@ manual_mode:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 5.6.60
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
@@ -37,7 +37,7 @@ sleep_mode:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 5.6.60
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
@@ -54,7 +54,7 @@ turn_off:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 5.6.60
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
@@ -71,7 +71,7 @@ turn_on:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 5.6.60
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
@@ -88,17 +88,17 @@ update:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 5.6.60
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 5.6.60
     method: devicedetail
     mobileId: '1234567890123456'
-    phoneBrand: SM N9005
+    phoneBrand: pyvesync
     phoneOS: Android
     timeZone: America/New_York
     token: sample_tk

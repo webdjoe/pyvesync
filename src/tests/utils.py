@@ -10,13 +10,17 @@ parse_args: function
 assert_test: function
     Test pyvesync API calls against existing API
 """
+from itertools import zip_longest
 import logging
 from pathlib import Path
 from typing import Any
 import yaml
+from mashumaro.mixins.orjson import DataClassORJSONMixin
 from defaults import CALL_API_ARGS, ID_KEYS, API_DEFAULTS
 
 logger = logging.getLogger(__name__)
+
+_SENTINEL = object()
 
 
 class YAMLWriter:
@@ -189,6 +193,8 @@ def parse_args(mock_api):
     call_kwargs = mock_api.call_args.kwargs
     all_kwargs = dict(zip(CALL_API_ARGS, call_args))
     all_kwargs.update(call_kwargs)
+    if isinstance(all_kwargs.get("json_object"), DataClassORJSONMixin):
+        all_kwargs["json_object"] = all_kwargs["json_object"].to_dict()
     return all_kwargs
 
 
@@ -229,7 +235,7 @@ def assert_test(test_func, all_kwargs, dev_type=None,
         all_kwargs['json_object'] = api_scrub(all_kwargs['json_object'], dev_type)
     if all_kwargs.get('headers') is not None:
         all_kwargs['headers'] = api_scrub(all_kwargs['headers'], dev_type)
-    mod = test_func.__module__.split(".")[-1]
+    mod = test_func.__self__.__module__.split(".")[-1]
     if dev_type is None:
         cls_name = test_func.__self__.__class__.__name__
     else:
@@ -246,5 +252,74 @@ def assert_test(test_func, all_kwargs, dev_type=None,
             writer.write_api(method_name, all_kwargs, overwrite)
         else:
             logger.debug("Not writing API data for %s %s %s", mod, cls_name, method_name)
-    assert writer._existing_api == all_kwargs
+    if writer._existing_api is None:
+        return False
+    assert writer._existing_api == all_kwargs, dicts_equal(writer._existing_api, all_kwargs)
     return True
+
+
+def deep_diff(a: Any, b: Any, path: str = ""):
+    """Yield dicts describing differences between two (possibly nested) values."""
+    if type(a) is not type(b):
+        yield {
+            "path": path, "change": "type",
+            "from": a, "to": b,
+            "from_type": type(a).__name__, "to_type": type(b).__name__,
+        }
+        return
+
+    if isinstance(a, dict):
+        keys = set(a) | set(b)
+        for k in sorted(keys, key=str):
+            p = f"{path}.{k}" if path else str(k)
+            if k not in b:
+                yield {"path": p, "change": "removed", "value": a[k]}
+            elif k not in a:
+                yield {"path": p, "change": "added", "value": b[k]}
+            else:
+                yield from deep_diff(a[k], b[k], p)
+
+    elif isinstance(a, (list, tuple)):
+        for i, (va, vb) in enumerate(zip_longest(a, b, fillvalue=_SENTINEL)):
+            p = f"{path}[{i}]"
+            if va is _SENTINEL:
+                yield {"path": p, "change": "added", "value": vb}
+            elif vb is _SENTINEL:
+                yield {"path": p, "change": "removed", "value": va}
+            else:
+                yield from deep_diff(va, vb, p)
+
+    elif isinstance(a, set):
+        if a != b:
+            # repr-sort to avoid TypeError on mixed-type sets
+            added = sorted(b - a, key=repr)
+            removed = sorted(a - b, key=repr)
+            yield {"path": path, "change": "set", "added": added, "removed": removed}
+
+    elif a != b:
+        yield {"path": path, "change": "modified", "from": a, "to": b}
+
+
+def format_diffs(diffs) -> str:
+    sym = {"added": "+", "removed": "-", "modified": "~", "type": "±", "set": "∈"}
+    out = []
+    for d in diffs:
+        p = d["path"] or "<root>"
+        c = d["change"]
+        if c in ("added", "removed"):
+            out.append(f"{sym[c]} {p}: {d['value']!r}")
+        elif c == "modified":
+            out.append(f"{sym[c]} {p}: {d['from']!r} -> {d['to']!r}")
+        elif c == "type":
+            out.append(f"{sym[c]} {p}: {d['from_type']} -> {d['to_type']} "
+                       f"({d['from']!r} -> {d['to']!r})")
+        elif c == "set":
+            out.append(f"{sym[c]} {p}: +{d['added']!r} -{d['removed']!r}")
+    return "\n".join(out)
+
+
+def dicts_equal(a: dict, b: dict, *, show_diff: bool = True):
+    """Return (equal_bool, diffs). Optionally print a readable diff."""
+    diffs = list(deep_diff(a, b))
+    if show_diff and diffs:
+        print(format_diffs(diffs))

@@ -33,7 +33,6 @@ from pyvesync.base_devices.fan_base import VeSyncFanBase
 from base_test_cases import TestBase
 from utils import assert_test, parse_args
 from defaults import TestDefaults
-import call_json
 import call_json_fans
 
 
@@ -126,8 +125,7 @@ class TestFans(TestBase):
         self.mock_api.return_value = (return_dict, 200)
 
         # Instantiate device from device list return item
-        device_config = call_json.DeviceList.device_list_item(setup_entry)
-        fan_obj = self.get_device("fans", device_config)
+        fan_obj = self.get_device("fans", setup_entry)
         assert isinstance(fan_obj, VeSyncFanBase)
 
         method_call = getattr(fan_obj, method)
@@ -137,8 +135,9 @@ class TestFans(TestBase):
         all_kwargs = parse_args(self.mock_api)
 
         # Assert request matches recorded request or write new records
-        assert_test(method_call, all_kwargs, setup_entry,
-                    self.write_api, self.overwrite)
+        assert assert_test(
+            method_call, all_kwargs, setup_entry, self.write_api, self.overwrite
+        )
 
     def test_methods(self, setup_entry, method):
         """Test device methods API request and response.
@@ -186,8 +185,7 @@ class TestFans(TestBase):
             self.mock_api.return_value = method_response, 200
 
         # Get device configuration from call_json.DeviceList.device_list_item()
-        device_config = call_json.DeviceList.device_list_item(setup_entry)
-        fan_obj = self.get_device("fans", device_config)
+        fan_obj = self.get_device("fans", setup_entry)
         assert isinstance(fan_obj, VeSyncFanBase)
 
         # Get method from device object
@@ -209,5 +207,6 @@ class TestFans(TestBase):
         all_kwargs = parse_args(self.mock_api)
 
         # Assert request matches recorded request or write new records
-        assert_test(method_call, all_kwargs, setup_entry,
-                    self.write_api, self.overwrite)
+        assert assert_test(
+            method_call, all_kwargs, setup_entry, self.write_api, self.overwrite
+        )

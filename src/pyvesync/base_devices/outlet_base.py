@@ -185,7 +185,7 @@ class VeSyncOutlet(VeSyncBaseToggleDevice):
         return RequestEnergyHistory.from_dict(body)
 
     async def _get_energy_history(self, history_interval: str) -> None:
-        """Internal function to pull energy history.
+        """Pull energy history from API.
 
         Args:
             history_interval (str): The interval for the energy history,

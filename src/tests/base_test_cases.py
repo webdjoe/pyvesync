@@ -10,6 +10,7 @@ from unittest.mock import MagicMock, patch
 from pyvesync import VeSync
 from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
 from defaults import TestDefaults, API_DEFAULTS
+from call_json import ALL_DEVICE_MAP_DICT, DeviceList
 
 if TYPE_CHECKING:
     from pyvesync.base_devices import VeSyncBaseDevice
@@ -107,7 +108,7 @@ class TestBase:
         """Run a function in the event loop."""
         return self.loop.run_until_complete(self.run_coro(func(*args, **kwargs)))
 
-    def get_device(self, product_type: str, device_details: dict) -> VeSyncBaseDevice:
+    def get_device(self, product_type: str, setup_entry: str) -> VeSyncBaseDevice:
         """Get device from device details dict.
 
         Args:
@@ -118,8 +119,10 @@ class TestBase:
         """
         if len(self.manager.devices) > 0:
             self.manager.devices.clear()
+        device_map = ALL_DEVICE_MAP_DICT[setup_entry]
+        device_config = DeviceList.device_list_item(device_map)
         self.manager.devices.add_device_from_model(
-            ResponseDeviceDetailsModel.from_dict(device_details), self.manager
+            ResponseDeviceDetailsModel.from_dict(device_config), self.manager
         )
         device_list = getattr(self.manager.devices, product_type)
         assert len(device_list) == 1, f"Could not instantiate {product_type} device."

@@ -35,7 +35,6 @@ from pyvesync.base_devices.bulb_base import VeSyncBulb
 from base_test_cases import TestBase
 from utils import assert_test, parse_args
 from defaults import TestDefaults
-import call_json
 import call_json_bulbs
 
 
@@ -147,8 +146,7 @@ class TestBulbs(TestBase):
         self.mock_api.return_value = return_val
 
         # Instantiate device from device list return item
-        device_config = call_json.DeviceList.device_list_item(setup_entry)
-        bulb_obj = self.get_device("bulbs", device_config)
+        bulb_obj = self.get_device("bulbs", setup_entry)
         assert isinstance(bulb_obj, VeSyncBulb)
 
         method_call = getattr(bulb_obj, method)
@@ -158,8 +156,9 @@ class TestBulbs(TestBase):
         all_kwargs = parse_args(self.mock_api)
 
         # Assert request matches recored request or write new records
-        assert_test(method_call, all_kwargs, setup_entry,
-                    self.write_api, self.overwrite)
+        assert assert_test(
+            method_call, all_kwargs, setup_entry, self.write_api, self.overwrite
+        )
 
         # Assert device details match expected values
         assert bulb_obj.state.brightness == TestDefaults.brightness
@@ -215,8 +214,8 @@ class TestBulbs(TestBase):
             self.mock_api.return_value = method_response, 200
 
         # Get device configuration from call_json.DeviceList.device_list_item()
-        device_config = call_json.DeviceList.device_list_item(setup_entry)
-        bulb_obj = self.get_device("bulbs", device_config)
+
+        bulb_obj = self.get_device("bulbs", setup_entry)
         assert isinstance(bulb_obj, VeSyncBulb)
 
         # Get method from device object

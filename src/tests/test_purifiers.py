@@ -34,7 +34,6 @@ import pyvesync.const as const
 from pyvesync.base_devices.purifier_base import VeSyncPurifier
 from base_test_cases import TestBase
 from utils import assert_test, parse_args
-import call_json
 import call_json_purifiers
 
 
@@ -128,8 +127,7 @@ class TestAirPurifiers(TestBase):
         self.mock_api.return_value = return_val
 
         # Instantiate device from device list return item
-        device_config = call_json.DeviceList.device_list_item(setup_entry)
-        fan_obj = self.get_device("air_purifiers", device_config)
+        fan_obj = self.get_device("air_purifiers", setup_entry)
         assert isinstance(fan_obj, VeSyncPurifier)
 
         method_call = getattr(fan_obj, method)
@@ -191,8 +189,7 @@ class TestAirPurifiers(TestBase):
         self.mock_api.return_value = (return_dict, 200)
 
         # Get device configuration from call_json.DeviceList.device_list_item()
-        device_config = call_json.DeviceList.device_list_item(setup_entry)
-        fan_obj = self.get_device("air_purifiers", device_config)
+        fan_obj = self.get_device("air_purifiers", setup_entry)
         assert isinstance(fan_obj, VeSyncPurifier)
 
         # Get method from device object

@@ -25,6 +25,7 @@ class FryerState(DeviceState):
     Note: This class is a placeholder for future functionality and does not currently
     implement any specific features or attributes.
     """
+
     __slots__ = ()
 
     def __init__(self,

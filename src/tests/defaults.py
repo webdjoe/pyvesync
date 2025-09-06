@@ -32,7 +32,7 @@ FunctionResponsesV2: defaultdict = defaultdict(
     }
 )
 
-CALL_API_ARGS = ['url', 'method', 'data', 'headers']
+CALL_API_ARGS = ['url', 'method', 'json_object', 'headers']
 
 ID_KEYS = ['CID', 'UUID', 'MACID']
 

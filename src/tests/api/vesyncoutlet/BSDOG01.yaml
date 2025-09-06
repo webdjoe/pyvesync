@@ -5,20 +5,23 @@ get_details:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 5.6.60
     cid: BSDOG01-CID
+    configModel: ConfigModule
     configModule: ConfigModule
-    deviceRegion: US
+    debugMode: false
+    deviceId: BSDOG01-CID
     method: bypassV2
     payload:
       data: {}
       method: getProperty
       source: APP
-    phoneBrand: SM N9005
+    phoneBrand: pyvesync
     phoneOS: Android
     timeZone: America/New_York
     token: sample_tk
     traceId: TRACE_ID
+    userCountryCode: US
   method: post
   url: /cloud/v2/deviceManaged/bypassV2
 turn_off:
@@ -28,7 +31,7 @@ turn_off:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 5.6.60
     cid: BSDOG01-CID
     configModule: ConfigModule
     deviceRegion: US
@@ -38,7 +41,7 @@ turn_off:
         powerSwitch_1: 0
       method: setProperty
       source: APP
-    phoneBrand: SM N9005
+    phoneBrand: pyvesync
     phoneOS: Android
     timeZone: America/New_York
     token: sample_tk
@@ -52,7 +55,7 @@ turn_on:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 5.6.60
     cid: BSDOG01-CID
     configModule: ConfigModule
     deviceRegion: US
@@ -62,7 +65,7 @@ turn_on:
         powerSwitch_1: 1
       method: setProperty
       source: APP
-    phoneBrand: SM N9005
+    phoneBrand: pyvesync
     phoneOS: Android
     timeZone: America/New_York
     token: sample_tk
@@ -76,7 +79,7 @@ update:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 5.6.60
     cid: BSDOG01-CID
     configModule: ConfigModule
     deviceRegion: US
@@ -85,7 +88,7 @@ update:
       data: {}
       method: getProperty
       source: APP
-    phoneBrand: SM N9005
+    phoneBrand: pyvesync
     phoneOS: Android
     timeZone: America/New_York
     token: sample_tk

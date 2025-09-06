@@ -1,62 +1,12 @@
-automatic_stop_off:
+auto_mode:
   headers:
     Content-Type: application/json; charset=UTF-8
     User-Agent: okhttp/3.12.1
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
-    cid: Classic200S-CID
-    configModule: ConfigModule
-    debugMode: false
-    deviceRegion: US
-    method: bypassV2
-    payload:
-      data:
-        enabled: false
-      method: setAutomaticStop
-      source: APP
-    phoneBrand: SM N9005
-    phoneOS: Android
-    timeZone: America/New_York
-    token: sample_tk
-    traceId: TRACE_ID
-  method: post
-  url: /cloud/v2/deviceManaged/bypassV2
-automatic_stop_on:
-  headers:
-    Content-Type: application/json; charset=UTF-8
-    User-Agent: okhttp/3.12.1
-  json_object:
-    acceptLanguage: en
-    accountID: sample_id
-    appVersion: 2.8.6
-    cid: Classic200S-CID
-    configModule: ConfigModule
-    debugMode: false
-    deviceRegion: US
-    method: bypassV2
-    payload:
-      data:
-        enabled: true
-      method: setAutomaticStop
-      source: APP
-    phoneBrand: SM N9005
-    phoneOS: Android
-    timeZone: America/New_York
-    token: sample_tk
-    traceId: TRACE_ID
-  method: post
-  url: /cloud/v2/deviceManaged/bypassV2
-set_auto_mode:
-  headers:
-    Content-Type: application/json; charset=UTF-8
-    User-Agent: okhttp/3.12.1
-  json_object:
-    acceptLanguage: en
-    accountID: sample_id
-    appVersion: 2.8.6
-    cid: Classic200S-CID
+    appVersion: 5.6.60
+    cid: Core300S-CID
     configModule: ConfigModule
     debugMode: false
     deviceRegion: US
@@ -64,74 +14,24 @@ set_auto_mode:
     payload:
       data:
         mode: auto
-      method: setHumidityMode
+      method: setPurifierMode
       source: APP
-    phoneBrand: SM N9005
+    phoneBrand: pyvesync
     phoneOS: Android
     timeZone: America/New_York
     token: sample_tk
     traceId: TRACE_ID
   method: post
   url: /cloud/v2/deviceManaged/bypassV2
-set_humidity:
+change_fan_speed:
   headers:
     Content-Type: application/json; charset=UTF-8
     User-Agent: okhttp/3.12.1
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
-    cid: Classic200S-CID
-    configModule: ConfigModule
-    debugMode: false
-    deviceRegion: US
-    method: bypassV2
-    payload:
-      data:
-        target_humidity: 50
-      method: setTargetHumidity
-      source: APP
-    phoneBrand: SM N9005
-    phoneOS: Android
-    timeZone: America/New_York
-    token: sample_tk
-    traceId: TRACE_ID
-  method: post
-  url: /cloud/v2/deviceManaged/bypassV2
-set_manual_mode:
-  headers:
-    Content-Type: application/json; charset=UTF-8
-    User-Agent: okhttp/3.12.1
-  json_object:
-    acceptLanguage: en
-    accountID: sample_id
-    appVersion: 2.8.6
-    cid: Classic200S-CID
-    configModule: ConfigModule
-    debugMode: false
-    deviceRegion: US
-    method: bypassV2
-    payload:
-      data:
-        mode: manual
-      method: setHumidityMode
-      source: APP
-    phoneBrand: SM N9005
-    phoneOS: Android
-    timeZone: America/New_York
-    token: sample_tk
-    traceId: TRACE_ID
-  method: post
-  url: /cloud/v2/deviceManaged/bypassV2
-set_mist_level:
-  headers:
-    Content-Type: application/json; charset=UTF-8
-    User-Agent: okhttp/3.12.1
-  json_object:
-    acceptLanguage: en
-    accountID: sample_id
-    appVersion: 2.8.6
-    cid: Classic200S-CID
+    appVersion: 5.6.60
+    cid: Core300S-CID
     configModule: ConfigModule
     debugMode: false
     deviceRegion: US
@@ -139,11 +39,114 @@ set_mist_level:
     payload:
       data:
         id: 0
-        level: 2
-        type: mist
-      method: setVirtualLevel
+        level: 3
+        mode: manual
+        type: wind
+      method: setLevel
       source: APP
-    phoneBrand: SM N9005
+    phoneBrand: pyvesync
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
+clear_timer:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 5.6.60
+    cid: Core300S-CID
+    configModule: ConfigModule
+    debugMode: false
+    deviceRegion: US
+    method: bypassV2
+    payload:
+      data: {}
+      method: delTimer
+      source: APP
+    phoneBrand: pyvesync
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
+manual_mode:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 5.6.60
+    cid: Core300S-CID
+    configModule: ConfigModule
+    debugMode: false
+    deviceRegion: US
+    method: bypassV2
+    payload:
+      data:
+        id: 0
+        level: 1
+        type: wind
+      method: setLevel
+      type: APP
+    phoneBrand: pyvesync
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
+set_timer:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 5.6.60
+    cid: Core300S-CID
+    configModule: ConfigModule
+    debugMode: false
+    deviceRegion: US
+    method: bypassV2
+    payload:
+      data:
+        action: 'off'
+        total: 100
+      method: addTimer
+      source: APP
+    phoneBrand: pyvesync
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
+sleep_mode:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 5.6.60
+    cid: Core300S-CID
+    configModule: ConfigModule
+    debugMode: false
+    deviceRegion: US
+    method: bypassV2
+    payload:
+      data:
+        mode: sleep
+      method: setPurifierMode
+      source: APP
+    phoneBrand: pyvesync
     phoneOS: Android
     timeZone: America/New_York
     token: sample_tk
@@ -157,8 +160,8 @@ turn_off:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
-    cid: Classic200S-CID
+    appVersion: 5.6.60
+    cid: Core300S-CID
     configModule: ConfigModule
     debugMode: false
     deviceRegion: US
@@ -169,7 +172,7 @@ turn_off:
         id: 0
       method: setSwitch
       source: APP
-    phoneBrand: SM N9005
+    phoneBrand: pyvesync
     phoneOS: Android
     timeZone: America/New_York
     token: sample_tk
@@ -183,19 +186,18 @@ turn_off_display:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
-    cid: Classic200S-CID
+    appVersion: 5.6.60
+    cid: Core300S-CID
     configModule: ConfigModule
     debugMode: false
     deviceRegion: US
     method: bypassV2
     payload:
       data:
-        enabled: false
-        id: 0
-      method: setIndicatorLightSwitch
+        state: false
+      method: setDisplay
       source: APP
-    phoneBrand: SM N9005
+    phoneBrand: pyvesync
     phoneOS: Android
     timeZone: America/New_York
     token: sample_tk
@@ -209,8 +211,8 @@ turn_on:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
-    cid: Classic200S-CID
+    appVersion: 5.6.60
+    cid: Core300S-CID
     configModule: ConfigModule
     debugMode: false
     deviceRegion: US
@@ -221,7 +223,7 @@ turn_on:
         id: 0
       method: setSwitch
       source: APP
-    phoneBrand: SM N9005
+    phoneBrand: pyvesync
     phoneOS: Android
     timeZone: America/New_York
     token: sample_tk
@@ -235,19 +237,18 @@ turn_on_display:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
-    cid: Classic200S-CID
+    appVersion: 5.6.60
+    cid: Core300S-CID
     configModule: ConfigModule
     debugMode: false
     deviceRegion: US
     method: bypassV2
     payload:
       data:
-        enabled: true
-        id: 0
-      method: setIndicatorLightSwitch
+        state: true
+      method: setDisplay
       source: APP
-    phoneBrand: SM N9005
+    phoneBrand: pyvesync
     phoneOS: Android
     timeZone: America/New_York
     token: sample_tk
@@ -261,17 +262,17 @@ update:
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
-    cid: Classic200S-CID
+    appVersion: 5.6.60
+    cid: Core300S-CID
     configModule: ConfigModule
     debugMode: false
     deviceRegion: US
     method: bypassV2
     payload:
       data: {}
-      method: getHumidifierStatus
+      method: getPurifierStatus
       source: APP
-    phoneBrand: SM N9005
+    phoneBrand: pyvesync
     phoneOS: Android
     timeZone: America/New_York
     token: sample_tk

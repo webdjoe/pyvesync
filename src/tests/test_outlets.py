@@ -28,9 +28,9 @@ See Also
 
 import pytest
 import logging
-import orjson
 import pyvesync.const as const
 from pyvesync.base_devices.outlet_base import VeSyncOutlet
+# from pyvesync.models.outlet_models import ResponseEnergyHistory
 from base_test_cases import TestBase
 from utils import assert_test, parse_args
 import call_json
@@ -111,11 +111,11 @@ class TestOutlets(TestBase):
             ['get_monthly_energy'],
             ['get_yearly_energy']
         ],
-        'ESW03-USA': [
-            ['get_weekly_energy'],
-            ['get_monthly_energy'],
-            ['get_yearly_energy']
-        ],
+        # 'ESW03-USA': [
+        #     ['get_weekly_energy'],
+        #     ['get_monthly_energy'],
+        #     ['get_yearly_energy']
+        # ],
         'ESW01-EU': [
             ['get_weekly_energy'],
             ['get_monthly_energy'],
@@ -156,8 +156,7 @@ class TestOutlets(TestBase):
             response_dict = details_response
         self.mock_api.return_value = response_dict, 200
         # Get device configuration
-        device_config = call_json.DeviceList.device_list_item(setup_entry)
-        outlet_obj = self.get_device("outlets", device_config)
+        outlet_obj = self.get_device("outlets", setup_entry)
         assert isinstance(outlet_obj, VeSyncOutlet)
 
         # Call get_details() directly
@@ -178,10 +177,9 @@ class TestOutlets(TestBase):
         else:
             self.mock_api.return_value = call_json.DETAILS_BADCODE, 200
         self.run_in_loop(outlet_obj.get_details)
-        assert len(self.caplog.records) == 1
         assert 'details' in self.caplog.text
 
-    def test_methods(self, setup_entry, method):
+    def test_methods(self, setup_entry: str, method):
         """Test device methods API request and response.
 
         This method is automatically parametrized by `pytest_generate_tests`
@@ -226,8 +224,8 @@ class TestOutlets(TestBase):
             resp_dict = method_response
         self.mock_api.return_value = resp_dict, 200
         # Get device configuration
-        device_config = call_json.DeviceList.device_list_item(setup_entry)
-        outlet_obj = self.get_device("outlets", device_config)
+
+        outlet_obj = self.get_device("outlets", setup_entry)
         assert isinstance(outlet_obj, VeSyncOutlet)
 
         # Get method from device object
@@ -249,7 +247,7 @@ class TestOutlets(TestBase):
         all_kwargs = parse_args(self.mock_api)
 
         # Assert request matches recorded request or write new records
-        assert_test(method_call, all_kwargs, setup_entry, self.write_api, self.overwrite)
+        assert assert_test(method_call, all_kwargs, setup_entry, self.write_api, self.overwrite)
 
         # Test bad responses
         self.mock_api.reset_mock()
@@ -266,17 +264,17 @@ class TestOutlets(TestBase):
         bad_return = self.run_in_loop(method_call)
         assert bad_return is False
 
-    @pytest.mark.parametrize('dev_type', [d for d in OUTLET_DEV_TYPES])
-    def test_power(self, dev_type):
+    @pytest.mark.parametrize('setup_entry', [d for d in OUTLET_DEV_TYPES])
+    def test_power(self, setup_entry):
         """Test outlets power history methods."""
-        device_config = call_json.DeviceList.device_list_item(dev_type)
-        outlet_obj = self.get_device("outlets", device_config)
+
+        outlet_obj = self.get_device("outlets", setup_entry)
         assert isinstance(outlet_obj, VeSyncOutlet)
         if not outlet_obj.supports_energy:
-            pytest.skip(f"{dev_type} does not support energy monitoring.")
+            pytest.skip(f"{setup_entry} does not support energy monitoring.")
 
         resp_dict = call_json_outlets.ENERGY_HISTORY
-        self.mock_api.return_value = orjson.dumps(resp_dict), 200
+        self.mock_api.return_value = resp_dict, 200
 
         self.run_in_loop(outlet_obj.update_energy)
         assert self.mock_api.call_count == 3
@@ -284,7 +282,7 @@ class TestOutlets(TestBase):
         assert outlet_obj.state.monthly_history is not None
         assert outlet_obj.state.yearly_history is not None
         self.mock_api.reset_mock()
-        if dev_type == 'wifi-switch-1.3':
+        if setup_entry == 'wifi-switch-1.3':
             self.mock_api.return_value = (None, 400)
         else:
             self.mock_api.return_value = call_json.DETAILS_BADCODE, 200

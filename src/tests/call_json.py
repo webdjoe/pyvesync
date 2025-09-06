@@ -1,6 +1,5 @@
 import copy
 from typing import Any
-import orjson
 import pyvesync.const as const
 from defaults import TestDefaults
 from pyvesync.device_map import DeviceMapTemplate
@@ -33,6 +32,8 @@ ALL_DEVICE_MAP_MODULES: list[DeviceMapTemplate] = [
 ALL_DEVICE_MAP_DICT: dict[str, DeviceMapTemplate] = {
     module.setup_entry: module for module in ALL_DEVICE_MAP_MODULES
 }
+"""Contains dictionary of setup_entry: DeviceMapTemplate for all devices."""
+
 
 """
 DEFAULT_BODY = Standard body for new device calls
@@ -370,7 +371,7 @@ class DeviceList:
         model_dict['cid'] = TestDefaults.cid(module.setup_entry)
         model_dict['uuid'] = TestDefaults.uuid(module.setup_entry)
         model_dict['macID'] = TestDefaults.macid(module.setup_entry)
-        model_dict['deviceType'] = module.setup_entry
+        model_dict['deviceType'] = module.dev_types[0]
         if module.setup_entry == 'ESO15-TB':
             model_dict['subDeviceNo'] = 1
         return model_dict
@@ -789,7 +790,7 @@ class DeviceDetails:
 
 
 DETAILS_BADCODE = {
-    "code": 1,
+    "code": 1000,
     "deviceImg": "",
     "activeTime": 1,
     "energy": 1,

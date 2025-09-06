@@ -1,40 +1,41 @@
 get_details:
   headers:
-    accept-language: en
-    accountId: sample_id
-    appVersion: 2.8.6
-    content-type: application/json
-    tk: sample_tk
-    tz: America/New_York
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
-    method: devicedetail
-    mobileId: '1234567890123456'
-    phoneBrand: SM N9005
+    appVersion: 5.6.60
+    cid: ESW15-USA-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: ESW15-USA-CID
+    method: deviceDetail
+    phoneBrand: pyvesync
     phoneOS: Android
     timeZone: America/New_York
     token: sample_tk
     traceId: TRACE_ID
+    userCountryCode: US
     uuid: ESW15-USA-UUID
   method: post
-  url: /15a/v1/device/devicedetail
+  url: /cloud/v1/deviceManaged/deviceDetail
 get_monthly_energy:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 5.6.60
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 5.6.60
     method: energymonth
     mobileId: '1234567890123456'
-    phoneBrand: SM N9005
+    phoneBrand: pyvesync
     phoneOS: Android
     timeZone: America/New_York
     token: sample_tk
@@ -46,17 +47,17 @@ get_weekly_energy:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 5.6.60
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 5.6.60
     method: energyweek
     mobileId: '1234567890123456'
-    phoneBrand: SM N9005
+    phoneBrand: pyvesync
     phoneOS: Android
     timeZone: America/New_York
     token: sample_tk
@@ -68,17 +69,17 @@ get_yearly_energy:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 5.6.60
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 5.6.60
     method: energyyear
     mobileId: '1234567890123456'
-    phoneBrand: SM N9005
+    phoneBrand: pyvesync
     phoneOS: Android
     timeZone: America/New_York
     token: sample_tk
@@ -90,7 +91,7 @@ turn_off:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 5.6.60
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
@@ -107,7 +108,7 @@ turn_off_nightlight:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 5.6.60
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
@@ -124,7 +125,7 @@ turn_on:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 5.6.60
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
@@ -141,7 +142,7 @@ turn_on_nightlight:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 5.6.60
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
@@ -158,17 +159,17 @@ update:
   headers:
     accept-language: en
     accountId: sample_id
-    appVersion: 2.8.6
+    appVersion: 5.6.60
     content-type: application/json
     tk: sample_tk
     tz: America/New_York
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    appVersion: 2.8.6
+    appVersion: 5.6.60
     method: devicedetail
     mobileId: '1234567890123456'
-    phoneBrand: SM N9005
+    phoneBrand: pyvesync
     phoneOS: Android
     timeZone: America/New_York
     token: sample_tk

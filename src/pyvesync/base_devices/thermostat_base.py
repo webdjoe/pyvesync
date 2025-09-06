@@ -37,6 +37,7 @@ class ThermostatState(DeviceState):
         details (ResponseDeviceDetailsModel): The thermostat device details.
         feature_map (ThermostatMap): The thermostat feature map.
     """
+
     __slots__ = (
         "alert_status",
         "configuration",
@@ -185,22 +186,22 @@ class VeSyncThermostat(VeSyncBaseDevice):
         return await self.set_fan_mode(ThermostatConst.FanMode.ON)
 
     async def get_configuration(self) -> None:
-        """Retrieves configuration from API."""
+        """Retrieve configuration from API."""
         _LOGGER.debug("get configuration not implemented for %s", self.device_type)
 
     async def set_temp_point(self, temperature: float) -> bool:
-        """Sets the temperature point."""
+        """Set the temperature point."""
         del temperature
         _LOGGER.debug("set temp point not implemented for %s", self.device_type)
         return False
 
     async def cancel_hold(self) -> bool:
-        """Cancels the scheduled hold."""
+        """Cancel the scheduled hold."""
         _LOGGER.debug("cancel hold not implemented for %s", self.device_type)
         return False
 
     async def set_cool_to_temp(self, temperature: float) -> bool:
-        """Sets the cool to temperature.
+        """Set the cool to temperature.
 
         Args:
             temperature (float): The cool to temperature.
