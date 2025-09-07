@@ -15,6 +15,7 @@ from pyvesync.models.bypass_models import (
 @dataclass
 class TowerFanResult(BypassV2InnerResult):
     """Tower Fan Result Model."""
+
     powerSwitch: int
     workMode: str
     manualSpeedLevel: int
@@ -36,6 +37,7 @@ class TowerFanResult(BypassV2InnerResult):
 @dataclass
 class FanSleepPreferences(DataClassORJSONMixin):
     """Fan Sleep Preferences."""
+
     sleepPreferenceType: str
     oscillationSwitch: int
     fallAsleepRemain: int

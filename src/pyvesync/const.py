@@ -55,6 +55,8 @@ BYPASS_HEADER_UA = "okhttp/3.12.1"
 TERMINAL_ID = '2' + str(uuid4()).replace('-', '')
 CLIENT_TYPE = "vesyncApp"
 
+STATUS_OK = 200
+
 
 # Generic Constants
 
@@ -290,6 +292,7 @@ class NightlightModes(StrEnum):
         AUTO: Nightlight is in auto mode.
         UNKNOWN: Nightlight status is unknown.
     """
+
     ON = "on"
     OFF = "off"
     DIM = "dim"
@@ -419,6 +422,7 @@ class PurifierAutoPreference(StrEnum):
         QUIET: Quiet preference level.
         UNKNOWN: Unknown preference level.
     """
+
     DEFAULT = "default"
     EFFICIENT = "efficient"
     QUIET = "quiet"

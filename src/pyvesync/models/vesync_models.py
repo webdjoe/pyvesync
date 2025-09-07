@@ -25,6 +25,7 @@ from pyvesync.models.base_models import (
 @dataclass
 class RequestGetTokenModel(RequestBaseModel):
     """Request model for requesting auth token (used for login)."""
+
     # Arguments to set
     email: str
     method: str
@@ -62,6 +63,7 @@ class RespGetTokenResultModel(ResponseBaseModel):
 
     This class is referenced by the `ResponseAuthModel` class.
     """
+
     accountID: str
     authorizeCode: str
 
@@ -69,6 +71,7 @@ class RespGetTokenResultModel(ResponseBaseModel):
 @dataclass
 class RequestLoginTokenModel(RequestBaseModel):
     """Request model for login."""
+
     # Arguments to set
     method: str
     authorizeCode: str | None
@@ -106,44 +109,13 @@ class RespLoginTokenResultModel(ResponseBaseModel):
 
     This class is referenced by the `ResponseLoginModel` class.
     """
+
     accountID: str
     acceptLanguage: str
     countryCode: str
     token: str
     bizToken: str = ''
     currentRegion: str = ''
-
-
-# @dataclass
-# class ResponseAuthModel(ResponseCodeModel):
-#     """Model for the auth response.
-
-#     Inherits from `BaseResultModel`. The `BaseResultModel` class provides the
-#     defaults "code" and "msg" fields for the response.
-
-#     Attributes:
-#         result: ResponseAuthResultModel
-#             The inner model for the 'result' field in the auth response.
-
-#     Examples:
-#         ```python
-#         a = {
-#             "code": 0,
-#             "msg": "success",
-#             "stacktrace": null,
-#             "module": null,
-#             "traceId": "123456",
-#             "result": {
-#                 "accountID": "123456",
-#                 "authorizeCode": "abcdef1234567890"
-#             }
-#         }
-#         b = ResponseAuthModel.from_dict(a)
-#         account_id = b.result.accountId
-#         authorizeCode = b.result.authorizeCode
-#         ```
-#     """
-#     result: IntRespAuthResultModel
 
 
 @dataclass
@@ -177,12 +149,14 @@ class ResponseLoginModel(ResponseCodeModel):
         token = b.result.token
         ```
     """
+
     result: RespLoginTokenResultModel | RespGetTokenResultModel
 
 
 @dataclass
 class RequestDeviceListModel(RequestBaseModel):
     """Model for the device list request."""
+
     token: str
     accountID: str
     timeZone: str = DefaultValues.timeZone
@@ -220,6 +194,7 @@ class ResponseDeviceDetailsModel(ResponseBaseModel):
     fields. This model flattens those fields into the `deviceStatus` and
     `connectionStatus` fields before deserialization.
     """
+
     deviceRegion: str
     isOwner: bool
     deviceName: str
@@ -265,6 +240,7 @@ class InternalDeviceListResult(ResponseBaseModel):
     Notes:
       Used by the `ResponseDeviceListModel` class to populate result field.
     """
+
     total: int
     pageSize: int
     pageNo: int
@@ -288,6 +264,7 @@ class ResponseDeviceListModel(ResponseCodeModel):
         See the `DeviceListResultModel` and `DeviceListDeviceModel` classes for
         the inner model of the 'result' field.
     """
+
     module: str | None
     stacktrace: str | None
     result: InternalDeviceListResult
@@ -300,6 +277,7 @@ class InternalDeviceListExtension(ResponseBaseModel):
     Used by the `InnerRespDeviceListDevModel` class to populate
     the extension field in the device list response.
     """
+
     airQuality: None | int
     airQualityLevel: None | int
     mode: None | str
@@ -309,6 +287,7 @@ class InternalDeviceListExtension(ResponseBaseModel):
 @dataclass
 class RequestPID(RequestBaseModel):
     """Model for the PID request."""
+
     method: str
     appVersion: str
     phoneBrand: str
@@ -324,6 +303,7 @@ class RequestPID(RequestBaseModel):
 @dataclass
 class RequestFirmwareModel(RequestBaseModel):
     """Model for the firmware request."""
+
     accountID: str
     timeZone: str
     token: str
@@ -341,12 +321,14 @@ class RequestFirmwareModel(RequestBaseModel):
 @dataclass
 class ResponseFirmwareModel(ResponseCodeModel):
     """Model for the firmware response."""
+
     result: FirmwareResultModel
 
 
 @dataclass
 class FirmwareUpdateInfoModel(ResponseBaseModel):
     """Firmware update information model."""
+
     currentVersion: str
     latestVersion: str
     releaseNotes: str
@@ -357,6 +339,7 @@ class FirmwareUpdateInfoModel(ResponseBaseModel):
 @dataclass
 class FirmwareDeviceItemModel(ResponseBaseModel):
     """Model for the firmware device item in the firmware response."""
+
     deviceCid: str
     deviceName: str
     code: int
@@ -367,4 +350,5 @@ class FirmwareDeviceItemModel(ResponseBaseModel):
 @dataclass
 class FirmwareResultModel(ResponseBaseModel):
     """Model for the firmware response result."""
+
     cidFwInfoList: list[FirmwareDeviceItemModel]

@@ -191,7 +191,7 @@ class VeSyncSwitch(VeSyncBaseToggleDevice):
             green: int | None = None,
             blue: int | None = None
     ) -> bool:
-        """Sets the backlight status and optionally its color if supported by the device.
+        """Set the backlight status and optionally its color if supported by the device.
 
         Args:
             status (bool): Backlight status (True for ON, False for OFF).
@@ -261,10 +261,10 @@ class VeSyncSwitch(VeSyncBaseToggleDevice):
 
     @deprecated("Use `turn_on_indicator_light` instead.")
     async def turn_indicator_light_on(self) -> bool:
-        """Deprecated, use turn_on_indicator_light."""
+        """Deprecated - use turn_on_indicator_light."""
         return await self.toggle_indicator_light(True)
 
     @deprecated("Use `turn_off_indicator_light` instead.")
     async def turn_indicator_light_off(self) -> bool:
-        """Deprecated, use turn_off_indicator_light."""
+        """Deprecated - use turn_off_indicator_light."""
         return await self.toggle_indicator_light(False)

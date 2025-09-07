@@ -55,9 +55,7 @@ class VeSyncTowerFan(BypassV2Mixin, VeSyncFanBase):
                 self.state.timer = Timer(res.timerRemain, action="on")
         if res.sleepPreference is None:
             return
-        self.state.sleep_preference_type = DeviceStatus.from_int(
-            res.sleepPreference.sleepPreferenceType
-            )
+        self.state.sleep_preference_type = res.sleepPreference.sleepPreferenceType
         self.state.sleep_fallasleep_remain = DeviceStatus.from_int(
             res.sleepPreference.fallAsleepRemain
             )

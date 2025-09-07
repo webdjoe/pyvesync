@@ -15,12 +15,14 @@ from pyvesync.models.base_models import ResponseCodeModel, ResponseBaseModel
 @dataclass
 class ResponseSwitchDetails(ResponseCodeModel):
     """Dimmer and Wall Switch Details Response Dict."""
+
     result: InternalDimmerDetailsResult | InternalSwitchResult | None = None
 
 
 @dataclass
 class InternalSwitchResult(ResponseBaseModel):
     """Dimmer Status Response Dict."""
+
     deviceStatus: str
     connectionStatus: str
     activeTime: int
@@ -29,6 +31,7 @@ class InternalSwitchResult(ResponseBaseModel):
 @dataclass
 class InternalDimmerDetailsResult(ResponseBaseModel):
     """Dimmer Details Result Dict."""
+
     devicename: str
     brightness: int
     indicatorlightStatus: str
@@ -45,6 +48,7 @@ class InternalDimmerDetailsResult(ResponseBaseModel):
 @dataclass
 class DimmerRGB:
     """Dimmer RGB Color Dict."""
+
     red: int
     green: int
     blue: int
@@ -61,6 +65,7 @@ class RequestSwitchBase(RequestBypassV1):
 @dataclass
 class RequestDimmerBrightness(RequestBypassV1):
     """Dimmer Status Request Dict."""
+
     brightness: str
 
 
@@ -72,6 +77,7 @@ class RequestDimmerDetails(RequestBypassV1):
 @dataclass
 class RequestSwitchStatus(RequestBypassV1):
     """Dimmer Details Request Dict."""
+
     status: str
     switchNo: int
 
@@ -79,11 +85,13 @@ class RequestSwitchStatus(RequestBypassV1):
 @dataclass
 class RequestDimmerStatus(RequestBypassV1):
     """Dimmer Status Request Dict."""
+
     status: str
     rgbValue: dict | None = None
 
     class Config(BaseConfig):  # type: ignore[override]
         """Dimmer Indicator Control Config Dict."""
+
         omit_none = True
         omit_default = True
         orjson_options = orjson.OPT_NON_STR_KEYS

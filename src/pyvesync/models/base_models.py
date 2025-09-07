@@ -48,6 +48,7 @@ RequestHeaders = {
 
 class BaseModelConfig(BaseConfig):
     """Base config for dataclasses."""
+
     orjson_options = orjson.OPT_NON_STR_KEYS
 
 
@@ -60,6 +61,7 @@ class RequestBaseModel(DataClassORJSONMixin):
 
     class Config(BaseModelConfig):
         """orjson config for dataclasses."""
+
         forbid_extra_keys = True
         orjson_options = orjson.OPT_NON_STR_KEYS
 
@@ -74,6 +76,7 @@ class ResponseBaseModel(DataClassORJSONMixin):
 
     class Config(BaseConfig):
         """Config for dataclasses."""
+
         orjson_options = orjson.OPT_NON_STR_KEYS
         forbid_extra_keys = False
 
@@ -85,6 +88,7 @@ class DefaultValues:
     Attributes for the default values of the request fields
     and static methods for preparing calculated fields.
     """
+
     _call_number: ClassVar[int] = 0
     userType: str = USER_TYPE
     appVersion: str = APP_VERSION
@@ -116,6 +120,7 @@ class DefaultValues:
 @dataclass
 class ResponseCodeModel(ResponseBaseModel):
     """Model for the 'result' field in response."""
+
     traceId: str
     code: int
     msg: str | None

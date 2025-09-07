@@ -269,7 +269,10 @@ class LibraryLogger:
             msg += f"Invalid field value: {exc.field_name} of type {exc.field_type_name}"
         elif isinstance(exc, UnserializableField):
             msg += f"Unserializable field: {exc.field_name} of type {exc.field_type_name}"
-        msg += "\n\n Please resport this issue to https://github.com/webdjoe/pyvesync/issues"
+        msg += (
+            "\n\n Please report this issue to"
+            "https://github.com/webdjoe/pyvesync/issues"
+        )
         logger.warning(msg)
         if not cls.debug:
             return

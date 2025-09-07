@@ -237,8 +237,9 @@ class TestBulbs(TestBase):
         all_kwargs = parse_args(self.mock_api)
 
         # Assert request matches recored request or write new records
-        assert_test(method_call, all_kwargs, setup_entry,
-                    self.write_api, self.overwrite)
+        assert assert_test(
+            method_call, all_kwargs, setup_entry, self.write_api, self.overwrite
+        )
 
     def _assert_color(self, bulb_obj):
         assert math.isclose(bulb_obj.color_rgb.red, DEFAULT_COLOR.rgb.red, rel_tol=1)

@@ -12,6 +12,7 @@ from pyvesync.models.bypass_models import BypassV2InnerResult
 @dataclass
 class ResultThermostatDetails(BypassV2InnerResult):
     """Result model for thermostat details."""
+
     supportMode: list[int]
     workMode: int
     workStatus: int
@@ -36,6 +37,7 @@ class ResultThermostatDetails(BypassV2InnerResult):
 @dataclass
 class ThermostatSimpleRoutine(DataClassORJSONMixin):
     """Thermostat routine model."""
+
     name: str
     routineId: int
 
@@ -43,6 +45,7 @@ class ThermostatSimpleRoutine(DataClassORJSONMixin):
 @dataclass
 class ThermostatRoutine(DataClassORJSONMixin):
     """Model for full thermostat routine."""
+
     name: str
     routineId: int
     type: int
@@ -57,6 +60,7 @@ class ThermostatRoutine(DataClassORJSONMixin):
 @dataclass
 class ThermostatMinorDetails(DataClassORJSONMixin):
     """Model for thermostat minor details."""
+
     mcu_version: str = field(metadata=field_options(alias="mcuVersion"))
     hvac_capacity: int = field(metadata=field_options(alias="hvacCapcity"))
     timestamp: int = field(metadata=field_options(alias="timeStamp"))
@@ -88,6 +92,7 @@ class ThermostatMinorDetails(DataClassORJSONMixin):
 @dataclass
 class ThermostatReminder(DataClassORJSONMixin):
     """Model for thermostat reminder."""
+
     code: int
     enabled: bool
     frequency: int
@@ -97,7 +102,9 @@ class ThermostatReminder(DataClassORJSONMixin):
     )
 
     @classmethod
-    def __post_deserialize__(cls, obj: ThermostatReminder) -> ThermostatReminder:  # type: ignore[override]
+    def __post_deserialize__(  # type: ignore[override]
+        cls, obj: ThermostatReminder
+    ) -> ThermostatReminder:
         """Post-deserialization processing."""
         if isinstance(obj.code, int):
             obj.code_name = ThermostatConst.ReminderCode(obj.code).name
@@ -107,6 +114,7 @@ class ThermostatReminder(DataClassORJSONMixin):
 @dataclass
 class ThermostatAlarm(DataClassORJSONMixin):
     """Model for thermostat alarm."""
+
     code: int
     enabled: bool
     code_name: str | None = None
@@ -115,7 +123,9 @@ class ThermostatAlarm(DataClassORJSONMixin):
     )
 
     @classmethod
-    def __post_deserialize__(cls, obj: ThermostatAlarm) -> ThermostatAlarm:  # type: ignore[override]
+    def __post_deserialize__(   # type: ignore[override]
+        cls, obj: ThermostatAlarm
+    ) -> ThermostatAlarm:
         """Post-deserialization processing."""
         if obj.code is not None:
             obj.code_name = ThermostatConst.AlarmCode(obj.code).name

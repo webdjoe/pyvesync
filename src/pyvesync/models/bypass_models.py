@@ -25,6 +25,7 @@ class RequestBypassV2(RequestBaseModel):
     This is the bypassV2 request model for API calls
     that use the `configModel` and `deviceId` fields.
     """
+
     acceptLanguage: str
     accountID: str
     appVersion: str
@@ -46,6 +47,7 @@ class RequestBypassV2(RequestBaseModel):
 @dataclass
 class BypassV2RequestPayload(RequestBaseModel):
     """Generic Bypass V2 Payload Request model."""
+
     data: dict
     method: str
     source: str = "APP"
@@ -58,6 +60,7 @@ class RequestBypassV1(RequestBaseModel):
     This is the bypassV1 request model for API calls
     that use the `configModel` and `deviceId` fields.
     """
+
     acceptLanguage: str
     accountID: str
     appVersion: str
@@ -77,6 +80,7 @@ class RequestBypassV1(RequestBaseModel):
 
     class Config(BaseConfig):   # type: ignore[override]
         """Configure omit None value keys."""
+
         omit_none = True
         orjson_options = orjson.OPT_NON_STR_KEYS
         forbid_extra_keys = True
@@ -85,6 +89,7 @@ class RequestBypassV1(RequestBaseModel):
 @dataclass
 class ResponseBypassV1(ResponseCodeModel):
     """Bypass V1 Response Dict."""
+
     result: BypassV1Result | None = field(
         default=None,
         metadata={
@@ -106,6 +111,7 @@ class ResponseBypassV2(ResponseCodeModel):
     This is the bypassV2 response model for API calls
     that use the `configModel` and `deviceId` fields.
     """
+
     result: BypassV2OuterResult | None = None
 
 
@@ -115,6 +121,7 @@ class BypassV2InnerResult(DataClassORJSONMixin):
 
     class Config(BaseModelConfig):
         """Configure the Outer Result model."""
+
         allow_deserialization_not_by_alias = True
 
 
@@ -133,24 +140,28 @@ class BypassV2OuterResult(DataClassORJSONMixin):
 
     class Config(BaseModelConfig):
         """Configure the Outer Result model."""
+
         allow_deserialization_not_by_alias = True
 
 
 @dataclass
 class BypassV2ResultError(DataClassORJSONMixin):
     """Bypass V2 Result Error Data Model."""
+
     msg: str
 
 
 @dataclass
 class ResultV2GetTimer(BypassV2InnerResult):
     """Inner result for Bypass V2 GetTimer method."""
+
     timers: list[TimerItemV2] | None = None
 
 
 @dataclass
 class ResultV2SetTimer(BypassV2InnerResult):
     """Result for Bypass V2 SetTimer method."""
+
     id: int
 
 
@@ -159,6 +170,7 @@ class ResultV2SetTimer(BypassV2InnerResult):
 @dataclass
 class TimeItemV1(ResponseBaseModel):
     """Data model for Bypass V1 Timers."""
+
     timerID: str
     counterTime: str
     action: str
@@ -170,6 +182,7 @@ class TimeItemV1(ResponseBaseModel):
 @dataclass
 class TimerItemV1(ResponseBaseModel):
     """Data model for Bypass V1 Timers."""
+
     timerID: str
     counterTimer: str
     action: str
@@ -180,6 +193,7 @@ class TimerItemV1(ResponseBaseModel):
 @dataclass
 class TimerItemV2(ResponseBaseModel):
     """Data model for Bypass V2 Timers."""
+
     id: int
     remain: int
     action: str
@@ -189,6 +203,7 @@ class TimerItemV2(ResponseBaseModel):
 @dataclass
 class ResultV1SetTimer(BypassV1Result):
     """Result model for setting Bypass V1 API timer."""
+
     timerID: str
     conflictTimerIds: list[str] | None = None
 
@@ -196,6 +211,7 @@ class ResultV1SetTimer(BypassV1Result):
 @dataclass
 class RequestV1ClearTimer(RequestBypassV1):
     """Request model for clearing Bypass V1 API outlet timer."""
+
     timerId: str
     status: str | None = None
 
@@ -203,12 +219,14 @@ class RequestV1ClearTimer(RequestBypassV1):
 @dataclass
 class ResultV1GetTimerList(BypassV1Result):
     """Get timers result for v1 API."""
+
     timers: list[TimeItemV1] | list[TimerItemV1] | TimerItemV1 | None = None
 
 
 @dataclass
 class RequestV1SetTime(RequestBypassV1):
     """Request model for setting timer with counterTime."""
+
     counterTime: str
     action: str
     status: str | None = None
@@ -218,6 +236,7 @@ class RequestV1SetTime(RequestBypassV1):
 @dataclass
 class RequestV1GetTimer(RequestBypassV1):
     """Request model for getting timers from v1 API."""
+
     switchNo: str | None = None
 
 
@@ -230,6 +249,7 @@ class RequestV1SetTimer(RequestBypassV1):
         action (str): The action to perform (e.g., "on", "off").
         switchNo (int | None): The switch number for the timer.
     """
+
     counterTimer: str
     action: str
     switchNo: int | None = None
@@ -251,6 +271,7 @@ class TimerModels:
         RequestV1GetTimer (RequestV1GetTimer): Model for getting timers from v1 API.
         RequestV1SetTime (RequestV1SetTime): Model for setting timer with counterTime key.
     """
+
     ResultV2GetTimer = ResultV2GetTimer
     ResultV2SetTimer = ResultV2SetTimer
     ResultV1SetTimer = ResultV1SetTimer

@@ -22,12 +22,14 @@ from pyvesync.models.base_models import (
 @dataclass
 class ResponseHumidifierBase(ResponseCodeModel):
     """Humidifier Base Response Dict."""
+
     result: OuterHumidifierResult
 
 
 @dataclass
 class OuterHumidifierResult(ResponseBaseModel):
     """Humidifier Result Dict."""
+
     code: int
     result: InnerHumidifierBaseResult
 
@@ -42,12 +44,14 @@ class InnerHumidifierBaseResult(ResponseBaseModel):
 
     class Config(BaseConfig):  # type: ignore[override]
         """Configure the results model to use subclass discriminator."""
+
         # discriminator = Discriminator(include_subtypes=True)
         allow_deserialization_not_by_alias = True
 
 
 class BypassV2InnerErrorResult(InnerHumidifierBaseResult):
     """Inner Error Result Model."""
+
     msg: str
 
 # Inner Result models for individual devices inherit from InnerHumidifierBaseResult
@@ -61,6 +65,7 @@ class ClassicLVHumidResult(InnerHumidifierBaseResult):
 
     Inherits from InnerHumidifierBaseResult.
     """
+
     enabled: bool
     mist_virtual_level: int
     mist_level: int
@@ -87,6 +92,7 @@ class ClassicConfig(ResponseBaseModel):
 
     class Config(BaseConfig):  # type: ignore[override]
         """Configure the results model to use subclass discriminator."""
+
         allow_deserialization_not_by_alias = True
         forbid_extra_keys = False
 
@@ -94,6 +100,7 @@ class ClassicConfig(ResponseBaseModel):
 @dataclass
 class LV600SConfig(ResponseBaseModel):
     """LV 600S Humidifier Configuration Model."""
+
     auto_target_humidity: int = 0
     display: bool = False
 
@@ -101,6 +108,7 @@ class LV600SConfig(ResponseBaseModel):
 @dataclass
 class LV600SExtension(ResponseBaseModel):
     """LV 600S Humidifier Configuration Model."""
+
     timer_remain: int = 0
     schedule_count: int = 0
 
@@ -111,6 +119,7 @@ class LV600SHumidResult(InnerHumidifierBaseResult):
 
     Inherits from InnerHumidifierBaseResult.
     """
+
     automatic_stop_reach_target: bool
     display: bool
     enabled: bool
@@ -133,6 +142,7 @@ class Superior6000SResult(InnerHumidifierBaseResult):
 
     Inherits from InnerHumidifierBaseResult.
     """
+
     powerSwitch: int
     humidity: int
     targetHumidity: int
@@ -158,6 +168,7 @@ class Superior6000SResult(InnerHumidifierBaseResult):
 @dataclass
 class Superior6000SDryingMode(ResponseBaseModel):
     """Drying Mode Model for Superior 6000S Humidifier."""
+
     dryingLevel: int
     autoDryingSwitch: int
     dryingState: int
@@ -169,6 +180,7 @@ class Superior6000SDryingMode(ResponseBaseModel):
 @dataclass
 class Levoit1000SResult(InnerHumidifierBaseResult):
     """Levoit 1000S Humidifier Result Model."""
+
     powerSwitch: int
     humidity: int
     targetHumidity: int

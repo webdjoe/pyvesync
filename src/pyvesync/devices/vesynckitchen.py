@@ -122,6 +122,10 @@ class AirFryer158138State(FryerState):
         'cook_status',
         'current_temp',
         'last_timestamp',
+        'max_temp_c',
+        'max_temp_f',
+        'min_temp_c',
+        'min_temp_f',
         'preheat',
         'preheat_last_time',
         'preheat_set_time',
@@ -134,6 +138,10 @@ class AirFryer158138State(FryerState):
         super().__init__(device, details, feature_map)
         self.device: VeSyncFryer = device
         self.features: list[str] = feature_map.features
+        self.min_temp_f: int = feature_map.temperature_range_f[0]
+        self.max_temp_f: int = feature_map.temperature_range_f[1]
+        self.min_temp_c: int = feature_map.temperature_range_c[0]
+        self.max_temp_c: int = feature_map.temperature_range_c[1]
         self.ready_start: bool = False
         self.preheat: bool = False
         self.cook_status: str | None = None
@@ -164,7 +172,7 @@ class AirFryer158138State(FryerState):
     @temp_unit.setter
     def temp_unit(self, temp_unit: str) -> None:
         """Set temperature unit."""
-        if temp_unit.lower() in ['f', 'fahrenheit']:
+        if temp_unit.lower() in ['f', 'fahrenheit', "fahrenheight"]:  # API TYPO
             self._temp_unit = 'fahrenheit'
         elif temp_unit.lower() in ['c', 'celsius']:
             self._temp_unit = 'celsius'
@@ -257,7 +265,9 @@ class AirFryer158138State(FryerState):
                 self.cook_set_time = cook.get('cookSetTime', self.cook_set_time)
                 self.cook_set_temp = cook.get('cookSetTemp', self.cook_set_temp)
                 self.current_temp = cook.get('currentTemp', self.current_temp)
-                self.temp_unit = cook.get('tempUnit', self.temp_unit)
+                self.temp_unit = cook.get(
+                    "tempUnit", self.temp_unit
+                )  # type: ignore[assignment]
             elif cook.get('cookStatus') == 'end':
                 self.set_standby()
                 self.cook_status = 'cookEnd'
@@ -303,7 +313,9 @@ class AirFryer158138State(FryerState):
         self.current_temp = return_status.get('curentTemp')
         self.cook_set_temp = return_status.get('targetTemp',
                                                return_status.get('cookSetTemp'))
-        self.temp_unit = return_status.get('tempUnit', self.temp_unit)  # Always keep set
+        self.temp_unit = return_status.get(
+            "tempUnit", self.temp_unit
+        )  # type: ignore[assignment]
         self.preheat_set_time = return_status.get('preheatSetTime')
         self.preheat_last_time = return_status.get('preheatLastTime')
 
@@ -523,12 +535,12 @@ class VeSyncAirFryer158(VeSyncFryer):
 
     def _validate_temp(self, set_temp: int) -> bool:
         """Temperature validation."""
-        if self.state.temp_unit == 'fahrenheight' and \
-                (set_temp < 200 or set_temp > 400):  # This is API spelling error
+        if self.state.temp_unit == 'fahrenheit' and \
+                (set_temp < self.state.min_temp_f or set_temp > self.state.max_temp_f):
             logger.debug('Invalid temperature %s for %s', set_temp, self.device_name)
             return False
         if self.state.temp_unit == 'celsius' and \
-                (set_temp < 75 or set_temp > 205):
+                (set_temp < self.state.min_temp_c or set_temp > self.state.max_temp_c):
             logger.debug('Invalid temperature %s for %s', set_temp, self.device_name)
             return False
         return True
@@ -597,22 +609,6 @@ class VeSyncAirFryer158(VeSyncFryer):
     async def update(self) -> None:
         """Update the device details."""
         await self.get_details()
-
-    @staticmethod
-    def fryer_code_check(code: str | int) -> str | None:
-        """Return the code description."""
-        if isinstance(code, str):
-            try:
-                code = int(code)
-            except ValueError:
-                return None
-        if code == 11903000:
-            return 'Error pausing, air fryer is not cooking.'
-        if code == 11902000:
-            return 'Error setting cook mode, air fryer is already cooking'
-        if str(abs(code))[0:5] == 11300:
-            return 'Air fryer is offline'
-        return None
 
     @property
     def _cmd_api_base(self) -> dict:

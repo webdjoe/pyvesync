@@ -33,6 +33,7 @@ class RequestHomeModel(RequestBaseModel):
     VeSync instance. The `VeSync` instance is passed as a
     keyword argument `RequestHomeModel(manager=instance)`.
     """
+
     # Arguments set by Manager Instance by passing kw_argument manager
     # these fields should be set to init=False
     accountID: str
@@ -61,6 +62,7 @@ class ResponseHomeModel(ResponseCodeModel):
     Attributes:
         result: dict: The home data.
     """
+
     result: IntResponseHomeResultModel | IntResponseHomeInfoResultModel | None
 
 
@@ -72,6 +74,7 @@ class RequestHomeInfoModel(RequestBaseModel):
     VeSync instance. The `VeSync` instance is passed as a
     keyword argument `RequestHomeModel(manager=instance)`.
     """
+
     # argument to pass in as positional or keyword argument homeId
     homeId: str
     # Arguments set by Manager Instance by passing kw_argument manager
@@ -102,18 +105,21 @@ class ResponseHomeInfoModel(ResponseCodeModel):
     Attributes:
         result: dict: The home room data.
     """
+
     result: IntResponseHomeInfoResultModel
 
 
 @dataclass
 class IntResponseHomeInfoResultModel:
     """Internal model for the 'result' field in home room response."""
+
     roomInfoList: list[IntResponseHomeListModel]
 
 
 @dataclass
 class IntResponseRoomListModel:
     """Internal model for the 'roomList' field in home response."""
+
     roomID: str
     roomName: str
     deviceList: list[IntResponseRoomDeviceListModel]
@@ -125,6 +131,7 @@ class IntResponseRoomListModel:
 @dataclass
 class IntResponseRoomDeviceListModel:
     """Internal model for the device list in room response."""
+
     logicalDeviceType: int
     virDeviceType: int
     cid: str
@@ -147,12 +154,14 @@ class IntResponseRoomDeviceListModel:
 @dataclass
 class IntResponseHomeResultModel:
     """Internal model for the 'result' field in home response."""
+
     homeList: list[IntResponseHomeListModel]
 
 
 @dataclass
 class IntResponseHomeListModel:
     """Internal model for the 'homeList' field in home response result."""
+
     homeId: int
     homeName: str
     nickname: str | None = None

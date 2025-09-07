@@ -6,7 +6,7 @@ from typing_extensions import deprecated
 
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseToggleDevice, DeviceState
 from pyvesync.utils.colors import HSV, RGB, Color
-from pyvesync.utils.helpers import Converters, Validators, NUMERIC_STRICT
+from pyvesync.utils.helpers import Converters, Validators
 from pyvesync.const import BulbFeatures
 
 if TYPE_CHECKING:
@@ -104,11 +104,12 @@ class BulbState(DeviceState):
         return None
 
     @hsv.setter
-    def hsv(
-        self, hue: NUMERIC_STRICT, saturation: NUMERIC_STRICT, value: NUMERIC_STRICT
-            ) -> None:
+    def hsv(self, hsv_object: HSV | None) -> None:
         """Set color property with HSV values."""
-        self._color = Color.from_hsv(hue, saturation, value)
+        if hsv_object is None:
+            self._color = None
+            return
+        self._color = Color(hsv_object)
 
     @property
     def rgb(self) -> RGB | None:
@@ -118,9 +119,12 @@ class BulbState(DeviceState):
         return None
 
     @rgb.setter
-    def rgb(self, red: float, green: float, blue: float) -> None:
+    def rgb(self, rgb_object: RGB | None) -> None:
         """Set color property with RGB values."""
-        self._color = Color.from_rgb(red, green, blue)
+        if rgb_object is None:
+            self._color = None
+            return
+        self._color = Color(rgb_object)
 
     @property
     def brightness(self) -> int | None:
@@ -240,14 +244,12 @@ class VeSyncBulb(VeSyncBaseToggleDevice[BulbState]):
         Returns:
             bool: True if successful, False otherwise.
         """
+        del hue, saturation, value
         if not self.supports_multicolor:
             logger.debug("Color mode is not supported on this bulb.")
-            return False
-        new_color = Color.from_hsv(hue, saturation, value)
-        if new_color is None:
-            logger.warning("Invalid color value")
-            return False
-        return await self.set_hsv(*new_color.rgb.to_tuple())
+        else:
+            logger.debug("set_hsv not configured for %s bulb", self.device_type)
+        return False
 
     async def set_rgb(self, red: float, green: float, blue: float) -> bool:
         """Set RGB if supported by bulb.
@@ -260,14 +262,12 @@ class VeSyncBulb(VeSyncBaseToggleDevice[BulbState]):
         Returns:
             bool: True if successful, False otherwise.
         """
+        del red, green, blue
         if not self.supports_multicolor:
             logger.debug("Color mode is not supported on this bulb.")
-            return False
-        new_color = Color.from_rgb(red, green, blue)
-        if new_color is None:
-            logger.warning("Invalid color value")
-            return False
-        return await self.set_hsv(*new_color.hsv.to_tuple())
+        else:
+            logger.debug("set_rgb not configured for %s bulb", self.device_type)
+        return False
 
     async def set_brightness(self, brightness: int) -> bool:
         """Set brightness if supported by bulb.
@@ -281,22 +281,6 @@ class VeSyncBulb(VeSyncBaseToggleDevice[BulbState]):
         del brightness
         logger.warning("Brightness not supported/configured by this bulb")
         return False
-
-    @property
-    @deprecated("Access state in `self.state` attribute, use `self.state.rgb`")
-    def color_value_rgb(self) -> RGB | None:
-        """DEPRECATED....use `self.state.rgb`."""
-        if self.state.color is not None:
-            return self.state.color.rgb
-        return None
-
-    @property
-    @deprecated("Access state in `self.state` attribute, use `self.state.hsv`")
-    def color_value_hsv(self) -> HSV | None:
-        """DEPRECATED....use `self.state.hsv`."""
-        if self.state.color is not None:
-            return self.state.color.hsv
-        return None
 
     async def set_color_temp(self, color_temp: int) -> bool:
         """Set color temperature if supported by bulb.

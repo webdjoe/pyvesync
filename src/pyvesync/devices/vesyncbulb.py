@@ -631,7 +631,7 @@ class VeSyncBulbESL100CW(BypassV1Mixin, VeSyncBulb):
         "toggle() is deprecated, use toggle_switch(toggle: bool | None = None) instead"
         )
     async def toggle(self, status: str) -> bool:
-        """Deprecated, use toggle_switch() instead."""
+        """Deprecated - use toggle_switch()."""
         status_bool = status == DeviceStatus.ON
         return await self.toggle_switch(status_bool)
 
@@ -843,7 +843,7 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
         ]
 
     def _payload_base(self) -> bulb_models.ValcenoStatusPayload:
-        """The payload dict for set status request.
+        """Return the payload base for the set status request.
 
         Avoid duplicating code and ensure that the payload dict is
         reset to its default state before each request.
@@ -977,7 +977,7 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
         "toggle() is deprecated, use toggle_switch(toggle: bool | None = None) instead"
         )
     async def toggle(self, status: str) -> bool:
-        """Deprecated, use toggle_switch() instead."""
+        """Deprecated - use toggle_switch()."""
         status_bool = status == DeviceStatus.ON
         return await self.toggle_switch(status_bool)
 

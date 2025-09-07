@@ -625,7 +625,7 @@ class VeSyncOutdoorPlug(BypassV1Mixin, VeSyncOutlet):
 
     @deprecated("Use toggle_switch(toggle: bool | None) instead")
     async def toggle(self, status: str) -> bool:
-        """Deprecated, use toggle_switch() instead."""
+        """Deprecated - use toggle_switch()."""
         toggle = status != DeviceStatus.ON
         return await self.toggle_switch(toggle)
 

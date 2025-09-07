@@ -29,12 +29,14 @@ class InnerPurifierBaseResult(BypassV2InnerResult):
 
     class Config(BaseConfig):  # type: ignore[override]
         """Configure the results model to use subclass discriminator."""
+
         discriminator = Discriminator(include_subtypes=True)
 
 
 @dataclass
 class PurifierV2DetailsResult(InnerPurifierBaseResult):
     """Vital 100S/200S and Everest Purifier Result Model."""
+
     powerSwitch: int
     filterLifePercent: int
     workMode: str
@@ -62,6 +64,7 @@ class PurifierV2DetailsResult(InnerPurifierBaseResult):
 @dataclass
 class VitalAutoPreferences:
     """Vital 100S/200S Auto Preferences."""
+
     autoPreferenceType: str
     roomSize: int
 
@@ -69,6 +72,7 @@ class VitalAutoPreferences:
 @dataclass
 class PurifierCoreDetailsResult(InnerPurifierBaseResult):
     """Purifier inner Result Dict."""
+
     enabled: bool
     filter_life: int
     mode: str
@@ -91,18 +95,21 @@ class PurifierCoreDetailsResult(InnerPurifierBaseResult):
 @dataclass
 class PurifierModifyTimerResult(InnerPurifierBaseResult):
     """Purifier inner Add Timer Result Dict."""
+
     id: int
 
 
 @dataclass
 class PurifierGetTimerResult(InnerPurifierBaseResult):
     """Purifier inner Timer Result Dict."""
+
     timers: list[ResponsePurifierTimerItems] | None
 
 
 @dataclass
 class ResponsePurifierTimerItems(ResponseBaseModel):
     """Purifier Timer Items Response Dict."""
+
     id: int
     remain: int
     total: int
@@ -112,6 +119,7 @@ class ResponsePurifierTimerItems(ResponseBaseModel):
 @dataclass
 class PurifierV2TimerPayloadData(RequestBaseModel):
     """Purifier Timer Payload Data Request Dict."""
+
     enabled: bool
     startAct: list[PurifierV2TimerActionItems]
     tmgEvt: PurifierV2EventTiming | None = None
@@ -123,6 +131,7 @@ class PurifierV2TimerPayloadData(RequestBaseModel):
 @dataclass
 class PurifierV2TimerActionItems(RequestBaseModel):
     """Purifier Timer Action Items Request Dict."""
+
     type: str
     act: int
     num: int = 0
@@ -131,6 +140,7 @@ class PurifierV2TimerActionItems(RequestBaseModel):
 @dataclass
 class PurifierV2EventTiming(RequestBaseModel):
     """Purifier Event Timing Request Dict."""
+
     clkSec: int
 
 
@@ -140,6 +150,7 @@ class PurifierV2EventTiming(RequestBaseModel):
 @dataclass
 class PurifierCoreDetailsConfig(ResponseBaseModel):
     """Config dict in Core purifier details response."""
+
     display: bool
     display_forever: bool
     auto_preference: None | PurifierCoreAutoConfig
@@ -148,6 +159,7 @@ class PurifierCoreDetailsConfig(ResponseBaseModel):
 @dataclass
 class PurifierCoreAutoConfig(ResponseBaseModel):
     """Auto configuration Core dict in purifier details response."""
+
     type: str
     room_size: int
 
@@ -155,6 +167,7 @@ class PurifierCoreAutoConfig(ResponseBaseModel):
 @dataclass
 class PurifierDetailsExtension(ResponseBaseModel):
     """Extension dict in purifier details response for Core 200/300/400."""
+
     schedule_count: int
     timer_remain: int
 
@@ -165,24 +178,28 @@ class PurifierDetailsExtension(ResponseBaseModel):
 @dataclass
 class RequestPurifier131(RequestBypassV1):
     """Purifier 131 Request Dict."""
+
     status: str | None = None
 
 
 @dataclass
 class RequestPurifier131Mode(RequestBypassV1):
     """Purifier 131 Request Dict."""
+
     mode: str
 
 
 @dataclass
 class RequestPurifier131Level(RequestBypassV1):
     """Purifier 131 Request Dict."""
+
     level: int
 
 
 @dataclass
 class Purifier131Result(BypassV1Result):
     """Purifier 131 Details Response Dict."""
+
     screenStatus: str
     filterLife: Purifier131Filter
     activeTime: int
@@ -199,6 +216,7 @@ class Purifier131Result(BypassV1Result):
 @dataclass
 class Purifier131Filter(ResponseBaseModel):
     """Filter details model for LV PUR131."""
+
     change: bool
     useHour: int
     percent: int

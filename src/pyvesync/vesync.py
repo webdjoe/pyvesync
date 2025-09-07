@@ -17,6 +17,8 @@ from pyvesync.const import (
     API_BASE_URL_EU,
     DEFAULT_REGION,
     NON_EU_REGIONS,
+    STATUS_OK,
+    DEFAULT_TZ,
 )
 from pyvesync.device_container import DeviceContainer, DeviceContainerInstance
 from pyvesync.utils.logs import LibraryLogger
@@ -45,11 +47,6 @@ from pyvesync.utils.errors import (
 
 
 logger = logging.getLogger(__name__)
-
-API_RATE_LIMIT: int = 30
-DEFAULT_TZ: str = 'America/New_York'
-
-DEFAULT_ENER_UP_INT: int = 21600
 
 
 class VeSync:  # pylint: disable=function-redefined
@@ -527,7 +524,7 @@ class VeSync:  # pylint: disable=function-redefined
 
                 status_code = response.status
                 resp_bytes = await response.read()
-                if status_code != 200:
+                if status_code != STATUS_OK:
                     LibraryLogger.log_api_status_error(
                         logger,
                         request_body=req_dict,

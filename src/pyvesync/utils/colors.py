@@ -71,6 +71,7 @@ class HSV:
         value (float): The value (brightness) component of the color,
             typically in the range [0, 1].
     """
+
     hue: float
     saturation: float
     value: float
@@ -119,6 +120,7 @@ class Color:
         rgb (namedtuple): red (0-255), green (0-255), blue (0-255)
             see [`RGB dataclass`][pyvesync.utils.colors.RGB]
     """
+
     color_object: InitVar[HSV | RGB]
 
     def __post_init__(
@@ -179,16 +181,15 @@ class Color:
         return cls(RGB(float(red), float(green), float(blue)))
 
     @classmethod
-    def from_hsv(cls, hue: NUMERIC_STRICT, saturation: NUMERIC_STRICT,
-                 value: NUMERIC_STRICT) -> Color | None:
+    def from_hsv(cls, hue: float, saturation: float, value: float) -> Color | None:
         """Create Color instance from HSV values.
 
         Args:
-            hue (NUMERIC_STRICT): The hue component of the color,
+            hue (float): The hue component of the color,
                 in the range [0, 360).
-            saturation (NUMERIC_STRICT): The saturation component of the color,
+            saturation (float): The saturation component of the color,
                 typically in the range [0, 1].
-            value (NUMERIC_STRICT): The value (brightness) component of the color,
+            value (float): The value (brightness) component of the color,
                 typically in the range [0, 1].
 
         Returns:

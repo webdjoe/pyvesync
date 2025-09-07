@@ -293,7 +293,7 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
 
     @deprecated("Use set_mode(mode: str) instead.")
     async def mode_toggle(self, mode: str) -> bool:
-        """Deprecated method for setting purifier mode."""
+        """Deprecated - Set purifier mode."""
         return await self.set_mode(mode)
 
     async def set_mode(self, mode: str) -> bool:
@@ -463,7 +463,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         self.state.device_status = DeviceStatus.from_int(details.powerSwitch)
         self.state.mode = details.workMode
         self.state.filter_life = details.filterLifePercent
-        if details.fanSpeedLevel == 255:
+        if details.fanSpeedLevel == 255:  # noqa: PLR2004
             self.state.fan_level = 0
         else:
             self.state.fan_level = details.fanSpeedLevel

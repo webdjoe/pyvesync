@@ -266,7 +266,7 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
 
     @deprecated("Use set_mode(mode: str) instead.")
     async def set_humidity_mode(self, mode: str) -> bool:
-        """Deprecated method to set humidifier mode.
+        """Deprecated - set humidifier mode.
 
         Use `set_mode(mode: str)` instead.
         """

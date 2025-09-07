@@ -317,6 +317,8 @@ class AirFryerMap(DeviceMapTemplate):
         module (ModuleType): Module for the device.
     """
 
+    temperature_range_f: tuple[int, int] = (200, 400)
+    temperature_range_c: tuple[int, int] = (75, 200)
     product_line: str = ProductLines.WIFI_KITCHEN
     product_type: str = ProductTypes.AIR_FRYER
     module: ModuleType = vesynckitchen
@@ -1134,3 +1136,11 @@ def get_thermostat(device_type: str) -> ThermostatMap | None:
             if any(device_type.lower() in dev.lower() for dev in module.dev_types):
                 return module
     return None
+
+
+#  ------------------- AIR FRYER CONST ------------------ #
+
+CUSTOM_RECIPE_ID = 1
+CUSTOM_RECIPE_TYPE = 3
+CUSTOM_RECIPE_NAME = "Manual Cook"
+CUSTOM_COOK_MODE = "custom"

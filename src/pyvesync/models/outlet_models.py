@@ -16,6 +16,7 @@ from pyvesync.models.base_models import (
 @dataclass
 class Response7AOutlet(ResponseBaseModel):
     """Response model for 7A outlet."""
+
     activeTime: int
     energy: float
     deviceStatus: str
@@ -26,12 +27,14 @@ class Response7AOutlet(ResponseBaseModel):
 @dataclass
 class ResponseEnergyHistory(ResponseCodeModel):
     """Response model for energy history."""
+
     result: ResponseEnergyResult
 
 
 @dataclass
 class ResponseEnergyResult(ResponseBaseModel):
     """Response model for energy result."""
+
     energyConsumptionOfToday: float
     costPerKWH: float
     maxEnergy: float
@@ -42,6 +45,7 @@ class ResponseEnergyResult(ResponseBaseModel):
 @dataclass
 class EnergyInfo:
     """Energy Info list items."""
+
     timestamp: int
     energyKWH: float
     money: float
@@ -50,6 +54,7 @@ class EnergyInfo:
 @dataclass
 class Response10ADetails(DataClassORJSONMixin):
     """Response model for Etekcity outlet details."""
+
     code: int
     msg: str | None
     deviceStatus: str
@@ -66,6 +71,7 @@ class Response10ADetails(DataClassORJSONMixin):
 @dataclass
 class ResponseOldEnergy(ResponseCodeModel):
     """Response model for old energy history."""
+
     energyConsumptionOfToday: float
     costPerKWH: float
     maxEnergy: float
@@ -76,12 +82,14 @@ class ResponseOldEnergy(ResponseCodeModel):
 @dataclass
 class Response15ADetails(ResponseCodeModel):
     """Response for 15A Outlets."""
+
     result: Response15AOutletResult
 
 
 @dataclass
 class Response15AOutletResult(ResponseBaseModel):
     """Response model for 15A outlet."""
+
     deviceStatus: str
     connectionStatus: str
     activeTime: int
@@ -101,6 +109,7 @@ class Request15ADetails(RequestBypassV1):
 @dataclass
 class RequestOutdoorStatus(RequestBypassV1):
     """Request model for outlet status."""
+
     status: str
     switchNo: str
 
@@ -108,6 +117,7 @@ class RequestOutdoorStatus(RequestBypassV1):
 @dataclass
 class RequestEnergyHistory(RequestBaseModel):
     """Request model for energy history."""
+
     acceptLanguage: str
     appVersion: str
     accountID: str
@@ -129,6 +139,7 @@ class Request15AStatus(RequestBypassV1):
 
     Inherits from RequestBypassV1.
     """
+
     status: str
 
 
@@ -138,18 +149,21 @@ class Request15ANightlight(RequestBypassV1):
 
     Inherits from RequestBypassV1.
     """
+
     mode: str
 
 
 @dataclass
 class ResponseOutdoorDetails(ResponseCodeModel):
     """Response model for outdoor outlet."""
+
     result: ResponseOutdoorOutletResult
 
 
 @dataclass
 class ResponseOutdoorOutletResult(ResponseBaseModel):
     """Response model for outdoor outlet."""
+
     deviceStatus: str
     connectionStatus: str
     activeTime: int
@@ -162,6 +176,7 @@ class ResponseOutdoorOutletResult(ResponseBaseModel):
 @dataclass
 class ResponseOutdoorSubDevices(ResponseBaseModel):
     """Response model for outdoor energy."""
+
     subDeviceNo: int
     defaultName: str
     subDeviceName: str
@@ -171,12 +186,14 @@ class ResponseOutdoorSubDevices(ResponseBaseModel):
 @dataclass
 class ResponseBSDGO1Details(ResponseCodeModel):
     """Response model for BSDGO1 outlet."""
+
     result: ResponseBSDGO1OutletResult
 
 
 @dataclass
 class ResponseBSDGO1OutletResult(ResponseBaseModel):
     """Response model for BSDGO1 outlet."""
+
     powerSwitch_1: int
     active_time: int
     connectionStatus: str
@@ -186,6 +203,7 @@ class ResponseBSDGO1OutletResult(ResponseBaseModel):
 @dataclass
 class Timer7AItem(ResponseBaseModel):
     """Timer item for 7A outlet."""
+
     timerID: str
     counterTimer: int
     action: str
@@ -195,4 +213,5 @@ class Timer7AItem(ResponseBaseModel):
 @dataclass
 class ResultESW10Details(ResponseBaseModel):
     """Response model for ESW10 outlet."""
+
     enabled: bool

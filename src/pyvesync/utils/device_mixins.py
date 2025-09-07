@@ -210,6 +210,7 @@ class BypassV2Mixin:
     Overrides the `_build_request` method and `request_keys` attribute for devices
     that use the Bypass V2 API- /cloud/v2/deviceManaged/bypassV2.
     """
+
     if TYPE_CHECKING:
         manager: VeSync
 

@@ -29,6 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 
 class VeSyncAuraThermostat(BypassV2Mixin, VeSyncThermostat):
     """VeSync Aura Thermostat."""
+
     def __init__(
         self,
         details: ResponseDeviceDetailsModel,

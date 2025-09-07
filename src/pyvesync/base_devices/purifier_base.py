@@ -450,12 +450,12 @@ class VeSyncPurifier(VeSyncBaseToggleDevice):
 
     @deprecated("Use `set_fan_speed()` instead.")
     async def change_fan_speed(self, speed: int | None = None) -> bool:
-        """Deprecated method for changing fan speed."""
+        """Deprecated - Set fan speed."""
         return await self.set_fan_speed(speed)
 
     @deprecated("Use `set_mode(mode: str)` instead.")
     async def change_mode(self, mode: str) -> bool:
-        """Deprecated method for changing purifier mode."""
+        """Deprecated - Set purifier mode."""
         return await self.set_mode(mode)
 
     @deprecated("Use `toggle_child_lock()` instead.")
