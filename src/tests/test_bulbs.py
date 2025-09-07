@@ -112,10 +112,10 @@ class TestBulbs(TestBase):
     device_methods = {
         'ESL100CW': [['set_color_temp', {'color_temp': 50}]],
         'ESL100MC': [['set_rgb', RGB_SET],
-                     ['enable_white_mode']],
+                     ['set_white_mode']],
         'XYD0001': [['set_hsv', HSV_SET],
                     ['set_color_temp', {'color_temp': 50}],
-                    ['enable_white_mode']
+                    ['set_white_mode']
                     ]
     }
 
@@ -242,20 +242,12 @@ class TestBulbs(TestBase):
         )
 
     def _assert_color(self, bulb_obj):
-        assert math.isclose(bulb_obj.color_rgb.red, DEFAULT_COLOR.rgb.red, rel_tol=1)
-        assert math.isclose(bulb_obj.color.rgb.red, DEFAULT_COLOR.rgb.red, rel_tol=1)
-        assert math.isclose(bulb_obj.color_rgb.green, DEFAULT_COLOR.rgb.green, rel_tol=1)
-        assert math.isclose(bulb_obj.color.rgb.green, DEFAULT_COLOR.rgb.green, rel_tol=1)
-        assert math.isclose(bulb_obj.color_rgb.blue, DEFAULT_COLOR.rgb.blue, rel_tol=1)
-        assert math.isclose(bulb_obj.color.rgb.blue, DEFAULT_COLOR.rgb.blue, rel_tol=1)
-        assert math.isclose(bulb_obj.color_hsv.hue, DEFAULT_COLOR.hsv.hue, rel_tol=1)
-        assert math.isclose(bulb_obj.color_hue, DEFAULT_COLOR.hsv.hue, rel_tol=1)
-        assert math.isclose(bulb_obj.color_hsv.saturation,
+        assert math.isclose(bulb_obj.state.color.rgb.red, DEFAULT_COLOR.rgb.red, rel_tol=1)
+        assert math.isclose(bulb_obj.state.color.rgb.green, DEFAULT_COLOR.rgb.green, rel_tol=1)
+        assert math.isclose(bulb_obj.state.color.rgb.blue, DEFAULT_COLOR.rgb.blue, rel_tol=1)
+        assert math.isclose(bulb_obj.state.color.hsv.hue, DEFAULT_COLOR.hsv.hue, rel_tol=1)
+        assert math.isclose(bulb_obj.state.color.hsv.saturation,
                             DEFAULT_COLOR.hsv.saturation,
                             rel_tol=1)
-        assert math.isclose(bulb_obj.color_saturation,
-                            DEFAULT_COLOR.hsv.saturation,
-                            rel_tol=1)
-        assert math.isclose(bulb_obj.color_hsv.value, DEFAULT_COLOR.hsv.value, rel_tol=1)
-        assert math.isclose(bulb_obj.color_value, DEFAULT_COLOR.hsv.value, rel_tol=1)
+        assert math.isclose(bulb_obj.state.color.hsv.value, DEFAULT_COLOR.hsv.value, rel_tol=1)
         return True

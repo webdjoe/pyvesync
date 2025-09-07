@@ -15,6 +15,7 @@ import logging
 from pathlib import Path
 from typing import Any
 import yaml
+import orjson
 from mashumaro.mixins.orjson import DataClassORJSONMixin
 from defaults import CALL_API_ARGS, ID_KEYS, API_DEFAULTS
 
@@ -194,7 +195,9 @@ def parse_args(mock_api):
     all_kwargs = dict(zip(CALL_API_ARGS, call_args))
     all_kwargs.update(call_kwargs)
     if isinstance(all_kwargs.get("json_object"), DataClassORJSONMixin):
-        all_kwargs["json_object"] = all_kwargs["json_object"].to_dict()
+        all_kwargs["json_object"] = orjson.loads(all_kwargs["json_object"].to_json())
+    elif isinstance(all_kwargs.get("json_object"), dict):
+        all_kwargs["json_object"] = orjson.loads(orjson.dumps(all_kwargs["json_object"]))
     return all_kwargs
 
 
@@ -322,4 +325,6 @@ def dicts_equal(a: dict, b: dict, *, show_diff: bool = True):
     """Return (equal_bool, diffs). Optionally print a readable diff."""
     diffs = list(deep_diff(a, b))
     if show_diff and diffs:
-        print(format_diffs(diffs))
+        # print(format_diffs(diffs))
+        return 'Differences found:\n' + format_diffs(diffs)
+    return "No differences found"

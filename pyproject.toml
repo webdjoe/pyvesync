@@ -49,11 +49,10 @@ where = ["src"]
 exclude = ["tests", "test*"]
 
 [tool.pytest.ini_options]
+addopts = "--tb=short --color=yes"
 testpaths = ["src/tests"]
 norecursedirs = ["*.egg-info", ".git", ".tox", "dist", "build", "venv"]
 pythonpath = "src"
-log_level = "DEBUG"
-log_cli_level = "DEBUG"
 log_cli = true
 
 [tool.pylint.MAIN]

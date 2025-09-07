@@ -148,14 +148,14 @@ class TestSwitches(TestBase):
 
         # Assert device details match expected values
         if switch_obj.supports_dimmable:
-            assert switch_obj.state.brightness == str(TestDefaults.brightness)
+            assert switch_obj.state.brightness == TestDefaults.brightness
             assert switch_obj.state.indicator_status == 'on'
             assert switch_obj.state.backlight_status == 'on'
             assert switch_obj.state.backlight_color is not None
             assert switch_obj.state.backlight_color.rgb.to_dict() == COLOR_DICT
         self.mock_api.reset_mock()
-        bad_dict, status = call_json.DETAILS_BADCODE
-        self.mock_api.return_value = bad_dict, status
+        bad_dict = call_json.DETAILS_BADCODE
+        self.mock_api.return_value = bad_dict, 200
         self.run_in_loop(switch_obj.get_details)
         assert 'Unknown error' in self.caplog.records[-1].message
 
@@ -231,8 +231,8 @@ class TestSwitches(TestBase):
                     self.write_api, self.overwrite)
 
         self.mock_api.reset_mock()
-        resp_dict, status = call_json.DETAILS_BADCODE
-        self.mock_api.return_value = resp_dict, status
+        resp_dict = call_json.DETAILS_BADCODE
+        self.mock_api.return_value = resp_dict, 200
         if method_kwargs:
             return_val = self.run_in_loop(method_call, **method_kwargs)
             assert return_val is False

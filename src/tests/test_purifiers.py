@@ -27,7 +27,6 @@ See Also
 """
 
 import logging
-import orjson
 import pytest
 
 import pyvesync.const as const
@@ -90,13 +89,13 @@ class TestAirPurifiers(TestBase):
 
     device = 'air_purifiers'
     air_purifiers = call_json_purifiers.PURIFIER_MODELS
-    base_methods = [['turn_on'], ['turn_off'], ['sleep_mode'], ['manual_mode'],
-                    ['change_fan_speed', {'speed': 3}]]
+    base_methods = [['turn_on'], ['turn_off'], ['set_sleep_mode'], ['set_manual_mode'],
+                    ['set_fan_speed', {'speed': 3}]]
     # TODO: Add timer tests
     device_methods = {
-        'Core300S': [['auto_mode'], ['turn_on_display'], ['turn_off_display']],
-        'Core400S': [['auto_mode'], ['turn_on_display'], ['turn_off_display']],
-        'Core600S': [['auto_mode'], ['turn_on_display'], ['turn_off_display']],
+        'Core300S': [['set_auto_mode'], ['turn_on_display'], ['turn_off_display']],
+        'Core400S': [['set_auto_mode'], ['turn_on_display'], ['turn_off_display']],
+        'Core600S': [['set_auto_mode'], ['turn_on_display'], ['turn_off_display']],
 
     }
 
@@ -123,7 +122,7 @@ class TestAirPurifiers(TestBase):
         """
         # Set return value for call_api based on call_json_fan.DETAILS_RESPONSES
         return_dict = call_json_purifiers.DETAILS_RESPONSES[setup_entry]
-        return_val = (orjson.dumps(return_dict), 200)
+        return_val = (return_dict, 200)
         self.mock_api.return_value = return_val
 
         # Instantiate device from device list return item

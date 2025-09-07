@@ -1,43 +1,48 @@
 set_brightness:
   headers:
-    accept-language: en
-    accountId: sample_id
-    appVersion: 5.6.60
-    content-type: application/json
-    tk: sample_tk
-    tz: America/New_York
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
   json_object:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
     cid: ESL100CW-CID
+    configModel: ConfigModule
     configModule: ConfigModule
+    debugMode: false
+    deviceId: ESL100CW-CID
     jsonCmd:
       light:
+        action: 'on'
         brightness: 50
+        colorTempe: 100
     method: bypass
     phoneBrand: pyvesync
     phoneOS: Android
     timeZone: America/New_York
     token: sample_tk
     traceId: TRACE_ID
+    userCountryCode: US
+    uuid: ESL100CW-UUID
   method: post
   url: /cloud/v1/deviceManaged/bypass
 set_color_temp:
   headers:
-    accept-language: en
-    accountId: sample_id
-    appVersion: 5.6.60
-    content-type: application/json
-    tk: sample_tk
-    tz: America/New_York
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
   json_object:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
     cid: ESL100CW-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: ESL100CW-CID
     jsonCmd:
       light:
+        action: 'on'
+        brightness: 100
         colorTempe: 50
     method: bypass
     phoneBrand: pyvesync
@@ -45,22 +50,23 @@ set_color_temp:
     timeZone: America/New_York
     token: sample_tk
     traceId: TRACE_ID
+    userCountryCode: US
+    uuid: ESL100CW-UUID
   method: post
   url: /cloud/v1/deviceManaged/bypass
 turn_off:
   headers:
-    accept-language: en
-    accountId: sample_id
-    appVersion: 5.6.60
-    content-type: application/json
-    tk: sample_tk
-    tz: America/New_York
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
   json_object:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
     cid: ESL100CW-CID
+    configModel: ConfigModule
     configModule: ConfigModule
+    debugMode: false
+    deviceId: ESL100CW-CID
     jsonCmd:
       light:
         action: 'off'
@@ -70,22 +76,23 @@ turn_off:
     timeZone: America/New_York
     token: sample_tk
     traceId: TRACE_ID
+    userCountryCode: US
+    uuid: ESL100CW-UUID
   method: post
   url: /cloud/v1/deviceManaged/bypass
 turn_on:
   headers:
-    accept-language: en
-    accountId: sample_id
-    appVersion: 5.6.60
-    content-type: application/json
-    tk: sample_tk
-    tz: America/New_York
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
   json_object:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
     cid: ESL100CW-CID
+    configModel: ConfigModule
     configModule: ConfigModule
+    debugMode: false
+    deviceId: ESL100CW-CID
     jsonCmd:
       light:
         action: 'on'
@@ -95,22 +102,23 @@ turn_on:
     timeZone: America/New_York
     token: sample_tk
     traceId: TRACE_ID
+    userCountryCode: US
+    uuid: ESL100CW-UUID
   method: post
   url: /cloud/v1/deviceManaged/bypass
 update:
   headers:
-    accept-language: en
-    accountId: sample_id
-    appVersion: 5.6.60
-    content-type: application/json
-    tk: sample_tk
-    tz: America/New_York
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
   json_object:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
     cid: ESL100CW-CID
+    configModel: ConfigModule
     configModule: ConfigModule
+    debugMode: false
+    deviceId: ESL100CW-CID
     jsonCmd:
       getLightStatus: get
     method: bypass
@@ -119,5 +127,7 @@ update:
     timeZone: America/New_York
     token: sample_tk
     traceId: TRACE_ID
+    userCountryCode: US
+    uuid: ESL100CW-UUID
   method: post
   url: /cloud/v1/deviceManaged/bypass

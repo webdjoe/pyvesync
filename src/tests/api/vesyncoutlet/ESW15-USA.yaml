@@ -23,157 +23,157 @@ get_details:
   url: /cloud/v1/deviceManaged/deviceDetail
 get_monthly_energy:
   headers:
-    accept-language: en
-    accountId: sample_id
-    appVersion: 5.6.60
-    content-type: application/json
-    tk: sample_tk
-    tz: America/New_York
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
   json_object:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    method: energymonth
-    mobileId: '1234567890123456'
+    debugMode: false
+    homeTimeZone: America/New_York
+    method: getLastMonthEnergy
     phoneBrand: pyvesync
     phoneOS: Android
     timeZone: America/New_York
     token: sample_tk
     traceId: TRACE_ID
+    userCountryCode: US
     uuid: ESW15-USA-UUID
   method: post
-  url: /15a/v1/device/energymonth
+  url: /cloud/v1/device/getLastMonthEnergy
 get_weekly_energy:
   headers:
-    accept-language: en
-    accountId: sample_id
-    appVersion: 5.6.60
-    content-type: application/json
-    tk: sample_tk
-    tz: America/New_York
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
   json_object:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    method: energyweek
-    mobileId: '1234567890123456'
+    debugMode: false
+    homeTimeZone: America/New_York
+    method: getLastWeekEnergy
     phoneBrand: pyvesync
     phoneOS: Android
     timeZone: America/New_York
     token: sample_tk
     traceId: TRACE_ID
+    userCountryCode: US
     uuid: ESW15-USA-UUID
   method: post
-  url: /15a/v1/device/energyweek
+  url: /cloud/v1/device/getLastWeekEnergy
 get_yearly_energy:
   headers:
-    accept-language: en
-    accountId: sample_id
-    appVersion: 5.6.60
-    content-type: application/json
-    tk: sample_tk
-    tz: America/New_York
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
   json_object:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    method: energyyear
-    mobileId: '1234567890123456'
+    debugMode: false
+    homeTimeZone: America/New_York
+    method: getLastYearEnergy
     phoneBrand: pyvesync
     phoneOS: Android
     timeZone: America/New_York
     token: sample_tk
     traceId: TRACE_ID
+    userCountryCode: US
     uuid: ESW15-USA-UUID
   method: post
-  url: /15a/v1/device/energyyear
+  url: /cloud/v1/device/getLastYearEnergy
 turn_off:
   headers:
-    accept-language: en
-    accountId: sample_id
-    appVersion: 5.6.60
-    content-type: application/json
-    tk: sample_tk
-    tz: America/New_York
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
   json_object:
     acceptLanguage: en
     accountID: sample_id
+    appVersion: 5.6.60
+    cid: ESW15-USA-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: ESW15-USA-CID
+    method: deviceStatus
+    phoneBrand: pyvesync
+    phoneOS: Android
     status: 'off'
     timeZone: America/New_York
     token: sample_tk
+    traceId: TRACE_ID
+    userCountryCode: US
     uuid: ESW15-USA-UUID
-  method: put
-  url: /15a/v1/device/devicestatus
+  method: post
+  url: /cloud/v1/deviceManaged/deviceStatus
 turn_off_nightlight:
   headers:
-    accept-language: en
-    accountId: sample_id
-    appVersion: 5.6.60
-    content-type: application/json
-    tk: sample_tk
-    tz: America/New_York
-  json_object:
-    acceptLanguage: en
-    accountID: sample_id
-    mode: manual
-    timeZone: America/New_York
-    token: sample_tk
-    uuid: ESW15-USA-UUID
-  method: put
-  url: /15a/v1/device/nightlightstatus
-turn_on:
-  headers:
-    accept-language: en
-    accountId: sample_id
-    appVersion: 5.6.60
-    content-type: application/json
-    tk: sample_tk
-    tz: America/New_York
-  json_object:
-    acceptLanguage: en
-    accountID: sample_id
-    status: 'on'
-    timeZone: America/New_York
-    token: sample_tk
-    uuid: ESW15-USA-UUID
-  method: put
-  url: /15a/v1/device/devicestatus
-turn_on_nightlight:
-  headers:
-    accept-language: en
-    accountId: sample_id
-    appVersion: 5.6.60
-    content-type: application/json
-    tk: sample_tk
-    tz: America/New_York
-  json_object:
-    acceptLanguage: en
-    accountID: sample_id
-    mode: auto
-    timeZone: America/New_York
-    token: sample_tk
-    uuid: ESW15-USA-UUID
-  method: put
-  url: /15a/v1/device/nightlightstatus
-update:
-  headers:
-    accept-language: en
-    accountId: sample_id
-    appVersion: 5.6.60
-    content-type: application/json
-    tk: sample_tk
-    tz: America/New_York
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
   json_object:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    method: devicedetail
-    mobileId: '1234567890123456'
+    cid: ESW15-USA-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: ESW15-USA-CID
+    method: outletNightLightCtl
+    mode: 'off'
     phoneBrand: pyvesync
     phoneOS: Android
     timeZone: America/New_York
     token: sample_tk
     traceId: TRACE_ID
+    userCountryCode: US
     uuid: ESW15-USA-UUID
   method: post
-  url: /15a/v1/device/devicedetail
+  url: /cloud/v1/deviceManaged/outletNightLightCtl
+turn_on:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 5.6.60
+    cid: ESW15-USA-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: ESW15-USA-CID
+    method: deviceStatus
+    phoneBrand: pyvesync
+    phoneOS: Android
+    status: 'on'
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+    userCountryCode: US
+    uuid: ESW15-USA-UUID
+  method: post
+  url: /cloud/v1/deviceManaged/deviceStatus
+turn_on_nightlight:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 5.6.60
+    cid: ESW15-USA-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: ESW15-USA-CID
+    method: outletNightLightCtl
+    mode: 'on'
+    phoneBrand: pyvesync
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+    userCountryCode: US
+    uuid: ESW15-USA-UUID
+  method: post
+  url: /cloud/v1/deviceManaged/outletNightLightCtl

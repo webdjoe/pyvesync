@@ -25,6 +25,7 @@ from pyvesync.utils.colors import Color
 from pyvesync.models import bulb_models
 from pyvesync.utils.device_mixins import (
     BypassV1Mixin,
+    BypassV2Mixin,
     process_bypassv1_result,
     process_bypassv2_result,
 )
@@ -40,43 +41,8 @@ logger = logging.getLogger(__name__)
 NUMERIC_OPT = int | float | str | None
 NUMERIC_STRICT = float | int | str
 
-# --8<-- [start:feature_dict]
 
-feature_dict: dict = {
-    'ESL100':
-        {
-            'module': 'VeSyncBulbESL100',
-            'features': ['dimmable'],
-            'color_model': 'none'
-        },
-    'ESL100CW':
-        {
-            'module': 'VeSyncBulbESL100CW',
-            'features': ['dimmable', 'color_temp'],
-            'color_model': 'none'
-        },
-    'XYD0001':
-        {
-            'module': 'VeSyncBulbValcenoA19MC',
-            'features': ['dimmable', 'color_temp', 'rgb_shift'],
-            'color_model': 'hsv'
-        },
-    'ESL100MC':
-        {
-            'module': 'VeSyncBulbESL100MC',
-            'features': ['dimmable', 'rgb_shift'],
-            'color_model': 'rgb'
-        }
-}
-
-# --8<-- [end:feature_dict]
-
-bulb_modules: dict = {k: v['module'] for k, v in feature_dict.items()}
-
-# __all__: list = [*bulb_modules.values(), "bulb_modules"]
-
-
-class VeSyncBulbESL100MC(VeSyncBulb):
+class VeSyncBulbESL100MC(BypassV2Mixin, VeSyncBulb):
     """Etekcity ESL100 Multi Color Bulb device.
 
     Inherits from [VeSyncBulb][pyvesync.base_devices.bulb_base.VeSyncBulb]
@@ -131,49 +97,22 @@ class VeSyncBulbESL100MC(VeSyncBulb):
                  manager: VeSync, feature_map: BulbMap) -> None:
         """Instantiate ESL100MC Multicolor Bulb."""
         super().__init__(details, manager, feature_map)
-        self.request_keys = [
-            'acceptLanguage',
-            'accountID',
-            'appVersion',
-            'cid',
-            'configModule',
-            'debugMode',
-            'deviceRegion',
-            'phoneBrand',
-            'phoneOS',
-            'timeZone',
-            'token',
-            'traceId',
-        ]
 
-    def _build_request(self, payload: dict) -> dict:
-        """Generate base request body for ESL100MC."""
-        default_dict = Helpers.get_class_attributes(
-            DefaultValues, self.request_keys)
-        default_dict.update(
-            Helpers.get_class_attributes(self, self.request_keys))
-        default_dict.update(
-            Helpers.get_class_attributes(self.manager, self.request_keys))
-        default_dict['method'] = 'bypassV2'
-        payload |= {"source": "APP"}
-        default_dict['payload'] = payload
-        return default_dict
+    # def _build_request(self, payload: dict) -> dict:
+    #     """Generate base request body for ESL100MC."""
+    #     default_dict = Helpers.get_class_attributes(
+    #         DefaultValues, self.request_keys)
+    #     default_dict.update(
+    #         Helpers.get_class_attributes(self, self.request_keys))
+    #     default_dict.update(
+    #         Helpers.get_class_attributes(self.manager, self.request_keys))
+    #     default_dict['method'] = 'bypassV2'
+    #     payload |= {"source": "APP"}
+    #     default_dict['payload'] = payload
+    #     return default_dict
 
     async def get_details(self) -> None:
-        head = Helpers.req_header_bypass()
-        payload = {
-            'method': 'getLightStatus',
-            'source': 'APP',
-            'data': {}
-        }
-        body = self._build_request(payload)
-
-        r_dict, _ = await self.manager.async_call_api(
-            '/cloud/v2/deviceManaged/bypassV2',
-            method='post',
-            headers=head,
-            json_object=body,
-        )
+        r_dict = await self.call_bypassv2_api("getLightStatus")
 
         result_model = process_bypassv2_result(
             self, logger, "get_details", r_dict, bulb_models.ResponseESL100MCResult
@@ -188,11 +127,11 @@ class VeSyncBulbESL100MC(VeSyncBulb):
         """Build detail dictionary from response."""
         self.state.brightness = response.brightness
         self.state.color_mode = response.colorMode
-        self.set_state("color", Color.from_rgb(
+        self.state.color = Color.from_rgb(
             red=response.red,
             green=response.green,
             blue=response.blue
-        ))
+        )
 
     async def set_brightness(self, brightness: int) -> bool:
         return await self.set_status(brightness=brightness)
@@ -261,29 +200,16 @@ class VeSyncBulbESL100MC(VeSyncBulb):
                 logger.debug("Brightness and RGB values are not set")
                 return False
 
-        head = Helpers.req_header_bypass()
-
-        payload = {
-            'method': 'setLightStatus',
-            'source': 'APP',
-            'data': {
-                'action': DeviceStatus.ON,
-                'speed': 0,
-                'brightness': brightness_update,
-                'red': 0 if new_color is None else int(new_color.rgb.red),
-                'green': 0 if new_color is None else int(new_color.rgb.green),
-                'blue': 0 if new_color is None else int(new_color.rgb.blue),
-                'colorMode': 'color' if new_color is not None else 'white',
-            }
+        data = {
+            "action": DeviceStatus.ON,
+            "speed": 0,
+            "brightness": brightness_update,
+            "red": 0 if new_color is None else int(new_color.rgb.red),
+            "green": 0 if new_color is None else int(new_color.rgb.green),
+            "blue": 0 if new_color is None else int(new_color.rgb.blue),
+            "colorMode": "color" if new_color is not None else "white",
         }
-        body = self._build_request(payload)
-
-        r_dict, _ = await self.manager.async_call_api(
-            '/cloud/v2/deviceManaged/bypassV2',
-            method='post',
-            headers=head,
-            json_object=body,
-        )
+        r_dict = await self.call_bypassv2_api("setLightStatus", data)
 
         r = Helpers.process_dev_response(logger, "set_status", self, r_dict)
         if r is None:
@@ -297,6 +223,7 @@ class VeSyncBulbESL100MC(VeSyncBulb):
             self.state.color_mode = 'white'
 
         self.state.device_status = DeviceStatus.ON
+        self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
     @deprecated(
@@ -308,28 +235,11 @@ class VeSyncBulbESL100MC(VeSyncBulb):
         return await self.toggle_switch(status_bool)
 
     async def toggle_switch(self, toggle: bool | None = None) -> bool:
-        head = Helpers.req_header_bypass()
-        # body = Helpers.bypass_body_v2(self.manager)
-        # body['cid'] = self.cid
-        # body['configModule'] = self.config_module
         if toggle is None:
             toggle = self.state.device_status == DeviceStatus.OFF
-        payload = {
-            'source': 'APP',
-            'method': 'setSwitch',
-            'data': {
-                'id': 0,
-                'enabled': toggle
-            }
-        }
-        body = self._build_request(payload)
+        data = {"id": 0, "enabled": toggle}
 
-        r_dict, _ = await self.manager.async_call_api(
-            '/cloud/v2/deviceManaged/bypassV2',
-            method='post',
-            headers=head,
-            json_object=body,
-        )
+        r_dict = await self.call_bypassv2_api("setSwitch", data)
 
         r = Helpers.process_dev_response(logger, "toggle", self, r_dict)
         if r is None:
@@ -849,7 +759,7 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
         reset to its default state before each request.
         """
         payload_dict: bulb_models.ValcenoStatusPayload = {
-            "force": 1,
+            "force": 0,
             "brightness": '',
             "colorTemp": "",
             "colorMode": "",
@@ -946,11 +856,10 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
     async def get_details(self) -> None:
         r_dict = await self._call_valceno_api('getLightStatusV2', {})
 
-        r = Helpers.process_dev_response(logger, "get_details", self, r_dict)
-        if r is None:
+        if r_dict is None:
             return
 
-        status = bulb_models.ResponseValcenoStatus.from_dict(r)
+        status = bulb_models.ResponseValcenoStatus.from_dict(r_dict)
         self._interpret_apicall_result(status)
 
     def _interpret_apicall_result(
@@ -997,9 +906,7 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
 
         r_dict = await self._call_valceno_api(method, payload_data)
 
-        r = Helpers.process_dev_response(logger, "toggle", self, r_dict)
-        if r is None:
-            self.state.connection_status = ConnectionStatus.OFFLINE
+        if r_dict is None:
             self.state.device_status = DeviceStatus.OFF
             return False
         self.state.device_status = DeviceStatus.ON if toggle else DeviceStatus.OFF
@@ -1099,9 +1006,6 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
         Returns:
             bool : True if call was successful, False otherwise
         """
-        if self.state.device_status != DeviceStatus.ON:
-            await self.turn_on()
-
         payload_data = self._build_status_payload(
             brightness=brightness,
             color_temp=color_temp,
@@ -1117,7 +1021,7 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
             logger.debug("Invalid payload data")
             return False
 
-        r_dict = await self._call_valceno_api('setLightStatus', payload_data)
+        r_dict = await self._call_valceno_api('setLightStatusV2', payload_data)
         if r_dict is None:
             return False
 
@@ -1144,30 +1048,17 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
             color_value (float, optional): Color value of bulb (0-100).
         """
         payload_dict = self._payload_base()
-        if color_hue is not None:
-            if Validators.validate_range(color_hue, 0, 360):
-                set_hue = int(color_hue * 250 / 9)
-                payload_dict['hue'] = set_hue
-            else:
-                logger.debug("Invalid hue value %s", color_hue)
-        if color_saturation is not None:
-            if Validators.validate_range(color_saturation, 0, 100):
-                set_sat = int(color_saturation * 100)
-                payload_dict['saturation'] = set_sat
-            else:
-                logger.debug("Invalid saturation value %s", color_saturation)
-        if color_value is not None:
-            if Validators.validate_range(color_saturation, 0, 100):
-                payload_dict['value'] = int(color_value)
-            else:
-                logger.debug("Invalid color value %s", color_value)
-
-        # Test if any HSV values are set
-        c_string = (f"{payload_dict['hue']}{payload_dict['saturation']}"
-                    f"{payload_dict['value']}")
-        if not c_string:
-            logger.debug("Invalid HSV values")
+        new_color = Color.from_hsv(
+            hue=color_hue,
+            saturation=color_saturation,
+            value=color_value
+        )
+        if new_color is None:
+            logger.warning("Invalid HSV values")
             return None
+        payload_dict['hue'] = int(new_color.hsv.hue * 250 / 9)
+        payload_dict['saturation'] = int(new_color.hsv.saturation * 100)
+        payload_dict['value'] = int(new_color.hsv.value)
         payload_dict['colorMode'] = 'hsv'
         payload_dict['force'] = 1
         return payload_dict
@@ -1200,7 +1091,7 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
             dict | None: Payload dictionary to be sent to the API.
         """
         payload_dict = self._payload_base()
-        if any(itm is not None for itm in [hue, saturation, value]):
+        if all(itm is not None for itm in [hue, saturation, value]):
             color_dict = self._build_color_payload(
                 color_hue=hue, color_saturation=saturation, color_value=value
             )
@@ -1212,9 +1103,10 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
         elif color_mode in ['color', 'hsv', 'rgb']:
             logger.debug("HSV values must be provided when setting color mode.")
         else:
-            if color_mode is not None:
-                # if color_mode not in ['white', 'hsv']
-                pass
+            if color_mode == "white" and not Validators.validate_zero_to_hundred(
+                color_temp
+            ):
+                payload_dict['colorMode'] = 'white'
             if color_temp is not None and Validators.validate_zero_to_hundred(color_temp):
                 payload_dict['colorTemp'] = int(color_temp)
                 payload_dict['colorMode'] = 'white'

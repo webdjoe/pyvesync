@@ -34,6 +34,7 @@ METHOD_RESPONSES['DEVTYPE'].default_factory = lambda: ({"code": 0, "msg": "succe
 """
 
 from copy import deepcopy
+from typing import Any
 from pyvesync.device_map import purifier_modules
 from pyvesync.const import ConnectionStatus, PurifierModes, DeviceStatus, AirQualityLevel
 from defaults import (
@@ -59,12 +60,12 @@ class PurifierDefaults:
     fan_set_level = 2
     filter_life = 80
     humidity = 50
-    display = True
-    display_config = True
+    display = DeviceStatus.ON
+    display_config = DeviceStatus.ON
     display_forever = True
     light_detection = False
     light_detected = True
-    child_lock = False
+    child_lock = DeviceStatus.ON
     air_quality_level = 1
     filter_open = 0
     aq_percent = 75
@@ -74,18 +75,18 @@ class PurifierDefaults:
     rotate_angle = 45
 
 
-PURIFIER_DETAILS = {
+PURIFIER_DETAILS: dict[str, dict[str, Any]] = {
     "Core200S": {
         "enabled": True,
         "filter_life": PurifierDefaults.filter_life,
         "mode": PurifierDefaults.purifier_mode,
         "level": PurifierDefaults.fan_level,
-        "air_quality": PurifierDefaults.air_quality_level,
+        "air_quality": PurifierDefaults.air_quality_enum.value,
         "air_quality_value": PurifierDefaults.air_quality_value_pm25,
-        "display": PurifierDefaults.display,
-        "child_lock": PurifierDefaults.child_lock,
+        "display": bool(PurifierDefaults.display),
+        "child_lock": bool(PurifierDefaults.child_lock),
         "configuration": {
-            "display": PurifierDefaults.display_config,
+            "display": bool(PurifierDefaults.display_config),
             "display_forever": PurifierDefaults.display_forever,
             "auto_preference": {"type": "default", "room_size": 0},
         },
@@ -97,12 +98,12 @@ PURIFIER_DETAILS = {
         "filter_life": PurifierDefaults.filter_life,
         "mode": PurifierDefaults.purifier_mode,
         "level": PurifierDefaults.fan_level,
-        "air_quality": PurifierDefaults.air_quality_level,
+        "air_quality": PurifierDefaults.air_quality_enum.value,
         "air_quality_value": PurifierDefaults.air_quality_value_pm25,
-        "display": PurifierDefaults.display,
-        "child_lock": PurifierDefaults.child_lock,
+        "display": bool(PurifierDefaults.display),
+        "child_lock": bool(PurifierDefaults.child_lock),
         "configuration": {
-            "display": PurifierDefaults.display_config,
+            "display": bool(PurifierDefaults.display_config),
             "display_forever": PurifierDefaults.display_forever,
             "auto_preference": {"type": "default", "room_size": 0},
         },
@@ -116,10 +117,10 @@ PURIFIER_DETAILS = {
         "level": PurifierDefaults.fan_level,
         "air_quality": PurifierDefaults.air_quality_enum.value,
         "air_quality_value": PurifierDefaults.air_quality_value_pm25,
-        "display": PurifierDefaults.display,
-        "child_lock": PurifierDefaults.child_lock,
+        "display": bool(PurifierDefaults.display),
+        "child_lock": bool(PurifierDefaults.child_lock),
         "configuration": {
-            "display": PurifierDefaults.display_config,
+            "display": bool(PurifierDefaults.display_config),
             "display_forever": PurifierDefaults.display_forever,
             "auto_preference": {"type": "default", "room_size": 0},
         },
@@ -133,10 +134,10 @@ PURIFIER_DETAILS = {
         "level": PurifierDefaults.fan_level,
         "air_quality": PurifierDefaults.air_quality_enum.value,
         "air_quality_value": PurifierDefaults.air_quality_value_pm25,
-        "display": PurifierDefaults.display,
-        "child_lock": PurifierDefaults.child_lock,
+        "display": bool(PurifierDefaults.display),
+        "child_lock": bool(PurifierDefaults.child_lock),
         "configuration": {
-            "display": PurifierDefaults.display_config,
+            "display": bool(PurifierDefaults.display_config),
             "display_forever": PurifierDefaults.display_forever,
             "auto_preference": {"type": "default", "room_size": 0},
         },
@@ -144,7 +145,7 @@ PURIFIER_DETAILS = {
         "device_error_code": 0,
     },
     "LV-PUR131S": {
-        "screenStatus": PurifierDefaults.display,
+        "screenStatus": PurifierDefaults.display.value,
         "filterLife": {
             "change": False,
             "useHour": 3520,
@@ -160,7 +161,7 @@ PURIFIER_DETAILS = {
         "mode": PurifierDefaults.purifier_mode,
         "deviceName": "Levoit 131S Air Purifier",
         "currentFirmVersion": "2.0.58",
-        "childLock": PurifierDefaults.child_lock,
+        "childLock": PurifierDefaults.child_lock.value,
         "deviceStatus": DeviceStatus.ON.value,
         "deviceImg": "https://image.vesync.com/defaultImages/deviceDefaultImages/airpurifier131_240.png",
         "connectionStatus": ConnectionStatus.ONLINE.value,

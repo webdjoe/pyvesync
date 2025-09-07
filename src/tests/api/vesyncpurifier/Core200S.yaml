@@ -1,4 +1,4 @@
-change_fan_speed:
+set_fan_speed:
   headers:
     Content-Type: application/json; charset=UTF-8
     User-Agent: okhttp/3.12.1
@@ -7,15 +7,15 @@ change_fan_speed:
     accountID: sample_id
     appVersion: 5.6.60
     cid: Core200S-CID
+    configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceRegion: US
+    deviceId: Core200S-CID
     method: bypassV2
     payload:
       data:
         id: 0
         level: 3
-        mode: manual
         type: wind
       method: setLevel
       source: APP
@@ -24,9 +24,10 @@ change_fan_speed:
     timeZone: America/New_York
     token: sample_tk
     traceId: TRACE_ID
+    userCountryCode: US
   method: post
   url: /cloud/v2/deviceManaged/bypassV2
-clear_timer:
+set_manual_mode:
   headers:
     Content-Type: application/json; charset=UTF-8
     User-Agent: okhttp/3.12.1
@@ -35,33 +36,10 @@ clear_timer:
     accountID: sample_id
     appVersion: 5.6.60
     cid: Core200S-CID
+    configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceRegion: US
-    method: bypassV2
-    payload:
-      data: {}
-      method: delTimer
-      source: APP
-    phoneBrand: pyvesync
-    phoneOS: Android
-    timeZone: America/New_York
-    token: sample_tk
-    traceId: TRACE_ID
-  method: post
-  url: /cloud/v2/deviceManaged/bypassV2
-manual_mode:
-  headers:
-    Content-Type: application/json; charset=UTF-8
-    User-Agent: okhttp/3.12.1
-  json_object:
-    acceptLanguage: en
-    accountID: sample_id
-    appVersion: 5.6.60
-    cid: Core200S-CID
-    configModule: ConfigModule
-    debugMode: false
-    deviceRegion: US
+    deviceId: Core200S-CID
     method: bypassV2
     payload:
       data:
@@ -69,41 +47,16 @@ manual_mode:
         level: 1
         type: wind
       method: setLevel
-      type: APP
-    phoneBrand: pyvesync
-    phoneOS: Android
-    timeZone: America/New_York
-    token: sample_tk
-    traceId: TRACE_ID
-  method: post
-  url: /cloud/v2/deviceManaged/bypassV2
-set_timer:
-  headers:
-    Content-Type: application/json; charset=UTF-8
-    User-Agent: okhttp/3.12.1
-  json_object:
-    acceptLanguage: en
-    accountID: sample_id
-    appVersion: 5.6.60
-    cid: Core200S-CID
-    configModule: ConfigModule
-    debugMode: false
-    deviceRegion: US
-    method: bypassV2
-    payload:
-      data:
-        action: 'off'
-        total: 100
-      method: addTimer
       source: APP
     phoneBrand: pyvesync
     phoneOS: Android
     timeZone: America/New_York
     token: sample_tk
     traceId: TRACE_ID
+    userCountryCode: US
   method: post
   url: /cloud/v2/deviceManaged/bypassV2
-sleep_mode:
+set_sleep_mode:
   headers:
     Content-Type: application/json; charset=UTF-8
     User-Agent: okhttp/3.12.1
@@ -112,9 +65,10 @@ sleep_mode:
     accountID: sample_id
     appVersion: 5.6.60
     cid: Core200S-CID
+    configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceRegion: US
+    deviceId: Core200S-CID
     method: bypassV2
     payload:
       data:
@@ -126,6 +80,7 @@ sleep_mode:
     timeZone: America/New_York
     token: sample_tk
     traceId: TRACE_ID
+    userCountryCode: US
   method: post
   url: /cloud/v2/deviceManaged/bypassV2
 turn_off:
@@ -137,9 +92,10 @@ turn_off:
     accountID: sample_id
     appVersion: 5.6.60
     cid: Core200S-CID
+    configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceRegion: US
+    deviceId: Core200S-CID
     method: bypassV2
     payload:
       data:
@@ -152,31 +108,7 @@ turn_off:
     timeZone: America/New_York
     token: sample_tk
     traceId: TRACE_ID
-  method: post
-  url: /cloud/v2/deviceManaged/bypassV2
-turn_off_display:
-  headers:
-    Content-Type: application/json; charset=UTF-8
-    User-Agent: okhttp/3.12.1
-  json_object:
-    acceptLanguage: en
-    accountID: sample_id
-    appVersion: 5.6.60
-    cid: Core200S-CID
-    configModule: ConfigModule
-    debugMode: false
-    deviceRegion: US
-    method: bypassV2
-    payload:
-      data:
-        state: false
-      method: setDisplay
-      source: APP
-    phoneBrand: pyvesync
-    phoneOS: Android
-    timeZone: America/New_York
-    token: sample_tk
-    traceId: TRACE_ID
+    userCountryCode: US
   method: post
   url: /cloud/v2/deviceManaged/bypassV2
 turn_on:
@@ -188,9 +120,10 @@ turn_on:
     accountID: sample_id
     appVersion: 5.6.60
     cid: Core200S-CID
+    configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceRegion: US
+    deviceId: Core200S-CID
     method: bypassV2
     payload:
       data:
@@ -203,31 +136,7 @@ turn_on:
     timeZone: America/New_York
     token: sample_tk
     traceId: TRACE_ID
-  method: post
-  url: /cloud/v2/deviceManaged/bypassV2
-turn_on_display:
-  headers:
-    Content-Type: application/json; charset=UTF-8
-    User-Agent: okhttp/3.12.1
-  json_object:
-    acceptLanguage: en
-    accountID: sample_id
-    appVersion: 5.6.60
-    cid: Core200S-CID
-    configModule: ConfigModule
-    debugMode: false
-    deviceRegion: US
-    method: bypassV2
-    payload:
-      data:
-        state: true
-      method: setDisplay
-      source: APP
-    phoneBrand: pyvesync
-    phoneOS: Android
-    timeZone: America/New_York
-    token: sample_tk
-    traceId: TRACE_ID
+    userCountryCode: US
   method: post
   url: /cloud/v2/deviceManaged/bypassV2
 update:
@@ -239,9 +148,10 @@ update:
     accountID: sample_id
     appVersion: 5.6.60
     cid: Core200S-CID
+    configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceRegion: US
+    deviceId: Core200S-CID
     method: bypassV2
     payload:
       data: {}
@@ -252,5 +162,6 @@ update:
     timeZone: America/New_York
     token: sample_tk
     traceId: TRACE_ID
+    userCountryCode: US
   method: post
   url: /cloud/v2/deviceManaged/bypassV2

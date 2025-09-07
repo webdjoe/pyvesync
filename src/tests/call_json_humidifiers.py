@@ -167,6 +167,26 @@ HUMIDIFIER_DETAILS: dict[str, Any] = {
         },
         "extension": {"schedule_count": 0, "timer_remain": 0},
     },
+    "LUH-O451S-WEU": {
+        "enabled": False,
+        "mist_virtual_level": HumidifierDefaults.virtual_mist_level,
+        "mist_level": HumidifierDefaults.mist_level,
+        "mode": HumidifierDefaults.humidifier_mode.value,
+        "water_lacks": HumidifierDefaults.water_lacks,
+        "water_tank_lifted": HumidifierDefaults.water_tank_lifted,
+        "humidity": HumidifierDefaults.humidity,
+        "humidity_high": HumidifierDefaults.humidity_high,
+        "display": HumidifierDefaults.display,
+        "warm_enabled": HumidifierDefaults.warm_mist_enabled,
+        "warm_level": HumidifierDefaults.warm_mist_level,
+        "automatic_stop_reach_target": HumidifierDefaults.auto_stop_reached,
+        "configuration": {
+            "auto_target_humidity": HumidifierDefaults.target_humidity,
+            "display": HumidifierDefaults.display_config,
+            "automatic_stop": HumidifierDefaults.auto_stop,
+        },
+        "extension": {"schedule_count": 0, "timer_remain": 0},
+    },
     "LUH-M101S": {
         "powerSwitch": int(DeviceStatus.ON),
         "humidity": HumidifierDefaults.humidity,
@@ -224,6 +244,7 @@ DETAILS_RESPONSES = {
     "Dual200S": build_bypass_v2_response(inner_result=HUMIDIFIER_DETAILS["Dual200S"]),
     "LUH-A602S-WUS": build_bypass_v2_response(inner_result=HUMIDIFIER_DETAILS["LUH-A602S-WUS"]),
     "LUH-O451S-WUS": build_bypass_v2_response(inner_result=HUMIDIFIER_DETAILS["LUH-O451S-WUS"]),
+    "LUH-O451S-WEU": build_bypass_v2_response(inner_result=HUMIDIFIER_DETAILS["LUH-O451S-WEU"]),
     "LUH-M101S": build_bypass_v2_response(inner_result=HUMIDIFIER_DETAILS["LUH-M101S"]),
     "LEH-S601S": build_bypass_v2_response(inner_result=HUMIDIFIER_DETAILS["LEH-S601S"]),
 }
@@ -245,6 +266,7 @@ METHOD_RESPONSES = {
     "Dual200S": deepcopy(FunctionResponsesV2),
     "LUH-A602S-WUS": deepcopy(FunctionResponsesV2),
     "LUH-O451S-WUS": deepcopy(FunctionResponsesV2),
+    "LUH-O451S-WEU": deepcopy(FunctionResponsesV2),
     "LUH-M101S": deepcopy(FunctionResponsesV2),
     "LEH-S601S": deepcopy(FunctionResponsesV2),
 }

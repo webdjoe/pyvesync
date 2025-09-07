@@ -80,3 +80,5 @@ class TestGeneralAPI(TestBase):
         assert len(self.manager.devices.outlets) == call_json_outlets.OUTLETS_NUM
         assert len(self.manager.devices.fans) == call_json_fans.FANS_NUM
         assert len(self.manager.devices.switches) == call_json_switches.SWITCHES_NUM
+        assert len(self.manager.devices.humidifiers) == call_json_humidifiers.HUMIDIFIERS_NUM
+        assert len(self.manager.devices.air_purifiers) == call_json_purifiers.PURIFIERS_NUM

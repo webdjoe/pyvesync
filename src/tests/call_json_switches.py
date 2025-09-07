@@ -16,7 +16,7 @@ from copy import deepcopy
 # from pyvesync.devices import vesyncswitch
 from pyvesync.device_map import switch_modules
 from pyvesync.const import DeviceStatus, ConnectionStatus
-from defaults import TestDefaults, FunctionResponsesV1
+from defaults import TestDefaults, FunctionResponsesV1, build_bypass_v1_response
 
 SWITCHES = [m.setup_entry for m in switch_modules]
 SWITCHES_NUM = len(SWITCHES)
@@ -97,9 +97,9 @@ SWITCH_DETAILS: dict[str, dict] = {
 
 
 DETAILS_RESPONSES = {
-    'ESWL01': SWITCH_DETAILS['ESWL01'],
-    'ESWD16': SWITCH_DETAILS['ESWD16'],
-    'ESWL03': SWITCH_DETAILS['ESWL03'],
+    'ESWL01': build_bypass_v1_response(result_dict=SWITCH_DETAILS['ESWL01']),
+    'ESWD16': build_bypass_v1_response(result_dict=SWITCH_DETAILS['ESWD16']),
+    'ESWL03': build_bypass_v1_response(result_dict=SWITCH_DETAILS['ESWL03']),
 }
 
 METHOD_RESPONSES = {

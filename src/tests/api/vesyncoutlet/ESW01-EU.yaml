@@ -11,7 +11,7 @@ get_details:
     accountId: sample_id
     appVersion: 5.6.60
     method: devicedetail
-    mobileId: '4948407020265246'
+    mobileId: '2809914961843013'
     phoneBrand: pyvesync
     phoneOS: Android
     timeZone: America/New_York
@@ -22,80 +22,72 @@ get_details:
   url: /10a/v1/device/devicedetail
 get_monthly_energy:
   headers:
-    accept-language: en
-    accountId: sample_id
-    appVersion: 5.6.60
-    content-type: application/json
-    tk: sample_tk
-    tz: America/New_York
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
   json_object:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    method: energymonth
-    mobileId: '1234567890123456'
+    debugMode: false
+    homeTimeZone: America/New_York
+    method: getLastMonthEnergy
     phoneBrand: pyvesync
     phoneOS: Android
     timeZone: America/New_York
     token: sample_tk
     traceId: TRACE_ID
+    userCountryCode: US
     uuid: ESW01-EU-UUID
   method: post
-  url: /10a/v1/device/energymonth
+  url: /cloud/v1/device/getLastMonthEnergy
 get_weekly_energy:
   headers:
-    accept-language: en
-    accountId: sample_id
-    appVersion: 5.6.60
-    content-type: application/json
-    tk: sample_tk
-    tz: America/New_York
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
   json_object:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    method: energyweek
-    mobileId: '1234567890123456'
+    debugMode: false
+    homeTimeZone: America/New_York
+    method: getLastWeekEnergy
     phoneBrand: pyvesync
     phoneOS: Android
     timeZone: America/New_York
     token: sample_tk
     traceId: TRACE_ID
+    userCountryCode: US
     uuid: ESW01-EU-UUID
   method: post
-  url: /10a/v1/device/energyweek
+  url: /cloud/v1/device/getLastWeekEnergy
 get_yearly_energy:
   headers:
-    accept-language: en
-    accountId: sample_id
-    appVersion: 5.6.60
-    content-type: application/json
-    tk: sample_tk
-    tz: America/New_York
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
   json_object:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    method: energyyear
-    mobileId: '1234567890123456'
+    debugMode: false
+    homeTimeZone: America/New_York
+    method: getLastYearEnergy
     phoneBrand: pyvesync
     phoneOS: Android
     timeZone: America/New_York
     token: sample_tk
     traceId: TRACE_ID
+    userCountryCode: US
     uuid: ESW01-EU-UUID
   method: post
-  url: /10a/v1/device/energyyear
+  url: /cloud/v1/device/getLastYearEnergy
 turn_off:
   headers:
-    accept-language: en
-    accountId: sample_id
-    appVersion: 5.6.60
-    content-type: application/json
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+    accountid: sample_id
     tk: sample_tk
     tz: America/New_York
   json_object:
-    acceptLanguage: en
     accountID: sample_id
     status: 'off'
     timeZone: America/New_York
@@ -105,14 +97,12 @@ turn_off:
   url: /10a/v1/device/devicestatus
 turn_on:
   headers:
-    accept-language: en
-    accountId: sample_id
-    appVersion: 5.6.60
-    content-type: application/json
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+    accountid: sample_id
     tk: sample_tk
     tz: America/New_York
   json_object:
-    acceptLanguage: en
     accountID: sample_id
     status: 'on'
     timeZone: America/New_York
@@ -120,25 +110,3 @@ turn_on:
     uuid: ESW01-EU-UUID
   method: put
   url: /10a/v1/device/devicestatus
-update:
-  headers:
-    accept-language: en
-    accountId: sample_id
-    appVersion: 5.6.60
-    content-type: application/json
-    tk: sample_tk
-    tz: America/New_York
-  json_object:
-    acceptLanguage: en
-    accountID: sample_id
-    appVersion: 5.6.60
-    method: devicedetail
-    mobileId: '1234567890123456'
-    phoneBrand: pyvesync
-    phoneOS: Android
-    timeZone: America/New_York
-    token: sample_tk
-    traceId: TRACE_ID
-    uuid: ESW01-EU-UUID
-  method: post
-  url: /10a/v1/device/devicedetail

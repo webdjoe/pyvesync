@@ -544,7 +544,7 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
         return True
 
     async def set_humidity(self, humidity: int) -> bool:
-        if Validators.validate_range(humidity, *self.target_minmax):
+        if not Validators.validate_range(humidity, *self.target_minmax):
             logger.debug("Humidity value must be set between 30 and 80")
             return False
 
@@ -753,7 +753,7 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
         return True
 
     async def set_humidity(self, humidity: int) -> bool:
-        if Validators.validate_range(humidity, *self.target_minmax):
+        if not Validators.validate_range(humidity, *self.target_minmax):
             logger.debug("Humidity value must be set between %s and %s",
                          self.target_minmax[0], self.target_minmax[1])
             return False

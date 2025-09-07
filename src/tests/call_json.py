@@ -330,6 +330,7 @@ def device_list_item(device_map: DeviceMapTemplate) -> dict:
 class DeviceList:
     list_response_base: dict[str, Any] = {
         'code': 0,
+        'traceId': TestDefaults.trace_id,
         'msg': 'Success',
         'result': {
             'pageNo': 1,

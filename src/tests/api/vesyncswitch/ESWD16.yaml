@@ -53,57 +53,154 @@ rgb_color_set:
     uuid: ESWD16-UUID
   method: put
   url: /dimmer/v1/device/devicergbstatus
-set_brightness:
+set_backlight_color:
   headers:
-    accept-language: en
-    accountId: sample_id
-    appVersion: 5.6.60
-    content-type: application/json
-    tk: sample_tk
-    tz: America/New_York
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    brightness: 100
-    timeZone: America/New_York
-    token: sample_tk
-    uuid: ESWD16-UUID
-  method: put
-  url: /dimmer/v1/device/updatebrightness
-turn_off:
-  headers:
-    accept-language: en
-    accountId: sample_id
     appVersion: 5.6.60
-    content-type: application/json
-    tk: sample_tk
-    tz: America/New_York
-  json_object:
-    acceptLanguage: en
-    accountID: sample_id
-    status: 'off'
-    timeZone: America/New_York
-    token: sample_tk
-    uuid: ESWD16-UUID
-  method: put
-  url: /dimmer/v1/device/devicestatus
-turn_on:
-  headers:
-    accept-language: en
-    accountId: sample_id
-    appVersion: 5.6.60
-    content-type: application/json
-    tk: sample_tk
-    tz: America/New_York
-  json_object:
-    acceptLanguage: en
-    accountID: sample_id
+    cid: ESWD16-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: ESWD16-CID
+    method: dimmerRgbValueCtl
+    phoneBrand: pyvesync
+    phoneOS: Android
+    rgbValue:
+      blue: 225
+      green: 100
+      red: 50
     status: 'on'
     timeZone: America/New_York
     token: sample_tk
+    traceId: TRACE_ID
+    userCountryCode: US
     uuid: ESWD16-UUID
-  method: put
-  url: /dimmer/v1/device/devicestatus
+  method: post
+  url: /cloud/v1/deviceManaged/dimmerRgbValueCtl
+set_brightness:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 5.6.60
+    brightness: '75'
+    cid: ESWD16-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: ESWD16-CID
+    method: dimmerBrightnessCtl
+    phoneBrand: pyvesync
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+    userCountryCode: US
+    uuid: ESWD16-UUID
+  method: post
+  url: /cloud/v1/deviceManaged/dimmerBrightnessCtl
+turn_off:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 5.6.60
+    cid: ESWD16-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: ESWD16-CID
+    method: dimmerPowerSwitchCtl
+    phoneBrand: pyvesync
+    phoneOS: Android
+    status: 'off'
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+    userCountryCode: US
+    uuid: ESWD16-UUID
+  method: post
+  url: /cloud/v1/deviceManaged/dimmerPowerSwitchCtl
+turn_on:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 5.6.60
+    cid: ESWD16-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: ESWD16-CID
+    method: dimmerPowerSwitchCtl
+    phoneBrand: pyvesync
+    phoneOS: Android
+    status: 'on'
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+    userCountryCode: US
+    uuid: ESWD16-UUID
+  method: post
+  url: /cloud/v1/deviceManaged/dimmerPowerSwitchCtl
+turn_on_indicator_light:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 5.6.60
+    cid: ESWD16-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: ESWD16-CID
+    method: dimmerIndicatorLightCtl
+    phoneBrand: pyvesync
+    phoneOS: Android
+    status: 'on'
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+    userCountryCode: US
+    uuid: ESWD16-UUID
+  method: post
+  url: /cloud/v1/deviceManaged/dimmerIndicatorLightCtl
+turn_on_rgb_backlight:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 5.6.60
+    cid: ESWD16-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: ESWD16-CID
+    method: dimmerRgbValueCtl
+    phoneBrand: pyvesync
+    phoneOS: Android
+    status: 'on'
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+    userCountryCode: US
+    uuid: ESWD16-UUID
+  method: post
+  url: /cloud/v1/deviceManaged/dimmerRgbValueCtl
 update:
   headers:
     accept-language: en

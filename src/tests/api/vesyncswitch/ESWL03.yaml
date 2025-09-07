@@ -1,37 +1,53 @@
 turn_off:
   headers:
-    accept-language: en
-    accountId: sample_id
-    appVersion: 5.6.60
-    content-type: application/json
-    tk: sample_tk
-    tz: America/New_York
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
   json_object:
     acceptLanguage: en
     accountID: sample_id
+    appVersion: 5.6.60
+    cid: ESWL03-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: ESWL03-CID
+    method: deviceStatus
+    phoneBrand: pyvesync
+    phoneOS: Android
     status: 'off'
+    switchNo: 0
     timeZone: America/New_York
     token: sample_tk
+    traceId: TRACE_ID
+    userCountryCode: US
     uuid: ESWL03-UUID
-  method: put
-  url: /inwallswitch/v1/device/devicestatus
+  method: post
+  url: /cloud/v1/deviceManaged/deviceStatus
 turn_on:
   headers:
-    accept-language: en
-    accountId: sample_id
-    appVersion: 5.6.60
-    content-type: application/json
-    tk: sample_tk
-    tz: America/New_York
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
   json_object:
     acceptLanguage: en
     accountID: sample_id
+    appVersion: 5.6.60
+    cid: ESWL03-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: ESWL03-CID
+    method: deviceStatus
+    phoneBrand: pyvesync
+    phoneOS: Android
     status: 'on'
+    switchNo: 0
     timeZone: America/New_York
     token: sample_tk
+    traceId: TRACE_ID
+    userCountryCode: US
     uuid: ESWL03-UUID
-  method: put
-  url: /inwallswitch/v1/device/devicestatus
+  method: post
+  url: /cloud/v1/deviceManaged/deviceStatus
 update:
   headers:
     accept-language: en

@@ -9,34 +9,64 @@ get_details:
   url: /v1/device/wifi-switch-1.3-CID/detail
 get_monthly_energy:
   headers:
-    accept-language: en
-    accountId: sample_id
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
     appVersion: 5.6.60
-    content-type: application/json
-    tk: sample_tk
-    tz: America/New_York
-  method: get
-  url: /v1/device/wifi-switch-1.3-CID/energy/month
+    debugMode: false
+    homeTimeZone: America/New_York
+    method: getLastMonthEnergy
+    phoneBrand: pyvesync
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+    userCountryCode: US
+    uuid: wifi-switch-1.3-UUID
+  method: post
+  url: /cloud/v1/device/getLastMonthEnergy
 get_weekly_energy:
   headers:
-    accept-language: en
-    accountId: sample_id
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
     appVersion: 5.6.60
-    content-type: application/json
-    tk: sample_tk
-    tz: America/New_York
-  method: get
-  url: /v1/device/wifi-switch-1.3-CID/energy/week
+    debugMode: false
+    homeTimeZone: America/New_York
+    method: getLastWeekEnergy
+    phoneBrand: pyvesync
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+    userCountryCode: US
+    uuid: wifi-switch-1.3-UUID
+  method: post
+  url: /cloud/v1/device/getLastWeekEnergy
 get_yearly_energy:
   headers:
-    accept-language: en
-    accountId: sample_id
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
     appVersion: 5.6.60
-    content-type: application/json
-    tk: sample_tk
-    tz: America/New_York
-  method: get
-  url: /v1/device/wifi-switch-1.3-CID/energy/year
+    debugMode: false
+    homeTimeZone: America/New_York
+    method: getLastYearEnergy
+    phoneBrand: pyvesync
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+    userCountryCode: US
+    uuid: wifi-switch-1.3-UUID
+  method: post
+  url: /cloud/v1/device/getLastYearEnergy
 turn_off:
   headers:
     accept-language: en
@@ -57,13 +87,3 @@ turn_on:
     tz: America/New_York
   method: put
   url: /v1/wifi-switch-1.3/wifi-switch-1.3-CID/status/on
-update:
-  headers:
-    accept-language: en
-    accountId: sample_id
-    appVersion: 5.6.60
-    content-type: application/json
-    tk: sample_tk
-    tz: America/New_York
-  method: get
-  url: /v1/device/wifi-switch-1.3-CID/detail

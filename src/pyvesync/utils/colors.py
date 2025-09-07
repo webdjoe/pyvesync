@@ -5,7 +5,7 @@ import logging
 from dataclasses import InitVar, dataclass
 
 import colorsys
-from pyvesync.utils.helpers import Validators, NUMERIC_STRICT
+from pyvesync.utils.helpers import Validators
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -159,8 +159,9 @@ class Color:
         }
 
     @classmethod
-    def from_rgb(cls, red: NUMERIC_STRICT, green: NUMERIC_STRICT,
-                 blue: NUMERIC_STRICT) -> Color | None:
+    def from_rgb(
+        cls, red: float | None, green: float | None, blue: float | None
+    ) -> Color | None:
         """Create Color instance from RGB values.
 
         Args:
@@ -178,10 +179,12 @@ class Color:
         if not Validators.validate_rgb(red, green, blue):
             _LOGGER.debug("Invalid RGB values")
             return None
-        return cls(RGB(float(red), float(green), float(blue)))
+        return cls(RGB(float(red), float(green), float(blue)))  # type: ignore[arg-type]
 
     @classmethod
-    def from_hsv(cls, hue: float, saturation: float, value: float) -> Color | None:
+    def from_hsv(
+        cls, hue: float | None, saturation: float | None, value: float | None
+    ) -> Color | None:
         """Create Color instance from HSV values.
 
         Args:
@@ -199,7 +202,7 @@ class Color:
         if not Validators.validate_hsv(hue, saturation, value):
             _LOGGER.debug("Invalid HSV values")
             return None
-        return cls(HSV(float(hue), float(saturation), float(value)))
+        return cls(HSV(float(hue), float(saturation), float(value)))  # type: ignore[arg-type]
 
     @staticmethod
     def hsv_to_rgb(hue: float, saturation: float, value: float) -> RGB:

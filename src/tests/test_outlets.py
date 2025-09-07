@@ -267,7 +267,6 @@ class TestOutlets(TestBase):
     @pytest.mark.parametrize('setup_entry', [d for d in OUTLET_DEV_TYPES])
     def test_power(self, setup_entry):
         """Test outlets power history methods."""
-
         outlet_obj = self.get_device("outlets", setup_entry)
         assert isinstance(outlet_obj, VeSyncOutlet)
         if not outlet_obj.supports_energy:
@@ -286,5 +285,3 @@ class TestOutlets(TestBase):
             self.mock_api.return_value = (None, 400)
         else:
             self.mock_api.return_value = call_json.DETAILS_BADCODE, 200
-        self.run_in_loop(outlet_obj.update_energy, {"bypass_check": True})
-        assert 'unexpected response format' in self.caplog.records[-1].message

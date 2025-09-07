@@ -1,74 +1,96 @@
 set_brightness:
   headers:
-    accept-language: en
-    accountId: sample_id
-    appVersion: 5.6.60
-    content-type: application/json
-    tk: sample_tk
-    tz: America/New_York
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
   json_object:
     acceptLanguage: en
     accountID: sample_id
-    brightNess: '50'
+    appVersion: 5.6.60
+    brightNess: 50
+    cid: ESL100-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: ESL100-CID
+    method: smartBulbBrightnessCtl
+    phoneBrand: pyvesync
+    phoneOS: Android
     status: 'on'
     timeZone: America/New_York
     token: sample_tk
+    traceId: TRACE_ID
+    userCountryCode: US
     uuid: ESL100-UUID
-  method: put
-  url: /SmartBulb/v1/device/updateBrightness
+  method: post
+  url: /cloud/v1/deviceManaged/smartBulbBrightnessCtl
 turn_off:
   headers:
-    accept-language: en
-    accountId: sample_id
-    appVersion: 5.6.60
-    content-type: application/json
-    tk: sample_tk
-    tz: America/New_York
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
   json_object:
     acceptLanguage: en
     accountID: sample_id
+    appVersion: 5.6.60
+    cid: ESL100-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: ESL100-CID
+    method: smartBulbPowerSwitchCtl
+    phoneBrand: pyvesync
+    phoneOS: Android
     status: 'off'
     timeZone: America/New_York
     token: sample_tk
+    traceId: TRACE_ID
+    userCountryCode: US
     uuid: ESL100-UUID
-  method: put
-  url: /SmartBulb/v1/device/devicestatus
+  method: post
+  url: /cloud/v1/deviceManaged/smartBulbPowerSwitchCtl
 turn_on:
   headers:
-    accept-language: en
-    accountId: sample_id
-    appVersion: 5.6.60
-    content-type: application/json
-    tk: sample_tk
-    tz: America/New_York
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
   json_object:
     acceptLanguage: en
     accountID: sample_id
+    appVersion: 5.6.60
+    cid: ESL100-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: ESL100-CID
+    method: smartBulbPowerSwitchCtl
+    phoneBrand: pyvesync
+    phoneOS: Android
     status: 'on'
     timeZone: America/New_York
     token: sample_tk
+    traceId: TRACE_ID
+    userCountryCode: US
     uuid: ESL100-UUID
-  method: put
-  url: /SmartBulb/v1/device/devicestatus
+  method: post
+  url: /cloud/v1/deviceManaged/smartBulbPowerSwitchCtl
 update:
   headers:
-    accept-language: en
-    accountId: sample_id
-    appVersion: 5.6.60
-    content-type: application/json
-    tk: sample_tk
-    tz: America/New_York
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
   json_object:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    method: devicedetail
-    mobileId: '1234567890123456'
+    cid: ESL100-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: ESL100-CID
+    method: deviceDetail
     phoneBrand: pyvesync
     phoneOS: Android
     timeZone: America/New_York
     token: sample_tk
     traceId: TRACE_ID
+    userCountryCode: US
     uuid: ESL100-UUID
   method: post
-  url: /SmartBulb/v1/device/devicedetail
+  url: /cloud/v1/deviceManaged/deviceDetail

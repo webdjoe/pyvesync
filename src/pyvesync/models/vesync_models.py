@@ -265,8 +265,6 @@ class ResponseDeviceListModel(ResponseCodeModel):
         the inner model of the 'result' field.
     """
 
-    module: str | None
-    stacktrace: str | None
     result: InternalDeviceListResult
 
 

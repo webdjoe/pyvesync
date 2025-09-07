@@ -190,7 +190,7 @@ def valceno_set_status_response(kwargs=None):
             default_resp['result']['result']['saturation'] = kwargs['saturation'] * 100
         if kwargs.get('value') is not None:
             default_resp['result']['result']['value'] = kwargs['value']
-    return default_resp, 200
+    return default_resp
 
 
 METHOD_RESPONSES = {

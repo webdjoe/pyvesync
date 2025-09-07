@@ -1,33 +1,3 @@
-enable_white_mode:
-  headers:
-    Content-Type: application/json; charset=UTF-8
-    User-Agent: okhttp/3.12.1
-  json_object:
-    acceptLanguage: en
-    accountID: sample_id
-    appVersion: 5.6.60
-    cid: XYD0001-CID
-    configModule: ConfigModule
-    deviceRegion: US
-    method: bypassV2
-    payload:
-      data:
-        brightness: ''
-        colorMode: white
-        colorTemp: ''
-        force: 1
-        hue: ''
-        saturation: ''
-        value: ''
-      method: setLightStatusV2
-      source: APP
-    phoneBrand: pyvesync
-    phoneOS: Android
-    timeZone: America/New_York
-    token: sample_tk
-    traceId: TRACE_ID
-  method: post
-  url: /cloud/v2/deviceManaged/bypassV2
 set_brightness:
   headers:
     Content-Type: application/json; charset=UTF-8
@@ -38,6 +8,7 @@ set_brightness:
     appVersion: 5.6.60
     cid: XYD0001-CID
     configModule: ConfigModule
+    debugMode: false
     deviceRegion: US
     method: bypassV2
     payload:
@@ -68,6 +39,7 @@ set_color_temp:
     appVersion: 5.6.60
     cid: XYD0001-CID
     configModule: ConfigModule
+    debugMode: false
     deviceRegion: US
     method: bypassV2
     payload:
@@ -98,16 +70,48 @@ set_hsv:
     appVersion: 5.6.60
     cid: XYD0001-CID
     configModule: ConfigModule
+    debugMode: false
     deviceRegion: US
     method: bypassV2
     payload:
       data:
-        brightness: 100
+        brightness: ''
         colorMode: hsv
         colorTemp: ''
         force: 1
-        hue: 5556
+        hue: 5555
         saturation: 5000
+        value: 100
+      method: setLightStatusV2
+      source: APP
+    phoneBrand: pyvesync
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
+set_white_mode:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 5.6.60
+    cid: XYD0001-CID
+    configModule: ConfigModule
+    debugMode: false
+    deviceRegion: US
+    method: bypassV2
+    payload:
+      data:
+        brightness: ''
+        colorMode: white
+        colorTemp: ''
+        force: 1
+        hue: ''
+        saturation: ''
         value: ''
       method: setLightStatusV2
       source: APP
@@ -128,6 +132,7 @@ turn_off:
     appVersion: 5.6.60
     cid: XYD0001-CID
     configModule: ConfigModule
+    debugMode: false
     deviceRegion: US
     method: bypassV2
     payload:
@@ -153,6 +158,7 @@ turn_on:
     appVersion: 5.6.60
     cid: XYD0001-CID
     configModule: ConfigModule
+    debugMode: false
     deviceRegion: US
     method: bypassV2
     payload:
@@ -178,6 +184,7 @@ update:
     appVersion: 5.6.60
     cid: XYD0001-CID
     configModule: ConfigModule
+    debugMode: false
     deviceRegion: US
     method: bypassV2
     payload:

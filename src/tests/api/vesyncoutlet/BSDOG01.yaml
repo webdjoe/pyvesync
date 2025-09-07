@@ -33,8 +33,10 @@ turn_off:
     accountID: sample_id
     appVersion: 5.6.60
     cid: BSDOG01-CID
+    configModel: ConfigModule
     configModule: ConfigModule
-    deviceRegion: US
+    debugMode: false
+    deviceId: BSDOG01-CID
     method: bypassV2
     payload:
       data:
@@ -46,6 +48,7 @@ turn_off:
     timeZone: America/New_York
     token: sample_tk
     traceId: TRACE_ID
+    userCountryCode: US
   method: post
   url: /cloud/v2/deviceManaged/bypassV2
 turn_on:
@@ -57,8 +60,10 @@ turn_on:
     accountID: sample_id
     appVersion: 5.6.60
     cid: BSDOG01-CID
+    configModel: ConfigModule
     configModule: ConfigModule
-    deviceRegion: US
+    debugMode: false
+    deviceId: BSDOG01-CID
     method: bypassV2
     payload:
       data:
@@ -70,28 +75,6 @@ turn_on:
     timeZone: America/New_York
     token: sample_tk
     traceId: TRACE_ID
-  method: post
-  url: /cloud/v2/deviceManaged/bypassV2
-update:
-  headers:
-    Content-Type: application/json; charset=UTF-8
-    User-Agent: okhttp/3.12.1
-  json_object:
-    acceptLanguage: en
-    accountID: sample_id
-    appVersion: 5.6.60
-    cid: BSDOG01-CID
-    configModule: ConfigModule
-    deviceRegion: US
-    method: bypassV2
-    payload:
-      data: {}
-      method: getProperty
-      source: APP
-    phoneBrand: pyvesync
-    phoneOS: Android
-    timeZone: America/New_York
-    token: sample_tk
-    traceId: TRACE_ID
+    userCountryCode: US
   method: post
   url: /cloud/v2/deviceManaged/bypassV2
