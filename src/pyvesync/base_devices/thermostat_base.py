@@ -40,6 +40,7 @@ class ThermostatState(DeviceState):
 
     __slots__ = (
         "alert_status",
+        "battery_level",
         "configuration",
         "cool_to_temp",
         "deadband",
@@ -47,6 +48,7 @@ class ThermostatState(DeviceState):
         "eco_type",
         "fan_mode",
         "fan_status",
+        "filter_life",
         "heat_to_temp",
         "hold_end_time",
         "hold_option",
@@ -90,6 +92,8 @@ class ThermostatState(DeviceState):
         self.alert_status: int | None = None
         self.routines: list[ThermostatSimpleRoutine] = []
         self.routine_running_id: int | None = None
+        self.battery_level: int | None = None
+        self.filter_life: int | None = None
 
     @property
     def is_running(self) -> bool:
@@ -121,7 +125,7 @@ class VeSyncThermostat(VeSyncBaseDevice):
         feature_map (ThermostatMap): The thermostat feature map.
     """
 
-    __slots__ = ("eco_types", "fan_modes", "hold_options", "work_modes")
+    __slots__ = ("eco_types", "fan_modes", "hold_options", "supported_work_modes")
 
     def __init__(
         self,
@@ -133,7 +137,7 @@ class VeSyncThermostat(VeSyncBaseDevice):
         super().__init__(details, manager, feature_map)
         self.state: ThermostatState = ThermostatState(self, details, feature_map)
         self.fan_modes = feature_map.fan_modes
-        self.work_modes = feature_map.modes
+        self.supported_work_modes = feature_map.modes
         self.eco_types = feature_map.eco_types
         self.hold_options = feature_map.hold_options
 

@@ -1,7 +1,7 @@
 """
 Air Purifier and Humidifier Device API Responses
 
-FANS variable is a list of device types
+FANS variable is a list of setup_entry's from the device_map
 
 DETAILS_RESPONSES variable is a dictionary of responses from the API
 for get_details() methods.  The keys are the device types and the
@@ -17,7 +17,7 @@ with the provided argument. If not callable, the value is returned as is.
 
 METHOD_RESPONSES = {
     'DEV_TYPE': defaultdict(
-        lambda: ({"code": 0, "msg": "success"}, 200))
+        lambda: {"code": 0, "msg": "success"}
     )
 }
 
@@ -30,7 +30,7 @@ METHOD_RESPONSES['DEV_TYPE']['set_status'] = status_response
 
 # To change the default value for a device type
 
-METHOD_RESPONSES['DEVTYPE'].default_factory = lambda: ({"code": 0, "msg": "success"}, 200)
+METHOD_RESPONSES['DEVTYPE'].default_factory = lambda: {"code": 0, "msg": "success"}
 """
 from typing import Any
 from copy import deepcopy

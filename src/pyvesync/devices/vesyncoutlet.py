@@ -8,7 +8,7 @@ from typing_extensions import deprecated
 from pyvesync.utils.helpers import Helpers, Timer
 from pyvesync.utils.logs import LibraryLogger
 
-from pyvesync.const import DeviceStatus, ConnectionStatus
+from pyvesync.const import DeviceStatus, ConnectionStatus, STATUS_OK
 from pyvesync.base_devices.outlet_base import VeSyncOutlet
 from pyvesync.models.base_models import RequestHeaders, DefaultValues
 from pyvesync.utils.device_mixins import (
@@ -156,7 +156,7 @@ class VeSyncOutlet7A(VeSyncOutlet):
             headers=Helpers.req_legacy_headers(self.manager),
         )
 
-        if status_code != 200:
+        if status_code != STATUS_OK:
             LibraryLogger.log_device_api_response_error(
                 logger, self.device_name, self.device_type,
                 'toggle_switch', "Response code is not 200"
@@ -178,7 +178,7 @@ class VeSyncOutlet7A(VeSyncOutlet):
             "get",
             headers=Helpers.req_legacy_headers(self.manager),
         )
-        if not r_dict or status_code != 200:
+        if not r_dict or status_code != STATUS_OK:
             logger.debug("No timer set.")
             self.state.timer = None
             return
@@ -222,7 +222,7 @@ class VeSyncOutlet7A(VeSyncOutlet):
             headers=Helpers.req_legacy_headers(self.manager),
             json_object=update_dict,
         )
-        if status_code != 200 or not isinstance(r_dict, dict):
+        if status_code != STATUS_OK or not isinstance(r_dict, dict):
             logger.debug("Failed to set timer.")
             return False
 
@@ -253,7 +253,7 @@ class VeSyncOutlet7A(VeSyncOutlet):
             "delete",
             headers=Helpers.req_legacy_headers(self.manager),
         )
-        if status_code != 200:
+        if status_code != STATUS_OK:
             return False
         self.state.timer = None
         return True

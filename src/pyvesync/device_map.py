@@ -370,6 +370,8 @@ thermostat_modules = [
             ThermostatWorkModes.COOL,
             ThermostatWorkModes.AUTO,
             ThermostatWorkModes.OFF,
+            ThermostatWorkModes.SMART_AUTO,
+            ThermostatWorkModes.EM_HEAT,
         ],
         eco_types=[
             ThermostatEcoTypes.BALANCE,
@@ -1136,11 +1138,3 @@ def get_thermostat(device_type: str) -> ThermostatMap | None:
             if any(device_type.lower() in dev.lower() for dev in module.dev_types):
                 return module
     return None
-
-
-#  ------------------- AIR FRYER CONST ------------------ #
-
-CUSTOM_RECIPE_ID = 1
-CUSTOM_RECIPE_TYPE = 3
-CUSTOM_RECIPE_NAME = "Manual Cook"
-CUSTOM_COOK_MODE = "custom"

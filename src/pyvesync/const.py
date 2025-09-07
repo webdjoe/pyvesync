@@ -802,3 +802,12 @@ class ThermostatConst:
     RoutineType = ThermostatRoutineTypes
     ScheduleOrHoldOption = ThermostatScheduleOrHoldOptions
     WorkStatus = ThermostatWorkStatusCodes
+
+
+#  ------------------- AIR FRYER CONST ------------------ #
+
+
+CUSTOM_RECIPE_ID = 1
+CUSTOM_RECIPE_TYPE = 3
+CUSTOM_RECIPE_NAME = "Manual Cook"
+CUSTOM_COOK_MODE = "custom"
