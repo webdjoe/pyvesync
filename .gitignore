@@ -37,3 +37,7 @@ requirements-docs.txt
 docs/
 site/
 overrides/
+models.json
+pyvesync.log
+testing_scripts/yamltest.yaml
+testing_scripts/api_test_editor.py

@@ -4,6 +4,7 @@ pyvesync is a library to manage VeSync compatible [smart home devices](#supporte
 
 ## Table of Contents <!-- omit in toc -->
 
+- [WARNING - pyvesync v3.0 🔥🔥🔥](#warning---pyvesync-v30-)
 - [Installation](#installation)
 - [Supported Devices](#supported-devices)
   - [Etekcity Outlets](#etekcity-outlets)
@@ -12,6 +13,8 @@ pyvesync is a library to manage VeSync compatible [smart home devices](#supporte
   - [Etekcity Bulbs](#etekcity-bulbs)
   - [Valceno Bulbs](#valceno-bulbs)
   - [Levoit Humidifiers](#levoit-humidifiers)
+  - [Cosori Air Fryer](#cosori-air-fryer)
+  - [Fans](#fans)
 - [Usage](#usage)
 - [Configuration](#configuration)
   - [Time Zones](#time-zones)
@@ -29,9 +32,10 @@ pyvesync is a library to manage VeSync compatible [smart home devices](#supporte
   - [Standard Air Purifier Properties \& Methods](#standard-air-purifier-properties--methods)
     - [Air Purifier Properties](#air-purifier-properties)
     - [Air Purifier Methods](#air-purifier-methods)
-    - [Levoit Purifier Core200S/300S/400S and Vital 100S/200S Properties](#levoit-purifier-core200s300s400s-vital-100s200s--everest-air-properties)
-    - [Levoit Purifier Core200S/300S/400S, Vital 100S/200S & Everest Air Methods](#levoit-purifier-core200s300s400s-vital-100s200s--everest-air-methods)
-    - [Levoit Vital 100S/200S Properties and Methods](#levoit-vital-100s200s--everest-air-properties-and-methods)
+    - [Levoit Purifier Core200S/300S/400S, Vital 100S/200S \& Everest Air Properties](#levoit-purifier-core200s300s400s-vital-100s200s--everest-air-properties)
+    - [Levoit Purifier Core200S/300S/400S, Vital 100S/200S \& Everest Air Methods](#levoit-purifier-core200s300s400s-vital-100s200s--everest-air-methods)
+    - [Levoit Vital 100S/200S \& Everest Air Properties and Methods](#levoit-vital-100s200s--everest-air-properties-and-methods)
+    - [Levoit Everest Air Properties \& Methods](#levoit-everest-air-properties--methods)
   - [Lights API Methods \& Properties](#lights-api-methods--properties)
     - [Brightness Light Bulb Method and Properties](#brightness-light-bulb-method-and-properties)
     - [Light Bulb Color Temperature Methods and Properties](#light-bulb-color-temperature-methods-and-properties)
@@ -61,6 +65,14 @@ pyvesync is a library to manage VeSync compatible [smart home devices](#supporte
 - [Debug mode](#debug-mode)
 - [Redact mode](#redact-mode)
 - [Feature Requests](#feature-requests)
+- [Device Requests](#device-requests)
+- [Contributing](#contributing)
+
+## WARNING - pyvesync v3.0 🔥🔥🔥
+
+pyvesync 3.0 will be released very shortly and will have **MAJOR BREAKING CHANGES**. This was necessary to improve maintainability and performance. Existing code **will not** work with the new release.  Please see the new pyvesync docs here: [pyvesync v3](https://webdjoe.github.io/pyvesync/latest/) or the [dev](https://github.com/webdjoe/pyvesync/tree/dev-2.0) branch for details.
+
+If you are currently using the library and wish to upgrade, please test you devices and create an issue with any bugs or feedback. This is a simple helper script to assist with testing: [testing_scripts](https://github.com/webdjoe/pyvesync/tree/dev-2.0/testing_scripts)
 
 ## Installation
 
