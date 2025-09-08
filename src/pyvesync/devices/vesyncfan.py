@@ -1,4 +1,5 @@
 """Module for VeSync Fans (Not Purifiers or Humidifiers)."""
+
 from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
@@ -9,6 +10,7 @@ from pyvesync.const import DeviceStatus, ConnectionStatus
 from pyvesync.utils.device_mixins import BypassV2Mixin, process_bypassv2_result
 from pyvesync.models.fan_models import TowerFanResult
 from pyvesync.models.bypass_models import TimerModels
+
 if TYPE_CHECKING:
     from pyvesync.device_map import FanMap
     from pyvesync import VeSync
@@ -50,26 +52,26 @@ class VeSyncTowerFan(BypassV2Mixin, VeSyncFanBase):
 
         if res.timerRemain is not None and res.timerRemain > 0:
             if self.state.device_status == DeviceStatus.ON:
-                self.state.timer = Timer(res.timerRemain, action="off")
+                self.state.timer = Timer(res.timerRemain, action='off')
             else:
-                self.state.timer = Timer(res.timerRemain, action="on")
+                self.state.timer = Timer(res.timerRemain, action='on')
         if res.sleepPreference is None:
             return
         self.state.sleep_preference_type = res.sleepPreference.sleepPreferenceType
         self.state.sleep_fallasleep_remain = DeviceStatus.from_int(
             res.sleepPreference.fallAsleepRemain
-            )
+        )
         self.state.sleep_oscillation_switch = DeviceStatus.from_int(
             res.sleepPreference.oscillationSwitch
-            )
+        )
         self.state.sleep_change_fan_level = DeviceStatus.from_int(
             res.sleepPreference.autoChangeFanLevelSwitch
-            )
+        )
 
     async def get_details(self) -> None:
-        r_dict = await self.call_bypassv2_api("getTowerFanStatus")
+        r_dict = await self.call_bypassv2_api('getTowerFanStatus')
         result = process_bypassv2_result(
-            self, logger, "get_details", r_dict, TowerFanResult
+            self, logger, 'get_details', r_dict, TowerFanResult
         )
         if result is None:
             return
@@ -85,13 +87,9 @@ class VeSyncTowerFan(BypassV2Mixin, VeSyncFanBase):
             logger.debug('Invalid fan speed level used - %s', speed)
             return False
 
-        payload_data = {
-            "manualSpeedLevel": speed,
-            "levelType": "wind",
-            "levelIdx": 0
-        }
-        r_dict = await self.call_bypassv2_api("setLevel", payload_data)
-        r = Helpers.process_dev_response(logger, "set_fan_speed", self, r_dict)
+        payload_data = {'manualSpeedLevel': speed, 'levelType': 'wind', 'levelIdx': 0}
+        r_dict = await self.call_bypassv2_api('setLevel', payload_data)
+        r = Helpers.process_dev_response(logger, 'set_fan_speed', self, r_dict)
         if r is None:
             return False
 
@@ -105,15 +103,12 @@ class VeSyncTowerFan(BypassV2Mixin, VeSyncFanBase):
             return await self.turn_off()
 
         if mode.lower() not in self.modes:
-            logger.debug('Invalid purifier mode used - %s',
-                         mode)
+            logger.debug('Invalid purifier mode used - %s', mode)
             return False
 
-        payload_data = {
-            "workMode": mode
-        }
-        r_dict = await self.call_bypassv2_api("setTowerFanMode", payload_data)
-        r = Helpers.process_dev_response(logger, "set_mode", self, r_dict)
+        payload_data = {'workMode': mode}
+        r_dict = await self.call_bypassv2_api('setTowerFanMode', payload_data)
+        r = Helpers.process_dev_response(logger, 'set_mode', self, r_dict)
         if r is None:
             return False
 
@@ -128,8 +123,8 @@ class VeSyncTowerFan(BypassV2Mixin, VeSyncFanBase):
             'powerSwitch': int(toggle),
             'switchIdx': 0,
         }
-        r_dict = await self.call_bypassv2_api("setSwitch", payload_data)
-        r = Helpers.process_dev_response(logger, "toggle_switch", self, r_dict)
+        r_dict = await self.call_bypassv2_api('setSwitch', payload_data)
+        r = Helpers.process_dev_response(logger, 'toggle_switch', self, r_dict)
         if r is None:
             return False
 
@@ -138,11 +133,9 @@ class VeSyncTowerFan(BypassV2Mixin, VeSyncFanBase):
         return True
 
     async def toggle_oscillation(self, toggle: bool) -> bool:
-        payload_data = {
-            "oscillationSwitch": int(toggle)
-        }
-        r_dict = await self.call_bypassv2_api("setOscillationSwitch", payload_data)
-        r = Helpers.process_dev_response(logger, "toggle_oscillation", self, r_dict)
+        payload_data = {'oscillationSwitch': int(toggle)}
+        r_dict = await self.call_bypassv2_api('setOscillationSwitch', payload_data)
+        r = Helpers.process_dev_response(logger, 'toggle_oscillation', self, r_dict)
         if r is None:
             return False
 
@@ -151,11 +144,9 @@ class VeSyncTowerFan(BypassV2Mixin, VeSyncFanBase):
         return True
 
     async def toggle_mute(self, toggle: bool) -> bool:
-        payload_data = {
-            "muteSwitch": int(toggle)
-        }
-        r_dict = await self.call_bypassv2_api("setMuteSwitch", payload_data)
-        r = Helpers.process_dev_response(logger, "toggle_mute", self, r_dict)
+        payload_data = {'muteSwitch': int(toggle)}
+        r_dict = await self.call_bypassv2_api('setMuteSwitch', payload_data)
+        r = Helpers.process_dev_response(logger, 'toggle_mute', self, r_dict)
         if r is None:
             return False
 
@@ -164,11 +155,9 @@ class VeSyncTowerFan(BypassV2Mixin, VeSyncFanBase):
         return True
 
     async def toggle_display(self, toggle: bool) -> bool:
-        payload_data = {
-            "screenSwitch": int(toggle)
-        }
-        r_dict = await self.call_bypassv2_api("setDisplay", payload_data)
-        r = Helpers.process_dev_response(logger, "toggle_display", self, r_dict)
+        payload_data = {'screenSwitch': int(toggle)}
+        r_dict = await self.call_bypassv2_api('setDisplay', payload_data)
+        r = Helpers.process_dev_response(logger, 'toggle_display', self, r_dict)
         if r is None:
             return False
 
@@ -178,11 +167,9 @@ class VeSyncTowerFan(BypassV2Mixin, VeSyncFanBase):
 
     async def toggle_displaying_type(self, toggle: bool) -> bool:
         """Set displaying type on/off - Unknown functionality."""
-        payload_data = {
-            "displayingType": int(toggle)
-        }
-        r_dict = await self.call_bypassv2_api("setDisplayingType", payload_data)
-        r = Helpers.process_dev_response(logger, "toggle_displaying_type", self, r_dict)
+        payload_data = {'displayingType': int(toggle)}
+        r_dict = await self.call_bypassv2_api('setDisplayingType', payload_data)
+        r = Helpers.process_dev_response(logger, 'toggle_displaying_type', self, r_dict)
         if r is None:
             return False
 
@@ -191,12 +178,9 @@ class VeSyncTowerFan(BypassV2Mixin, VeSyncFanBase):
         return True
 
     async def get_timer(self) -> None:
-        r_dict = await self.call_bypassv2_api(
-            "getTimer",
-            {}
-        )
+        r_dict = await self.call_bypassv2_api('getTimer', {})
         r_model = process_bypassv2_result(
-            self, logger, "get_timer", r_dict, TimerModels.ResultV2GetTimer
+            self, logger, 'get_timer', r_dict, TimerModels.ResultV2GetTimer
         )
         if not r_model:
             logger.debug('No timer found - run get_timer()')
@@ -208,9 +192,7 @@ class VeSyncTowerFan(BypassV2Mixin, VeSyncFanBase):
         if not isinstance(timer, TimerModels.TimerItemV2):
             logger.debug('Invalid timer found for %s', self.device_name)
             return
-        self.state.timer = Timer(
-            timer.remain, timer.action, timer.id
-        )
+        self.state.timer = Timer(timer.remain, timer.action, timer.id)
 
     async def set_timer(self, duration: int, action: str | None = None) -> bool:
         if action is None:
@@ -226,9 +208,9 @@ class VeSyncTowerFan(BypassV2Mixin, VeSyncFanBase):
             'action': action,
             'total': duration,
         }
-        r_dict = await self.call_bypassv2_api("setTimer", payload_data)
+        r_dict = await self.call_bypassv2_api('setTimer', payload_data)
         r_model = process_bypassv2_result(
-            self, logger, "set_timer", r_dict, TimerModels.ResultV2SetTimer
+            self, logger, 'set_timer', r_dict, TimerModels.ResultV2SetTimer
         )
         if r_model is None:
             return False
@@ -242,8 +224,8 @@ class VeSyncTowerFan(BypassV2Mixin, VeSyncFanBase):
         payload_data = {
             'id': self.state.timer.id,
         }
-        r_dict = await self.call_bypassv2_api("clearTimer", payload_data)
-        result = Helpers.process_dev_response(logger, "clear_timer", self, r_dict)
+        r_dict = await self.call_bypassv2_api('clearTimer', payload_data)
+        result = Helpers.process_dev_response(logger, 'clear_timer', self, r_dict)
         if result is None:
             return False
         self.state.timer = None

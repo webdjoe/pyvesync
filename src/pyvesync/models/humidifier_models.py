@@ -6,6 +6,7 @@ These models inherit from `ResponseBaseModel` and `RequestBaseModel` from the
 The `InnerHumidifierBaseResult` class is used as a base class for the inner humidifier
 result models. The correct subclass is determined by the mashumaro discriminator.
 """
+
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import Annotated
@@ -16,7 +17,7 @@ from mashumaro.types import Alias
 from pyvesync.models.base_models import (
     ResponseBaseModel,
     ResponseCodeModel,
-    )
+)
 
 
 @dataclass
@@ -54,6 +55,7 @@ class BypassV2InnerErrorResult(InnerHumidifierBaseResult):
 
     msg: str
 
+
 # Inner Result models for individual devices inherit from InnerHumidifierBaseResult
 # and are used to parse the response from the API.
 # The correct subclass is determined by the mashumaro discriminator
@@ -70,7 +72,7 @@ class ClassicLVHumidResult(InnerHumidifierBaseResult):
     mist_virtual_level: int
     mist_level: int
     mode: str
-    display: Annotated[bool, Alias("indicator_light_status")]
+    display: Annotated[bool, Alias('indicator_light_status')]
     water_lacks: bool
     humidity: int | None = None
     humidity_high: bool = False
@@ -87,7 +89,7 @@ class ClassicConfig(ResponseBaseModel):
     """Classic 200S Humidifier Configuration Model."""
 
     auto_target_humidity: int = 0
-    display: Annotated[bool, Alias("indicator_light_status")] = False
+    display: Annotated[bool, Alias('indicator_light_status')] = False
     automatic_stop: bool = False
 
     class Config(BaseConfig):  # type: ignore[override]
@@ -133,6 +135,7 @@ class LV600SHumidResult(InnerHumidifierBaseResult):
     extension: LV600SExtension | None = None
     configuration: LV600SConfig | None = None
 
+
 # Models for the VeSync Superior 6000S Humidifier
 
 
@@ -176,6 +179,7 @@ class Superior6000SDryingMode(ResponseBaseModel):
 
 
 # Models for the Levoit 1000S Humidifier
+
 
 @dataclass
 class Levoit1000SResult(InnerHumidifierBaseResult):

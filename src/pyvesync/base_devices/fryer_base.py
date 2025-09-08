@@ -1,4 +1,5 @@
 """Air Purifier Base Class."""
+
 from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
@@ -28,10 +29,12 @@ class FryerState(DeviceState):
 
     __slots__ = ()
 
-    def __init__(self,
-                 device: VeSyncFryer,
-                 details: ResponseDeviceDetailsModel,
-                 feature_map: AirFryerMap) -> None:
+    def __init__(
+        self,
+        device: VeSyncFryer,
+        details: ResponseDeviceDetailsModel,
+        feature_map: AirFryerMap,
+    ) -> None:
         """Initialize FryerState.
 
         Args:

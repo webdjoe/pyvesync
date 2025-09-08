@@ -1,4 +1,5 @@
 """Base Devices for Outlets."""
+
 from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
@@ -62,29 +63,29 @@ class OutletState(DeviceState):
     """
 
     __slots__ = (
-        "energy",
-        "monthly_history",
-        "nightlight_automode",
-        "nightlight_brightness",
-        "nightlight_status",
-        "power",
-        "voltage",
-        "weekly_history",
-        "yearly_history",
+        'energy',
+        'monthly_history',
+        'nightlight_automode',
+        'nightlight_brightness',
+        'nightlight_status',
+        'power',
+        'voltage',
+        'weekly_history',
+        'yearly_history',
     )
 
     def __init__(
         self,
         device: VeSyncOutlet,
         details: ResponseDeviceDetailsModel,
-        feature_map: OutletMap
-            ) -> None:
+        feature_map: OutletMap,
+    ) -> None:
         """Initialize VeSync Switch State."""
         super().__init__(device, details, feature_map)
         self._exclude_serialization = [
-            "weakly_history",
-            "monthly_history",
-            "yearly_history",
+            'weakly_history',
+            'monthly_history',
+            'yearly_history',
         ]
         self.device: VeSyncOutlet = device
         self.features: list[str] = feature_map.features
@@ -102,30 +103,30 @@ class OutletState(DeviceState):
     def annual_history_to_json(self) -> None | str:
         """Dump annual history."""
         if not self.device.supports_energy:
-            logger.info("Device does not support energy monitoring.")
+            logger.info('Device does not support energy monitoring.')
             return None
         if self.yearly_history is None:
-            logger.info("No yearly history available, run device.get_yearly_history().")
+            logger.info('No yearly history available, run device.get_yearly_history().')
             return None
         return self.yearly_history.to_json()
 
     def monthly_history_to_json(self) -> None | str:
         """Dump monthly history."""
         if not self.device.supports_energy:
-            logger.info("Device does not support energy monitoring.")
+            logger.info('Device does not support energy monitoring.')
             return None
         if self.monthly_history is None:
-            logger.info("No monthly history available, run device.get_monthly_history().")
+            logger.info('No monthly history available, run device.get_monthly_history().')
             return None
         return self.monthly_history.to_json()
 
     def weekly_history_to_json(self) -> None | str:
         """Dump weekly history."""
         if not self.device.supports_energy:
-            logger.info("Device does not support energy monitoring.")
+            logger.info('Device does not support energy monitoring.')
             return None
         if self.weekly_history is None:
-            logger.info("No weekly history available, run device.get_weekly_history().")
+            logger.info('No weekly history available, run device.get_weekly_history().')
             return None
         return self.weekly_history.to_json()
 
@@ -166,8 +167,9 @@ class VeSyncOutlet(VeSyncBaseToggleDevice):
 
     # __metaclass__ = ABCMeta
 
-    def __init__(self, details: ResponseDeviceDetailsModel,
-                 manager: VeSync, feature_map: OutletMap) -> None:
+    def __init__(
+        self, details: ResponseDeviceDetailsModel, manager: VeSync, feature_map: OutletMap
+    ) -> None:
         """Initialize VeSync Outlet base class."""
         super().__init__(details, manager, feature_map)
         self.state: OutletState = OutletState(self, details, feature_map)
@@ -175,9 +177,20 @@ class VeSyncOutlet(VeSyncBaseToggleDevice):
 
     def _build_energy_request(self, method: str) -> RequestEnergyHistory:
         """Build energy request post."""
-        request_keys = ["acceptLanguage", "accountID", "appVersion", "phoneBrand",
-                        "phoneOS", "timeZone", "token", "traceId", "userCountryCode",
-                        "debugMode", "homeTimeZone", "uuid"]
+        request_keys = [
+            'acceptLanguage',
+            'accountID',
+            'appVersion',
+            'phoneBrand',
+            'phoneOS',
+            'timeZone',
+            'token',
+            'traceId',
+            'userCountryCode',
+            'debugMode',
+            'homeTimeZone',
+            'uuid',
+        ]
         body = Helpers.get_class_attributes(DefaultValues, request_keys)
         body.update(Helpers.get_class_attributes(self.manager, request_keys))
         body.update(Helpers.get_class_attributes(self, request_keys))
@@ -195,13 +208,15 @@ class VeSyncOutlet(VeSyncBaseToggleDevice):
             Builds the state.<history_interval>_history attribute.
         """
         if not self.supports_energy:
-            logger.debug("Device does not support energy monitoring.")
+            logger.debug('Device does not support energy monitoring.')
             return
         history_intervals = [
-            'getLastWeekEnergy', 'getLastMonthEnergy', 'getLastYearEnergy'
-            ]
+            'getLastWeekEnergy',
+            'getLastMonthEnergy',
+            'getLastYearEnergy',
+        ]
         if history_interval not in history_intervals:
-            logger.debug("Invalid history interval: %s", history_interval)
+            logger.debug('Invalid history interval: %s', history_interval)
             return
         body = self._build_energy_request(history_interval)
         headers = Helpers.req_header_bypass()
@@ -212,9 +227,7 @@ class VeSyncOutlet(VeSyncBaseToggleDevice):
             json_object=body.to_dict(),
         )
 
-        r = Helpers.process_dev_response(
-            logger, history_interval, self, r_bytes
-            )
+        r = Helpers.process_dev_response(logger, history_interval, self, r_bytes)
         if r is None:
             return
         response = ResponseEnergyHistory.from_dict(r)
@@ -288,28 +301,28 @@ class VeSyncOutlet(VeSyncBaseToggleDevice):
         """
         del mode  # unused
         if not self.supports_nightlight:
-            logger.debug("Device does not support nightlight.")
+            logger.debug('Device does not support nightlight.')
         else:
-            logger.debug("Nightlight mode not configured for %s", self.device_name)
+            logger.debug('Nightlight mode not configured for %s', self.device_name)
         return False
 
     async def turn_on_nightlight(self) -> bool:
         """Turn on nightlight if supported."""
         if not self.supports_nightlight:
-            logger.debug("Device does not support nightlight.")
+            logger.debug('Device does not support nightlight.')
             return False
         return await self.set_nightlight_state(NightlightModes.ON)
 
     async def turn_off_nightlight(self) -> bool:
         """Turn off nightlight if supported."""
         if not self.supports_nightlight:
-            logger.debug("Device does not support nightlight.")
+            logger.debug('Device does not support nightlight.')
             return False
         return await self.set_nightlight_state(NightlightModes.OFF)
 
     async def set_nightlight_auto(self) -> bool:
         """Set nightlight to auto mode."""
         if not self.supports_nightlight:
-            logger.debug("Device does not support nightlight.")
+            logger.debug('Device does not support nightlight.')
             return False
         return await self.set_nightlight_state(NightlightModes.AUTO)

@@ -28,10 +28,10 @@ if TYPE_CHECKING:
     from pyvesync.utils.errors import ResponseInfo
     from pyvesync.base_devices import VeSyncBaseDevice
 
-T_MODEL = TypeVar("T_MODEL", bound=DataClassORJSONMixin)
+T_MODEL = TypeVar('T_MODEL', bound=DataClassORJSONMixin)
 
-BYPASS_V1_PATH = "/cloud/v1/deviceManaged/"
-BYPASS_V2_BASE = "/cloud/v2/deviceManaged/"
+BYPASS_V1_PATH = '/cloud/v1/deviceManaged/'
+BYPASS_V2_BASE = '/cloud/v2/deviceManaged/'
 
 
 def process_bypassv1_result(
@@ -39,7 +39,7 @@ def process_bypassv1_result(
     logger: Logger,
     method: str,
     resp_dict: dict | None,
-    model: type[T_MODEL]
+    model: type[T_MODEL],
 ) -> T_MODEL | None:
     """Process the Bypass V1 API response.
 
@@ -62,7 +62,7 @@ def process_bypassv1_result(
             device.device_name,
             device.device_type,
             method,
-            "Error decoding JSON response",
+            'Error decoding JSON response',
         )
         return None
 
@@ -70,11 +70,9 @@ def process_bypassv1_result(
     device.last_response = error_info
     device.last_response.response_data = resp_dict
     if error_info.error_type != ErrorTypes.SUCCESS:
-        _handle_bypass_error(
-            logger, device, method, error_info, resp_dict['code']
-        )
+        _handle_bypass_error(logger, device, method, error_info, resp_dict['code'])
         return None
-    result = resp_dict.get("result")
+    result = resp_dict.get('result')
     if not isinstance(result, dict):
         return None
     return Helpers.model_maker(logger, model, method, result, device)
@@ -113,9 +111,7 @@ def _handle_bypass_error(
         code,
         error_info.message,
     )
-    device.state.connection_status = ConnectionStatus.from_bool(
-        error_info.device_online
-        )
+    device.state.connection_status = ConnectionStatus.from_bool(error_info.device_online)
 
 
 def _get_inner_result(
@@ -126,8 +122,8 @@ def _get_inner_result(
 ) -> dict | None:
     """Process the code in the result field of Bypass V2."""
     try:
-        outer_result = resp_dict["result"]
-        inner_result = outer_result["result"]
+        outer_result = resp_dict['result']
+        inner_result = outer_result['result']
         code = int(outer_result['code'])
     except (ValueError, TypeError, KeyError):
         LibraryLogger.log_device_api_response_error(
@@ -135,15 +131,15 @@ def _get_inner_result(
             device.device_name,
             device.device_type,
             method,
-            "Error processing bypass V2 API response result.",
+            'Error processing bypass V2 API response result.',
         )
         return None
 
     if code != 0:
         error_info = ErrorCodes.get_error_info(code)
-        error_msg = f"{error_info.message}"
-        if inner_result.get("msg") is not None:
-            error_info.message = f"{error_info.message} - {inner_result['msg']}"
+        error_msg = f'{error_info.message}'
+        if inner_result.get('msg') is not None:
+            error_info.message = f'{error_info.message} - {inner_result["msg"]}'
         LibraryLogger.log_device_return_code(
             logger,
             method,
@@ -162,7 +158,7 @@ def process_bypassv2_result(
     logger: Logger,
     method: str,
     resp_dict: dict | None,
-    model: type[T_MODEL]
+    model: type[T_MODEL],
 ) -> T_MODEL | None:
     """Process the Bypass V1 API response.
 
@@ -186,7 +182,7 @@ def process_bypassv2_result(
             device.device_name,
             device.device_type,
             method,
-            "Error decoding JSON response",
+            'Error decoding JSON response',
         )
         return None
 
@@ -194,9 +190,7 @@ def process_bypassv2_result(
     device.last_response = error_info
     device.last_response.response_data = resp_dict
     if error_info.error_type != ErrorTypes.SUCCESS:
-        _handle_bypass_error(
-            logger, device, method, error_info, resp_dict['code']
-        )
+        _handle_bypass_error(logger, device, method, error_info, resp_dict['code'])
         return None
     result = _get_inner_result(device, logger, method, resp_dict)
     if not isinstance(result, dict):
@@ -216,27 +210,27 @@ class BypassV2Mixin:
 
     __slots__ = ()
     request_keys: ClassVar[list[str]] = [
-        "acceptLanguage",
-        "appVersion",
-        "phoneBrand",
-        "phoneOS",
-        "accountID",
-        "cid",
-        "configModule",
-        "debugMode",
-        "traceId",
-        "timeZone",
-        "token",
-        "userCountryCode",
-        "configModel",
-        "deviceId",
+        'acceptLanguage',
+        'appVersion',
+        'phoneBrand',
+        'phoneOS',
+        'accountID',
+        'cid',
+        'configModule',
+        'debugMode',
+        'traceId',
+        'timeZone',
+        'token',
+        'userCountryCode',
+        'configModel',
+        'deviceId',
     ]
 
     def _build_request(
         self,
         payload_method: str,
         data: dict | None = None,
-        method: str = "bypassV2",
+        method: str = 'bypassV2',
     ) -> RequestBypassV2:
         """Build API request body Bypass V2 endpoint.
 
@@ -248,16 +242,16 @@ class BypassV2Mixin:
         body = Helpers.get_class_attributes(DefaultValues, self.request_keys)
         body.update(Helpers.get_class_attributes(self.manager, self.request_keys))
         body.update(Helpers.get_class_attributes(self, self.request_keys))
-        body["method"] = method
-        body["payload"] = {"method": payload_method, "source": "APP", "data": data or {}}
+        body['method'] = method
+        body['payload'] = {'method': payload_method, 'source': 'APP', 'data': data or {}}
         return RequestBypassV2.from_dict(body)
 
     async def call_bypassv2_api(
         self,
         payload_method: str,
         data: dict | None = None,
-        method: str = "bypassV2",
-        endpoint: str = "bypassV2",
+        method: str = 'bypassV2',
+        endpoint: str = 'bypassV2',
     ) -> dict | None:
         """Send Bypass V2 API request.
 
@@ -276,7 +270,7 @@ class BypassV2Mixin:
         request = self._build_request(payload_method, data, method)
         endpoint = BYPASS_V2_BASE + endpoint
         resp_dict, _ = await self.manager.async_call_api(
-            endpoint, "post", request, Helpers.req_header_bypass()
+            endpoint, 'post', request, Helpers.req_header_bypass()
         )
         return resp_dict
 
@@ -295,28 +289,28 @@ class BypassV1Mixin:
 
     __slots__ = ()
     request_keys: ClassVar[list[str]] = [
-        "acceptLanguage",
-        "appVersion",
-        "phoneBrand",
-        "phoneOS",
-        "accountID",
-        "cid",
-        "configModule",
-        "debugMode",
-        "traceId",
-        "timeZone",
-        "token",
-        "userCountryCode",
-        "uuid",
-        "configModel",
-        "deviceId",
+        'acceptLanguage',
+        'appVersion',
+        'phoneBrand',
+        'phoneOS',
+        'accountID',
+        'cid',
+        'configModule',
+        'debugMode',
+        'traceId',
+        'timeZone',
+        'token',
+        'userCountryCode',
+        'uuid',
+        'configModel',
+        'deviceId',
     ]
 
     def _build_request(
         self,
         request_model: type[RequestBypassV1],
         update_dict: dict | None = None,
-        method: str = "bypass"
+        method: str = 'bypass',
     ) -> RequestBypassV1:
         """Build API request body for the Bypass V1 endpoint.
 
@@ -332,7 +326,7 @@ class BypassV1Mixin:
         body = Helpers.get_class_attributes(DefaultValues, self.request_keys)
         body.update(Helpers.get_class_attributes(self.manager, self.request_keys))
         body.update(Helpers.get_class_attributes(self, self.request_keys))
-        body["method"] = method
+        body['method'] = method
         body.update(update_dict or {})
         return request_model.from_dict(body)
 
@@ -340,8 +334,8 @@ class BypassV1Mixin:
         self,
         request_model: type[RequestBypassV1],
         update_dict: dict | None = None,
-        method: str = "bypass",
-        endpoint: str = "bypass",
+        method: str = 'bypass',
+        endpoint: str = 'bypass',
     ) -> dict | None:
         """Send ByPass V1 API request.
 
@@ -361,7 +355,7 @@ class BypassV1Mixin:
         request = self._build_request(request_model, update_dict, method)
         url_path = BYPASS_V1_PATH + endpoint
         resp_dict, _ = await self.manager.async_call_api(
-            url_path, "post", request, Helpers.req_header_bypass()
+            url_path, 'post', request, Helpers.req_header_bypass()
         )
 
         return resp_dict

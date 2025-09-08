@@ -3,6 +3,7 @@
 API calls to bypassV2 endpoints have similar request structures. These models are used
 to serialize and deserialize the JSON requests for the bypassV2 endpoints.
 """
+
 from __future__ import annotations
 from dataclasses import dataclass, field
 from mashumaro.mixins.orjson import DataClassORJSONMixin
@@ -50,7 +51,7 @@ class BypassV2RequestPayload(RequestBaseModel):
 
     data: dict
     method: str
-    source: str = "APP"
+    source: str = 'APP'
 
 
 @dataclass
@@ -78,7 +79,7 @@ class RequestBypassV1(RequestBaseModel):
     deviceId: str
     configModel: str
 
-    class Config(BaseConfig):   # type: ignore[override]
+    class Config(BaseConfig):  # type: ignore[override]
         """Configure omit None value keys."""
 
         omit_none = True
@@ -93,8 +94,8 @@ class ResponseBypassV1(ResponseCodeModel):
     result: BypassV1Result | None = field(
         default=None,
         metadata={
-            "serialize": pass_through,
-            "deserialize": pass_through,
+            'serialize': pass_through,
+            'deserialize': pass_through,
         },
     )
 
@@ -133,8 +134,8 @@ class BypassV2OuterResult(DataClassORJSONMixin):
     result: BypassV2InnerResult | None = field(
         default=None,
         metadata={
-            "serialize": pass_through,
-            "deserialize": pass_through,
+            'serialize': pass_through,
+            'deserialize': pass_through,
         },
     )
 
@@ -166,6 +167,7 @@ class ResultV2SetTimer(BypassV2InnerResult):
 
 
 # Bypass V1 Timer Models
+
 
 @dataclass
 class TimeItemV1(ResponseBaseModel):

@@ -7,8 +7,10 @@ The `InnerPurifierBaseResult` class is used as a base class for the inner purifi
 result models for all models and the mashumaro discriminator determines the correct
 subclass when deserializing.
 """
+
 from __future__ import annotations
 from dataclasses import dataclass
+
 # import orjson
 from mashumaro.config import BaseConfig
 from mashumaro.types import Discriminator
@@ -20,7 +22,7 @@ from pyvesync.models.bypass_models import (
 from pyvesync.models.base_models import (
     ResponseBaseModel,
     RequestBaseModel,
-    )
+)
 
 
 @dataclass
@@ -99,6 +101,7 @@ class PurifierSproutResult(InnerPurifierBaseResult):
 @dataclass
 class PurifierNightlight(ResponseBaseModel):
     """Purifier Nightlight Response Dict."""
+
     nightLightSwitch: bool
     brightness: int
     colorTemperature: int

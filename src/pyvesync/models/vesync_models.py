@@ -9,6 +9,7 @@ Note:
     should be no repeating keys set in the child models.
 
 """
+
 from __future__ import annotations
 from dataclasses import dataclass, field
 import hashlib
@@ -19,7 +20,7 @@ from pyvesync.models.base_models import (
     ResponseBaseModel,
     RequestBaseModel,
     DefaultValues,
-    )
+)
 
 
 @dataclass
@@ -33,10 +34,10 @@ class RequestGetTokenModel(RequestBaseModel):
     # default values
     acceptLanguage: str = DefaultValues.acceptLanguage
     accountID: str = ''
-    authProtocolType: str = "generic"
+    authProtocolType: str = 'generic'
     clientInfo: str = DefaultValues.phoneBrand
     clientType: str = DefaultValues.clientType
-    clientVersion: str = f"VeSync {DefaultValues.appVersion}"
+    clientVersion: str = f'VeSync {DefaultValues.appVersion}'
     debugMode: bool = False
     osInfo: str = DefaultValues.phoneOS
     terminalId: str = DefaultValues.terminalId
@@ -80,13 +81,13 @@ class RequestLoginTokenModel(RequestBaseModel):
     accountID: str = ''
     clientInfo: str = DefaultValues.phoneBrand
     clientType: str = DefaultValues.clientType
-    clientVersion: str = f"VeSync {DefaultValues.appVersion}"
+    clientVersion: str = f'VeSync {DefaultValues.appVersion}'
     debugMode: bool = False
     emailSubscriptions: bool = False
     osInfo: str = DefaultValues.phoneOS
     terminalId: str = DefaultValues.terminalId
     timeZone: str = DefaultValues.timeZone
-    token: str = ""
+    token: str = ''
     bizToken: str | None = None
     regionChange: str | None = None
     userCountryCode: str = DefaultValues.userCountryCode
@@ -175,12 +176,12 @@ def _flatten_device_prop(d: dict[str, Any]) -> dict[str, Any]:
     if isinstance(d.get('deviceProp'), dict):
         device_prop = d['deviceProp']
         if device_prop.get('powerSwitch') is not None:
-            d['deviceStatus'] = "on" if device_prop['powerSwitch'] == 1 else "off"
+            d['deviceStatus'] = 'on' if device_prop['powerSwitch'] == 1 else 'off'
         if device_prop.get('connectionStatus') is not None:
             d['connectionStatus'] = device_prop['connectionStatus']
         if device_prop.get('wifiMac') is not None:
             d['macID'] = device_prop['wifiMac']
-    d.pop("deviceProp", None)
+    d.pop('deviceProp', None)
     return d
 
 
@@ -204,17 +205,17 @@ class ResponseDeviceDetailsModel(ResponseBaseModel):
     type: str
     configModule: str
     uuid: str | None = None
-    macID: str = ""
-    mode: str = ""
-    deviceImg: str = ""
+    macID: str = ''
+    mode: str = ''
+    deviceImg: str = ''
     speed: str | None = None
     currentFirmVersion: str | None = None
     subDeviceType: str | None = None
     subDeviceList: str | None = None
     extension: InternalDeviceListExtension | None = None
     subDeviceNo: int | None = None
-    deviceStatus: str = "off"
-    connectionStatus: str = "offline"
+    deviceStatus: str = 'off'
+    connectionStatus: str = 'offline'
     productType: str | None = None
 
     @classmethod
@@ -229,7 +230,7 @@ class ResponseDeviceDetailsModel(ResponseBaseModel):
         super().__pre_deserialize__(d)
         d = _flatten_device_prop(d)
         if d.get('cid') is None:
-            d['cid'] = d.get('uuid') if d.get('uuid') is not None else d.get("macID")
+            d['cid'] = d.get('uuid') if d.get('uuid') is not None else d.get('macID')
         return d
 
 
@@ -312,7 +313,7 @@ class RequestFirmwareModel(RequestBaseModel):
     appVersion: str = DefaultValues.appVersion
     phoneBrand: str = DefaultValues.phoneBrand
     phoneOS: str = DefaultValues.phoneOS
-    method: str = "getFirmwareUpdateInfoList"
+    method: str = 'getFirmwareUpdateInfoList'
     debugMode: bool = False
 
 
@@ -359,9 +360,9 @@ class RequestDeviceConfiguration(RequestBaseModel):
     accountID: str
     token: str
     acceptLanguage: str = DefaultValues.acceptLanguage
-    appVersion: str = f"VeSync {DefaultValues.appVersion}"
+    appVersion: str = f'VeSync {DefaultValues.appVersion}'
     debugMode: bool = False
-    method: str = "getAppConfigurationV2"
+    method: str = 'getAppConfigurationV2'
     phoneBrand: str = DefaultValues.phoneBrand
     phoneOS: str = DefaultValues.phoneOS
     timeZone: str = DefaultValues.timeZone
@@ -370,10 +371,10 @@ class RequestDeviceConfiguration(RequestBaseModel):
     categories: list[dict[str, str | bool]] = field(
         default_factory=lambda: [
             {
-                "category": "SupportedModelsV3",
-                "language": "en",
-                "testMode": False,
-                "version": "",
+                'category': 'SupportedModelsV3',
+                'language': 'en',
+                'testMode': False,
+                'version': '',
             }
         ]
     )

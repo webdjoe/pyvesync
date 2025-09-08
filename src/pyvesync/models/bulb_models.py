@@ -4,6 +4,7 @@ These models are used to serialize and deserialize the JSON responses from the
 VeSync API. The models are used in the VeSync API class methods to provide
 type hints and data validation.
 """
+
 from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Self, TypedDict
@@ -84,14 +85,15 @@ class ResponseESL100DetailResult(ResponseBaseModel):
 
     deviceName: str | None
     name: str | None
-    brightness: int | None = field(metadata=field_options(alias="brightNess"))
+    brightness: int | None = field(metadata=field_options(alias='brightNess'))
     activeTime: int | None
-    deviceStatus: str = "off"
-    connectionStatus: str = "offline"
+    deviceStatus: str = 'off'
+    connectionStatus: str = 'offline'
 
     @classmethod
     def __post_deserialize__(  # type: ignore[override]
-            cls, obj: Self) -> Self:
+        cls, obj: Self
+    ) -> Self:
         """Set values depending on color or white mode."""
         if obj.brightness is None:
             obj.brightness = 0
@@ -112,7 +114,7 @@ class ResponseESL100CWLight(ResponseBaseModel):
     """ESL100CW Tunable Bulb Device Detail Response."""
 
     brightness: int | None
-    action: str = "on"
+    action: str = 'on'
     colorTempe: int = 0
 
 
@@ -163,7 +165,7 @@ class ResponseValcenoOuterResult(ResponseBaseModel):
     """Valceno Bulb Status Response."""
 
     result: ResponseValcenoStatusResult
-    traceId: str = ""
+    traceId: str = ''
     code: int = 0
 
 
@@ -171,13 +173,13 @@ class ResponseValcenoOuterResult(ResponseBaseModel):
 class ResponseValcenoStatusResult(ResponseBaseModel):
     """Valceno Bulb Status Result."""
 
-    colorMode: str = ""
+    colorMode: str = ''
     colorTemp: int = 0
     brightness: int = 0
     hue: int = 0
     saturation: int = 0
     value: int = 0
-    enabled: str = "off"
+    enabled: str = 'off'
 
 
 class ValcenoStatusPayload(TypedDict):

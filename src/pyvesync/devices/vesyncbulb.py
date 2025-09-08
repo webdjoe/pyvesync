@@ -93,8 +93,9 @@ class VeSyncBulbESL100MC(BypassV2Mixin, VeSyncBulb):
 
     __slots__ = ()
 
-    def __init__(self, details: ResponseDeviceDetailsModel,
-                 manager: VeSync, feature_map: BulbMap) -> None:
+    def __init__(
+        self, details: ResponseDeviceDetailsModel, manager: VeSync, feature_map: BulbMap
+    ) -> None:
         """Instantiate ESL100MC Multicolor Bulb."""
         super().__init__(details, manager, feature_map)
 
@@ -112,54 +113,49 @@ class VeSyncBulbESL100MC(BypassV2Mixin, VeSyncBulb):
     #     return default_dict
 
     async def get_details(self) -> None:
-        r_dict = await self.call_bypassv2_api("getLightStatus")
+        r_dict = await self.call_bypassv2_api('getLightStatus')
 
         result_model = process_bypassv2_result(
-            self, logger, "get_details", r_dict, bulb_models.ResponseESL100MCResult
+            self, logger, 'get_details', r_dict, bulb_models.ResponseESL100MCResult
         )
         if result_model is None:
             return
         self._set_state(result_model)
         return
 
-    def _set_state(
-            self, response: bulb_models.ResponseESL100MCResult) -> None:
+    def _set_state(self, response: bulb_models.ResponseESL100MCResult) -> None:
         """Build detail dictionary from response."""
         self.state.brightness = response.brightness
         self.state.color_mode = response.colorMode
         self.state.color = Color.from_rgb(
-            red=response.red,
-            green=response.green,
-            blue=response.blue
+            red=response.red, green=response.green, blue=response.blue
         )
 
     async def set_brightness(self, brightness: int) -> bool:
         return await self.set_status(brightness=brightness)
 
-    async def set_rgb(self,
-                      red: float,
-                      green: float,
-                      blue: float) -> bool:
+    async def set_rgb(self, red: float, green: float, blue: float) -> bool:
         return await self.set_status(red=red, green=green, blue=blue)
 
     async def set_hsv(self, hue: float, saturation: float, value: float) -> bool:
         hsv = Color.from_hsv(hue=hue, saturation=saturation, value=value)
         if hsv is not None:
             return await self.set_status(
-                red=hsv.rgb.red,
-                green=hsv.rgb.green,
-                blue=hsv.rgb.blue
-                )
-        logger.debug("Invalid HSV values")
+                red=hsv.rgb.red, green=hsv.rgb.green, blue=hsv.rgb.blue
+            )
+        logger.debug('Invalid HSV values')
         return False
 
     async def set_white_mode(self) -> bool:
         return await self.set_status(brightness=100)
 
-    async def set_status(self, brightness: float | None = None,
-                         red: float | None = None,
-                         green: float | None = None,
-                         blue: float | None = None) -> bool:
+    async def set_status(
+        self,
+        brightness: float | None = None,
+        red: float | None = None,
+        green: float | None = None,
+        blue: float | None = None,
+    ) -> bool:
         """Set color of VeSync ESL100MC.
 
         Brightness or RGB values must be provided. If RGB values are provided,
@@ -178,40 +174,44 @@ class VeSyncBulbESL100MC(BypassV2Mixin, VeSyncBulb):
         if red is not None and green is not None and blue is not None:
             new_color = Color.from_rgb(red, green, blue)
             color_mode = 'color'
-            if self.state.device_status == DeviceStatus.ON \
-                    and new_color == self.state.color:
-                logger.debug("New color is same as current color")
+            if (
+                self.state.device_status == DeviceStatus.ON
+                and new_color == self.state.color
+            ):
+                logger.debug('New color is same as current color')
                 return True
         else:
-            logger.debug("RGB Values not provided")
+            logger.debug('RGB Values not provided')
             new_color = None
             if brightness is not None:
                 if Validators.validate_zero_to_hundred(brightness):
                     brightness_update = int(brightness)
                 else:
-                    logger.debug("Invalid brightness value")
+                    logger.debug('Invalid brightness value')
                     return False
-                if self.state.device_status == DeviceStatus.ON \
-                        and brightness_update == self.state.brightness:
+                if (
+                    self.state.device_status == DeviceStatus.ON
+                    and brightness_update == self.state.brightness
+                ):
                     logger.debug('Brightness already set to %s', brightness)
                     return True
                 color_mode = 'white'
             else:
-                logger.debug("Brightness and RGB values are not set")
+                logger.debug('Brightness and RGB values are not set')
                 return False
 
         data = {
-            "action": DeviceStatus.ON,
-            "speed": 0,
-            "brightness": brightness_update,
-            "red": 0 if new_color is None else int(new_color.rgb.red),
-            "green": 0 if new_color is None else int(new_color.rgb.green),
-            "blue": 0 if new_color is None else int(new_color.rgb.blue),
-            "colorMode": "color" if new_color is not None else "white",
+            'action': DeviceStatus.ON,
+            'speed': 0,
+            'brightness': brightness_update,
+            'red': 0 if new_color is None else int(new_color.rgb.red),
+            'green': 0 if new_color is None else int(new_color.rgb.green),
+            'blue': 0 if new_color is None else int(new_color.rgb.blue),
+            'colorMode': 'color' if new_color is not None else 'white',
         }
-        r_dict = await self.call_bypassv2_api("setLightStatus", data)
+        r_dict = await self.call_bypassv2_api('setLightStatus', data)
 
-        r = Helpers.process_dev_response(logger, "set_status", self, r_dict)
+        r = Helpers.process_dev_response(logger, 'set_status', self, r_dict)
         if r is None:
             return False
 
@@ -227,8 +227,8 @@ class VeSyncBulbESL100MC(BypassV2Mixin, VeSyncBulb):
         return True
 
     @deprecated(
-        "toggle() is deprecated, use toggle_switch(toggle: bool | None = None) instead"
-        )
+        'toggle() is deprecated, use toggle_switch(toggle: bool | None = None) instead'
+    )
     async def toggle(self, status: str) -> bool:
         """Toggle switch of VeSync ESL100MC."""
         status_bool = status == DeviceStatus.ON
@@ -237,11 +237,11 @@ class VeSyncBulbESL100MC(BypassV2Mixin, VeSyncBulb):
     async def toggle_switch(self, toggle: bool | None = None) -> bool:
         if toggle is None:
             toggle = self.state.device_status == DeviceStatus.OFF
-        data = {"id": 0, "enabled": toggle}
+        data = {'id': 0, 'enabled': toggle}
 
-        r_dict = await self.call_bypassv2_api("setSwitch", data)
+        r_dict = await self.call_bypassv2_api('setSwitch', data)
 
-        r = Helpers.process_dev_response(logger, "toggle", self, r_dict)
+        r = Helpers.process_dev_response(logger, 'toggle', self, r_dict)
         if r is None:
             return False
 
@@ -289,24 +289,22 @@ class VeSyncBulbESL100(BypassV1Mixin, VeSyncBulb):
 
     __slots__ = ()
 
-    def __init__(self, details: ResponseDeviceDetailsModel,
-                 manager: VeSync, feature_map: BulbMap) -> None:
+    def __init__(
+        self, details: ResponseDeviceDetailsModel, manager: VeSync, feature_map: BulbMap
+    ) -> None:
         """Initialize Etekcity ESL100 Dimmable Bulb."""
         super().__init__(details, manager, feature_map)
 
     async def get_details(self) -> None:
         method_dict = {
-            "method": "deviceDetail",
+            'method': 'deviceDetail',
         }
 
         r_dict = await self.call_bypassv1_api(
-            bulb_models.RequestESL100Detail,
-            method_dict,
-            'deviceDetail',
-            'deviceDetail'
+            bulb_models.RequestESL100Detail, method_dict, 'deviceDetail', 'deviceDetail'
         )
         model = process_bypassv1_result(
-            self, logger, "get_details", r_dict, bulb_models.ResponseESL100DetailResult
+            self, logger, 'get_details', r_dict, bulb_models.ResponseESL100DetailResult
         )
 
         if model is None:
@@ -317,8 +315,8 @@ class VeSyncBulbESL100(BypassV1Mixin, VeSyncBulb):
         self.state.connection_status = model.connectionStatus
 
     @deprecated(
-        "toggle() is deprecated, use toggle_switch(toggle: bool | None = None) instead"
-        )
+        'toggle() is deprecated, use toggle_switch(toggle: bool | None = None) instead'
+    )
     async def toggle(self, status: str) -> bool:
         """Toggle switch of ESL100 bulb."""
         status_bool = status != DeviceStatus.ON
@@ -338,23 +336,23 @@ class VeSyncBulbESL100(BypassV1Mixin, VeSyncBulb):
         #     json_object=body,
         # )
         method_dict = {
-            "status": status,
+            'status': status,
         }
         r_dict = await self.call_bypassv1_api(
             bulb_models.RequestESL100Status,
             method_dict,
             'smartBulbPowerSwitchCtl',
-            'smartBulbPowerSwitchCtl'
+            'smartBulbPowerSwitchCtl',
         )
 
-        r = Helpers.process_dev_response(logger, "toggle", self, r_dict)
+        r = Helpers.process_dev_response(logger, 'toggle', self, r_dict)
         if r is None:
             return False
 
         self.state.device_status = status
         return True
 
-    @deprecated("Use set_brightness() instead")
+    @deprecated('Use set_brightness() instead')
     async def set_status(self, brightness: int) -> bool:
         """Set brightness of dimmable bulb.
 
@@ -371,26 +369,28 @@ class VeSyncBulbESL100(BypassV1Mixin, VeSyncBulb):
             logger.warning('%s is not dimmable', self.device_name)
             return False
         if not Validators.validate_zero_to_hundred(brightness):
-            logger.debug("Invalid brightness value")
+            logger.debug('Invalid brightness value')
             return False
         brightness_update = brightness
-        if self.state.device_status == DeviceStatus.ON \
-                and brightness_update == self.supports_brightness:
-            logger.debug("Device already in requested state")
+        if (
+            self.state.device_status == DeviceStatus.ON
+            and brightness_update == self.supports_brightness
+        ):
+            logger.debug('Device already in requested state')
             return True
 
         method_dict = {
-            "brightNess": str(brightness_update),
-            "status": "on",
+            'brightNess': str(brightness_update),
+            'status': 'on',
         }
         r_dict = await self.call_bypassv1_api(
             bulb_models.RequestESL100Brightness,
             method_dict,
             'smartBulbBrightnessCtl',
-            'smartBulbBrightnessCtl'
+            'smartBulbBrightnessCtl',
         )
 
-        r = Helpers.process_dev_response(logger, "set_brightness", self, r_dict)
+        r = Helpers.process_dev_response(logger, 'set_brightness', self, r_dict)
         if r is None:
             return False
 
@@ -401,23 +401,20 @@ class VeSyncBulbESL100(BypassV1Mixin, VeSyncBulb):
 
     async def get_timer(self) -> None:
         r_dict = await self.call_bypassv1_api(
-            TimerModels.RequestV1GetTimer,
-            {},
-            'getTimers',
-            'timer/getTimers'
+            TimerModels.RequestV1GetTimer, {}, 'getTimers', 'timer/getTimers'
         )
         result_model = process_bypassv1_result(
-            self, logger, "get_timer", r_dict, TimerModels.ResultV1GetTimer
+            self, logger, 'get_timer', r_dict, TimerModels.ResultV1GetTimer
         )
         if result_model is None:
             return
         if not isinstance(result_model.timers, list) or not result_model.timers:
             self.state.timer = None
-            logger.debug("No timers found")
+            logger.debug('No timers found')
             return
         timer = result_model.timers
         if not isinstance(timer, TimerModels.TimerItemV1):
-            logger.debug("Invalid timer item type")
+            logger.debug('Invalid timer item type')
             return
         self.state.timer = Timer(
             int(timer.counterTimer),
@@ -427,24 +424,24 @@ class VeSyncBulbESL100(BypassV1Mixin, VeSyncBulb):
 
     async def set_timer(self, duration: int, action: str | None = None) -> bool:
         if action is None:
-            action = DeviceStatus.ON if self.state.device_status == DeviceStatus.OFF \
+            action = (
+                DeviceStatus.ON
+                if self.state.device_status == DeviceStatus.OFF
                 else DeviceStatus.OFF
+            )
         if action not in [DeviceStatus.ON, DeviceStatus.OFF]:
             logger.debug("Invalid action value - must be 'on' or 'off'")
             return False
         update_dict = {
-            "action": action,
-            "counterTime": str(duration),
-            "status": "1",
+            'action': action,
+            'counterTime': str(duration),
+            'status': '1',
         }
         r_dict = await self.call_bypassv1_api(
-            TimerModels.RequestV1SetTime,
-            update_dict,
-            'addTimer',
-            'timer/addTimer'
+            TimerModels.RequestV1SetTime, update_dict, 'addTimer', 'timer/addTimer'
         )
         result_model = process_bypassv1_result(
-            self, logger, "set_timer", r_dict, TimerModels.ResultV1SetTimer
+            self, logger, 'set_timer', r_dict, TimerModels.ResultV1SetTimer
         )
         if result_model is None:
             return False
@@ -453,18 +450,16 @@ class VeSyncBulbESL100(BypassV1Mixin, VeSyncBulb):
 
     async def clear_timer(self) -> bool:
         if self.state.timer is None:
-            logger.debug("No timer set - run get_timer() first")
+            logger.debug('No timer set - run get_timer() first')
             return False
         timer = self.state.timer
         r_dict = await self.call_bypassv1_api(
             TimerModels.RequestV1ClearTimer,
-            {"timerId": str(timer.id), 'status': "1"},
+            {'timerId': str(timer.id), 'status': '1'},
             'deleteTimer',
-            'timer/deleteTimer'
+            'timer/deleteTimer',
         )
-        result = Helpers.process_dev_response(
-            logger, "clear_timer", self, r_dict
-            )
+        result = Helpers.process_dev_response(logger, 'clear_timer', self, r_dict)
         if result is None:
             return False
         self.state.timer = None
@@ -511,18 +506,20 @@ class VeSyncBulbESL100CW(BypassV1Mixin, VeSyncBulb):
 
     __slots__ = ()
 
-    def __init__(self, details: ResponseDeviceDetailsModel,
-                 manager: VeSync, feature_map: BulbMap) -> None:
+    def __init__(
+        self, details: ResponseDeviceDetailsModel, manager: VeSync, feature_map: BulbMap
+    ) -> None:
         """Initialize Etekcity Tunable white bulb."""
         super().__init__(details, manager, feature_map)
 
     async def get_details(self) -> None:
         r_dict = await self.call_bypassv1_api(
-            bulb_models.RequestESL100CWBase, {"jsonCmd": {"getLightStatus": "get"}},
-            )
+            bulb_models.RequestESL100CWBase,
+            {'jsonCmd': {'getLightStatus': 'get'}},
+        )
 
         light_resp = process_bypassv1_result(
-            self, logger, "get_details", r_dict, bulb_models.ResponseESL100CWDetailResult
+            self, logger, 'get_details', r_dict, bulb_models.ResponseESL100CWDetailResult
         )
         if light_resp is None:
             self.state.connection_status = ConnectionStatus.OFFLINE
@@ -530,7 +527,8 @@ class VeSyncBulbESL100CW(BypassV1Mixin, VeSyncBulb):
         self._interpret_apicall_result(light_resp)
 
     def _interpret_apicall_result(
-            self, response: bulb_models.ResponseESL100CWDetailResult) -> None:
+        self, response: bulb_models.ResponseESL100CWDetailResult
+    ) -> None:
         self.state.connection_status = ConnectionStatus.ONLINE
         result = response.light
         self.state.device_status = result.action
@@ -538,8 +536,8 @@ class VeSyncBulbESL100CW(BypassV1Mixin, VeSyncBulb):
         self.state.color_temp = result.colorTempe
 
     @deprecated(
-        "toggle() is deprecated, use toggle_switch(toggle: bool | None = None) instead"
-        )
+        'toggle() is deprecated, use toggle_switch(toggle: bool | None = None) instead'
+    )
     async def toggle(self, status: str) -> bool:
         """Deprecated - use toggle_switch()."""
         status_bool = status == DeviceStatus.ON
@@ -552,12 +550,12 @@ class VeSyncBulbESL100CW(BypassV1Mixin, VeSyncBulb):
 
         r_dict = await self.call_bypassv1_api(
             bulb_models.RequestESL100CWBase,
-            {"jsonCmd": {"light": {"action": status}}},
+            {'jsonCmd': {'light': {'action': status}}},
             'bypass',
-            'bypass'
+            'bypass',
         )
 
-        r = Helpers.process_dev_response(logger, "toggle", self, r_dict)
+        r = Helpers.process_dev_response(logger, 'toggle', self, r_dict)
         if r is None:
             logger.debug('%s offline', self.device_name)
             return False
@@ -568,14 +566,15 @@ class VeSyncBulbESL100CW(BypassV1Mixin, VeSyncBulb):
         """Set brightness of tunable bulb."""
         return await self.set_status(brightness=brightness)
 
-    async def set_status(self, /, brightness: int | None = None,
-                         color_temp: int | None = None) -> bool:
+    async def set_status(
+        self, /, brightness: int | None = None, color_temp: int | None = None
+    ) -> bool:
         """Set status of tunable bulb."""
         if brightness is not None:
             if Validators.validate_zero_to_hundred(brightness):
                 brightness_update = int(brightness)
             else:
-                logger.debug("Invalid brightness value")
+                logger.debug('Invalid brightness value')
                 return False
         elif self.state.brightness is not None:
             brightness_update = self.state.brightness
@@ -585,30 +584,33 @@ class VeSyncBulbESL100CW(BypassV1Mixin, VeSyncBulb):
             if Validators.validate_zero_to_hundred(color_temp):
                 color_temp_update = color_temp
             else:
-                logger.debug("Invalid color temperature value")
+                logger.debug('Invalid color temperature value')
                 return False
         elif self.state.color_temp is not None:
             color_temp_update = self.state.color_temp
         else:
             color_temp_update = 100
-        if self.state.device_status == DeviceStatus.ON \
-                and brightness_update == self.state.brightness \
-                and color_temp_update == self.state.color_temp:
-            logger.debug("Device already in requested state")
+        if (
+            self.state.device_status == DeviceStatus.ON
+            and brightness_update == self.state.brightness
+            and color_temp_update == self.state.color_temp
+        ):
+            logger.debug('Device already in requested state')
             return True
         light_dict: dict[str, NUMERIC_OPT | str] = {
             'colorTempe': color_temp_update,
             'brightness': brightness_update,
-            'action': DeviceStatus.ON}
+            'action': DeviceStatus.ON,
+        }
 
         r_dict = await self.call_bypassv1_api(
             bulb_models.RequestESL100CWBase,
-            {"jsonCmd": {"light": light_dict}},
+            {'jsonCmd': {'light': light_dict}},
             'bypass',
-            'bypass'
+            'bypass',
         )
 
-        r = Helpers.process_dev_response(logger, "set_brightness", self, r_dict)
+        r = Helpers.process_dev_response(logger, 'set_brightness', self, r_dict)
         if r is None:
             return False
 
@@ -623,25 +625,22 @@ class VeSyncBulbESL100CW(BypassV1Mixin, VeSyncBulb):
 
     async def get_timer(self) -> None:
         r_dict = await self.call_bypassv1_api(
-            TimerModels.RequestV1GetTimer,
-            {},
-            'getTimers',
-            'timer/getTimers'
+            TimerModels.RequestV1GetTimer, {}, 'getTimers', 'timer/getTimers'
         )
         result_model = process_bypassv1_result(
-            self, logger, "get_timer", r_dict, TimerModels.ResultV1GetTimer
+            self, logger, 'get_timer', r_dict, TimerModels.ResultV1GetTimer
         )
         if result_model is None:
             return
         if not isinstance(result_model.timers, list) or not result_model.timers:
-            logger.debug("No timers found")
+            logger.debug('No timers found')
             return
         timers = result_model.timers
         if len(timers) > 1:
-            logger.debug("Multiple timers found, returning first timer")
+            logger.debug('Multiple timers found, returning first timer')
         timer = timers[0]
         if not isinstance(timer, TimerModels.TimeItemV1):
-            logger.debug("Invalid timer item type")
+            logger.debug('Invalid timer item type')
             return
         self.state.timer = Timer(
             int(timer.counterTime),
@@ -651,24 +650,24 @@ class VeSyncBulbESL100CW(BypassV1Mixin, VeSyncBulb):
 
     async def set_timer(self, duration: int, action: str | None = None) -> bool:
         if action is None:
-            action = DeviceStatus.ON if self.state.device_status == DeviceStatus.OFF \
+            action = (
+                DeviceStatus.ON
+                if self.state.device_status == DeviceStatus.OFF
                 else DeviceStatus.OFF
+            )
         if action not in [DeviceStatus.ON, DeviceStatus.OFF]:
             logger.debug("Invalid action value - must be 'on' or 'off'")
             return False
         update_dict = {
-            "action": action,
-            "counterTime": str(duration),
-            "status": "1",
+            'action': action,
+            'counterTime': str(duration),
+            'status': '1',
         }
         r_dict = await self.call_bypassv1_api(
-            TimerModels.RequestV1SetTime,
-            update_dict,
-            'addTimer',
-            'timer/addTimer'
+            TimerModels.RequestV1SetTime, update_dict, 'addTimer', 'timer/addTimer'
         )
         result_model = process_bypassv1_result(
-            self, logger, "set_timer", r_dict, TimerModels.ResultV1SetTimer
+            self, logger, 'set_timer', r_dict, TimerModels.ResultV1SetTimer
         )
         if result_model is None:
             return False
@@ -677,16 +676,16 @@ class VeSyncBulbESL100CW(BypassV1Mixin, VeSyncBulb):
 
     async def clear_timer(self) -> bool:
         if self.state.timer is None:
-            logger.debug("No timer set - run get_timer() first")
+            logger.debug('No timer set - run get_timer() first')
             return False
         timer = self.state.timer
         r_dict = await self.call_bypassv1_api(
             TimerModels.RequestV1ClearTimer,
-            {"timerId": str(timer.id), 'status': "1"},
+            {'timerId': str(timer.id), 'status': '1'},
             'deleteTimer',
-            'timer/deleteTimer'
+            'timer/deleteTimer',
         )
-        r = Helpers.process_dev_response(logger, "clear_timer", self, r_dict)
+        r = Helpers.process_dev_response(logger, 'clear_timer', self, r_dict)
         if r is None:
             return False
         self.state.timer = None
@@ -733,8 +732,9 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
 
     __slots__ = ()
 
-    def __init__(self, details: ResponseDeviceDetailsModel,
-                 manager: VeSync, feature_map: BulbMap) -> None:
+    def __init__(
+        self, details: ResponseDeviceDetailsModel, manager: VeSync, feature_map: BulbMap
+    ) -> None:
         """Initialize Multicolor bulb."""
         super().__init__(details, manager, feature_map)
         self.request_keys = [
@@ -759,13 +759,13 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
         reset to its default state before each request.
         """
         payload_dict: bulb_models.ValcenoStatusPayload = {
-            "force": 0,
-            "brightness": '',
-            "colorTemp": "",
-            "colorMode": "",
-            "hue": "",
-            "saturation": "",
-            "value": ""
+            'force': 0,
+            'brightness': '',
+            'colorTemp': '',
+            'colorMode': '',
+            'hue': '',
+            'saturation': '',
+            'value': '',
         }
         return payload_dict
 
@@ -815,7 +815,8 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
         return default_dict
 
     async def _call_valceno_api(
-            self, payload_method: str, payload_data: Mapping) -> dict | None:
+        self, payload_method: str, payload_data: Mapping
+    ) -> dict | None:
         """Make API call to Valceno Smart Bulb.
 
         Args:
@@ -836,11 +837,7 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
                 "data": {}
                 }
         """
-        payload = {
-            'method': payload_method,
-            'source': 'APP',
-            'data': payload_data
-        }
+        payload = {'method': payload_method, 'source': 'APP', 'data': payload_data}
         request_body = self._build_request(payload)
         r_dict, _ = await self.manager.async_call_api(
             '/cloud/v2/deviceManaged/bypassV2',
@@ -863,7 +860,8 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
         self._interpret_apicall_result(status)
 
     def _interpret_apicall_result(
-            self, response: bulb_models.ResponseValcenoStatus) -> None:
+        self, response: bulb_models.ResponseValcenoStatus
+    ) -> None:
         """Process API response with device status.
 
         Assigns the values to the state attributes of the device.
@@ -877,14 +875,14 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
         self.state.brightness = result.brightness
         self.state.color_temp = result.colorTemp
         self.state.color_mode = result.colorMode
-        hue = float(round(result.hue/250*9, 2))
-        sat = float(result.saturation/100)
+        hue = float(round(result.hue / 250 * 9, 2))
+        sat = float(result.saturation / 100)
         val = float(result.value)
         self.state.color = Color.from_hsv(hue=hue, saturation=sat, value=val)
 
     @deprecated(
-        "toggle() is deprecated, use toggle_switch(toggle: bool | None = None) instead"
-        )
+        'toggle() is deprecated, use toggle_switch(toggle: bool | None = None) instead'
+    )
     async def toggle(self, status: str) -> bool:
         """Deprecated - use toggle_switch()."""
         status_bool = status == DeviceStatus.ON
@@ -895,13 +893,13 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
             toggle = self.state.device_status == DeviceStatus.OFF
 
         if toggle == self.state.device_status:
-            logger.debug("Device already in requested state")
+            logger.debug('Device already in requested state')
             return True
 
         payload_data = {
-                'id': 0,
-                'enabled': toggle,
-                }
+            'id': 0,
+            'enabled': toggle,
+        }
         method = 'setSwitch'
 
         r_dict = await self._call_valceno_api(method, payload_data)
@@ -916,13 +914,13 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
     async def set_rgb(self, red: float, green: float, blue: float) -> bool:
         new_color = Color.from_rgb(red=red, green=green, blue=blue)
         if new_color is None:
-            logger.debug("Invalid RGB values")
+            logger.debug('Invalid RGB values')
             return False
 
         return await self.set_hsv(
             hue=new_color.hsv.hue,
             saturation=new_color.hsv.saturation,
-            value=new_color.hsv.value
+            value=new_color.hsv.value,
         )
 
     async def set_brightness(self, brightness: int) -> bool:
@@ -950,12 +948,10 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
         """Set Color Mode of Bulb (white / hsv)."""
         return await self.set_status(color_mode=color_mode)
 
-    async def set_hsv(self, hue: float,
-                      saturation: float,
-                      value: float) -> bool:
+    async def set_hsv(self, hue: float, saturation: float, value: float) -> bool:
         new_color = Color.from_hsv(hue=hue, saturation=saturation, value=value)
         if new_color is None:
-            logger.warning("Invalid HSV values")
+            logger.warning('Invalid HSV values')
             return False
 
         # the api expects the hsv Value in the brightness parameter
@@ -966,11 +962,11 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
         )
         if payload_data is None:
             return False
-        resp = await self._call_valceno_api("setLightStatusV2", payload_data)
+        resp = await self._call_valceno_api('setLightStatusV2', payload_data)
         if resp is None:
             return False
 
-        r_dict = Helpers.process_dev_response(logger, "set_hsv", self, resp)
+        r_dict = Helpers.process_dev_response(logger, 'set_hsv', self, resp)
         if r_dict is None:
             return False
 
@@ -1012,20 +1008,20 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
             hue=color_hue,
             saturation=color_saturation,
             value=color_value,
-            color_mode=color_mode
+            color_mode=color_mode,
         )
         if payload_data == self._payload_base():
-            logger.debug("No state change.")
+            logger.debug('No state change.')
             return False
         if payload_data is None:
-            logger.debug("Invalid payload data")
+            logger.debug('Invalid payload data')
             return False
 
         r_dict = await self._call_valceno_api('setLightStatusV2', payload_data)
         if r_dict is None:
             return False
 
-        r_dict = Helpers.process_dev_response(logger, "set_status", self, r_dict)
+        r_dict = Helpers.process_dev_response(logger, 'set_status', self, r_dict)
         if r_dict is None:
             return False
 
@@ -1033,10 +1029,12 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
         self._interpret_apicall_result(r_model)
         return True
 
-    def _build_color_payload(self, color_hue: float | None = None,
-                             color_saturation: float | None = None,
-                             color_value: float | None = None
-                             ) -> bulb_models.ValcenoStatusPayload | None:
+    def _build_color_payload(
+        self,
+        color_hue: float | None = None,
+        color_saturation: float | None = None,
+        color_value: float | None = None,
+    ) -> bulb_models.ValcenoStatusPayload | None:
         """Create color payload for Valceno Bulbs.
 
         This is called by `_build_status_payload` if any of the HSV values are set.
@@ -1049,12 +1047,10 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
         """
         payload_dict = self._payload_base()
         new_color = Color.from_hsv(
-            hue=color_hue,
-            saturation=color_saturation,
-            value=color_value
+            hue=color_hue, saturation=color_saturation, value=color_value
         )
         if new_color is None:
-            logger.warning("Invalid HSV values")
+            logger.warning('Invalid HSV values')
             return None
         payload_dict['hue'] = int(new_color.hsv.hue * 250 / 9)
         payload_dict['saturation'] = int(new_color.hsv.saturation * 100)
@@ -1063,14 +1059,15 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
         payload_dict['force'] = 1
         return payload_dict
 
-    def _build_status_payload(self,
-                              brightness: float | None = None,
-                              color_temp: float | None = None,
-                              hue: float | None = None,
-                              saturation: float | None = None,
-                              value: float | None = None,
-                              color_mode: str | None = None
-                              ) -> bulb_models.ValcenoStatusPayload | None:
+    def _build_status_payload(
+        self,
+        brightness: float | None = None,
+        color_temp: float | None = None,
+        hue: float | None = None,
+        saturation: float | None = None,
+        value: float | None = None,
+        color_mode: str | None = None,
+    ) -> bulb_models.ValcenoStatusPayload | None:
         """Create status payload data for Valceno Bulbs.
 
         If color_mode is set, hue, saturation and/or value must be set as well.
@@ -1101,9 +1098,9 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
             if self._check_color_state(hue=hue, saturation=saturation, value=value):
                 return None
         elif color_mode in ['color', 'hsv', 'rgb']:
-            logger.debug("HSV values must be provided when setting color mode.")
+            logger.debug('HSV values must be provided when setting color mode.')
         else:
-            if color_mode == "white" and not Validators.validate_zero_to_hundred(
+            if color_mode == 'white' and not Validators.validate_zero_to_hundred(
                 color_temp
             ):
                 payload_dict['colorMode'] = 'white'
@@ -1112,16 +1109,18 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
                 payload_dict['colorMode'] = 'white'
             if brightness is not None and Validators.validate_zero_to_hundred(brightness):
                 payload_dict['brightness'] = int(brightness)
-        force_keys = ["colorTemp", "saturation", "hue", "colorMode", "value"]
+        force_keys = ['colorTemp', 'saturation', 'hue', 'colorMode', 'value']
         for key in force_keys:
-            if payload_dict.get(key) != "":
-                payload_dict["force"] = 1
+            if payload_dict.get(key) != '':
+                payload_dict['force'] = 1
         return payload_dict
 
-    def _check_color_state(self, hue: float | None = None,
-                           saturation: float | None = None,
-                           value: float | None = None
-                           ) -> bool:
+    def _check_color_state(
+        self,
+        hue: float | None = None,
+        saturation: float | None = None,
+        value: float | None = None,
+    ) -> bool:
         """Check if color state is already set.
 
         Returns True if color is already set, False otherwise.
@@ -1138,8 +1137,10 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
             set_color = Color.from_hsv(
                 hue=set_hue, saturation=set_saturation, value=set_value
             )
-            if self.state.device_status == DeviceStatus.ON \
-                    and set_color == self.state.color:
-                logger.debug("Device already set to requested color")
+            if (
+                self.state.device_status == DeviceStatus.ON
+                and set_color == self.state.color
+            ):
+                logger.debug('Device already set to requested color')
                 return True
         return False

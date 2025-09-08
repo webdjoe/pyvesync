@@ -17,6 +17,7 @@ All models should inherit `ResponseBaseModel` or `RequestBaseModel`. Use
 Attributes are inherited from the [const][pyvesync.const] module for
 default values.
 """
+
 from __future__ import annotations
 from time import time
 from typing import ClassVar
@@ -36,13 +37,13 @@ from pyvesync.const import (
     DEFAULT_TZ,
     BYPASS_HEADER_UA,
     TERMINAL_ID,
-    CLIENT_TYPE
-    )
+    CLIENT_TYPE,
+)
 
 
 RequestHeaders = {
-    "User-Agent": BYPASS_HEADER_UA,
-    "Content-Type": "application/json; charset=UTF-8",
+    'User-Agent': BYPASS_HEADER_UA,
+    'Content-Type': 'application/json; charset=UTF-8',
 }
 
 

@@ -37,11 +37,11 @@ class RGB:
 
     def __str__(self) -> str:
         """Return string representation."""
-        return f"RGB({self.red}, {self.green}, {self.blue})"
+        return f'RGB({self.red}, {self.green}, {self.blue})'
 
     def __repr__(self) -> str:
         """Return string representation."""
-        return f"RGB(red={self.red}, green={self.green}, blue={self.blue})"
+        return f'RGB(red={self.red}, green={self.green}, blue={self.blue})'
 
     def to_tuple(self) -> tuple[float, float, float]:
         """Return RGB values as tuple."""
@@ -50,9 +50,9 @@ class RGB:
     def to_dict(self) -> dict[str, float]:
         """Return RGB values as dict."""
         return {
-            "red": self.red,
-            "green": self.green,
-            "blue": self.blue,
+            'red': self.red,
+            'green': self.green,
+            'blue': self.blue,
         }
 
 
@@ -84,11 +84,11 @@ class HSV:
 
     def __str__(self) -> str:
         """Return string representation."""
-        return f"HSV({self.hue}, {self.saturation}, {self.value})"
+        return f'HSV({self.hue}, {self.saturation}, {self.value})'
 
     def __repr__(self) -> str:
         """Return string representation."""
-        return f"HSV(hue={self.hue}, saturation={self.saturation}, value={self.value})"
+        return f'HSV(hue={self.hue}, saturation={self.saturation}, value={self.value})'
 
     def to_tuple(self) -> tuple[float, float, float]:
         """Return HSV values as tuple."""
@@ -97,9 +97,9 @@ class HSV:
     def to_dict(self) -> dict[str, float]:
         """Return HSV values as dict."""
         return {
-            "hue": self.hue,
-            "saturation": self.saturation,
-            "value": self.value,
+            'hue': self.hue,
+            'saturation': self.saturation,
+            'value': self.value,
         }
 
 
@@ -137,24 +137,24 @@ class Color:
 
     def __str__(self) -> str:
         """Return string representation."""
-        return f"Color(hsv={self.hsv}, rgb={self.rgb})"
+        return f'Color(hsv={self.hsv}, rgb={self.rgb})'
 
     def __repr__(self) -> str:
         """Return string representation."""
-        return f"Color(hsv={self.hsv}, rgb={self.rgb})"
+        return f'Color(hsv={self.hsv}, rgb={self.rgb})'
 
     def as_dict(self) -> dict[str, dict]:
         """Return color values as dict."""
         return {
-            "hsv": {
-                "hue": self.hsv.hue,
-                "saturation": self.hsv.saturation,
-                "value": self.hsv.value,
+            'hsv': {
+                'hue': self.hsv.hue,
+                'saturation': self.hsv.saturation,
+                'value': self.hsv.value,
             },
-            "rgb": {
-                "red": self.rgb.red,
-                "green": self.rgb.green,
-                "blue": self.rgb.blue,
+            'rgb': {
+                'red': self.rgb.red,
+                'green': self.rgb.green,
+                'blue': self.rgb.blue,
             },
         }
 
@@ -177,7 +177,7 @@ class Color:
                 or None if the input values are invalid.
         """
         if not Validators.validate_rgb(red, green, blue):
-            _LOGGER.debug("Invalid RGB values")
+            _LOGGER.debug('Invalid RGB values')
             return None
         return cls(RGB(float(red), float(green), float(blue)))  # type: ignore[arg-type]
 
@@ -200,7 +200,7 @@ class Color:
                 or None if the input values are invalid.
         """
         if not Validators.validate_hsv(hue, saturation, value):
-            _LOGGER.debug("Invalid HSV values")
+            _LOGGER.debug('Invalid HSV values')
             return None
         return cls(HSV(float(hue), float(saturation), float(value)))  # type: ignore[arg-type]
 
@@ -219,11 +219,10 @@ class Color:
             RGB: An RGB dataclass with red, green, and blue components.
         """
         return RGB(
-            *tuple(round(i * 255, 0) for i in colorsys.hsv_to_rgb(
-                hue / 360,
-                saturation / 100,
-                value / 100
-            ))
+            *tuple(
+                round(i * 255, 0)
+                for i in colorsys.hsv_to_rgb(hue / 360, saturation / 100, value / 100)
+            )
         )
 
     @staticmethod
@@ -238,11 +237,7 @@ class Color:
         Returns:
             HSV: An HSV dataclass with hue, saturation, and value components.
         """
-        hsv_tuple = colorsys.rgb_to_hsv(
-                red / 255,
-                green / 255,
-                blue / 255
-            )
+        hsv_tuple = colorsys.rgb_to_hsv(red / 255, green / 255, blue / 255)
         hsv_factors = [360, 100, 100]
 
         return HSV(

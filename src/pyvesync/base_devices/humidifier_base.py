@@ -1,4 +1,5 @@
 """Base Device and State Class for VeSync Humidifiers."""
+
 from __future__ import annotations
 from abc import abstractmethod
 import logging
@@ -6,11 +7,7 @@ from typing import TYPE_CHECKING
 from typing_extensions import deprecated
 
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseToggleDevice, DeviceState
-from pyvesync.const import (
-    HumidifierFeatures,
-    HumidifierModes,
-    DeviceStatus
-    )
+from pyvesync.const import HumidifierFeatures, HumidifierModes, DeviceStatus
 
 if TYPE_CHECKING:
     from pyvesync import VeSync
@@ -54,33 +51,37 @@ class HumidifierState(DeviceState):
     """
 
     __slots__ = (
-        "auto_preference",
-        "auto_stop_target_reached",
-        "auto_target_humidity",
-        "automatic_stop_config",
-        "display_set_status",
-        "display_status",
-        "drying_mode_auto_switch",
-        "drying_mode_level",
-        "drying_mode_status",
-        "drying_mode_time_remain",
-        "filter_life_percent",
-        "humidity",
-        "humidity_high",
-        "mist_level",
-        "mist_virtual_level",
-        "mode",
-        "nightlight_brightness",
-        "nightlight_status",
-        "temperature",
-        "warm_mist_enabled",
-        "warm_mist_level",
-        "water_lacks",
-        "water_tank_lifted",
+        'auto_preference',
+        'auto_stop_target_reached',
+        'auto_target_humidity',
+        'automatic_stop_config',
+        'display_set_status',
+        'display_status',
+        'drying_mode_auto_switch',
+        'drying_mode_level',
+        'drying_mode_status',
+        'drying_mode_time_remain',
+        'filter_life_percent',
+        'humidity',
+        'humidity_high',
+        'mist_level',
+        'mist_virtual_level',
+        'mode',
+        'nightlight_brightness',
+        'nightlight_status',
+        'temperature',
+        'warm_mist_enabled',
+        'warm_mist_level',
+        'water_lacks',
+        'water_tank_lifted',
     )
 
-    def __init__(self, device: VeSyncHumidifier, details: ResponseDeviceDetailsModel,
-                 feature_map: HumidifierMap) -> None:
+    def __init__(
+        self,
+        device: VeSyncHumidifier,
+        details: ResponseDeviceDetailsModel,
+        feature_map: HumidifierMap,
+    ) -> None:
         """Initialize VeSync Humidifier State.
 
         This state class is used to store the current state of the humidifier.
@@ -126,7 +127,7 @@ class HumidifierState(DeviceState):
         return self.automatic_stop_config
 
     @property
-    @deprecated("Use auto_stop_target_reached instead.")
+    @deprecated('Use auto_stop_target_reached instead.')
     def automatic_stop_target_reached(self) -> bool:
         """Deprecated function.
 
@@ -159,7 +160,7 @@ class HumidifierState(DeviceState):
         return self.mode in [HumidifierModes.AUTO, self.mode, HumidifierModes.HUMIDITY]
 
     @property
-    @deprecated("Use humidity property instead.")
+    @deprecated('Use humidity property instead.')
     def humidity_level(self) -> int | None:
         """Deprecated function.
 
@@ -230,14 +231,18 @@ class VeSyncHumidifier(VeSyncBaseToggleDevice):
     """
 
     __slots__ = (
-        "mist_levels",
-        "mist_modes",
-        "target_minmax",
-        "warm_mist_levels",
+        'mist_levels',
+        'mist_modes',
+        'target_minmax',
+        'warm_mist_levels',
     )
 
-    def __init__(self, details: ResponseDeviceDetailsModel,
-                 manager: VeSync, feature_map: HumidifierMap) -> None:
+    def __init__(
+        self,
+        details: ResponseDeviceDetailsModel,
+        manager: VeSync,
+        feature_map: HumidifierMap,
+    ) -> None:
         """Initialize VeSync Humidifier Class.
 
         Args:
@@ -291,7 +296,7 @@ class VeSyncHumidifier(VeSyncBaseToggleDevice):
             bool: Success of request.
         """
         del toggle
-        logger.warning("Automatic stop is not supported or configured for this device.")
+        logger.warning('Automatic stop is not supported or configured for this device.')
         return False
 
     async def toggle_display(self, toggle: bool) -> bool:
@@ -304,7 +309,7 @@ class VeSyncHumidifier(VeSyncBaseToggleDevice):
             bool: Success of request.
         """
         del toggle
-        logger.warning("Display is not supported or configured for this device.")
+        logger.warning('Display is not supported or configured for this device.')
         return False
 
     @abstractmethod
@@ -375,7 +380,7 @@ class VeSyncHumidifier(VeSyncBaseToggleDevice):
         """
         if HumidifierModes.AUTO in self.mist_modes:
             return await self.set_mode(HumidifierModes.AUTO)
-        logger.debug("Auto mode not supported for this device.")
+        logger.debug('Auto mode not supported for this device.')
         return await self.set_mode(HumidifierModes.AUTO)
 
     async def set_manual_mode(self) -> bool:
@@ -386,7 +391,7 @@ class VeSyncHumidifier(VeSyncBaseToggleDevice):
         """
         if HumidifierModes.MANUAL in self.mist_modes:
             return await self.set_mode(HumidifierModes.MANUAL)
-        logger.debug("Manual mode not supported for this device.")
+        logger.debug('Manual mode not supported for this device.')
         return await self.set_mode(HumidifierModes.MANUAL)
 
     async def set_sleep_mode(self) -> bool:
@@ -397,7 +402,7 @@ class VeSyncHumidifier(VeSyncBaseToggleDevice):
         """
         if HumidifierModes.SLEEP in self.mist_modes:
             return await self.set_mode(HumidifierModes.SLEEP)
-        logger.debug("Sleep mode not supported for this device.")
+        logger.debug('Sleep mode not supported for this device.')
         return await self.set_mode(HumidifierModes.SLEEP)
 
     async def set_humidity(self, humidity: int) -> bool:
@@ -410,7 +415,7 @@ class VeSyncHumidifier(VeSyncBaseToggleDevice):
             bool: Success of request.
         """
         del humidity
-        logger.debug("Target humidity is not supported or configured for this device.")
+        logger.debug('Target humidity is not supported or configured for this device.')
         return False
 
     async def set_nightlight_brightness(self, brightness: int) -> bool:
@@ -424,9 +429,9 @@ class VeSyncHumidifier(VeSyncBaseToggleDevice):
         """
         del brightness
         if not self.supports_nightlight_brightness:
-            logger.debug("Nightlight brightness is not supported for this device.")
+            logger.debug('Nightlight brightness is not supported for this device.')
             return False
-        logger.debug("Nightlight brightness has not been configured.")
+        logger.debug('Nightlight brightness has not been configured.')
         return False
 
     async def set_warm_level(self, warm_level: int) -> bool:
@@ -440,16 +445,16 @@ class VeSyncHumidifier(VeSyncBaseToggleDevice):
         """
         del warm_level
         if self.supports_warm_mist:
-            logger.debug("Warm level has not been configured.")
+            logger.debug('Warm level has not been configured.')
             return False
-        logger.debug("Warm level is not supported for this device.")
+        logger.debug('Warm level is not supported for this device.')
         return False
 
     async def toggle_drying_mode(self, toggle: bool | None = None) -> bool:
         """enable/disable drying filters after turning off."""
         del toggle
         if self.supports_drying_mode:
-            logger.debug("Drying mode is not configured for this device.")
+            logger.debug('Drying mode is not configured for this device.')
             return False
-        logger.debug("Drying mode is not supported for this device.")
+        logger.debug('Drying mode is not supported for this device.')
         return False

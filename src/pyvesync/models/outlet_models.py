@@ -1,4 +1,5 @@
 """Data models for VeSync outlets."""
+
 from __future__ import annotations
 from dataclasses import dataclass
 
@@ -9,8 +10,8 @@ from pyvesync.models.bypass_models import (
 from pyvesync.models.base_models import (
     ResponseCodeModel,
     ResponseBaseModel,
-    RequestBaseModel
-  )
+    RequestBaseModel,
+)
 
 
 @dataclass

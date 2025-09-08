@@ -15,6 +15,7 @@ Usage:
     # Use `LibraryLogger.log_api_exception` to log API exceptions.
     LibraryLogger.log_api_exception(logger, request_dict, exception)
 """
+
 from __future__ import annotations
 import logging
 import os
@@ -120,7 +121,7 @@ class LibraryLogger:
         if cls.shouldredact:
             stringvalue = re.sub(
                 (
-                    r"(?i)"
+                    r'(?i)'
                     r'((?<=token":\s")|'
                     r'(?<=password":\s")|'
                     r'(?<=email":\s")|'
@@ -130,12 +131,12 @@ class LibraryLogger:
                     r'(?<=authKey":\s")|'
                     r'(?<=uuid":\s")|'
                     r'(?<=cid":\s")|'
-                    r"(?<=token\s)|"
-                    r"(?<=authorizeCode\s)|"
-                    r"(?<=account_id\s))"
+                    r'(?<=token\s)|'
+                    r'(?<=authorizeCode\s)|'
+                    r'(?<=account_id\s))'
                     r'[^"\s]+'
                 ),
-                "##_REDACTED_##",
+                '##_REDACTED_##',
                 stringvalue,
             )
         return stringvalue
@@ -162,18 +163,19 @@ class LibraryLogger:
             if isinstance(api, bytes):
                 api_dict = orjson.loads(api)
             elif isinstance(api, str):
-                api_dict = orjson.loads(api.encode("utf-8"))
+                api_dict = orjson.loads(api.encode('utf-8'))
             elif isinstance(api, (dict, CIMultiDictProxy)):
                 api_dict = dict(api)
             else:
                 return None
-            dump = orjson.dumps(dict(api_dict),
-                                option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS)
-            return cls.redactor(dump.decode("utf-8"))
+            dump = orjson.dumps(
+                dict(api_dict), option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS
+            )
+            return cls.redactor(dump.decode('utf-8'))
 
         except (orjson.JSONDecodeError, orjson.JSONEncodeError):
             if isinstance(api, bytes):
-                return api.decode("utf-8")
+                return api.decode('utf-8')
             return str(api)
 
     @staticmethod
@@ -202,7 +204,7 @@ class LibraryLogger:
             propagation of log messages to the root logger to avoid duplicate
             messages.
         """
-        if level in (logging.DEBUG, "DEBUG"):
+        if level in (logging.DEBUG, 'DEBUG'):
             LibraryLogger.debug = True
         root_logger = logging.getLogger()
         if root_logger.handlers:
@@ -210,8 +212,8 @@ class LibraryLogger:
                 root_logger.removeHandler(handler)
 
         formatter = logging.Formatter(
-            fmt="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S",
+            fmt='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
+            datefmt='%Y-%m-%d %H:%M:%S',
         )
         if std_out is True:
             str_handler = logging.StreamHandler()
@@ -255,28 +257,27 @@ class LibraryLogger:
         """
         if device is not None:
             msg = (
-                f"Error parsing {device.product_type} {device.device_name} {method_name} "
-                f"response with data model {exc.holder_class_name}"
+                f'Error parsing {device.product_type} {device.device_name} {method_name} '
+                f'response with data model {exc.holder_class_name}'
             )
         else:
             msg = (
-                f"Error parsing {method_name} response with "
-                f"data model {exc.holder_class_name}"
+                f'Error parsing {method_name} response with '
+                f'data model {exc.holder_class_name}'
             )
         if isinstance(exc, MissingField):
-            msg += f"Missing field: {exc.field_name} of type {exc.field_type_name}"
+            msg += f'Missing field: {exc.field_name} of type {exc.field_type_name}'
         elif isinstance(exc, InvalidFieldValue):
-            msg += f"Invalid field value: {exc.field_name} of type {exc.field_type_name}"
+            msg += f'Invalid field value: {exc.field_name} of type {exc.field_type_name}'
         elif isinstance(exc, UnserializableField):
-            msg += f"Unserializable field: {exc.field_name} of type {exc.field_type_name}"
+            msg += f'Unserializable field: {exc.field_name} of type {exc.field_type_name}'
         msg += (
-            "\n\n Please report this issue to"
-            "https://github.com/webdjoe/pyvesync/issues"
+            '\n\n Please report this issue tohttps://github.com/webdjoe/pyvesync/issues'
         )
         logger.warning(msg)
         if not cls.debug:
             return
-        msg = ""
+        msg = ''
         if is_dataclass(exc.holder_class):
             holder = exc.holder_class
             field_tuple = fields(holder)
@@ -284,20 +285,20 @@ class LibraryLogger:
             field_f = sorted([f.name for f in field_tuple])
             dif = set(field_f) - set(resp_f)
             if dif:
-                msg += "\n\n-------------------------------------"
-                msg += "\n Expected Fields:"
-                msg += f"\n({', '.join(field_f)})"
-                msg += "\n Response Fields:"
-                msg += f"\n({', '.join(resp_f)})"
-                msg += "\n Missing Fields:"
-                msg += f"\n({', '.join(dif)})"
+                msg += '\n\n-------------------------------------'
+                msg += '\n Expected Fields:'
+                msg += f'\n({", ".join(field_f)})'
+                msg += '\n Response Fields:'
+                msg += f'\n({", ".join(resp_f)})'
+                msg += '\n Missing Fields:'
+                msg += f'\n({", ".join(dif)})'
 
-        msg += "\n\n Full Response:"
-        msg += f"\n{orjson.dumps(resp_dict, option=orjson.OPT_INDENT_2).decode('utf-8')}"
+        msg += '\n\n Full Response:'
+        msg += f'\n{orjson.dumps(resp_dict, option=orjson.OPT_INDENT_2).decode("utf-8")}'
         if cls.verbose:
-            msg += "\n\n---------------------------------"
-            msg += "\n\n Exception:"
-            msg += f"\n{exc.__traceback__}"
+            msg += '\n\n---------------------------------'
+            msg += '\n\n Exception:'
+            msg += f'\n{exc.__traceback__}'
         logger.debug(msg)
 
     @classmethod
@@ -318,9 +319,9 @@ class LibraryLogger:
             msg (str | None, optional): optional description of error
         """
         logger.debug(
-            "%s API returned an unexpected response format: %s",
+            '%s API returned an unexpected response format: %s',
             method_name,
-            msg if msg is not None else "",
+            msg if msg is not None else '',
         )
 
     @classmethod
@@ -345,11 +346,11 @@ class LibraryLogger:
             msg (str | None, optional): optional description of error
         """
         logger.debug(
-            "%s for %s API returned an unexpected response format in %s: %s",
+            '%s for %s API returned an unexpected response format in %s: %s',
             device_name,
             device_type,
             method,
-            msg if msg is not None else "",
+            msg if msg is not None else '',
         )
 
     @classmethod
@@ -378,9 +379,15 @@ class LibraryLogger:
         try:
             code_str = str(code)
         except (TypeError, ValueError):
-            code_str = "UNKNOWN"
-        logger.debug("%s for %s API from %s returned code: %s, message: %s",
-                     device_name, device_type, method, code_str, message)
+            code_str = 'UNKNOWN'
+        logger.debug(
+            '%s for %s API from %s returned code: %s, message: %s',
+            device_name,
+            device_type,
+            method,
+            code_str,
+            message,
+        )
 
     @classmethod
     def log_api_call(
@@ -409,30 +416,30 @@ class LibraryLogger:
         if cls.verbose is False:
             return
         # Build the log message parts.
-        parts = ["========API CALL========"]
+        parts = ['========API CALL========']
         endpoint = response.url.path
-        parts.append(f"API CALL to endpoint: {endpoint}")
-        parts.append(f"Response Status: {response.status}")
-        parts.append(f"Method: {response.method}")
+        parts.append(f'API CALL to endpoint: {endpoint}')
+        parts.append(f'Response Status: {response.status}')
+        parts.append(f'Method: {response.method}')
 
         request_headers = cls.api_printer(response.request_info.headers)
         if request_headers:
-            parts.append(f"Request Headers: {os.linesep} {request_headers}")
+            parts.append(f'Request Headers: {os.linesep} {request_headers}')
 
         if request_body is not None:
             request_body = cls.api_printer(request_body)
-            parts.append(f"Request Body: {os.linesep} {request_body}")
+            parts.append(f'Request Body: {os.linesep} {request_body}')
 
         response_headers = cls.api_printer(response.headers)
         if response_headers:
-            parts.append(f"Response Headers: {os.linesep} {response_headers}")
+            parts.append(f'Response Headers: {os.linesep} {response_headers}')
 
         if cls.is_json(response_body):
             response_str = cls.api_printer(response_body)
-            parts.append(f"Response Body: {os.linesep} {response_str}")
+            parts.append(f'Response Body: {os.linesep} {response_str}')
         elif isinstance(response_body, bytes):
-            response_str = response_body.decode("utf-8")
-            parts.append(f"Response Body: {os.linesep} {response_str}")
+            response_str = response_body.decode('utf-8')
+            parts.append(f'Response Body: {os.linesep} {response_str}')
 
         full_message = os.linesep.join(parts)
         logger.debug(full_message)
@@ -461,23 +468,23 @@ class LibraryLogger:
         if cls.debug is False:
             return
         # Build the log message parts.
-        parts = [f"Error in API CALL to endpoint: {response.url.path}"]
-        parts.append(f"Response Status: {response.status}")
+        parts = [f'Error in API CALL to endpoint: {response.url.path}']
+        parts.append(f'Response Status: {response.status}')
         req_headers = cls.api_printer(response.request_info.headers)
         if req_headers is not None:
-            parts.append(f"Request Headers: {os.linesep} {req_headers}")
+            parts.append(f'Request Headers: {os.linesep} {req_headers}')
 
         req_body = cls.api_printer(request_body)
         if req_body is not None:
-            parts.append(f"Request Body: {os.linesep} {req_body}")
+            parts.append(f'Request Body: {os.linesep} {req_body}')
 
         resp_headers = cls.api_printer(response.headers)
         if resp_headers is not None:
-            parts.append(f"Response Headers: {os.linesep} {resp_headers}")
+            parts.append(f'Response Headers: {os.linesep} {resp_headers}')
 
         resp_body = cls.api_printer(response_bytes)
         if resp_body is not None:
-            parts.append(f"Request Body: {os.linesep} {request_body}")
+            parts.append(f'Request Body: {os.linesep} {request_body}')
 
         full_message = os.linesep.join(parts)
         logger.debug(full_message)
@@ -488,7 +495,7 @@ class LibraryLogger:
         logger: logging.Logger,
         *,
         exception: ClientResponseError,
-        request_body: dict | None
+        request_body: dict | None,
     ) -> None:
         """Log API exceptions in debug mode.
 
@@ -503,15 +510,15 @@ class LibraryLogger:
         if cls.debug is False:
             return
         # Build the log message parts.
-        parts = [f"Error in API CALL to endpoint: {exception.request_info.url.path}"]
-        parts.append(f"Exception Raised: {exception}")
+        parts = [f'Error in API CALL to endpoint: {exception.request_info.url.path}']
+        parts.append(f'Exception Raised: {exception}')
         req_headers = cls.api_printer(exception.request_info.headers)
         if req_headers is not None:
-            parts.append(f"Request Headers: {os.linesep} {req_headers}")
+            parts.append(f'Request Headers: {os.linesep} {req_headers}')
 
         req_body = cls.api_printer(request_body)
         if req_body is not None:
-            parts.append(f"Request Body: {os.linesep} {req_body}")
+            parts.append(f'Request Body: {os.linesep} {req_body}')
 
         full_message = os.linesep.join(parts)
         logger.debug(full_message)

@@ -1,4 +1,5 @@
 """VeSync API for controlling air purifiers."""
+
 from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
@@ -9,15 +10,15 @@ from pyvesync.base_devices.purifier_base import VeSyncPurifier
 from pyvesync.utils.device_mixins import (
     BypassV1Mixin,
     BypassV2Mixin,
-    process_bypassv2_result
-    )
+    process_bypassv2_result,
+)
 from pyvesync.utils.helpers import Helpers, Timer
 from pyvesync.const import (
     PurifierAutoPreference,
     DeviceStatus,
     ConnectionStatus,
-    PurifierModes
-    )
+    PurifierModes,
+)
 from pyvesync.models.bypass_models import (
     ResultV2GetTimer,
     ResultV2SetTimer,
@@ -34,7 +35,7 @@ from pyvesync.models.purifier_models import (
     RequestPurifier131Mode,
     RequestPurifier131Level,
     Purifier131Result,
-    )
+)
 
 if TYPE_CHECKING:
     from pyvesync import VeSync
@@ -102,8 +103,12 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
 
     __slots__ = ()
 
-    def __init__(self, details: ResponseDeviceDetailsModel,
-                 manager: VeSync, feature_map: PurifierMap) -> None:
+    def __init__(
+        self,
+        details: ResponseDeviceDetailsModel,
+        manager: VeSync,
+        feature_map: PurifierMap,
+    ) -> None:
         """Initialize VeSync Air Purifier Bypass Base Class."""
         super().__init__(details, manager, feature_map)
 
@@ -121,13 +126,15 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
         self.state.mode = result.mode
         self.state.fan_level = result.level or 0
         self.state.fan_set_level = result.levelNew or 0
-        self.state.display_status = DeviceStatus.ON if result.display \
-            else DeviceStatus.OFF
+        self.state.display_status = (
+            DeviceStatus.ON if result.display else DeviceStatus.OFF
+        )
         self.state.child_lock = result.child_lock or False
         config = result.configuration
         if config is not None:
-            self.state.display_set_status = DeviceStatus.ON if config.display \
-                else DeviceStatus.OFF
+            self.state.display_set_status = (
+                DeviceStatus.ON if config.display else DeviceStatus.OFF
+            )
             self.state.display_forever = config.display_forever
             if config.auto_preference is not None:
                 self.state.auto_preference_type = config.auto_preference.type
@@ -141,7 +148,7 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
     async def get_details(self) -> None:
         r_dict = await self.call_bypassv2_api('getPurifierStatus')
         resp_model = process_bypassv2_result(
-            self, _LOGGER, "get_details", r_dict, PurifierCoreDetailsResult
+            self, _LOGGER, 'get_details', r_dict, PurifierCoreDetailsResult
         )
         if resp_model is None:
             return
@@ -150,7 +157,7 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
     async def get_timer(self) -> Timer | None:
         r_bytes = await self.call_bypassv2_api('getTimer')
         resp_model = process_bypassv2_result(
-            self, _LOGGER, "get_timer", r_bytes, ResultV2GetTimer
+            self, _LOGGER, 'get_timer', r_bytes, ResultV2GetTimer
         )
         if resp_model is None:
             return None
@@ -168,7 +175,7 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
         )
         self.state.device_status = DeviceStatus.ON
         self.state.connection_status = ConnectionStatus.ONLINE
-        _LOGGER.debug("Timer found: %s", str(self.state.timer))
+        _LOGGER.debug('Timer found: %s', str(self.state.timer))
         return self.state.timer
 
     async def set_timer(self, duration: int, action: str | None = None) -> bool:
@@ -176,19 +183,14 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
         if self.state.device_status != DeviceStatus.ON:
             _LOGGER.debug("Can't set timer when device is off")
         # head, body = self.build_api_dict('addTimer')
-        payload_data = {
-            "action": str(action),
-            "total": duration
-        }
+        payload_data = {'action': str(action), 'total': duration}
         r_dict = await self.call_bypassv2_api('addTimer', payload_data)
         resp_model = process_bypassv2_result(
-            self, _LOGGER, "set_timer", r_dict, ResultV2SetTimer
+            self, _LOGGER, 'set_timer', r_dict, ResultV2SetTimer
         )
         if resp_model is None:
             return False
-        self.state.timer = Timer(
-                timer_duration=duration, action="off", id=resp_model.id
-                )
+        self.state.timer = Timer(timer_duration=duration, action='off', id=resp_model.id)
         self.state.device_status = DeviceStatus.ON
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
@@ -197,16 +199,14 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
         if self.state.timer is None:
             _LOGGER.debug('No timer to clear, run `get_timer()` to get active timer')
             return False
-        payload_data = {
-            "id": self.state.timer.id
-        }
+        payload_data = {'id': self.state.timer.id}
 
         r_dict = await self.call_bypassv2_api('delTimer', payload_data)
-        r = Helpers.process_dev_response(_LOGGER, "clear_timer", self, r_dict)
+        r = Helpers.process_dev_response(_LOGGER, 'clear_timer', self, r_dict)
         if r is None:
             return False
 
-        _LOGGER.debug("Timer cleared")
+        _LOGGER.debug('Timer cleared')
         self.state.timer = None
         self.state.device_status = DeviceStatus.ON
         self.state.connection_status = ConnectionStatus.ONLINE
@@ -215,12 +215,9 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
     async def set_auto_preference(self, preference: str, room_size: int = 800) -> bool:
         if self.state.device_status != DeviceStatus.ON:
             _LOGGER.debug("Can't set auto preference when device is off")
-        payload_data = {
-            "type": preference,
-            "room_size": room_size
-        }
+        payload_data = {'type': preference, 'room_size': room_size}
         r_dict = await self.call_bypassv2_api('setAutoPreference', payload_data)
-        r = Helpers.process_dev_response(_LOGGER, "set_auto_preference", self, r_dict)
+        r = Helpers.process_dev_response(_LOGGER, 'set_auto_preference', self, r_dict)
         if r is None:
             return False
         self.state.connection_status = ConnectionStatus.ONLINE
@@ -235,19 +232,20 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
         if speed is not None:
             if speed not in speeds:
                 _LOGGER.debug(
-                    "%s is invalid speed - valid speeds are %s", speed, str(speeds))
+                    '%s is invalid speed - valid speeds are %s', speed, str(speeds)
+                )
                 return False
             new_speed = speed
         else:
             new_speed = Helpers.bump_level(current_speed, self.fan_levels)
 
         data = {
-            "id": 0,
-            "level": new_speed,
-            "type": "wind",
+            'id': 0,
+            'level': new_speed,
+            'type': 'wind',
         }
         r_dict = await self.call_bypassv2_api('setLevel', data)
-        r = Helpers.process_dev_response(_LOGGER, "set_fan_speed", self, r_dict)
+        r = Helpers.process_dev_response(_LOGGER, 'set_fan_speed', self, r_dict)
         if r is None:
             return False
 
@@ -272,10 +270,10 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
         """
         if toggle is None:
             toggle = self.state.child_lock is False
-        data = {"child_lock": toggle}
+        data = {'child_lock': toggle}
 
         r_dict = await self.call_bypassv2_api('setChildLock', data)
-        r = Helpers.process_dev_response(_LOGGER, "toggle_child_lock", self, r_dict)
+        r = Helpers.process_dev_response(_LOGGER, 'toggle_child_lock', self, r_dict)
         if r is None:
             return False
 
@@ -290,28 +288,28 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
             bool : True if filter is reset, False if not
         """
         r_dict = await self.call_bypassv2_api('resetFilter')
-        r = Helpers.process_dev_response(_LOGGER, "reset_filter", self, r_dict)
+        r = Helpers.process_dev_response(_LOGGER, 'reset_filter', self, r_dict)
         return bool(r)
 
-    @deprecated("Use set_mode(mode: str) instead.")
+    @deprecated('Use set_mode(mode: str) instead.')
     async def mode_toggle(self, mode: str) -> bool:
         """Deprecated - Set purifier mode."""
         return await self.set_mode(mode)
 
     async def set_mode(self, mode: str) -> bool:
         if mode.lower() not in self.modes:
-            _LOGGER.debug("Invalid purifier mode used - %s", mode)
+            _LOGGER.debug('Invalid purifier mode used - %s', mode)
             return False
 
         if mode.lower() == PurifierModes.MANUAL:
             return await self.set_fan_speed(self.state.fan_level or 1)
 
         data = {
-            "mode": mode,
+            'mode': mode,
         }
         r_dict = await self.call_bypassv2_api('setPurifierMode', data)
 
-        r = Helpers.process_dev_response(_LOGGER, "set_mode", self, r_dict)
+        r = Helpers.process_dev_response(_LOGGER, 'set_mode', self, r_dict)
         if r is None:
             return False
 
@@ -327,12 +325,9 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
             _LOGGER.debug('Invalid toggle value for purifier switch')
             return False
 
-        data = {
-            "enabled": toggle,
-            "id": 0
-        }
+        data = {'enabled': toggle, 'id': 0}
         r_dict = await self.call_bypassv2_api('setSwitch', data)
-        r = Helpers.process_dev_response(_LOGGER, "toggle_switch", self, r_dict)
+        r = Helpers.process_dev_response(_LOGGER, 'toggle_switch', self, r_dict)
         if r is None:
             return False
 
@@ -342,14 +337,12 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
 
     async def toggle_display(self, mode: bool) -> bool:
         if not isinstance(mode, bool):
-            _LOGGER.debug("Mode must be True or False")
+            _LOGGER.debug('Mode must be True or False')
             return False
 
-        data = {
-            "state": mode
-        }
+        data = {'state': mode}
         r_dict = await self.call_bypassv2_api('setDisplay', data)
-        r = Helpers.process_dev_response(_LOGGER, "set_display", self, r_dict)
+        r = Helpers.process_dev_response(_LOGGER, 'set_display', self, r_dict)
         if r is None:
             return False
         self.state.connection_status = ConnectionStatus.ONLINE
@@ -358,16 +351,16 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
 
     async def set_nightlight_mode(self, mode: str) -> bool:
         if not self.supports_nightlight:
-            _LOGGER.debug("Device does not support night light")
+            _LOGGER.debug('Device does not support night light')
             return False
         if mode.lower() not in self.nightlight_modes:
-            _LOGGER.warning("Invalid nightlight mode used (on, off or dim)- %s", mode)
+            _LOGGER.warning('Invalid nightlight mode used (on, off or dim)- %s', mode)
             return False
 
         r_dict = await self.call_bypassv2_api(
             'setNightLight', {'night_light': mode.lower()}
-            )
-        r = Helpers.process_dev_response(_LOGGER, "set_night_light", self, r_dict)
+        )
+        r = Helpers.process_dev_response(_LOGGER, 'set_night_light', self, r_dict)
         if r is None:
             return False
 
@@ -375,25 +368,25 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
         return True
 
     @property
-    @deprecated("Use self.state.air_quality instead.")
+    @deprecated('Use self.state.air_quality instead.')
     def air_quality(self) -> int | None:
         """Get air quality value PM2.5 (ug/m3)."""
         return self.state.pm25
 
     @property
-    @deprecated("Use self.state.fan_level instead.")
+    @deprecated('Use self.state.fan_level instead.')
     def fan_level(self) -> int | None:
         """Get current fan level."""
         return self.state.fan_level
 
     @property
-    @deprecated("Use self.state.filter_life instead.")
+    @deprecated('Use self.state.filter_life instead.')
     def filter_life(self) -> int | None:
         """Get percentage of filter life remaining."""
         return self.state.filter_life
 
     @property
-    @deprecated("Use self.state.display_status instead.")
+    @deprecated('Use self.state.display_status instead.')
     def display_state(self) -> bool:
         """Get display state.
 
@@ -402,7 +395,7 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
         return self.state.display_status == DeviceStatus.ON
 
     @property
-    @deprecated("Use self.state.display_status instead.")
+    @deprecated('Use self.state.display_status instead.')
     def screen_status(self) -> bool:
         """Get display status.
 
@@ -465,7 +458,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
     def _set_state(self, details: InnerPurifierBaseResult) -> None:
         """Set Purifier state from details response."""
         if not isinstance(details, PurifierVitalDetailsResult):
-            _LOGGER.debug("Invalid details model passed to _set_state")
+            _LOGGER.debug('Invalid details model passed to _set_state')
             return
         self.state.connection_status = ConnectionStatus.ONLINE
         self.state.device_status = DeviceStatus.from_int(details.powerSwitch)
@@ -481,10 +474,10 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         self.state.pm25 = details.PM25
         self.state.light_detection_switch = DeviceStatus.from_int(
             details.lightDetectionSwitch
-            )
+        )
         self.state.light_detection_status = DeviceStatus.from_int(
             details.environmentLightState
-            )
+        )
         self.state.display_set_status = DeviceStatus.from_int(details.screenSwitch)
         self.state.display_status = DeviceStatus.from_int(details.screenState)
         auto_pref = details.autoPreference
@@ -502,7 +495,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
             self.state.timer = Timer(details.timerRemain, 'off')
 
     @property
-    @deprecated("Use self.state.fan_set_level instead.")
+    @deprecated('Use self.state.fan_set_level instead.')
     def set_speed_level(self) -> int | None:
         """Get set speed level."""
         return self.state.fan_set_level
@@ -523,14 +516,14 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         """Build API V2 Purifier details dictionary."""
         r_dict = await self.call_bypassv2_api('getPurifierStatus')
         r_model = process_bypassv2_result(
-            self, _LOGGER, "get_details", r_dict, PurifierVitalDetailsResult
+            self, _LOGGER, 'get_details', r_dict, PurifierVitalDetailsResult
         )
         if r_model is None:
             return
 
         self._set_state(r_model)
 
-    @deprecated("Use toggle_light_detection(toggle) instead.")
+    @deprecated('Use toggle_light_detection(toggle) instead.')
     async def set_light_detection(self, toggle: bool) -> bool:
         """Set light detection feature."""
         return await self.toggle_light_detection(toggle)
@@ -539,15 +532,15 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         """Enable/Disable Light Detection Feature."""
         if bool(self.state.light_detection_status) == toggle:
             _LOGGER.debug(
-                "Light detection is already %s", self.state.light_detection_status
+                'Light detection is already %s', self.state.light_detection_status
             )
             return True
 
         if toggle is None:
             toggle = not bool(self.state.light_detection_status)
-        payload_data = {"lightDetectionSwitch": int(toggle)}
+        payload_data = {'lightDetectionSwitch': int(toggle)}
         r_dict = await self.call_bypassv2_api('setLightDetection', payload_data)
-        r = Helpers.process_dev_response(_LOGGER, "set_light_detection", self, r_dict)
+        r = Helpers.process_dev_response(_LOGGER, 'set_light_detection', self, r_dict)
         if r is None:
             return False
 
@@ -565,12 +558,9 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
             _LOGGER.debug('Purifier is already %s', self.state.device_status)
             return True
 
-        payload_data = {
-                'powerSwitch': int(toggle),
-                'switchIdx': 0
-            }
+        payload_data = {'powerSwitch': int(toggle), 'switchIdx': 0}
         r_dict = await self.call_bypassv2_api('setSwitch', payload_data)
-        r = Helpers.process_dev_response(_LOGGER, "toggle_switch", self, r_dict)
+        r = Helpers.process_dev_response(_LOGGER, 'toggle_switch', self, r_dict)
         if r is None:
             return False
 
@@ -592,7 +582,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         payload_data = {'childLockSwitch': int(toggle)}
         r_dict = await self.call_bypassv2_api('setChildLock', payload_data)
 
-        r = Helpers.process_dev_response(_LOGGER, "toggle_child_lock", self, r_dict)
+        r = Helpers.process_dev_response(_LOGGER, 'toggle_child_lock', self, r_dict)
         if r is None:
             return False
 
@@ -609,12 +599,10 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
             _LOGGER.debug('Display is already %s', mode)
             return True
 
-        payload_data = {
-            'screenSwitch': int(mode)
-        }
+        payload_data = {'screenSwitch': int(mode)}
         r_dict = await self.call_bypassv2_api('setDisplay', payload_data)
 
-        r = Helpers.process_dev_response(_LOGGER, "set_display", self, r_dict)
+        r = Helpers.process_dev_response(_LOGGER, 'set_display', self, r_dict)
         if r is None:
             return False
 
@@ -622,9 +610,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
-    async def set_timer(
-        self, duration: int, action: str | None = None
-    ) -> bool:
+    async def set_timer(self, duration: int, action: str | None = None) -> bool:
         action = DeviceStatus.OFF  # No other actions available for this device
         if action not in [DeviceStatus.ON, DeviceStatus.OFF]:
             _LOGGER.debug('Invalid action for timer')
@@ -635,11 +621,13 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         action_item = PurifierV2TimerActionItems(type=method, act=action_int)
         timing = PurifierV2EventTiming(clkSec=duration)
         payload_data = PurifierV2TimerPayloadData(
-            enabled=True, startAct=[action_item], tmgEvt=timing,
+            enabled=True,
+            startAct=[action_item],
+            tmgEvt=timing,
         )
 
         r_dict = await self.call_bypassv2_api('addTimerV2', payload_data.to_dict())
-        r = Helpers.process_dev_response(_LOGGER, "set_timer", self, r_dict)
+        r = Helpers.process_dev_response(_LOGGER, 'set_timer', self, r_dict)
         if r is None:
             return False
 
@@ -651,15 +639,12 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
 
     async def clear_timer(self) -> bool:
         if self.state.timer is None:
-            _LOGGER.warning("No timer found, run get_timer() to retrieve timer.")
+            _LOGGER.warning('No timer found, run get_timer() to retrieve timer.')
             return False
 
-        payload_data = {
-            "id": self.state.timer.id,
-            "subDeviceNo": 0
-        }
+        payload_data = {'id': self.state.timer.id, 'subDeviceNo': 0}
         r_dict = await self.call_bypassv2_api('delTimerV2', payload_data)
-        r = Helpers.process_dev_response(_LOGGER, "clear_timer", self, r_dict)
+        r = Helpers.process_dev_response(_LOGGER, 'clear_timer', self, r_dict)
         if r is None:
             return False
 
@@ -667,8 +652,9 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
-    async def set_auto_preference(self, preference: str = PurifierAutoPreference.DEFAULT,
-                                  room_size: int = 600) -> bool:
+    async def set_auto_preference(
+        self, preference: str = PurifierAutoPreference.DEFAULT, room_size: int = 600
+    ) -> bool:
         """Set Levoit Vital 100S/200S auto mode.
 
         Parameters:
@@ -679,17 +665,14 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         """
         if preference not in self.auto_preferences:
             _LOGGER.debug(
-                "%s is invalid preference -"
-                " valid preferences are default, efficient, quiet",
+                '%s is invalid preference -'
+                ' valid preferences are default, efficient, quiet',
                 preference,
             )
             return False
-        payload_data = {
-            "autoPreference": preference,
-            "roomSize": room_size
-        }
+        payload_data = {'autoPreference': preference, 'roomSize': room_size}
         r_dict = await self.call_bypassv2_api('setAutoPreference', payload_data)
-        r = Helpers.process_dev_response(_LOGGER, "set_auto_preference", self, r_dict)
+        r = Helpers.process_dev_response(_LOGGER, 'set_auto_preference', self, r_dict)
         if r is None:
             return False
 
@@ -702,7 +685,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         if speed is not None:
             if speed not in self.fan_levels:
                 _LOGGER.debug(
-                    "%s is invalid speed - valid speeds are %s",
+                    '%s is invalid speed - valid speeds are %s',
                     speed,
                     str(self.fan_levels),
                 )
@@ -713,13 +696,9 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         else:
             new_speed = Helpers.bump_level(self.state.fan_level, self.fan_levels)
 
-        payload_data = {
-            "levelIdx": 0,
-            "manualSpeedLevel": new_speed,
-            "levelType": "wind"
-        }
+        payload_data = {'levelIdx': 0, 'manualSpeedLevel': new_speed, 'levelType': 'wind'}
         r_dict = await self.call_bypassv2_api('setLevel', payload_data)
-        r = Helpers.process_dev_response(_LOGGER, "set_fan_speed", self, r_dict)
+        r = Helpers.process_dev_response(_LOGGER, 'set_fan_speed', self, r_dict)
         if r is None:
             return False
 
@@ -732,7 +711,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
 
     async def set_mode(self, mode: str) -> bool:
         if mode.lower() not in self.modes:
-            _LOGGER.debug("Invalid purifier mode used - %s", mode)
+            _LOGGER.debug('Invalid purifier mode used - %s', mode)
             return False
 
         # Call change_fan_speed if mode is set to manual
@@ -741,11 +720,9 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
                 return await self.set_fan_speed(1)
             return await self.set_fan_speed(self.state.fan_set_level)
 
-        payload_data = {
-            "workMode": mode
-        }
+        payload_data = {'workMode': mode}
         r_dict = await self.call_bypassv2_api('setPurifierMode', payload_data)
-        r = Helpers.process_dev_response(_LOGGER, "mode_toggle", self, r_dict)
+        r = Helpers.process_dev_response(_LOGGER, 'mode_toggle', self, r_dict)
         if r is None:
             return False
 
@@ -805,7 +782,7 @@ class VeSyncAirSprout(VeSyncAirBaseV2):
     def _set_state(self, details: InnerPurifierBaseResult) -> None:
         """Set Purifier state from details response."""
         if not isinstance(details, PurifierSproutResult):
-            _LOGGER.debug("Invalid details model passed to _set_state")
+            _LOGGER.debug('Invalid details model passed to _set_state')
             return
         self.state.connection_status = ConnectionStatus.ONLINE
         self.state.device_status = DeviceStatus.from_int(details.powerSwitch)
@@ -873,8 +850,12 @@ class VeSyncAir131(BypassV1Mixin, VeSyncPurifier):
 
     __slots__ = ()
 
-    def __init__(self, details: ResponseDeviceDetailsModel,
-                 manager: VeSync, feature_map: PurifierMap) -> None:
+    def __init__(
+        self,
+        details: ResponseDeviceDetailsModel,
+        manager: VeSync,
+        feature_map: PurifierMap,
+    ) -> None:
         """Initialize air purifier class."""
         super().__init__(details, manager, feature_map)
         # self.request_keys = [
@@ -919,9 +900,9 @@ class VeSyncAir131(BypassV1Mixin, VeSyncPurifier):
 
     async def get_details(self) -> None:
         r_dict = await self.call_bypassv1_api(
-            RequestPurifier131, method="deviceDetail", endpoint="deviceDetail"
+            RequestPurifier131, method='deviceDetail', endpoint='deviceDetail'
         )
-        r = Helpers.process_dev_response(_LOGGER, "get_details", self, r_dict)
+        r = Helpers.process_dev_response(_LOGGER, 'get_details', self, r_dict)
         if r is None:
             return
 
@@ -929,14 +910,14 @@ class VeSyncAir131(BypassV1Mixin, VeSyncPurifier):
         self._set_state(r_model)
 
     async def toggle_display(self, mode: bool) -> bool:
-        update_dict = {
-            "status": "on" if mode else "off"
-        }
+        update_dict = {'status': 'on' if mode else 'off'}
         r_dict = await self.call_bypassv1_api(
-            RequestPurifier131, method="airPurifierScreenCtl",
-            endpoint="airPurifierScreenCtl", update_dict=update_dict
+            RequestPurifier131,
+            method='airPurifierScreenCtl',
+            endpoint='airPurifierScreenCtl',
+            update_dict=update_dict,
         )
-        r = Helpers.process_dev_response(_LOGGER, "toggle_display", self, r_dict)
+        r = Helpers.process_dev_response(_LOGGER, 'toggle_display', self, r_dict)
         if r is None:
             return False
 
@@ -949,14 +930,14 @@ class VeSyncAir131(BypassV1Mixin, VeSyncPurifier):
         if toggle is None:
             toggle = self.state.device_status != DeviceStatus.ON
 
-        update_dict = {
-            "status": DeviceStatus.from_bool(toggle).value
-        }
+        update_dict = {'status': DeviceStatus.from_bool(toggle).value}
         r_dict = await self.call_bypassv1_api(
-            RequestPurifier131, method="airPurifierPowerSwitchCtl",
-            endpoint="airPurifierPowerSwitchCtl", update_dict=update_dict
+            RequestPurifier131,
+            method='airPurifierPowerSwitchCtl',
+            endpoint='airPurifierPowerSwitchCtl',
+            update_dict=update_dict,
         )
-        r = Helpers.process_dev_response(_LOGGER, "toggle_switch", self, r_dict)
+        r = Helpers.process_dev_response(_LOGGER, 'toggle_switch', self, r_dict)
         if r is None:
             return False
 
@@ -970,7 +951,7 @@ class VeSyncAir131(BypassV1Mixin, VeSyncPurifier):
         if speed is not None:
             if speed not in self.fan_levels:
                 _LOGGER.debug(
-                    "%s is invalid speed - valid speeds are %s",
+                    '%s is invalid speed - valid speeds are %s',
                     speed,
                     str(self.fan_levels),
                 )
@@ -979,14 +960,14 @@ class VeSyncAir131(BypassV1Mixin, VeSyncPurifier):
         else:
             new_speed = Helpers.bump_level(current_speed, self.fan_levels)
 
-        update_dict = {
-            "level": new_speed
-        }
+        update_dict = {'level': new_speed}
         r_dict = await self.call_bypassv1_api(
-            RequestPurifier131Level, method="airPurifierSpeedCtl",
-            endpoint="airPurifierSpeedCtl", update_dict=update_dict
+            RequestPurifier131Level,
+            method='airPurifierSpeedCtl',
+            endpoint='airPurifierSpeedCtl',
+            update_dict=update_dict,
         )
-        r = Helpers.process_dev_response(_LOGGER, "set_fan_speed", self, r_dict)
+        r = Helpers.process_dev_response(_LOGGER, 'set_fan_speed', self, r_dict)
         if r is None:
             return False
 
@@ -1007,14 +988,14 @@ class VeSyncAir131(BypassV1Mixin, VeSyncPurifier):
             )
             return await self.set_fan_speed(set_level)
 
-        update_dict = {
-            "mode": mode
-        }
+        update_dict = {'mode': mode}
         r_dict = await self.call_bypassv1_api(
-            RequestPurifier131Mode, method="airPurifierRunModeCtl",
-            endpoint="airPurifierRunModeCtl", update_dict=update_dict
+            RequestPurifier131Mode,
+            method='airPurifierRunModeCtl',
+            endpoint='airPurifierRunModeCtl',
+            update_dict=update_dict,
         )
-        r = Helpers.process_dev_response(_LOGGER, "mode_toggle", self, r_dict)
+        r = Helpers.process_dev_response(_LOGGER, 'mode_toggle', self, r_dict)
         if r is None:
             return False
 

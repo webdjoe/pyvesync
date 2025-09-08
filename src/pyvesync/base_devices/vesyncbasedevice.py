@@ -1,4 +1,5 @@
 """Base class for all VeSync devices."""
+
 from __future__ import annotations
 from abc import ABC, abstractmethod
 import logging
@@ -7,6 +8,7 @@ from datetime import datetime as dt
 from zoneinfo import ZoneInfo
 from typing import TYPE_CHECKING, Any, Generic, TypeVar
 from typing_extensions import deprecated
+
 # import warnings
 import orjson
 
@@ -22,8 +24,8 @@ if TYPE_CHECKING:
     from pyvesync.utils.errors import ResponseInfo
 
 
-VS_TYPE = TypeVar("VS_TYPE", bound="VeSyncBaseDevice")
-VS_STATE_T = TypeVar("VS_STATE_T", bound="DeviceState")
+VS_TYPE = TypeVar('VS_TYPE', bound='VeSyncBaseDevice')
+VS_STATE_T = TypeVar('VS_STATE_T', bound='DeviceState')
 
 
 class VeSyncBaseDevice(ABC, Generic[VS_STATE_T]):
@@ -83,39 +85,40 @@ class VeSyncBaseDevice(ABC, Generic[VS_STATE_T]):
     """
 
     __slots__ = (
-        "__base_exclusions",
-        "__weakref__",
-        "_exclude_serialization",
-        "cid",
-        "config_module",
-        "connection_type",
-        "current_firm_version",
-        "device_image",
-        "device_name",
-        "device_region",
-        "device_type",
-        "enabled",
-        "features",
-        "last_response",
-        "latest_firm_version",
-        "mac_id",
-        "manager",
-        "pid",
-        "product_type",
-        "request_keys",
-        "state",
-        "sub_device_no",
-        "type",
-        "uuid",
+        '__base_exclusions',
+        '__weakref__',
+        '_exclude_serialization',
+        'cid',
+        'config_module',
+        'connection_type',
+        'current_firm_version',
+        'device_image',
+        'device_name',
+        'device_region',
+        'device_type',
+        'enabled',
+        'features',
+        'last_response',
+        'latest_firm_version',
+        'mac_id',
+        'manager',
+        'pid',
+        'product_type',
+        'request_keys',
+        'state',
+        'sub_device_no',
+        'type',
+        'uuid',
     )
 
     state: VS_STATE_T
 
-    def __init__(self,
-                 details: ResponseDeviceDetailsModel,
-                 manager: VeSync,
-                 feature_map: DeviceMapTemplate
-                 ) -> None:
+    def __init__(
+        self,
+        details: ResponseDeviceDetailsModel,
+        manager: VeSync,
+        feature_map: DeviceMapTemplate,
+    ) -> None:
         """Initialize VeSync device base class."""
         self._exclude_serialization: list[str] = []
         self.enabled: bool = True
@@ -143,8 +146,7 @@ class VeSyncBaseDevice(ABC, Generic[VS_STATE_T]):
         """Use device CID and sub-device number to test equality."""
         if not isinstance(other, VeSyncBaseDevice):
             return NotImplemented
-        return bool(other.cid == self.cid
-                    and other.sub_device_no == self.sub_device_no)
+        return bool(other.cid == self.cid and other.sub_device_no == self.sub_device_no)
 
     def __hash__(self) -> int:
         """Use CID and sub-device number to make device hash."""
@@ -153,19 +155,19 @@ class VeSyncBaseDevice(ABC, Generic[VS_STATE_T]):
     def __str__(self) -> str:
         """Use device info for string representation of class."""
         return (
-            f"Device Name: {self.device_name}, "
-            f"Device Type: {self.device_type}, "
-            f"SubDevice No.: {self.sub_device_no}"
+            f'Device Name: {self.device_name}, '
+            f'Device Type: {self.device_type}, '
+            f'SubDevice No.: {self.sub_device_no}'
         )
 
     def __repr__(self) -> str:
         """Representation of device details."""
         return (
-            f"DevClass: {self.__class__.__name__}, "
-            f"Product Type: {self.product_type}, "
-            f"Name:{self.device_name}, "
-            f"Device No: {self.sub_device_no}, "
-            f"CID: {self.cid}"
+            f'DevClass: {self.__class__.__name__}, '
+            f'Product Type: {self.product_type}, '
+            f'Name:{self.device_name}, '
+            f'Device No: {self.sub_device_no}, '
+            f'CID: {self.cid}'
         )
 
     # def __getattr__(self, attr: str) -> object:
@@ -296,10 +298,8 @@ class VeSyncBaseDevice(ABC, Generic[VS_STATE_T]):
         if state:
             self.state.display()
 
-    @deprecated("Use to_json() instead")
-    def displayJSON(
-        self, state: bool = True, indent: bool = True
-    ) -> str:  # pylint: disable=invalid-name
+    @deprecated('Use to_json() instead')
+    def displayJSON(self, state: bool = True, indent: bool = True) -> str:  # pylint: disable=invalid-name
         """Return JSON details for device. - Deprecated use to_json()."""
         return self.to_json(state, indent)
 
@@ -325,16 +325,16 @@ class VeSyncBaseDevice(ABC, Generic[VS_STATE_T]):
             dict[str, Any]: Dictionary containing device information.
         """
         device_dict = {
-            "device_name": self.device_name,
-            "product_type": self.product_type,
-            "model": self.device_type,
-            "subdevice_no": str(self.sub_device_no),
-            "type": self.type,
-            "cid": self.cid,
-            "features:": self.features,
-            "config_module": self.config_module,
-            "connection_type": self.connection_type,
-            "last_response": self.last_response,
+            'device_name': self.device_name,
+            'product_type': self.product_type,
+            'model': self.device_type,
+            'subdevice_no': str(self.sub_device_no),
+            'type': self.type,
+            'cid': self.cid,
+            'features:': self.features,
+            'config_module': self.config_module,
+            'connection_type': self.connection_type,
+            'last_response': self.last_response,
         }
         state_dict = self.state.to_dict() if state else {}
         return device_dict | state_dict
@@ -478,23 +478,23 @@ class DeviceState:
     """
 
     __slots__ = (
-        "__base_exclusions",
-        "_exclude_serialization",
-        "active_time",
-        "connection_status",
-        "device",
-        "device_status",
-        "features",
-        "last_update_ts",
-        "timer",
+        '__base_exclusions',
+        '_exclude_serialization',
+        'active_time',
+        'connection_status',
+        'device',
+        'device_status',
+        'features',
+        'last_update_ts',
+        'timer',
     )
 
     def __init__(
         self,
         device: VeSyncBaseDevice,
         details: ResponseDeviceDetailsModel,
-        feature_map: DeviceMapTemplate
-            ) -> None:
+        feature_map: DeviceMapTemplate,
+    ) -> None:
         """Initialize device state."""
         self.__base_exclusions: list[str] = ['manager', 'device', 'state']
         self._exclude_serialization: list[str] = []
@@ -508,19 +508,24 @@ class DeviceState:
 
     def __str__(self) -> str:
         """Return device state as string."""
-        return (f"{self.device.device_name}, {self.device.product_type}, "
-                f"Device Status:{self.device_status}, "
-                f"Connection Status: {self.connection_status}")
+        return (
+            f'{self.device.device_name}, {self.device.product_type}, '
+            f'Device Status:{self.device_status}, '
+            f'Connection Status: {self.connection_status}'
+        )
 
     def __repr__(self) -> str:
         """Return device state as string."""
-        return (f"{self.device.device_name}, Device Status:{self.device_status}, "
-                f"Connection Status: {self.connection_status}")
+        return (
+            f'{self.device.device_name}, Device Status:{self.device_status}, '
+            f'Connection Status: {self.connection_status}'
+        )
 
     def update_ts(self) -> None:
         """Update last update timestamp."""
-        self.last_update_ts = int(dt.now(
-            tz=ZoneInfo(self.device.manager.time_zone)).timestamp())
+        self.last_update_ts = int(
+            dt.now(tz=ZoneInfo(self.device.manager.time_zone)).timestamp()
+        )
 
     @staticmethod
     def __predicate(attr: Any) -> bool:  # noqa: ANN401
@@ -540,10 +545,10 @@ class DeviceState:
         for attr_name, attr_value in inspect.getmembers(
             self, lambda a: not self.__predicate(a)
         ):
-            if (
-                attr_name.startswith("_")
-                or attr_name in [*self.__base_exclusions, *self._exclude_serialization]
-            ):
+            if attr_name.startswith('_') or attr_name in [
+                *self.__base_exclusions,
+                *self._exclude_serialization,
+            ]:
                 continue
             state_dict[attr_name] = attr_value
         return state_dict

@@ -1,4 +1,5 @@
 """Air Purifier Base Class."""
+
 from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
@@ -12,8 +13,8 @@ from pyvesync.const import (
     PurifierFeatures,
     PurifierModes,
     DeviceStatus,
-    NightlightModes
-    )
+    NightlightModes,
+)
 
 if TYPE_CHECKING:
     from pyvesync import VeSync
@@ -65,32 +66,31 @@ class PurifierState(DeviceState):
     """
 
     __slots__ = (
-
-        "_air_quality_level",
-        "aq_percent",
-        "auto_preference_type",
-        "auto_room_size",
-        "child_lock",
-        "co2",
-        "display_forever",
-        "display_set_status",
-        "display_status",
-        "fan_level",
-        "fan_rotate_angle",
-        "fan_set_level",
-        "filter_life",
-        "filter_open_state",
-        "humidity",
-        "light_detection_status",
-        "light_detection_switch",
-        "mode",
-        "nightlight_brightness",
-        "nightlight_status",
-        "pm1",
-        "pm10",
-        "pm25",
-        "temperature",
-        "voc",
+        '_air_quality_level',
+        'aq_percent',
+        'auto_preference_type',
+        'auto_room_size',
+        'child_lock',
+        'co2',
+        'display_forever',
+        'display_set_status',
+        'display_status',
+        'fan_level',
+        'fan_rotate_angle',
+        'fan_set_level',
+        'filter_life',
+        'filter_open_state',
+        'humidity',
+        'light_detection_status',
+        'light_detection_switch',
+        'mode',
+        'nightlight_brightness',
+        'nightlight_status',
+        'pm1',
+        'pm10',
+        'pm25',
+        'temperature',
+        'voc',
     )
 
     def __init__(
@@ -157,43 +157,43 @@ class PurifierState(DeviceState):
         return str(self._air_quality_level)
 
     @property
-    @deprecated("Use state.air_quality_level instead.")
+    @deprecated('Use state.air_quality_level instead.')
     def air_quality(self) -> int | str | None:
         """Return air quality level."""
         return self.air_quality_level
 
     @property
-    @deprecated("Use light_detection_switch instead.")
+    @deprecated('Use light_detection_switch instead.')
     def light_detection(self) -> bool:
         """Return light detection status."""
         return self.light_detection_switch == DeviceStatus.ON
 
     @property
-    @deprecated("Use state.pm25 instead.")
+    @deprecated('Use state.pm25 instead.')
     def air_quality_value(self) -> int | None:
         """Return air quality value."""
         return self.pm25
 
     @property
-    @deprecated("Use PurifierState.fan_level instead.")
+    @deprecated('Use PurifierState.fan_level instead.')
     def speed(self) -> int | None:
         """Return fan speed."""
         return self.fan_level
 
     @property
-    @deprecated("Use PurifierState.nightlight_status instead.")
+    @deprecated('Use PurifierState.nightlight_status instead.')
     def night_light(self) -> str | None:
         """Return night light status."""
         return self.nightlight_status
 
     @property
-    @deprecated("Use display_status instead.")
+    @deprecated('Use display_status instead.')
     def display_state(self) -> str | None:
         """Return display status."""
         return self.display_status
 
     @property
-    @deprecated("Use display_set_status instead.")
+    @deprecated('Use display_set_status instead.')
     def display_switch(self) -> str | None:
         """Return display switch status."""
         return self.display_set_status
@@ -232,12 +232,7 @@ class VeSyncPurifier(VeSyncBaseToggleDevice):
         auto_preferences (list[str]): List of auto preferences supported by the device.
     """
 
-    __slots__ = (
-        "auto_preferences",
-        "fan_levels",
-        "modes",
-        "nightlight_modes"
-    )
+    __slots__ = ('auto_preferences', 'fan_levels', 'modes', 'nightlight_modes')
 
     def __init__(
         self,
@@ -320,7 +315,7 @@ class VeSyncPurifier(VeSyncBaseToggleDevice):
             toggle (bool | None): Toggle child lock. If None, toggle state.
         """
         del toggle
-        logger.debug("Child lock not configured for this device.")
+        logger.debug('Child lock not configured for this device.')
         return False
 
     async def turn_on_child_lock(self) -> bool:
@@ -359,35 +354,35 @@ class VeSyncPurifier(VeSyncBaseToggleDevice):
         """Set Purifier to Auto Mode."""
         if PurifierModes.AUTO in self.modes:
             return await self.set_mode(PurifierModes.AUTO)
-        logger.error("Auto mode not supported for this device.")
+        logger.error('Auto mode not supported for this device.')
         return False
 
     async def set_sleep_mode(self) -> bool:
         """Set Purifier to Sleep Mode."""
         if PurifierModes.SLEEP in self.modes:
             return await self.set_mode(PurifierModes.SLEEP)
-        logger.error("Sleep mode not supported for this device.")
+        logger.error('Sleep mode not supported for this device.')
         return False
 
     async def set_manual_mode(self) -> bool:
         """Set Purifier to Manual Mode."""
         if PurifierModes.MANUAL in self.modes:
             return await self.set_mode(PurifierModes.MANUAL)
-        logger.error("Manual mode not supported for this device.")
+        logger.error('Manual mode not supported for this device.')
         return False
 
     async def set_turbo_mode(self) -> bool:
         """Set Purifier to Turbo Mode."""
         if PurifierModes.TURBO in self.modes:
             return await self.set_mode(PurifierModes.TURBO)
-        logger.error("Turbo mode not supported for this device.")
+        logger.error('Turbo mode not supported for this device.')
         return False
 
     async def set_pet_mode(self) -> bool:
         """Set Purifier to Pet Mode."""
         if PurifierModes.PET in self.modes:
             return await self.set_mode(PurifierModes.PET)
-        logger.error("Pet mode not supported for this device.")
+        logger.error('Pet mode not supported for this device.')
         return False
 
     async def set_auto_preference(self, preference: str, room_size: int = 800) -> bool:
@@ -402,7 +397,7 @@ class VeSyncPurifier(VeSyncBaseToggleDevice):
             bool: True if successful, False otherwise.
         """
         del preference, room_size
-        logger.debug("Auto preference not configured for this device.")
+        logger.debug('Auto preference not configured for this device.')
         return False
 
     async def toggle_light_detection(self, toggle: bool | None = None) -> bool:
@@ -416,9 +411,9 @@ class VeSyncPurifier(VeSyncBaseToggleDevice):
         """
         del toggle
         if not self.supports_light_detection:
-            logger.debug("Light detection not supported for this device.")
+            logger.debug('Light detection not supported for this device.')
         else:
-            logger.debug("Light detection not configured for this device.")
+            logger.debug('Light detection not configured for this device.')
         return False
 
     async def turn_on_light_detection(self) -> bool:
@@ -431,50 +426,50 @@ class VeSyncPurifier(VeSyncBaseToggleDevice):
 
     async def reset_filter(self) -> bool:
         """Reset filter life."""
-        logger.debug("Filter life reset not configured for this device.")
+        logger.debug('Filter life reset not configured for this device.')
         return False
 
-    @deprecated("Use set_auto_mode instead.")
+    @deprecated('Use set_auto_mode instead.')
     async def auto_mode(self) -> bool:
         """Set Purifier to Auto Mode."""
         return await self.set_auto_mode()
 
-    @deprecated("Use set_sleep_mode instead.")
+    @deprecated('Use set_sleep_mode instead.')
     async def sleep_mode(self) -> bool:
         """Set Purifier to Sleep Mode."""
         return await self.set_sleep_mode()
 
-    @deprecated("Use set_manual_mode instead.")
+    @deprecated('Use set_manual_mode instead.')
     async def manual_mode(self) -> bool:
         """Set Purifier to Manual Mode."""
         return await self.set_manual_mode()
 
-    @deprecated("Use set_turbo_mode instead.")
+    @deprecated('Use set_turbo_mode instead.')
     async def turbo_mode(self) -> bool:
         """Set Purifier to Turbo Mode."""
         return await self.set_turbo_mode()
 
-    @deprecated("Use set_pet_mode instead.")
+    @deprecated('Use set_pet_mode instead.')
     async def pet_mode(self) -> bool:
         """Set Purifier to Pet Mode."""
         return await self.set_pet_mode()
 
-    @deprecated("Use set_nightlight_mode instead.")
+    @deprecated('Use set_nightlight_mode instead.')
     async def nightlight_mode(self, mode: str) -> bool:
         """Set Nightlight Mode."""
         return await self.set_nightlight_mode(mode)
 
-    @deprecated("Use `set_fan_speed()` instead.")
+    @deprecated('Use `set_fan_speed()` instead.')
     async def change_fan_speed(self, speed: int | None = None) -> bool:
         """Deprecated - Set fan speed."""
         return await self.set_fan_speed(speed)
 
-    @deprecated("Use `set_mode(mode: str)` instead.")
+    @deprecated('Use `set_mode(mode: str)` instead.')
     async def change_mode(self, mode: str) -> bool:
         """Deprecated - Set purifier mode."""
         return await self.set_mode(mode)
 
-    @deprecated("Use `toggle_child_lock()` instead.")
+    @deprecated('Use `toggle_child_lock()` instead.')
     async def set_child_lock(self, toggle: bool) -> bool:
         """Set child lock (display lock).
 
@@ -482,7 +477,7 @@ class VeSyncPurifier(VeSyncBaseToggleDevice):
         """
         return await self.toggle_child_lock(toggle)
 
-    @deprecated("Use `turn_on_child_lock()` instead.")
+    @deprecated('Use `turn_on_child_lock()` instead.')
     async def child_lock_on(self) -> bool:
         """Turn on child lock (display lock).
 
@@ -490,7 +485,7 @@ class VeSyncPurifier(VeSyncBaseToggleDevice):
         """
         return await self.toggle_child_lock(True)
 
-    @deprecated("Use `turn_off_child_lock()` instead.")
+    @deprecated('Use `turn_off_child_lock()` instead.')
     async def child_lock_off(self) -> bool:
         """Turn off child lock (display lock).
 
@@ -499,7 +494,7 @@ class VeSyncPurifier(VeSyncBaseToggleDevice):
         return await self.toggle_child_lock(False)
 
     @property
-    @deprecated("Use self.state.child_lock instead.")
+    @deprecated('Use self.state.child_lock instead.')
     def child_lock(self) -> bool:
         """Get child lock state.
 
@@ -509,7 +504,7 @@ class VeSyncPurifier(VeSyncBaseToggleDevice):
         return self.state.child_lock
 
     @property
-    @deprecated("Use self.state.nightlight_status instead.")
+    @deprecated('Use self.state.nightlight_status instead.')
     def night_light(self) -> str | None:
         """Get night light state.
 
@@ -518,12 +513,12 @@ class VeSyncPurifier(VeSyncBaseToggleDevice):
         """
         return self.state.nightlight_status
 
-    @deprecated("Use turn_on_light_detection() instead.")
+    @deprecated('Use turn_on_light_detection() instead.')
     async def set_light_detection_on(self) -> bool:
         """Turn on light detection feature."""
         return await self.toggle_light_detection(True)
 
-    @deprecated("Use turn_off_light_detection() instead.")
+    @deprecated('Use turn_off_light_detection() instead.')
     async def set_light_detection_off(self) -> bool:
         """Turn off light detection feature."""
         return await self.toggle_light_detection(False)

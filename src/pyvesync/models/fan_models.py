@@ -3,6 +3,7 @@
 These models inherit from `ResponseBaseModel` and `RequestBaseModel` from the
 `base_models` module.
 """
+
 from __future__ import annotations
 from dataclasses import dataclass
 from mashumaro.mixins.orjson import DataClassORJSONMixin

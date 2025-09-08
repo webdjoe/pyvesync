@@ -56,7 +56,9 @@ Note:
     list, ensuring all required fields are present based on the `<product-type>Map`
     fields.
 """
+
 from itertools import chain
+
 # from types import ModuleType
 from types import ModuleType
 from typing import Union
@@ -87,19 +89,19 @@ from pyvesync.const import (
     ThermostatWorkModes,
     ThermostatHoldOptions,
     ThermostatRoutineTypes,
-    ProductLines
+    ProductLines,
 )
 
 T_MAPS = Union[
-    list["OutletMap"],
-    list["SwitchMap"],
-    list["BulbMap"],
-    list["FanMap"],
-    list["HumidifierMap"],
-    list["PurifierMap"],
-    list["AirFryerMap"],
-    list["ThermostatMap"]
-    ]
+    list['OutletMap'],
+    list['SwitchMap'],
+    list['BulbMap'],
+    list['FanMap'],
+    list['HumidifierMap'],
+    list['PurifierMap'],
+    list['AirFryerMap'],
+    list['ThermostatMap'],
+]
 
 
 @dataclass(kw_only=True)
@@ -234,7 +236,7 @@ class FanMap(DeviceMapTemplate):
     fan_levels: list[int] = field(default_factory=list)
     modes: list[str] = field(default_factory=list)
     sleep_preferences: list[str] = field(default_factory=list)
-    set_mode_method: str = ""
+    set_mode_method: str = ''
 
 
 @dataclass(kw_only=True)
@@ -401,65 +403,65 @@ thermostat_modules = [
 
 outlet_modules = [
     OutletMap(
-        dev_types=["wifi-switch-1.3"],
-        class_name="VeSyncOutlet7A",
+        dev_types=['wifi-switch-1.3'],
+        class_name='VeSyncOutlet7A',
         features=[OutletFeatures.ENERGY_MONITOR],
-        model_name="WiFi Outlet US/CA",
-        model_display="ESW01-USA Series",
-        setup_entry="wifi-switch-1.3",
+        model_name='WiFi Outlet US/CA',
+        model_display='ESW01-USA Series',
+        setup_entry='wifi-switch-1.3',
     ),
     OutletMap(  # TODO: Add energy
-        dev_types=["ESW10-USA"],
-        class_name="VeSyncESW10USA",
+        dev_types=['ESW10-USA'],
+        class_name='VeSyncESW10USA',
         features=[],
-        model_name="10A WiFi Outlet USA",
-        model_display="ESW10-USA Series",
-        setup_entry="ESW03-USA",
+        model_name='10A WiFi Outlet USA',
+        model_display='ESW10-USA Series',
+        setup_entry='ESW03-USA',
     ),
     OutletMap(
-        dev_types=["ESW01-EU"],
-        class_name="VeSyncOutlet10A",
+        dev_types=['ESW01-EU'],
+        class_name='VeSyncOutlet10A',
         features=[OutletFeatures.ENERGY_MONITOR],
-        model_name="10A WiFi Outlet Europe",
-        model_display="ESW01-EU",
-        setup_entry="ESW01-EU",
+        model_name='10A WiFi Outlet Europe',
+        model_display='ESW01-EU',
+        setup_entry='ESW01-EU',
     ),
     OutletMap(
-        dev_types=["ESW15-USA"],
-        class_name="VeSyncOutlet15A",
+        dev_types=['ESW15-USA'],
+        class_name='VeSyncOutlet15A',
         features=[OutletFeatures.ENERGY_MONITOR, OutletFeatures.NIGHTLIGHT],
         nightlight_modes=[NightlightModes.ON, NightlightModes.OFF, NightlightModes.AUTO],
-        model_name="15A WiFi Outlet US/CA",
-        model_display="ESW15-USA Series",
-        setup_entry="ESW15-USA",
+        model_name='15A WiFi Outlet US/CA',
+        model_display='ESW15-USA Series',
+        setup_entry='ESW15-USA',
     ),
     OutletMap(
-        dev_types=["ESO15-TB"],
-        class_name="VeSyncOutdoorPlug",
+        dev_types=['ESO15-TB'],
+        class_name='VeSyncOutdoorPlug',
         features=[OutletFeatures.ENERGY_MONITOR],
-        model_name="Outdoor Plug",
-        model_display="ESO15-TB Series",
-        setup_entry="ESO15-TB",
+        model_name='Outdoor Plug',
+        model_display='ESO15-TB Series',
+        setup_entry='ESO15-TB',
     ),
     OutletMap(
         dev_types=[
-            "BSDOG01",
-            "WYSMTOD16A",
-            "WHOGPLUG",
-            "WM-PLUG",
-            "JXUK13APLUG",
-            "WYZYOGMINIPLUG",
-            "BSDOG02",
-            "HWPLUG16A",
-            "FY-PLUG",
-            "HWPLUG16"
+            'BSDOG01',
+            'WYSMTOD16A',
+            'WHOGPLUG',
+            'WM-PLUG',
+            'JXUK13APLUG',
+            'WYZYOGMINIPLUG',
+            'BSDOG02',
+            'HWPLUG16A',
+            'FY-PLUG',
+            'HWPLUG16',
         ],
-        class_name="VeSyncOutletBSDGO1",
+        class_name='VeSyncOutletBSDGO1',
         features=[OutletFeatures.ONOFF],
-        model_name="Smart Plug",
-        model_display="Smart Plug Series",
-        setup_entry="BSDOG01",
-        device_alias="Greensun Smart Plug",
+        model_name='Smart Plug',
+        model_display='Smart Plug Series',
+        setup_entry='BSDOG01',
+        device_alias='Greensun Smart Plug',
     ),
 ]
 """List of ['OutletMap'][pyvesync.device_map.OutletMap] configuration
@@ -467,35 +469,35 @@ objects for outlet devices."""
 
 switch_modules = [
     SwitchMap(
-        dev_types=["ESWL01"],
-        class_name="VeSyncWallSwitch",
-        device_alias="Wall Switch",
+        dev_types=['ESWL01'],
+        class_name='VeSyncWallSwitch',
+        device_alias='Wall Switch',
         features=[SwitchFeatures.ONOFF],
-        model_name="Light Switch",
-        model_display="ESWL01 Series",
-        setup_entry="ESWL01",
+        model_name='Light Switch',
+        model_display='ESWL01 Series',
+        setup_entry='ESWL01',
     ),
     SwitchMap(
-        dev_types=["ESWD16"],
-        class_name="VeSyncDimmerSwitch",
+        dev_types=['ESWD16'],
+        class_name='VeSyncDimmerSwitch',
         features=[
             SwitchFeatures.DIMMABLE,
             SwitchFeatures.INDICATOR_LIGHT,
             SwitchFeatures.BACKLIGHT_RGB,
         ],
-        device_alias="Dimmer Switch",
-        model_name="Dimmer Switch",
-        model_display="ESWD16 Series",
-        setup_entry="ESWD16",
+        device_alias='Dimmer Switch',
+        model_name='Dimmer Switch',
+        model_display='ESWD16 Series',
+        setup_entry='ESWD16',
     ),
     SwitchMap(
-        dev_types=["ESWL03"],
-        class_name="VeSyncWallSwitch",
-        device_alias="Three-Way Wall Switch",
+        dev_types=['ESWL03'],
+        class_name='VeSyncWallSwitch',
+        device_alias='Three-Way Wall Switch',
         features=[SwitchFeatures.ONOFF],
-        model_name="Light Switch 3 way",
-        model_display="ESWL03 Series",
-        setup_entry="ESWL03",
+        model_name='Light Switch 3 way',
+        model_display='ESWL03 Series',
+        setup_entry='ESWL03',
     ),
 ]
 """List of ['SwitchMap'][pyvesync.device_map.SwitchMap] configuration
@@ -511,55 +513,55 @@ objects for switch devices."""
 #     device_alias="<device_alias>")
 bulb_modules = [
     BulbMap(
-        dev_types=["ESL100"],
-        class_name="VeSyncBulbESL100",
+        dev_types=['ESL100'],
+        class_name='VeSyncBulbESL100',
         features=[SwitchFeatures.DIMMABLE],
         color_model=None,
-        device_alias="Dimmable Bright White Bulb",
+        device_alias='Dimmable Bright White Bulb',
         color_modes=[ColorMode.WHITE],
-        model_display="ESL100 Series",
-        model_name="Soft white light bulb",
-        setup_entry="ESL100",
+        model_display='ESL100 Series',
+        model_name='Soft white light bulb',
+        setup_entry='ESL100',
     ),
     BulbMap(
-        dev_types=["ESL100CW"],
-        class_name="VeSyncBulbESL100CW",
+        dev_types=['ESL100CW'],
+        class_name='VeSyncBulbESL100CW',
         features=[BulbFeatures.DIMMABLE, BulbFeatures.COLOR_TEMP],
         color_model=None,
-        device_alias="Dimmable Tunable White Bulb",
+        device_alias='Dimmable Tunable White Bulb',
         color_modes=[ColorMode.WHITE],
-        model_display="ESL100CW Series",
-        model_name="Cool-to-Warm White Light Bulb",
-        setup_entry="ESL100CW",
+        model_display='ESL100CW Series',
+        model_name='Cool-to-Warm White Light Bulb',
+        setup_entry='ESL100CW',
     ),
     BulbMap(
-        dev_types=["XYD0001"],
-        class_name="VeSyncBulbValcenoA19MC",
+        dev_types=['XYD0001'],
+        class_name='VeSyncBulbValcenoA19MC',
         features=[
             BulbFeatures.DIMMABLE,
             BulbFeatures.MULTICOLOR,
             BulbFeatures.COLOR_TEMP,
         ],
         color_model=ColorMode.HSV,
-        device_alias="Valceno Dimmable RGB Bulb",
+        device_alias='Valceno Dimmable RGB Bulb',
         color_modes=[ColorMode.WHITE, ColorMode.COLOR],
-        model_display="XYD0001",
-        model_name="Valceno WiFi Bulb",
-        setup_entry="XYD0001",
+        model_display='XYD0001',
+        model_name='Valceno WiFi Bulb',
+        setup_entry='XYD0001',
     ),
     BulbMap(
-        dev_types=["ESL100MC"],
-        class_name="VeSyncBulbESL100MC",
+        dev_types=['ESL100MC'],
+        class_name='VeSyncBulbESL100MC',
         features=[
             BulbFeatures.MULTICOLOR,
             BulbFeatures.DIMMABLE,
         ],
         color_model=ColorMode.RGB,
-        device_alias="Etekcity Dimmable RGB Bulb",
+        device_alias='Etekcity Dimmable RGB Bulb',
         color_modes=[ColorMode.WHITE, ColorMode.COLOR],
-        model_name="Multicolor Bulb",
-        model_display="ESL100MC",
-        setup_entry="ESL100MC",
+        model_name='Multicolor Bulb',
+        model_display='ESL100MC',
+        setup_entry='ESL100MC',
     ),
 ]
 """List of ['BulbMap'][pyvesync.device_map.BulbMap] configuration
@@ -568,142 +570,142 @@ objects for bulb devices."""
 
 humidifier_modules = [
     HumidifierMap(
-        class_name="VeSyncHumid200300S",
+        class_name='VeSyncHumid200300S',
         dev_types=[
-            "Classic300S",
-            "LUH-A601S-WUSB",
-            "LUH-A601S-AUSW",
+            'Classic300S',
+            'LUH-A601S-WUSB',
+            'LUH-A601S-AUSW',
         ],
         features=[
             HumidifierFeatures.NIGHTLIGHT,
             HumidifierFeatures.NIGHTLIGHT_BRIGHTNESS,
         ],
         mist_modes={
-            HumidifierModes.AUTO: "auto",
-            HumidifierModes.SLEEP: "sleep",
-            HumidifierModes.MANUAL: "manual",
+            HumidifierModes.AUTO: 'auto',
+            HumidifierModes.SLEEP: 'sleep',
+            HumidifierModes.MANUAL: 'manual',
         },
         mist_levels=list(range(1, 10)),
-        device_alias="Classic 300S",
-        model_display="LUH-A601S Series",
-        model_name="Classic 300S",
-        setup_entry="Classic300S",
+        device_alias='Classic 300S',
+        model_display='LUH-A601S Series',
+        model_name='Classic 300S',
+        setup_entry='Classic300S',
     ),
     HumidifierMap(
-        class_name="VeSyncHumid200S",
-        dev_types=["Classic200S"],
+        class_name='VeSyncHumid200S',
+        dev_types=['Classic200S'],
         features=[],
         mist_modes={
-            HumidifierModes.AUTO: "auto",
-            HumidifierModes.MANUAL: "manual",
+            HumidifierModes.AUTO: 'auto',
+            HumidifierModes.MANUAL: 'manual',
         },
         mist_levels=list(range(1, 10)),
-        device_alias="Classic 200S",
-        model_display="Classic 200S Series",
-        model_name="Classic 200S",
-        setup_entry="Classic200S",
+        device_alias='Classic 200S',
+        model_display='Classic 200S Series',
+        model_name='Classic 200S',
+        setup_entry='Classic200S',
     ),
     HumidifierMap(
-        class_name="VeSyncHumid200300S",
-        dev_types=["Dual200S", "LUH-D301S-WUSR", "LUH-D301S-WJP", "LUH-D301S-WEU"],
+        class_name='VeSyncHumid200300S',
+        dev_types=['Dual200S', 'LUH-D301S-WUSR', 'LUH-D301S-WJP', 'LUH-D301S-WEU'],
         features=[],
         mist_modes={
-            HumidifierModes.AUTO: "auto",
-            HumidifierModes.MANUAL: "manual",
+            HumidifierModes.AUTO: 'auto',
+            HumidifierModes.MANUAL: 'manual',
         },
         mist_levels=list(range(1, 3)),
-        device_alias="Dual 200S",
-        model_display="LUH-D301S Series",
-        model_name="Dual 200S",
-        setup_entry="Dual200S",
+        device_alias='Dual 200S',
+        model_display='LUH-D301S Series',
+        model_name='Dual 200S',
+        setup_entry='Dual200S',
     ),
     HumidifierMap(
-        class_name="VeSyncHumid200300S",
+        class_name='VeSyncHumid200300S',
         dev_types=[
-            "LUH-A602S-WUSR",
-            "LUH-A602S-WUS",
-            "LUH-A602S-WEUR",
-            "LUH-A602S-WEU",
-            "LUH-A602S-WJP",
-            "LUH-A602S-WUSC",
+            'LUH-A602S-WUSR',
+            'LUH-A602S-WUS',
+            'LUH-A602S-WEUR',
+            'LUH-A602S-WEU',
+            'LUH-A602S-WJP',
+            'LUH-A602S-WUSC',
         ],
         features=[HumidifierFeatures.WARM_MIST],
         mist_modes={
-            HumidifierModes.AUTO: "auto",
-            HumidifierModes.SLEEP: "sleep",
-            HumidifierModes.MANUAL: "manual",
+            HumidifierModes.AUTO: 'auto',
+            HumidifierModes.SLEEP: 'sleep',
+            HumidifierModes.MANUAL: 'manual',
         },
         mist_levels=list(range(1, 10)),
         warm_mist_levels=[0, 1, 2, 3],
-        device_alias="LV600S",
-        model_display="LUH-A602S Series",
-        model_name="LV600S",
-        setup_entry="LUH-A602S-WUS",
+        device_alias='LV600S',
+        model_display='LUH-A602S Series',
+        model_name='LV600S',
+        setup_entry='LUH-A602S-WUS',
     ),
     HumidifierMap(
-        class_name="VeSyncHumid200300S",
-        dev_types=["LUH-O451S-WEU"],
+        class_name='VeSyncHumid200300S',
+        dev_types=['LUH-O451S-WEU'],
         features=[HumidifierFeatures.WARM_MIST],
         mist_modes={
-            HumidifierModes.AUTO: "auto",
-            HumidifierModes.SLEEP: "sleep",
-            HumidifierModes.MANUAL: "manual",
+            HumidifierModes.AUTO: 'auto',
+            HumidifierModes.SLEEP: 'sleep',
+            HumidifierModes.MANUAL: 'manual',
         },
         mist_levels=list(range(1, 10)),
         warm_mist_levels=list(range(4)),
-        device_alias="OasisMist 450S EU",
-        model_name="OasisMist 4.5L",
-        model_display="LUH-O451S Series",
-        setup_entry="LUH-O451S-WEU",
+        device_alias='OasisMist 450S EU',
+        model_name='OasisMist 4.5L',
+        model_display='LUH-O451S Series',
+        setup_entry='LUH-O451S-WEU',
     ),
     HumidifierMap(
-        class_name="VeSyncHumid200300S",
-        dev_types=["LUH-O451S-WUS", "LUH-O451S-WUSR", "LUH-O601S-WUS", "LUH-O601S-KUS"],
+        class_name='VeSyncHumid200300S',
+        dev_types=['LUH-O451S-WUS', 'LUH-O451S-WUSR', 'LUH-O601S-WUS', 'LUH-O601S-KUS'],
         features=[HumidifierFeatures.WARM_MIST],
         mist_modes={
-            HumidifierModes.AUTO: "auto",
-            HumidifierModes.SLEEP: "sleep",
-            HumidifierModes.MANUAL: "manual",
-            HumidifierModes.HUMIDITY: "humidity",
+            HumidifierModes.AUTO: 'auto',
+            HumidifierModes.SLEEP: 'sleep',
+            HumidifierModes.MANUAL: 'manual',
+            HumidifierModes.HUMIDITY: 'humidity',
         },
         mist_levels=list(range(1, 10)),
         warm_mist_levels=list(range(4)),
-        device_alias="OasisMist 450S",
-        model_display="OasisMist 4.5L Series",
-        model_name="OasisMist 4.5L",
-        setup_entry="LUH-O451S-WUS",
+        device_alias='OasisMist 450S',
+        model_display='OasisMist 4.5L Series',
+        model_name='OasisMist 4.5L',
+        setup_entry='LUH-O451S-WUS',
     ),
     HumidifierMap(
-        class_name="VeSyncHumid1000S",
-        dev_types=["LUH-M101S-WUS", "LUH-M101S-WEUR", "LUH-M101S-WUSR"],
+        class_name='VeSyncHumid1000S',
+        dev_types=['LUH-M101S-WUS', 'LUH-M101S-WEUR', 'LUH-M101S-WUSR'],
         features=[],
         mist_modes={
-            HumidifierModes.AUTO: "auto",
-            HumidifierModes.SLEEP: "sleep",
-            HumidifierModes.MANUAL: "manual",
+            HumidifierModes.AUTO: 'auto',
+            HumidifierModes.SLEEP: 'sleep',
+            HumidifierModes.MANUAL: 'manual',
         },
         mist_levels=list(range(1, 10)),
-        device_alias="Oasismist 1000S",
-        model_display="Oasismist Series",
-        model_name="Oasismist 1000S",
-        setup_entry="LUH-M101S",
+        device_alias='Oasismist 1000S',
+        model_display='Oasismist Series',
+        model_name='Oasismist 1000S',
+        setup_entry='LUH-M101S',
     ),
     HumidifierMap(
-        class_name="VeSyncSuperior6000S",
-        dev_types=["LEH-S601S-WUS", "LEH-S601S-WUSR", "LEH-S601S-WEUR"],
+        class_name='VeSyncSuperior6000S',
+        dev_types=['LEH-S601S-WUS', 'LEH-S601S-WUSR', 'LEH-S601S-WEUR'],
         features=[HumidifierFeatures.DRYING_MODE],
         mist_modes={
-            HumidifierModes.AUTO: "autoPro",
-            HumidifierModes.SLEEP: "sleep",
-            HumidifierModes.HUMIDITY: "humidity",
-            HumidifierModes.MANUAL: "manual",
-            HumidifierModes.AUTOPRO: "autoPro",
+            HumidifierModes.AUTO: 'autoPro',
+            HumidifierModes.SLEEP: 'sleep',
+            HumidifierModes.HUMIDITY: 'humidity',
+            HumidifierModes.MANUAL: 'manual',
+            HumidifierModes.AUTOPRO: 'autoPro',
         },
         mist_levels=list(range(1, 10)),
-        device_alias="Superior 6000S",
-        model_display="LEH-S601S Series",
-        model_name="Superior 6000S",
-        setup_entry="LEH-S601S",
+        device_alias='Superior 6000S',
+        model_display='LEH-S601S Series',
+        model_name='Superior 6000S',
+        setup_entry='LEH-S601S',
     ),
 ]
 """List of ['HumidifierMap'][pyvesync.device_map.HumidifierMap] configuration
@@ -712,8 +714,8 @@ objects for humidifier devices."""
 
 purifier_modules: list[PurifierMap] = [
     PurifierMap(
-        class_name="VeSyncAirBypass",
-        dev_types=["Core200S", "LAP-C201S-AUSR", "LAP-C202S-WUSR"],
+        class_name='VeSyncAirBypass',
+        dev_types=['Core200S', 'LAP-C201S-AUSR', 'LAP-C202S-WUSR'],
         modes=[PurifierModes.SLEEP, PurifierModes.MANUAL],
         features=[PurifierFeatures.RESET_FILTER, PurifierFeatures.NIGHTLIGHT],
         auto_preferences=[
@@ -723,19 +725,19 @@ purifier_modules: list[PurifierMap] = [
         ],
         fan_levels=list(range(1, 4)),
         nightlight_modes=[NightlightModes.ON, NightlightModes.OFF, NightlightModes.DIM],
-        device_alias="Core 200S",
-        model_display="Core 200S",
-        model_name="Core 200S",
-        setup_entry="Core200S",
+        device_alias='Core 200S',
+        model_display='Core 200S',
+        model_name='Core 200S',
+        setup_entry='Core200S',
     ),
     PurifierMap(
-        class_name="VeSyncAirBypass",
+        class_name='VeSyncAirBypass',
         dev_types=[
-            "Core300S",
-            "LAP-C301S-WJP",
-            "LAP-C302S-WUSB",
-            "LAP-C301S-WAAA",
-            "LAP-C302S-WGC",
+            'Core300S',
+            'LAP-C301S-WJP',
+            'LAP-C302S-WUSB',
+            'LAP-C301S-WAAA',
+            'LAP-C302S-WGC',
         ],
         modes=[PurifierModes.SLEEP, PurifierModes.MANUAL, PurifierModes.AUTO],
         auto_preferences=[
@@ -745,30 +747,30 @@ purifier_modules: list[PurifierMap] = [
         ],
         features=[PurifierFeatures.AIR_QUALITY],
         fan_levels=list(range(1, 5)),
-        device_alias="Core 300S",
-        model_display="Core 300S",
-        model_name="Core 300S",
-        setup_entry="Core300S",
+        device_alias='Core 300S',
+        model_display='Core 300S',
+        model_name='Core 300S',
+        setup_entry='Core300S',
     ),
     PurifierMap(
-        class_name="VeSyncAirBypass",
-        dev_types=["Core400S", "LAP-C401S-WJP", "LAP-C401S-WUSR", "LAP-C401S-WAAA"],
+        class_name='VeSyncAirBypass',
+        dev_types=['Core400S', 'LAP-C401S-WJP', 'LAP-C401S-WUSR', 'LAP-C401S-WAAA'],
         modes=[PurifierModes.SLEEP, PurifierModes.MANUAL, PurifierModes.AUTO],
         features=[PurifierFeatures.AIR_QUALITY],
         fan_levels=list(range(1, 5)),
-        device_alias="Core 400S",
+        device_alias='Core 400S',
         auto_preferences=[
             PurifierAutoPreference.DEFAULT,
             PurifierAutoPreference.EFFICIENT,
             PurifierAutoPreference.QUIET,
         ],
-        model_display="Core 400S",
-        model_name="Core 400S",
-        setup_entry="Core400S",
+        model_display='Core 400S',
+        model_name='Core 400S',
+        setup_entry='Core400S',
     ),
     PurifierMap(
-        class_name="VeSyncAirBypass",
-        dev_types=["Core600S", "LAP-C601S-WUS", "LAP-C601S-WUSR", "LAP-C601S-WEU"],
+        class_name='VeSyncAirBypass',
+        dev_types=['Core600S', 'LAP-C601S-WUS', 'LAP-C601S-WUSR', 'LAP-C601S-WEU'],
         modes=[PurifierModes.SLEEP, PurifierModes.MANUAL, PurifierModes.AUTO],
         features=[PurifierFeatures.AIR_QUALITY],
         auto_preferences=[
@@ -777,32 +779,32 @@ purifier_modules: list[PurifierMap] = [
             PurifierAutoPreference.QUIET,
         ],
         fan_levels=list(range(1, 5)),
-        device_alias="Core 600S",
-        model_display="Core 600S",
-        model_name="Core 600S",
-        setup_entry="Core600S",
+        device_alias='Core 600S',
+        model_display='Core 600S',
+        model_name='Core 600S',
+        setup_entry='Core600S',
     ),
     PurifierMap(
-        class_name="VeSyncAir131",
-        dev_types=["LV-PUR131S", "LV-RH131S"],
+        class_name='VeSyncAir131',
+        dev_types=['LV-PUR131S', 'LV-RH131S'],
         modes=[PurifierModes.SLEEP, PurifierModes.MANUAL, PurifierModes.AUTO],
         features=[PurifierFeatures.AIR_QUALITY],
         fan_levels=list(range(1, 4)),
-        device_alias="LV-PUR131S",
-        model_display="LV-PUR131S/RH131S Series",
-        model_name="LV131S",
-        setup_entry="LV-PUR131S",
+        device_alias='LV-PUR131S',
+        model_display='LV-PUR131S/RH131S Series',
+        model_name='LV131S',
+        setup_entry='LV-PUR131S',
     ),
     PurifierMap(
-        class_name="VeSyncAirBaseV2",
+        class_name='VeSyncAirBaseV2',
         dev_types=[
-            "LAP-V102S-AASR",
-            "LAP-V102S-WUS",
-            "LAP-V102S-WEU",
-            "LAP-V102S-AUSR",
-            "LAP-V102S-WJP",
-            "LAP-V102S-AJPR",
-            "LAP-V102S-AEUR",
+            'LAP-V102S-AASR',
+            'LAP-V102S-WUS',
+            'LAP-V102S-WEU',
+            'LAP-V102S-AUSR',
+            'LAP-V102S-WJP',
+            'LAP-V102S-AJPR',
+            'LAP-V102S-AEUR',
         ],
         modes=[
             PurifierModes.SLEEP,
@@ -812,26 +814,26 @@ purifier_modules: list[PurifierMap] = [
         ],
         features=[PurifierFeatures.AIR_QUALITY],
         fan_levels=list(range(1, 5)),
-        device_alias="Vital 100S",
+        device_alias='Vital 100S',
         auto_preferences=[
             PurifierAutoPreference.DEFAULT,
             PurifierAutoPreference.EFFICIENT,
             PurifierAutoPreference.QUIET,
         ],
-        model_display="LAP-V102S Series",
-        model_name="Vital 100S",
-        setup_entry="LAP-V102S",
+        model_display='LAP-V102S Series',
+        model_name='Vital 100S',
+        setup_entry='LAP-V102S',
     ),
     PurifierMap(
-        class_name="VeSyncAirBaseV2",
+        class_name='VeSyncAirBaseV2',
         dev_types=[
-            "LAP-V201S-AASR",
-            "LAP-V201S-WJP",
-            "LAP-V201S-WEU",
-            "LAP-V201S-WUS",
-            "LAP-V201-AUSR",
-            "LAP-V201S-AUSR",
-            "LAP-V201S-AEUR",
+            'LAP-V201S-AASR',
+            'LAP-V201S-WJP',
+            'LAP-V201S-WEU',
+            'LAP-V201S-WUS',
+            'LAP-V201-AUSR',
+            'LAP-V201S-AUSR',
+            'LAP-V201S-AEUR',
         ],
         modes=[
             PurifierModes.SLEEP,
@@ -841,23 +843,23 @@ purifier_modules: list[PurifierMap] = [
         ],
         features=[PurifierFeatures.AIR_QUALITY, PurifierFeatures.LIGHT_DETECT],
         fan_levels=list(range(1, 5)),
-        device_alias="Vital 200S",
+        device_alias='Vital 200S',
         auto_preferences=[
             PurifierAutoPreference.DEFAULT,
             PurifierAutoPreference.EFFICIENT,
             PurifierAutoPreference.QUIET,
         ],
-        model_display="LAP-V201S Series",
-        model_name="Vital 200S",
-        setup_entry="LAP-V201S",
+        model_display='LAP-V201S Series',
+        model_name='Vital 200S',
+        setup_entry='LAP-V201S',
     ),
     PurifierMap(
-        class_name="VeSyncAirBaseV2",
+        class_name='VeSyncAirBaseV2',
         dev_types=[
-            "LAP-EL551S-AUS",
-            "LAP-EL551S-AEUR",
-            "LAP-EL551S-WEU",
-            "LAP-EL551S-WUS",
+            'LAP-EL551S-AUS',
+            'LAP-EL551S-AEUR',
+            'LAP-EL551S-WEU',
+            'LAP-EL551S-WUS',
         ],
         modes=[
             PurifierModes.SLEEP,
@@ -871,26 +873,25 @@ purifier_modules: list[PurifierMap] = [
             PurifierFeatures.LIGHT_DETECT,
         ],
         fan_levels=list(range(1, 4)),
-        device_alias="Everest Air",
+        device_alias='Everest Air',
         auto_preferences=[
             PurifierAutoPreference.DEFAULT,
             PurifierAutoPreference.EFFICIENT,
             PurifierAutoPreference.QUIET,
         ],
-        model_display="LAP-EL551S Series",
-        model_name="Everest Air",
-        setup_entry="EL551S",
+        model_display='LAP-EL551S Series',
+        model_name='Everest Air',
+        setup_entry='EL551S',
     ),
     PurifierMap(
-        class_name="VeSyncAirBaseV2",
+        class_name='VeSyncAirBaseV2',
         dev_types=[
-            "LAP-B851S-WEU",
-            "LAP-B851S-WNA",
-            "LAP-B851S-AEUR",
-            "LAP-B851S-AUS",
-            "LAP-B851S-WUS",
-            "LAP-BAY-MAX01S",
-
+            'LAP-B851S-WEU',
+            'LAP-B851S-WNA',
+            'LAP-B851S-AEUR',
+            'LAP-B851S-AUS',
+            'LAP-B851S-WUS',
+            'LAP-BAY-MAX01S',
         ],
         modes=[
             PurifierModes.SLEEP,
@@ -902,15 +903,15 @@ purifier_modules: list[PurifierMap] = [
             PurifierFeatures.NIGHTLIGHT,
         ],
         fan_levels=list(range(1, 4)),
-        device_alias="Sprout Air Purifier",
+        device_alias='Sprout Air Purifier',
         auto_preferences=[
             PurifierAutoPreference.DEFAULT,
             PurifierAutoPreference.EFFICIENT,
             PurifierAutoPreference.QUIET,
         ],
-        model_display="Sprout Air Series",
-        model_name="Sprout Air",
-        setup_entry="LAP-B851S-WUS",
+        model_display='Sprout Air Series',
+        model_name='Sprout Air',
+        setup_entry='LAP-B851S-WUS',
     ),
 ]
 """List of ['PurifierMap'][pyvesync.device_map.PurifierMap] configuration
@@ -919,22 +920,22 @@ objects for purifier devices."""
 
 fan_modules: list[FanMap] = [
     FanMap(
-        class_name="VeSyncTowerFan",
-        dev_types=["LTF-F422S-KEU", "LTF-F422S-WUSR", "LTF-F422_WJP", "LTF-F422S-WUS"],
+        class_name='VeSyncTowerFan',
+        dev_types=['LTF-F422S-KEU', 'LTF-F422S-WUSR', 'LTF-F422_WJP', 'LTF-F422S-WUS'],
         modes=[
             FanModes.NORMAL,
             FanModes.TURBO,
             FanModes.AUTO,
             FanModes.ADVANCED_SLEEP,
         ],
-        set_mode_method="setTowerFanMode",
+        set_mode_method='setTowerFanMode',
         features=[
             FanFeatures.OSCILLATION,
             FanFeatures.DISPLAYING_TYPE,
             FanFeatures.SOUND,
         ],
         fan_levels=list(range(1, 13)),
-        device_alias="Tower Fan",
+        device_alias='Tower Fan',
         sleep_preferences=[
             FanSleepPreference.DEFAULT,
             FanSleepPreference.ADVANCED,
@@ -942,9 +943,9 @@ fan_modules: list[FanMap] = [
             FanSleepPreference.EFFICIENT,
             FanSleepPreference.QUIET,
         ],  # Unknown sleep preferences, need to be verified
-        model_display="LTF-F422S Series",
-        model_name="Classic 42-Inch Tower Fan",
-        setup_entry="LTF-F422S",
+        model_display='LTF-F422S Series',
+        model_name='Classic 42-Inch Tower Fan',
+        setup_entry='LTF-F422S',
     ),
 ]
 """List of ['FanMap'][pyvesync.device_map.FanMap] configuration
@@ -953,13 +954,13 @@ objects for fan devices."""
 
 air_fryer_modules: list[AirFryerMap] = [
     AirFryerMap(
-        class_name="VeSyncAirFryer158",
+        class_name='VeSyncAirFryer158',
         module=vesynckitchen,
         dev_types=['CS137-AF/CS158-AF', 'CS158-AF', 'CS137-AF', 'CS358-AF'],
-        device_alias="Air Fryer",
-        model_display="CS158/159/168/169-AF Series",
-        model_name="Smart/Pro/Pro Gen 2 5.8 Qt. Air Fryer",
-        setup_entry="CS137-AF/CS158-AF",
+        device_alias='Air Fryer',
+        model_display='CS158/159/168/169-AF Series',
+        model_name='Smart/Pro/Pro Gen 2 5.8 Qt. Air Fryer',
+        setup_entry='CS137-AF/CS158-AF',
     )
 ]
 """List of ['AirFryerMap'][pyvesync.device_map.AirFryerMap] configuration
@@ -998,8 +999,8 @@ def get_device_config(device_type: str) -> DeviceMapTemplate | None:
     for module in chain(*all_modules):
         if device_type in module.dev_types:
             return module
-    if device_type.count("-") > 1:
-        device_type = "-".join(device_type.split("-")[:-1])
+    if device_type.count('-') > 1:
+        device_type = '-'.join(device_type.split('-')[:-1])
         for module in chain(*all_modules):
             if any(device_type.lower() in dev.lower() for dev in module.dev_types):
                 return module
@@ -1019,8 +1020,8 @@ def get_fan(device_type: str) -> FanMap | None:
         if device_type in module.dev_types:
             return module
     # Try to match with a more generic device type
-    if device_type.count("-") > 1:
-        device_type = "-".join(device_type.split("-")[:-1])
+    if device_type.count('-') > 1:
+        device_type = '-'.join(device_type.split('-')[:-1])
         for module in fan_modules:
             if any(device_type.lower() in dev.lower() for dev in module.dev_types):
                 return module
@@ -1039,8 +1040,8 @@ def get_purifier(device_type: str) -> PurifierMap | None:
     for module in purifier_modules:
         if device_type in module.dev_types:
             return module
-    if device_type.count("-") > 1:
-        device_type = "-".join(device_type.split("-")[:-1])
+    if device_type.count('-') > 1:
+        device_type = '-'.join(device_type.split('-')[:-1])
         for module in purifier_modules:
             if any(device_type.lower() in dev.lower() for dev in module.dev_types):
                 return module
@@ -1059,8 +1060,8 @@ def get_humidifier(device_type: str) -> HumidifierMap | None:
     for module in humidifier_modules:
         if device_type in module.dev_types:
             return module
-    if device_type.count("-") > 1:
-        device_type = "-".join(device_type.split("-")[:-1])
+    if device_type.count('-') > 1:
+        device_type = '-'.join(device_type.split('-')[:-1])
         for module in humidifier_modules:
             if any(device_type.lower() in dev.lower() for dev in module.dev_types):
                 return module
@@ -1079,8 +1080,8 @@ def get_outlet(device_type: str) -> OutletMap | None:
     for module in outlet_modules:
         if device_type in module.dev_types:
             return module
-    if device_type.count("-") > 1:
-        device_type = "-".join(device_type.split("-")[:-1])
+    if device_type.count('-') > 1:
+        device_type = '-'.join(device_type.split('-')[:-1])
         for module in outlet_modules:
             if any(device_type.lower() in dev.lower() for dev in module.dev_types):
                 return module
@@ -1099,8 +1100,8 @@ def get_switch(device_type: str) -> SwitchMap | None:
     for module in switch_modules:
         if device_type in module.dev_types:
             return module
-    if device_type.count("-") > 1:
-        device_type = "-".join(device_type.split("-")[:-1])
+    if device_type.count('-') > 1:
+        device_type = '-'.join(device_type.split('-')[:-1])
         for module in switch_modules:
             if any(device_type.lower() in dev.lower() for dev in module.dev_types):
                 return module
@@ -1119,8 +1120,8 @@ def get_bulb(device_type: str) -> BulbMap | None:
     for module in bulb_modules:
         if device_type in module.dev_types:
             return module
-    if device_type.count("-") > 1:
-        device_type = "-".join(device_type.split("-")[:-1])
+    if device_type.count('-') > 1:
+        device_type = '-'.join(device_type.split('-')[:-1])
         for module in bulb_modules:
             if any(device_type.lower() in dev.lower() for dev in module.dev_types):
                 return module
@@ -1139,8 +1140,8 @@ def get_air_fryer(device_type: str) -> AirFryerMap | None:
     for module in air_fryer_modules:
         if device_type in module.dev_types:
             return module
-    if device_type.count("-") > 1:
-        device_type = "-".join(device_type.split("-")[:-1])
+    if device_type.count('-') > 1:
+        device_type = '-'.join(device_type.split('-')[:-1])
         for module in air_fryer_modules:
             if any(device_type.lower() in dev.lower() for dev in module.dev_types):
                 return module
@@ -1159,8 +1160,8 @@ def get_thermostat(device_type: str) -> ThermostatMap | None:
     for module in thermostat_modules:
         if device_type in module.dev_types:
             return module
-    if device_type.count("-") > 1:
-        device_type = "-".join(device_type.split("-")[:-1])
+    if device_type.count('-') > 1:
+        device_type = '-'.join(device_type.split('-')[:-1])
         for module in thermostat_modules:
             if any(device_type.lower() in dev.lower() for dev in module.dev_types):
                 return module

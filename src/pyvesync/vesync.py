@@ -32,8 +32,8 @@ from pyvesync.models.vesync_models import (
     RespLoginTokenResultModel,
     RequestFirmwareModel,
     ResponseFirmwareModel,
-    FirmwareDeviceItemModel
-    )
+    FirmwareDeviceItemModel,
+)
 from pyvesync.utils.errors import (
     ErrorCodes,
     ErrorTypes,
@@ -43,7 +43,7 @@ from pyvesync.utils.errors import (
     VeSyncServerError,
     VeSyncLoginError,
     raise_api_errors,
-    )
+)
 
 
 logger = logging.getLogger(__name__)
@@ -64,21 +64,23 @@ class VeSync:  # pylint: disable=function-redefined
         'country_code',
         'enabled',
         'in_process',
-        "language",
+        'language',
         'password',
         'session',
         'time_zone',
-        'username'
+        'username',
     )
 
-    def __init__(self,  # noqa: PLR0913
-                 username: str,
-                 password: str,
-                 country_code: str = DEFAULT_REGION,
-                 session: ClientSession | None = None,
-                 time_zone: str = DEFAULT_TZ,
-                 debug: bool = False,
-                 redact: bool = True) -> None:
+    def __init__(  # noqa: PLR0913
+        self,
+        username: str,
+        password: str,
+        country_code: str = DEFAULT_REGION,
+        session: ClientSession | None = None,
+        time_zone: str = DEFAULT_TZ,
+        debug: bool = False,
+        redact: bool = True,
+    ) -> None:
         """Initialize VeSync Manager.
 
         This class is used as the manager for all VeSync objects, all methods and
@@ -247,14 +249,12 @@ class VeSync:  # pylint: disable=function-redefined
         if new_device_count != current_device_count:
             logger.debug(
                 'Removed %s devices', str(current_device_count - new_device_count)
-                )
+            )
         current_device_count = new_device_count
         self._device_container.add_new_devices(dev_list_resp, self)
         new_device_count = len(self._device_container)
         if new_device_count != current_device_count:
-            logger.debug(
-                'Added %s devices', str(new_device_count - current_device_count)
-                )
+            logger.debug('Added %s devices', str(new_device_count - current_device_count))
         return True
 
     async def get_devices(self) -> bool:
@@ -272,9 +272,7 @@ class VeSync:  # pylint: disable=function-redefined
         self.in_process = True
         proc_return = False
         request_model = RequestDeviceListModel(
-            token=self.token,
-            accountID=self.account_id,
-            timeZone=self.time_zone
+            token=self.token, accountID=self.account_id, timeZone=self.time_zone
         )
         response_dict, _ = await self.async_call_api(
             '/cloud/v1/deviceManaged/devices',
@@ -285,7 +283,8 @@ class VeSync:  # pylint: disable=function-redefined
 
         if response_dict is None:
             raise VeSyncAPIResponseError(
-                'Error receiving response to device list request')
+                'Error receiving response to device list request'
+            )
 
         response = ResponseDeviceListModel.from_dict(response_dict)
 
@@ -298,7 +297,8 @@ class VeSync:  # pylint: disable=function-redefined
             if error_info.error_type == ErrorTypes.SERVER_ERROR:
                 raise VeSyncServerError(info_msg)
             raise VeSyncAPIResponseError(
-                'Error receiving response to device list request')
+                'Error receiving response to device list request'
+            )
 
         self.in_process = False
 
@@ -315,8 +315,12 @@ class VeSync:  # pylint: disable=function-redefined
             VeSyncAPIResponseError: If API response is invalid.
             VeSyncServerError: If server returns an error.
         """
-        if not isinstance(self.username, str) or len(self.username) == 0 \
-                or not isinstance(self.password, str) or len(self.password) == 0:
+        if (
+            not isinstance(self.username, str)
+            or len(self.username) == 0
+            or not isinstance(self.password, str)
+            or len(self.password) == 0
+        ):
             raise VeSyncLoginError('Username and password must be specified')
 
         request_auth = RequestGetTokenModel(
@@ -325,19 +329,20 @@ class VeSync:  # pylint: disable=function-redefined
             password=self.password,
         )
         resp_dict, _ = await self.async_call_api(
-            '/globalPlatform/api/accountAuth/v1/authByPWDOrOTM', 'post',
-            json_object=request_auth
+            '/globalPlatform/api/accountAuth/v1/authByPWDOrOTM',
+            'post',
+            json_object=request_auth,
         )
         if resp_dict is None:
             raise VeSyncAPIResponseError('Error receiving response to auth request')
 
         if resp_dict.get('code') != 0:
-            error_info = ErrorCodes.get_error_info(resp_dict.get("code"))
+            error_info = ErrorCodes.get_error_info(resp_dict.get('code'))
             resp_message = resp_dict.get('msg')
             if resp_message is not None:
                 error_info.message = f'{error_info.message} ({resp_message})'
             raise VeSyncAPIResponseError(
-                f"Error receiving response to auth request - {error_info.message}"
+                f'Error receiving response to auth request - {error_info.message}'
             )
 
         try:
@@ -351,16 +356,16 @@ class VeSync:  # pylint: disable=function-redefined
         result = response_model.result
         if not isinstance(result, RespGetTokenResultModel):
             raise VeSyncAPIResponseError(
-                "Error receiving response to login request -"
-                " result is not IntRespAuthResultModel"
+                'Error receiving response to login request -'
+                ' result is not IntRespAuthResultModel'
             )
 
         return await self._login_token(auth_code=result.authorizeCode)
 
     async def _login_token(
-            self,
-            auth_code: str | None = None,
-            region_change_token: str | None = None,
+        self,
+        auth_code: str | None = None,
+        region_change_token: str | None = None,
     ) -> None:  # pylint: disable=W9006 # pylint mult docstring raises
         """Exchanges the authorization code for a token.
 
@@ -384,11 +389,12 @@ class VeSync:  # pylint: disable=function-redefined
             authorizeCode=auth_code,
             bizToken=region_change_token,
             userCountryCode=self.country_code,
-            regionChange="last_region" if region_change_token else None,
+            regionChange='last_region' if region_change_token else None,
         )
         resp_dict, _ = await self.async_call_api(
-            '/user/api/accountManage/v1/loginByAuthorizeCode4Vesync', 'post',
-            json_object=request_login
+            '/user/api/accountManage/v1/loginByAuthorizeCode4Vesync',
+            'post',
+            json_object=request_login,
         )
         if resp_dict is None:
             raise VeSyncAPIResponseError('Error receiving response to login request')
@@ -396,11 +402,11 @@ class VeSync:  # pylint: disable=function-redefined
             response_model = ResponseLoginModel.from_dict(resp_dict)
             if not isinstance(response_model.result, RespLoginTokenResultModel):
                 raise VeSyncAPIResponseError(
-                    "Error receiving response to login request -"
-                    "result is not RespLoginTokenResultModel"
+                    'Error receiving response to login request -'
+                    'result is not RespLoginTokenResultModel'
                 )
             if response_model.code != 0:
-                error_info = ErrorCodes.get_error_info(resp_dict.get("code"))
+                error_info = ErrorCodes.get_error_info(resp_dict.get('code'))
 
                 # Handle cross region error by retrying login with new region
                 if error_info.error_type == ErrorTypes.CROSS_REGION:
@@ -411,14 +417,14 @@ class VeSync:  # pylint: disable=function-redefined
                 if resp_message is not None:
                     error_info.message = f'{error_info.message} ({resp_message})'
                 raise VeSyncLoginError(
-                    f"Error receiving response to login request - {error_info.message}"
+                    f'Error receiving response to login request - {error_info.message}'
                 )
 
             result = response_model.result
             if not isinstance(result, RespLoginTokenResultModel):
                 raise VeSyncAPIResponseError(
-                    "Error receiving response to login request -"
-                    " result is not RespLoginTokenResultModel"
+                    'Error receiving response to login request -'
+                    ' result is not RespLoginTokenResultModel'
                 )
 
             self._token = result.token
@@ -464,10 +470,10 @@ class VeSync:  # pylint: disable=function-redefined
     async def __aexit__(self, *exec_info: object) -> None:
         """Asynchronous context manager exit."""
         if self.session and self._close_session:
-            logger.debug("Closing session, exiting context manager")
+            logger.debug('Closing session, exiting context manager')
             await self.session.close()
             return
-        logger.debug("Session not closed, exiting context manager")
+        logger.debug('Session not closed, exiting context manager')
 
     async def async_call_api(
         self,
@@ -521,7 +527,6 @@ class VeSync:  # pylint: disable=function-redefined
                 headers=headers,
                 raise_for_status=False,
             ) as response:
-
                 status_code = response.status
                 resp_bytes = await response.read()
                 if status_code != STATUS_OK:
@@ -536,9 +541,9 @@ class VeSync:  # pylint: disable=function-redefined
                 LibraryLogger.log_api_call(logger, response, resp_bytes, req_dict)
                 resp_dict = Helpers.try_json_loads(resp_bytes)
                 if isinstance(resp_dict, dict):
-                    error_info = ErrorCodes.get_error_info(resp_dict.get("code"))
-                    if resp_dict.get("msg") is not None:
-                        error_info.message = f"{error_info.message} ({resp_dict['msg']})"
+                    error_info = ErrorCodes.get_error_info(resp_dict.get('code'))
+                    if resp_dict.get('msg') is not None:
+                        error_info.message = f'{error_info.message} ({resp_dict["msg"]})'
                         raise_api_errors(error_info)
 
                 return resp_dict, status_code
@@ -571,18 +576,20 @@ class VeSync:  # pylint: disable=function-redefined
                 if device.code != 0:
                     logger.debug(
                         'Device %s has error code %s with message: %s',
-                        device.deviceName, device.code, device.msg
+                        device.deviceName,
+                        device.code,
+                        device.msg,
                     )
                 else:
                     logger.debug(
-                        'Device %s has no firmware updates available',
-                        device.deviceName
+                        'Device %s has no firmware updates available', device.deviceName
                     )
                 continue
             for update_info in device.firmUpdateInfos:
                 update_dict[device.deviceCid] = (
-                    update_info.currentVersion, update_info.latestVersion
-                    )
+                    update_info.currentVersion,
+                    update_info.latestVersion,
+                )
                 if update_info.isMainFw is True:
                     break
         for device_obj in self._device_container:
@@ -602,7 +609,8 @@ class VeSync:  # pylint: disable=function-redefined
             logger.debug('No devices to check for firmware updates')
             return False
         body_fields = [
-            field.name for field in fields(RequestFirmwareModel)
+            field.name
+            for field in fields(RequestFirmwareModel)
             if field.default_factory is MISSING and field.default is MISSING
         ]
         body = Helpers.get_class_attributes(self, body_fields)
@@ -614,7 +622,8 @@ class VeSync:  # pylint: disable=function-redefined
         )
         if resp_dict is None:
             raise VeSyncAPIResponseError(
-                'Error receiving response to firmware update request')
+                'Error receiving response to firmware update request'
+            )
         resp_model = ResponseFirmwareModel.from_dict(resp_dict)
         if resp_model.code != 0:
             error_info = ErrorCodes.get_error_info(resp_model.code)

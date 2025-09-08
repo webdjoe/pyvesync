@@ -15,6 +15,7 @@ Notes:
     `pyvesync.models.base_models.DefaultValues` to set default values.
 
 """
+
 from __future__ import annotations
 from dataclasses import dataclass, field
 
@@ -22,7 +23,7 @@ from pyvesync.models.base_models import (
     ResponseCodeModel,
     RequestBaseModel,
     DefaultValues,
-    )
+)
 
 
 @dataclass

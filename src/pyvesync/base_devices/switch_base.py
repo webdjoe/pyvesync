@@ -1,4 +1,5 @@
 """Base classes for all VeSync switches."""
+
 from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
@@ -42,18 +43,18 @@ class SwitchState(DeviceState):
     """
 
     __slots__ = (
-        "_backlight_color",
-        "backlight_status",
-        "brightness",
-        "indicator_status",
+        '_backlight_color',
+        'backlight_status',
+        'brightness',
+        'indicator_status',
     )
 
     def __init__(
         self,
         device: VeSyncSwitch,
         details: ResponseDeviceDetailsModel,
-        feature_map: SwitchMap
-            ) -> None:
+        feature_map: SwitchMap,
+    ) -> None:
         """Initialize VeSync Switch State."""
         super().__init__(device, details, feature_map)
         self.device: VeSyncSwitch = device
@@ -67,7 +68,7 @@ class SwitchState(DeviceState):
     def backlight_rgb(self) -> RGB | None:
         """Get backlight RGB color."""
         if not self.device.supports_backlight_color:
-            logger.warning("Backlight color not supported.")
+            logger.warning('Backlight color not supported.')
         if isinstance(self._backlight_color, Color):
             return self._backlight_color.rgb
         return None
@@ -76,7 +77,7 @@ class SwitchState(DeviceState):
     def backlight_hsv(self) -> HSV | None:
         """Get backlight HSV color."""
         if not self.device.supports_backlight_color:
-            logger.warning("Backlight color not supported.")
+            logger.warning('Backlight color not supported.')
         if isinstance(self._backlight_color, Color):
             return self._backlight_color.hsv
         return None
@@ -86,14 +87,14 @@ class SwitchState(DeviceState):
         """Get backlight color."""
         if isinstance(self._backlight_color, Color):
             return self._backlight_color
-        logger.warning("Backlight color not supported.")
+        logger.warning('Backlight color not supported.')
         return None
 
     @backlight_color.setter
     def backlight_color(self, color: Color | None) -> None:
         """Set backlight color."""
         if not self.device.supports_backlight_color:
-            logger.warning("Backlight color not supported.")
+            logger.warning('Backlight color not supported.')
             return
         self._backlight_color = color
 
@@ -128,14 +129,15 @@ class VeSyncSwitch(VeSyncBaseToggleDevice):
 
     __slots__ = ()
 
-    def __init__(self, details: ResponseDeviceDetailsModel,
-                 manager: VeSync, feature_map: SwitchMap) -> None:
+    def __init__(
+        self, details: ResponseDeviceDetailsModel, manager: VeSync, feature_map: SwitchMap
+    ) -> None:
         """Initialize Switch Base Class."""
         super().__init__(details, manager, feature_map)
         self.state: SwitchState = SwitchState(self, details, feature_map)
 
     @property
-    @deprecated("Use `supports_dimmable` property instead.")
+    @deprecated('Use `supports_dimmable` property instead.')
     def is_dimmable(self) -> bool:
         """Return True if switch is dimmable."""
         return bool(SwitchFeatures.DIMMABLE in self.features)
@@ -171,9 +173,9 @@ class VeSyncSwitch(VeSyncBaseToggleDevice):
         """
         del toggle
         if self.supports_indicator_light:
-            logger.debug("toggle_indicator_light not configured for %s", self.device_name)
+            logger.debug('toggle_indicator_light not configured for %s', self.device_name)
         else:
-            logger.debug("toggle_indicator_light not supported for %s", self.device_name)
+            logger.debug('toggle_indicator_light not supported for %s', self.device_name)
         return False
 
     async def turn_on_indicator_light(self) -> bool:
@@ -185,11 +187,11 @@ class VeSyncSwitch(VeSyncBaseToggleDevice):
         return await self.toggle_indicator_light(False)
 
     async def set_backlight_status(
-            self,
-            status: bool,
-            red: int | None = None,
-            green: int | None = None,
-            blue: int | None = None
+        self,
+        status: bool,
+        red: int | None = None,
+        green: int | None = None,
+        blue: int | None = None,
     ) -> bool:
         """Set the backlight status and optionally its color if supported by the device.
 
@@ -205,9 +207,9 @@ class VeSyncSwitch(VeSyncBaseToggleDevice):
         """
         del status, red, green, blue
         if self.supports_backlight:
-            logger.debug("set_backlight_status not configured for %s", self.device_name)
+            logger.debug('set_backlight_status not configured for %s', self.device_name)
         else:
-            logger.debug("set_backlight_status not supported for %s", self.device_name)
+            logger.debug('set_backlight_status not supported for %s', self.device_name)
         return False
 
     async def turn_on_rgb_backlight(self) -> bool:
@@ -218,12 +220,12 @@ class VeSyncSwitch(VeSyncBaseToggleDevice):
         """Turn off backlight if supported."""
         return await self.set_backlight_status(False)
 
-    @deprecated("Use `turn_on_rgb_backlight()` instead.")
+    @deprecated('Use `turn_on_rgb_backlight()` instead.')
     async def turn_rgb_backlight_on(self) -> bool:
         """Turn on RGB backlight if supported."""
         return await self.set_backlight_status(True)
 
-    @deprecated("Use `turn_off_rgb_backlight()` instead.")
+    @deprecated('Use `turn_off_rgb_backlight()` instead.')
     async def turn_rgb_backlight_off(self) -> bool:
         """Turn off RGB backlight if supported."""
         return await self.set_backlight_status(False)
@@ -239,9 +241,7 @@ class VeSyncSwitch(VeSyncBaseToggleDevice):
         Returns:
             bool: True if successful, False otherwise.
         """
-        return await self.set_backlight_status(
-            True, red=red, green=green, blue=blue
-        )
+        return await self.set_backlight_status(True, red=red, green=green, blue=blue)
 
     async def set_brightness(self, brightness: int) -> bool:
         """Set the brightness of the switch if supported.
@@ -254,17 +254,17 @@ class VeSyncSwitch(VeSyncBaseToggleDevice):
         """
         del brightness
         if self.supports_dimmable:
-            logger.debug("set_brightness not configured for %s", self.device_name)
+            logger.debug('set_brightness not configured for %s', self.device_name)
         else:
-            logger.debug("set_brightness not supported for %s", self.device_name)
+            logger.debug('set_brightness not supported for %s', self.device_name)
         return False
 
-    @deprecated("Use `turn_on_indicator_light` instead.")
+    @deprecated('Use `turn_on_indicator_light` instead.')
     async def turn_indicator_light_on(self) -> bool:
         """Deprecated - use turn_on_indicator_light."""
         return await self.toggle_indicator_light(True)
 
-    @deprecated("Use `turn_off_indicator_light` instead.")
+    @deprecated('Use `turn_off_indicator_light` instead.')
     async def turn_indicator_light_off(self) -> bool:
         """Deprecated - use turn_off_indicator_light."""
         return await self.toggle_indicator_light(False)

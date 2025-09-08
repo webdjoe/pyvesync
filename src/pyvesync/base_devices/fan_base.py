@@ -1,4 +1,5 @@
 """Fan Devices Base Class (NOT purifiers or humidifiers)."""
+
 from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
@@ -45,23 +46,23 @@ class FanState(DeviceState):
     """
 
     __slots__ = (
-        "display_set_status",
-        "display_status",
-        "displaying_type",
-        "fan_level",
-        "fan_set_level",
-        "humidity",
-        "mode",
-        "mute_set_status",
-        "mute_status",
-        "oscillation_set_status",
-        "oscillation_status",
-        "sleep_change_fan_level",
-        "sleep_fallasleep_remain",
-        "sleep_oscillation_switch",
-        "sleep_preference_type",
-        "temperature",
-        "thermal_comfort",
+        'display_set_status',
+        'display_status',
+        'displaying_type',
+        'fan_level',
+        'fan_set_level',
+        'humidity',
+        'mode',
+        'mute_set_status',
+        'mute_status',
+        'oscillation_set_status',
+        'oscillation_status',
+        'sleep_change_fan_level',
+        'sleep_fallasleep_remain',
+        'sleep_oscillation_switch',
+        'sleep_preference_type',
+        'temperature',
+        'thermal_comfort',
     )
 
     def __init__(
@@ -111,9 +112,9 @@ class VeSyncFanBase(VeSyncBaseToggleDevice):
     """
 
     __slots__ = (
-        "fan_levels",
-        "modes",
-        "sleep_preferences",
+        'fan_levels',
+        'modes',
+        'sleep_preferences',
     )
 
     def __init__(
@@ -216,7 +217,7 @@ class VeSyncFanBase(VeSyncBaseToggleDevice):
         """
         if FanModes.AUTO in self.modes:
             return await self.set_mode(FanModes.AUTO)
-        logger.warning("Auto mode not supported for this device.")
+        logger.warning('Auto mode not supported for this device.')
         return False
 
     async def set_advanced_sleep_mode(self) -> bool:
@@ -231,7 +232,7 @@ class VeSyncFanBase(VeSyncBaseToggleDevice):
         """
         if FanModes.ADVANCED_SLEEP in self.modes:
             return await self.set_mode(FanModes.ADVANCED_SLEEP)
-        logger.warning("Advanced Sleep mode not supported for this device.")
+        logger.warning('Advanced Sleep mode not supported for this device.')
         return False
 
     async def set_sleep_mode(self) -> bool:
@@ -248,7 +249,7 @@ class VeSyncFanBase(VeSyncBaseToggleDevice):
         """
         if FanModes.ADVANCED_SLEEP in self.modes:
             return await self.set_mode(FanModes.ADVANCED_SLEEP)
-        logger.warning("Sleep mode not supported for this device.")
+        logger.warning('Sleep mode not supported for this device.')
         return False
 
     async def set_manual_mode(self) -> bool:
@@ -263,7 +264,7 @@ class VeSyncFanBase(VeSyncBaseToggleDevice):
         """
         if FanModes.NORMAL in self.modes:
             return await self.set_mode(FanModes.NORMAL)
-        logger.warning("Manual mode not supported for this device.")
+        logger.warning('Manual mode not supported for this device.')
         return False
 
     async def set_normal_mode(self) -> bool:
@@ -278,7 +279,7 @@ class VeSyncFanBase(VeSyncBaseToggleDevice):
         """
         if FanModes.NORMAL in self.modes:
             return await self.set_mode(FanModes.NORMAL)
-        logger.warning("Normal mode not supported for this device.")
+        logger.warning('Normal mode not supported for this device.')
         return False
 
     async def set_turbo_mode(self) -> bool:
@@ -293,7 +294,7 @@ class VeSyncFanBase(VeSyncBaseToggleDevice):
         """
         if FanModes.TURBO in self.modes:
             return await self.set_mode(FanModes.TURBO)
-        logger.warning("Turbo mode not supported for this device.")
+        logger.warning('Turbo mode not supported for this device.')
         return False
 
     async def toggle_oscillation(self, toggle: bool) -> bool:
@@ -307,9 +308,9 @@ class VeSyncFanBase(VeSyncBaseToggleDevice):
         """
         del toggle
         if self.supports_oscillation:
-            logger.debug("Oscillation not configured for this device.")
+            logger.debug('Oscillation not configured for this device.')
         else:
-            logger.debug("Oscillation not supported for this device.")
+            logger.debug('Oscillation not supported for this device.')
         return False
 
     async def turn_on_oscillation(self) -> bool:
@@ -332,9 +333,9 @@ class VeSyncFanBase(VeSyncBaseToggleDevice):
         """
         del toggle
         if self.supports_mute:
-            logger.debug("Mute not configured for this device.")
+            logger.debug('Mute not configured for this device.')
         else:
-            logger.debug("Mute not supported for this device.")
+            logger.debug('Mute not supported for this device.')
         return False
 
     async def turn_on_mute(self) -> bool:
@@ -358,32 +359,32 @@ class VeSyncFanBase(VeSyncBaseToggleDevice):
         """
         del toggle
         if self.supports_displaying_type:
-            logger.debug("Displaying type not configured for this device.")
+            logger.debug('Displaying type not configured for this device.')
         else:
-            logger.debug("Displaying type not supported for this device.")
+            logger.debug('Displaying type not supported for this device.')
         return False
 
-    @deprecated("Use `set_normal_mode` method instead")
+    @deprecated('Use `set_normal_mode` method instead')
     async def normal_mode(self) -> bool:
         """Set mode to normal."""
         return await self.set_normal_mode()
 
-    @deprecated("Use `set_manual_mode` method instead")
+    @deprecated('Use `set_manual_mode` method instead')
     async def manual_mode(self) -> bool:
         """Adapter to set mode to normal."""
         return await self.set_normal_mode()
 
-    @deprecated("Use `set_advanced_sleep_mode` method instead")
+    @deprecated('Use `set_advanced_sleep_mode` method instead')
     async def advanced_sleep_mode(self) -> bool:
         """Set advanced sleep mode."""
         return await self.set_mode('advancedSleep')
 
-    @deprecated("Use `set_sleep_mode` method instead")
+    @deprecated('Use `set_sleep_mode` method instead')
     async def sleep_mode(self) -> bool:
         """Adapter to set advanced sleep mode."""
         return await self.set_advanced_sleep_mode()
 
-    @deprecated("Use `set_mode` method instead")
+    @deprecated('Use `set_mode` method instead')
     async def mode_toggle(self, mode: str) -> bool:
         """Set mode to specified mode."""
         return await self.set_mode(mode)

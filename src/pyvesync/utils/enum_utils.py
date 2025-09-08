@@ -19,7 +19,7 @@ class IntEnumMixin(enum.IntEnum):
             if member.value == value:
                 return member
         unknown_enum_val = int.__new__(cls, value)  # type: ignore[call-overload]
-        unknown_enum_val._name_ = "UNKNOWN"
+        unknown_enum_val._name_ = 'UNKNOWN'
         unknown_enum_val._value_ = value  # type: ignore[assignment]
         unknown_enum_val.__objclass__ = cls.__class__  # type: ignore[assignment]
         return unknown_enum_val

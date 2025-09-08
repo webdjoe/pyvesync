@@ -14,7 +14,7 @@ from pyvesync.const import (
     ThermostatEcoTypes,
     ThermostatWorkStatusCodes,
     ThermostatFanStatus,
-    )
+)
 
 if TYPE_CHECKING:
     from pyvesync import VeSync
@@ -39,29 +39,29 @@ class ThermostatState(DeviceState):
     """
 
     __slots__ = (
-        "alert_status",
-        "battery_level",
-        "configuration",
-        "cool_to_temp",
-        "deadband",
-        "device_config",
-        "eco_type",
-        "fan_mode",
-        "fan_status",
-        "filter_life",
-        "heat_to_temp",
-        "hold_end_time",
-        "hold_option",
-        "humidity",
-        "lock_status",
-        "mode",
-        "routine_running_id",
-        "routines",
-        "schedule_or_hold",
-        "temperature",
-        "temperature_unit",
-        "work_mode",
-        "work_status",
+        'alert_status',
+        'battery_level',
+        'configuration',
+        'cool_to_temp',
+        'deadband',
+        'device_config',
+        'eco_type',
+        'fan_mode',
+        'fan_status',
+        'filter_life',
+        'heat_to_temp',
+        'hold_end_time',
+        'hold_option',
+        'humidity',
+        'lock_status',
+        'mode',
+        'routine_running_id',
+        'routines',
+        'schedule_or_hold',
+        'temperature',
+        'temperature_unit',
+        'work_mode',
+        'work_status',
     )
 
     def __init__(
@@ -125,7 +125,7 @@ class VeSyncThermostat(VeSyncBaseDevice):
         feature_map (ThermostatMap): The thermostat feature map.
     """
 
-    __slots__ = ("eco_types", "fan_modes", "hold_options", "supported_work_modes")
+    __slots__ = ('eco_types', 'fan_modes', 'hold_options', 'supported_work_modes')
 
     def __init__(
         self,
@@ -144,7 +144,7 @@ class VeSyncThermostat(VeSyncBaseDevice):
     async def set_mode(self, mode: ThermostatWorkModes) -> bool:
         """Set the thermostat mode."""
         del mode  # Unused
-        _LOGGER.debug("set mode not implemented for %s", self.device_type)
+        _LOGGER.debug('set mode not implemented for %s', self.device_type)
         return False
 
     async def turn_off(self) -> bool:
@@ -174,7 +174,7 @@ class VeSyncThermostat(VeSyncBaseDevice):
     async def set_fan_mode(self, mode: ThermostatFanModes) -> bool:
         """Set thermostat fan mode."""
         del mode
-        _LOGGER.debug("set fan mode not implemented for %s", self.device_type)
+        _LOGGER.debug('set fan mode not implemented for %s', self.device_type)
         return False
 
     async def set_fan_ciruclate(self) -> bool:
@@ -191,17 +191,17 @@ class VeSyncThermostat(VeSyncBaseDevice):
 
     async def get_configuration(self) -> None:
         """Retrieve configuration from API."""
-        _LOGGER.debug("get configuration not implemented for %s", self.device_type)
+        _LOGGER.debug('get configuration not implemented for %s', self.device_type)
 
     async def set_temp_point(self, temperature: float) -> bool:
         """Set the temperature point."""
         del temperature
-        _LOGGER.debug("set temp point not implemented for %s", self.device_type)
+        _LOGGER.debug('set temp point not implemented for %s', self.device_type)
         return False
 
     async def cancel_hold(self) -> bool:
         """Cancel the scheduled hold."""
-        _LOGGER.debug("cancel hold not implemented for %s", self.device_type)
+        _LOGGER.debug('cancel hold not implemented for %s', self.device_type)
         return False
 
     async def set_cool_to_temp(self, temperature: float) -> bool:
@@ -214,7 +214,7 @@ class VeSyncThermostat(VeSyncBaseDevice):
             bool: True if successful, False otherwise.
         """
         del temperature
-        _LOGGER.debug("set cool to temp not implemented for %s", self.device_type)
+        _LOGGER.debug('set cool to temp not implemented for %s', self.device_type)
         return False
 
     async def set_heat_to_temp(self, temperature: float) -> bool:
@@ -227,13 +227,13 @@ class VeSyncThermostat(VeSyncBaseDevice):
             bool: True if successful, False otherwise.
         """
         del temperature
-        _LOGGER.debug("set heat to temp not implemented for %s", self.device_type)
+        _LOGGER.debug('set heat to temp not implemented for %s', self.device_type)
         return False
 
     async def toggle_lock(self, toggle: bool, pin: int | str | None = None) -> bool:
         """Toggle the thermostat lock status."""
         del toggle, pin
-        _LOGGER.debug("toggle lock not implemented for %s", self.device_type)
+        _LOGGER.debug('toggle lock not implemented for %s', self.device_type)
         return False
 
     async def turn_on_lock(self, pin: int | str) -> bool:
@@ -260,9 +260,9 @@ class VeSyncThermostat(VeSyncBaseDevice):
         """
         del eco_type
         if not self.eco_types:
-            _LOGGER.debug("No eco types available for %s", self.device_type)
+            _LOGGER.debug('No eco types available for %s', self.device_type)
         else:
-            _LOGGER.debug("set_eco_type not configured for %s", self.device_name)
+            _LOGGER.debug('set_eco_type not configured for %s', self.device_name)
         return False
 
     async def set_eco_first(self) -> bool:

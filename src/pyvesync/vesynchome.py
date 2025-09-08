@@ -1,4 +1,5 @@
 """This is a WIP, not implemented yet."""
+
 from __future__ import annotations
 import logging
 import asyncio
@@ -70,8 +71,8 @@ class VeSyncHome:
         for home in home_list:
             if not isinstance(home, IntResponseHomeListModel):
                 raise VeSyncAPIResponseError(
-                    "Invalid home list item type."
-                    f"Expected IntResponseHomeListModel, got {home}"
+                    'Invalid home list item type.'
+                    f'Expected IntResponseHomeListModel, got {home}'
                 )
             homes.append(VeSyncHome(home.homeId, home.homeName, home.nickname))
         return homes
@@ -96,39 +97,35 @@ class VeSyncHome:
         """
         body = cls._build_request_model(manager, RequestHomeModel)
         response, _ = await manager.async_call_api(
-            '/cloud/v1/homeManaged/getHomeList',
-            method='post',
-            json_object=body
+            '/cloud/v1/homeManaged/getHomeList', method='post', json_object=body
         )
         if response is None:
             raise VeSyncAPIResponseError(
-                "Response is None, enable debugging to see more information."
+                'Response is None, enable debugging to see more information.'
             )
 
         resp_model = ResponseHomeModel.from_dict(response)
         if resp_model.code != 0:
             error = ErrorCodes.get_error_info(resp_model.code)
             if resp_model.msg is not None:
-                error.message = f"{resp_model.msg} ({error.message})"
+                error.message = f'{resp_model.msg} ({error.message})'
             raise VeSyncAPIResponseError(
-                f"Failed to get home list with error: {error.to_json()}"
+                f'Failed to get home list with error: {error.to_json()}'
             )
         result = resp_model.result
         if not isinstance(result, IntResponseHomeResultModel):
             raise VeSyncAPIResponseError(
-                "Error in home list API response."
-                f"Expected IntResponseHomeResultModel, got {result}"
+                'Error in home list API response.'
+                f'Expected IntResponseHomeResultModel, got {result}'
             )
         home_list = result.homeList
         if not home_list:
-            raise VeSyncAPIResponseError(
-                "No homes found in the response."
-            )
+            raise VeSyncAPIResponseError('No homes found in the response.')
         for home in home_list:
             if not isinstance(home, IntResponseHomeListModel):
                 raise VeSyncAPIResponseError(
-                    "Invalid home list item type."
-                    f"Expected IntResponseHomeListModel, got {home}"
+                    'Invalid home list item type.'
+                    f'Expected IntResponseHomeListModel, got {home}'
                 )
             # clear existing homes
             # manager.homes = []

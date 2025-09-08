@@ -1,4 +1,5 @@
 """Helper functions for VeSync API."""
+
 from __future__ import annotations
 
 import hashlib
@@ -68,8 +69,9 @@ class Validators:
         return Validators.validate_range(value, 0, 100)
 
     @classmethod
-    def validate_hsv(cls, hue: NUMERIC_OPT, saturation: NUMERIC_OPT,
-                     value: NUMERIC_OPT) -> bool:
+    def validate_hsv(
+        cls, hue: NUMERIC_OPT, saturation: NUMERIC_OPT, value: NUMERIC_OPT
+    ) -> bool:
         """Validate HSV values."""
         return (
             cls.validate_range(hue, 0, 360)
@@ -78,12 +80,11 @@ class Validators:
         )
 
     @classmethod
-    def validate_rgb(cls, red: NUMERIC_OPT, green: NUMERIC_OPT,
-                     blue: NUMERIC_OPT) -> bool:
+    def validate_rgb(
+        cls, red: NUMERIC_OPT, green: NUMERIC_OPT, blue: NUMERIC_OPT
+    ) -> bool:
         """Validate RGB values."""
-        return all(
-            cls.validate_range(val, 0, 255) for val in (red, green, blue)
-        )
+        return all(cls.validate_range(val, 0, 255) for val in (red, green, blue))
 
 
 class Converters:
@@ -97,7 +98,7 @@ class Converters:
     @staticmethod
     def color_temp_pct_to_kelvin(pct: int) -> int:
         """Convert percentage to Kelvin."""
-        return int(KELVIN_MIN + ((pct/100) * (KELVIN_MAX - KELVIN_MIN)))
+        return int(KELVIN_MIN + ((pct / 100) * (KELVIN_MAX - KELVIN_MIN)))
 
     @staticmethod
     def temperature_kelvin_to_celsius(kelvin: int) -> float:
@@ -221,18 +222,18 @@ class Helpers:
         """
         device.state.update_ts()
         if r_dict is None:
-            logger.error("No response from API for %s", method_name)
+            logger.error('No response from API for %s', method_name)
             device.last_response = ResponseInfo(
-                name="INVALID_RESPONSE",
+                name='INVALID_RESPONSE',
                 error_type=ErrorTypes.BAD_RESPONSE,
-                message=f"No response from API for {method_name}",
+                message=f'No response from API for {method_name}',
             )
             return None
 
         error_code = (
-            r_dict.get("error", {}).get("code")
-            if "error" in r_dict
-            else r_dict.get("code")
+            r_dict.get('error', {}).get('code')
+            if 'error' in r_dict
+            else r_dict.get('code')
         )
 
         new_msg = None
@@ -259,7 +260,7 @@ class Helpers:
             if error_info.error_type == ErrorTypes.UNKNOWN_ERROR:
                 error_info.message = new_msg
             else:
-                error_info.message = f"{error_info.message} - {new_msg}"
+                error_info.message = f'{error_info.message} - {new_msg}'
         if error_info.device_online is False:
             device.state.connection_status = ConnectionStatus.OFFLINE
         LibraryLogger.log_device_return_code(
@@ -268,7 +269,7 @@ class Helpers:
             device.device_name,
             device.device_type,
             error_int,
-            f"{error_info.error_type} - {error_info.name} {error_info.message}",
+            f'{error_info.error_type} - {error_info.name} {error_info.message}',
         )
         device.last_response = error_info
         if error_int != 0:
@@ -309,6 +310,7 @@ class Helpers:
                 return attr() if callable(attr) else attr  # type: ignore[no-any-return]
             except TypeError:
                 return None
+
         result = {}
         normalized_keys = {normalize_name(key): key for key in keys}
         normalized_aliases = [normalize_name(key) for key in alias_map.values()]
@@ -377,7 +379,7 @@ class Helpers:
         return {
             'Content-Type': 'application/json; charset=UTF-8',
             'User-Agent': BYPASS_HEADER_UA,
-            }
+        }
 
     @staticmethod
     def _req_body_base(manager: VeSync) -> dict[str, str]:
@@ -418,7 +420,7 @@ class Helpers:
         return {'accountID': manager.account_id, 'token': manager.token}
 
     @staticmethod
-    @deprecated("This is a legacy function and will be removed in a future release.")
+    @deprecated('This is a legacy function and will be removed in a future release.')
     def _req_body_details() -> REQUEST_T:
         """Detail keys for api requests.
 
@@ -444,7 +446,7 @@ class Helpers:
         }
 
     @classmethod
-    @deprecated("This is a legacy function and will be removed in a future release.")
+    @deprecated('This is a legacy function and will be removed in a future release.')
     def req_body(cls, manager: VeSync, type_: str) -> REQUEST_T:  # noqa: C901
         """Builder for body of api requests.
 
@@ -480,7 +482,7 @@ class Helpers:
                 'password': cls.hash_password(manager.password),
                 'devToken': '',
                 'userType': USER_TYPE,
-                'method': 'login'
+                'method': 'login',
             }
             return body
 
@@ -564,6 +566,7 @@ class Helpers:
                     elif isinstance(v, list):
                         for item in v:
                             yield from extract_all_error_codes(key, item)
+
         errors = []
         for error_key in error_keys:
             errors.extend(list(extract_all_error_codes(error_key, response)))
@@ -615,8 +618,10 @@ class Timer:
         Returns:
             str: String representation of the Timer object.
         """
-        return (f'Timer(id={self.id}, duration={self.timer_duration}, '
-                f'status={self.status}, remaining={self.time_remaining})')
+        return (
+            f'Timer(id={self.id}, duration={self.timer_duration}, '
+            f'status={self.status}, remaining={self.time_remaining})'
+        )
 
     def update_ts(self) -> None:
         """Update timestamp."""
@@ -635,9 +640,9 @@ class Timer:
     @property
     def time_remaining(self) -> int:
         """Return remaining seconds."""
-        if self._status == "paused":
+        if self._status == 'paused':
             return self._remain
-        if self._status == "done":
+        if self._status == 'done':
             return 0
 
         # 'active' state - compute how much time has ticked away
@@ -652,7 +657,7 @@ class Timer:
     @property
     def running(self) -> bool:
         """Check if timer is active."""
-        return (self.time_remaining > 0 and self.status == 'active')
+        return self.time_remaining > 0 and self.status == 'active'
 
     @property
     def paused(self) -> bool:
@@ -684,13 +689,13 @@ class Timer:
             - Update internal counters,
             - Set _status to 'paused'.
         """
-        if self._status == "active":
+        if self._status == 'active':
             # Update the time_remaining based on elapsed
             current_remaining = self.time_remaining
             if current_remaining <= 0:
-                self._status = "done"
+                self._status = 'done'
                 self._remain = 0
             else:
-                self._status = "paused"
+                self._status = 'paused'
                 self._remain = current_remaining
             self._update_time = int(time.time())

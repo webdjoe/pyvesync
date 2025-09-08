@@ -28,9 +28,7 @@ from pyvesync.base_devices.fan_base import VeSyncFanBase
 from pyvesync.base_devices.humidifier_base import VeSyncHumidifier
 from pyvesync.base_devices.fryer_base import VeSyncFryer
 from pyvesync.base_devices.thermostat_base import VeSyncThermostat
-from pyvesync.models.vesync_models import (
-    ResponseDeviceDetailsModel
-    )
+from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
 from pyvesync.device_map import get_device_config
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
 
@@ -57,9 +55,10 @@ class _DeviceContainerBase(MutableSet[VeSyncBaseDevice]):
     __slots__ = ('__weakref__', '_data')
 
     def __init__(
-            self, sequence: Sequence[VeSyncBaseDevice] | None = None,
-            /,
-            ) -> None:
+        self,
+        sequence: Sequence[VeSyncBaseDevice] | None = None,
+        /,
+    ) -> None:
         """Initialize the DeviceContainer class."""
         self._data: set[VeSyncBaseDevice] = set()
         if isinstance(sequence, Sequence):
@@ -76,7 +75,7 @@ class _DeviceContainerBase(MutableSet[VeSyncBaseDevice]):
     def add(self, value: VeSyncBaseDevice) -> None:
         """Add a device to the container."""
         if value in self._data:
-            logger.debug("Device already exists")
+            logger.debug('Device already exists')
             return
         self._data.add(value)
 
@@ -127,15 +126,16 @@ class DeviceContainer(_DeviceContainerBase):
     __slots__ = ()
 
     def __init__(
-            self, sequence: Sequence[VeSyncBaseDevice] | None = None,
-            /,
-            ) -> None:
+        self,
+        sequence: Sequence[VeSyncBaseDevice] | None = None,
+        /,
+    ) -> None:
         """Initialize the DeviceContainer class."""
         super().__init__(sequence)
 
-    def _build_device_instance(self,
-                               device: ResponseDeviceDetailsModel,
-                               manager: VeSync) -> VeSyncBaseDevice | None:
+    def _build_device_instance(
+        self, device: ResponseDeviceDetailsModel, manager: VeSync
+    ) -> VeSyncBaseDevice | None:
         """Create a device from a single device model from the device list.
 
         Args:
@@ -153,11 +153,11 @@ class DeviceContainer(_DeviceContainerBase):
         """
         if not isinstance(device, ResponseDeviceDetailsModel):
             raise VeSyncAPIResponseError(
-                f"Expected ResponseDeviceDetailsModel, got {type(device)}"
+                f'Expected ResponseDeviceDetailsModel, got {type(device)}'
             )
         device_features = get_device_config(device.deviceType)
         if device_features is None:
-            logger.debug("Device type %s not found in device map", device.deviceType)
+            logger.debug('Device type %s not found in device map', device.deviceType)
             return None
         dev_class = device_features.class_name
         dev_module = device_features.module
@@ -214,8 +214,9 @@ class DeviceContainer(_DeviceContainerBase):
             found will be returned (a set is unordered).
         """
         for device in self._data:
-            if (fuzzy and _clean_string(device.device_name) == _clean_string(name)) \
-                    or (device.device_name == name):
+            if (fuzzy and _clean_string(device.device_name) == _clean_string(name)) or (
+                device.device_name == name
+            ):
                 return device
         return None
 
@@ -246,9 +247,7 @@ class DeviceContainer(_DeviceContainerBase):
         """
         return self._data.discard(value)
 
-    def remove_stale_devices(
-        self, device_list_result: ResponseDeviceListModel
-    ) -> None:
+    def remove_stale_devices(self, device_list_result: ResponseDeviceListModel) -> None:
         """Remove devices that are not in the provided list.
 
         Args:
@@ -257,11 +256,13 @@ class DeviceContainer(_DeviceContainerBase):
                 method.
         """
         device_list = device_list_result.result.list
-        new_hashes = [hash(device.cid+str(device.subDeviceNo)) for device in device_list]
+        new_hashes = [
+            hash(device.cid + str(device.subDeviceNo)) for device in device_list
+        ]
         remove_cids = []
         for device in self._data:
             if hash(device) not in new_hashes:
-                logger.debug("Removing stale device %s", device.device_name)
+                logger.debug('Removing stale device %s', device.device_name)
                 remove_cids.append(device.cid)
         for cid in remove_cids:
             self.remove_by_cid(cid)
@@ -285,21 +286,34 @@ class DeviceContainer(_DeviceContainerBase):
     @property
     def outlets(self) -> list[VeSyncOutlet]:
         """Return a list of devices that are outlets."""
-        return [device for device in self if isinstance(device, VeSyncOutlet)
-                and device.product_type == ProductTypes.OUTLET]
+        return [
+            device
+            for device in self
+            if isinstance(device, VeSyncOutlet)
+            and device.product_type == ProductTypes.OUTLET
+        ]
 
     @property
     def switches(self) -> list[VeSyncSwitch]:
         """Return a list of devices that are switches."""
-        return [device for device in self
-                if (isinstance(
-                    device, VeSyncSwitch) and device.product_type == ProductTypes.SWITCH)]
+        return [
+            device
+            for device in self
+            if (
+                isinstance(device, VeSyncSwitch)
+                and device.product_type == ProductTypes.SWITCH
+            )
+        ]
 
     @property
     def bulbs(self) -> list[VeSyncBulb]:
         """Return a list of devices that are lights."""
-        return [device for device in self if isinstance(device, VeSyncBulb)
-                and (device.product_type == ProductTypes.BULB)]
+        return [
+            device
+            for device in self
+            if isinstance(device, VeSyncBulb)
+            and (device.product_type == ProductTypes.BULB)
+        ]
 
     @property
     def air_purifiers(self) -> list[VeSyncPurifier]:

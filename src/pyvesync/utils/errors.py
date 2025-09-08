@@ -86,18 +86,18 @@ class ErrorTypes(StrEnum):
         BAD_RESPONSE: Bad response from API
     """
 
-    SUCCESS = "success"
-    AUTHENTICATION = "auth_error"
-    RATE_LIMIT = "rate_limit_error"
-    SERVER_ERROR = "server_error"
-    REQUEST_ERROR = "request_error"
-    DEVICE_ERROR = "device_error"
-    CONFIG_ERROR = "config_error"
-    DEVICE_OFFLINE = "device_offline"
-    UNKNOWN_ERROR = "unknown_error"
-    TOKEN_ERROR = "token_error"
-    BAD_RESPONSE = "bad_response"
-    CROSS_REGION = "cross_region"
+    SUCCESS = 'success'
+    AUTHENTICATION = 'auth_error'
+    RATE_LIMIT = 'rate_limit_error'
+    SERVER_ERROR = 'server_error'
+    REQUEST_ERROR = 'request_error'
+    DEVICE_ERROR = 'device_error'
+    CONFIG_ERROR = 'config_error'
+    DEVICE_OFFLINE = 'device_offline'
+    UNKNOWN_ERROR = 'unknown_error'
+    TOKEN_ERROR = 'token_error'
+    BAD_RESPONSE = 'bad_response'
+    CROSS_REGION = 'cross_region'
 
 
 class ErrorCodes:
@@ -136,600 +136,598 @@ class ErrorCodes:
 
     errors: MappingProxyType[str, ResponseInfo] = MappingProxyType(
         {
-            "-11260022": ResponseInfo(
-                "CROSS_REGION_ERROR",
+            '-11260022': ResponseInfo(
+                'CROSS_REGION_ERROR',
                 ErrorTypes.CROSS_REGION,
-                "Cross region error",
+                'Cross region error',
             ),
-            "11": ResponseInfo(
-                "DEVICE_OFFLINE",
+            '11': ResponseInfo(
+                'DEVICE_OFFLINE',
                 ErrorTypes.DEVICE_OFFLINE,
-                "Device offline",
+                'Device offline',
                 device_online=False,
             ),
-            "4041004": ResponseInfo(
-                "DEVICE_OFFLINE",
+            '4041004': ResponseInfo(
+                'DEVICE_OFFLINE',
                 ErrorTypes.DEVICE_OFFLINE,
-                "Device offline",
+                'Device offline',
                 device_online=False,
             ),
-            "-11203000": ResponseInfo(
-                "ACCOUNT_EXIST", ErrorTypes.AUTHENTICATION, "Account already exists"
+            '-11203000': ResponseInfo(
+                'ACCOUNT_EXIST', ErrorTypes.AUTHENTICATION, 'Account already exists'
             ),
-            "-11200000": ResponseInfo(
-                "ACCOUNT_FORMAT_ERROR", ErrorTypes.CONFIG_ERROR, "Account format error"
+            '-11200000': ResponseInfo(
+                'ACCOUNT_FORMAT_ERROR', ErrorTypes.CONFIG_ERROR, 'Account format error'
             ),
-            "-11202000": ResponseInfo(
-                "ACCOUNT_NOT_EXIST", ErrorTypes.AUTHENTICATION, "Account does not exist"
+            '-11202000': ResponseInfo(
+                'ACCOUNT_NOT_EXIST', ErrorTypes.AUTHENTICATION, 'Account does not exist'
             ),
-            "-11300027": ResponseInfo(
-                "AIRPURGE_OFFLINE",
+            '-11300027': ResponseInfo(
+                'AIRPURGE_OFFLINE',
                 ErrorTypes.DEVICE_OFFLINE,
-                "Device offline",
+                'Device offline',
                 device_online=False,
             ),
-            "-16906000": ResponseInfo(
-                "REQUEST_TOO_FREQUENT",
+            '-16906000': ResponseInfo(
+                'REQUEST_TOO_FREQUENT',
                 ErrorTypes.RATE_LIMIT,
-                "Request too frequent",
+                'Request too frequent',
                 operational_error=True,
             ),
-            "-11902000": ResponseInfo(
-                "AUTHKEY_NOT_EXIST", ErrorTypes.CONFIG_ERROR, "Authkey does not exist"
+            '-11902000': ResponseInfo(
+                'AUTHKEY_NOT_EXIST', ErrorTypes.CONFIG_ERROR, 'Authkey does not exist'
             ),
-            "-11900000": ResponseInfo(
-                "AUTHKEY_PID_NOT_MATCH", ErrorTypes.DEVICE_ERROR, "Authkey PID mismatch"
+            '-11900000': ResponseInfo(
+                'AUTHKEY_PID_NOT_MATCH', ErrorTypes.DEVICE_ERROR, 'Authkey PID mismatch'
             ),
-            "-11504000": ResponseInfo(
-                "AWAY_MAX", ErrorTypes.CONFIG_ERROR, "Away maximum reached"
+            '-11504000': ResponseInfo(
+                'AWAY_MAX', ErrorTypes.CONFIG_ERROR, 'Away maximum reached'
             ),
-            "11014000": ResponseInfo(
-                "BYPASS_AIRPURIFIER_E2",
+            '11014000': ResponseInfo(
+                'BYPASS_AIRPURIFIER_E2',
                 ErrorTypes.DEVICE_ERROR,
-                "Air Purifier E2 error",
+                'Air Purifier E2 error',
                 critical_error=True,
                 device_online=True,
             ),
-            "11802000": ResponseInfo(
-                "BYPASS_AIRPURIFIER_MOTOR_ABNORMAL",
+            '11802000': ResponseInfo(
+                'BYPASS_AIRPURIFIER_MOTOR_ABNORMAL',
                 ErrorTypes.DEVICE_ERROR,
-                "Air Purifier motor error",
+                'Air Purifier motor error',
                 critical_error=True,
                 device_online=True,
             ),
-            "11504000": ResponseInfo(
-                "BYPASS_AWAY_MAX", ErrorTypes.CONFIG_ERROR, "Away maximum reached"
+            '11504000': ResponseInfo(
+                'BYPASS_AWAY_MAX', ErrorTypes.CONFIG_ERROR, 'Away maximum reached'
             ),
-            "11509000": ResponseInfo(
-                "BYPASS_AWAY_NOT_EXIST",
+            '11509000': ResponseInfo(
+                'BYPASS_AWAY_NOT_EXIST',
                 ErrorTypes.CONFIG_ERROR,
-                "Away does not exist",
+                'Away does not exist',
             ),
-            "11908000": ResponseInfo(
-                "BYPASS_COOK_TIMEOUT", ErrorTypes.DEVICE_ERROR, "Cook timeout error"
+            '11908000': ResponseInfo(
+                'BYPASS_COOK_TIMEOUT', ErrorTypes.DEVICE_ERROR, 'Cook timeout error'
             ),
-            "11909000": ResponseInfo(
-                "BYPASS_SMART_STOP",
+            '11909000': ResponseInfo(
+                'BYPASS_SMART_STOP',
                 ErrorTypes.DEVICE_ERROR,
-                "Smart stop error",
+                'Smart stop error',
                 device_online=True,
             ),
-            "11910000": ResponseInfo(
-                "BYPASS_LEFT_ZONE_COOKING",
+            '11910000': ResponseInfo(
+                'BYPASS_LEFT_ZONE_COOKING',
                 ErrorTypes.DEVICE_ERROR,
-                "Left zone cooking error",
-                device_online=True
-            ),
-            "11911000": ResponseInfo(
-                "BYPASS_RIGHT_ZONE_COOKING",
-                ErrorTypes.DEVICE_ERROR,
-                "Right zone cooking error",
-                device_online=True
-            ),
-            "11912000": ResponseInfo(
-                "BYPASS_ALL_ZONE_COOKING",
-                ErrorTypes.DEVICE_ERROR,
-                "All zone cooking error",
-                device_online=True
-            ),
-            "11916000": ResponseInfo(
-                "BYPASS_NTC_RIGHT_TOP_SHORT",
-                ErrorTypes.DEVICE_ERROR,
-                "Right top short error",
-                critical_error=True,
+                'Left zone cooking error',
                 device_online=True,
-                ),
-            "11917000": ResponseInfo(
-                "BYPASS_NTC_RIGHT_TOP_OPEN",
+            ),
+            '11911000': ResponseInfo(
+                'BYPASS_RIGHT_ZONE_COOKING',
                 ErrorTypes.DEVICE_ERROR,
-                "Right top open error",
+                'Right zone cooking error',
+                device_online=True,
+            ),
+            '11912000': ResponseInfo(
+                'BYPASS_ALL_ZONE_COOKING',
+                ErrorTypes.DEVICE_ERROR,
+                'All zone cooking error',
+                device_online=True,
+            ),
+            '11916000': ResponseInfo(
+                'BYPASS_NTC_RIGHT_TOP_SHORT',
+                ErrorTypes.DEVICE_ERROR,
+                'Right top short error',
                 critical_error=True,
                 device_online=True,
             ),
-            "11918000": ResponseInfo(
-                "BYPASS_NTC_BOTTOM_SHORT",
+            '11917000': ResponseInfo(
+                'BYPASS_NTC_RIGHT_TOP_OPEN',
                 ErrorTypes.DEVICE_ERROR,
-                "Bottom short error",
+                'Right top open error',
                 critical_error=True,
                 device_online=True,
             ),
-            "11919000": ResponseInfo(
-                "BYPASS_NTC_BOTTOM_OPEN",
+            '11918000': ResponseInfo(
+                'BYPASS_NTC_BOTTOM_SHORT',
                 ErrorTypes.DEVICE_ERROR,
-                "Bottom open error",
+                'Bottom short error',
                 critical_error=True,
                 device_online=True,
             ),
-            "11924000": ResponseInfo(
-                "BYPASS_RIGHT_TEMP_FAULT",
+            '11919000': ResponseInfo(
+                'BYPASS_NTC_BOTTOM_OPEN',
                 ErrorTypes.DEVICE_ERROR,
-                "Right temperature fault",
+                'Bottom open error',
                 critical_error=True,
                 device_online=True,
             ),
-            "11925000": ResponseInfo(
-                "BYPASS_ZONE_2_MOTOR_ABNORMAL",
+            '11924000': ResponseInfo(
+                'BYPASS_RIGHT_TEMP_FAULT',
                 ErrorTypes.DEVICE_ERROR,
-                "Zone 2 motor error",
+                'Right temperature fault',
                 critical_error=True,
                 device_online=True,
             ),
-            "11021000": ResponseInfo(
-                "BYPASS_DEVICE_END",
+            '11925000': ResponseInfo(
+                'BYPASS_ZONE_2_MOTOR_ABNORMAL',
                 ErrorTypes.DEVICE_ERROR,
-                "Device end error",
+                'Zone 2 motor error',
                 critical_error=True,
                 device_online=True,
             ),
-            "11012000": ResponseInfo(
-                "BYPASS_DEVICE_RUNNING",
+            '11021000': ResponseInfo(
+                'BYPASS_DEVICE_END',
                 ErrorTypes.DEVICE_ERROR,
-                "Device running error",
+                'Device end error',
                 critical_error=True,
                 device_online=True,
             ),
-            "11020000": ResponseInfo(
-                "BYPASS_DEVICE_STOP",
+            '11012000': ResponseInfo(
+                'BYPASS_DEVICE_RUNNING',
                 ErrorTypes.DEVICE_ERROR,
-                "Device stop error",
-                device_online=True,
-                critical_error=True,
-            ),
-            "11901000": ResponseInfo(
-                "BYPASS_DOOR_OPEN",
-                ErrorTypes.DEVICE_ERROR,
-                "Door open error",
+                'Device running error',
                 critical_error=True,
                 device_online=True,
             ),
-            "11006000": ResponseInfo(
-                "BYPASS_E1_OPEN",
+            '11020000': ResponseInfo(
+                'BYPASS_DEVICE_STOP',
                 ErrorTypes.DEVICE_ERROR,
-                "Open circuit error",
-                critical_error=True,
-                device_online=True,
-            ),
-            "11007000": ResponseInfo(
-                "BYPASS_E2_SHORT",
-                ErrorTypes.DEVICE_ERROR,
-                "Short circuit error",
+                'Device stop error',
                 device_online=True,
                 critical_error=True,
             ),
-            "11015000": ResponseInfo(
-                "BYPASS_E3_WARM",
+            '11901000': ResponseInfo(
+                'BYPASS_DOOR_OPEN',
                 ErrorTypes.DEVICE_ERROR,
-                "Warm error",
+                'Door open error',
                 critical_error=True,
                 device_online=True,
             ),
-            "11018000": ResponseInfo(
-                "BYPASS_SET_MIST_LEVEL",
+            '11006000': ResponseInfo(
+                'BYPASS_E1_OPEN',
                 ErrorTypes.DEVICE_ERROR,
-                "Cannot set mist level error",
-                device_online=True,
-            ),
-            "11019000": ResponseInfo(
-                "BYPASS_E6_VOLTAGE_LOW",
-                ErrorTypes.DEVICE_ERROR,
-                "Low voltage error",
+                'Open circuit error',
                 critical_error=True,
                 device_online=True,
             ),
-            "11013000": ResponseInfo(
-                "BYPASS_E7_VOLTAGE",
+            '11007000': ResponseInfo(
+                'BYPASS_E2_SHORT',
                 ErrorTypes.DEVICE_ERROR,
-                "Voltage error",
-                critical_error=True,
-                device_online=True,
-            ),
-            "11607000": ResponseInfo(
-                "BYPASS_HUMIDIFIER_ERROR_CONNECT_MSG",
-                ErrorTypes.DEVICE_ERROR,
-                "Humidifier connect message error",
-            ),
-            "11317000": ResponseInfo(
-                "BYPASS_DIMMER_NCT",
-                ErrorTypes.DEVICE_ERROR,
-                "Dimmer NCT error",
-                critical_error=True,
-                device_online=True,
-            ),
-            "11608000": ResponseInfo(
-                "BYPASS_HUMIDIFIER_ERROR_WATER_PUMP",
-                ErrorTypes.DEVICE_ERROR,
-                "Humidifier water pump error",
-                critical_error=True,
-                device_online=True,
-            ),
-            "11609000": ResponseInfo(
-                "BYPASS_HUMIDIFIER_ERROR_FAN_MOTOR",
-                ErrorTypes.DEVICE_ERROR,
-                "Humidifier fan motor error",
-                critical_error=True,
-                device_online=True,
-            ),
-            "11601000": ResponseInfo(
-                "BYPASS_HUMIDIFIER_ERROR_DRY_BURNING",
-                ErrorTypes.DEVICE_ERROR,
-                "Dry burning error",
-                critical_error=True,
-                device_online=True,
-            ),
-            "11602000": ResponseInfo(
-                "BYPASS_HUMIDIFIER_ERROR_PTC",
-                ErrorTypes.DEVICE_ERROR,
-                "Humidifier PTC error",
-                critical_error=True,
-                device_online=True,
-            ),
-            "11603000": ResponseInfo(
-                "BYPASS_HUMIDIFIER_ERROR_WARM_HIGH",
-                ErrorTypes.DEVICE_ERROR,
-                "Humidifier warm high error",
-                critical_error=True,
-                device_online=True,
-            ),
-            "11604000": ResponseInfo(
-                "BYPASS_HUMIDIFIER_ERROR_WATER",
-                ErrorTypes.DEVICE_ERROR,
-                "Humidifier water error",
-                critical_error=True,
-                device_online=True,
-            ),
-            "11907000": ResponseInfo(
-                "BYPASS_LOW_WATER",
-                ErrorTypes.DEVICE_ERROR,
-                "Low water error",
+                'Short circuit error',
                 device_online=True,
                 critical_error=True,
             ),
-            "11028000": ResponseInfo(
-                "BYPASS_MOTOR_OPEN",
+            '11015000': ResponseInfo(
+                'BYPASS_E3_WARM',
                 ErrorTypes.DEVICE_ERROR,
-                "Motor open error",
-                device_online=True,
-                critical_error=True,
-            ),
-            "11017000": ResponseInfo(
-                "BYPASS_NOT_SUPPORTED", ErrorTypes.REQUEST_ERROR, "Not supported error"
-            ),
-            "11905000": ResponseInfo(
-                "BYPASS_NO_POT",
-                ErrorTypes.DEVICE_ERROR,
-                "No pot error",
-                device_online=True,
-                critical_error=True,
-            ),
-            "12001000": ResponseInfo(
-                "BYPASS_LACK_FOOD",
-                ErrorTypes.DEVICE_ERROR,
-                "Lack of food error",
-                device_online=True,
-                critical_error=True,
-            ),
-            "12002000": ResponseInfo(
-                "BYPASS_JAM_FOOD",
-                ErrorTypes.DEVICE_ERROR,
-                "Jam food error",
-                device_online=True,
-                critical_error=True,
-            ),
-            "12003000": ResponseInfo(
-                "BYPASS_BLOCK_FOOD",
-                ErrorTypes.DEVICE_ERROR,
-                "Block food error",
-                device_online=True,
-                critical_error=True,
-            ),
-            "12004000": ResponseInfo(
-                "BYPASS_PUMP_FAIL",
-                ErrorTypes.DEVICE_ERROR,
-                "Pump failure error",
-                device_online=True,
-                critical_error=True,
-            ),
-            "12005000": ResponseInfo(
-                "BYPASS_CALI_FAIL",
-                ErrorTypes.DEVICE_ERROR,
-                "Calibration failure error",
-                device_online=True,
-                critical_error=True,
-            ),
-            "11611000": ResponseInfo(
-                "BYPASS_FILTER_TRAY_ERROR",
-                ErrorTypes.DEVICE_ERROR,
-                "Filter tray error",
+                'Warm error',
                 critical_error=True,
                 device_online=True,
             ),
-            "11610000": ResponseInfo(
-                "BYPASS_VALUE_ERROR",
+            '11018000': ResponseInfo(
+                'BYPASS_SET_MIST_LEVEL',
                 ErrorTypes.DEVICE_ERROR,
-                "Value error",
+                'Cannot set mist level error',
+                device_online=True,
+            ),
+            '11019000': ResponseInfo(
+                'BYPASS_E6_VOLTAGE_LOW',
+                ErrorTypes.DEVICE_ERROR,
+                'Low voltage error',
                 critical_error=True,
                 device_online=True,
             ),
-            "11022000": ResponseInfo(
-                "BYPASS_CANNOT_SET_LEVEL",
+            '11013000': ResponseInfo(
+                'BYPASS_E7_VOLTAGE',
                 ErrorTypes.DEVICE_ERROR,
-                "Cannot set level error",
+                'Voltage error',
+                critical_error=True,
+                device_online=True,
+            ),
+            '11607000': ResponseInfo(
+                'BYPASS_HUMIDIFIER_ERROR_CONNECT_MSG',
+                ErrorTypes.DEVICE_ERROR,
+                'Humidifier connect message error',
+            ),
+            '11317000': ResponseInfo(
+                'BYPASS_DIMMER_NCT',
+                ErrorTypes.DEVICE_ERROR,
+                'Dimmer NCT error',
+                critical_error=True,
+                device_online=True,
+            ),
+            '11608000': ResponseInfo(
+                'BYPASS_HUMIDIFIER_ERROR_WATER_PUMP',
+                ErrorTypes.DEVICE_ERROR,
+                'Humidifier water pump error',
+                critical_error=True,
+                device_online=True,
+            ),
+            '11609000': ResponseInfo(
+                'BYPASS_HUMIDIFIER_ERROR_FAN_MOTOR',
+                ErrorTypes.DEVICE_ERROR,
+                'Humidifier fan motor error',
+                critical_error=True,
+                device_online=True,
+            ),
+            '11601000': ResponseInfo(
+                'BYPASS_HUMIDIFIER_ERROR_DRY_BURNING',
+                ErrorTypes.DEVICE_ERROR,
+                'Dry burning error',
+                critical_error=True,
+                device_online=True,
+            ),
+            '11602000': ResponseInfo(
+                'BYPASS_HUMIDIFIER_ERROR_PTC',
+                ErrorTypes.DEVICE_ERROR,
+                'Humidifier PTC error',
+                critical_error=True,
+                device_online=True,
+            ),
+            '11603000': ResponseInfo(
+                'BYPASS_HUMIDIFIER_ERROR_WARM_HIGH',
+                ErrorTypes.DEVICE_ERROR,
+                'Humidifier warm high error',
+                critical_error=True,
+                device_online=True,
+            ),
+            '11604000': ResponseInfo(
+                'BYPASS_HUMIDIFIER_ERROR_WATER',
+                ErrorTypes.DEVICE_ERROR,
+                'Humidifier water error',
+                critical_error=True,
+                device_online=True,
+            ),
+            '11907000': ResponseInfo(
+                'BYPASS_LOW_WATER',
+                ErrorTypes.DEVICE_ERROR,
+                'Low water error',
+                device_online=True,
+                critical_error=True,
+            ),
+            '11028000': ResponseInfo(
+                'BYPASS_MOTOR_OPEN',
+                ErrorTypes.DEVICE_ERROR,
+                'Motor open error',
+                device_online=True,
+                critical_error=True,
+            ),
+            '11017000': ResponseInfo(
+                'BYPASS_NOT_SUPPORTED', ErrorTypes.REQUEST_ERROR, 'Not supported error'
+            ),
+            '11905000': ResponseInfo(
+                'BYPASS_NO_POT',
+                ErrorTypes.DEVICE_ERROR,
+                'No pot error',
+                device_online=True,
+                critical_error=True,
+            ),
+            '12001000': ResponseInfo(
+                'BYPASS_LACK_FOOD',
+                ErrorTypes.DEVICE_ERROR,
+                'Lack of food error',
+                device_online=True,
+                critical_error=True,
+            ),
+            '12002000': ResponseInfo(
+                'BYPASS_JAM_FOOD',
+                ErrorTypes.DEVICE_ERROR,
+                'Jam food error',
+                device_online=True,
+                critical_error=True,
+            ),
+            '12003000': ResponseInfo(
+                'BYPASS_BLOCK_FOOD',
+                ErrorTypes.DEVICE_ERROR,
+                'Block food error',
+                device_online=True,
+                critical_error=True,
+            ),
+            '12004000': ResponseInfo(
+                'BYPASS_PUMP_FAIL',
+                ErrorTypes.DEVICE_ERROR,
+                'Pump failure error',
+                device_online=True,
+                critical_error=True,
+            ),
+            '12005000': ResponseInfo(
+                'BYPASS_CALI_FAIL',
+                ErrorTypes.DEVICE_ERROR,
+                'Calibration failure error',
+                device_online=True,
+                critical_error=True,
+            ),
+            '11611000': ResponseInfo(
+                'BYPASS_FILTER_TRAY_ERROR',
+                ErrorTypes.DEVICE_ERROR,
+                'Filter tray error',
+                critical_error=True,
+                device_online=True,
+            ),
+            '11610000': ResponseInfo(
+                'BYPASS_VALUE_ERROR',
+                ErrorTypes.DEVICE_ERROR,
+                'Value error',
+                critical_error=True,
+                device_online=True,
+            ),
+            '11022000': ResponseInfo(
+                'BYPASS_CANNOT_SET_LEVEL',
+                ErrorTypes.DEVICE_ERROR,
+                'Cannot set level error',
                 critical_error=False,
                 device_online=True,
             ),
-            "11023000": ResponseInfo(
-                "BYPASS_NTC_BOTTOM_OPEN",
+            '11023000': ResponseInfo(
+                'BYPASS_NTC_BOTTOM_OPEN',
                 ErrorTypes.DEVICE_ERROR,
-                "NTC bottom open error",
+                'NTC bottom open error',
                 critical_error=True,
                 device_online=True,
             ),
-            "11024000": ResponseInfo(
-                "BYPASS_NTC_BOTTOM_SHORT",
+            '11024000': ResponseInfo(
+                'BYPASS_NTC_BOTTOM_SHORT',
                 ErrorTypes.DEVICE_ERROR,
-                "NTC bottom short error",
+                'NTC bottom short error',
                 critical_error=True,
                 device_online=True,
             ),
-            "11026000": ResponseInfo(
-                "BYPASS_NTC_TOP_OPEN",
+            '11026000': ResponseInfo(
+                'BYPASS_NTC_TOP_OPEN',
                 ErrorTypes.DEVICE_ERROR,
-                "NTC top open error",
+                'NTC top open error',
                 critical_error=True,
                 device_online=True,
             ),
-            "11025000": ResponseInfo(
-                "BYPASS_NTC_TOP_SHORT",
+            '11025000': ResponseInfo(
+                'BYPASS_NTC_TOP_SHORT',
                 ErrorTypes.DEVICE_ERROR,
-                "NTC top short error",
+                'NTC top short error',
                 critical_error=True,
                 device_online=True,
             ),
-            "11027000": ResponseInfo(
-                "BYPASS_OPEN_HEAT_PIPE_OR_OPEN_FUSE",
+            '11027000': ResponseInfo(
+                'BYPASS_OPEN_HEAT_PIPE_OR_OPEN_FUSE',
                 ErrorTypes.DEVICE_ERROR,
-                "Open heat pipe or fuse error",
+                'Open heat pipe or fuse error',
                 critical_error=True,
                 device_online=True,
             ),
-            "11906000": ResponseInfo(
-                "BYPASS_OVER_HEATED",
+            '11906000': ResponseInfo(
+                'BYPASS_OVER_HEATED',
                 ErrorTypes.DEVICE_ERROR,
-                "Overheated error",
+                'Overheated error',
                 critical_error=True,
                 device_online=True,
             ),
-            "11000000": ResponseInfo(
-                "BYPASS_PARAMETER_INVALID",
+            '11000000': ResponseInfo(
+                'BYPASS_PARAMETER_INVALID',
                 ErrorTypes.REQUEST_ERROR,
-                "Invalid bypass parameter",
+                'Invalid bypass parameter',
             ),
-            "11510000": ResponseInfo(
-                "BYPASS_SCHEDULE_CONFLICT", ErrorTypes.CONFIG_ERROR, "Schedule conflict"
+            '11510000': ResponseInfo(
+                'BYPASS_SCHEDULE_CONFLICT', ErrorTypes.CONFIG_ERROR, 'Schedule conflict'
             ),
-            "11502000": ResponseInfo(
-                "BYPASS_SCHEDULE_MAX",
+            '11502000': ResponseInfo(
+                'BYPASS_SCHEDULE_MAX',
                 ErrorTypes.CONFIG_ERROR,
-                "Maximum number of schedules reached",
+                'Maximum number of schedules reached',
             ),
-            "11507000": ResponseInfo(
-                "BYPASS_SCHEDULE_NOT_EXIST",
+            '11507000': ResponseInfo(
+                'BYPASS_SCHEDULE_NOT_EXIST',
                 ErrorTypes.CONFIG_ERROR,
-                "Schedule does not exist",
+                'Schedule does not exist',
             ),
-            "11503000": ResponseInfo(
-                "TIMER_MAX",
+            '11503000': ResponseInfo(
+                'TIMER_MAX',
                 ErrorTypes.CONFIG_ERROR,
-                "Maximum number of timers reached",
+                'Maximum number of timers reached',
             ),
-            "11508000": ResponseInfo(
-                "TIMER_NOT_EXIST",
+            '11508000': ResponseInfo(
+                'TIMER_NOT_EXIST',
                 ErrorTypes.CONFIG_ERROR,
-                "Timer does not exist",
+                'Timer does not exist',
             ),
-            "11605000": ResponseInfo(
-                "BYPASS_WATER_LOCK",
+            '11605000': ResponseInfo(
+                'BYPASS_WATER_LOCK',
                 ErrorTypes.DEVICE_ERROR,
-                "Water lock error",
+                'Water lock error',
                 critical_error=True,
                 device_online=True,
             ),
-            "11029000": ResponseInfo(
-                "BYPASS_WIFI_ERROR", ErrorTypes.DEVICE_ERROR, "WiFi error"
+            '11029000': ResponseInfo(
+                'BYPASS_WIFI_ERROR', ErrorTypes.DEVICE_ERROR, 'WiFi error'
             ),
-            "11902000": ResponseInfo(
-                "BY_PASS_ERROR_COOKING_158",
+            '11902000': ResponseInfo(
+                'BY_PASS_ERROR_COOKING_158',
                 ErrorTypes.DEVICE_ERROR,
-                "Error setting cook mode, air fryer is already cooking",
+                'Error setting cook mode, air fryer is already cooking',
                 device_online=True,
             ),
-            "11035000": ResponseInfo(
-                "BYPASS_MOTOR_ABNORMAL_ERROR",
+            '11035000': ResponseInfo(
+                'BYPASS_MOTOR_ABNORMAL_ERROR',
                 ErrorTypes.DEVICE_ERROR,
-                "Motor abnormal error",
+                'Motor abnormal error',
                 critical_error=True,
                 device_online=True,
             ),
-            "11903000": ResponseInfo(
-                "BY_PASS_ERROR_NOT_COOK_158",
+            '11903000': ResponseInfo(
+                'BY_PASS_ERROR_NOT_COOK_158',
                 ErrorTypes.DEVICE_ERROR,
-                "Error pausing, air fryer is not cooking",
+                'Error pausing, air fryer is not cooking',
                 device_online=True,
             ),
-            "-12001000": ResponseInfo(
-                "CONFIGKEY_EXPIRED", ErrorTypes.CONFIG_ERROR, "Configkey expired"
+            '-12001000': ResponseInfo(
+                'CONFIGKEY_EXPIRED', ErrorTypes.CONFIG_ERROR, 'Configkey expired'
             ),
-            "-12000000": ResponseInfo(
-                "CONFIGKEY_NOT_EXIST",
+            '-12000000': ResponseInfo(
+                'CONFIGKEY_NOT_EXIST',
                 ErrorTypes.CONFIG_ERROR,
-                "Configkey does not exist",
+                'Configkey does not exist',
             ),
-            "-11305000": ResponseInfo(
-                "CONFIG_MODULE_NOT_EXIST",
+            '-11305000': ResponseInfo(
+                'CONFIG_MODULE_NOT_EXIST',
                 ErrorTypes.REQUEST_ERROR,
-                "Config module does not exist",
+                'Config module does not exist',
             ),
-            "-11100000": ResponseInfo(
-                "DATABASE_FAILED", ErrorTypes.SERVER_ERROR, "Database error"
+            '-11100000': ResponseInfo(
+                'DATABASE_FAILED', ErrorTypes.SERVER_ERROR, 'Database error'
             ),
-            "-11101000": ResponseInfo(
-                "DATABASE_FAILED_ERROR", ErrorTypes.SERVER_ERROR, "Database error"
+            '-11101000': ResponseInfo(
+                'DATABASE_FAILED_ERROR', ErrorTypes.SERVER_ERROR, 'Database error'
             ),
-            "-11306000": ResponseInfo(
-                "DEVICE_BOUND",
+            '-11306000': ResponseInfo(
+                'DEVICE_BOUND',
                 ErrorTypes.CONFIG_ERROR,
-                "Device already associated with another account",
+                'Device already associated with another account',
             ),
-            "-11301000": ResponseInfo(
-                "DEVICE_NOT_EXIST",
+            '-11301000': ResponseInfo(
+                'DEVICE_NOT_EXIST',
                 ErrorTypes.CONFIG_ERROR,
-                "Device does not exist",
+                'Device does not exist',
                 device_online=False,
             ),
-            "-11300000": ResponseInfo(
-                "DEVICE_OFFLINE",
+            '-11300000': ResponseInfo(
+                'DEVICE_OFFLINE',
                 ErrorTypes.DEVICE_OFFLINE,
-                "Device offline",
+                'Device offline',
                 device_online=False,
             ),
-            "-11302000": ResponseInfo(
-                "DEVICE_TIMEOUT",
+            '-11302000': ResponseInfo(
+                'DEVICE_TIMEOUT',
                 ErrorTypes.DEVICE_ERROR,
-                "Device timeout",
+                'Device timeout',
                 device_online=False,
             ),
-            "-11304000": ResponseInfo(
-                "DEVICE_TIMEZONE_DIFF",
+            '-11304000': ResponseInfo(
+                'DEVICE_TIMEZONE_DIFF',
                 ErrorTypes.CONFIG_ERROR,
-                "Device timezone difference",
+                'Device timezone difference',
             ),
-            "-11303000": ResponseInfo(
-                "FIRMWARE_LATEST",
+            '-11303000': ResponseInfo(
+                'FIRMWARE_LATEST',
                 ErrorTypes.CONFIG_ERROR,
-                "No firmware update available",
+                'No firmware update available',
             ),
-            "-11102000": ResponseInfo(
-                "INTERNAL_ERROR", ErrorTypes.SERVER_ERROR, "Internal server error"
+            '-11102000': ResponseInfo(
+                'INTERNAL_ERROR', ErrorTypes.SERVER_ERROR, 'Internal server error'
             ),
-            "-11004000": ResponseInfo(
-                "METHOD_NOT_FOUND", ErrorTypes.REQUEST_ERROR, "Method not found"
+            '-11004000': ResponseInfo(
+                'METHOD_NOT_FOUND', ErrorTypes.REQUEST_ERROR, 'Method not found'
             ),
-            "-11107000": ResponseInfo(
-                "MONGODB_ERROR", ErrorTypes.SERVER_ERROR, "MongoDB error"
+            '-11107000': ResponseInfo(
+                'MONGODB_ERROR', ErrorTypes.SERVER_ERROR, 'MongoDB error'
             ),
-            "-11105000": ResponseInfo(
-                "MYSQL_ERROR", ErrorTypes.SERVER_ERROR, "MySQL error"
+            '-11105000': ResponseInfo(
+                'MYSQL_ERROR', ErrorTypes.SERVER_ERROR, 'MySQL error'
             ),
-            "88888888": ResponseInfo(
-                "NETWORK_DISABLE", ErrorTypes.SERVER_ERROR, "Network disabled"
+            '88888888': ResponseInfo(
+                'NETWORK_DISABLE', ErrorTypes.SERVER_ERROR, 'Network disabled'
             ),
-            "77777777": ResponseInfo(
-                "NETWORK_TIMEOUT", ErrorTypes.SERVER_ERROR, "Network timeout"
+            '77777777': ResponseInfo(
+                'NETWORK_TIMEOUT', ErrorTypes.SERVER_ERROR, 'Network timeout'
             ),
-            "4031005": ResponseInfo(
-                "NO_PERMISSION_7A", ErrorTypes.DEVICE_ERROR, "No 7A Permissions"
+            '4031005': ResponseInfo(
+                'NO_PERMISSION_7A', ErrorTypes.DEVICE_ERROR, 'No 7A Permissions'
             ),
-            "-11201000": ResponseInfo(
-                "PASSWORD_ERROR", ErrorTypes.AUTHENTICATION, "Invalid password"
+            '-11201000': ResponseInfo(
+                'PASSWORD_ERROR', ErrorTypes.AUTHENTICATION, 'Invalid password'
             ),
-            "-11901000": ResponseInfo(
-                "PID_NOT_EXIST", ErrorTypes.DEVICE_ERROR, "PID does not exist"
+            '-11901000': ResponseInfo(
+                'PID_NOT_EXIST', ErrorTypes.DEVICE_ERROR, 'PID does not exist'
             ),
-            "-11106000": ResponseInfo(
-                "REDIS_ERROR", ErrorTypes.SERVER_ERROR, "Redis error"
+            '-11106000': ResponseInfo(
+                'REDIS_ERROR', ErrorTypes.SERVER_ERROR, 'Redis error'
             ),
-            "-11003000": ResponseInfo(
-                "REQUEST_HIGH", ErrorTypes.RATE_LIMIT, "Rate limiting error"
+            '-11003000': ResponseInfo(
+                'REQUEST_HIGH', ErrorTypes.RATE_LIMIT, 'Rate limiting error'
             ),
-            "-11005000": ResponseInfo(
-                "RESOURCE_NOT_EXIST",
+            '-11005000': ResponseInfo(
+                'RESOURCE_NOT_EXIST',
                 ErrorTypes.REQUEST_ERROR,
-                "No device with ID found",
+                'No device with ID found',
                 device_online=False,
             ),
-            "-11108000": ResponseInfo("S3_ERROR", ErrorTypes.SERVER_ERROR, "S3 error"),
-            "-11502000": ResponseInfo(
-                "SCHEDULE_MAX",
+            '-11108000': ResponseInfo('S3_ERROR', ErrorTypes.SERVER_ERROR, 'S3 error'),
+            '-11502000': ResponseInfo(
+                'SCHEDULE_MAX',
                 ErrorTypes.CONFIG_ERROR,
-                "Maximum number of schedules reached",
+                'Maximum number of schedules reached',
             ),
-            "-11103000": ResponseInfo(
-                "SERVER_BUSY", ErrorTypes.SERVER_ERROR, "Server busy"
+            '-11103000': ResponseInfo(
+                'SERVER_BUSY', ErrorTypes.SERVER_ERROR, 'Server busy'
             ),
-            "-11104000": ResponseInfo(
-                "SERVER_TIMEOUT", ErrorTypes.SERVER_ERROR, "Server timeout"
+            '-11104000': ResponseInfo(
+                'SERVER_TIMEOUT', ErrorTypes.SERVER_ERROR, 'Server timeout'
             ),
-            "-11501000": ResponseInfo(
-                "TIMER_CONFLICT", ErrorTypes.DEVICE_ERROR, "Timer conflict"
+            '-11501000': ResponseInfo(
+                'TIMER_CONFLICT', ErrorTypes.DEVICE_ERROR, 'Timer conflict'
             ),
-            "-11503000": ResponseInfo(
-                "TIMER_MAX", ErrorTypes.DEVICE_ERROR, "Maximum number of timers reached"
+            '-11503000': ResponseInfo(
+                'TIMER_MAX', ErrorTypes.DEVICE_ERROR, 'Maximum number of timers reached'
             ),
-            "-11500000": ResponseInfo(
-                "TIMER_NOT_EXIST", ErrorTypes.DEVICE_ERROR, "Timer does not exist"
+            '-11500000': ResponseInfo(
+                'TIMER_NOT_EXIST', ErrorTypes.DEVICE_ERROR, 'Timer does not exist'
             ),
-            "-11001000": ResponseInfo(
-                "TOKEN_EXPIRED", ErrorTypes.TOKEN_ERROR, "Invalid token"
+            '-11001000': ResponseInfo(
+                'TOKEN_EXPIRED', ErrorTypes.TOKEN_ERROR, 'Invalid token'
             ),
-            "-999999999": ResponseInfo(
-                "UNKNOWN", ErrorTypes.SERVER_ERROR, "Unknown error"
+            '-999999999': ResponseInfo(
+                'UNKNOWN', ErrorTypes.SERVER_ERROR, 'Unknown error'
             ),
-            "-11307000": ResponseInfo(
-                "UUID_NOT_EXIST",
+            '-11307000': ResponseInfo(
+                'UUID_NOT_EXIST',
                 ErrorTypes.DEVICE_ERROR,
-                "Device UUID not found",
+                'Device UUID not found',
                 device_online=False,
             ),
-            "12102000": ResponseInfo(
-                "TEM_SENOR_ERROR",
+            '12102000': ResponseInfo(
+                'TEM_SENOR_ERROR',
                 ErrorTypes.DEVICE_ERROR,
-                "Temperature sensor error",
+                'Temperature sensor error',
                 critical_error=True,
                 device_online=True,
             ),
-            "12103000": ResponseInfo(
-                "HUM_SENOR_ERROR",
+            '12103000': ResponseInfo(
+                'HUM_SENOR_ERROR',
                 ErrorTypes.DEVICE_ERROR,
-                "Humidity sensor error",
+                'Humidity sensor error',
                 critical_error=True,
                 device_online=True,
             ),
-            "12101000": ResponseInfo(
-                "SENSOR_ERROR",
+            '12101000': ResponseInfo(
+                'SENSOR_ERROR',
                 ErrorTypes.DEVICE_ERROR,
-                "Sensor error",
+                'Sensor error',
                 critical_error=True,
                 device_online=True,
             ),
-            "11005000": ResponseInfo(
-                "BYPASS_DEVICE_IS_OFF",
-                ErrorTypes.DEVICE_ERROR, "Device is off"
-                "Device is off",
+            '11005000': ResponseInfo(
+                'BYPASS_DEVICE_IS_OFF',
+                ErrorTypes.DEVICE_ERROR,
+                'Device is offDevice is off',
                 critical_error=True,
                 device_online=True,
             ),
-
-
         }
     )
 
@@ -753,17 +751,17 @@ class ErrorCodes:
         """
         try:
             if error_code is None:
-                return ResponseInfo("UNKNOWN", ErrorTypes.UNKNOWN_ERROR, "Unknown error")
+                return ResponseInfo('UNKNOWN', ErrorTypes.UNKNOWN_ERROR, 'Unknown error')
             error_str = str(error_code)
             error_int = int(error_code)
-            if error_str == "0":
-                return ResponseInfo("SUCCESS", ErrorTypes.SUCCESS, "Success")
+            if error_str == '0':
+                return ResponseInfo('SUCCESS', ErrorTypes.SUCCESS, 'Success')
             if error_str in cls.errors:
                 return cls.errors[error_str]
             error_code = int(error_int / 1000) * 1000
             return cls.errors[str(error_code)]
         except (ValueError, TypeError, KeyError):
-            return ResponseInfo("UNKNOWN", ErrorTypes.UNKNOWN_ERROR, "Unknown error")
+            return ResponseInfo('UNKNOWN', ErrorTypes.UNKNOWN_ERROR, 'Unknown error')
 
     @classmethod
     def is_critical(cls, error_code: str | int) -> bool:
@@ -800,7 +798,7 @@ class VeSyncTokenError(VeSyncError):
 
     def __init__(self) -> None:
         """Initialize the exception with a message."""
-        super().__init__("Token expired or invalid - please re-authenticate with login()")
+        super().__init__('Token expired or invalid - please re-authenticate with login()')
 
 
 class VeSyncServerError(VeSyncError):
@@ -816,7 +814,7 @@ class VeSyncRateLimitError(VeSyncError):
 
     def __init__(self) -> None:
         """Initialize the exception with a message."""
-        super().__init__("VeSync API rate limit exceeded")
+        super().__init__('VeSync API rate limit exceeded')
 
 
 class VeSyncAPIResponseError(VeSyncError):
@@ -825,7 +823,7 @@ class VeSyncAPIResponseError(VeSyncError):
     def __init__(self, msg: None | str = None) -> None:
         """Initialize the exception with a message."""
         if msg is None:
-            msg = "Unexpected VeSync API response."
+            msg = 'Unexpected VeSync API response.'
         super().__init__(msg)
 
 
@@ -834,9 +832,9 @@ class VeSyncAPIStatusCodeError(VeSyncError):
 
     def __init__(self, status_code: str | None = None) -> None:
         """Initialize the exception with a message."""
-        message = "VeSync API returned an unknown status code"
+        message = 'VeSync API returned an unknown status code'
         if status_code is not None:
-            message = f"VeSync API returned status code {status_code}"
+            message = f'VeSync API returned status code {status_code}'
         super().__init__(message)
 
 
@@ -860,6 +858,6 @@ def raise_api_errors(error_info: ResponseInfo) -> None:
             raise VeSyncTokenError
         case ErrorTypes.SERVER_ERROR:
             raise VeSyncServerError(
-                f"{error_info.message} - "
-                "Please report error to github.com/webdjoe/pyvesync/issues"
+                f'{error_info.message} - '
+                'Please report error to github.com/webdjoe/pyvesync/issues'
             )

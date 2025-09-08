@@ -3,6 +3,7 @@
 These models inherit from `ResponseBaseModel` and `RequestBaseModel` from the
 `base_models` module.
 """
+
 from __future__ import annotations
 from typing import Any
 from dataclasses import dataclass

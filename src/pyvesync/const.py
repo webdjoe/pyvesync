@@ -23,6 +23,7 @@ Attributes:
     BYPASS_HEADER_UA (str): Bypass header user agent
     TERMINAL_ID (str): Unique identifier for new API calls
 """
+
 from random import randint, choices
 from uuid import uuid4
 import string
@@ -30,30 +31,30 @@ from enum import StrEnum, IntEnum, Enum
 from types import MappingProxyType
 from pyvesync.utils.enum_utils import IntEnumMixin
 
-DEFAULT_LANGUAGE = "en"
+DEFAULT_LANGUAGE = 'en'
 API_BASE_URL = None  # Global URL (non-EU regions): "https://smartapi.vesync.com"
 # If device is out of reach, the cloud api sends a timeout response after 7 seconds,
 # using 8 here so there is time enough to catch that message
-API_BASE_URL_US = "https://smartapi.vesync.com"
-API_BASE_URL_EU = "https://smartapi.vesync.eu"
+API_BASE_URL_US = 'https://smartapi.vesync.com'
+API_BASE_URL_EU = 'https://smartapi.vesync.eu'
 NON_EU_REGIONS = ['US', 'CA', 'MX', 'JP']
 API_TIMEOUT = 8
 USER_AGENT = (
-    "VeSync/3.2.39 (com.etekcity.vesyncPlatform; build:5; iOS 15.5.0) Alamofire/5.2.1"
+    'VeSync/3.2.39 (com.etekcity.vesyncPlatform; build:5; iOS 15.5.0) Alamofire/5.2.1'
 )
-DEFAULT_TZ = "America/New_York"
-DEFAULT_REGION = "US"
-APP_VERSION = "5.6.60"
+DEFAULT_TZ = 'America/New_York'
+DEFAULT_REGION = 'US'
+APP_VERSION = '5.6.60'
 APP_ID = ''.join(choices(string.ascii_lowercase + string.digits, k=8))  # noqa: S311
-PHONE_BRAND = "pyvesync"
-PHONE_OS = "Android"
+PHONE_BRAND = 'pyvesync'
+PHONE_OS = 'Android'
 # MOBILE_ID = "1234567890123456"
 MOBILE_ID = str(randint(1000000000000000, 9999999999999999))  # noqa: S311
-USER_TYPE = "1"
-BYPASS_APP_V = f"VeSync {APP_VERSION}"
-BYPASS_HEADER_UA = "okhttp/3.12.1"
+USER_TYPE = '1'
+BYPASS_APP_V = f'VeSync {APP_VERSION}'
+BYPASS_HEADER_UA = 'okhttp/3.12.1'
 TERMINAL_ID = '2' + str(uuid4()).replace('-', '')
-CLIENT_TYPE = "vesyncApp"
+CLIENT_TYPE = 'vesyncApp'
 
 STATUS_OK = 200
 
@@ -67,26 +68,26 @@ KELVIN_MAX = 6500
 class ProductLines(StrEnum):
     """High level product line."""
 
-    WIFI_LIGHT = "wifi-light"
-    WIFI_AIR = "wifi-air"
-    WIFI_KITCHEN = "wifi-kitchen"
-    SWITCHES = "Switches"
-    WIFI_SWITCH = "wifi-switch"
-    THERMOSTAT = "thermostat"
+    WIFI_LIGHT = 'wifi-light'
+    WIFI_AIR = 'wifi-air'
+    WIFI_KITCHEN = 'wifi-kitchen'
+    SWITCHES = 'Switches'
+    WIFI_SWITCH = 'wifi-switch'
+    THERMOSTAT = 'thermostat'
 
 
 class ProductTypes(StrEnum):
     """General device types enum."""
 
-    OUTLET = "outlet"
-    BULB = "bulb"
-    SWITCH = "switch"
-    PURIFIER = "purifier"
-    FAN = "fan"
-    HUMIDIFIER = "humidifier"
-    AIR_FRYER = "air fryer"
-    KITCHEN_THERMOMETER = "kitchen thermometer"
-    THERMOSTAT = "thermostat"
+    OUTLET = 'outlet'
+    BULB = 'bulb'
+    SWITCH = 'switch'
+    PURIFIER = 'purifier'
+    FAN = 'fan'
+    HUMIDIFIER = 'humidifier'
+    AIR_FRYER = 'air fryer'
+    KITCHEN_THERMOMETER = 'kitchen thermometer'
+    THERMOSTAT = 'thermostat'
 
 
 class IntFlag(IntEnum):
@@ -120,7 +121,7 @@ class StrFlag(StrEnum):
         NOT_SUPPORTED: Device is not supported, "not_supported"
     """
 
-    NOT_SUPPORTED = "not_supported"
+    NOT_SUPPORTED = 'not_supported'
 
 
 class NightlightStatus(StrEnum):
@@ -145,10 +146,10 @@ class NightlightStatus(StrEnum):
         ```
     """
 
-    ON = "on"
-    OFF = "off"
-    AUTO = "auto"
-    UNKNOWN = "unknown"
+    ON = 'on'
+    OFF = 'off'
+    AUTO = 'auto'
+    UNKNOWN = 'unknown'
 
     def __bool__(self) -> bool:
         """Return True if nightlight is on or auto."""
@@ -157,7 +158,7 @@ class NightlightStatus(StrEnum):
     def __int__(self) -> int:
         """Return integer representation of the enum."""
         if self not in [NightlightStatus.ON, NightlightStatus.OFF]:
-            raise ValueError("Only ON and OFF are valid values for int conversion")
+            raise ValueError('Only ON and OFF are valid values for int conversion')
         return int(self == NightlightStatus.ON)
 
 
@@ -192,13 +193,13 @@ class DeviceStatus(StrEnum):
         ```
     """
 
-    ON = "on"
-    OFF = "off"
-    PAUSED = "paused"
-    STANDBY = "standby"
-    IDLE = "idle"
-    RUNNING = "running"
-    UNKNOWN = "unknown"
+    ON = 'on'
+    OFF = 'off'
+    PAUSED = 'paused'
+    STANDBY = 'standby'
+    IDLE = 'idle'
+    RUNNING = 'running'
+    UNKNOWN = 'unknown'
 
     def __bool__(self) -> bool:
         """Return True if device is on or running."""
@@ -268,9 +269,9 @@ class ConnectionStatus(StrEnum):
         ```
     """
 
-    ONLINE = "online"
-    OFFLINE = "offline"
-    UNKNOWN = "unknown"
+    ONLINE = 'online'
+    OFFLINE = 'offline'
+    UNKNOWN = 'unknown'
 
     def __bool__(self) -> bool:
         """Return True if device is online."""
@@ -296,20 +297,18 @@ class NightlightModes(StrEnum):
         UNKNOWN: Nightlight status is unknown.
     """
 
-    ON = "on"
-    OFF = "off"
-    DIM = "dim"
-    AUTO = "auto"
-    UNKNOWN = "unknown"
+    ON = 'on'
+    OFF = 'off'
+    DIM = 'dim'
+    AUTO = 'auto'
+    UNKNOWN = 'unknown'
 
     def __bool__(self) -> bool:
         """Return True if nightlight is on or auto.
 
         Off and unknown are False, all other True.
         """
-        return self in [
-            NightlightModes.ON, NightlightModes.AUTO, NightlightModes.DIM
-            ]
+        return self in [NightlightModes.ON, NightlightModes.AUTO, NightlightModes.DIM]
 
 
 class ColorMode(StrEnum):
@@ -322,13 +321,14 @@ class ColorMode(StrEnum):
         COLOR: Color mode.
     """
 
-    RGB = "rgb"
-    HSV = "hsv"
-    WHITE = "white"
-    COLOR = "color"
+    RGB = 'rgb'
+    HSV = 'hsv'
+    WHITE = 'white'
+    COLOR = 'color'
 
 
 # Purifier Constants
+
 
 class AirQualityLevel(Enum):
     """Representation of air quality levels as string and integers.
@@ -395,15 +395,17 @@ class AirQualityLevel(Enum):
             very good for excellent and bad for poor. Unknown is returned
             if value is None or not in the list.
         """
-        _string_to_enum = MappingProxyType({
-            "excellent": cls.EXCELLENT,
-            "very good": cls.EXCELLENT,  # Alias
-            "good": cls.GOOD,
-            "moderate": cls.MODERATE,
-            "poor": cls.POOR,
-            "bad": cls.POOR,  # Alias
-            "unknown": cls.UNKNOWN
-        })
+        _string_to_enum = MappingProxyType(
+            {
+                'excellent': cls.EXCELLENT,
+                'very good': cls.EXCELLENT,  # Alias
+                'good': cls.GOOD,
+                'moderate': cls.MODERATE,
+                'poor': cls.POOR,
+                'bad': cls.POOR,  # Alias
+                'unknown': cls.UNKNOWN,
+            }
+        )
         if isinstance(value, str) and value.lower() in _string_to_enum:
             return AirQualityLevel(_string_to_enum[value.lower()])
         return cls.UNKNOWN
@@ -426,13 +428,14 @@ class PurifierAutoPreference(StrEnum):
         UNKNOWN: Unknown preference level.
     """
 
-    DEFAULT = "default"
-    EFFICIENT = "efficient"
-    QUIET = "quiet"
-    UNKNOWN = "unknown"
+    DEFAULT = 'default'
+    EFFICIENT = 'efficient'
+    QUIET = 'quiet'
+    UNKNOWN = 'unknown'
 
 
 # Fan Constants
+
 
 class FanSleepPreference(StrEnum):
     """Sleep mode preferences for VeSync fans.
@@ -446,23 +449,25 @@ class FanSleepPreference(StrEnum):
         UNKNOWN: Unknown sleep mode.
     """
 
-    DEFAULT = "default"
-    ADVANCED = "advanced"
-    TURBO = "turbo"
-    EFFICIENT = "efficient"
-    QUIET = "quiet"
-    TEMP_SENSE = "tempSense"
-    KIDS = "kids"
-    UNKNOWN = "unknown"
+    DEFAULT = 'default'
+    ADVANCED = 'advanced'
+    TURBO = 'turbo'
+    EFFICIENT = 'efficient'
+    QUIET = 'quiet'
+    TEMP_SENSE = 'tempSense'
+    KIDS = 'kids'
+    UNKNOWN = 'unknown'
 
 
 # Device Features
+
 
 class Features(StrEnum):
     """Base Class for Features Enum to appease typing."""
 
 
 # Device Features
+
 
 class HumidifierFeatures(Features):
     """VeSync humidifier features.
@@ -477,14 +482,14 @@ class HumidifierFeatures(Features):
             Different from auto, which adjusts fan level to maintain humidity.
     """
 
-    ONOFF = "onoff"
-    CHILD_LOCK = "child_lock"
-    NIGHTLIGHT = "night_light"
-    WATER_LEVEL = "water_level"
-    WARM_MIST = "warm_mist"
-    AUTO_STOP = "auto_stop"
-    NIGHTLIGHT_BRIGHTNESS = "nightlight_brightness"
-    DRYING_MODE = "drying_mode"
+    ONOFF = 'onoff'
+    CHILD_LOCK = 'child_lock'
+    NIGHTLIGHT = 'night_light'
+    WATER_LEVEL = 'water_level'
+    WARM_MIST = 'warm_mist'
+    AUTO_STOP = 'auto_stop'
+    NIGHTLIGHT_BRIGHTNESS = 'nightlight_brightness'
+    DRYING_MODE = 'drying_mode'
 
 
 class PurifierFeatures(Features):
@@ -503,16 +508,16 @@ class PurifierFeatures(Features):
         RESET_FILTER: Reset filter status.
     """
 
-    RESET_FILTER = "reset_filter"
-    CHILD_LOCK = "child_lock"
-    NIGHTLIGHT = "night_light"
-    AIR_QUALITY = "air_quality"
-    VENT_ANGLE = "fan_rotate"
-    LIGHT_DETECT = "light_detect"
-    PM25 = "pm25"
-    PM10 = "pm10"
-    PM1 = "pm1"
-    AQPERCENT = "aq_percent"
+    RESET_FILTER = 'reset_filter'
+    CHILD_LOCK = 'child_lock'
+    NIGHTLIGHT = 'night_light'
+    AIR_QUALITY = 'air_quality'
+    VENT_ANGLE = 'fan_rotate'
+    LIGHT_DETECT = 'light_detect'
+    PM25 = 'pm25'
+    PM10 = 'pm10'
+    PM1 = 'pm1'
+    AQPERCENT = 'aq_percent'
 
 
 class PurifierStringLevels(Features):
@@ -524,9 +529,9 @@ class PurifierStringLevels(Features):
         HIGH: High fan speed.
     """
 
-    LOW = "low"
-    MEDIUM = "medium"
-    HIGH = "high"
+    LOW = 'low'
+    MEDIUM = 'medium'
+    HIGH = 'high'
 
 
 class BulbFeatures(Features):
@@ -539,10 +544,10 @@ class BulbFeatures(Features):
         MULTICOLOR: Multicolor status.
     """
 
-    ONOFF = "onoff"
-    DIMMABLE = "dimmable"
-    COLOR_TEMP = "color_temp"
-    MULTICOLOR = "multicolor"
+    ONOFF = 'onoff'
+    DIMMABLE = 'dimmable'
+    COLOR_TEMP = 'color_temp'
+    MULTICOLOR = 'multicolor'
 
 
 class OutletFeatures(Features):
@@ -554,9 +559,9 @@ class OutletFeatures(Features):
         NIGHTLIGHT: Nightlight status.
     """
 
-    ONOFF = "onoff"
-    ENERGY_MONITOR = "energy_monitor"
-    NIGHTLIGHT = "nightlight"
+    ONOFF = 'onoff'
+    ENERGY_MONITOR = 'energy_monitor'
+    NIGHTLIGHT = 'nightlight'
 
 
 class SwitchFeatures(Features):
@@ -570,22 +575,23 @@ class SwitchFeatures(Features):
         BACKLIGHT_RGB: RGB backlight status.
     """
 
-    ONOFF = "onoff"
-    DIMMABLE = "dimmable"
-    INDICATOR_LIGHT = "indicator_light"
-    BACKLIGHT = "backlight"
-    BACKLIGHT_RGB = "backlight_rgb"
+    ONOFF = 'onoff'
+    DIMMABLE = 'dimmable'
+    INDICATOR_LIGHT = 'indicator_light'
+    BACKLIGHT = 'backlight'
+    BACKLIGHT_RGB = 'backlight_rgb'
 
 
 class FanFeatures(Features):
     """VeSync fan features."""
 
-    OSCILLATION = "oscillation"
-    SOUND = "sound"
-    DISPLAYING_TYPE = "displaying_type"  # Unknown functionality
+    OSCILLATION = 'oscillation'
+    SOUND = 'sound'
+    DISPLAYING_TYPE = 'displaying_type'  # Unknown functionality
 
 
 # Modes
+
 
 class PurifierModes(Features):
     """VeSync air purifier modes.
@@ -599,12 +605,12 @@ class PurifierModes(Features):
         UNKNOWN: Unknown mode.
     """
 
-    AUTO = "auto"
-    MANUAL = "manual"
-    SLEEP = "sleep"
-    TURBO = "turbo"
-    PET = "pet"
-    UNKNOWN = "unknown"
+    AUTO = 'auto'
+    MANUAL = 'manual'
+    SLEEP = 'sleep'
+    TURBO = 'turbo'
+    PET = 'pet'
+    UNKNOWN = 'unknown'
 
 
 class HumidifierModes(Features):
@@ -621,14 +627,14 @@ class HumidifierModes(Features):
         AUTOPRO: AutoPro mode.
     """
 
-    AUTO = "auto"
-    MANUAL = "manual"
-    HUMIDITY = "humidity"
-    SLEEP = "sleep"
-    TURBO = "turbo"
-    PET = "pet"
-    UNKNOWN = "unknown"
-    AUTOPRO = "autopro"
+    AUTO = 'auto'
+    MANUAL = 'manual'
+    HUMIDITY = 'humidity'
+    SLEEP = 'sleep'
+    TURBO = 'turbo'
+    PET = 'pet'
+    UNKNOWN = 'unknown'
+    AUTOPRO = 'autopro'
 
 
 class FanModes(StrEnum):
@@ -645,27 +651,28 @@ class FanModes(StrEnum):
         ADVANCED_SLEEP: Advanced sleep mode.
     """
 
-    AUTO = "auto"
-    NORMAL = "normal"
-    MANUAL = "normal"
-    SLEEP = "advancedSleep"
-    TURBO = "turbo"
-    PET = "pet"
-    UNKNOWN = "unknown"
-    ADVANCED_SLEEP = "advancedSleep"
+    AUTO = 'auto'
+    NORMAL = 'normal'
+    MANUAL = 'normal'
+    SLEEP = 'advancedSleep'
+    TURBO = 'turbo'
+    PET = 'pet'
+    UNKNOWN = 'unknown'
+    ADVANCED_SLEEP = 'advancedSleep'
 
 
 # Air Fryer Constants
 
 AIRFRYER_PID_MAP = {
-    "WiFi_SKA_AirFryer137_US": "wnxwqs76gknqyzjn",
-    "WiFi_SKA_AirFryer158_US": "2cl8hmafsthl65bd",
-    "WiFi_AirFryer_CS158-AF_EU": "8t8op7pcvzlsbosm"
+    'WiFi_SKA_AirFryer137_US': 'wnxwqs76gknqyzjn',
+    'WiFi_SKA_AirFryer158_US': '2cl8hmafsthl65bd',
+    'WiFi_AirFryer_CS158-AF_EU': '8t8op7pcvzlsbosm',
 }
 """PID's for VeSync Air Fryers based on ConfigModule."""
 
 
 # Thermostat Constants
+
 
 class ThermostatWorkModes(IntEnum):
     """Working modes for VeSync Aura thermostats.
@@ -812,5 +819,5 @@ class ThermostatConst:
 
 CUSTOM_RECIPE_ID = 1
 CUSTOM_RECIPE_TYPE = 3
-CUSTOM_RECIPE_NAME = "Manual Cook"
-CUSTOM_COOK_MODE = "custom"
+CUSTOM_RECIPE_NAME = 'Manual Cook'
+CUSTOM_COOK_MODE = 'custom'

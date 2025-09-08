@@ -61,32 +61,32 @@ class ThermostatRoutine(DataClassORJSONMixin):
 class ThermostatMinorDetails(DataClassORJSONMixin):
     """Model for thermostat minor details."""
 
-    mcu_version: str = field(metadata=field_options(alias="mcuVersion"))
-    hvac_capacity: int = field(metadata=field_options(alias="hvacCapcity"))
-    timestamp: int = field(metadata=field_options(alias="timeStamp"))
-    time_zone: int = field(metadata=field_options(alias="timeZone"))
-    offset_in_sec: int = field(metadata=field_options(alias="offsetInSec"))
-    time_fmt: int = field(metadata=field_options(alias="timeFmt"))
-    date_fmt: int = field(metadata=field_options(alias="dateFmt"))
-    fan_delay_time: int = field(metadata=field_options(alias="fanDelayTime"))
-    fan_circulation_time: int = field(metadata=field_options(alias="fanCirTime"))
-    hvac_protect_time: int = field(metadata=field_options(alias="hvacProtecTime"))
-    hvac_min_on_time: int = field(metadata=field_options(alias="hvacMinOnTime"))
-    aux_min_on_time: int = field(metadata=field_options(alias="auxMinOnTime"))
-    screen_brightness: int = field(metadata=field_options(alias="screenBrightness"))
-    standby_timeout: int = field(metadata=field_options(alias="standbyTimeOut"))
-    aux_low_temperature: int = field(metadata=field_options(alias="auxLowBalanceTemp"))
-    aux_high_temperature: int = field(metadata=field_options(alias="auxHighBalanceTemp"))
-    keytone: bool = field(metadata=field_options(alias="keyTone"))
+    mcu_version: str = field(metadata=field_options(alias='mcuVersion'))
+    hvac_capacity: int = field(metadata=field_options(alias='hvacCapcity'))
+    timestamp: int = field(metadata=field_options(alias='timeStamp'))
+    time_zone: int = field(metadata=field_options(alias='timeZone'))
+    offset_in_sec: int = field(metadata=field_options(alias='offsetInSec'))
+    time_fmt: int = field(metadata=field_options(alias='timeFmt'))
+    date_fmt: int = field(metadata=field_options(alias='dateFmt'))
+    fan_delay_time: int = field(metadata=field_options(alias='fanDelayTime'))
+    fan_circulation_time: int = field(metadata=field_options(alias='fanCirTime'))
+    hvac_protect_time: int = field(metadata=field_options(alias='hvacProtecTime'))
+    hvac_min_on_time: int = field(metadata=field_options(alias='hvacMinOnTime'))
+    aux_min_on_time: int = field(metadata=field_options(alias='auxMinOnTime'))
+    screen_brightness: int = field(metadata=field_options(alias='screenBrightness'))
+    standby_timeout: int = field(metadata=field_options(alias='standbyTimeOut'))
+    aux_low_temperature: int = field(metadata=field_options(alias='auxLowBalanceTemp'))
+    aux_high_temperature: int = field(metadata=field_options(alias='auxHighBalanceTemp'))
+    keytone: bool = field(metadata=field_options(alias='keyTone'))
     smart_schedule_enabled: bool = field(
-        metadata=field_options(alias="smartScheduleEnabled")
-        )
-    time_to_temp_enabled: bool = field(metadata=field_options(alias="timeToTempEnabled"))
-    early_on_enabled: bool = field(metadata=field_options(alias="earlyOnEnabled"))
-    reminder_list: list[ThermostatReminder] = field(
-        metadata=field_options(alias="reminderList")
+        metadata=field_options(alias='smartScheduleEnabled')
     )
-    alarm_list: list[ThermostatAlarm] = field(metadata=field_options(alias="alarmList"))
+    time_to_temp_enabled: bool = field(metadata=field_options(alias='timeToTempEnabled'))
+    early_on_enabled: bool = field(metadata=field_options(alias='earlyOnEnabled'))
+    reminder_list: list[ThermostatReminder] = field(
+        metadata=field_options(alias='reminderList')
+    )
+    alarm_list: list[ThermostatAlarm] = field(metadata=field_options(alias='alarmList'))
 
 
 @dataclass
@@ -98,7 +98,7 @@ class ThermostatReminder(DataClassORJSONMixin):
     frequency: int
     code_name: str | None = None
     last_maintenance_time: int | None = field(
-        default=None, metadata=field_options(alias="lastMaintenTime")
+        default=None, metadata=field_options(alias='lastMaintenTime')
     )
 
     @classmethod
@@ -119,11 +119,11 @@ class ThermostatAlarm(DataClassORJSONMixin):
     enabled: bool
     code_name: str | None = None
     aux_runtime_limit: int | None = field(
-        default=None, metadata=field_options(alias="auxRunTimeLimit")
+        default=None, metadata=field_options(alias='auxRunTimeLimit')
     )
 
     @classmethod
-    def __post_deserialize__(   # type: ignore[override]
+    def __post_deserialize__(  # type: ignore[override]
         cls, obj: ThermostatAlarm
     ) -> ThermostatAlarm:
         """Post-deserialization processing."""
