@@ -5400,11 +5400,11 @@
 
             <details class="quote">
               <summary>Source code in <code>src\pyvesync\base_devices\vesyncbasedevice.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-572">572</a></span>
-<span class="normal"><a href="#__codelineno-0-573">573</a></span>
-<span class="normal"><a href="#__codelineno-0-574">574</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-572" name="__codelineno-0-572"></a><span class="k">def</span><span class="w"> </span><span class="nf">as_tuple</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">...</span><span class="p">]:</span>
-<a id="__codelineno-0-573" name="__codelineno-0-573"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert state to tuple of (name, value) tuples.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-574" name="__codelineno-0-574"></a>    <span class="k">return</span> <span class="nb">tuple</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_serialize</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-574">574</a></span>
+<span class="normal"><a href="#__codelineno-0-575">575</a></span>
+<span class="normal"><a href="#__codelineno-0-576">576</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-574" name="__codelineno-0-574"></a><span class="k">def</span><span class="w"> </span><span class="nf">as_tuple</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">...</span><span class="p">]:</span>
+<a id="__codelineno-0-575" name="__codelineno-0-575"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert state to tuple of (name, value) tuples.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-576" name="__codelineno-0-576"></a>    <span class="k">return</span> <span class="nb">tuple</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_serialize</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -5430,13 +5430,13 @@
 
             <details class="quote">
               <summary>Source code in <code>src\pyvesync\base_devices\vesyncbasedevice.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-576">576</a></span>
-<span class="normal"><a href="#__codelineno-0-577">577</a></span>
-<span class="normal"><a href="#__codelineno-0-578">578</a></span>
-<span class="normal"><a href="#__codelineno-0-579">579</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-576" name="__codelineno-0-576"></a><span class="k">def</span><span class="w"> </span><span class="nf">display</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-577" name="__codelineno-0-577"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Print formatted state to stdout.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-578" name="__codelineno-0-578"></a>    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_serialize</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-<a id="__codelineno-0-579" name="__codelineno-0-579"></a>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">name</span><span class="si">:</span><span class="s1">.&lt;30</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">val</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-578">578</a></span>
+<span class="normal"><a href="#__codelineno-0-579">579</a></span>
+<span class="normal"><a href="#__codelineno-0-580">580</a></span>
+<span class="normal"><a href="#__codelineno-0-581">581</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-578" name="__codelineno-0-578"></a><span class="k">def</span><span class="w"> </span><span class="nf">display</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-579" name="__codelineno-0-579"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Print formatted state to stdout.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-580" name="__codelineno-0-580"></a>    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_serialize</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+<a id="__codelineno-0-581" name="__codelineno-0-581"></a>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">name</span><span class="si">:</span><span class="s1">.&lt;30</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">val</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -5462,11 +5462,11 @@
 
             <details class="quote">
               <summary>Source code in <code>src\pyvesync\base_devices\vesyncbasedevice.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-568">568</a></span>
-<span class="normal"><a href="#__codelineno-0-569">569</a></span>
-<span class="normal"><a href="#__codelineno-0-570">570</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-568" name="__codelineno-0-568"></a><span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-<a id="__codelineno-0-569" name="__codelineno-0-569"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert state to dictionary.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-570" name="__codelineno-0-570"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_serialize</span><span class="p">()</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-570">570</a></span>
+<span class="normal"><a href="#__codelineno-0-571">571</a></span>
+<span class="normal"><a href="#__codelineno-0-572">572</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-570" name="__codelineno-0-570"></a><span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<a id="__codelineno-0-571" name="__codelineno-0-571"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert state to dictionary.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-572" name="__codelineno-0-572"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_serialize</span><span class="p">()</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -5546,25 +5546,25 @@
 
             <details class="quote">
               <summary>Source code in <code>src\pyvesync\base_devices\vesyncbasedevice.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-549">549</a></span>
-<span class="normal"><a href="#__codelineno-0-550">550</a></span>
-<span class="normal"><a href="#__codelineno-0-551">551</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-551">551</a></span>
 <span class="normal"><a href="#__codelineno-0-552">552</a></span>
 <span class="normal"><a href="#__codelineno-0-553">553</a></span>
 <span class="normal"><a href="#__codelineno-0-554">554</a></span>
 <span class="normal"><a href="#__codelineno-0-555">555</a></span>
 <span class="normal"><a href="#__codelineno-0-556">556</a></span>
 <span class="normal"><a href="#__codelineno-0-557">557</a></span>
-<span class="normal"><a href="#__codelineno-0-558">558</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-549" name="__codelineno-0-549"></a><span class="k">def</span><span class="w"> </span><span class="nf">to_json</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indent</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<a id="__codelineno-0-550" name="__codelineno-0-550"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Dump state to JSON string.</span>
-<a id="__codelineno-0-551" name="__codelineno-0-551"></a>
-<a id="__codelineno-0-552" name="__codelineno-0-552"></a><span class="sd">    Args:</span>
-<a id="__codelineno-0-553" name="__codelineno-0-553"></a><span class="sd">        indent (bool): If True, indent JSON output, defaults to False.</span>
-<a id="__codelineno-0-554" name="__codelineno-0-554"></a>
-<a id="__codelineno-0-555" name="__codelineno-0-555"></a><span class="sd">    Returns:</span>
-<a id="__codelineno-0-556" name="__codelineno-0-556"></a><span class="sd">        str: JSON formatted string of device state.</span>
-<a id="__codelineno-0-557" name="__codelineno-0-557"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-558" name="__codelineno-0-558"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_jsonb</span><span class="p">(</span><span class="n">indent</span><span class="o">=</span><span class="n">indent</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+<span class="normal"><a href="#__codelineno-0-558">558</a></span>
+<span class="normal"><a href="#__codelineno-0-559">559</a></span>
+<span class="normal"><a href="#__codelineno-0-560">560</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-551" name="__codelineno-0-551"></a><span class="k">def</span><span class="w"> </span><span class="nf">to_json</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indent</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-0-552" name="__codelineno-0-552"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Dump state to JSON string.</span>
+<a id="__codelineno-0-553" name="__codelineno-0-553"></a>
+<a id="__codelineno-0-554" name="__codelineno-0-554"></a><span class="sd">    Args:</span>
+<a id="__codelineno-0-555" name="__codelineno-0-555"></a><span class="sd">        indent (bool): If True, indent JSON output, defaults to False.</span>
+<a id="__codelineno-0-556" name="__codelineno-0-556"></a>
+<a id="__codelineno-0-557" name="__codelineno-0-557"></a><span class="sd">    Returns:</span>
+<a id="__codelineno-0-558" name="__codelineno-0-558"></a><span class="sd">        str: JSON formatted string of device state.</span>
+<a id="__codelineno-0-559" name="__codelineno-0-559"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-560" name="__codelineno-0-560"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_jsonb</span><span class="p">(</span><span class="n">indent</span><span class="o">=</span><span class="n">indent</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -5590,19 +5590,19 @@
 
             <details class="quote">
               <summary>Source code in <code>src\pyvesync\base_devices\vesyncbasedevice.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-560">560</a></span>
-<span class="normal"><a href="#__codelineno-0-561">561</a></span>
-<span class="normal"><a href="#__codelineno-0-562">562</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-562">562</a></span>
 <span class="normal"><a href="#__codelineno-0-563">563</a></span>
 <span class="normal"><a href="#__codelineno-0-564">564</a></span>
 <span class="normal"><a href="#__codelineno-0-565">565</a></span>
-<span class="normal"><a href="#__codelineno-0-566">566</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-560" name="__codelineno-0-560"></a><span class="k">def</span><span class="w"> </span><span class="nf">to_jsonb</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indent</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
-<a id="__codelineno-0-561" name="__codelineno-0-561"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert state to JSON bytes.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-562" name="__codelineno-0-562"></a>    <span class="k">if</span> <span class="n">indent</span><span class="p">:</span>
-<a id="__codelineno-0-563" name="__codelineno-0-563"></a>        <span class="k">return</span> <span class="n">orjson</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span>
-<a id="__codelineno-0-564" name="__codelineno-0-564"></a>            <span class="bp">self</span><span class="o">.</span><span class="n">_serialize</span><span class="p">(),</span> <span class="n">option</span><span class="o">=</span><span class="n">orjson</span><span class="o">.</span><span class="n">OPT_NON_STR_KEYS</span> <span class="o">|</span> <span class="n">orjson</span><span class="o">.</span><span class="n">OPT_INDENT_2</span>
-<a id="__codelineno-0-565" name="__codelineno-0-565"></a>        <span class="p">)</span>
-<a id="__codelineno-0-566" name="__codelineno-0-566"></a>    <span class="k">return</span> <span class="n">orjson</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_serialize</span><span class="p">(),</span> <span class="n">option</span><span class="o">=</span><span class="n">orjson</span><span class="o">.</span><span class="n">OPT_NON_STR_KEYS</span><span class="p">)</span>
+<span class="normal"><a href="#__codelineno-0-566">566</a></span>
+<span class="normal"><a href="#__codelineno-0-567">567</a></span>
+<span class="normal"><a href="#__codelineno-0-568">568</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-562" name="__codelineno-0-562"></a><span class="k">def</span><span class="w"> </span><span class="nf">to_jsonb</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indent</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+<a id="__codelineno-0-563" name="__codelineno-0-563"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert state to JSON bytes.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-564" name="__codelineno-0-564"></a>    <span class="k">if</span> <span class="n">indent</span><span class="p">:</span>
+<a id="__codelineno-0-565" name="__codelineno-0-565"></a>        <span class="k">return</span> <span class="n">orjson</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span>
+<a id="__codelineno-0-566" name="__codelineno-0-566"></a>            <span class="bp">self</span><span class="o">.</span><span class="n">_serialize</span><span class="p">(),</span> <span class="n">option</span><span class="o">=</span><span class="n">orjson</span><span class="o">.</span><span class="n">OPT_NON_STR_KEYS</span> <span class="o">|</span> <span class="n">orjson</span><span class="o">.</span><span class="n">OPT_INDENT_2</span>
+<a id="__codelineno-0-567" name="__codelineno-0-567"></a>        <span class="p">)</span>
+<a id="__codelineno-0-568" name="__codelineno-0-568"></a>    <span class="k">return</span> <span class="n">orjson</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_serialize</span><span class="p">(),</span> <span class="n">option</span><span class="o">=</span><span class="n">orjson</span><span class="o">.</span><span class="n">OPT_NON_STR_KEYS</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -5628,13 +5628,13 @@
 
             <details class="quote">
               <summary>Source code in <code>src\pyvesync\base_devices\vesyncbasedevice.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-518">518</a></span>
-<span class="normal"><a href="#__codelineno-0-519">519</a></span>
-<span class="normal"><a href="#__codelineno-0-520">520</a></span>
-<span class="normal"><a href="#__codelineno-0-521">521</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-518" name="__codelineno-0-518"></a><span class="k">def</span><span class="w"> </span><span class="nf">update_ts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-519" name="__codelineno-0-519"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Update last update timestamp.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-520" name="__codelineno-0-520"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">last_update_ts</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">dt</span><span class="o">.</span><span class="n">now</span><span class="p">(</span>
-<a id="__codelineno-0-521" name="__codelineno-0-521"></a>        <span class="n">tz</span><span class="o">=</span><span class="n">ZoneInfo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">time_zone</span><span class="p">))</span><span class="o">.</span><span class="n">timestamp</span><span class="p">())</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-520">520</a></span>
+<span class="normal"><a href="#__codelineno-0-521">521</a></span>
+<span class="normal"><a href="#__codelineno-0-522">522</a></span>
+<span class="normal"><a href="#__codelineno-0-523">523</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-520" name="__codelineno-0-520"></a><span class="k">def</span><span class="w"> </span><span class="nf">update_ts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-521" name="__codelineno-0-521"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Update last update timestamp.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-522" name="__codelineno-0-522"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">last_update_ts</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">dt</span><span class="o">.</span><span class="n">now</span><span class="p">(</span>
+<a id="__codelineno-0-523" name="__codelineno-0-523"></a>        <span class="n">tz</span><span class="o">=</span><span class="n">ZoneInfo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">time_zone</span><span class="p">))</span><span class="o">.</span><span class="n">timestamp</span><span class="p">())</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -5658,21 +5658,17 @@
 
 
 <a href="#pyvesync.devices.vesyncfan.VeSyncTowerFan" class="toc-permalink" title="Permanent link">↲</a></h2>
-<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">VeSyncTowerFan</span><span class="p">(</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">details</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="ResponseDeviceDetailsModel
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">VeSyncTowerFan</span><span class="p">(</span><span class="n">details</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="ResponseDeviceDetailsModel
 
 
   
       dataclass
-   (pyvesync.models.vesync_models.ResponseDeviceDetailsModel)" href="../../development/data_models/#pyvesync.models.vesync_models.ResponseDeviceDetailsModel">ResponseDeviceDetailsModel</a></span><span class="p">,</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">manager</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="pyvesync.vesync.VeSync (pyvesync.VeSync)" href="../../development/vesync_api/#pyvesync.vesync.VeSync">VeSync</a></span><span class="p">,</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">feature_map</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="FanMap
+   (pyvesync.models.vesync_models.ResponseDeviceDetailsModel)" href="../../development/data_models/#pyvesync.models.vesync_models.ResponseDeviceDetailsModel">ResponseDeviceDetailsModel</a></span><span class="p">,</span> <span class="n">manager</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="pyvesync.vesync.VeSync (pyvesync.VeSync)" href="../../development/vesync_api/#pyvesync.vesync.VeSync">VeSync</a></span><span class="p">,</span> <span class="n">feature_map</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="FanMap
 
 
   
       dataclass
-   (pyvesync.device_map.FanMap)" href="../../development/device_map/#pyvesync.device_map.FanMap">FanMap</a></span><span class="p">,</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="p">)</span>
+   (pyvesync.device_map.FanMap)" href="../../development/device_map/#pyvesync.device_map.FanMap">FanMap</a></span><span class="p">)</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
@@ -6301,22 +6297,7 @@
   </span>
 
 <a href="#pyvesync.devices.vesyncfan.VeSyncTowerFan.request_keys" class="toc-permalink" title="Permanent link">↲</a></h4>
-<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">request_keys</span><span class="p">:</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="s1">&#39;acceptLanguage&#39;</span><span class="p">,</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="s1">&#39;appVersion&#39;</span><span class="p">,</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="s1">&#39;phoneBrand&#39;</span><span class="p">,</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="s1">&#39;phoneOS&#39;</span><span class="p">,</span>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="s1">&#39;accountID&#39;</span><span class="p">,</span>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="s1">&#39;cid&#39;</span><span class="p">,</span>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="s1">&#39;configModule&#39;</span><span class="p">,</span>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="s1">&#39;debugMode&#39;</span><span class="p">,</span>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="s1">&#39;traceId&#39;</span><span class="p">,</span>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="s1">&#39;timeZone&#39;</span><span class="p">,</span>
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    <span class="s1">&#39;token&#39;</span><span class="p">,</span>
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    <span class="s1">&#39;userCountryCode&#39;</span><span class="p">,</span>
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    <span class="s1">&#39;configModel&#39;</span><span class="p">,</span>
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    <span class="s1">&#39;deviceId&#39;</span><span class="p">,</span>
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="p">]</span>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">request_keys</span><span class="p">:</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;acceptLanguage&#39;</span><span class="p">,</span> <span class="s1">&#39;appVersion&#39;</span><span class="p">,</span> <span class="s1">&#39;phoneBrand&#39;</span><span class="p">,</span> <span class="s1">&#39;phoneOS&#39;</span><span class="p">,</span> <span class="s1">&#39;accountID&#39;</span><span class="p">,</span> <span class="s1">&#39;cid&#39;</span><span class="p">,</span> <span class="s1">&#39;configModule&#39;</span><span class="p">,</span> <span class="s1">&#39;debugMode&#39;</span><span class="p">,</span> <span class="s1">&#39;traceId&#39;</span><span class="p">,</span> <span class="s1">&#39;timeZone&#39;</span><span class="p">,</span> <span class="s1">&#39;token&#39;</span><span class="p">,</span> <span class="s1">&#39;userCountryCode&#39;</span><span class="p">,</span> <span class="s1">&#39;configModel&#39;</span><span class="p">,</span> <span class="s1">&#39;deviceId&#39;</span><span class="p">]</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -6573,12 +6554,7 @@
   </span>
 
 <a href="#pyvesync.devices.vesyncfan.VeSyncTowerFan.call_bypassv2_api" class="toc-permalink" title="Permanent link">↲</a></h4>
-<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">call_bypassv2_api</span><span class="p">(</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">payload_method</span><span class="p">:</span> <span class="n"><span title="str">str</span></span><span class="p">,</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">data</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">method</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">=</span> <span class="s1">&#39;bypassV2&#39;</span><span class="p">,</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">endpoint</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">=</span> <span class="s1">&#39;bypassV2&#39;</span><span class="p">,</span>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="dict">dict</span></span> <span class="o">|</span> <span class="kc">None</span>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">call_bypassv2_api</span><span class="p">(</span><span class="n">payload_method</span><span class="p">:</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">=</span> <span class="s1">&#39;bypassV2&#39;</span><span class="p">,</span> <span class="n">endpoint</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">=</span> <span class="s1">&#39;bypassV2&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="dict">dict</span></span> <span class="o">|</span> <span class="kc">None</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -10259,10 +10235,14 @@ if there is an error.</p>
               <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-299">299</a></span>
 <span class="normal"><a href="#__codelineno-0-300">300</a></span>
 <span class="normal"><a href="#__codelineno-0-301">301</a></span>
-<span class="normal"><a href="#__codelineno-0-302">302</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-299" name="__codelineno-0-299"></a><span class="nd">@deprecated</span><span class="p">(</span><span class="s2">&quot;Use to_json() instead&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-300" name="__codelineno-0-300"></a><span class="k">def</span><span class="w"> </span><span class="nf">displayJSON</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">indent</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>  <span class="c1"># pylint: disable=invalid-name</span>
-<a id="__codelineno-0-301" name="__codelineno-0-301"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Return JSON details for device. - Deprecated use to_json().&quot;&quot;&quot;</span>
-<a id="__codelineno-0-302" name="__codelineno-0-302"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_json</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">indent</span><span class="p">)</span>
+<span class="normal"><a href="#__codelineno-0-302">302</a></span>
+<span class="normal"><a href="#__codelineno-0-303">303</a></span>
+<span class="normal"><a href="#__codelineno-0-304">304</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-299" name="__codelineno-0-299"></a><span class="nd">@deprecated</span><span class="p">(</span><span class="s2">&quot;Use to_json() instead&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-300" name="__codelineno-0-300"></a><span class="k">def</span><span class="w"> </span><span class="nf">displayJSON</span><span class="p">(</span>
+<a id="__codelineno-0-301" name="__codelineno-0-301"></a>    <span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">indent</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+<a id="__codelineno-0-302" name="__codelineno-0-302"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>  <span class="c1"># pylint: disable=invalid-name</span>
+<a id="__codelineno-0-303" name="__codelineno-0-303"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Return JSON details for device. - Deprecated use to_json().&quot;&quot;&quot;</span>
+<a id="__codelineno-0-304" name="__codelineno-0-304"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_json</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">indent</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -11539,9 +11519,7 @@ false with warning debug message if not supported.</p>
 
             <details class="quote">
               <summary>Source code in <code>src\pyvesync\base_devices\vesyncbasedevice.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-316">316</a></span>
-<span class="normal"><a href="#__codelineno-0-317">317</a></span>
-<span class="normal"><a href="#__codelineno-0-318">318</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-318">318</a></span>
 <span class="normal"><a href="#__codelineno-0-319">319</a></span>
 <span class="normal"><a href="#__codelineno-0-320">320</a></span>
 <span class="normal"><a href="#__codelineno-0-321">321</a></span>
@@ -11561,29 +11539,31 @@ false with warning debug message if not supported.</p>
 <span class="normal"><a href="#__codelineno-0-335">335</a></span>
 <span class="normal"><a href="#__codelineno-0-336">336</a></span>
 <span class="normal"><a href="#__codelineno-0-337">337</a></span>
-<span class="normal"><a href="#__codelineno-0-338">338</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-316" name="__codelineno-0-316"></a><span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-<a id="__codelineno-0-317" name="__codelineno-0-317"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Return device information as a dictionary.</span>
-<a id="__codelineno-0-318" name="__codelineno-0-318"></a>
-<a id="__codelineno-0-319" name="__codelineno-0-319"></a><span class="sd">    Args:</span>
-<a id="__codelineno-0-320" name="__codelineno-0-320"></a><span class="sd">        state (bool): If True, include state in dictionary, defaults to True.</span>
-<a id="__codelineno-0-321" name="__codelineno-0-321"></a>
-<a id="__codelineno-0-322" name="__codelineno-0-322"></a><span class="sd">    Returns:</span>
-<a id="__codelineno-0-323" name="__codelineno-0-323"></a><span class="sd">        dict[str, Any]: Dictionary containing device information.</span>
-<a id="__codelineno-0-324" name="__codelineno-0-324"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-325" name="__codelineno-0-325"></a>    <span class="n">device_dict</span> <span class="o">=</span> <span class="p">{</span>
-<a id="__codelineno-0-326" name="__codelineno-0-326"></a>        <span class="s2">&quot;device_name&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">device_name</span><span class="p">,</span>
-<a id="__codelineno-0-327" name="__codelineno-0-327"></a>        <span class="s2">&quot;product_type&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">product_type</span><span class="p">,</span>
-<a id="__codelineno-0-328" name="__codelineno-0-328"></a>        <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">device_type</span><span class="p">,</span>
-<a id="__codelineno-0-329" name="__codelineno-0-329"></a>        <span class="s2">&quot;subdevice_no&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sub_device_no</span><span class="p">),</span>
-<a id="__codelineno-0-330" name="__codelineno-0-330"></a>        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
-<a id="__codelineno-0-331" name="__codelineno-0-331"></a>        <span class="s2">&quot;cid&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">cid</span><span class="p">,</span>
-<a id="__codelineno-0-332" name="__codelineno-0-332"></a>        <span class="s2">&quot;features:&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">features</span><span class="p">,</span>
-<a id="__codelineno-0-333" name="__codelineno-0-333"></a>        <span class="s2">&quot;config_module&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_module</span><span class="p">,</span>
-<a id="__codelineno-0-334" name="__codelineno-0-334"></a>        <span class="s2">&quot;connection_type&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection_type</span><span class="p">,</span>
-<a id="__codelineno-0-335" name="__codelineno-0-335"></a>        <span class="s2">&quot;last_response&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_response</span><span class="p">,</span>
-<a id="__codelineno-0-336" name="__codelineno-0-336"></a>    <span class="p">}</span>
-<a id="__codelineno-0-337" name="__codelineno-0-337"></a>    <span class="n">state_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span> <span class="k">if</span> <span class="n">state</span> <span class="k">else</span> <span class="p">{}</span>
-<a id="__codelineno-0-338" name="__codelineno-0-338"></a>    <span class="k">return</span> <span class="n">device_dict</span> <span class="o">|</span> <span class="n">state_dict</span>
+<span class="normal"><a href="#__codelineno-0-338">338</a></span>
+<span class="normal"><a href="#__codelineno-0-339">339</a></span>
+<span class="normal"><a href="#__codelineno-0-340">340</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-318" name="__codelineno-0-318"></a><span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<a id="__codelineno-0-319" name="__codelineno-0-319"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Return device information as a dictionary.</span>
+<a id="__codelineno-0-320" name="__codelineno-0-320"></a>
+<a id="__codelineno-0-321" name="__codelineno-0-321"></a><span class="sd">    Args:</span>
+<a id="__codelineno-0-322" name="__codelineno-0-322"></a><span class="sd">        state (bool): If True, include state in dictionary, defaults to True.</span>
+<a id="__codelineno-0-323" name="__codelineno-0-323"></a>
+<a id="__codelineno-0-324" name="__codelineno-0-324"></a><span class="sd">    Returns:</span>
+<a id="__codelineno-0-325" name="__codelineno-0-325"></a><span class="sd">        dict[str, Any]: Dictionary containing device information.</span>
+<a id="__codelineno-0-326" name="__codelineno-0-326"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-327" name="__codelineno-0-327"></a>    <span class="n">device_dict</span> <span class="o">=</span> <span class="p">{</span>
+<a id="__codelineno-0-328" name="__codelineno-0-328"></a>        <span class="s2">&quot;device_name&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">device_name</span><span class="p">,</span>
+<a id="__codelineno-0-329" name="__codelineno-0-329"></a>        <span class="s2">&quot;product_type&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">product_type</span><span class="p">,</span>
+<a id="__codelineno-0-330" name="__codelineno-0-330"></a>        <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">device_type</span><span class="p">,</span>
+<a id="__codelineno-0-331" name="__codelineno-0-331"></a>        <span class="s2">&quot;subdevice_no&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sub_device_no</span><span class="p">),</span>
+<a id="__codelineno-0-332" name="__codelineno-0-332"></a>        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
+<a id="__codelineno-0-333" name="__codelineno-0-333"></a>        <span class="s2">&quot;cid&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">cid</span><span class="p">,</span>
+<a id="__codelineno-0-334" name="__codelineno-0-334"></a>        <span class="s2">&quot;features:&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">features</span><span class="p">,</span>
+<a id="__codelineno-0-335" name="__codelineno-0-335"></a>        <span class="s2">&quot;config_module&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_module</span><span class="p">,</span>
+<a id="__codelineno-0-336" name="__codelineno-0-336"></a>        <span class="s2">&quot;connection_type&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection_type</span><span class="p">,</span>
+<a id="__codelineno-0-337" name="__codelineno-0-337"></a>        <span class="s2">&quot;last_response&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_response</span><span class="p">,</span>
+<a id="__codelineno-0-338" name="__codelineno-0-338"></a>    <span class="p">}</span>
+<a id="__codelineno-0-339" name="__codelineno-0-339"></a>    <span class="n">state_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span> <span class="k">if</span> <span class="n">state</span> <span class="k">else</span> <span class="p">{}</span>
+<a id="__codelineno-0-340" name="__codelineno-0-340"></a>    <span class="k">return</span> <span class="n">device_dict</span> <span class="o">|</span> <span class="n">state_dict</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -11679,9 +11659,7 @@ false with warning debug message if not supported.</p>
 
             <details class="quote">
               <summary>Source code in <code>src\pyvesync\base_devices\vesyncbasedevice.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-304">304</a></span>
-<span class="normal"><a href="#__codelineno-0-305">305</a></span>
-<span class="normal"><a href="#__codelineno-0-306">306</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-306">306</a></span>
 <span class="normal"><a href="#__codelineno-0-307">307</a></span>
 <span class="normal"><a href="#__codelineno-0-308">308</a></span>
 <span class="normal"><a href="#__codelineno-0-309">309</a></span>
@@ -11689,17 +11667,19 @@ false with warning debug message if not supported.</p>
 <span class="normal"><a href="#__codelineno-0-311">311</a></span>
 <span class="normal"><a href="#__codelineno-0-312">312</a></span>
 <span class="normal"><a href="#__codelineno-0-313">313</a></span>
-<span class="normal"><a href="#__codelineno-0-314">314</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-304" name="__codelineno-0-304"></a><span class="k">def</span><span class="w"> </span><span class="nf">to_json</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">indent</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<a id="__codelineno-0-305" name="__codelineno-0-305"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Print JSON API string for device details.</span>
-<a id="__codelineno-0-306" name="__codelineno-0-306"></a>
-<a id="__codelineno-0-307" name="__codelineno-0-307"></a><span class="sd">    Args:</span>
-<a id="__codelineno-0-308" name="__codelineno-0-308"></a><span class="sd">        state (bool): If True, include state in JSON output, defaults to True.</span>
-<a id="__codelineno-0-309" name="__codelineno-0-309"></a><span class="sd">        indent (bool): If True, indent JSON output, defaults to True.</span>
-<a id="__codelineno-0-310" name="__codelineno-0-310"></a>
-<a id="__codelineno-0-311" name="__codelineno-0-311"></a><span class="sd">    Returns:</span>
-<a id="__codelineno-0-312" name="__codelineno-0-312"></a><span class="sd">        str: JSON formatted string of device details.</span>
-<a id="__codelineno-0-313" name="__codelineno-0-313"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-314" name="__codelineno-0-314"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_jsonb</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">indent</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+<span class="normal"><a href="#__codelineno-0-314">314</a></span>
+<span class="normal"><a href="#__codelineno-0-315">315</a></span>
+<span class="normal"><a href="#__codelineno-0-316">316</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-306" name="__codelineno-0-306"></a><span class="k">def</span><span class="w"> </span><span class="nf">to_json</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">indent</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-0-307" name="__codelineno-0-307"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Print JSON API string for device details.</span>
+<a id="__codelineno-0-308" name="__codelineno-0-308"></a>
+<a id="__codelineno-0-309" name="__codelineno-0-309"></a><span class="sd">    Args:</span>
+<a id="__codelineno-0-310" name="__codelineno-0-310"></a><span class="sd">        state (bool): If True, include state in JSON output, defaults to True.</span>
+<a id="__codelineno-0-311" name="__codelineno-0-311"></a><span class="sd">        indent (bool): If True, indent JSON output, defaults to True.</span>
+<a id="__codelineno-0-312" name="__codelineno-0-312"></a>
+<a id="__codelineno-0-313" name="__codelineno-0-313"></a><span class="sd">    Returns:</span>
+<a id="__codelineno-0-314" name="__codelineno-0-314"></a><span class="sd">        str: JSON formatted string of device details.</span>
+<a id="__codelineno-0-315" name="__codelineno-0-315"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-316" name="__codelineno-0-316"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_jsonb</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">indent</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -11808,9 +11788,7 @@ false with warning debug message if not supported.</p>
 
             <details class="quote">
               <summary>Source code in <code>src\pyvesync\base_devices\vesyncbasedevice.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-340">340</a></span>
-<span class="normal"><a href="#__codelineno-0-341">341</a></span>
-<span class="normal"><a href="#__codelineno-0-342">342</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-342">342</a></span>
 <span class="normal"><a href="#__codelineno-0-343">343</a></span>
 <span class="normal"><a href="#__codelineno-0-344">344</a></span>
 <span class="normal"><a href="#__codelineno-0-345">345</a></span>
@@ -11837,36 +11815,38 @@ false with warning debug message if not supported.</p>
 <span class="normal"><a href="#__codelineno-0-366">366</a></span>
 <span class="normal"><a href="#__codelineno-0-367">367</a></span>
 <span class="normal"><a href="#__codelineno-0-368">368</a></span>
-<span class="normal"><a href="#__codelineno-0-369">369</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-340" name="__codelineno-0-340"></a><span class="k">def</span><span class="w"> </span><span class="nf">to_jsonb</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">indent</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
-<a id="__codelineno-0-341" name="__codelineno-0-341"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;JSON API bytes for device details.</span>
-<a id="__codelineno-0-342" name="__codelineno-0-342"></a>
-<a id="__codelineno-0-343" name="__codelineno-0-343"></a><span class="sd">    Args:</span>
-<a id="__codelineno-0-344" name="__codelineno-0-344"></a><span class="sd">        state (bool): If True, include state in JSON output, defaults to True.</span>
-<a id="__codelineno-0-345" name="__codelineno-0-345"></a><span class="sd">        indent (bool): If True, indent JSON output, defaults to True.</span>
-<a id="__codelineno-0-346" name="__codelineno-0-346"></a>
-<a id="__codelineno-0-347" name="__codelineno-0-347"></a><span class="sd">    Returns:</span>
-<a id="__codelineno-0-348" name="__codelineno-0-348"></a><span class="sd">        bytes: JSON formatted bytes of device details.</span>
-<a id="__codelineno-0-349" name="__codelineno-0-349"></a>
-<a id="__codelineno-0-350" name="__codelineno-0-350"></a><span class="sd">    Example:</span>
-<a id="__codelineno-0-351" name="__codelineno-0-351"></a><span class="sd">        This is an example without state.</span>
-<a id="__codelineno-0-352" name="__codelineno-0-352"></a><span class="sd">        ```</span>
-<a id="__codelineno-0-353" name="__codelineno-0-353"></a><span class="sd">        {</span>
-<a id="__codelineno-0-354" name="__codelineno-0-354"></a><span class="sd">            &quot;Device Name&quot;: &quot;Living Room Lamp&quot;,</span>
-<a id="__codelineno-0-355" name="__codelineno-0-355"></a><span class="sd">            &quot;Model&quot;: &quot;ESL100&quot;,</span>
-<a id="__codelineno-0-356" name="__codelineno-0-356"></a><span class="sd">            &quot;Subdevice No&quot;: &quot;0&quot;,</span>
-<a id="__codelineno-0-357" name="__codelineno-0-357"></a><span class="sd">            &quot;Type&quot;: &quot;wifi&quot;,</span>
-<a id="__codelineno-0-358" name="__codelineno-0-358"></a><span class="sd">            &quot;CID&quot;: &quot;1234567890abcdef&quot;</span>
-<a id="__codelineno-0-359" name="__codelineno-0-359"></a><span class="sd">        }</span>
-<a id="__codelineno-0-360" name="__codelineno-0-360"></a><span class="sd">        ```</span>
-<a id="__codelineno-0-361" name="__codelineno-0-361"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-362" name="__codelineno-0-362"></a>    <span class="n">return_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="n">state</span><span class="o">=</span><span class="n">state</span><span class="p">)</span>
-<a id="__codelineno-0-363" name="__codelineno-0-363"></a>    <span class="k">if</span> <span class="n">indent</span><span class="p">:</span>
-<a id="__codelineno-0-364" name="__codelineno-0-364"></a>        <span class="k">return</span> <span class="n">orjson</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span>
-<a id="__codelineno-0-365" name="__codelineno-0-365"></a>            <span class="n">return_dict</span><span class="p">,</span>
-<a id="__codelineno-0-366" name="__codelineno-0-366"></a>            <span class="n">option</span><span class="o">=</span><span class="n">orjson</span><span class="o">.</span><span class="n">OPT_INDENT_2</span> <span class="o">|</span> <span class="n">orjson</span><span class="o">.</span><span class="n">OPT_NON_STR_KEYS</span><span class="p">,</span>
-<a id="__codelineno-0-367" name="__codelineno-0-367"></a>        <span class="p">)</span>
-<a id="__codelineno-0-368" name="__codelineno-0-368"></a>
-<a id="__codelineno-0-369" name="__codelineno-0-369"></a>    <span class="k">return</span> <span class="n">orjson</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">return_dict</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="n">orjson</span><span class="o">.</span><span class="n">OPT_NON_STR_KEYS</span><span class="p">)</span>
+<span class="normal"><a href="#__codelineno-0-369">369</a></span>
+<span class="normal"><a href="#__codelineno-0-370">370</a></span>
+<span class="normal"><a href="#__codelineno-0-371">371</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-342" name="__codelineno-0-342"></a><span class="k">def</span><span class="w"> </span><span class="nf">to_jsonb</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">indent</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+<a id="__codelineno-0-343" name="__codelineno-0-343"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;JSON API bytes for device details.</span>
+<a id="__codelineno-0-344" name="__codelineno-0-344"></a>
+<a id="__codelineno-0-345" name="__codelineno-0-345"></a><span class="sd">    Args:</span>
+<a id="__codelineno-0-346" name="__codelineno-0-346"></a><span class="sd">        state (bool): If True, include state in JSON output, defaults to True.</span>
+<a id="__codelineno-0-347" name="__codelineno-0-347"></a><span class="sd">        indent (bool): If True, indent JSON output, defaults to True.</span>
+<a id="__codelineno-0-348" name="__codelineno-0-348"></a>
+<a id="__codelineno-0-349" name="__codelineno-0-349"></a><span class="sd">    Returns:</span>
+<a id="__codelineno-0-350" name="__codelineno-0-350"></a><span class="sd">        bytes: JSON formatted bytes of device details.</span>
+<a id="__codelineno-0-351" name="__codelineno-0-351"></a>
+<a id="__codelineno-0-352" name="__codelineno-0-352"></a><span class="sd">    Example:</span>
+<a id="__codelineno-0-353" name="__codelineno-0-353"></a><span class="sd">        This is an example without state.</span>
+<a id="__codelineno-0-354" name="__codelineno-0-354"></a><span class="sd">        ```</span>
+<a id="__codelineno-0-355" name="__codelineno-0-355"></a><span class="sd">        {</span>
+<a id="__codelineno-0-356" name="__codelineno-0-356"></a><span class="sd">            &quot;Device Name&quot;: &quot;Living Room Lamp&quot;,</span>
+<a id="__codelineno-0-357" name="__codelineno-0-357"></a><span class="sd">            &quot;Model&quot;: &quot;ESL100&quot;,</span>
+<a id="__codelineno-0-358" name="__codelineno-0-358"></a><span class="sd">            &quot;Subdevice No&quot;: &quot;0&quot;,</span>
+<a id="__codelineno-0-359" name="__codelineno-0-359"></a><span class="sd">            &quot;Type&quot;: &quot;wifi&quot;,</span>
+<a id="__codelineno-0-360" name="__codelineno-0-360"></a><span class="sd">            &quot;CID&quot;: &quot;1234567890abcdef&quot;</span>
+<a id="__codelineno-0-361" name="__codelineno-0-361"></a><span class="sd">        }</span>
+<a id="__codelineno-0-362" name="__codelineno-0-362"></a><span class="sd">        ```</span>
+<a id="__codelineno-0-363" name="__codelineno-0-363"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-364" name="__codelineno-0-364"></a>    <span class="n">return_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="n">state</span><span class="o">=</span><span class="n">state</span><span class="p">)</span>
+<a id="__codelineno-0-365" name="__codelineno-0-365"></a>    <span class="k">if</span> <span class="n">indent</span><span class="p">:</span>
+<a id="__codelineno-0-366" name="__codelineno-0-366"></a>        <span class="k">return</span> <span class="n">orjson</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span>
+<a id="__codelineno-0-367" name="__codelineno-0-367"></a>            <span class="n">return_dict</span><span class="p">,</span>
+<a id="__codelineno-0-368" name="__codelineno-0-368"></a>            <span class="n">option</span><span class="o">=</span><span class="n">orjson</span><span class="o">.</span><span class="n">OPT_INDENT_2</span> <span class="o">|</span> <span class="n">orjson</span><span class="o">.</span><span class="n">OPT_NON_STR_KEYS</span><span class="p">,</span>
+<a id="__codelineno-0-369" name="__codelineno-0-369"></a>        <span class="p">)</span>
+<a id="__codelineno-0-370" name="__codelineno-0-370"></a>
+<a id="__codelineno-0-371" name="__codelineno-0-371"></a>    <span class="k">return</span> <span class="n">orjson</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">return_dict</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="n">orjson</span><span class="o">.</span><span class="n">OPT_NON_STR_KEYS</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -12394,25 +12374,25 @@ True to turn mute on, False to turn off</p>
 
             <details class="quote">
               <summary>Source code in <code>src\pyvesync\base_devices\vesyncbasedevice.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-429">429</a></span>
-<span class="normal"><a href="#__codelineno-0-430">430</a></span>
-<span class="normal"><a href="#__codelineno-0-431">431</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-431">431</a></span>
 <span class="normal"><a href="#__codelineno-0-432">432</a></span>
 <span class="normal"><a href="#__codelineno-0-433">433</a></span>
 <span class="normal"><a href="#__codelineno-0-434">434</a></span>
 <span class="normal"><a href="#__codelineno-0-435">435</a></span>
 <span class="normal"><a href="#__codelineno-0-436">436</a></span>
 <span class="normal"><a href="#__codelineno-0-437">437</a></span>
-<span class="normal"><a href="#__codelineno-0-438">438</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-429" name="__codelineno-0-429"></a><span class="nd">@abstractmethod</span>
-<a id="__codelineno-0-430" name="__codelineno-0-430"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">toggle_switch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">toggle</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-431" name="__codelineno-0-431"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Toggle device power on or off.</span>
-<a id="__codelineno-0-432" name="__codelineno-0-432"></a>
-<a id="__codelineno-0-433" name="__codelineno-0-433"></a><span class="sd">    Args:</span>
-<a id="__codelineno-0-434" name="__codelineno-0-434"></a><span class="sd">        toggle (bool | None): True to turn on, False to turn off, None to toggle.</span>
-<a id="__codelineno-0-435" name="__codelineno-0-435"></a>
-<a id="__codelineno-0-436" name="__codelineno-0-436"></a><span class="sd">    Returns:</span>
-<a id="__codelineno-0-437" name="__codelineno-0-437"></a><span class="sd">        bool: True if successful, False otherwise.</span>
-<a id="__codelineno-0-438" name="__codelineno-0-438"></a><span class="sd">    &quot;&quot;&quot;</span>
+<span class="normal"><a href="#__codelineno-0-438">438</a></span>
+<span class="normal"><a href="#__codelineno-0-439">439</a></span>
+<span class="normal"><a href="#__codelineno-0-440">440</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-431" name="__codelineno-0-431"></a><span class="nd">@abstractmethod</span>
+<a id="__codelineno-0-432" name="__codelineno-0-432"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">toggle_switch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">toggle</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<a id="__codelineno-0-433" name="__codelineno-0-433"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Toggle device power on or off.</span>
+<a id="__codelineno-0-434" name="__codelineno-0-434"></a>
+<a id="__codelineno-0-435" name="__codelineno-0-435"></a><span class="sd">    Args:</span>
+<a id="__codelineno-0-436" name="__codelineno-0-436"></a><span class="sd">        toggle (bool | None): True to turn on, False to turn off, None to toggle.</span>
+<a id="__codelineno-0-437" name="__codelineno-0-437"></a>
+<a id="__codelineno-0-438" name="__codelineno-0-438"></a><span class="sd">    Returns:</span>
+<a id="__codelineno-0-439" name="__codelineno-0-439"></a><span class="sd">        bool: True if successful, False otherwise.</span>
+<a id="__codelineno-0-440" name="__codelineno-0-440"></a><span class="sd">    &quot;&quot;&quot;</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -12442,11 +12422,11 @@ True to turn mute on, False to turn off</p>
 
             <details class="quote">
               <summary>Source code in <code>src\pyvesync\base_devices\vesyncbasedevice.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-444">444</a></span>
-<span class="normal"><a href="#__codelineno-0-445">445</a></span>
-<span class="normal"><a href="#__codelineno-0-446">446</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-444" name="__codelineno-0-444"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">turn_off</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-445" name="__codelineno-0-445"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Turn device off.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-446" name="__codelineno-0-446"></a>    <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">toggle_switch</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-446">446</a></span>
+<span class="normal"><a href="#__codelineno-0-447">447</a></span>
+<span class="normal"><a href="#__codelineno-0-448">448</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-446" name="__codelineno-0-446"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">turn_off</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<a id="__codelineno-0-447" name="__codelineno-0-447"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Turn device off.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-448" name="__codelineno-0-448"></a>    <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">toggle_switch</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -12609,11 +12589,11 @@ True to turn mute on, False to turn off</p>
 
             <details class="quote">
               <summary>Source code in <code>src\pyvesync\base_devices\vesyncbasedevice.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-440">440</a></span>
-<span class="normal"><a href="#__codelineno-0-441">441</a></span>
-<span class="normal"><a href="#__codelineno-0-442">442</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-440" name="__codelineno-0-440"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">turn_on</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-441" name="__codelineno-0-441"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Turn device on.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-442" name="__codelineno-0-442"></a>    <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">toggle_switch</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-442">442</a></span>
+<span class="normal"><a href="#__codelineno-0-443">443</a></span>
+<span class="normal"><a href="#__codelineno-0-444">444</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-442" name="__codelineno-0-442"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">turn_on</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<a id="__codelineno-0-443" name="__codelineno-0-443"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Turn device on.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-444" name="__codelineno-0-444"></a>    <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">toggle_switch</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
