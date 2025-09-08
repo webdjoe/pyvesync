@@ -18,6 +18,7 @@ Some of the changes are:
 - Device state has been separated from the device object and is now managed by the device specific subclasses of [`DeviceState`][pyvesync.base_devices.vesyncbasedevice.DeviceState]. The state object is located in the `state` attribute of the device object.
 - [`const`][pyvesync.const] module to hold all library constants.
 - [`device_map`][pyvesync.device_map] module holds all device type mappings and configuration.
+- Allow for the changing of regions and API base URL.
 
 If you submit a PR please ensure that it follows all conventions outlined in [CONTRIBUTING](./development/contributing.md).
 
@@ -31,7 +32,7 @@ import aiohttp
 from pyvesync.vesync import VeSync
 
 async def main():
-    async with VeSync("user", "password") as manager:
+    async with VeSync("user", "password", country_code="US") as manager:
         await manager.login()  # Still returns true
         if not manager.enabled:
             print("Not logged in.")

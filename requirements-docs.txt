@@ -1,4 +1,5 @@
 mkdocs
+ruff
 mkdocs-material
 mkdocstrings
 mkdocstrings-python
