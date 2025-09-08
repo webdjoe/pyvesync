@@ -10,3 +10,5 @@ Devices are organized into modules by product type. Each page shows the methods 
 6. [Switches](switches.md)
 7. [Thermostats](thermostats.md)
 8. [Air Fryers](kitchen.md)
+
+For a list of supported devices and their corresponding device classes, see the [Supported Devices](../supported_devices.md) page.

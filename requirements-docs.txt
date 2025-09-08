@@ -11,3 +11,4 @@ pymdown-extensions
 mike
 mkdocs-git-revision-date-localized-plugin
 docstring-inheritance
+mkdocs-autorefs

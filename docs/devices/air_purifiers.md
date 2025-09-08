@@ -5,6 +5,7 @@
 - [PurifierState Class][pyvesync.base_devices.purifier_base.PurifierState]
 - [VeSyncAirBypass Purifiers][pyvesync.devices.vesyncpurifier.VeSyncAirBypass] - Most common model
 - [VeSyncAirBaseV2 Purifiers][pyvesync.devices.vesyncpurifier.VeSyncAirBaseV2] - Newer models
+- [VeSyncAirSprout Purifiers][pyvesync.devices.vesyncpurifier.VeSyncAirSprout] - Sprout models
 - [VeSyncAir131 Purifiers][pyvesync.devices.vesyncpurifier.VeSyncAir131] - PUR-LV131S Purifiers
 - [VeSyncPurifier Base Device][pyvesync.base_devices.purifier_base.VeSyncPurifier] - Abstract base class
 
@@ -52,6 +53,24 @@
             functions: false
         group_by_category: true
         toc_label: "VeSyncAirBaseV2 Purifiers"
+        show_root_heading: true
+        show_root_toc_entry: true
+        show_category_heading: true
+        show_source: true
+        show_if_no_docstring: true
+        inherited_members: true
+        docstring_options:
+            ignore_init_summary: true
+        merge_init_into_class: false
+
+::: pyvesync.devices.vesyncpurifier.VeSyncAirSprout
+    options:
+        filters:
+            - "!^_.*"
+        summary:
+            functions: false
+        group_by_category: true
+        toc_label: "VeSyncAirSprout Purifiers"
         show_root_heading: true
         show_root_toc_entry: true
         show_category_heading: true

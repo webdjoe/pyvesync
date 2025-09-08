@@ -415,8 +415,11 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
 class VeSyncAirBaseV2(VeSyncAirBypass):
     """Levoit V2 Air Purifier Class.
 
-    Inherits from VeSyncAirBypass and VeSyncBaseDevice class. For
-    newer devices that use camel-case API calls.
+    Handles the Vital 100S/200S and Sprout Air Purifiers. The
+    Sprout purifier has a separate class
+    [VeSyncAirSprout][pyvesync.devices.vesyncpurifier.VeSyncAirSprout]
+    that overrides the `_set_state` method. Inherits from VeSyncAirBypass
+    and VeSyncBaseDevice class. For newer devices that use camel-case API calls.
 
     Args:
         details (dict): Dictionary of device details
@@ -756,7 +759,9 @@ class VeSyncAirSprout(VeSyncAirBaseV2):
     """Class for the Sprout Air Purifier.
 
     Inherits from VeSyncAirBaseV2 class and overrides
-    the _set_state method.
+    the _set_state method. See the
+    [VeSyncAirBaseV2][pyvesync.devices.vesyncpurifier.VeSyncAirBaseV2]
+    class for more information.
 
     Args:
         details (dict): Dictionary of device details
