@@ -12,6 +12,7 @@ from typing import TypeVar, Any
 from collections import defaultdict
 from requests.structures import CaseInsensitiveDict
 import pyvesync.const as const
+from pyvesync.utils.helpers import Converters
 from pyvesync.device_map import DeviceMapTemplate
 from pyvesync.utils.colors import Color, RGB
 
@@ -184,6 +185,7 @@ class TestDefaults:
     color: Color = Color(RGB(50, 100, 225))
     brightness = 100
     color_temp = 100
+    color_temp_k = Converters.color_temp_pct_to_kelvin(100)
     bool_toggle = True
     str_toggle = 'on'
     bin_toggle = 1

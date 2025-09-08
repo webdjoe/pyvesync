@@ -87,16 +87,20 @@ class TestAirPurifiers(TestBase):
         }
     """
 
-    device = 'air_purifiers'
+    device = "air_purifiers"
     air_purifiers = call_json_purifiers.PURIFIER_MODELS
-    base_methods = [['turn_on'], ['turn_off'], ['set_sleep_mode'], ['set_manual_mode'],
-                    ['set_fan_speed', {'speed': 3}]]
+    base_methods = [
+        ["turn_on"],
+        ["turn_off"],
+        ["set_sleep_mode"],
+        ["set_manual_mode"],
+        ["set_fan_speed", {"speed": 3}],
+    ]
     # TODO: Add timer tests
     device_methods = {
-        'Core300S': [['set_auto_mode'], ['turn_on_display'], ['turn_off_display']],
-        'Core400S': [['set_auto_mode'], ['turn_on_display'], ['turn_off_display']],
-        'Core600S': [['set_auto_mode'], ['turn_on_display'], ['turn_off_display']],
-
+        "Core300S": [["set_auto_mode"], ["turn_on_display"], ["turn_off_display"]],
+        "Core400S": [["set_auto_mode"], ["turn_on_display"], ["turn_off_display"]],
+        "Core600S": [["set_auto_mode"], ["turn_on_display"], ["turn_off_display"]],
     }
 
     def test_details(self, setup_entry, method):
@@ -136,7 +140,9 @@ class TestAirPurifiers(TestBase):
         all_kwargs = parse_args(self.mock_api)
 
         # Assert request matches recored request or write new records
-        assert_test(method_call, all_kwargs, setup_entry, self.write_api, self.overwrite)
+        assert assert_test(
+            method_call, all_kwargs, setup_entry, self.write_api, self.overwrite
+        )
 
     def test_methods(self, setup_entry, method):
         """Test device methods API request and response.
@@ -167,7 +173,7 @@ class TestAirPurifiers(TestBase):
 
         """
         # TODO: FIX `clear_timer` recorded API request in yaml
-        if method[0] == 'clear_timer':
+        if method[0] == "clear_timer":
             pytest.skip("Incorrect clear_timer API request")
         # Get method name and kwargs from method fixture
         method_name = method[0]
@@ -195,11 +201,11 @@ class TestAirPurifiers(TestBase):
         method_call = getattr(fan_obj, method[0])
 
         # Ensure method runs based on device configuration
-        if method[0] == 'turn_on':
+        if method[0] == "turn_on":
             fan_obj.state.device_status = const.DeviceStatus.OFF
-        elif method[0] == 'turn_off':
+        elif method[0] == "turn_off":
             fan_obj.state.device_status = const.DeviceStatus.ON
-        elif method[0] == 'change_fan_speed':
+        elif method[0] == "change_fan_speed":
             fan_obj.state.mode = const.PurifierModes.MANUAL
         # elif method[0] == 'clear_timer':
         #     fan_obj.timer = call_json_fans.FAN_TIMER
@@ -214,5 +220,6 @@ class TestAirPurifiers(TestBase):
         all_kwargs = parse_args(self.mock_api)
 
         # Assert request matches recored request or write new records
-        assert_test(method_call, all_kwargs, setup_entry,
-                    self.write_api, self.overwrite)
+        assert assert_test(
+            method_call, all_kwargs, setup_entry, self.write_api, self.overwrite
+        )

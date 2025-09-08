@@ -144,7 +144,13 @@ class TestSwitches(TestBase):
         all_kwargs = parse_args(self.mock_api)
 
         # Assert request matches recored request or write new records
-        assert_test(switch_obj.get_details, all_kwargs, setup_entry, self.write_api, self.overwrite)
+        assert assert_test(
+            switch_obj.get_details,
+            all_kwargs,
+            setup_entry,
+            self.write_api,
+            self.overwrite,
+        )
 
         # Assert device details match expected values
         if switch_obj.supports_dimmable:
@@ -227,8 +233,9 @@ class TestSwitches(TestBase):
         all_kwargs = parse_args(self.mock_api)
 
         # Assert request matches recored request or write new records
-        assert_test(method_call, all_kwargs, setup_entry,
-                    self.write_api, self.overwrite)
+        assert assert_test(
+            method_call, all_kwargs, setup_entry, self.write_api, self.overwrite
+        )
 
         self.mock_api.reset_mock()
         resp_dict = call_json.DETAILS_BADCODE

@@ -43,15 +43,14 @@ DEFAULT_COLOR = TestDefaults.color
 DEFAULT_COLOR_RGB = dict(asdict(DEFAULT_COLOR.rgb))
 DEFAULT_COLOR_HSV = dict(asdict(DEFAULT_COLOR.hsv))
 RGB_SET = {
-    'red': 50,
-    'green': 200,
-    'blue': 255,
-
+    "red": 50,
+    "green": 200,
+    "blue": 255,
 }
 HSV_SET = {
-    'hue': 200,
-    'saturation': 50,
-    'value': 100,
+    "hue": 200,
+    "saturation": 50,
+    "value": 100,
 }
 
 
@@ -103,16 +102,23 @@ class TestHumidifiers(TestBase):
 
     """
 
-    device = 'humidifiers'
+    device = "humidifiers"
     humidifiers = call_json_humidifiers.HUMIDIFIERS
-    base_methods = [['turn_on'], ['turn_off'], ['turn_on_display'], ['turn_off_display'],
-                    ['turn_on_automatic_stop'], ['turn_off_automatic_stop'],
-                    ['set_humidity', {'humidity': 50}], ['set_auto_mode'],
-                    ['set_manual_mode'], ['set_mist_level', {'level': 2}]
-                    ]
+    base_methods = [
+        ["turn_on"],
+        ["turn_off"],
+        ["turn_on_display"],
+        ["turn_off_display"],
+        ["turn_on_automatic_stop"],
+        ["turn_off_automatic_stop"],
+        ["set_humidity", {"humidity": 50}],
+        ["set_auto_mode"],
+        ["set_manual_mode"],
+        ["set_mist_level", {"level": 2}],
+    ]
     device_methods = {
-        'LUH-A602S-WUSR': [['set_warm_level', {'warm_level': 3}]],
-        'LEH-S601S-WUS': [['set_drying_mode_enabled', {'mode': False}]]
+        "LUH-A602S-WUSR": [["set_warm_level", {"warm_level": 3}]],
+        "LEH-S601S-WUS": [["set_drying_mode_enabled", {"mode": False}]],
     }
 
     def test_details(self, setup_entry, method):
@@ -152,8 +158,9 @@ class TestHumidifiers(TestBase):
         all_kwargs = parse_args(self.mock_api)
 
         # Assert request matches recorded request or write new records
-        assert_test(method_call, all_kwargs, setup_entry,
-                    self.write_api, self.overwrite)
+        assert assert_test(
+            method_call, all_kwargs, setup_entry, self.write_api, self.overwrite
+        )
 
     def test_methods(self, setup_entry, method):
         """Test device methods API request and response.
@@ -208,9 +215,9 @@ class TestHumidifiers(TestBase):
         method_call = getattr(fan_obj, method[0])
 
         # Ensure method runs based on device configuration
-        if method[0] == 'turn_on':
+        if method[0] == "turn_on":
             fan_obj.state.device_status = const.DeviceStatus.OFF
-        elif method[0] == 'turn_off':
+        elif method[0] == "turn_off":
             fan_obj.state.device_status = const.DeviceStatus.ON
 
         # Call method with kwargs if defined
@@ -223,5 +230,6 @@ class TestHumidifiers(TestBase):
         all_kwargs = parse_args(self.mock_api)
 
         # Assert request matches recored request or write new records
-        assert_test(method_call, all_kwargs, setup_entry,
-                    self.write_api, self.overwrite)
+        assert assert_test(
+            method_call, all_kwargs, setup_entry, self.write_api, self.overwrite
+        )

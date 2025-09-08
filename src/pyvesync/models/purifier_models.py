@@ -34,7 +34,7 @@ class InnerPurifierBaseResult(BypassV2InnerResult):
 
 
 @dataclass
-class PurifierV2DetailsResult(InnerPurifierBaseResult):
+class PurifierVitalDetailsResult(InnerPurifierBaseResult):
     """Vital 100S/200S and Everest Purifier Result Model."""
 
     powerSwitch: int
@@ -53,7 +53,7 @@ class PurifierV2DetailsResult(InnerPurifierBaseResult):
     timerRemain: int
     efficientModeTimeRemain: int
     errorCode: int
-    autoPreference: VitalAutoPreferences | None = None
+    autoPreference: V2AutoPreferences | None = None
     fanRotateAngle: int | None = None
     filterOpenState: int | None = None
     PM1: int | None = None
@@ -62,11 +62,46 @@ class PurifierV2DetailsResult(InnerPurifierBaseResult):
 
 
 @dataclass
-class VitalAutoPreferences:
+class V2AutoPreferences:
     """Vital 100S/200S Auto Preferences."""
 
     autoPreferenceType: str
     roomSize: int
+
+
+@dataclass
+class PurifierSproutResult(InnerPurifierBaseResult):
+    """Sprout Purifier Result Model."""
+
+    powerSwitch: int
+    workMode: str
+    manualSpeedLevel: int | None
+    fanSpeedLevel: int | None
+    PM1: int | None
+    PM25: int | None
+    PM10: int | None
+    screenState: int
+    childLockSwitch: int
+    screenSwitch: int
+    scheduleCount: int
+    timerRemain: int
+    humidity: int | None
+    AQI: int | None
+    AQLevel: int | None
+    temperature: int | None
+    VOC: int | None
+    CO2: int | None
+    errorCode: int
+    nightlight: PurifierNightlight | None = None
+    autoPreference: V2AutoPreferences | None = None
+
+
+@dataclass
+class PurifierNightlight(ResponseBaseModel):
+    """Purifier Nightlight Response Dict."""
+    nightLightSwitch: bool
+    brightness: int
+    colorTemperature: int
 
 
 @dataclass

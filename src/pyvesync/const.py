@@ -60,6 +60,9 @@ STATUS_OK = 200
 
 # Generic Constants
 
+KELVIN_MIN = 2700
+KELVIN_MAX = 6500
+
 
 class ProductLines(StrEnum):
     """High level product line."""

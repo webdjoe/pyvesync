@@ -253,6 +253,7 @@ def assert_test(test_func, all_kwargs, dev_type=None,
         if write_api is True:
             logger.debug("Writing API data for %s %s %s", mod, cls_name, method_name)
             writer.write_api(method_name, all_kwargs, overwrite)
+            return True
         else:
             logger.debug("Not writing API data for %s %s %s", mod, cls_name, method_name)
     if writer._existing_api is None:

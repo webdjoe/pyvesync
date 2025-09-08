@@ -350,3 +350,88 @@ class FirmwareResultModel(ResponseBaseModel):
     """Model for the firmware response result."""
 
     cidFwInfoList: list[FirmwareDeviceItemModel]
+
+
+@dataclass
+class RequestDeviceConfiguration(RequestBaseModel):
+    """Model for the device configuration request."""
+
+    accountID: str
+    token: str
+    acceptLanguage: str = DefaultValues.acceptLanguage
+    appVersion: str = f"VeSync {DefaultValues.appVersion}"
+    debugMode: bool = False
+    method: str = "getAppConfigurationV2"
+    phoneBrand: str = DefaultValues.phoneBrand
+    phoneOS: str = DefaultValues.phoneOS
+    timeZone: str = DefaultValues.timeZone
+    traceId: str = field(default_factory=DefaultValues.traceId)
+    userCountryCode: str = DefaultValues.userCountryCode
+    categories: list[dict[str, str | bool]] = field(
+        default_factory=lambda: [
+            {
+                "category": "SupportedModelsV3",
+                "language": "en",
+                "testMode": False,
+                "version": "",
+            }
+        ]
+    )
+    recall: bool = False
+
+
+@dataclass
+class ResponseDeviceConfiguration(ResponseCodeModel):
+    """Model for the device configuration response.
+
+    Inherits from `BaseResultModel`. The `BaseResultModel` class provides the
+    defaults "code" and "msg" fields for the response.
+
+    Attributes:
+        result: dict
+            The inner model for the 'result' field in the device configuration response.
+    """
+
+    result: dict[str, Any]
+
+
+@dataclass
+class ResultDeviceConfiguration(ResponseBaseModel):
+    """Model for the device configuration result field.
+
+    This class is referenced by the `ResponseDeviceConfiguration` class.
+    """
+
+    configList: list[DeviceConfigurationConfigListItem]
+
+
+@dataclass
+class DeviceConfigurationConfigListItem(ResponseBaseModel):
+    """Model for each item in the configList field of the device configuration result.
+
+    This class is referenced by the `ResultDeviceConfiguration` class.
+    """
+
+    category: str
+    items: list[dict[str, Any]]
+
+
+@dataclass
+class DeviceConfigItem(ResponseBaseModel):
+    """Model for each item in the configList field of the device configuration result.
+
+    This class is referenced by the `DeviceConfigurationConfigListItem` class.
+    """
+
+    itemKey: str
+    itemValue: list[dict[str, Any]]
+
+
+@dataclass
+class DeviceConfigItemValue(ResponseBaseModel):
+    """Model for each item in the configList field of the device configuration result.
+
+    This class is referenced by the `DeviceConfigItem` class.
+    """
+
+    productLineList: list

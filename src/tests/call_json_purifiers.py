@@ -60,6 +60,7 @@ class PurifierDefaults:
     fan_set_level = 2
     filter_life = 80
     humidity = 50
+    night_light = DeviceStatus.ON
     display = DeviceStatus.ON
     display_config = DeviceStatus.ON
     display_forever = True
@@ -73,6 +74,9 @@ class PurifierDefaults:
     pm1 = 10
     pm10 = 5
     rotate_angle = 45
+    voc = 120
+    co2 = 669
+    temperature = 791
 
 
 PURIFIER_DETAILS: dict[str, dict[str, Any]] = {
@@ -219,168 +223,90 @@ PURIFIER_DETAILS: dict[str, dict[str, Any]] = {
         "errorCode": 0,
     },
     "EL551S": {  # Everest Air
-                "fanRotateAngle": PurifierDefaults.rotate_angle,
-                "filterOpenState": PurifierDefaults.filter_open,
-                "powerSwitch": int(DeviceStatus.ON),
-                "filterLifePercent": PurifierDefaults.filter_life,
-                "workMode": PurifierDefaults.purifier_mode,
-                "manualSpeedLevel": PurifierDefaults.fan_set_level,
-                "fanSpeedLevel": PurifierDefaults.fan_level,
-                "AQLevel": PurifierDefaults.air_quality_enum.value,
-                "AQPercent": PurifierDefaults.aq_percent,
+        "fanRotateAngle": PurifierDefaults.rotate_angle,
+        "filterOpenState": PurifierDefaults.filter_open,
+        "powerSwitch": int(DeviceStatus.ON),
+        "filterLifePercent": PurifierDefaults.filter_life,
+        "workMode": PurifierDefaults.purifier_mode,
+        "manualSpeedLevel": PurifierDefaults.fan_set_level,
+        "fanSpeedLevel": PurifierDefaults.fan_level,
+        "AQLevel": PurifierDefaults.air_quality_enum.value,
+        "AQPercent": PurifierDefaults.aq_percent,
+        "PM25": PurifierDefaults.air_quality_value_pm25,
+        "PM1": PurifierDefaults.pm1,
+        "PM10": PurifierDefaults.pm10,
+        "screenState": int(PurifierDefaults.display),
+        "childLockSwitch": int(PurifierDefaults.child_lock),
+        "screenSwitch": int(PurifierDefaults.display_config),
+        "lightDetectionSwitch": int(PurifierDefaults.light_detection),
+        "environmentLightState": int(PurifierDefaults.light_detected),
+        "autoPreference": {"autoPreferenceType": "default", "roomSize": 0},
+        "routine": {"routineType": "normal", "runSeconds": 0},
+        "scheduleCount": 0,
+        "timerRemain": 0,
+        "efficientModeTimeRemain": 0,
+        "ecoModeRunTime": 0,
+        "errorCode": 0,
+    },
+    "LAP-B851S-WUS": {
+        "traceId": TestDefaults.trace_id,
+        "code": 0,
+        "msg": "request success",
+        "module": None,
+        "stacktrace": None,
+        "result": {
+            "traceId": TestDefaults.trace_id,
+            "code": 0,
+            "result": {
+                "powerSwitch": TestDefaults.bin_toggle,
+                "workMode": "auto",
+                "manualSpeedLevel": PurifierDefaults.fan_level,
+                "fanSpeedLevel": PurifierDefaults.fan_set_level,
                 "PM25": PurifierDefaults.air_quality_value_pm25,
                 "PM1": PurifierDefaults.pm1,
                 "PM10": PurifierDefaults.pm10,
                 "screenState": int(PurifierDefaults.display),
                 "childLockSwitch": int(PurifierDefaults.child_lock),
                 "screenSwitch": int(PurifierDefaults.display_config),
-                "lightDetectionSwitch": int(PurifierDefaults.light_detection),
-                "environmentLightState": int(PurifierDefaults.light_detected),
-                "autoPreference": {"autoPreferenceType": "default", "roomSize": 0},
-                "routine": {"routineType": "normal", "runSeconds": 0},
+                "lampType": 0,
+                "roomSize": 242,
+                "lampSwitch": int(PurifierDefaults.display),
+                "autoPreference": {"autoPreferenceType": "default", "roomSize": 630},
                 "scheduleCount": 0,
                 "timerRemain": 0,
-                "efficientModeTimeRemain": 0,
-                "ecoModeRunTime": 0,
+                "efficientModeTimeRemain": 1182,
+                "humidity": PurifierDefaults.humidity,
+                "AQI": PurifierDefaults.aq_percent,
+                "AQLevel": PurifierDefaults.air_quality_level,
+                "VOC": PurifierDefaults.voc,
+                "CO2": PurifierDefaults.co2,
+                "temperature": PurifierDefaults.temperature,
+                "nightLight": {
+                    "nightLightSwitch": int(PurifierDefaults.night_light),
+                    "brightness": TestDefaults.brightness,
+                    "colorTemperature": TestDefaults.color_temp_k,
+                },
+                "breathingLamp": {
+                    "breathingLampSwitch": TestDefaults.bin_toggle,
+                    "colorTemperature": TestDefaults.color_temp_k,
+                    "timeInterval": 5,
+                    "brightnessStart": 10,
+                    "brightnessEnd": 90,
+                },
                 "errorCode": 0,
-            }
-
-    }
-
-
-# class FanDetails:
-#     details_air = ({
-#         "code": 0,
-#         "msg": None,
-#         "deviceStatus": "on",
-#         "connectionStatus": "online",
-#         "activeTime": Defaults.active_time,
-#         "deviceImg": None,
-#         "deviceName": "LV-PUR131S-NAME",
-#         "filterLife": {
-#             "change": False,
-#             "useHour": None,
-#             "percent": PurifierDefaults.filter_life,
-#         },
-#         "airQuality": "excellent",
-#         "screenStatus": "on",
-#         "mode": "manual",
-#         "level": PurifierDefaults.fan_level,
-#         "schedule": None,
-#         "timer": None,
-#         "scheduleCount": 0,
-#     }, 200)
-
-#     details_core = ({
-
-#         "traceId": Defaults.trace_id,
-#         "code": 0,
-#         "msg": "request success",
-#         "result": {
-#             "traceId": Defaults.trace_id,
-#             "code": 0,
-#             "result": {
-#                 "enabled": True,
-#                 "filter_life": PurifierDefaults.filter_life,
-#                 "mode": "manual",
-#                 "level": PurifierDefaults.fan_level,
-#                 "air_quality": PurifierDefaults.air_quality_level,
-#                 "air_quality_value": PurifierDefaults.air_quality_value,
-#                 "display": True,
-#                 "child_lock": True,
-#                 "configuration": {
-#                     "display": True,
-#                     "display_forever": True,
-#                     "auto_preference": {"type": "default", "room_size": 0},
-#                 },
-#                 "extension": {"schedule_count": 0, "timer_remain": 0},
-#                 "device_error_code": 0,
-#             },
-#         },
-#     }, 200)
-
-#     details_vital100s = ({
-#         "traceId": Defaults.trace_id,
-#         "code": 0,
-#         "msg": "request success",
-#         "module": None,
-#         "stacktrace": None,
-#         "result": {
-#             "traceId": Defaults.trace_id,
-#             "code": 0,
-#             "result": {
-#                 "powerSwitch": Defaults.bin_toggle,
-#                 "filterLifePercent": PurifierDefaults.filter_life,
-#                 "workMode": "manual",
-#                 "manualSpeedLevel": PurifierDefaults.fan_level,
-#                 "fanSpeedLevel": PurifierDefaults.fan_level,
-#                 "AQLevel": PurifierDefaults.air_quality_level,
-#                 "PM25": PurifierDefaults.air_quality_value_pm25,
-#                 "screenState": Defaults.bin_toggle,
-#                 "childLockSwitch": Defaults.bin_toggle,
-#                 "screenSwitch": Defaults.bin_toggle,
-#                 "lightDetectionSwitch": Defaults.bin_toggle,
-#                 "environmentLightState": Defaults.bin_toggle,
-#                 "autoPreference": {"autoPreferenceType": "default", "roomSize": 0},
-#                 "scheduleCount": 0,
-#                 "timerRemain": 0,
-#                 "efficientModeTimeRemain": 0,
-#                 "sleepPreference": {
-#                     "sleepPreferenceType": "default",
-#                     "cleaningBeforeBedSwitch": 1,
-#                     "cleaningBeforeBedSpeedLevel": 3,
-#                     "cleaningBeforeBedMinutes": 5,
-#                     "whiteNoiseSleepAidSwitch": 1,
-#                     "whiteNoiseSleepAidSpeedLevel": 1,
-#                     "whiteNoiseSleepAidMinutes": 45,
-#                     "duringSleepSpeedLevel": 5,
-#                     "duringSleepMinutes": 480,
-#                     "afterWakeUpPowerSwitch": 1,
-#                     "afterWakeUpWorkMode": "auto",
-#                     "afterWakeUpFanSpeedLevel": 1,
-#                 },
-#                 "errorCode": 0,
-#             },
-#         },
-#     }, 200)
-
-#     details_everest = ({
-#         "traceId": "1691789977402",
-#         "code": 0,
-#         "msg": "request success",
-#         "module": None,
-#         "stacktrace": None,
-#         "result": {
-#             "traceId": Defaults.trace_id,
-#             "code": 0,
-#             "result": {
-#                 "fanRotateAngle": PurifierDefaults.rotate_angle,
-#                 "filterOpenState": PurifierDefaults.filter_open,
-#                 "powerSwitch": Defaults.bin_toggle,
-#                 "filterLifePercent": PurifierDefaults.filter_life,
-#                 "workMode": "auto",
-#                 "manualSpeedLevel": PurifierDefaults.fan_level,
-#                 "fanSpeedLevel": PurifierDefaults.fan_level,
-#                 "AQLevel": PurifierDefaults.air_quality_level,
-#                 "AQPercent": PurifierDefaults.aq_percent,
-#                 "PM25": PurifierDefaults.air_quality_value,
-#                 "PM1": PurifierDefaults.pm1,
-#                 "PM10": PurifierDefaults.pm10,
-#                 "screenState": Defaults.bin_toggle,
-#                 "childLockSwitch": Defaults.bin_toggle,
-#                 "screenSwitch": Defaults.bin_toggle,
-#                 "lightDetectionSwitch": Defaults.bin_toggle,
-#                 "environmentLightState": Defaults.bin_toggle,
-#                 "autoPreference": {"autoPreferenceType": "default", "roomSize": 0},
-#                 "routine": {"routineType": "normal", "runSeconds": 0},
-#                 "scheduleCount": 0,
-#                 "timerRemain": 0,
-#                 "efficientModeTimeRemain": 0,
-#                 "ecoModeRunTime": 0,
-#                 "errorCode": 0,
-#             },
-#         },
-#     }, 200)
+                "dumpedState": 0,
+                "whiteNoiseInfo": {
+                    "playStatus": 0,
+                    "soundId": 100006,
+                    "countDown": 1800,
+                    "countingDown": 1800,
+                    "downloadStatus": 2,
+                },
+                "guardingInfo": {"guarding": 0, "remainTS": 100},
+            },
+        },
+    },
+}
 
 
 DETAILS_RESPONSES = {
@@ -392,6 +318,7 @@ DETAILS_RESPONSES = {
     "LAP-V102S": build_bypass_v2_response(inner_result=PURIFIER_DETAILS["LAP-V102S"]),
     "LAP-V201S": build_bypass_v2_response(inner_result=PURIFIER_DETAILS["LAP-V201S"]),
     "EL551S": build_bypass_v2_response(inner_result=PURIFIER_DETAILS["EL551S"]),
+    "LAP-B851S-WUS": build_bypass_v2_response(inner_result=PURIFIER_DETAILS["LAP-B851S-WUS"]),
 }
 
 FunctionResponses.default_factory = lambda: (
@@ -413,6 +340,7 @@ METHOD_RESPONSES = {
     "LAP-V102S": deepcopy(FunctionResponsesV2),
     "LAP-V201S": deepcopy(FunctionResponsesV2),
     "EL551S": deepcopy(FunctionResponsesV2),
+    "LAP-B851S-WUS": deepcopy(FunctionResponsesV2),
 }
 
 # Add responses for methods with different responses than the default

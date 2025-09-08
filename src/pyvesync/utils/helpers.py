@@ -23,6 +23,8 @@ from pyvesync.const import (
     PHONE_BRAND,
     PHONE_OS,
     USER_TYPE,
+    KELVIN_MIN,
+    KELVIN_MAX,
     ConnectionStatus,
 )
 from pyvesync.utils.errors import ErrorCodes, ErrorTypes, ResponseInfo
@@ -90,12 +92,12 @@ class Converters:
     @staticmethod
     def color_temp_kelvin_to_pct(kelvin: int) -> int:
         """Convert Kelvin to percentage."""
-        return int((kelvin - 2700) / 153)
+        return int((kelvin - KELVIN_MIN) / (KELVIN_MAX - KELVIN_MIN) * 100)
 
     @staticmethod
     def color_temp_pct_to_kelvin(pct: int) -> int:
         """Convert percentage to Kelvin."""
-        return int(pct * 153 + 2700)
+        return int(KELVIN_MIN + ((pct/100) * (KELVIN_MAX - KELVIN_MIN)))
 
     @staticmethod
     def temperature_kelvin_to_celsius(kelvin: int) -> float:

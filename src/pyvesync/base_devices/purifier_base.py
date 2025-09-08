@@ -54,17 +54,24 @@ class PurifierState(DeviceState):
         light_detection_status (str): Light detection status of the purifier.
         nightlight_status (str): Nightlight status of the purifier.
         fan_rotate_angle (int): Fan rotate angle of the purifier.
+        temperature (int): Temperature value of the purifier.
+        humidity (int): Humidity value of the purifier.
+        voc (int): VOC value of the purifier.
+        co2 (int): CO2 value of the purifier.
+        nightlight_brightness (int): Nightlight brightness level of the purifier.
 
     Note:
         Not all attributes are supported by all models.
     """
 
     __slots__ = (
+
         "_air_quality_level",
         "aq_percent",
         "auto_preference_type",
         "auto_room_size",
         "child_lock",
+        "co2",
         "display_forever",
         "display_set_status",
         "display_status",
@@ -73,13 +80,17 @@ class PurifierState(DeviceState):
         "fan_set_level",
         "filter_life",
         "filter_open_state",
+        "humidity",
         "light_detection_status",
         "light_detection_switch",
         "mode",
+        "nightlight_brightness",
         "nightlight_status",
         "pm1",
         "pm10",
         "pm25",
+        "temperature",
+        "voc",
     )
 
     def __init__(
@@ -102,13 +113,18 @@ class PurifierState(DeviceState):
         self.display_status: str | None = None
         self.display_set_status: str | None = None
         self.display_forever: bool = False
+        self.humidity: int | None = None
+        self.temperature: int | None = None
         # Attributes not supported by all purifiers
         self.pm25: int | None = None
         self.pm1: int | None = None
         self.pm10: int | None = None
         self.aq_percent: int | None = None
+        self.voc: int | None = None
+        self.co2: int | None = None
         self.light_detection_switch: str | None = None
         self.light_detection_status: str | None = None
+        self.nightlight_brightness: int | None = None
         self.nightlight_status: str | None = None
         self.fan_rotate_angle: int | None = None
 

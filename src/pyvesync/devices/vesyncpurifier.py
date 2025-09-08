@@ -24,7 +24,9 @@ from pyvesync.models.bypass_models import (
 )
 from pyvesync.models.purifier_models import (
     PurifierCoreDetailsResult,
-    PurifierV2DetailsResult,
+    PurifierVitalDetailsResult,
+    PurifierSproutResult,
+    InnerPurifierBaseResult,
     PurifierV2EventTiming,
     PurifierV2TimerActionItems,
     PurifierV2TimerPayloadData,
@@ -457,8 +459,11 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         """Initialize the VeSync Base API V2 Air Purifier Class."""
         super().__init__(details, manager, feature_map)
 
-    def _set_state(self, details: PurifierV2DetailsResult) -> None:
+    def _set_state(self, details: InnerPurifierBaseResult) -> None:
         """Set Purifier state from details response."""
+        if not isinstance(details, PurifierVitalDetailsResult):
+            _LOGGER.debug("Invalid details model passed to _set_state")
+            return
         self.state.connection_status = ConnectionStatus.ONLINE
         self.state.device_status = DeviceStatus.from_int(details.powerSwitch)
         self.state.mode = details.workMode
@@ -515,7 +520,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         """Build API V2 Purifier details dictionary."""
         r_dict = await self.call_bypassv2_api('getPurifierStatus')
         r_model = process_bypassv2_result(
-            self, _LOGGER, "get_details", r_dict, PurifierV2DetailsResult
+            self, _LOGGER, "get_details", r_dict, PurifierVitalDetailsResult
         )
         if r_model is None:
             return
@@ -745,6 +750,90 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         self.state.connection_status = ConnectionStatus.ONLINE
         self.state.device_status = DeviceStatus.ON
         return True
+
+
+class VeSyncAirSprout(VeSyncAirBaseV2):
+    """Class for the Sprout Air Purifier.
+
+    Inherits from VeSyncAirBaseV2 class and overrides
+    the _set_state method.
+
+    Args:
+        details (dict): Dictionary of device details
+        manager (VeSync): Instantiated VeSync object
+        feature_map (PurifierMap): Device map template
+
+    Attributes:
+        state (PurifierState): State of the device.
+        last_response (ResponseInfo): Last response from API call.
+        manager (VeSync): Manager object for API calls.
+        device_name (str): Name of device.
+        device_image (str): URL for device image.
+        cid (str): Device ID.
+        connection_type (str): Connection type of device.
+        device_type (str): Type of device.
+        type (str): Type of device.
+        uuid (str): UUID of device, not always present.
+        config_module (str): Configuration module of device.
+        mac_id (str): MAC ID of device.
+        current_firm_version (str): Current firmware version of device.
+        device_region (str): Region of device. (US, EU, etc.)
+        pid (str): Product ID of device, pulled by some devices on update.
+        sub_device_no (int): Sub-device number of device.
+        product_type (str): Product type of device.
+        features (dict): Features of device.
+        modes (list[str]): List of modes supported by the device.
+        fan_levels (list[int]): List of fan levels supported by the device.
+        nightlight_modes (list[str]): List of nightlight modes supported by the device.
+        auto_preferences (list[str]): List of auto preferences supported by the device.
+    """
+
+    def __init__(
+        self,
+        details: ResponseDeviceDetailsModel,
+        manager: VeSync,
+        feature_map: PurifierMap,
+    ) -> None:
+        """Initialize air purifier class."""
+        super().__init__(details, manager, feature_map)
+
+    def _set_state(self, details: InnerPurifierBaseResult) -> None:
+        """Set Purifier state from details response."""
+        if not isinstance(details, PurifierSproutResult):
+            _LOGGER.debug("Invalid details model passed to _set_state")
+            return
+        self.state.connection_status = ConnectionStatus.ONLINE
+        self.state.device_status = DeviceStatus.from_int(details.powerSwitch)
+        self.state.mode = details.workMode
+        if details.fanSpeedLevel == 255:  # noqa: PLR2004
+            self.state.fan_level = 0
+        else:
+            self.state.fan_level = details.fanSpeedLevel
+        self.state.fan_set_level = details.manualSpeedLevel
+        self.state.child_lock = bool(details.childLockSwitch)
+        self.state.air_quality_level = details.AQLevel
+        self.state.pm25 = details.PM25
+        self.state.pm1 = details.PM1
+        self.state.pm10 = details.PM10
+        self.state.aq_percent = details.AQI
+        self.state.display_set_status = DeviceStatus.from_int(details.screenSwitch)
+        self.state.display_status = DeviceStatus.from_int(details.screenState)
+        auto_pref = details.autoPreference
+        if auto_pref is not None:
+            self.state.auto_preference_type = auto_pref.autoPreferenceType
+            self.state.auto_room_size = auto_pref.roomSize
+        self.state.humidity = details.humidity
+        self.state.temperature = int((details.temperature or 0) / 10)
+        self.state.pm1 = details.PM1
+        self.state.pm10 = details.PM10
+        self.state.pm25 = details.PM25
+        self.state.voc = details.VOC
+        self.state.co2 = details.CO2
+        if details.nightlight is not None:
+            self.state.nightlight_status = DeviceStatus.from_int(
+                details.nightlight.nightLightSwitch
+            )
+            self.state.nightlight_brightness = details.nightlight.brightness
 
 
 class VeSyncAir131(BypassV1Mixin, VeSyncPurifier):

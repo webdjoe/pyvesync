@@ -719,7 +719,7 @@ purifier_modules: list[PurifierMap] = [
         auto_preferences=[
             PurifierAutoPreference.DEFAULT,
             PurifierAutoPreference.EFFICIENT,
-            PurifierAutoPreference.QUIET
+            PurifierAutoPreference.QUIET,
         ],
         fan_levels=list(range(1, 4)),
         nightlight_modes=[NightlightModes.ON, NightlightModes.OFF, NightlightModes.DIM],
@@ -736,12 +736,12 @@ purifier_modules: list[PurifierMap] = [
             "LAP-C302S-WUSB",
             "LAP-C301S-WAAA",
             "LAP-C302S-WGC",
-            ],
+        ],
         modes=[PurifierModes.SLEEP, PurifierModes.MANUAL, PurifierModes.AUTO],
         auto_preferences=[
             PurifierAutoPreference.DEFAULT,
             PurifierAutoPreference.EFFICIENT,
-            PurifierAutoPreference.QUIET
+            PurifierAutoPreference.QUIET,
         ],
         features=[PurifierFeatures.AIR_QUALITY],
         fan_levels=list(range(1, 5)),
@@ -760,8 +760,8 @@ purifier_modules: list[PurifierMap] = [
         auto_preferences=[
             PurifierAutoPreference.DEFAULT,
             PurifierAutoPreference.EFFICIENT,
-            PurifierAutoPreference.QUIET
-            ],
+            PurifierAutoPreference.QUIET,
+        ],
         model_display="Core 400S",
         model_name="Core 400S",
         setup_entry="Core400S",
@@ -774,7 +774,7 @@ purifier_modules: list[PurifierMap] = [
         auto_preferences=[
             PurifierAutoPreference.DEFAULT,
             PurifierAutoPreference.EFFICIENT,
-            PurifierAutoPreference.QUIET
+            PurifierAutoPreference.QUIET,
         ],
         fan_levels=list(range(1, 5)),
         device_alias="Core 600S",
@@ -816,8 +816,8 @@ purifier_modules: list[PurifierMap] = [
         auto_preferences=[
             PurifierAutoPreference.DEFAULT,
             PurifierAutoPreference.EFFICIENT,
-            PurifierAutoPreference.QUIET
-            ],
+            PurifierAutoPreference.QUIET,
+        ],
         model_display="LAP-V102S Series",
         model_name="Vital 100S",
         setup_entry="LAP-V102S",
@@ -839,17 +839,14 @@ purifier_modules: list[PurifierMap] = [
             PurifierModes.AUTO,
             PurifierModes.PET,
         ],
-        features=[
-            PurifierFeatures.AIR_QUALITY,
-            PurifierFeatures.LIGHT_DETECT
-            ],
+        features=[PurifierFeatures.AIR_QUALITY, PurifierFeatures.LIGHT_DETECT],
         fan_levels=list(range(1, 5)),
         device_alias="Vital 200S",
         auto_preferences=[
             PurifierAutoPreference.DEFAULT,
             PurifierAutoPreference.EFFICIENT,
-            PurifierAutoPreference.QUIET
-            ],
+            PurifierAutoPreference.QUIET,
+        ],
         model_display="LAP-V201S Series",
         model_name="Vital 200S",
         setup_entry="LAP-V201S",
@@ -871,18 +868,49 @@ purifier_modules: list[PurifierMap] = [
         features=[
             PurifierFeatures.AIR_QUALITY,
             PurifierFeatures.VENT_ANGLE,
-            PurifierFeatures.LIGHT_DETECT
-            ],
+            PurifierFeatures.LIGHT_DETECT,
+        ],
         fan_levels=list(range(1, 4)),
         device_alias="Everest Air",
         auto_preferences=[
             PurifierAutoPreference.DEFAULT,
             PurifierAutoPreference.EFFICIENT,
-            PurifierAutoPreference.QUIET
-            ],
+            PurifierAutoPreference.QUIET,
+        ],
         model_display="LAP-EL551S Series",
         model_name="Everest Air",
         setup_entry="EL551S",
+    ),
+    PurifierMap(
+        class_name="VeSyncAirBaseV2",
+        dev_types=[
+            "LAP-B851S-WEU",
+            "LAP-B851S-WNA",
+            "LAP-B851S-AEUR",
+            "LAP-B851S-AUS",
+            "LAP-B851S-WUS",
+            "LAP-BAY-MAX01S",
+
+        ],
+        modes=[
+            PurifierModes.SLEEP,
+            PurifierModes.MANUAL,
+            PurifierModes.AUTO,
+        ],
+        features=[
+            PurifierFeatures.AIR_QUALITY,
+            PurifierFeatures.NIGHTLIGHT,
+        ],
+        fan_levels=list(range(1, 4)),
+        device_alias="Sprout Air Purifier",
+        auto_preferences=[
+            PurifierAutoPreference.DEFAULT,
+            PurifierAutoPreference.EFFICIENT,
+            PurifierAutoPreference.QUIET,
+        ],
+        model_display="Sprout Air Series",
+        model_name="Sprout Air",
+        setup_entry="LAP-B851S-WUS",
     ),
 ]
 """List of ['PurifierMap'][pyvesync.device_map.PurifierMap] configuration

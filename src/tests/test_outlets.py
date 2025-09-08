@@ -166,8 +166,12 @@ class TestOutlets(TestBase):
         all_kwargs = parse_args(self.mock_api)
 
         # Set both write_api and overwrite to True to update YAML files
-        assert_test(
-            outlet_obj.get_details, all_kwargs, setup_entry, write_api=True, overwrite=True
+        assert assert_test(
+            outlet_obj.get_details,
+            all_kwargs,
+            setup_entry,
+            write_api=self.write_api,
+            overwrite=self.overwrite,
         )
 
         # Test bad responses
@@ -247,7 +251,9 @@ class TestOutlets(TestBase):
         all_kwargs = parse_args(self.mock_api)
 
         # Assert request matches recorded request or write new records
-        assert assert_test(method_call, all_kwargs, setup_entry, self.write_api, self.overwrite)
+        assert assert_test(
+            method_call, all_kwargs, setup_entry, self.write_api, self.overwrite
+        )
 
         # Test bad responses
         self.mock_api.reset_mock()
