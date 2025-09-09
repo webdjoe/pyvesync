@@ -1,29 +1,30 @@
 """Base classes for thermostat devices."""
 
 from __future__ import annotations
+
 import logging
 from typing import TYPE_CHECKING
 
-from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice, DeviceState
+from pyvesync.base_devices.vesyncbasedevice import DeviceState, VeSyncBaseDevice
 from pyvesync.const import (
     ThermostatConst,
-    ThermostatWorkModes,
+    ThermostatEcoTypes,
     ThermostatFanModes,
+    ThermostatFanStatus,
     ThermostatHoldOptions,
     ThermostatScheduleOrHoldOptions,
-    ThermostatEcoTypes,
+    ThermostatWorkModes,
     ThermostatWorkStatusCodes,
-    ThermostatFanStatus,
 )
 
 if TYPE_CHECKING:
     from pyvesync import VeSync
-    from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
+    from pyvesync.device_map import ThermostatMap
     from pyvesync.models.thermostat_models import (
         ThermostatMinorDetails,
         ThermostatSimpleRoutine,
     )
-    from pyvesync.device_map import ThermostatMap
+    from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
 
 
 _LOGGER = logging.getLogger(__name__)

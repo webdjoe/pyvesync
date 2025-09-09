@@ -1,18 +1,20 @@
 """Base Device and State Class for VeSync Humidifiers."""
 
 from __future__ import annotations
-from abc import abstractmethod
+
 import logging
+from abc import abstractmethod
 from typing import TYPE_CHECKING
+
 from typing_extensions import deprecated
 
-from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseToggleDevice, DeviceState
-from pyvesync.const import HumidifierFeatures, HumidifierModes, DeviceStatus
+from pyvesync.base_devices.vesyncbasedevice import DeviceState, VeSyncBaseToggleDevice
+from pyvesync.const import DeviceStatus, HumidifierFeatures, HumidifierModes
 
 if TYPE_CHECKING:
     from pyvesync import VeSync
-    from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
     from pyvesync.device_map import HumidifierMap
+    from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
 
 
 logger = logging.getLogger(__name__)

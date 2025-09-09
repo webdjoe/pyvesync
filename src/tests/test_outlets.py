@@ -160,14 +160,15 @@ class TestOutlets(TestBase):
         assert isinstance(outlet_obj, VeSyncOutlet)
 
         # Call get_details() directly
-        self.run_in_loop(outlet_obj.get_details)
+        method_call = getattr(outlet_obj, method)
+        self.run_in_loop(method_call)
 
         # Parse arguments from mock_api call into dictionary
         all_kwargs = parse_args(self.mock_api)
 
         # Set both write_api and overwrite to True to update YAML files
         assert assert_test(
-            outlet_obj.get_details,
+            method_call,
             all_kwargs,
             setup_entry,
             write_api=self.write_api,

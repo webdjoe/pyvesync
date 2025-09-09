@@ -50,23 +50,24 @@ turn_on:
   url: /cloud/v1/deviceManaged/deviceStatus
 update:
   headers:
-    accept-language: en
-    accountId: sample_id
-    appVersion: 5.6.60
-    content-type: application/json
-    tk: sample_tk
-    tz: America/New_York
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
   json_object:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    method: devicedetail
-    mobileId: '1234567890123456'
+    cid: ESWL01-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: ESWL01-CID
+    method: deviceDetail
     phoneBrand: pyvesync
     phoneOS: Android
     timeZone: America/New_York
     token: sample_tk
     traceId: TRACE_ID
+    userCountryCode: US
     uuid: ESWL01-UUID
   method: post
-  url: /inwallswitch/v1/device/devicedetail
+  url: /cloud/v1/deviceManaged/deviceDetail

@@ -8,25 +8,26 @@ devices that use the `/cloud/v2/deviceManaged/bypassV2` endpoint, while the
 """
 
 from __future__ import annotations
+
 from logging import Logger
 from typing import TYPE_CHECKING, ClassVar, TypeVar
 
 from mashumaro.mixins.orjson import DataClassORJSONMixin
 
+from pyvesync.const import ConnectionStatus
 from pyvesync.models.base_models import DefaultValues
 from pyvesync.models.bypass_models import (
-    RequestBypassV2,
     RequestBypassV1,
+    RequestBypassV2,
 )
-from pyvesync.utils.helpers import Helpers
 from pyvesync.utils.errors import ErrorCodes, ErrorTypes, raise_api_errors
+from pyvesync.utils.helpers import Helpers
 from pyvesync.utils.logs import LibraryLogger
-from pyvesync.const import ConnectionStatus
 
 if TYPE_CHECKING:
     from pyvesync import VeSync
-    from pyvesync.utils.errors import ResponseInfo
     from pyvesync.base_devices import VeSyncBaseDevice
+    from pyvesync.utils.errors import ResponseInfo
 
 T_MODEL = TypeVar('T_MODEL', bound=DataClassORJSONMixin)
 

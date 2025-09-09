@@ -1,6 +1,7 @@
 """Utilities to handle Enums."""
 
 from __future__ import annotations
+
 import enum
 
 

@@ -1,20 +1,16 @@
 """Air Purifier Base Class."""
 
 from __future__ import annotations
+
 import logging
 from typing import TYPE_CHECKING
 
-from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice, DeviceState
-# from pyvesync.const import (
-#     IntFlag,
-#     StrFlag,
-#     )
+from pyvesync.base_devices.vesyncbasedevice import DeviceState, VeSyncBaseDevice
 
 if TYPE_CHECKING:
     from pyvesync import VeSync
-    from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
     from pyvesync.device_map import AirFryerMap
-    # from pyvesync.utils.helpers import Timer
+    from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
 
 
 logger = logging.getLogger(__name__)
@@ -70,4 +66,3 @@ class VeSyncFryer(VeSyncBaseDevice):
             This is a bare class as there is only one supported air fryer model.
         """
         super().__init__(details, manager, feature_map)
-        # self.state: FryerState = FryerState(self, details, feature_map)

@@ -1,20 +1,21 @@
 """Base classes for all VeSync switches."""
 
 from __future__ import annotations
+
 import logging
 from typing import TYPE_CHECKING
+
 from typing_extensions import deprecated
 
-from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseToggleDevice, DeviceState
-
-from pyvesync.utils.colors import Color
+from pyvesync.base_devices.vesyncbasedevice import DeviceState, VeSyncBaseToggleDevice
 from pyvesync.const import SwitchFeatures
+from pyvesync.utils.colors import Color
 
 if TYPE_CHECKING:
     from pyvesync import VeSync
+    from pyvesync.device_map import SwitchMap
     from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
     from pyvesync.utils.colors import HSV, RGB
-    from pyvesync.device_map import SwitchMap
 
 logger = logging.getLogger(__name__)
 

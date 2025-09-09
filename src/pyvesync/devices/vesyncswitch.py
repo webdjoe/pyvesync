@@ -21,25 +21,25 @@ Note:
 """
 
 from __future__ import annotations
-from dataclasses import asdict
-import logging
 
-# from abc import ABCMeta, abstractmethod
+import logging
+from dataclasses import asdict
 from typing import TYPE_CHECKING
+
 from typing_extensions import deprecated
 
 from pyvesync.base_devices.switch_base import VeSyncSwitch
-from pyvesync.utils.colors import Color
-from pyvesync.utils.helpers import Helpers, Validators, Timer
-from pyvesync.utils.device_mixins import BypassV1Mixin, process_bypassv1_result
 from pyvesync.const import ConnectionStatus, DeviceStatus
-from pyvesync.models.bypass_models import RequestBypassV1, TimerModels
 from pyvesync.models import switch_models
+from pyvesync.models.bypass_models import RequestBypassV1, TimerModels
+from pyvesync.utils.colors import Color
+from pyvesync.utils.device_mixins import BypassV1Mixin, process_bypassv1_result
+from pyvesync.utils.helpers import Helpers, Timer, Validators
 
 if TYPE_CHECKING:
     from pyvesync import VeSync
-    from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
     from pyvesync.device_map import SwitchMap
+    from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
 
 _LOGGER = logging.getLogger(__name__)
 

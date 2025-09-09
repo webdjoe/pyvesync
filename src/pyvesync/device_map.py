@@ -57,39 +57,44 @@ Note:
     fields.
 """
 
-from itertools import chain
+from __future__ import annotations
 
-# from types import ModuleType
+from dataclasses import dataclass, field
+from itertools import chain
 from types import ModuleType
 from typing import Union
-from dataclasses import dataclass, field
-from pyvesync.devices import vesyncbulb
-from pyvesync.devices import vesyncoutlet
-from pyvesync.devices import vesyncswitch
-from pyvesync.devices import vesyncfan, vesynchumidifier, vesyncpurifier
-from pyvesync.devices import vesynckitchen
-from pyvesync.devices import vesyncthermostat
+
 from pyvesync.const import (
-    ColorMode,
-    PurifierModes,
-    HumidifierModes,
     BulbFeatures,
-    OutletFeatures,
-    ProductTypes,
-    SwitchFeatures,
-    HumidifierFeatures,
-    PurifierFeatures,
-    NightlightModes,
-    PurifierAutoPreference,
-    FanSleepPreference,
-    FanModes,
+    ColorMode,
     FanFeatures,
+    FanModes,
+    FanSleepPreference,
+    HumidifierFeatures,
+    HumidifierModes,
+    NightlightModes,
+    OutletFeatures,
+    ProductLines,
+    ProductTypes,
+    PurifierAutoPreference,
+    PurifierFeatures,
+    PurifierModes,
+    SwitchFeatures,
     ThermostatEcoTypes,
     ThermostatFanModes,
-    ThermostatWorkModes,
     ThermostatHoldOptions,
     ThermostatRoutineTypes,
-    ProductLines,
+    ThermostatWorkModes,
+)
+from pyvesync.devices import (
+    vesyncbulb,
+    vesyncfan,
+    vesynchumidifier,
+    vesynckitchen,
+    vesyncoutlet,
+    vesyncpurifier,
+    vesyncswitch,
+    vesyncthermostat,
 )
 
 T_MAPS = Union[
@@ -504,13 +509,6 @@ switch_modules = [
 objects for switch devices."""
 
 
-# Bulb Device Definition
-# Format: BulbMap(
-#     dev_types=["<device_type>"],
-#     class_name="<class_name>",
-#     features=["<feature>"],
-#     color_model="<color_model>",
-#     device_alias="<device_alias>")
 bulb_modules = [
     BulbMap(
         dev_types=['ESL100'],

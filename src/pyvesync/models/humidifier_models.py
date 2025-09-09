@@ -8,6 +8,7 @@ result models. The correct subclass is determined by the mashumaro discriminator
 """
 
 from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import Annotated
 
@@ -46,7 +47,6 @@ class InnerHumidifierBaseResult(ResponseBaseModel):
     class Config(BaseConfig):  # type: ignore[override]
         """Configure the results model to use subclass discriminator."""
 
-        # discriminator = Discriminator(include_subtypes=True)
         allow_deserialization_not_by_alias = True
 
 

@@ -1,25 +1,26 @@
 """This is a WIP, not implemented yet."""
 
 from __future__ import annotations
-import logging
-import asyncio
-from typing import TYPE_CHECKING
-from dataclasses import fields
 
+import asyncio
+import logging
+from dataclasses import fields
+from typing import TYPE_CHECKING
+
+from pyvesync.models.base_models import DefaultValues
+from pyvesync.models.home_models import (
+    IntResponseHomeListModel,
+    IntResponseHomeResultModel,
+    RequestHomeModel,
+    ResponseHomeModel,
+)
 from pyvesync.utils.errors import ErrorCodes, VeSyncAPIResponseError
 from pyvesync.utils.helpers import Helpers
-from pyvesync.models.home_models import (
-    IntResponseHomeResultModel,
-    IntResponseHomeListModel,
-    ResponseHomeModel,
-    RequestHomeModel,
-)
-from pyvesync.models.base_models import DefaultValues
 
 if TYPE_CHECKING:
-    from pyvesync.vesync import VeSync
-    from pyvesync.models.base_models import RequestBaseModel
     from pyvesync.base_devices import VeSyncBaseDevice
+    from pyvesync.models.base_models import RequestBaseModel
+    from pyvesync.vesync import VeSync
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,7 +50,7 @@ class VeSyncHome:
         for update_coro in asyncio.as_completed(update_tasks):
             try:
                 await update_coro
-            except Exception as e:
+            except Exception as e:  # pylint: disable=broad-except  # noqa: BLE001, PERF203
                 _LOGGER.debug('Error updating device %s', e)
 
     @staticmethod
@@ -70,10 +71,11 @@ class VeSyncHome:
         homes = []
         for home in home_list:
             if not isinstance(home, IntResponseHomeListModel):
-                raise VeSyncAPIResponseError(
+                msg = (
                     'Invalid home list item type.'
                     f'Expected IntResponseHomeListModel, got {home}'
                 )
+                raise VeSyncAPIResponseError(msg)
             homes.append(VeSyncHome(home.homeId, home.homeName, home.nickname))
         return homes
 
@@ -109,33 +111,24 @@ class VeSyncHome:
             error = ErrorCodes.get_error_info(resp_model.code)
             if resp_model.msg is not None:
                 error.message = f'{resp_model.msg} ({error.message})'
-            raise VeSyncAPIResponseError(
-                f'Failed to get home list with error: {error.to_json()}'
-            )
+
+            msg = f'Failed to get home list with error: {error.to_json()}'
+            raise VeSyncAPIResponseError(msg)
         result = resp_model.result
         if not isinstance(result, IntResponseHomeResultModel):
-            raise VeSyncAPIResponseError(
+            msg = (
                 'Error in home list API response.'
                 f'Expected IntResponseHomeResultModel, got {result}'
             )
+            raise VeSyncAPIResponseError(msg)
         home_list = result.homeList
         if not home_list:
             raise VeSyncAPIResponseError('No homes found in the response.')
         for home in home_list:
             if not isinstance(home, IntResponseHomeListModel):
-                raise VeSyncAPIResponseError(
-                    'Invalid home list item type.'
-                    f'Expected IntResponseHomeListModel, got {home}'
-                )
-            # clear existing homes
-            # manager.homes = []
-            # manager.homes.append(
-            #     VeSyncHome(
-            #         home_id=home.homeId,
-            #         name=home.homeName,
-            #         nickname=home.nickname
-            #     )
-            # )
+                msg = ('Invalid home list item type.'
+                       f'Expected IntResponseHomeListModel, got {home}')
+                raise VeSyncAPIResponseError(msg)
         return True
 
 

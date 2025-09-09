@@ -19,27 +19,29 @@ default values.
 """
 
 from __future__ import annotations
+
+from dataclasses import dataclass
 from time import time
 from typing import ClassVar
-from dataclasses import dataclass
+
 import orjson
-from mashumaro.mixins.orjson import DataClassORJSONMixin
 from mashumaro.config import BaseConfig
+from mashumaro.mixins.orjson import DataClassORJSONMixin
+
 from pyvesync.const import (
-    USER_TYPE,
-    APP_VERSION,
     APP_ID,
+    APP_VERSION,
+    BYPASS_HEADER_UA,
+    CLIENT_TYPE,
+    DEFAULT_LANGUAGE,
+    DEFAULT_REGION,
+    DEFAULT_TZ,
+    MOBILE_ID,
     PHONE_BRAND,
     PHONE_OS,
-    MOBILE_ID,
-    DEFAULT_REGION,
-    DEFAULT_LANGUAGE,
-    DEFAULT_TZ,
-    BYPASS_HEADER_UA,
     TERMINAL_ID,
-    CLIENT_TYPE,
+    USER_TYPE,
 )
-
 
 RequestHeaders = {
     'User-Agent': BYPASS_HEADER_UA,

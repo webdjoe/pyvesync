@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
-import logging
 import contextlib
+import logging
 from typing import TYPE_CHECKING, Any
 
 from griffe import (
     AliasResolutionError,
     Docstring,
-    Extension,
     DocstringSectionText,
+    Extension,
     GriffeLoader,
 )
 
@@ -27,8 +27,8 @@ def _docstring_above(obj: Object) -> str | None:
             if obj.name in parent.members and not parent.members[obj.name].is_alias:
                 # Use parent of the parent object to avoid linking private methods
                 return (
-                    f"Inherited From [`{parent.members[obj.name].parent.name}`]"  # type: ignore[union-attr]
-                    f"[{parent.members[obj.name].parent.canonical_path}]"  # type: ignore[union-attr]
+                    f'Inherited From [`{parent.members[obj.name].parent.name}`]'  # type: ignore[union-attr]
+                    f'[{parent.members[obj.name].parent.canonical_path}]'  # type: ignore[union-attr]
                 )
     return None
 
@@ -40,7 +40,7 @@ def _inherit_docstrings(  # noqa: C901
         seen = set()
 
     # if obj.path in seen:
-    #     return
+    #     return  # noqa: ERA001
 
     seen.add(obj.path)
 
@@ -55,7 +55,7 @@ def _inherit_docstrings(  # noqa: C901
             if docstring_above := _docstring_above(member):  # type: ignore[arg-type]
                 if member.docstring is None:
                     member.docstring = Docstring(
-                        "",
+                        '',
                         parent=member,  # type: ignore[arg-type]
                         parser=loader.docstring_parser,
                         parser_options=loader.docstring_options,
@@ -63,8 +63,11 @@ def _inherit_docstrings(  # noqa: C901
                 sections = member.docstring.parsed
 
                 # Prevent inserting duplicate docstrings
-                if sections and sections[0].kind == 'text' \
-                        and sections[0].value.startswith("Inherited From"):
+                if (
+                    sections
+                    and sections[0].kind == 'text'
+                    and sections[0].value.startswith('Inherited From')
+                ):
                     continue
                 sections.insert(0, DocstringSectionText(docstring_above))
                 # This adds the Inherited notation to the base class, can't
@@ -77,7 +80,11 @@ class InheritedNotation(Extension):
     """Griffe extension for inheriting docstrings."""
 
     def on_package_loaded(
-        self, *, pkg: Module, loader: GriffeLoader, **kwargs: Any  # noqa: ANN401, ARG002
+        self,
+        *,
+        pkg: Module,
+        loader: GriffeLoader,
+        **kwargs: Any,  # noqa: ANN401, ARG002
     ) -> None:
         """Inherit docstrings from parent classes once the whole package is loaded."""
         _inherit_docstrings(pkg, loader)

@@ -1,28 +1,29 @@
 """Thermostat device classes."""
 
 from __future__ import annotations
+
 import logging
 from typing import TYPE_CHECKING
 
 from pyvesync.base_devices.thermostat_base import VeSyncThermostat
-from pyvesync.utils.device_mixins import BypassV2Mixin, process_bypassv2_result
-from pyvesync.utils.helpers import Helpers, Validators
 from pyvesync.const import (
     ThermostatConst,
-    ThermostatHoldStatus,
     ThermostatEcoTypes,
     ThermostatFanModes,
+    ThermostatHoldStatus,
     ThermostatWorkModes,
 )
 from pyvesync.models.thermostat_models import (
     ResultThermostatDetails,
     ThermostatMinorDetails,
 )
+from pyvesync.utils.device_mixins import BypassV2Mixin, process_bypassv2_result
+from pyvesync.utils.helpers import Helpers, Validators
 
 if TYPE_CHECKING:
     from pyvesync import VeSync
-    from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
     from pyvesync.device_map import ThermostatMap
+    from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
 
 _LOGGER = logging.getLogger(__name__)
 

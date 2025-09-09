@@ -17,12 +17,13 @@ Notes:
 """
 
 from __future__ import annotations
+
 from dataclasses import dataclass, field
 
 from pyvesync.models.base_models import (
-    ResponseCodeModel,
-    RequestBaseModel,
     DefaultValues,
+    RequestBaseModel,
+    ResponseCodeModel,
 )
 
 
@@ -126,7 +127,7 @@ class IntResponseRoomListModel:
     deviceList: list[IntResponseRoomDeviceListModel]
     plantComformHumidityRangeLower: int | None = None
     plantComformHumidityRangeHigher: int | None = None
-    # group_list = []  # TODO: Create group model
+    # group_list = []  # TODO: Create group model  # noqa: ERA001
 
 
 @dataclass

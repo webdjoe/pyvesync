@@ -1,25 +1,26 @@
 """Air Purifier Base Class."""
 
 from __future__ import annotations
+
 import logging
-from typing import TYPE_CHECKING
 from abc import abstractmethod
+from typing import TYPE_CHECKING
 
 from typing_extensions import deprecated
 
-from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseToggleDevice, DeviceState
+from pyvesync.base_devices.vesyncbasedevice import DeviceState, VeSyncBaseToggleDevice
 from pyvesync.const import (
     AirQualityLevel,
-    PurifierFeatures,
-    PurifierModes,
     DeviceStatus,
     NightlightModes,
+    PurifierFeatures,
+    PurifierModes,
 )
 
 if TYPE_CHECKING:
     from pyvesync import VeSync
-    from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
     from pyvesync.device_map import PurifierMap
+    from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
 
 
 logger = logging.getLogger(__name__)

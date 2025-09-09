@@ -138,14 +138,15 @@ class TestSwitches(TestBase):
         switch_obj = self.get_device("switches", setup_entry)
         assert isinstance(switch_obj, VeSyncSwitch)
 
-        self.run_in_loop(switch_obj.get_details)
+        method_call = getattr(switch_obj, method)
+        self.run_in_loop(method_call)
 
         # Parse mock_api args tuple from arg, kwargs to kwargs
         all_kwargs = parse_args(self.mock_api)
 
         # Assert request matches recored request or write new records
         assert assert_test(
-            switch_obj.get_details,
+            method_call,
             all_kwargs,
             setup_entry,
             self.write_api,

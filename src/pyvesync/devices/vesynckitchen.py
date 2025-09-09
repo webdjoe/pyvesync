@@ -26,21 +26,24 @@ VeSyncAirFryer158.refresh_interval = -1
 """
 
 from __future__ import annotations
+
 import logging
 import time
 from typing import TYPE_CHECKING, TypeVar
+
 from typing_extensions import deprecated
-from pyvesync.utils.helpers import Helpers
-from pyvesync.utils.logs import LibraryLogger
-from pyvesync.const import DeviceStatus, ConnectionStatus, AIRFRYER_PID_MAP
+
 from pyvesync.base_devices import FryerState, VeSyncFryer
+from pyvesync.const import AIRFRYER_PID_MAP, ConnectionStatus, DeviceStatus
 from pyvesync.models.base_models import DefaultValues
 from pyvesync.utils.errors import VeSyncError
+from pyvesync.utils.helpers import Helpers
+from pyvesync.utils.logs import LibraryLogger
 
 if TYPE_CHECKING:
     from pyvesync import VeSync
-    from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
     from pyvesync.device_map import AirFryerMap
+    from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
 
 T = TypeVar('T')
 
@@ -147,7 +150,8 @@ class AirFryer158138State(FryerState):
         elif temp_unit.lower() in ['c', 'celsius']:
             self._temp_unit = 'celsius'
         else:
-            raise ValueError(f'Invalid temperature unit - {temp_unit}')
+            msg = f'Invalid temperature unit - {temp_unit}'
+            raise ValueError(msg)
 
     @property
     def preheat_time_remaining(self) -> int:
@@ -371,10 +375,11 @@ class VeSyncAirFryer158(VeSyncFryer):
         self.ready_start = False
         self.cook_temps: dict[str, list[int]] | None = None
         if self.config_module not in AIRFRYER_PID_MAP:
-            raise VeSyncError(
-                f'Report this error as an issue -'
+            msg = (
+                'Report this error as an issue - '
                 f'{self.config_module} not found in PID map for {self}'
             )
+            raise VeSyncError(msg)
         self.pid = AIRFRYER_PID_MAP[self.config_module]
         self.request_keys = [
             'acceptLanguage',

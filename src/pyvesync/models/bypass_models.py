@@ -5,17 +5,19 @@ to serialize and deserialize the JSON requests for the bypassV2 endpoints.
 """
 
 from __future__ import annotations
+
 from dataclasses import dataclass, field
-from mashumaro.mixins.orjson import DataClassORJSONMixin
-from mashumaro.config import BaseConfig
-from mashumaro import pass_through
+
 import orjson
+from mashumaro import pass_through
+from mashumaro.config import BaseConfig
+from mashumaro.mixins.orjson import DataClassORJSONMixin
 
 from pyvesync.models.base_models import (
+    BaseModelConfig,
     RequestBaseModel,
     ResponseBaseModel,
     ResponseCodeModel,
-    BaseModelConfig,
 )
 
 

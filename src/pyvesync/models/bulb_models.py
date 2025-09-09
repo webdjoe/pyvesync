@@ -6,13 +6,16 @@ type hints and data validation.
 """
 
 from __future__ import annotations
+
 from dataclasses import dataclass, field
 from typing import Self, TypedDict
+
 from mashumaro import field_options
 from mashumaro.config import BaseConfig
 from mashumaro.mixins.orjson import DataClassORJSONMixin
-from pyvesync.models.bypass_models import RequestBypassV1, BypassV2InnerResult
-from pyvesync.models.base_models import ResponseCodeModel, ResponseBaseModel
+
+from pyvesync.models.base_models import ResponseBaseModel, ResponseCodeModel
+from pyvesync.models.bypass_models import BypassV2InnerResult, RequestBypassV1
 
 
 @dataclass

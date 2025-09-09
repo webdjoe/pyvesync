@@ -1,19 +1,21 @@
 """Base classes for all VeSync bulbs."""
 
 from __future__ import annotations
+
 import logging
 from typing import TYPE_CHECKING
+
 from typing_extensions import deprecated
 
-from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseToggleDevice, DeviceState
+from pyvesync.base_devices.vesyncbasedevice import DeviceState, VeSyncBaseToggleDevice
+from pyvesync.const import BulbFeatures
 from pyvesync.utils.colors import HSV, RGB, Color
 from pyvesync.utils.helpers import Converters, Validators
-from pyvesync.const import BulbFeatures
 
 if TYPE_CHECKING:
     from pyvesync import VeSync
-    from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
     from pyvesync.device_map import BulbMap
+    from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
 
 
 logger = logging.getLogger(__name__)
@@ -206,8 +208,6 @@ class VeSyncBulb(VeSyncBaseToggleDevice[BulbState]):
     """
 
     __slots__ = ()
-
-    # __metaclass__ = ABCMeta
 
     def __init__(
         self, details: ResponseDeviceDetailsModel, manager: VeSync, feature_map: BulbMap

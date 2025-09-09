@@ -1,4 +1,4 @@
-get_details:
+update:
   headers:
     Content-Type: application/json; charset=UTF-8
     User-Agent: okhttp/3.12.1

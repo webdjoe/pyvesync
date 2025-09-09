@@ -1,9 +1,11 @@
 """Data models for VeSync thermostats."""
 
 from __future__ import annotations
+
 from dataclasses import dataclass, field
-from mashumaro.mixins.orjson import DataClassORJSONMixin
+
 from mashumaro import field_options
+from mashumaro.mixins.orjson import DataClassORJSONMixin
 
 from pyvesync.const import ThermostatConst
 from pyvesync.models.bypass_models import BypassV2InnerResult

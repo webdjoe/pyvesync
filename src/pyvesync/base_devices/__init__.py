@@ -5,14 +5,14 @@ for each device type. The base classes are used to create the device objects, wh
 state classes are used to store the current state of the device.
 """
 
-from .vesyncbasedevice import VeSyncBaseDevice, VeSyncBaseToggleDevice, DeviceState
-from .bulb_base import VeSyncBulb, BulbState
-from .switch_base import VeSyncSwitch, SwitchState
-from .outlet_base import VeSyncOutlet, OutletState
-from .fan_base import VeSyncFanBase, FanState
-from .purifier_base import VeSyncPurifier, PurifierState
-from .humidifier_base import VeSyncHumidifier, HumidifierState
-from .fryer_base import VeSyncFryer, FryerState
+from .bulb_base import BulbState, VeSyncBulb
+from .fan_base import FanState, VeSyncFanBase
+from .fryer_base import FryerState, VeSyncFryer
+from .humidifier_base import HumidifierState, VeSyncHumidifier
+from .outlet_base import OutletState, VeSyncOutlet
+from .purifier_base import PurifierState, VeSyncPurifier
+from .switch_base import SwitchState, VeSyncSwitch
+from .vesyncbasedevice import DeviceState, VeSyncBaseDevice, VeSyncBaseToggleDevice
 
 __all__ = [
     'BulbState',

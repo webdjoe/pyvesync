@@ -1,41 +1,42 @@
 """Etekcity Outlets."""
 
 from __future__ import annotations
+
 import logging
 from typing import TYPE_CHECKING
+
 from typing_extensions import deprecated
 
+from pyvesync.base_devices.outlet_base import VeSyncOutlet
+from pyvesync.const import STATUS_OK, ConnectionStatus, DeviceStatus
+from pyvesync.models.base_models import DefaultValues, RequestHeaders
+from pyvesync.models.bypass_models import TimerModels
+from pyvesync.models.outlet_models import (
+    Request15ADetails,
+    Request15ANightlight,
+    Request15AStatus,
+    RequestOutdoorStatus,
+    Response7AOutlet,
+    Response10ADetails,
+    Response15ADetails,
+    ResponseBSDGO1OutletResult,
+    ResponseOutdoorDetails,
+    ResultESW10Details,
+    Timer7AItem,
+)
+from pyvesync.utils.device_mixins import (
+    BypassV1Mixin,
+    BypassV2Mixin,
+    process_bypassv1_result,
+    process_bypassv2_result,
+)
 from pyvesync.utils.helpers import Helpers, Timer
 from pyvesync.utils.logs import LibraryLogger
 
-from pyvesync.const import DeviceStatus, ConnectionStatus, STATUS_OK
-from pyvesync.base_devices.outlet_base import VeSyncOutlet
-from pyvesync.models.base_models import RequestHeaders, DefaultValues
-from pyvesync.utils.device_mixins import (
-    BypassV1Mixin,
-    process_bypassv1_result,
-    BypassV2Mixin,
-    process_bypassv2_result,
-)
-from pyvesync.models.outlet_models import Response7AOutlet
-from pyvesync.models.bypass_models import TimerModels
-from pyvesync.models.outlet_models import (
-    Response10ADetails,
-    Request15ADetails,
-    Request15ANightlight,
-    Response15ADetails,
-    ResponseOutdoorDetails,
-    ResponseBSDGO1OutletResult,
-    Request15AStatus,
-    RequestOutdoorStatus,
-    Timer7AItem,
-    ResultESW10Details,
-)
-
 if TYPE_CHECKING:
     from pyvesync import VeSync
-    from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
     from pyvesync.device_map import OutletMap
+    from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
 
 logger = logging.getLogger(__name__)
 

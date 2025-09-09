@@ -37,7 +37,7 @@ disable=
     format,
     abstract-method,
     arguments-differ,
-    broad-exception-caught, # FIXME
+    broad-exception-caught,
     cyclic-import,
     duplicate-code,
     fixme,
@@ -56,7 +56,7 @@ disable=
     too-many-public-methods,
     too-many-return-statements,
     too-many-statements,
-    too-complex,  # FIXME
+    too-complex,
     wildcard-import,
     unused-wildcard-import,
     unnecessary-pass,

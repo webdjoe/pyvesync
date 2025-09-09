@@ -1,22 +1,17 @@
 """VeSync API for controlling air purifiers."""
 
 from __future__ import annotations
+
 import logging
 from typing import TYPE_CHECKING
 
 from typing_extensions import deprecated
 
 from pyvesync.base_devices.purifier_base import VeSyncPurifier
-from pyvesync.utils.device_mixins import (
-    BypassV1Mixin,
-    BypassV2Mixin,
-    process_bypassv2_result,
-)
-from pyvesync.utils.helpers import Helpers, Timer
 from pyvesync.const import (
-    PurifierAutoPreference,
-    DeviceStatus,
     ConnectionStatus,
+    DeviceStatus,
+    PurifierAutoPreference,
     PurifierModes,
 )
 from pyvesync.models.bypass_models import (
@@ -24,23 +19,29 @@ from pyvesync.models.bypass_models import (
     ResultV2SetTimer,
 )
 from pyvesync.models.purifier_models import (
-    PurifierCoreDetailsResult,
-    PurifierVitalDetailsResult,
-    PurifierSproutResult,
     InnerPurifierBaseResult,
+    Purifier131Result,
+    PurifierCoreDetailsResult,
+    PurifierSproutResult,
     PurifierV2EventTiming,
     PurifierV2TimerActionItems,
     PurifierV2TimerPayloadData,
+    PurifierVitalDetailsResult,
     RequestPurifier131,
-    RequestPurifier131Mode,
     RequestPurifier131Level,
-    Purifier131Result,
+    RequestPurifier131Mode,
 )
+from pyvesync.utils.device_mixins import (
+    BypassV1Mixin,
+    BypassV2Mixin,
+    process_bypassv2_result,
+)
+from pyvesync.utils.helpers import Helpers, Timer
 
 if TYPE_CHECKING:
     from pyvesync import VeSync
-    from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
     from pyvesync.device_map import PurifierMap
+    from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -182,7 +183,6 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
         action = DeviceStatus.OFF  # No other actions available for this device
         if self.state.device_status != DeviceStatus.ON:
             _LOGGER.debug("Can't set timer when device is off")
-        # head, body = self.build_api_dict('addTimer')
         payload_data = {'action': str(action), 'total': duration}
         r_dict = await self.call_bypassv2_api('addTimer', payload_data)
         resp_model = process_bypassv2_result(
@@ -732,7 +732,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         return True
 
 
-class VeSyncAirSprout(VeSyncAirBaseV2):
+class VeSyncAirSprout(VeSyncAirBaseV2):  # pylint: disable=too-many-ancestors
     """Class for the Sprout Air Purifier.
 
     Inherits from VeSyncAirBaseV2 class and overrides
@@ -858,31 +858,6 @@ class VeSyncAir131(BypassV1Mixin, VeSyncPurifier):
     ) -> None:
         """Initialize air purifier class."""
         super().__init__(details, manager, feature_map)
-        # self.request_keys = [
-        #     "acceptLanguage",
-        #     "appVersion",
-        #     "phoneBrand",
-        #     "phoneOS",
-        #     "accountID",
-        #     "debugMode"
-        #     "traceId",
-        #     "timeZone",
-        #     "token",
-        #     "userCountryCode",
-        #     "uuid"
-        # ]
-
-    # def _build_request(
-    #     self, method: str, update_dict: dict | None = None
-    # ) -> RequestPurifier131:
-    #     """Build API request body for air purifier timer."""
-    #     body = Helpers.get_class_attributes(DefaultValues, self.request_keys)
-    #     body.update(Helpers.get_class_attributes(self.manager, self.request_keys))
-    #     body.update(Helpers.get_class_attributes(self, self.request_keys))
-    #     body["method"] = method
-    #     if update_dict is not None:
-    #         body.update(update_dict)
-    #     return RequestPurifier131.from_dict(body)
 
     def _set_state(self, details: Purifier131Result) -> None:
         """Set state from purifier API get_details() response."""

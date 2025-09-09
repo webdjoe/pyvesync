@@ -283,6 +283,7 @@ API_DEFAULTS = CaseInsensitiveDict({
     'phoneOS': const.PHONE_OS,
     'userType': const.USER_TYPE,
     "tk": TestDefaults.token,
+    "mobileId": "MOBILE_ID",
     "traceId": "TRACE_ID",
     'verifyEmail': 'EMAIL',
     'nickName': 'NICKNAME',

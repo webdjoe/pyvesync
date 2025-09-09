@@ -10,22 +10,21 @@ from collections.abc import Iterator
 from dataclasses import InitVar, dataclass, field
 from typing import TYPE_CHECKING, Any, TypeVar, Union
 
-
-from typing_extensions import deprecated
-from mashumaro.exceptions import MissingField, InvalidFieldValue, UnserializableField
-from mashumaro.mixins.orjson import DataClassORJSONMixin
 import orjson
+from mashumaro.exceptions import InvalidFieldValue, MissingField, UnserializableField
+from mashumaro.mixins.orjson import DataClassORJSONMixin
+from typing_extensions import deprecated
 
 from pyvesync.const import (
     APP_VERSION,
     BYPASS_HEADER_UA,
     DEFAULT_REGION,
+    KELVIN_MAX,
+    KELVIN_MIN,
     MOBILE_ID,
     PHONE_BRAND,
     PHONE_OS,
     USER_TYPE,
-    KELVIN_MIN,
-    KELVIN_MAX,
     ConnectionStatus,
 )
 from pyvesync.utils.errors import ErrorCodes, ErrorTypes, ResponseInfo
@@ -246,14 +245,14 @@ class Helpers:
                     new_msg = code_tuple[1]
                     break
 
-        try:
-            if isinstance(error_code, str):
+        if isinstance(error_code, int):
+            error_int = error_code
+        elif isinstance(error_code, str):
+            try:
                 error_int = int(error_code)
-            elif isinstance(error_code, int):
-                error_int = error_code
-            else:
-                raise TypeError
-        except TypeError:
+            except ValueError:
+                error_int = -999999999
+        else:
             error_int = -999999999
         error_info = ErrorCodes.get_error_info(error_int)
         if new_msg is not None:

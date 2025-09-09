@@ -12,29 +12,31 @@ The classes all inherit from VeSyncBulb, which is a subclass of VeSyncBaseDevice
 """
 
 from __future__ import annotations
+
 import logging
 from collections.abc import Mapping
 from typing import TYPE_CHECKING
+
 from typing_extensions import deprecated
+
 from pyvesync.base_devices import VeSyncBulb
-from pyvesync.const import DeviceStatus, ConnectionStatus
+from pyvesync.const import ConnectionStatus, DeviceStatus
+from pyvesync.models import bulb_models
 from pyvesync.models.base_models import DefaultValues
 from pyvesync.models.bypass_models import TimerModels
-from pyvesync.utils.helpers import Helpers, Validators, Timer
 from pyvesync.utils.colors import Color
-from pyvesync.models import bulb_models
 from pyvesync.utils.device_mixins import (
     BypassV1Mixin,
     BypassV2Mixin,
     process_bypassv1_result,
     process_bypassv2_result,
 )
-
+from pyvesync.utils.helpers import Helpers, Timer, Validators
 
 if TYPE_CHECKING:
     from pyvesync import VeSync
-    from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
     from pyvesync.device_map import BulbMap
+    from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
 
 logger = logging.getLogger(__name__)
 
@@ -98,19 +100,6 @@ class VeSyncBulbESL100MC(BypassV2Mixin, VeSyncBulb):
     ) -> None:
         """Instantiate ESL100MC Multicolor Bulb."""
         super().__init__(details, manager, feature_map)
-
-    # def _build_request(self, payload: dict) -> dict:
-    #     """Generate base request body for ESL100MC."""
-    #     default_dict = Helpers.get_class_attributes(
-    #         DefaultValues, self.request_keys)
-    #     default_dict.update(
-    #         Helpers.get_class_attributes(self, self.request_keys))
-    #     default_dict.update(
-    #         Helpers.get_class_attributes(self.manager, self.request_keys))
-    #     default_dict['method'] = 'bypassV2'
-    #     payload |= {"source": "APP"}
-    #     default_dict['payload'] = payload
-    #     return default_dict
 
     async def get_details(self) -> None:
         r_dict = await self.call_bypassv2_api('getLightStatus')
@@ -326,15 +315,6 @@ class VeSyncBulbESL100(BypassV1Mixin, VeSyncBulb):
         if toggle is None:
             toggle = self.state.device_status != DeviceStatus.ON
         status = DeviceStatus.ON if toggle else DeviceStatus.OFF
-        # body = Helpers.req_body(self.manager, 'devicestatus')
-        # body['uuid'] = self.uuid
-        # body['status'] = status
-        # r_dict, _ = await self.manager.async_call_api(
-        #     '/SmartBulb/v1/device/devicestatus',
-        #     'put',
-        #     headers=Helpers.req_headers(self.manager),
-        #     json_object=body,
-        # )
         method_dict = {
             'status': status,
         }

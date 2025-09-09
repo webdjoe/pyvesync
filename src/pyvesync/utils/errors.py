@@ -38,9 +38,12 @@ Example:
     ```
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass
-from types import MappingProxyType
 from enum import StrEnum
+from types import MappingProxyType
+
 from mashumaro.mixins.orjson import DataClassORJSONMixin
 
 
@@ -857,7 +860,8 @@ def raise_api_errors(error_info: ResponseInfo) -> None:
         case ErrorTypes.TOKEN_ERROR:
             raise VeSyncTokenError
         case ErrorTypes.SERVER_ERROR:
-            raise VeSyncServerError(
+            msg = (
                 f'{error_info.message} - '
                 'Please report error to github.com/webdjoe/pyvesync/issues'
             )
+            raise VeSyncServerError(msg)

@@ -26,21 +26,24 @@ Example:
     command line arguments. Command line arguments will override these values.
 """
 
+from __future__ import annotations
+
 import argparse
-import sys
-import random
-from pathlib import Path
 import asyncio
 import logging
-from typing import Literal
+import random
+import sys
+from pathlib import Path
+from typing import TYPE_CHECKING, Literal
 
 from pyvesync import VeSync
 from pyvesync.const import PurifierModes
-from pyvesync.base_devices import VeSyncBaseToggleDevice
-from pyvesync.device_container import DeviceContainer
 
+if TYPE_CHECKING:
+    from pyvesync.base_devices import VeSyncBaseToggleDevice
+    from pyvesync.device_container import DeviceContainer
 
-_T_DEVS = Literal["bulbs", "switchs", "outlets", "humidifiers", "air_purifiers", "fans"]
+_T_DEVS = Literal['bulbs', 'switchs', 'outlets', 'humidifiers', 'air_purifiers', 'fans']
 
 
 # Manually configure script arguments
@@ -56,32 +59,36 @@ TEST_DEV_TYPE: _T_DEVS | None = None
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
-logger.info("Starting VeSync device test...")
+logger.info('Starting VeSync device test...')
 stream_handler = logging.StreamHandler(sys.stdout)
 stream_handler.setLevel(logging.INFO)
 formatter = logging.Formatter(
-    fmt="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
+    fmt='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
 )
 stream_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
 logger.propagate = False
 
 
-_SEP = "-" * 18
+_SEP = '-' * 18
 # Logging messages
-_LOG_DEVICE_START = _SEP + " Testing %s %s " + _SEP
-_LOG_DEVICE_END = _SEP + " Finished testing %s %s " + _SEP
+_LOG_DEVICE_START = _SEP + ' Testing %s %s ' + _SEP
 
 
 async def _random_await() -> None:
-    await asyncio.sleep(random.randrange(10, 30) / 10)
-    logger.info("Random await finished")
+    await asyncio.sleep(random.randrange(10, 30) / 10)  # noqa: S311
+    logger.info('Random await finished')
 
 
-async def vesync_test(
-    username: str, password: str, country_code: str, output_file: str, test_devices: bool = False,
-    test_timers: bool = False, test_dev_type: _T_DEVS | None = None
+async def vesync_test(  # noqa: PLR0913
+    username: str,
+    password: str,
+    country_code: str,
+    output_file: str,
+    test_devices: bool = False,
+    test_timers: bool = False,
+    test_dev_type: _T_DEVS | None = None,
 ) -> None:
     """Main function to test VeSync devices.
 
@@ -101,51 +108,51 @@ async def vesync_test(
     """
     output_path = Path(output_file).resolve()
     if not output_path.parent.exists():
-        logger.error("Output directory %s does not exist.", output_path.parent)
+        logger.error('Output directory %s does not exist.', output_path.parent)
         return
     file_handler = logging.FileHandler(output_path)
     logger.addHandler(file_handler)
 
     # Instantiate VeSync object
     vs = await VeSync(username, password, country_code or 'US').__aenter__()
-    # vs.debug = True  # Enable debug mode
+    vs.debug = True  # Enable debug mode
     vs.verbose = True  # Enable verbose mode
-    # vs.redact = True  # Redact sensitive information in logs
+    vs.redact = True  # Redact sensitive information in logs
     vs.log_to_file(str(output_path), std_out=False)  # Log to specified file
-    logger.info("VeSync instance created, logging to %s", output_path)
+    logger.info('VeSync instance created, logging to %s', output_path)
     # Login to VeSync account and check for success
-    logger.info("Logging in to VeSync account...")
+    logger.info('Logging in to VeSync account...')
     await vs.login()
-    logger.info("Login successful, pulling device list...")
+    logger.info('Login successful, pulling device list...')
     await _random_await()
 
     # Pull device list and update all devices
     await vs.update()
     await _random_await()
-    logger.info("Device list pulled successfully.")
+    logger.info('Device list pulled successfully.')
 
     # Run tests for outlets
-    if vs.devices.outlets and (test_devices is True or test_dev_type == "outlets"):
+    if vs.devices.outlets and (test_devices is True or test_dev_type == 'outlets'):
         await outlets(vs, update=False)
 
     # Run tests for air purifiers
     if vs.devices.air_purifiers and (
-        test_devices is True or test_dev_type == "air_purifiers"
+        test_devices is True or test_dev_type == 'air_purifiers'
     ):
         await air_purifiers(vs, update=False)
 
     # Run tests for humidifiers
     if vs.devices.humidifiers and (
-        test_devices is True or test_dev_type == "humidifiers"
+        test_devices is True or test_dev_type == 'humidifiers'
     ):
         await humidifiers(vs, update=False)
 
     # Run tests for bulbs
-    if vs.devices.bulbs and (test_devices is True or test_dev_type == "bulbs"):
+    if vs.devices.bulbs and (test_devices is True or test_dev_type == 'bulbs'):
         await bulbs(vs, update=False)
 
     # Run tests for switches
-    if vs.devices.switches and (test_devices is True or test_dev_type == "switches"):
+    if vs.devices.switches and (test_devices is True or test_dev_type == 'switches'):
         await switches(vs, update=False)
 
     # Test timers if requested
@@ -153,7 +160,7 @@ async def vesync_test(
         await device_timers(vs.devices, update=False)
 
     await vs.__aexit__(None, None, None)  # Clean up VeSync instance
-    logger.info("Finished testing VeSync devices, results logged to %s", output_path)
+    logger.info('Finished testing VeSync devices, results logged to %s', output_path)
 
 
 async def common_tests(
@@ -167,25 +174,25 @@ async def common_tests(
         await device.update()
         await _random_await()
 
-    if device.state.connection_status == "offline":
-        logger.info("%s is offline, skipping", device.device_name)
+    if device.state.connection_status == 'offline':
+        logger.info('%s is offline, skipping', device.device_name)
         return None
 
-    logger.info("Current device state: %s", device.state.to_json(indent=True))
+    logger.info('Current device state: %s', device.state.to_json(indent=True))
 
-    if device.state.device_status == "off":
-        logger.info("Initial state is off, turning on device")
+    if device.state.device_status == 'off':
+        logger.info('Initial state is off, turning on device')
         await device.turn_on()
         logger.info(device.state.device_status)
         await _random_await()
         return False
 
-    logger.info("Initial state is on, turning off device")
+    logger.info('Initial state is on, turning off device')
     await device.turn_off()
     logger.info(device.state.device_status)
     await _random_await()
 
-    logger.info("Turning on device")
+    logger.info('Turning on device')
     await device.turn_on()
     logger.info(device.state.device_status)
     await _random_await()
@@ -200,7 +207,7 @@ async def device_timers(dev_list: DeviceContainer, update: bool = False) -> None
 
     for dev in dev_list:
         logger.info(
-            "%s Testing timer for %s %s %s", _SEP, dev.device_type, dev.device_name, _SEP
+            '%s Testing timer for %s %s %s', _SEP, dev.device_type, dev.device_name, _SEP
         )
 
         if dev.device_type not in dev_set:
@@ -212,32 +219,32 @@ async def device_timers(dev_list: DeviceContainer, update: bool = False) -> None
             await _random_await()
 
         await dev.get_timer()
-        logger.info("Current timer state: %s", dev.state.timer)
+        logger.info('Current timer state: %s', dev.state.timer)
         await _random_await()
 
         if dev.state.timer is None:
-            logger.info("Setting timer for 1 hour to turn on device")
+            logger.info('Setting timer for 1 hour to turn on device')
             await dev.set_timer(3600, 'on')
-            logger.info("Current timer state: %s", dev.state.timer)
+            logger.info('Current timer state: %s', dev.state.timer)
             await _random_await()
 
-        logger.info("Updating device state after setting timer")
+        logger.info('Updating device state after setting timer')
         await dev.update()
-        logger.info("Current timer state: %s", dev.state.timer)
+        logger.info('Current timer state: %s', dev.state.timer)
         await _random_await()
 
-        logger.info("Getting current active timer via API")
+        logger.info('Getting current active timer via API')
         await dev.get_timer()
-        logger.info("Current timer state: %s", dev.state.timer)
+        logger.info('Current timer state: %s', dev.state.timer)
         await _random_await()
 
-        logger.info("Clearing timer")
+        logger.info('Clearing timer')
         await dev.clear_timer()
-        logger.info("Current timer state: %s", dev.state.timer)
+        logger.info('Current timer state: %s', dev.state.timer)
         await _random_await()
 
         logger.info(
-            "%s Finished testing timer for %s %s %s",
+            '%s Finished testing timer for %s %s %s',
             _SEP,
             dev.device_type,
             dev.device_name,
@@ -247,7 +254,7 @@ async def device_timers(dev_list: DeviceContainer, update: bool = False) -> None
 
 async def humidifiers(manager: VeSync, update: bool = False) -> None:
     """Test humidifiers in the VeSync device manager."""
-    logger.info("%s Testing humidifiers %s", _SEP, _SEP)
+    logger.info('%s Testing humidifiers %s', _SEP, _SEP)
     dev_types = set()
     for dev in manager.devices.humidifiers:
         # Ensure the same device type is not tested multiple times
@@ -261,36 +268,36 @@ async def humidifiers(manager: VeSync, update: bool = False) -> None:
 
         logger.info(dev.state.to_json(indent=True))
         initial_state = dev.state.to_dict()
-        logger.debug("Initial state: %s", dev.state.to_json(indent=True))
+        logger.debug('Initial state: %s', dev.state.to_json(indent=True))
 
-        logger.info("Setting state to auto mode")
+        logger.info('Setting state to auto mode')
         await dev.set_auto_mode()
         logger.debug(dev.state.mode)
         await _random_await()
 
-        logger.info("Setting state to manual mode")
+        logger.info('Setting state to manual mode')
         await dev.set_manual_mode()
         logger.debug(dev.state.mode)
         await _random_await()
 
-        logger.info("Setting mist level to 2")
+        logger.info('Setting mist level to 2')
         await dev.set_mist_level(2)
-        logger.debug("mist_level: %s", dev.state.mist_level)
-        logger.debug("mist_virtual_level: %s", dev.state.mist_virtual_level)
+        logger.debug('mist_level: %s', dev.state.mist_level)
+        logger.debug('mist_virtual_level: %s', dev.state.mist_virtual_level)
         await _random_await()
 
-        logger.info("Setting sleep mode")
+        logger.info('Setting sleep mode')
         await dev.set_sleep_mode()
         logger.debug(dev.state.mode)
         await _random_await()
 
-        logger.info("Setting target humidity to 50%")
+        logger.info('Setting target humidity to 50%')
         await dev.set_humidity(50)
         logger.debug(dev.state.target_humidity)
         await _random_await()
 
         if initial_on is True:
-            logger.info("Returning to initial state")
+            logger.info('Returning to initial state')
             await dev.set_mist_level(initial_state['mist_level'])
             await dev.set_mode(initial_state['mode'])
             await dev.set_humidity(initial_state['target_humidity'])
@@ -299,9 +306,9 @@ async def humidifiers(manager: VeSync, update: bool = False) -> None:
         await _random_await()
 
 
-async def bulbs(manager: VeSync, update: bool = False) -> None:
+async def bulbs(manager: VeSync, update: bool = False) -> None:  # noqa: C901
     """Test bulbs in the VeSync device manager."""
-    logger.info("%s Testing bulbs %s", _SEP, _SEP)
+    logger.info('%s Testing bulbs %s', _SEP, _SEP)
     dev_types = set()
     for dev in manager.devices.bulbs:
         if dev.device_type in dev_types:
@@ -317,24 +324,24 @@ async def bulbs(manager: VeSync, update: bool = False) -> None:
 
         # Print the current state of the device
         if dev.supports_brightness:
-            logger.info("Setting brightness to 30%")
+            logger.info('Setting brightness to 30%')
             await dev.set_brightness(30)
-            logger.debug("Brightness: %s", dev.state.brightness)
+            logger.debug('Brightness: %s', dev.state.brightness)
             await _random_await()
 
         if dev.supports_color_temp:
-            logger.info("Setting color temperature to 10")
+            logger.info('Setting color temperature to 10')
             await dev.set_color_temp(10)
-            logger.debug("Color Temperature: %s", dev.state.color_temp)
+            logger.debug('Color Temperature: %s', dev.state.color_temp)
             await _random_await()
 
         if dev.supports_multicolor:
-            logger.info("Setting RGB color to (255, 40, 30)")
+            logger.info('Setting RGB color to (255, 40, 30)')
             await dev.set_rgb(255, 40, 30)
-            logger.debug("Color: %s", dev.state.rgb)
+            logger.debug('Color: %s', dev.state.rgb)
             await _random_await()
 
-        logger.info("Returning to initial state")
+        logger.info('Returning to initial state')
         if initial_on is False:
             await dev.turn_off()
             await _random_await()
@@ -346,17 +353,17 @@ async def bulbs(manager: VeSync, update: bool = False) -> None:
             await dev.set_brightness(initial_state['brightness'])
         if initial_state['rgb'] is not None:
             await dev.set_rgb(
-                initial_state["rgb"][0],
-                initial_state["rgb"][1],
-                initial_state["rgb"][2],
+                initial_state['rgb'][0],
+                initial_state['rgb'][1],
+                initial_state['rgb'][2],
             )
 
         await _random_await()
 
 
-async def switches(manager: VeSync, update: bool = False) -> None:
+async def switches(manager: VeSync, update: bool = False) -> None:  # noqa: C901, PLR0915
     """Test switches in the VeSync device manager."""
-    logger.info("%s Testing switches %s", _SEP, _SEP)
+    logger.info('%s Testing switches %s', _SEP, _SEP)
     dev_types = set()
     for dev in manager.devices.switches:
         if dev.device_type in dev_types:
@@ -371,53 +378,53 @@ async def switches(manager: VeSync, update: bool = False) -> None:
         initial_state = dev.state.to_dict()
 
         if dev.supports_dimmable:
-            logger.debug("Setting brightness to 100%")
+            logger.debug('Setting brightness to 100%')
             await dev.set_brightness(100)
             logger.debug(dev.state.brightness)
             await _random_await()
 
         if dev.supports_indicator_light:
-            if initial_state['indicator_status'] == "on":
-                logger.debug("Initial state is on, turning off indicator light")
+            if initial_state['indicator_status'] == 'on':
+                logger.debug('Initial state is on, turning off indicator light')
                 await dev.turn_off_indicator_light()
-                logger.debug("indicator_status: %s", dev.state.indicator_status)
+                logger.debug('indicator_status: %s', dev.state.indicator_status)
                 await _random_await()
                 await dev.turn_on_indicator_light()
-                logger.debug("indicator_status: %s", dev.state.indicator_status)
+                logger.debug('indicator_status: %s', dev.state.indicator_status)
                 await _random_await()
             else:
-                logger.debug("Initial state is off, turning on indicator light")
+                logger.debug('Initial state is off, turning on indicator light')
                 await dev.turn_on_indicator_light()
-                logger.debug("indicator_status: %s", dev.state.indicator_status)
+                logger.debug('indicator_status: %s', dev.state.indicator_status)
                 await _random_await()
                 await dev.turn_off_indicator_light()
-                logger.debug("indicator_status: %s", dev.state.indicator_status)
+                logger.debug('indicator_status: %s', dev.state.indicator_status)
                 await _random_await()
 
         if dev.supports_backlight_color:
-            if initial_state['backlight_status'] == "on":
-                logger.debug("Initial state is on, turning off RGB backlight")
+            if initial_state['backlight_status'] == 'on':
+                logger.debug('Initial state is on, turning off RGB backlight')
                 await dev.turn_off_rgb_backlight()
-                logger.debug("backlight_status: %s", dev.state.backlight_status)
+                logger.debug('backlight_status: %s', dev.state.backlight_status)
                 await _random_await()
-            logger.debug("Turrning on RGB backlight")
+            logger.debug('Turrning on RGB backlight')
             await dev.turn_on_rgb_backlight()
-            logger.debug("backlight_status: %s", dev.state.backlight_status)
+            logger.debug('backlight_status: %s', dev.state.backlight_status)
             await _random_await()
 
-            logger.debug("Setting backlight color to (50, 30, 15)")
+            logger.debug('Setting backlight color to (50, 30, 15)')
             await dev.set_backlight_color(50, 30, 15)
-            logger.debug("backlight_color: %s", dev.state.backlight_color)
+            logger.debug('backlight_color: %s', dev.state.backlight_color)
             await _random_await()
 
-            if initial_state["backlight_status"] == "off":
+            if initial_state['backlight_status'] == 'off':
                 await dev.turn_off_rgb_backlight()
                 await _random_await()
             else:
                 await dev.set_backlight_color(
-                    initial_state["backlight_color"][0],
-                    initial_state["backlight_color"][1],
-                    initial_state["backlight_color"][2],
+                    initial_state['backlight_color'][0],
+                    initial_state['backlight_color'][1],
+                    initial_state['backlight_color'][2],
                 )
             await _random_await()
 
@@ -426,9 +433,9 @@ async def switches(manager: VeSync, update: bool = False) -> None:
             await _random_await()
 
 
-async def air_purifiers(manager: VeSync, update: bool = False) -> None:
+async def air_purifiers(manager: VeSync, update: bool = False) -> None:  # noqa: C901, PLR0915
     """Test air purifiers in the VeSync device manager."""
-    logger.info("%s Testing air purifiers %s", _SEP, _SEP)
+    logger.info('%s Testing air purifiers %s', _SEP, _SEP)
     dev_types = set()
     for dev in manager.devices.air_purifiers:
         if dev.device_type in dev_types:
@@ -443,66 +450,66 @@ async def air_purifiers(manager: VeSync, update: bool = False) -> None:
         initial_state = dev.state.to_dict()
 
         if initial_state['display_set_state'] is True:
-            logger.info("Turning off display")
+            logger.info('Turning off display')
             await dev.turn_off_display()
-            logger.info("display_set_state: %s", dev.state.display_set_state)
-            logger.info("display_status: %s", dev.state.display_status)
+            logger.info('display_set_state: %s', dev.state.display_set_status)
+            logger.info('display_status: %s', dev.state.display_status)
             await _random_await()
-            logger.info("Turning on display")
+            logger.info('Turning on display')
             await dev.turn_on_display()
-            logger.info("display_set_state: %s", dev.state.display_set_state)
-            logger.info("display_status: %s", dev.state.display_status)
+            logger.info('display_set_state: %s', dev.state.display_set_status)
+            logger.info('display_status: %s', dev.state.display_status)
             await _random_await()
         else:
-            logger.info("Display is off, turning on display")
+            logger.info('Display is off, turning on display')
             await dev.turn_on_display()
-            logger.info("display_set_state: %s", dev.state.display_set_state)
-            logger.info("display_status: %s", dev.state.display_status)
+            logger.info('display_set_state: %s', dev.state.display_set_status)
+            logger.info('display_status: %s', dev.state.display_status)
             await _random_await()
-            logger.info("Turning off display")
+            logger.info('Turning off display')
             await dev.turn_off_display()
-            logger.info("display_set_state: %s", dev.state.display_set_state)
-            logger.info("display_status: %s", dev.state.display_status)
+            logger.info('display_set_state: %s', dev.state.display_set_status)
+            logger.info('display_status: %s', dev.state.display_status)
             await _random_await()
 
         if PurifierModes.AUTO in dev.modes:
-            logger.info("Setting auto mode")
+            logger.info('Setting auto mode')
             await dev.set_auto_mode()
-            logger.info("mode: %s", dev.state.mode)
+            logger.info('mode: %s', dev.state.mode)
             await _random_await()
         if PurifierModes.SLEEP in dev.modes:
-            logger.info("Setting sleep mode")
+            logger.info('Setting sleep mode')
             await dev.set_sleep_mode()
-            logger.info("mode: %s", dev.state.mode)
+            logger.info('mode: %s', dev.state.mode)
             await _random_await()
         if PurifierModes.MANUAL in dev.modes:
-            logger.info("Setting manual mode")
+            logger.info('Setting manual mode')
             await dev.set_manual_mode()
-            logger.info("mode: %s", dev.state.mode)
+            logger.info('mode: %s', dev.state.mode)
             await _random_await()
 
-        logger.info("Setting fan speed to 1")
+        logger.info('Setting fan speed to 1')
         await dev.set_fan_speed(1)
-        logger.info("fan_level: %s", dev.state.fan_level)
+        logger.info('fan_level: %s', dev.state.fan_level)
         await dev.set_fan_speed(initial_state['fan_level'])
 
         if initial_state['child_lock'] is True:
-            logger.info("Turning off child lock")
+            logger.info('Turning off child lock')
             await dev.turn_off_child_lock()
-            logger.info("child_lock: %s", dev.state.child_lock)
+            logger.info('child_lock: %s', dev.state.child_lock)
             await _random_await()
             await dev.turn_on_child_lock()
             await _random_await()
         else:
-            logger.info("Turning on child lock")
+            logger.info('Turning on child lock')
             await dev.turn_on_child_lock()
-            logger.info("child_lock: %s", dev.state.child_lock)
+            logger.info('child_lock: %s', dev.state.child_lock)
             await _random_await()
             await dev.turn_off_child_lock()
             await _random_await()
 
         if initial_on is False:
-            logger.info("Turning off device")
+            logger.info('Turning off device')
             await dev.turn_off()
             await _random_await()
             return
@@ -513,7 +520,7 @@ async def air_purifiers(manager: VeSync, update: bool = False) -> None:
 
 async def outlets(manager: VeSync, update: bool = False) -> None:
     """Test outlets in the VeSync device manager."""
-    logger.info("%s Testing outlets %s", _SEP, _SEP)
+    logger.info('%s Testing outlets %s', _SEP, _SEP)
     dev_types = set()
     for dev in manager.devices.outlets:
         if dev.device_type in dev_types:
@@ -526,67 +533,67 @@ async def outlets(manager: VeSync, update: bool = False) -> None:
         initial_state = dev.state.to_dict()
 
         if dev.supports_nightlight:
-            if initial_state['nightlight_status'] == "on":
-                logger.info("Turning off nightlight")
+            if initial_state['nightlight_status'] == 'on':
+                logger.info('Turning off nightlight')
                 await dev.turn_off_nightlight()
-                logger.info("nightlight_status: %s", dev.state.nightlight_status)
+                logger.info('nightlight_status: %s', dev.state.nightlight_status)
                 await _random_await()
                 await dev.turn_on_nightlight()
             else:
-                logger.info("Turning on nightlight")
+                logger.info('Turning on nightlight')
                 await dev.turn_on_nightlight()
-                logger.info("nightlight_status: %s", dev.state.nightlight_status)
+                logger.info('nightlight_status: %s', dev.state.nightlight_status)
                 await _random_await()
                 await dev.turn_off_nightlight()
 
         if dev.supports_energy:
-            logger.info("Getting energy data")
+            logger.info('Getting energy data')
             await dev.get_monthly_energy()
             await dev.get_weekly_energy()
             await dev.get_yearly_energy()
-            logger.info("Energy usage: %s", dev.state.energy)
-            logger.info("Power: %s", dev.state.power)
-            logger.info("Voltage: %s", dev.state.voltage)
+            logger.info('Energy usage: %s', dev.state.energy)
+            logger.info('Power: %s', dev.state.power)
+            logger.info('Voltage: %s', dev.state.voltage)
             if dev.state.monthly_history:
-                logger.info("Monthly history: %s", dev.state.monthly_history.to_json())
+                logger.info('Monthly history: %s', dev.state.monthly_history.to_json())
             if dev.state.weekly_history:
-                logger.info("Weekly history: %s", dev.state.weekly_history.to_json())
+                logger.info('Weekly history: %s', dev.state.weekly_history.to_json())
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description="Test pyvesync library and devices.",
-        epilog="Run script with --help for more information.",
+        description='Test pyvesync library and devices.',
+        epilog='Run script with --help for more information.',
     )
-    parser.add_argument("--email", default=USERNAME, help="Email for VeSync account")
+    parser.add_argument('--email', default=USERNAME, help='Email for VeSync account')
     parser.add_argument(
-        "--password", default=PASSWORD, help="Password for VeSync account"
-    )
-    parser.add_argument(
-        "--country-code", default=REGION, help="Country of the VeSync account in ISO 3166 Alpha-2 format"
+        '--password', default=PASSWORD, help='Password for VeSync account'
     )
     parser.add_argument(
-        "--test_devices",
-        action="store_true",
+        '--country-code',
+        default=REGION,
+        help='Country of the VeSync account in ISO 3166 Alpha-2 format',
+    )
+    parser.add_argument(
+        '--test_devices',
+        action='store_true',
         default=TEST_DEVICES,
-        help="Include devices in test, default: False",
+        help='Include devices in test, default: False',
     )
     parser.add_argument(
-        "--test_timers",
-        action="store_true",
+        '--test_timers',
+        action='store_true',
         default=TEST_TIMERS,
-        help="Run tests on timers, default: False",
+        help='Run tests on timers, default: False',
     )
     parser.add_argument(
-        "--output-file",
-        default="vesync.log",
-        help="Relative or absolute path to output file",
+        '--output-file',
+        default='vesync.log',
+        help='Relative or absolute path to output file',
     )
     parser.add_argument(
-        "--test_dev_type",
-        choices=[
-            "bulbs", "switches", "outlets", "humidifiers", "air_purifiers", "fans"
-        ],
+        '--test_dev_type',
+        choices=['bulbs', 'switches', 'outlets', 'humidifiers', 'air_purifiers', 'fans'],
         default=TEST_DEV_TYPE,
         help="Specific device type to test, e.g., 'bulbs', 'switches', etc.",
     )
@@ -594,8 +601,8 @@ if __name__ == "__main__":
 
     if args.email is None or args.password is None:
         logger.error(
-            "Username and password must be provided"
-            "via command line arguments or script variables."
+            'Username and password must be provided'
+            'via command line arguments or script variables.'
         )
         sys.exit(1)
 

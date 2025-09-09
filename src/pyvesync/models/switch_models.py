@@ -5,12 +5,15 @@ These models inherit from `ResponseBaseModel` and `RequestBaseModel` from the
 """
 
 from __future__ import annotations
-from typing import Any
+
 from dataclasses import dataclass
+from typing import Any
+
 import orjson
 from mashumaro.config import BaseConfig
+
+from pyvesync.models.base_models import ResponseBaseModel, ResponseCodeModel
 from pyvesync.models.bypass_models import RequestBypassV1
-from pyvesync.models.base_models import ResponseCodeModel, ResponseBaseModel
 
 
 @dataclass

@@ -1,16 +1,18 @@
 """Data models for VeSync outlets."""
 
 from __future__ import annotations
+
 from dataclasses import dataclass
 
 from mashumaro.mixins.orjson import DataClassORJSONMixin
+
+from pyvesync.models.base_models import (
+    RequestBaseModel,
+    ResponseBaseModel,
+    ResponseCodeModel,
+)
 from pyvesync.models.bypass_models import (
     RequestBypassV1,
-)
-from pyvesync.models.base_models import (
-    ResponseCodeModel,
-    ResponseBaseModel,
-    RequestBaseModel,
 )
 
 

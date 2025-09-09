@@ -1,38 +1,38 @@
 """VeSync API Device Libary."""
 
 from __future__ import annotations
-import logging
+
 import asyncio
+import logging
+from dataclasses import MISSING, fields
 from pathlib import Path
 from typing import Self
-from dataclasses import fields, MISSING
+
 from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientResponseError
+from mashumaro.exceptions import MissingField, UnserializableDataError
 from mashumaro.mixins.orjson import DataClassORJSONMixin
-from mashumaro.exceptions import UnserializableDataError, MissingField
 
-from pyvesync.utils.helpers import Helpers
 from pyvesync.const import (
-    API_BASE_URL_US,
     API_BASE_URL_EU,
+    API_BASE_URL_US,
     DEFAULT_REGION,
+    DEFAULT_TZ,
     NON_EU_REGIONS,
     STATUS_OK,
-    DEFAULT_TZ,
 )
 from pyvesync.device_container import DeviceContainer, DeviceContainerInstance
-from pyvesync.utils.logs import LibraryLogger
 from pyvesync.models.vesync_models import (
-    RequestDeviceListModel,
-    ResponseDeviceListModel,
-    RequestGetTokenModel,
-    RespGetTokenResultModel,
-    RequestLoginTokenModel,
-    ResponseLoginModel,
-    RespLoginTokenResultModel,
-    RequestFirmwareModel,
-    ResponseFirmwareModel,
     FirmwareDeviceItemModel,
+    RequestDeviceListModel,
+    RequestFirmwareModel,
+    RequestGetTokenModel,
+    RequestLoginTokenModel,
+    RespGetTokenResultModel,
+    RespLoginTokenResultModel,
+    ResponseDeviceListModel,
+    ResponseFirmwareModel,
+    ResponseLoginModel,
 )
 from pyvesync.utils.errors import (
     ErrorCodes,
@@ -40,11 +40,12 @@ from pyvesync.utils.errors import (
     VeSyncAPIResponseError,
     VeSyncAPIStatusCodeError,
     VeSyncError,
-    VeSyncServerError,
     VeSyncLoginError,
+    VeSyncServerError,
     raise_api_errors,
 )
-
+from pyvesync.utils.helpers import Helpers
+from pyvesync.utils.logs import LibraryLogger
 
 logger = logging.getLogger(__name__)
 
@@ -341,9 +342,9 @@ class VeSync:  # pylint: disable=function-redefined
             resp_message = resp_dict.get('msg')
             if resp_message is not None:
                 error_info.message = f'{error_info.message} ({resp_message})'
-            raise VeSyncAPIResponseError(
-                f'Error receiving response to auth request - {error_info.message}'
-            )
+
+            msg = f'Error receiving response to auth request - {error_info.message}'
+            raise VeSyncAPIResponseError(msg)
 
         try:
             response_model = ResponseLoginModel.from_dict(resp_dict)
@@ -416,9 +417,8 @@ class VeSync:  # pylint: disable=function-redefined
                 resp_message = resp_dict.get('msg')
                 if resp_message is not None:
                     error_info.message = f'{error_info.message} ({resp_message})'
-                raise VeSyncLoginError(
-                    f'Error receiving response to login request - {error_info.message}'
-                )
+                msg = f'Error receiving response to login request - {error_info.message}'
+                raise VeSyncLoginError(msg)
 
             result = response_model.result
             if not isinstance(result, RespLoginTokenResultModel):
@@ -456,11 +456,13 @@ class VeSync:  # pylint: disable=function-redefined
     async def update_all_devices(self) -> None:
         """Run `get_details()` for each device and update state."""
         logger.debug('Start updating the device details one by one')
-        update_tasks = [device.update() for device in self._device_container]
-        for update_coro in asyncio.as_completed(update_tasks):
-            try:
-                await update_coro
-            except VeSyncError as exc:
+        update_tasks = [
+            asyncio.create_task(device.update()) for device in self._device_container
+        ]
+        done, _ = await asyncio.wait(update_tasks, return_when=asyncio.ALL_COMPLETED)
+        for task in done:
+            exc = task.exception()
+            if exc is not None and isinstance(exc, VeSyncError):
                 logger.debug('Error updating device: %s', exc)
 
     async def __aenter__(self) -> Self:

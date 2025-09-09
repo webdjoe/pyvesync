@@ -1,27 +1,29 @@
 """VeSync Humidifier Devices."""
 
 from __future__ import annotations
+
 import logging
 from typing import TYPE_CHECKING
-from typing_extensions import deprecated
+
 import orjson
+from typing_extensions import deprecated
 
 from pyvesync.base_devices import VeSyncHumidifier
-from pyvesync.utils.helpers import Helpers, Validators, Timer
-from pyvesync.utils.device_mixins import BypassV2Mixin, process_bypassv2_result
-from pyvesync.const import DeviceStatus, ConnectionStatus
+from pyvesync.const import ConnectionStatus, DeviceStatus
 from pyvesync.models.bypass_models import ResultV2GetTimer, ResultV2SetTimer
 from pyvesync.models.humidifier_models import (
     ClassicLVHumidResult,
-    Levoit1000SResult,
     InnerHumidifierBaseResult,
+    Levoit1000SResult,
     Superior6000SResult,
 )
+from pyvesync.utils.device_mixins import BypassV2Mixin, process_bypassv2_result
+from pyvesync.utils.helpers import Helpers, Timer, Validators
 
 if TYPE_CHECKING:
     from pyvesync import VeSync
-    from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
     from pyvesync.device_map import HumidifierMap
+    from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
 
 
 logger = logging.getLogger(__name__)

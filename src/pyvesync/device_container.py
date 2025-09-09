@@ -13,27 +13,30 @@ Classes:
 """
 
 from __future__ import annotations
+
 import logging
 import re
-from typing import TypeVar, TYPE_CHECKING
 from collections.abc import Iterator, MutableSet, Sequence
-from pyvesync.models.vesync_models import ResponseDeviceListModel
-from pyvesync.utils.errors import VeSyncAPIResponseError
-from pyvesync.const import ProductTypes
-from pyvesync.base_devices.outlet_base import VeSyncOutlet
-from pyvesync.base_devices.switch_base import VeSyncSwitch
+from typing import TYPE_CHECKING, TypeVar
+
 from pyvesync.base_devices.bulb_base import VeSyncBulb
-from pyvesync.base_devices.purifier_base import VeSyncPurifier
 from pyvesync.base_devices.fan_base import VeSyncFanBase
-from pyvesync.base_devices.humidifier_base import VeSyncHumidifier
 from pyvesync.base_devices.fryer_base import VeSyncFryer
+from pyvesync.base_devices.humidifier_base import VeSyncHumidifier
+from pyvesync.base_devices.outlet_base import VeSyncOutlet
+from pyvesync.base_devices.purifier_base import VeSyncPurifier
+from pyvesync.base_devices.switch_base import VeSyncSwitch
 from pyvesync.base_devices.thermostat_base import VeSyncThermostat
-from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
-from pyvesync.device_map import get_device_config
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
+from pyvesync.const import ProductTypes
+from pyvesync.device_map import get_device_config
 
 if TYPE_CHECKING:
     from pyvesync import VeSync
+    from pyvesync.models.vesync_models import (
+        ResponseDeviceDetailsModel,
+        ResponseDeviceListModel,
+    )
 
 
 logger = logging.getLogger(__name__)
@@ -151,10 +154,6 @@ class DeviceContainer(_DeviceContainerBase):
             VeSyncAPIResponseError: If the model is not an instance of
                 `ResponseDeviceDetailsModel`.
         """
-        if not isinstance(device, ResponseDeviceDetailsModel):
-            raise VeSyncAPIResponseError(
-                f'Expected ResponseDeviceDetailsModel, got {type(device)}'
-            )
         device_features = get_device_config(device.deviceType)
         if device_features is None:
             logger.debug('Device type %s not found in device map', device.deviceType)

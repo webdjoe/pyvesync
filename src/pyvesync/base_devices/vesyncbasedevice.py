@@ -1,27 +1,27 @@
 """Base class for all VeSync devices."""
 
 from __future__ import annotations
-from abc import ABC, abstractmethod
-import logging
+
 import inspect
+import logging
+from abc import ABC, abstractmethod
 from datetime import datetime as dt
-from zoneinfo import ZoneInfo
 from typing import TYPE_CHECKING, Any, Generic, TypeVar
+from zoneinfo import ZoneInfo
+
+import orjson
 from typing_extensions import deprecated
 
-# import warnings
-import orjson
-
-from pyvesync.const import DeviceStatus, ConnectionStatus
+from pyvesync.const import ConnectionStatus, DeviceStatus
 
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from pyvesync import VeSync
-    from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
     from pyvesync.device_map import DeviceMapTemplate
-    from pyvesync.utils.helpers import Timer
+    from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
     from pyvesync.utils.errors import ResponseInfo
+    from pyvesync.utils.helpers import Timer
 
 
 VS_TYPE = TypeVar('VS_TYPE', bound='VeSyncBaseDevice')
@@ -170,20 +170,6 @@ class VeSyncBaseDevice(ABC, Generic[VS_STATE_T]):
             f'CID: {self.cid}'
         )
 
-    # def __getattr__(self, attr: str) -> object:
-    #     """Return attribute from device state.
-
-    #     This will be removed in the next release.
-    #     """
-    #     if hasattr(self.state, attr):
-    #         warnings.warn(
-    #             "Access device state through the self.state attribute. ",
-    #             category=DeprecationWarning,
-    #             stacklevel=2,
-    #         )
-    #         return getattr(self.state, attr)
-    #     return object.__getattribute__(self, attr)
-
     @property
     def is_on(self) -> bool:
         """Return true if device is on."""
@@ -294,7 +280,7 @@ class VeSyncBaseDevice(ABC, Generic[VS_STATE_T]):
             display_list.append(('UUID: ', self.uuid))
 
         for line in display_list:
-            print(f'{line[0]:.<30} {line[1]}')
+            print(f'{line[0]:.<30} {line[1]}')  # noqa: T201
         if state:
             self.state.display()
 
@@ -583,4 +569,4 @@ class DeviceState:
     def display(self) -> None:
         """Print formatted state to stdout."""
         for name, val in self._serialize().items():
-            print(f'{name:.<30} {val}')
+            print(f'{name:.<30} {val}')  # noqa: T201

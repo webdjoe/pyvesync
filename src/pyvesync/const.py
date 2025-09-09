@@ -24,11 +24,14 @@ Attributes:
     TERMINAL_ID (str): Unique identifier for new API calls
 """
 
-from random import randint, choices
-from uuid import uuid4
+from __future__ import annotations
+
 import string
-from enum import StrEnum, IntEnum, Enum
+from enum import Enum, IntEnum, StrEnum
+from random import choices, randint
 from types import MappingProxyType
+from uuid import uuid4
+
 from pyvesync.utils.enum_utils import IntEnumMixin
 
 DEFAULT_LANGUAGE = 'en'
@@ -48,7 +51,6 @@ APP_VERSION = '5.6.60'
 APP_ID = ''.join(choices(string.ascii_lowercase + string.digits, k=8))  # noqa: S311
 PHONE_BRAND = 'pyvesync'
 PHONE_OS = 'Android'
-# MOBILE_ID = "1234567890123456"
 MOBILE_ID = str(randint(1000000000000000, 9999999999999999))  # noqa: S311
 USER_TYPE = '1'
 BYPASS_APP_V = f'VeSync {APP_VERSION}'
@@ -239,7 +241,7 @@ class DeviceStatus(StrEnum):
         return cls.UNKNOWN
 
     @classmethod
-    def from_bool(cls, value: bool) -> 'DeviceStatus':
+    def from_bool(cls, value: bool) -> DeviceStatus:
         """Convert boolean value to corresponding string."""
         return cls.ON if value is True else cls.OFF
 
@@ -278,7 +280,7 @@ class ConnectionStatus(StrEnum):
         return self == ConnectionStatus.ONLINE
 
     @classmethod
-    def from_bool(cls, value: bool | None) -> 'ConnectionStatus':
+    def from_bool(cls, value: bool | None) -> ConnectionStatus:
         """Convert boolean value to corresponding string.
 
         Returns ConnectionStatus.ONLINE if True, else ConnectionStatus.OFFLINE.
@@ -384,7 +386,7 @@ class AirQualityLevel(Enum):
         return self.name.lower()
 
     @classmethod
-    def from_string(cls, value: str | None) -> 'AirQualityLevel':
+    def from_string(cls, value: str | None) -> AirQualityLevel:
         """Convert string value to corresponding integer.
 
         Get enum from string value to normalize different values of the same
@@ -411,7 +413,7 @@ class AirQualityLevel(Enum):
         return cls.UNKNOWN
 
     @classmethod
-    def from_int(cls, value: int | None) -> 'AirQualityLevel':
+    def from_int(cls, value: int | None) -> AirQualityLevel:
         """Convert integer value to corresponding string."""
         if value in [itm.value for itm in cls]:
             return cls(value)

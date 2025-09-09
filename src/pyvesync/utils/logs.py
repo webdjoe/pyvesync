@@ -17,22 +17,24 @@ Usage:
 """
 
 from __future__ import annotations
+
 import logging
 import os
 import re
-from pathlib import Path
 from collections.abc import Mapping
 from dataclasses import fields, is_dataclass
+from pathlib import Path
 from typing import TYPE_CHECKING
-from mashumaro.exceptions import MissingField, InvalidFieldValue, UnserializableField
-import orjson
 
+import orjson
+from mashumaro.exceptions import InvalidFieldValue, MissingField, UnserializableField
 from multidict import CIMultiDictProxy
 
 if TYPE_CHECKING:
-    from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
     from aiohttp import ClientResponse
     from aiohttp.client_exceptions import ClientResponseError
+
+    from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
 
 
 class LibraryLogger:

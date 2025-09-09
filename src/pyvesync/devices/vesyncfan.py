@@ -1,19 +1,20 @@
 """Module for VeSync Fans (Not Purifiers or Humidifiers)."""
 
 from __future__ import annotations
+
 import logging
 from typing import TYPE_CHECKING
 
-from pyvesync.utils.helpers import Helpers, Timer
 from pyvesync.base_devices import VeSyncFanBase
-from pyvesync.const import DeviceStatus, ConnectionStatus
-from pyvesync.utils.device_mixins import BypassV2Mixin, process_bypassv2_result
-from pyvesync.models.fan_models import TowerFanResult
+from pyvesync.const import ConnectionStatus, DeviceStatus
 from pyvesync.models.bypass_models import TimerModels
+from pyvesync.models.fan_models import TowerFanResult
+from pyvesync.utils.device_mixins import BypassV2Mixin, process_bypassv2_result
+from pyvesync.utils.helpers import Helpers, Timer
 
 if TYPE_CHECKING:
-    from pyvesync.device_map import FanMap
     from pyvesync import VeSync
+    from pyvesync.device_map import FanMap
     from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
 
 logger = logging.getLogger(__name__)

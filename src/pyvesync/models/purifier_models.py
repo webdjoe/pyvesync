@@ -9,19 +9,20 @@ subclass when deserializing.
 """
 
 from __future__ import annotations
+
 from dataclasses import dataclass
 
-# import orjson
 from mashumaro.config import BaseConfig
 from mashumaro.types import Discriminator
-from pyvesync.models.bypass_models import (
-    RequestBypassV1,
-    BypassV2InnerResult,
-    BypassV1Result,
-)
+
 from pyvesync.models.base_models import (
-    ResponseBaseModel,
     RequestBaseModel,
+    ResponseBaseModel,
+)
+from pyvesync.models.bypass_models import (
+    BypassV1Result,
+    BypassV2InnerResult,
+    RequestBypassV1,
 )
 
 

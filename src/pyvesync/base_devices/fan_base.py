@@ -1,18 +1,20 @@
 """Fan Devices Base Class (NOT purifiers or humidifiers)."""
 
 from __future__ import annotations
+
 import logging
-from typing import TYPE_CHECKING
 from abc import abstractmethod
+from typing import TYPE_CHECKING
+
 from typing_extensions import deprecated
 
-from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseToggleDevice, DeviceState
-from pyvesync.const import FanModes, FanFeatures
+from pyvesync.base_devices.vesyncbasedevice import DeviceState, VeSyncBaseToggleDevice
+from pyvesync.const import FanFeatures, FanModes
 
 if TYPE_CHECKING:
     from pyvesync import VeSync
-    from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
     from pyvesync.device_map import FanMap
+    from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
 
 
 logger = logging.getLogger(__name__)

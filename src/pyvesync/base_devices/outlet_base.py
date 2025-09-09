@@ -1,20 +1,21 @@
 """Base Devices for Outlets."""
 
 from __future__ import annotations
+
 import logging
 from typing import TYPE_CHECKING
 
-from pyvesync.const import OutletFeatures, NightlightModes
-from pyvesync.utils.helpers import Helpers
-from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseToggleDevice, DeviceState
-from pyvesync.models.outlet_models import RequestEnergyHistory, ResponseEnergyHistory
+from pyvesync.base_devices.vesyncbasedevice import DeviceState, VeSyncBaseToggleDevice
+from pyvesync.const import NightlightModes, OutletFeatures
 from pyvesync.models.base_models import DefaultValues
+from pyvesync.models.outlet_models import RequestEnergyHistory, ResponseEnergyHistory
+from pyvesync.utils.helpers import Helpers
 
 if TYPE_CHECKING:
     from pyvesync import VeSync
     from pyvesync.device_map import OutletMap
-    from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
     from pyvesync.models.outlet_models import ResponseEnergyResult
+    from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
 
 logger = logging.getLogger(__name__)
 
@@ -164,8 +165,6 @@ class VeSyncOutlet(VeSyncBaseToggleDevice):
         product_type (str): Product type of device.
         features (dict): Features of device.
     """
-
-    # __metaclass__ = ABCMeta
 
     def __init__(
         self, details: ResponseDeviceDetailsModel, manager: VeSync, feature_map: OutletMap

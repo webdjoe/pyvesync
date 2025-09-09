@@ -5,7 +5,9 @@ These models inherit from `ResponseBaseModel` and `RequestBaseModel` from the
 """
 
 from __future__ import annotations
+
 from dataclasses import dataclass
+
 from mashumaro.mixins.orjson import DataClassORJSONMixin
 
 from pyvesync.models.bypass_models import (

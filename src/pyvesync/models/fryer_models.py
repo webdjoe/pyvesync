@@ -1,7 +1,9 @@
 """Data models for VeSync air fryers."""
 
 from __future__ import annotations
+
 from dataclasses import dataclass
+
 from pyvesync.models.base_models import ResponseBaseModel
 
 

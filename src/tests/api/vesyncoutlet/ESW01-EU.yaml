@@ -1,4 +1,4 @@
-get_details:
+update:
   headers:
     accept-language: en
     accountId: sample_id
@@ -11,7 +11,7 @@ get_details:
     accountId: sample_id
     appVersion: 5.6.60
     method: devicedetail
-    mobileId: '2809914961843013'
+    mobileId: 'MOBILE_ID'
     phoneBrand: pyvesync
     phoneOS: Android
     timeZone: America/New_York
