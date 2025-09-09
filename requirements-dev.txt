@@ -1,4 +1,5 @@
 pytest
+requests
 pytest-cov
 ruff
 pylint
