@@ -1,0 +1,9 @@
+pytest
+pytest-cov
+ruff
+pylint
+mypy
+pyyaml
+tox
+aiofiles
+pre-commit
