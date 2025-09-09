@@ -2,10 +2,10 @@
 
 import json
 import logging
-from typing import Any, Dict, List, Tuple, Union, Optional
-from pyvesync.vesyncbasedevice import VeSyncBaseDevice
-from pyvesync.helpers import Helpers, Timer
+from typing import Any, Dict, List, Optional, Tuple, Union
 
+from pyvesync.helpers import Helpers, Timer
+from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 
 humid_features: dict = {
     'Classic300S': {
@@ -60,7 +60,7 @@ humid_features: dict = {
                        'LUH-O601S-WUS',
                        'LUH-O601S-KUS'],
             'features': ['warm_mist'],
-            'mist_modes': ['auto', 'humidity', 'sleep', 'manual'],
+            'mist_modes': ['auto', 'sleep', 'manual'],
             'mist_levels': list(range(1, 10)),
             'warm_mist_levels': list(range(4))
     },
