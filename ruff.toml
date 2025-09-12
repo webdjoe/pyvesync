@@ -47,6 +47,7 @@ ignore = [
   "INP001", # Implicit Namespace error  - IGNORE
   "TC003",  # Bug in TYPE_CHECKING recommendation for dataclasses - IGNORE
   "D102",  # Missing docstring in public method - HANDLED BY flake8-docstrings
+  "EXE002", # Use of exec - IGNORE
   # "Q000", # Quotes
 
 
