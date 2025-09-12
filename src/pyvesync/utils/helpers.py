@@ -8,7 +8,7 @@ import re
 import time
 from collections.abc import Iterator
 from dataclasses import InitVar, dataclass, field
-from typing import TYPE_CHECKING, Any, TypeVar, Union
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import orjson
 from mashumaro.exceptions import InvalidFieldValue, MissingField, UnserializableField
@@ -40,9 +40,9 @@ T_MODEL = TypeVar('T_MODEL', bound=DataClassORJSONMixin)
 
 _LOGGER = logging.getLogger(__name__)
 
-NUMERIC_OPT = Union[float, str, None]
+NUMERIC_OPT = float | str | None
 
-NUMERIC_STRICT = Union[float, str]
+NUMERIC_STRICT = float | str
 
 REQUEST_T = dict[str, Any]
 

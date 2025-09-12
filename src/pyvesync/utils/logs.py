@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """library_logger.py.
 
 This module provides a custom logger for libraries. It automatically

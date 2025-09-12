@@ -50,7 +50,7 @@ class VeSyncHome:
         for update_coro in asyncio.as_completed(update_tasks):
             try:
                 await update_coro
-            except Exception as e:  # pylint: disable=broad-except  # noqa: BLE001, PERF203
+            except Exception as e:  # pylint: disable=broad-except
                 _LOGGER.debug('Error updating device %s', e)
 
     @staticmethod

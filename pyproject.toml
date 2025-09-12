@@ -35,14 +35,28 @@ dev = [
     "pytest",
     "pytest-cov",
     "pyyaml",
+    "pylint",
+    "mypy",
+    "ruff",
+    "pre-commit",
     "tox",
+    "requests",
     "aiofiles"
 ]
 docs = [
     "mkdocstrings-python",
     "mkdocs",
+    "ruff",
+    "Pygments",
     "mkdocs-material",
     "mkdocstrings",
+    "mkdocs-include-markdown-plugin",
+    "mkdocs-material-extensions",
+    "pymdown-extensions",
+    "mike",
+    "mkdocs-git-revision-date-localized-plugin",
+    "docstring-inheritance",
+    "mkdocs-autoref"
 ]
 
 [tool.setuptools.packages.find]

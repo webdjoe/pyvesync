@@ -97,7 +97,7 @@ from pyvesync.devices import (
     vesyncthermostat,
 )
 
-T_MAPS = Union[
+T_MAPS = Union[  # noqa: UP007, RUF100
     list['OutletMap'],
     list['SwitchMap'],
     list['BulbMap'],
