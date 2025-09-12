@@ -43,4 +43,5 @@ jobs:
           pip install pytest
           pytest -v
       - name: Fail if any steps failed
-        run: exit 1 if (${{ steps.ruff.outcome }} == 'failure' || ${{ steps.pylint.outcome }} == 'failure' || ${{ steps.pytest.outcome }} == 'failure') else 0
+        run: |
+          [ "${{ steps.ruff.outcome }}" == "failure" ] || [ "${{ steps.pylint.outcome }}" == "failure" ] || [ "${{ steps.pytest.outcome }}" == "failure" ] && exit 1 || exit 0
