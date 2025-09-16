@@ -605,7 +605,13 @@ humidifier_modules = [
     ),
     HumidifierMap(
         class_name='VeSyncHumid200300S',
-        dev_types=['Dual200S', 'LUH-D301S-WUSR', 'LUH-D301S-WJP', 'LUH-D301S-WEU'],
+        dev_types=[
+            'Dual200S',
+            'LUH-D301S-WUSR',
+            'LUH-D301S-WJP',
+            'LUH-D301S-WEU',
+            'LUH-D301S-KEUR',
+        ],
         features=[],
         mist_modes={
             HumidifierModes.AUTO: 'auto',
