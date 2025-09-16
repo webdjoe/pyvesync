@@ -817,6 +817,17 @@ class VeSyncAirSprout(VeSyncAirBaseV2):  # pylint: disable=too-many-ancestors
             )
             self.state.nightlight_brightness = details.nightlight.brightness
 
+    async def get_details(self) -> None:
+        """Build API V2 Purifier details dictionary."""
+        r_dict = await self.call_bypassv2_api('getPurifierStatus')
+        r_model = process_bypassv2_result(
+            self, _LOGGER, 'get_details', r_dict, PurifierSproutResult
+        )
+        if r_model is None:
+            return
+
+        self._set_state(r_model)
+
 
 class VeSyncAir131(BypassV1Mixin, VeSyncPurifier):
     """Levoit Air Purifier Class.
