@@ -203,7 +203,9 @@ class Color:
         if not Validators.validate_hsv(hue, saturation, value):
             _LOGGER.debug('Invalid HSV values')
             return None
-        return cls(HSV(float(hue), float(saturation), float(value)))  # type: ignore[arg-type]
+        return cls(
+            HSV(float(hue), float(saturation), float(value))  # type: ignore[arg-type]
+        )
 
     @staticmethod
     def hsv_to_rgb(hue: float, saturation: float, value: float) -> RGB:

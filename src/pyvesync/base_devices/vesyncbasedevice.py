@@ -6,8 +6,8 @@ import inspect
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime as dt
+from datetime import timezone
 from typing import TYPE_CHECKING, Any, Generic, TypeVar
-from zoneinfo import ZoneInfo
 
 import orjson
 from typing_extensions import deprecated
@@ -285,7 +285,9 @@ class VeSyncBaseDevice(ABC, Generic[VS_STATE_T]):
             self.state.display()
 
     @deprecated('Use to_json() instead')
-    def displayJSON(self, state: bool = True, indent: bool = True) -> str:  # pylint: disable=invalid-name
+    def displayJSON(
+        self, state: bool = True, indent: bool = True
+    ) -> str:  # pylint: disable=invalid-name
         """Return JSON details for device. - Deprecated use to_json()."""
         return self.to_json(state, indent)
 
@@ -449,7 +451,7 @@ class DeviceState:
         device (VeSyncBaseDevice): Device object.
         device_status (str): Device status.
         features (dict): Features of device.
-        last_update_ts (int): Last update timestamp of device, defaults to None.
+        last_update_ts (int): Last update timestamp in UTC, defaults to None.
 
     Methods:
         update_ts: Update last update timestamp.
@@ -508,9 +510,9 @@ class DeviceState:
         )
 
     def update_ts(self) -> None:
-        """Update last update timestamp."""
+        """Update last update timestamp as UTC timestamp."""
         self.last_update_ts = int(
-            dt.now(tz=ZoneInfo(self.device.manager.time_zone)).timestamp()
+            int(dt.now(tz=timezone.utc).timestamp())
         )
 
     @staticmethod

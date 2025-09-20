@@ -251,7 +251,9 @@ class AirFryer158138State(FryerState):
                 self.cook_set_time = cook.get('cookSetTime', self.cook_set_time)
                 self.cook_set_temp = cook.get('cookSetTemp', self.cook_set_temp)
                 self.current_temp = cook.get('currentTemp', self.current_temp)
-                self.temp_unit = cook.get('tempUnit', self.temp_unit)  # type: ignore[assignment]
+                self.temp_unit = cook.get(
+                    'tempUnit', self.temp_unit
+                    )  # type: ignore[assignment]
             elif cook.get('cookStatus') == 'end':
                 self.set_standby()
                 self.cook_status = 'cookEnd'
@@ -301,7 +303,9 @@ class AirFryer158138State(FryerState):
         self.cook_set_temp = return_status.get(
             'targetTemp', return_status.get('cookSetTemp')
         )
-        self.temp_unit = return_status.get('tempUnit', self.temp_unit)  # type: ignore[assignment]
+        self.temp_unit = return_status.get(
+            'tempUnit', self.temp_unit
+        )  # type: ignore[assignment]
         self.preheat_set_time = return_status.get('preheatSetTime')
         self.preheat_last_time = return_status.get('preheatLastTime')
 

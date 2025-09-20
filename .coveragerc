@@ -8,7 +8,6 @@ omit = src/tests/*
 exclude_lines =
     # Have to re-enable the standard pragma
     pragma: no cover
-
     # Don't complain about missing debug-only code:
     def __repr__
     def __str__
@@ -21,7 +20,6 @@ exclude_lines =
     # Don't complain if tests don't hit defensive assertion code:
     raise AssertionError
     raise NotImplementedError
-
     # Don't complain about abstract methods, they aren't run:
     @(abc\.)?abstractmethod
 

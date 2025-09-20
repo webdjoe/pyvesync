@@ -23,7 +23,6 @@ classifiers = [
 dependencies = [
     "aiohttp>=3.8.1",
     "mashumaro[orjson]>=3.13.1",
-    "python-dateutil>=2.8.1"
 ]
 
 [project.urls]
@@ -69,6 +68,29 @@ testpaths = ["src/tests"]
 norecursedirs = ["*.egg-info", ".git", ".tox", "dist", "build", "venv"]
 pythonpath = "src"
 log_cli = true
+
+[tool.coverage.run]
+branch = true
+omit = [
+    "test/*",
+    "src/tests/*",
+    "testing_scripts/*"
+]
+
+[tool.coverage.report]
+exclude_also = [
+    'pragma: no cover',
+    'if self\\.debug',
+    "def __repr__",
+    "def __str__",
+    "def __eq__",
+    "def __hash__",
+    "def firmware_update",
+    "def get_config",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "@(abc\\.)?abstractmethod",
+]
 
 [tool.pylint.MAIN]
 persistent = false
