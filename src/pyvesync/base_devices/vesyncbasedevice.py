@@ -5,8 +5,8 @@ from __future__ import annotations
 import inspect
 import logging
 from abc import ABC, abstractmethod
+from datetime import UTC
 from datetime import datetime as dt
-from datetime import timezone
 from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 import orjson
@@ -511,9 +511,7 @@ class DeviceState:
 
     def update_ts(self) -> None:
         """Update last update timestamp as UTC timestamp."""
-        self.last_update_ts = int(
-            int(dt.now(tz=timezone.utc).timestamp())
-        )
+        self.last_update_ts = int(dt.now(tz=UTC).timestamp())
 
     @staticmethod
     def __predicate(attr: Any) -> bool:  # noqa: ANN401
