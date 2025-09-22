@@ -126,8 +126,10 @@ class VeSyncHome:
             raise VeSyncAPIResponseError('No homes found in the response.')
         for home in home_list:
             if not isinstance(home, IntResponseHomeListModel):
-                msg = ('Invalid home list item type.'
-                       f'Expected IntResponseHomeListModel, got {home}')
+                msg = (
+                    'Invalid home list item type.'
+                    f'Expected IntResponseHomeListModel, got {home}'
+                )
                 raise VeSyncAPIResponseError(msg)
         return True
 

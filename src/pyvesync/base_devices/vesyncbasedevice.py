@@ -285,9 +285,7 @@ class VeSyncBaseDevice(ABC, Generic[VS_STATE_T]):
             self.state.display()
 
     @deprecated('Use to_json() instead')
-    def displayJSON(
-        self, state: bool = True, indent: bool = True
-    ) -> str:  # pylint: disable=invalid-name
+    def displayJSON(self, state: bool = True, indent: bool = True) -> str:  # pylint: disable=invalid-name
         """Return JSON details for device. - Deprecated use to_json()."""
         return self.to_json(state, indent)
 
