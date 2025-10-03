@@ -330,6 +330,7 @@ class VeSync:  # pylint: disable=function-redefined
             email=self.username,
             method='authByPWDOrOTM',
             password=self.password,
+            userCountryCode=self.country_code,
         )
         resp_dict, _ = await self.async_call_api(
             '/globalPlatform/api/accountAuth/v1/authByPWDOrOTM',
