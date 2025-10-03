@@ -413,7 +413,7 @@ class VeSync:  # pylint: disable=function-redefined
                 if error_info.error_type == ErrorTypes.CROSS_REGION:
                     result = response_model.result
                     self.country_code = result.countryCode
-                    return await self._login_token(region_change_token=result.bizToken)
+                    return await self._login_token(region_change_token=result.bizToken, auth_code=auth_code)
                 resp_message = resp_dict.get('msg')
                 if resp_message is not None:
                     error_info.message = f'{error_info.message} ({resp_message})'
