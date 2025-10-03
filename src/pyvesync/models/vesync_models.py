@@ -22,7 +22,6 @@ from pyvesync.models.base_models import (
     ResponseBaseModel,
     ResponseCodeModel,
 )
-from tests.call_json import USER_TYPE
 
 
 @dataclass
