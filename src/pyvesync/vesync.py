@@ -70,6 +70,7 @@ class VeSync:  # pylint: disable=function-redefined
         'session',
         'time_zone',
         'username',
+        '_login_attempts',
     )
 
     def __init__(  # noqa: PLR0913
