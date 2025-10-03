@@ -445,7 +445,7 @@ class VeSync:  # pylint: disable=function-redefined
                     self.country_code = result.countryCode
                     self._login_attempts += 1
                     if self._login_attempts == 1:
-                        return await self.login()
+                        return await self._login_token(region_change_token=result.bizToken)
                     else:
                         return await self._legacy_login()
                 resp_message = resp_dict.get('msg')
