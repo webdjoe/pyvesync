@@ -155,7 +155,7 @@ class VeSync:  # pylint: disable=function-redefined
         self.enabled = False
         self.in_process = False
         self._device_container: DeviceContainer = DeviceContainerInstance
-        self._login_attempts = 0
+        self._login_attempts: int = 0
 
     @property
     def devices(self) -> DeviceContainer:
