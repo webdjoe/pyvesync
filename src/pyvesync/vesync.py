@@ -382,7 +382,7 @@ class VeSync:  # pylint: disable=function-redefined
             json_object=request_auth
         )
 
-        if Helpers.code_check(resp_dict) and 'result' in resp_dict:
+        if resp_dict.get('code') == 0 and 'result' in resp_dict:
             self._token = resp_dict.get('result').get('token')
             self._account_id = resp_dict.get('result').get('accountID')
             self.country_code = resp_dict.get('result').get('countryCode')
