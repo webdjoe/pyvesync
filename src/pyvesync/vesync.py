@@ -446,9 +446,9 @@ class VeSync:  # pylint: disable=function-redefined
                     self.country_code = result.countryCode
                     self._login_attempts += 1
                     if self._login_attempts == 1:
-                        await self.login()  
+                        return await self.login()  
                     else:
-                        await self._legacy_login()
+                        return await self._legacy_login()
                 resp_message = resp_dict.get('msg')
                 if resp_message is not None:
                     error_info.message = f'{error_info.message} ({resp_message})'
