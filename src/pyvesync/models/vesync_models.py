@@ -105,7 +105,7 @@ class RequestLoginTokenModel(RequestBaseModel):
         if d['bizToken'] is None:
             d.pop('bizToken')
         return d
-    
+
 @dataclass
 class RequestLoginLegacy(RequestBaseModel):
     """Request model for login."""
