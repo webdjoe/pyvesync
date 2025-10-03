@@ -119,6 +119,10 @@ class RequestLoginLegacy(RequestBaseModel):
     userType: str = USER_TYPE
     acceptLanguage: str = DefaultValues.acceptLanguage
     timeZone: str = DefaultValues.timeZone
+    phoneBrand: str = DefaultValues.phoneBrand
+    phoneOS: str = DefaultValues.phoneOS
+    appVersion: str = DefaultValues.appVersion
+    traceId: str = field(default_factory=DefaultValues.newTraceId)
 
     def __post_init__(self) -> None:
         """Hash the password field."""
