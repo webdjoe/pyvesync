@@ -23,6 +23,8 @@ from pyvesync.models.base_models import (
     ResponseCodeModel,
 )
 
+from pyvesync.const import USER_TYPE
+
 
 @dataclass
 class RequestGetTokenModel(RequestBaseModel):
