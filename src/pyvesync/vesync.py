@@ -155,6 +155,7 @@ class VeSync:  # pylint: disable=function-redefined
         self.enabled = False
         self.in_process = False
         self._device_container: DeviceContainer = DeviceContainerInstance
+        self._login_attempts = 0
 
     @property
     def devices(self) -> DeviceContainer:
@@ -413,7 +414,13 @@ class VeSync:  # pylint: disable=function-redefined
                 if error_info.error_type == ErrorTypes.CROSS_REGION:
                     result = response_model.result
                     self.country_code = result.countryCode
-                    return await self._login_token(region_change_token=result.bizToken, auth_code=auth_code)
+                    self._login_attempts += 1
+                    if self._login_attempts > 2:
+                        raise VeSyncLoginError(
+                            'Maximum login attempts exceeded,'
+                            ' please check your country code'
+                        )
+                    return await self.login()
                 resp_message = resp_dict.get('msg')
                 if resp_message is not None:
                     error_info.message = f'{error_info.message} ({resp_message})'
