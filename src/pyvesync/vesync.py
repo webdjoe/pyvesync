@@ -389,6 +389,7 @@ class VeSync:  # pylint: disable=function-redefined
             logger.debug('Login successful')
             logger.debug('token %s', self.token)
             logger.debug('account_id %s', self.account_id)
+            return None
 
         logger.error('Error logging in with username and password')
         raise VeSyncAPIResponseError(resp_dict)
