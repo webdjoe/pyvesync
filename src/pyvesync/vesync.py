@@ -366,7 +366,7 @@ class VeSync:  # pylint: disable=function-redefined
             )
 
         await self._login_token(auth_code=result.authorizeCode)
-    
+
     async def _legacy_login(self) -> None:
         """Log into VeSync server using the legacy approach.
 
@@ -393,7 +393,7 @@ class VeSync:  # pylint: disable=function-redefined
 
         logger.error('Error logging in with username and password')
         raise VeSyncAPIResponseError(resp_dict)
-    
+
     async def _login_token(
         self,
         auth_code: str | None = None,
@@ -446,7 +446,7 @@ class VeSync:  # pylint: disable=function-redefined
                     self.country_code = result.countryCode
                     self._login_attempts += 1
                     if self._login_attempts == 1:
-                        return await self.login()  
+                        return await self.login()
                     else:
                         return await self._legacy_login()
                 resp_message = resp_dict.get('msg')
