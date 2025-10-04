@@ -82,4 +82,4 @@ max-args = 6
 quote-style = "single"
 indent-style = "space"
 skip-magic-trailing-comma = false
-line-ending = "cr-lf"
+line-ending = "native"
