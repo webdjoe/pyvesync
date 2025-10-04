@@ -11,6 +11,7 @@ from pyvesync.base_devices.purifier_base import VeSyncPurifier
 from pyvesync.const import (
     ConnectionStatus,
     DeviceStatus,
+    NightlightModes,
     PurifierAutoPreference,
     PurifierModes,
 )
@@ -363,8 +364,8 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
         r = Helpers.process_dev_response(_LOGGER, 'set_night_light', self, r_dict)
         if r is None:
             return False
-
-        self.state.nightlight_status = mode
+        self.state.connection_status = ConnectionStatus.ONLINE
+        self.state.nightlight_status = NightlightModes(mode.lower())
         return True
 
     @property

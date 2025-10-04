@@ -146,12 +146,13 @@ The VeSync signature is:
 VeSync(
     username: str,
     password: str,
+    country_code: str = DEFAULT_COUNTRY_CODE,  # US
     session: ClientSession | None = None,
     time_zone: str = DEFAULT_TZ  # America/New_York
+    debug: bool = False,
+    redact: bool = True,
     )
 ```
-
-The VeSync class no longer accepts a `debug` or `redact` argument. To set debug the library set `manager.debug = True` to the instance and `manager.redact = True`.
 
 ### Product Types
 
@@ -283,6 +284,59 @@ from pyvesync.logs import VeSyncLoginError
 async def main():
     async with VeSync("user", "password") as manager:
         await manager.login()
+        await manager.update()
+
+        # Acts as a set of device instances
+        device_container = manager.devices
+
+        outlets = device_container.outlets # List of outlet instances
+        outlet = outlets[0]
+        await outlet.update()
+        await outlet.turn_off()
+        outlet.display()
+
+        # Iterate of entire device list
+        for devices in device_container:
+            device.display()
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+If you want to reuse your token and account_id between runs. The `VeSync.auth` object holds the credentials and helper methods to save and load credentials.
+
+```python
+import asyncio
+from pyvesync import VeSync
+from pyvesync.logs import VeSyncLoginError
+
+# VeSync is an asynchronous context manager
+# VeSync(username, password, debug=False, redact=True, session=None)
+
+async def main():
+    async with VeSync("user", "password") as manager:
+
+        # If credentials are stored in a file, it can be loaded
+        # the default location is ~/.vesync_token
+        await manager.load_credentials_from_file()
+        # or the file path can be passed
+        await manager.load_credentials_from_file("/path/to/token_file")
+
+        # Or credentials can be passed directly
+        manager.set_credentials("your_token", "your_account_id")
+
+        # No login needed
+        # await manager.login()
+
+        # To store credentials to a file after login
+        await manager.save_credentials() # Saves to default location ~/.vesync_token
+        # or pass a file path
+        await manager.save_credentials("/path/to/token_file")
+
+        # Output Credentials as JSON String
+        await manager.output_credentials()
+
         await manager.update()
 
         # Acts as a set of device instances
