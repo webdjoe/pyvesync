@@ -14,11 +14,9 @@ from mashumaro.mixins.orjson import DataClassORJSONMixin
 
 from pyvesync.auth import VeSyncAuth
 from pyvesync.const import (
-    API_BASE_URL_EU,
-    API_BASE_URL_US,
     DEFAULT_REGION,
     DEFAULT_TZ,
-    NON_EU_REGIONS,
+    REGION_API_MAP,
     STATUS_OK,
 )
 from pyvesync.device_container import DeviceContainer, DeviceContainerInstance
@@ -174,10 +172,10 @@ class VeSync:  # pylint: disable=function-redefined
         """Return country code."""
         return self._auth.country_code
 
-    @country_code.setter
-    def country_code(self, value: str) -> None:
-        """Set country code."""
-        self._auth.country_code = value
+    @property
+    def current_region(self) -> str:
+        """Return current region."""
+        return self._auth.current_region
 
     @property
     def token(self) -> str:
@@ -276,14 +274,18 @@ class VeSync:  # pylint: disable=function-redefined
         """
         return await self.auth.load_credentials_from_file(filename)
 
-    def set_credentials(self, token: str, account_id: str) -> None:
+    def set_credentials(
+        self, token: str, account_id: str, country_code: str, region: str
+    ) -> None:
         """Set authentication credentials.
 
         Args:
             token (str): Authentication token.
             account_id (str): Account ID.
+            country_code (str): Country code in ISO 3166 Alpha-2 format.
+            region (str): Current region code.
         """
-        self._auth.set_credentials(token, account_id)
+        self._auth.set_credentials(token, account_id, country_code, region)
 
     def log_to_file(self, filename: str | Path, std_out: bool = True) -> None:
         """Log to file and enable debug logging.
@@ -512,9 +514,7 @@ class VeSync:  # pylint: disable=function-redefined
 
         If `API_BASE_URL` is set, it will take precedence over the determined URL.
         """
-        if self.country_code in NON_EU_REGIONS:
-            return API_BASE_URL_US
-        return API_BASE_URL_EU
+        return REGION_API_MAP[self.current_region]
 
     def _update_fw_version(self, info_list: list[FirmwareDeviceItemModel]) -> bool:
         """Update device firmware versions from API response."""

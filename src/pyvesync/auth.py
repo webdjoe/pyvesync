@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 import orjson
 from mashumaro.exceptions import MissingField, UnserializableDataError
 
-from pyvesync.const import DEFAULT_REGION
+from pyvesync.const import DEFAULT_REGION, NON_EU_COUNTRY_CODES
 from pyvesync.models.vesync_models import (
     RequestGetTokenModel,
     RequestLoginTokenModel,
@@ -42,6 +42,7 @@ class VeSyncAuth:
     __slots__ = (
         '_account_id',
         '_country_code',
+        '_current_region',
         '_password',
         '_token',
         '_token_file_path',
@@ -63,6 +64,7 @@ class VeSyncAuth:
             username: VeSync account username (email)
             password: VeSync account password
             country_code: Country code in ISO 3166 Alpha-2 format
+            current_region: Current region code - determines API base URL
             token_file_path: Path to store/load authentication token
 
         Note:
@@ -76,7 +78,14 @@ class VeSyncAuth:
         self._token: str | None = None
         self._account_id: str | None = None
         self._country_code = country_code.upper()
+        self._current_region = self._country_code_to_region()
         self._token_file_path: Path | None = None
+
+    def _country_code_to_region(self) -> str:
+        """Convert country code to region string for API use."""
+        if self._country_code in NON_EU_COUNTRY_CODES:
+            return 'US'
+        return 'EU'
 
     @property
     def token(self) -> str:
@@ -107,6 +116,11 @@ class VeSyncAuth:
         self._country_code = value.upper()
 
     @property
+    def current_region(self) -> str:
+        """Return current region."""
+        return self._current_region
+
+    @property
     def is_authenticated(self) -> bool:
         """Check if user is authenticated."""
         return self._token is not None and self._account_id is not None
@@ -115,19 +129,21 @@ class VeSyncAuth:
         self,
         token: str,
         account_id: str,
-        region: str | None = None,
+        country_code: str,
+        region: str,
     ) -> None:
         """Set authentication credentials.
 
         Args:
             token: Authentication token
             account_id: Account ID
-            region: Country code in ISO 3166 Alpha-2 format
+            country_code: Country code in ISO 3166 Alpha-2 format
+            region: Current region code
         """
         self._token = token
         self._account_id = account_id
-        if region is not None:
-            self._country_code = region.upper()
+        self._country_code = country_code.upper()
+        self._current_region = region
 
     async def load_credentials_from_file(
         self, file_path: str | Path | None = None
@@ -156,10 +172,10 @@ class VeSyncAuth:
                 Path(file_path_object).read_text, encoding='utf-8'
             )
             data = orjson.loads(data)
-            self._token = data.get('token')
-            self._account_id = data.get('account_id')
-            if data.get('country_code'):
-                self._country_code = data.get('country_code').upper()
+            self._token = data['token']
+            self._account_id = data['account_id']
+            self._country_code = data['country_code'].upper()
+            self._current_region = data['current_region']
             logger.debug('Credentials loaded from file: %s', file_path)
         except orjson.JSONDecodeError as exc:
             logger.warning('Failed to load credentials from file: %s', exc)
@@ -180,6 +196,7 @@ class VeSyncAuth:
             'token': self._token,
             'account_id': self._account_id,
             'country_code': self._country_code,
+            'current_region': self._current_region,
         }
         try:
             return orjson.dumps(credentials).decode('utf-8')
@@ -369,6 +386,7 @@ class VeSyncAuth:
                 if error_info.error_type == ErrorTypes.CROSS_REGION:
                     result = response_model.result
                     self._country_code = result.countryCode
+                    self._current_region = result.currentRegion
                     logger.debug(
                         'Cross-region error, retrying with country: %s',
                         self._country_code,

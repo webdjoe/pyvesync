@@ -40,7 +40,11 @@ API_BASE_URL = None  # Global URL (non-EU regions): "https://smartapi.vesync.com
 # using 8 here so there is time enough to catch that message
 API_BASE_URL_US = 'https://smartapi.vesync.com'
 API_BASE_URL_EU = 'https://smartapi.vesync.eu'
-NON_EU_REGIONS = ['US', 'CA', 'MX', 'JP']
+REGION_API_MAP = {
+    'US': API_BASE_URL_US,
+    'EU': API_BASE_URL_EU,
+}
+NON_EU_COUNTRY_CODES = ['US', 'CA', 'MX', 'JP']
 API_TIMEOUT = 8
 USER_AGENT = (
     'VeSync/3.2.39 (com.etekcity.vesyncPlatform; build:5; iOS 15.5.0) Alamofire/5.2.1'
