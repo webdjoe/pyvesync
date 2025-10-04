@@ -10,9 +10,9 @@ from typing import Self
 
 from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientResponseError
-from mashumaro.exceptions import MissingField, UnserializableDataError
 from mashumaro.mixins.orjson import DataClassORJSONMixin
 
+from pyvesync.auth import VeSyncAuth
 from pyvesync.const import (
     API_BASE_URL_EU,
     API_BASE_URL_US,
@@ -26,13 +26,8 @@ from pyvesync.models.vesync_models import (
     FirmwareDeviceItemModel,
     RequestDeviceListModel,
     RequestFirmwareModel,
-    RequestGetTokenModel,
-    RequestLoginTokenModel,
-    RespGetTokenResultModel,
-    RespLoginTokenResultModel,
     ResponseDeviceListModel,
     ResponseFirmwareModel,
-    ResponseLoginModel,
 )
 from pyvesync.utils.errors import (
     ErrorCodes,
@@ -40,7 +35,6 @@ from pyvesync.utils.errors import (
     VeSyncAPIResponseError,
     VeSyncAPIStatusCodeError,
     VeSyncError,
-    VeSyncLoginError,
     VeSyncServerError,
     raise_api_errors,
 )
@@ -55,21 +49,17 @@ class VeSync:  # pylint: disable=function-redefined
 
     __slots__ = (
         '__weakref__',
-        '_account_id',
+        '_auth',
         '_close_session',
         '_debug',
         '_device_container',
         '_redact',
-        '_token',
         '_verbose',
-        'country_code',
         'enabled',
         'in_process',
         'language',
-        'password',
         'session',
         'time_zone',
-        'username',
     )
 
     def __init__(  # noqa: PLR0913
@@ -108,6 +98,10 @@ class VeSync:  # pylint: disable=function-redefined
                 VeSync account during login.
             debug (bool): Enable debug logging, by default False.
             redact (bool): Enable redaction of sensitive information, by default True.
+            token (str): Pre-existing authentication token, by default None
+            account_id (str): Pre-existing account ID, by default None
+            token_file_path (str | Path): Path to store/load authentication token,
+                by default None
 
         Attributes:
             session (ClientSession):  Client session for API calls
@@ -115,9 +109,7 @@ class VeSync:  # pylint: disable=function-redefined
                 has functionality of a mutable set. See
                 [`DeviceContainer`][pyvesync.device_container.DeviceContainer] for
                 more information
-            token (str): VeSync API token
-            account_id (str): VeSync account ID
-            country_code (str): Country code for VeSync account pulled from API
+            auth (VeSyncAuth): Authentication manager
             time_zone (str): Time zone for VeSync account pulled from API
             enabled (bool): True if logged in to VeSync, False if not
 
@@ -134,6 +126,9 @@ class VeSync:  # pylint: disable=function-redefined
             If using a context manager is not convenient, `manager.__aenter__()` and
             `manager.__aexit__()` can be called directly.
 
+            Either username/password or token/account_id must be provided for
+            authentication.
+
         See Also:
             :obj:`DeviceContainer`
                 Container object to store VeSync devices
@@ -144,17 +139,20 @@ class VeSync:  # pylint: disable=function-redefined
         self._close_session = False
         self._debug = debug
         self.redact = redact
-        self.username: str = username
-        self.password: str = password
-        self._token: str | None = None
-        self._account_id: str | None = None
-        self.country_code: str = country_code.upper()
         self._verbose: bool = False
         self.time_zone: str = time_zone
         self.language: str = 'en'
         self.enabled = False
         self.in_process = False
         self._device_container: DeviceContainer = DeviceContainerInstance
+
+        # Initialize authentication manager
+        self._auth = VeSyncAuth(
+            manager=self,
+            username=username,
+            password=password,
+            country_code=country_code,
+        )
 
     @property
     def devices(self) -> DeviceContainer:
@@ -167,18 +165,43 @@ class VeSync:  # pylint: disable=function-redefined
         return self._device_container
 
     @property
+    def auth(self) -> VeSyncAuth:
+        """Return VeSync authentication manager."""
+        return self._auth
+
+    @property
+    def country_code(self) -> str:
+        """Return country code."""
+        return self._auth.country_code
+
+    @country_code.setter
+    def country_code(self, value: str) -> None:
+        """Set country code."""
+        self._auth.country_code = value
+
+    @property
     def token(self) -> str:
-        """Return VeSync API token."""
-        if self._token is None:
-            raise AttributeError('Token not set, run login() method')
-        return self._token
+        """Return authentication token.
+
+        Returns:
+            str: Authentication token.
+
+        Raises:
+            AttributeError: If token is not set.
+        """
+        return self._auth.token
 
     @property
     def account_id(self) -> str:
-        """Return VeSync account ID."""
-        if self._account_id is None:
-            raise AttributeError('Account ID not set, run login() method')
-        return self._account_id
+        """Return account ID.
+
+        Returns:
+            str: Account ID.
+
+        Raises:
+            AttributeError: If account ID is not set.
+        """
+        return self._auth.account_id
 
     @property
     def debug(self) -> bool:
@@ -225,6 +248,43 @@ class VeSync:  # pylint: disable=function-redefined
             LibraryLogger.shouldredact = False
         self._redact = new_flag
 
+    def output_credentials(self) -> str | None:
+        """Output current authentication credentials as a JSON string."""
+        return self.auth.output_credentials()
+
+    async def save_credentials(self, filename: str | Path | None) -> None:
+        """Save authentication credentials to a file.
+
+        Args:
+            filename (str | Path | None): The name of the file to save credentials to.
+                If None, no action is taken.
+        """
+        if filename is not None:
+            await self.auth.save_credentials_to_file(filename)
+
+    async def load_credentials_from_file(
+        self, filename: str | Path | None = None
+    ) -> bool:
+        """Load authentication credentials from a file.
+
+        Args:
+            filename (str | Path | None): The name of the file to load credentials from.
+                If None, no action is taken.
+
+        Returns:
+            bool: True if credentials were loaded successfully, False otherwise.
+        """
+        return await self.auth.load_credentials_from_file(filename)
+
+    def set_credentials(self, token: str, account_id: str) -> None:
+        """Set authentication credentials.
+
+        Args:
+            token (str): Authentication token.
+            account_id (str): Account ID.
+        """
+        self._auth.set_credentials(token, account_id)
+
     def log_to_file(self, filename: str | Path, std_out: bool = True) -> None:
         """Log to file and enable debug logging.
 
@@ -267,13 +327,17 @@ class VeSync:  # pylint: disable=function-redefined
             VeSyncAPIResponseError: If API response is invalid.
             VeSyncServerError: If server returns an error.
         """
-        if not self.enabled:
-            return False
-
         self.in_process = True
         proc_return = False
+
+        if not self.auth.is_authenticated or (
+            not self.auth.token or not self.auth.account_id
+        ):
+            logger.debug("Not logged in to VeSync, can't get devices")
+            return False
+
         request_model = RequestDeviceListModel(
-            token=self.token, accountID=self.account_id, timeZone=self.time_zone
+            token=self.auth.token, accountID=self.auth.account_id, timeZone=self.time_zone
         )
         response_dict, _ = await self.async_call_api(
             '/cloud/v1/deviceManaged/devices',
@@ -305,79 +369,13 @@ class VeSync:  # pylint: disable=function-redefined
 
         return proc_return
 
-    async def login(self) -> None:  # pylint: disable=W9006 # pylint mult docstring raises
+    async def login(self) -> bool:  # pylint: disable=W9006 # pylint mult docstring raises
         """Log into VeSync server.
 
         Username and password are provided when class is instantiated.
 
-        Raises:
-            VeSyncLoginError: If login fails, for example due to invalid username
-                or password.
-            VeSyncAPIResponseError: If API response is invalid.
-            VeSyncServerError: If server returns an error.
-        """
-        if (
-            not isinstance(self.username, str)
-            or len(self.username) == 0
-            or not isinstance(self.password, str)
-            or len(self.password) == 0
-        ):
-            raise VeSyncLoginError('Username and password must be specified')
-
-        request_auth = RequestGetTokenModel(
-            email=self.username,
-            method='authByPWDOrOTM',
-            password=self.password,
-        )
-        resp_dict, _ = await self.async_call_api(
-            '/globalPlatform/api/accountAuth/v1/authByPWDOrOTM',
-            'post',
-            json_object=request_auth,
-        )
-        if resp_dict is None:
-            raise VeSyncAPIResponseError('Error receiving response to auth request')
-
-        if resp_dict.get('code') != 0:
-            error_info = ErrorCodes.get_error_info(resp_dict.get('code'))
-            resp_message = resp_dict.get('msg')
-            if resp_message is not None:
-                error_info.message = f'{error_info.message} ({resp_message})'
-
-            msg = f'Error receiving response to auth request - {error_info.message}'
-            raise VeSyncAPIResponseError(msg)
-
-        try:
-            response_model = ResponseLoginModel.from_dict(resp_dict)
-        except Exception as exc:
-            logger.debug('Error parsing auth response: %s', exc)
-            raise VeSyncAPIResponseError(
-                'Error receiving response to auth request'
-            ) from exc
-
-        result = response_model.result
-        if not isinstance(result, RespGetTokenResultModel):
-            raise VeSyncAPIResponseError(
-                'Error receiving response to login request -'
-                ' result is not IntRespAuthResultModel'
-            )
-
-        return await self._login_token(auth_code=result.authorizeCode)
-
-    async def _login_token(
-        self,
-        auth_code: str | None = None,
-        region_change_token: str | None = None,
-    ) -> None:  # pylint: disable=W9006 # pylint mult docstring raises
-        """Exchanges the authorization code for a token.
-
-        This completes the login process. If the initial call fails with
-        `"login trigger cross region error."`, the region is adjusted and
-        another attempt is made.
-
-        Args:
-            auth_code (str): Auth code to use for logging in.
-            region_change_token (str): "bizToken" to use when calling this endpoint
-                for a second time with a different region.
+        Returns:
+            True if login successful, False otherwise
 
         Raises:
             VeSyncLoginError: If login fails, for example due to invalid username
@@ -385,59 +383,10 @@ class VeSync:  # pylint: disable=function-redefined
             VeSyncAPIResponseError: If API response is invalid.
             VeSyncServerError: If server returns an error.
         """
-        request_login = RequestLoginTokenModel(
-            method='loginByAuthorizeCode4Vesync',
-            authorizeCode=auth_code,
-            bizToken=region_change_token,
-            userCountryCode=self.country_code,
-            regionChange='last_region' if region_change_token else None,
-        )
-        resp_dict, _ = await self.async_call_api(
-            '/user/api/accountManage/v1/loginByAuthorizeCode4Vesync',
-            'post',
-            json_object=request_login,
-        )
-        if resp_dict is None:
-            raise VeSyncAPIResponseError('Error receiving response to login request')
-        try:
-            response_model = ResponseLoginModel.from_dict(resp_dict)
-            if not isinstance(response_model.result, RespLoginTokenResultModel):
-                raise VeSyncAPIResponseError(
-                    'Error receiving response to login request -'
-                    'result is not RespLoginTokenResultModel'
-                )
-            if response_model.code != 0:
-                error_info = ErrorCodes.get_error_info(resp_dict.get('code'))
-
-                # Handle cross region error by retrying login with new region
-                if error_info.error_type == ErrorTypes.CROSS_REGION:
-                    result = response_model.result
-                    self.country_code = result.countryCode
-                    return await self._login_token(region_change_token=result.bizToken)
-                resp_message = resp_dict.get('msg')
-                if resp_message is not None:
-                    error_info.message = f'{error_info.message} ({resp_message})'
-                msg = f'Error receiving response to login request - {error_info.message}'
-                raise VeSyncLoginError(msg)
-
-            result = response_model.result
-            if not isinstance(result, RespLoginTokenResultModel):
-                raise VeSyncAPIResponseError(
-                    'Error receiving response to login request -'
-                    ' result is not RespLoginTokenResultModel'
-                )
-
-            self._token = result.token
-            self._account_id = result.accountID
-            self.country_code = result.countryCode
+        success = await self._auth.login()
+        if success:
             self.enabled = True
-            logger.debug('Login successful')
-
-        except (MissingField, UnserializableDataError) as exc:
-            logger.debug('Error parsing login response: %s', exc)
-            raise VeSyncAPIResponseError(
-                'Error receiving response to login request'
-            ) from exc
+        return success
 
     async def update(self) -> None:
         """Fetch updated information about devices and new device list.
@@ -456,7 +405,7 @@ class VeSync:  # pylint: disable=function-redefined
     async def update_all_devices(self) -> None:
         """Run `get_details()` for each device and update state."""
         logger.debug('Start updating the device details one by one')
-        update_tasks = [
+        update_tasks: list[asyncio.Task] = [
             asyncio.create_task(device.update()) for device in self._device_container
         ]
         done, _ = await asyncio.wait(update_tasks, return_when=asyncio.ALL_COMPLETED)

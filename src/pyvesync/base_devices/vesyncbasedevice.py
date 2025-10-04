@@ -10,7 +10,6 @@ from datetime import datetime as dt
 from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 import orjson
-from typing_extensions import deprecated
 
 from pyvesync.const import ConnectionStatus, DeviceStatus
 
@@ -283,11 +282,6 @@ class VeSyncBaseDevice(ABC, Generic[VS_STATE_T]):
             print(f'{line[0]:.<30} {line[1]}')  # noqa: T201
         if state:
             self.state.display()
-
-    @deprecated('Use to_json() instead')
-    def displayJSON(self, state: bool = True, indent: bool = True) -> str:  # pylint: disable=invalid-name
-        """Return JSON details for device. - Deprecated use to_json()."""
-        return self.to_json(state, indent)
 
     def to_json(self, state: bool = True, indent: bool = True) -> str:
         """Print JSON API string for device details.

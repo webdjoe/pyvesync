@@ -83,8 +83,8 @@ class TestApiFunc:
         self.manager = VeSync('EMAIL', 'PASSWORD')
         self.manager.verbose = True
         self.manager.enabled = True
-        self.manager._token = TestDefaults.token
-        self.manager._account_id = TestDefaults.account_id
+        self.manager.auth._token = TestDefaults.token
+        self.manager.auth._account_id = TestDefaults.account_id
         caplog.set_level(logging.DEBUG)
         yield
         self.mock.stop()
