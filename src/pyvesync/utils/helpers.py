@@ -479,10 +479,9 @@ class Helpers:
             # pylint: disable=protected-access
             body |= {
                 'email': manager.auth._username,  # noqa: SLF001
-
                 'password': cls.hash_password(
                     manager.auth._password  # noqa: SLF001
-                    ),
+                ),
                 'devToken': '',
                 'userType': USER_TYPE,
                 'method': 'login',
