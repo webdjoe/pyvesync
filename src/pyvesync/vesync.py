@@ -96,10 +96,6 @@ class VeSync:  # pylint: disable=function-redefined
                 VeSync account during login.
             debug (bool): Enable debug logging, by default False.
             redact (bool): Enable redaction of sensitive information, by default True.
-            token (str): Pre-existing authentication token, by default None
-            account_id (str): Pre-existing account ID, by default None
-            token_file_path (str | Path): Path to store/load authentication token,
-                by default None
 
         Attributes:
             session (ClientSession):  Client session for API calls

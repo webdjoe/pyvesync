@@ -327,8 +327,7 @@ class VeSyncFanBase(VeSyncBaseToggleDevice):
         """Toggle mute on/off.
 
         Parameters:
-            toggle : bool
-                True to turn mute on, False to turn off
+            toggle (bool): True to turn mute on, False to turn off
 
         Returns:
             bool : True if successful, False if not

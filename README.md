@@ -357,9 +357,6 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-
-
-
 Devices are stored in the respective lists in the instantiated `VeSync` class:
 
 ```python
