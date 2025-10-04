@@ -8042,14 +8042,14 @@ false with warning debug message if not supported.</p>
       <tbody>
           <tr class="doc-section-item">
             <td>
-                <code>toggle </code>
+                <code>toggle</code>
             </td>
             <td>
+                  <code><span title="bool">bool</span></code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>bool
-True to turn mute on, False to turn off</p>
+                <p>True to turn mute on, False to turn off</p>
               </div>
             </td>
             <td>
@@ -8904,8 +8904,7 @@ and <a class="autorefs autorefs-internal" title="VeSyncBaseDevice" href="../../d
 <span class="normal"><a href="#__codelineno-0-388">388</a></span>
 <span class="normal"><a href="#__codelineno-0-389">389</a></span>
 <span class="normal"><a href="#__codelineno-0-390">390</a></span>
-<span class="normal"><a href="#__codelineno-0-391">391</a></span>
-<span class="normal"><a href="#__codelineno-0-392">392</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-103" name="__codelineno-0-103"></a><span class="k">class</span><span class="w"> </span><span class="nc">VeSyncFanBase</span><span class="p">(</span><span class="n">VeSyncBaseToggleDevice</span><span class="p">):</span>
+<span class="normal"><a href="#__codelineno-0-391">391</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-103" name="__codelineno-0-103"></a><span class="k">class</span><span class="w"> </span><span class="nc">VeSyncFanBase</span><span class="p">(</span><span class="n">VeSyncBaseToggleDevice</span><span class="p">):</span>
 <a id="__codelineno-0-104" name="__codelineno-0-104"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Base device for VeSync tower fans.</span>
 <a id="__codelineno-0-105" name="__codelineno-0-105"></a>
 <a id="__codelineno-0-106" name="__codelineno-0-106"></a><span class="sd">    Inherits from</span>
@@ -9132,69 +9131,68 @@ and <a class="autorefs autorefs-internal" title="VeSyncBaseDevice" href="../../d
 <a id="__codelineno-0-327" name="__codelineno-0-327"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Toggle mute on/off.</span>
 <a id="__codelineno-0-328" name="__codelineno-0-328"></a>
 <a id="__codelineno-0-329" name="__codelineno-0-329"></a><span class="sd">        Parameters:</span>
-<a id="__codelineno-0-330" name="__codelineno-0-330"></a><span class="sd">            toggle : bool</span>
-<a id="__codelineno-0-331" name="__codelineno-0-331"></a><span class="sd">                True to turn mute on, False to turn off</span>
-<a id="__codelineno-0-332" name="__codelineno-0-332"></a>
-<a id="__codelineno-0-333" name="__codelineno-0-333"></a><span class="sd">        Returns:</span>
-<a id="__codelineno-0-334" name="__codelineno-0-334"></a><span class="sd">            bool : True if successful, False if not</span>
-<a id="__codelineno-0-335" name="__codelineno-0-335"></a><span class="sd">        &quot;&quot;&quot;</span>
-<a id="__codelineno-0-336" name="__codelineno-0-336"></a>        <span class="k">del</span> <span class="n">toggle</span>
-<a id="__codelineno-0-337" name="__codelineno-0-337"></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">supports_mute</span><span class="p">:</span>
-<a id="__codelineno-0-338" name="__codelineno-0-338"></a>            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Mute not configured for this device.&#39;</span><span class="p">)</span>
-<a id="__codelineno-0-339" name="__codelineno-0-339"></a>        <span class="k">else</span><span class="p">:</span>
-<a id="__codelineno-0-340" name="__codelineno-0-340"></a>            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Mute not supported for this device.&#39;</span><span class="p">)</span>
-<a id="__codelineno-0-341" name="__codelineno-0-341"></a>        <span class="k">return</span> <span class="kc">False</span>
-<a id="__codelineno-0-342" name="__codelineno-0-342"></a>
-<a id="__codelineno-0-343" name="__codelineno-0-343"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">turn_on_mute</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-344" name="__codelineno-0-344"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Set toggle_mute to on.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-345" name="__codelineno-0-345"></a>        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">toggle_mute</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
-<a id="__codelineno-0-346" name="__codelineno-0-346"></a>
-<a id="__codelineno-0-347" name="__codelineno-0-347"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">turn_off_mute</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-348" name="__codelineno-0-348"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Set toggle_mute to off.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-349" name="__codelineno-0-349"></a>        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">toggle_mute</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
-<a id="__codelineno-0-350" name="__codelineno-0-350"></a>
-<a id="__codelineno-0-351" name="__codelineno-0-351"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">toggle_displaying_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">toggle</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-352" name="__codelineno-0-352"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Toggle displaying type on/off.</span>
-<a id="__codelineno-0-353" name="__codelineno-0-353"></a>
-<a id="__codelineno-0-354" name="__codelineno-0-354"></a><span class="sd">        This functionality is unknown but was in the API calls.</span>
-<a id="__codelineno-0-355" name="__codelineno-0-355"></a>
-<a id="__codelineno-0-356" name="__codelineno-0-356"></a><span class="sd">        Args:</span>
-<a id="__codelineno-0-357" name="__codelineno-0-357"></a><span class="sd">            toggle (bool): Displaying type state.</span>
-<a id="__codelineno-0-358" name="__codelineno-0-358"></a>
-<a id="__codelineno-0-359" name="__codelineno-0-359"></a><span class="sd">        Returns:</span>
-<a id="__codelineno-0-360" name="__codelineno-0-360"></a><span class="sd">            bool: true if success.</span>
-<a id="__codelineno-0-361" name="__codelineno-0-361"></a><span class="sd">        &quot;&quot;&quot;</span>
-<a id="__codelineno-0-362" name="__codelineno-0-362"></a>        <span class="k">del</span> <span class="n">toggle</span>
-<a id="__codelineno-0-363" name="__codelineno-0-363"></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">supports_displaying_type</span><span class="p">:</span>
-<a id="__codelineno-0-364" name="__codelineno-0-364"></a>            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Displaying type not configured for this device.&#39;</span><span class="p">)</span>
-<a id="__codelineno-0-365" name="__codelineno-0-365"></a>        <span class="k">else</span><span class="p">:</span>
-<a id="__codelineno-0-366" name="__codelineno-0-366"></a>            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Displaying type not supported for this device.&#39;</span><span class="p">)</span>
-<a id="__codelineno-0-367" name="__codelineno-0-367"></a>        <span class="k">return</span> <span class="kc">False</span>
-<a id="__codelineno-0-368" name="__codelineno-0-368"></a>
-<a id="__codelineno-0-369" name="__codelineno-0-369"></a>    <span class="nd">@deprecated</span><span class="p">(</span><span class="s1">&#39;Use `set_normal_mode` method instead&#39;</span><span class="p">)</span>
-<a id="__codelineno-0-370" name="__codelineno-0-370"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">normal_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-371" name="__codelineno-0-371"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Set mode to normal.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-372" name="__codelineno-0-372"></a>        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_normal_mode</span><span class="p">()</span>
-<a id="__codelineno-0-373" name="__codelineno-0-373"></a>
-<a id="__codelineno-0-374" name="__codelineno-0-374"></a>    <span class="nd">@deprecated</span><span class="p">(</span><span class="s1">&#39;Use `set_manual_mode` method instead&#39;</span><span class="p">)</span>
-<a id="__codelineno-0-375" name="__codelineno-0-375"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">manual_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-376" name="__codelineno-0-376"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Adapter to set mode to normal.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-377" name="__codelineno-0-377"></a>        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_normal_mode</span><span class="p">()</span>
-<a id="__codelineno-0-378" name="__codelineno-0-378"></a>
-<a id="__codelineno-0-379" name="__codelineno-0-379"></a>    <span class="nd">@deprecated</span><span class="p">(</span><span class="s1">&#39;Use `set_advanced_sleep_mode` method instead&#39;</span><span class="p">)</span>
-<a id="__codelineno-0-380" name="__codelineno-0-380"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">advanced_sleep_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-381" name="__codelineno-0-381"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Set advanced sleep mode.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-382" name="__codelineno-0-382"></a>        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_mode</span><span class="p">(</span><span class="s1">&#39;advancedSleep&#39;</span><span class="p">)</span>
-<a id="__codelineno-0-383" name="__codelineno-0-383"></a>
-<a id="__codelineno-0-384" name="__codelineno-0-384"></a>    <span class="nd">@deprecated</span><span class="p">(</span><span class="s1">&#39;Use `set_sleep_mode` method instead&#39;</span><span class="p">)</span>
-<a id="__codelineno-0-385" name="__codelineno-0-385"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">sleep_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-386" name="__codelineno-0-386"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Adapter to set advanced sleep mode.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-387" name="__codelineno-0-387"></a>        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_advanced_sleep_mode</span><span class="p">()</span>
-<a id="__codelineno-0-388" name="__codelineno-0-388"></a>
-<a id="__codelineno-0-389" name="__codelineno-0-389"></a>    <span class="nd">@deprecated</span><span class="p">(</span><span class="s1">&#39;Use `set_mode` method instead&#39;</span><span class="p">)</span>
-<a id="__codelineno-0-390" name="__codelineno-0-390"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">mode_toggle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-391" name="__codelineno-0-391"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Set mode to specified mode.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-392" name="__codelineno-0-392"></a>        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_mode</span><span class="p">(</span><span class="n">mode</span><span class="p">)</span>
+<a id="__codelineno-0-330" name="__codelineno-0-330"></a><span class="sd">            toggle (bool): True to turn mute on, False to turn off</span>
+<a id="__codelineno-0-331" name="__codelineno-0-331"></a>
+<a id="__codelineno-0-332" name="__codelineno-0-332"></a><span class="sd">        Returns:</span>
+<a id="__codelineno-0-333" name="__codelineno-0-333"></a><span class="sd">            bool : True if successful, False if not</span>
+<a id="__codelineno-0-334" name="__codelineno-0-334"></a><span class="sd">        &quot;&quot;&quot;</span>
+<a id="__codelineno-0-335" name="__codelineno-0-335"></a>        <span class="k">del</span> <span class="n">toggle</span>
+<a id="__codelineno-0-336" name="__codelineno-0-336"></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">supports_mute</span><span class="p">:</span>
+<a id="__codelineno-0-337" name="__codelineno-0-337"></a>            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Mute not configured for this device.&#39;</span><span class="p">)</span>
+<a id="__codelineno-0-338" name="__codelineno-0-338"></a>        <span class="k">else</span><span class="p">:</span>
+<a id="__codelineno-0-339" name="__codelineno-0-339"></a>            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Mute not supported for this device.&#39;</span><span class="p">)</span>
+<a id="__codelineno-0-340" name="__codelineno-0-340"></a>        <span class="k">return</span> <span class="kc">False</span>
+<a id="__codelineno-0-341" name="__codelineno-0-341"></a>
+<a id="__codelineno-0-342" name="__codelineno-0-342"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">turn_on_mute</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<a id="__codelineno-0-343" name="__codelineno-0-343"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Set toggle_mute to on.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-344" name="__codelineno-0-344"></a>        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">toggle_mute</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+<a id="__codelineno-0-345" name="__codelineno-0-345"></a>
+<a id="__codelineno-0-346" name="__codelineno-0-346"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">turn_off_mute</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<a id="__codelineno-0-347" name="__codelineno-0-347"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Set toggle_mute to off.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-348" name="__codelineno-0-348"></a>        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">toggle_mute</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+<a id="__codelineno-0-349" name="__codelineno-0-349"></a>
+<a id="__codelineno-0-350" name="__codelineno-0-350"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">toggle_displaying_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">toggle</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<a id="__codelineno-0-351" name="__codelineno-0-351"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Toggle displaying type on/off.</span>
+<a id="__codelineno-0-352" name="__codelineno-0-352"></a>
+<a id="__codelineno-0-353" name="__codelineno-0-353"></a><span class="sd">        This functionality is unknown but was in the API calls.</span>
+<a id="__codelineno-0-354" name="__codelineno-0-354"></a>
+<a id="__codelineno-0-355" name="__codelineno-0-355"></a><span class="sd">        Args:</span>
+<a id="__codelineno-0-356" name="__codelineno-0-356"></a><span class="sd">            toggle (bool): Displaying type state.</span>
+<a id="__codelineno-0-357" name="__codelineno-0-357"></a>
+<a id="__codelineno-0-358" name="__codelineno-0-358"></a><span class="sd">        Returns:</span>
+<a id="__codelineno-0-359" name="__codelineno-0-359"></a><span class="sd">            bool: true if success.</span>
+<a id="__codelineno-0-360" name="__codelineno-0-360"></a><span class="sd">        &quot;&quot;&quot;</span>
+<a id="__codelineno-0-361" name="__codelineno-0-361"></a>        <span class="k">del</span> <span class="n">toggle</span>
+<a id="__codelineno-0-362" name="__codelineno-0-362"></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">supports_displaying_type</span><span class="p">:</span>
+<a id="__codelineno-0-363" name="__codelineno-0-363"></a>            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Displaying type not configured for this device.&#39;</span><span class="p">)</span>
+<a id="__codelineno-0-364" name="__codelineno-0-364"></a>        <span class="k">else</span><span class="p">:</span>
+<a id="__codelineno-0-365" name="__codelineno-0-365"></a>            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Displaying type not supported for this device.&#39;</span><span class="p">)</span>
+<a id="__codelineno-0-366" name="__codelineno-0-366"></a>        <span class="k">return</span> <span class="kc">False</span>
+<a id="__codelineno-0-367" name="__codelineno-0-367"></a>
+<a id="__codelineno-0-368" name="__codelineno-0-368"></a>    <span class="nd">@deprecated</span><span class="p">(</span><span class="s1">&#39;Use `set_normal_mode` method instead&#39;</span><span class="p">)</span>
+<a id="__codelineno-0-369" name="__codelineno-0-369"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">normal_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<a id="__codelineno-0-370" name="__codelineno-0-370"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Set mode to normal.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-371" name="__codelineno-0-371"></a>        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_normal_mode</span><span class="p">()</span>
+<a id="__codelineno-0-372" name="__codelineno-0-372"></a>
+<a id="__codelineno-0-373" name="__codelineno-0-373"></a>    <span class="nd">@deprecated</span><span class="p">(</span><span class="s1">&#39;Use `set_manual_mode` method instead&#39;</span><span class="p">)</span>
+<a id="__codelineno-0-374" name="__codelineno-0-374"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">manual_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<a id="__codelineno-0-375" name="__codelineno-0-375"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Adapter to set mode to normal.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-376" name="__codelineno-0-376"></a>        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_normal_mode</span><span class="p">()</span>
+<a id="__codelineno-0-377" name="__codelineno-0-377"></a>
+<a id="__codelineno-0-378" name="__codelineno-0-378"></a>    <span class="nd">@deprecated</span><span class="p">(</span><span class="s1">&#39;Use `set_advanced_sleep_mode` method instead&#39;</span><span class="p">)</span>
+<a id="__codelineno-0-379" name="__codelineno-0-379"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">advanced_sleep_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<a id="__codelineno-0-380" name="__codelineno-0-380"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Set advanced sleep mode.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-381" name="__codelineno-0-381"></a>        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_mode</span><span class="p">(</span><span class="s1">&#39;advancedSleep&#39;</span><span class="p">)</span>
+<a id="__codelineno-0-382" name="__codelineno-0-382"></a>
+<a id="__codelineno-0-383" name="__codelineno-0-383"></a>    <span class="nd">@deprecated</span><span class="p">(</span><span class="s1">&#39;Use `set_sleep_mode` method instead&#39;</span><span class="p">)</span>
+<a id="__codelineno-0-384" name="__codelineno-0-384"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">sleep_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<a id="__codelineno-0-385" name="__codelineno-0-385"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Adapter to set advanced sleep mode.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-386" name="__codelineno-0-386"></a>        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_advanced_sleep_mode</span><span class="p">()</span>
+<a id="__codelineno-0-387" name="__codelineno-0-387"></a>
+<a id="__codelineno-0-388" name="__codelineno-0-388"></a>    <span class="nd">@deprecated</span><span class="p">(</span><span class="s1">&#39;Use `set_mode` method instead&#39;</span><span class="p">)</span>
+<a id="__codelineno-0-389" name="__codelineno-0-389"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">mode_toggle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<a id="__codelineno-0-390" name="__codelineno-0-390"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Set mode to specified mode.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-391" name="__codelineno-0-391"></a>        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_mode</span><span class="p">(</span><span class="n">mode</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
               </details>
 
@@ -9946,13 +9944,13 @@ and <a class="autorefs autorefs-internal" title="VeSyncBaseDevice" href="../../d
 
             <details class="quote">
               <summary>Source code in <code>src\pyvesync\base_devices\fan_base.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-379">379</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-378">378</a></span>
+<span class="normal"><a href="#__codelineno-0-379">379</a></span>
 <span class="normal"><a href="#__codelineno-0-380">380</a></span>
-<span class="normal"><a href="#__codelineno-0-381">381</a></span>
-<span class="normal"><a href="#__codelineno-0-382">382</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-379" name="__codelineno-0-379"></a><span class="nd">@deprecated</span><span class="p">(</span><span class="s1">&#39;Use `set_advanced_sleep_mode` method instead&#39;</span><span class="p">)</span>
-<a id="__codelineno-0-380" name="__codelineno-0-380"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">advanced_sleep_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-381" name="__codelineno-0-381"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Set advanced sleep mode.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-382" name="__codelineno-0-382"></a>    <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_mode</span><span class="p">(</span><span class="s1">&#39;advancedSleep&#39;</span><span class="p">)</span>
+<span class="normal"><a href="#__codelineno-0-381">381</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-378" name="__codelineno-0-378"></a><span class="nd">@deprecated</span><span class="p">(</span><span class="s1">&#39;Use `set_advanced_sleep_mode` method instead&#39;</span><span class="p">)</span>
+<a id="__codelineno-0-379" name="__codelineno-0-379"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">advanced_sleep_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<a id="__codelineno-0-380" name="__codelineno-0-380"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Set advanced sleep mode.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-381" name="__codelineno-0-381"></a>    <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_mode</span><span class="p">(</span><span class="s1">&#39;advancedSleep&#39;</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -10341,13 +10339,13 @@ open an issue if there is an error.</p>
 
             <details class="quote">
               <summary>Source code in <code>src\pyvesync\base_devices\fan_base.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-374">374</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-373">373</a></span>
+<span class="normal"><a href="#__codelineno-0-374">374</a></span>
 <span class="normal"><a href="#__codelineno-0-375">375</a></span>
-<span class="normal"><a href="#__codelineno-0-376">376</a></span>
-<span class="normal"><a href="#__codelineno-0-377">377</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-374" name="__codelineno-0-374"></a><span class="nd">@deprecated</span><span class="p">(</span><span class="s1">&#39;Use `set_manual_mode` method instead&#39;</span><span class="p">)</span>
-<a id="__codelineno-0-375" name="__codelineno-0-375"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">manual_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-376" name="__codelineno-0-376"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Adapter to set mode to normal.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-377" name="__codelineno-0-377"></a>    <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_normal_mode</span><span class="p">()</span>
+<span class="normal"><a href="#__codelineno-0-376">376</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-373" name="__codelineno-0-373"></a><span class="nd">@deprecated</span><span class="p">(</span><span class="s1">&#39;Use `set_manual_mode` method instead&#39;</span><span class="p">)</span>
+<a id="__codelineno-0-374" name="__codelineno-0-374"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">manual_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<a id="__codelineno-0-375" name="__codelineno-0-375"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Adapter to set mode to normal.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-376" name="__codelineno-0-376"></a>    <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_normal_mode</span><span class="p">()</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -10383,13 +10381,13 @@ open an issue if there is an error.</p>
 
             <details class="quote">
               <summary>Source code in <code>src\pyvesync\base_devices\fan_base.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-389">389</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-388">388</a></span>
+<span class="normal"><a href="#__codelineno-0-389">389</a></span>
 <span class="normal"><a href="#__codelineno-0-390">390</a></span>
-<span class="normal"><a href="#__codelineno-0-391">391</a></span>
-<span class="normal"><a href="#__codelineno-0-392">392</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-389" name="__codelineno-0-389"></a><span class="nd">@deprecated</span><span class="p">(</span><span class="s1">&#39;Use `set_mode` method instead&#39;</span><span class="p">)</span>
-<a id="__codelineno-0-390" name="__codelineno-0-390"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">mode_toggle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-391" name="__codelineno-0-391"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Set mode to specified mode.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-392" name="__codelineno-0-392"></a>    <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_mode</span><span class="p">(</span><span class="n">mode</span><span class="p">)</span>
+<span class="normal"><a href="#__codelineno-0-391">391</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-388" name="__codelineno-0-388"></a><span class="nd">@deprecated</span><span class="p">(</span><span class="s1">&#39;Use `set_mode` method instead&#39;</span><span class="p">)</span>
+<a id="__codelineno-0-389" name="__codelineno-0-389"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">mode_toggle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<a id="__codelineno-0-390" name="__codelineno-0-390"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Set mode to specified mode.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-391" name="__codelineno-0-391"></a>    <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_mode</span><span class="p">(</span><span class="n">mode</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -10425,13 +10423,13 @@ open an issue if there is an error.</p>
 
             <details class="quote">
               <summary>Source code in <code>src\pyvesync\base_devices\fan_base.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-369">369</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-368">368</a></span>
+<span class="normal"><a href="#__codelineno-0-369">369</a></span>
 <span class="normal"><a href="#__codelineno-0-370">370</a></span>
-<span class="normal"><a href="#__codelineno-0-371">371</a></span>
-<span class="normal"><a href="#__codelineno-0-372">372</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-369" name="__codelineno-0-369"></a><span class="nd">@deprecated</span><span class="p">(</span><span class="s1">&#39;Use `set_normal_mode` method instead&#39;</span><span class="p">)</span>
-<a id="__codelineno-0-370" name="__codelineno-0-370"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">normal_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-371" name="__codelineno-0-371"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Set mode to normal.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-372" name="__codelineno-0-372"></a>    <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_normal_mode</span><span class="p">()</span>
+<span class="normal"><a href="#__codelineno-0-371">371</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-368" name="__codelineno-0-368"></a><span class="nd">@deprecated</span><span class="p">(</span><span class="s1">&#39;Use `set_normal_mode` method instead&#39;</span><span class="p">)</span>
+<a id="__codelineno-0-369" name="__codelineno-0-369"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">normal_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<a id="__codelineno-0-370" name="__codelineno-0-370"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Set mode to normal.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-371" name="__codelineno-0-371"></a>    <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_normal_mode</span><span class="p">()</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -11350,13 +11348,13 @@ false with warning debug message if not supported.</p>
 
             <details class="quote">
               <summary>Source code in <code>src\pyvesync\base_devices\fan_base.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-384">384</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-383">383</a></span>
+<span class="normal"><a href="#__codelineno-0-384">384</a></span>
 <span class="normal"><a href="#__codelineno-0-385">385</a></span>
-<span class="normal"><a href="#__codelineno-0-386">386</a></span>
-<span class="normal"><a href="#__codelineno-0-387">387</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-384" name="__codelineno-0-384"></a><span class="nd">@deprecated</span><span class="p">(</span><span class="s1">&#39;Use `set_sleep_mode` method instead&#39;</span><span class="p">)</span>
-<a id="__codelineno-0-385" name="__codelineno-0-385"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">sleep_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-386" name="__codelineno-0-386"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Adapter to set advanced sleep mode.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-387" name="__codelineno-0-387"></a>    <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_advanced_sleep_mode</span><span class="p">()</span>
+<span class="normal"><a href="#__codelineno-0-386">386</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-383" name="__codelineno-0-383"></a><span class="nd">@deprecated</span><span class="p">(</span><span class="s1">&#39;Use `set_sleep_mode` method instead&#39;</span><span class="p">)</span>
+<a id="__codelineno-0-384" name="__codelineno-0-384"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">sleep_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<a id="__codelineno-0-385" name="__codelineno-0-385"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Adapter to set advanced sleep mode.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-386" name="__codelineno-0-386"></a>    <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_advanced_sleep_mode</span><span class="p">()</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -11950,7 +11948,8 @@ false with warning debug message if not supported.</p>
 
             <details class="quote">
               <summary>Source code in <code>src\pyvesync\base_devices\fan_base.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-351">351</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-350">350</a></span>
+<span class="normal"><a href="#__codelineno-0-351">351</a></span>
 <span class="normal"><a href="#__codelineno-0-352">352</a></span>
 <span class="normal"><a href="#__codelineno-0-353">353</a></span>
 <span class="normal"><a href="#__codelineno-0-354">354</a></span>
@@ -11965,24 +11964,23 @@ false with warning debug message if not supported.</p>
 <span class="normal"><a href="#__codelineno-0-363">363</a></span>
 <span class="normal"><a href="#__codelineno-0-364">364</a></span>
 <span class="normal"><a href="#__codelineno-0-365">365</a></span>
-<span class="normal"><a href="#__codelineno-0-366">366</a></span>
-<span class="normal"><a href="#__codelineno-0-367">367</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-351" name="__codelineno-0-351"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">toggle_displaying_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">toggle</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-352" name="__codelineno-0-352"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Toggle displaying type on/off.</span>
-<a id="__codelineno-0-353" name="__codelineno-0-353"></a>
-<a id="__codelineno-0-354" name="__codelineno-0-354"></a><span class="sd">    This functionality is unknown but was in the API calls.</span>
-<a id="__codelineno-0-355" name="__codelineno-0-355"></a>
-<a id="__codelineno-0-356" name="__codelineno-0-356"></a><span class="sd">    Args:</span>
-<a id="__codelineno-0-357" name="__codelineno-0-357"></a><span class="sd">        toggle (bool): Displaying type state.</span>
-<a id="__codelineno-0-358" name="__codelineno-0-358"></a>
-<a id="__codelineno-0-359" name="__codelineno-0-359"></a><span class="sd">    Returns:</span>
-<a id="__codelineno-0-360" name="__codelineno-0-360"></a><span class="sd">        bool: true if success.</span>
-<a id="__codelineno-0-361" name="__codelineno-0-361"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-362" name="__codelineno-0-362"></a>    <span class="k">del</span> <span class="n">toggle</span>
-<a id="__codelineno-0-363" name="__codelineno-0-363"></a>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">supports_displaying_type</span><span class="p">:</span>
-<a id="__codelineno-0-364" name="__codelineno-0-364"></a>        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Displaying type not configured for this device.&#39;</span><span class="p">)</span>
-<a id="__codelineno-0-365" name="__codelineno-0-365"></a>    <span class="k">else</span><span class="p">:</span>
-<a id="__codelineno-0-366" name="__codelineno-0-366"></a>        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Displaying type not supported for this device.&#39;</span><span class="p">)</span>
-<a id="__codelineno-0-367" name="__codelineno-0-367"></a>    <span class="k">return</span> <span class="kc">False</span>
+<span class="normal"><a href="#__codelineno-0-366">366</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-350" name="__codelineno-0-350"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">toggle_displaying_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">toggle</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<a id="__codelineno-0-351" name="__codelineno-0-351"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Toggle displaying type on/off.</span>
+<a id="__codelineno-0-352" name="__codelineno-0-352"></a>
+<a id="__codelineno-0-353" name="__codelineno-0-353"></a><span class="sd">    This functionality is unknown but was in the API calls.</span>
+<a id="__codelineno-0-354" name="__codelineno-0-354"></a>
+<a id="__codelineno-0-355" name="__codelineno-0-355"></a><span class="sd">    Args:</span>
+<a id="__codelineno-0-356" name="__codelineno-0-356"></a><span class="sd">        toggle (bool): Displaying type state.</span>
+<a id="__codelineno-0-357" name="__codelineno-0-357"></a>
+<a id="__codelineno-0-358" name="__codelineno-0-358"></a><span class="sd">    Returns:</span>
+<a id="__codelineno-0-359" name="__codelineno-0-359"></a><span class="sd">        bool: true if success.</span>
+<a id="__codelineno-0-360" name="__codelineno-0-360"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-361" name="__codelineno-0-361"></a>    <span class="k">del</span> <span class="n">toggle</span>
+<a id="__codelineno-0-362" name="__codelineno-0-362"></a>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">supports_displaying_type</span><span class="p">:</span>
+<a id="__codelineno-0-363" name="__codelineno-0-363"></a>        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Displaying type not configured for this device.&#39;</span><span class="p">)</span>
+<a id="__codelineno-0-364" name="__codelineno-0-364"></a>    <span class="k">else</span><span class="p">:</span>
+<a id="__codelineno-0-365" name="__codelineno-0-365"></a>        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Displaying type not supported for this device.&#39;</span><span class="p">)</span>
+<a id="__codelineno-0-366" name="__codelineno-0-366"></a>    <span class="k">return</span> <span class="kc">False</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -12022,14 +12020,14 @@ false with warning debug message if not supported.</p>
       <tbody>
           <tr class="doc-section-item">
             <td>
-                <code>toggle </code>
+                <code>toggle</code>
             </td>
             <td>
+                  <code><span title="bool">bool</span></code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>bool
-True to turn mute on, False to turn off</p>
+                <p>True to turn mute on, False to turn off</p>
               </div>
             </td>
             <td>
@@ -12079,23 +12077,21 @@ True to turn mute on, False to turn off</p>
 <span class="normal"><a href="#__codelineno-0-337">337</a></span>
 <span class="normal"><a href="#__codelineno-0-338">338</a></span>
 <span class="normal"><a href="#__codelineno-0-339">339</a></span>
-<span class="normal"><a href="#__codelineno-0-340">340</a></span>
-<span class="normal"><a href="#__codelineno-0-341">341</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-326" name="__codelineno-0-326"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">toggle_mute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">toggle</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="normal"><a href="#__codelineno-0-340">340</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-326" name="__codelineno-0-326"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">toggle_mute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">toggle</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <a id="__codelineno-0-327" name="__codelineno-0-327"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Toggle mute on/off.</span>
 <a id="__codelineno-0-328" name="__codelineno-0-328"></a>
 <a id="__codelineno-0-329" name="__codelineno-0-329"></a><span class="sd">    Parameters:</span>
-<a id="__codelineno-0-330" name="__codelineno-0-330"></a><span class="sd">        toggle : bool</span>
-<a id="__codelineno-0-331" name="__codelineno-0-331"></a><span class="sd">            True to turn mute on, False to turn off</span>
-<a id="__codelineno-0-332" name="__codelineno-0-332"></a>
-<a id="__codelineno-0-333" name="__codelineno-0-333"></a><span class="sd">    Returns:</span>
-<a id="__codelineno-0-334" name="__codelineno-0-334"></a><span class="sd">        bool : True if successful, False if not</span>
-<a id="__codelineno-0-335" name="__codelineno-0-335"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-336" name="__codelineno-0-336"></a>    <span class="k">del</span> <span class="n">toggle</span>
-<a id="__codelineno-0-337" name="__codelineno-0-337"></a>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">supports_mute</span><span class="p">:</span>
-<a id="__codelineno-0-338" name="__codelineno-0-338"></a>        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Mute not configured for this device.&#39;</span><span class="p">)</span>
-<a id="__codelineno-0-339" name="__codelineno-0-339"></a>    <span class="k">else</span><span class="p">:</span>
-<a id="__codelineno-0-340" name="__codelineno-0-340"></a>        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Mute not supported for this device.&#39;</span><span class="p">)</span>
-<a id="__codelineno-0-341" name="__codelineno-0-341"></a>    <span class="k">return</span> <span class="kc">False</span>
+<a id="__codelineno-0-330" name="__codelineno-0-330"></a><span class="sd">        toggle (bool): True to turn mute on, False to turn off</span>
+<a id="__codelineno-0-331" name="__codelineno-0-331"></a>
+<a id="__codelineno-0-332" name="__codelineno-0-332"></a><span class="sd">    Returns:</span>
+<a id="__codelineno-0-333" name="__codelineno-0-333"></a><span class="sd">        bool : True if successful, False if not</span>
+<a id="__codelineno-0-334" name="__codelineno-0-334"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-335" name="__codelineno-0-335"></a>    <span class="k">del</span> <span class="n">toggle</span>
+<a id="__codelineno-0-336" name="__codelineno-0-336"></a>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">supports_mute</span><span class="p">:</span>
+<a id="__codelineno-0-337" name="__codelineno-0-337"></a>        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Mute not configured for this device.&#39;</span><span class="p">)</span>
+<a id="__codelineno-0-338" name="__codelineno-0-338"></a>    <span class="k">else</span><span class="p">:</span>
+<a id="__codelineno-0-339" name="__codelineno-0-339"></a>        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Mute not supported for this device.&#39;</span><span class="p">)</span>
+<a id="__codelineno-0-340" name="__codelineno-0-340"></a>    <span class="k">return</span> <span class="kc">False</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -12438,11 +12434,11 @@ True to turn mute on, False to turn off</p>
 
             <details class="quote">
               <summary>Source code in <code>src\pyvesync\base_devices\fan_base.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-347">347</a></span>
-<span class="normal"><a href="#__codelineno-0-348">348</a></span>
-<span class="normal"><a href="#__codelineno-0-349">349</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-347" name="__codelineno-0-347"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">turn_off_mute</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-348" name="__codelineno-0-348"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Set toggle_mute to off.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-349" name="__codelineno-0-349"></a>    <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">toggle_mute</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-346">346</a></span>
+<span class="normal"><a href="#__codelineno-0-347">347</a></span>
+<span class="normal"><a href="#__codelineno-0-348">348</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-346" name="__codelineno-0-346"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">turn_off_mute</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<a id="__codelineno-0-347" name="__codelineno-0-347"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Set toggle_mute to off.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-348" name="__codelineno-0-348"></a>    <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">toggle_mute</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -12605,11 +12601,11 @@ True to turn mute on, False to turn off</p>
 
             <details class="quote">
               <summary>Source code in <code>src\pyvesync\base_devices\fan_base.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-343">343</a></span>
-<span class="normal"><a href="#__codelineno-0-344">344</a></span>
-<span class="normal"><a href="#__codelineno-0-345">345</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-343" name="__codelineno-0-343"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">turn_on_mute</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-344" name="__codelineno-0-344"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Set toggle_mute to on.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-345" name="__codelineno-0-345"></a>    <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">toggle_mute</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-342">342</a></span>
+<span class="normal"><a href="#__codelineno-0-343">343</a></span>
+<span class="normal"><a href="#__codelineno-0-344">344</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-342" name="__codelineno-0-342"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">turn_on_mute</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<a id="__codelineno-0-343" name="__codelineno-0-343"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Set toggle_mute to on.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-344" name="__codelineno-0-344"></a>    <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">toggle_mute</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
