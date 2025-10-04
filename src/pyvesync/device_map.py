@@ -960,7 +960,7 @@ air_fryer_modules: list[AirFryerMap] = [
     AirFryerMap(
         class_name='VeSyncAirFryer158',
         module=vesynckitchen,
-        dev_types=['CS137-AF/CS158-AF', 'CS158-AF', 'CS137-AF', 'CS358-AF'],
+        dev_types=['CS137-AF/CS158-AF', 'CS158-AF', 'CS137-AF'],
         device_alias='Air Fryer',
         model_display='CS158/159/168/169-AF Series',
         model_name='Smart/Pro/Pro Gen 2 5.8 Qt. Air Fryer',
