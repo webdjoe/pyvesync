@@ -33,6 +33,7 @@ from pyvesync.models.vesync_models import (
     ResponseDeviceListModel,
     ResponseFirmwareModel,
     ResponseLoginModel,
+    RequestLoginLegacy,
 )
 from pyvesync.utils.errors import (
     ErrorCodes,
@@ -70,6 +71,7 @@ class VeSync:  # pylint: disable=function-redefined
         'session',
         'time_zone',
         'username',
+        '_login_attempts',
     )
 
     def __init__(  # noqa: PLR0913
@@ -155,6 +157,7 @@ class VeSync:  # pylint: disable=function-redefined
         self.enabled = False
         self.in_process = False
         self._device_container: DeviceContainer = DeviceContainerInstance
+        self._login_attempts: int = 0
 
     @property
     def devices(self) -> DeviceContainer:
@@ -361,7 +364,35 @@ class VeSync:  # pylint: disable=function-redefined
                 ' result is not IntRespAuthResultModel'
             )
 
-        return await self._login_token(auth_code=result.authorizeCode)
+        await self._login_token(auth_code=result.authorizeCode)
+
+    async def _legacy_login(self) -> None:
+        """Log into VeSync server using the legacy approach.
+
+        """
+
+        request_auth = RequestLoginLegacy(
+            email=self.username,
+            password=self.password,
+        )
+
+        resp_dict, _ = await self.async_call_api(
+            '/cloud/v1/user/login', 'post',
+            json_object=request_auth
+        )
+
+        if resp_dict.get('code') == 0 and 'result' in resp_dict:
+            self._token = resp_dict.get('result').get('token')
+            self._account_id = resp_dict.get('result').get('accountID')
+            self.country_code = resp_dict.get('result').get('countryCode')
+            self.enabled = True
+            logger.debug('Login successful')
+            logger.debug('token %s', self.token)
+            logger.debug('account_id %s', self.account_id)
+            return None
+
+        logger.error('Error logging in with username and password')
+        raise VeSyncAPIResponseError(resp_dict)
 
     async def _login_token(
         self,
@@ -413,7 +444,12 @@ class VeSync:  # pylint: disable=function-redefined
                 if error_info.error_type == ErrorTypes.CROSS_REGION:
                     result = response_model.result
                     self.country_code = result.countryCode
-                    return await self._login_token(region_change_token=result.bizToken)
+                    self._login_attempts += 1
+                    if self._login_attempts == 1:
+                        return await self._login_token(region_change_token=result.bizToken)
+                    else:
+                        self.country_code = DEFAULT_REGION
+                        return await self._legacy_login()
                 resp_message = resp_dict.get('msg')
                 if resp_message is not None:
                     error_info.message = f'{error_info.message} ({resp_message})'

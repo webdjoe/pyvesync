@@ -23,6 +23,8 @@ from pyvesync.models.base_models import (
     ResponseCodeModel,
 )
 
+from pyvesync.const import USER_TYPE
+
 
 @dataclass
 class RequestGetTokenModel(RequestBaseModel):
@@ -103,6 +105,33 @@ class RequestLoginTokenModel(RequestBaseModel):
         if d['bizToken'] is None:
             d.pop('bizToken')
         return d
+
+@dataclass
+class RequestLoginLegacy(RequestBaseModel):
+    """Request model for login."""
+
+    # Arguments to set
+    email: str
+    password: str
+    # default values
+    devToken: str = ''
+    method: str = "login"
+    userType: str = USER_TYPE
+    acceptLanguage: str = DefaultValues.acceptLanguage
+    timeZone: str = DefaultValues.timeZone
+    phoneBrand: str = DefaultValues.phoneBrand
+    phoneOS: str = DefaultValues.phoneOS
+    appVersion: str = DefaultValues.appVersion
+    traceId: str = field(default_factory=DefaultValues.newTraceId)
+
+    def __post_init__(self) -> None:
+        """Hash the password field."""
+        self.password = self.hash_password(self.password)
+
+    @staticmethod
+    def hash_password(string: str) -> str:
+        """Encode password."""
+        return hashlib.md5(string.encode('utf-8')).hexdigest()  # noqa: S324
 
 
 @dataclass
