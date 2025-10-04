@@ -1404,7 +1404,12 @@ calling the API. The <code>bypass</code> endpoint can also be overridden for spe
 
               <details class="quote">
                 <summary>Source code in <code>src\pyvesync\utils\device_mixins.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-284">284</a></span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-279">279</a></span>
+<span class="normal"><a href="#__codelineno-0-280">280</a></span>
+<span class="normal"><a href="#__codelineno-0-281">281</a></span>
+<span class="normal"><a href="#__codelineno-0-282">282</a></span>
+<span class="normal"><a href="#__codelineno-0-283">283</a></span>
+<span class="normal"><a href="#__codelineno-0-284">284</a></span>
 <span class="normal"><a href="#__codelineno-0-285">285</a></span>
 <span class="normal"><a href="#__codelineno-0-286">286</a></span>
 <span class="normal"><a href="#__codelineno-0-287">287</a></span>
@@ -1482,95 +1487,90 @@ calling the API. The <code>bypass</code> endpoint can also be overridden for spe
 <span class="normal"><a href="#__codelineno-0-359">359</a></span>
 <span class="normal"><a href="#__codelineno-0-360">360</a></span>
 <span class="normal"><a href="#__codelineno-0-361">361</a></span>
-<span class="normal"><a href="#__codelineno-0-362">362</a></span>
-<span class="normal"><a href="#__codelineno-0-363">363</a></span>
-<span class="normal"><a href="#__codelineno-0-364">364</a></span>
-<span class="normal"><a href="#__codelineno-0-365">365</a></span>
-<span class="normal"><a href="#__codelineno-0-366">366</a></span>
-<span class="normal"><a href="#__codelineno-0-367">367</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-284" name="__codelineno-0-284"></a><span class="k">class</span><span class="w"> </span><span class="nc">BypassV1Mixin</span><span class="p">:</span>
-<a id="__codelineno-0-285" name="__codelineno-0-285"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Mixin for bypass V1 API.</span>
-<a id="__codelineno-0-286" name="__codelineno-0-286"></a>
-<a id="__codelineno-0-287" name="__codelineno-0-287"></a><span class="sd">    Overrides the `_build_request` method and `request_keys` attribute for devices</span>
-<a id="__codelineno-0-288" name="__codelineno-0-288"></a><span class="sd">    that use the Bypass V1 API- /cloud/v1/deviceManaged/bypass. The primary method to</span>
-<a id="__codelineno-0-289" name="__codelineno-0-289"></a><span class="sd">    call is `call_bypassv1_api`, which is a wrapper for setting up the request body and</span>
-<a id="__codelineno-0-290" name="__codelineno-0-290"></a><span class="sd">    calling the API. The `bypass` endpoint can also be overridden for specific API calls.</span>
-<a id="__codelineno-0-291" name="__codelineno-0-291"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-292" name="__codelineno-0-292"></a>
-<a id="__codelineno-0-293" name="__codelineno-0-293"></a>    <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-<a id="__codelineno-0-294" name="__codelineno-0-294"></a>        <span class="n">manager</span><span class="p">:</span> <span class="n">VeSync</span>
-<a id="__codelineno-0-295" name="__codelineno-0-295"></a>
-<a id="__codelineno-0-296" name="__codelineno-0-296"></a>    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
-<a id="__codelineno-0-297" name="__codelineno-0-297"></a>    <span class="n">request_keys</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span>
-<a id="__codelineno-0-298" name="__codelineno-0-298"></a>        <span class="s2">&quot;acceptLanguage&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-299" name="__codelineno-0-299"></a>        <span class="s2">&quot;appVersion&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-300" name="__codelineno-0-300"></a>        <span class="s2">&quot;phoneBrand&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-301" name="__codelineno-0-301"></a>        <span class="s2">&quot;phoneOS&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-302" name="__codelineno-0-302"></a>        <span class="s2">&quot;accountID&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-303" name="__codelineno-0-303"></a>        <span class="s2">&quot;cid&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-304" name="__codelineno-0-304"></a>        <span class="s2">&quot;configModule&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-305" name="__codelineno-0-305"></a>        <span class="s2">&quot;debugMode&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-306" name="__codelineno-0-306"></a>        <span class="s2">&quot;traceId&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-307" name="__codelineno-0-307"></a>        <span class="s2">&quot;timeZone&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-308" name="__codelineno-0-308"></a>        <span class="s2">&quot;token&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-309" name="__codelineno-0-309"></a>        <span class="s2">&quot;userCountryCode&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-310" name="__codelineno-0-310"></a>        <span class="s2">&quot;uuid&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-311" name="__codelineno-0-311"></a>        <span class="s2">&quot;configModel&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-312" name="__codelineno-0-312"></a>        <span class="s2">&quot;deviceId&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-313" name="__codelineno-0-313"></a>    <span class="p">]</span>
-<a id="__codelineno-0-314" name="__codelineno-0-314"></a>
-<a id="__codelineno-0-315" name="__codelineno-0-315"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_build_request</span><span class="p">(</span>
-<a id="__codelineno-0-316" name="__codelineno-0-316"></a>        <span class="bp">self</span><span class="p">,</span>
-<a id="__codelineno-0-317" name="__codelineno-0-317"></a>        <span class="n">request_model</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">RequestBypassV1</span><span class="p">],</span>
-<a id="__codelineno-0-318" name="__codelineno-0-318"></a>        <span class="n">update_dict</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-319" name="__codelineno-0-319"></a>        <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;bypass&quot;</span>
-<a id="__codelineno-0-320" name="__codelineno-0-320"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RequestBypassV1</span><span class="p">:</span>
-<a id="__codelineno-0-321" name="__codelineno-0-321"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Build API request body for the Bypass V1 endpoint.</span>
+<span class="normal"><a href="#__codelineno-0-362">362</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-279" name="__codelineno-0-279"></a><span class="k">class</span><span class="w"> </span><span class="nc">BypassV1Mixin</span><span class="p">:</span>
+<a id="__codelineno-0-280" name="__codelineno-0-280"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Mixin for bypass V1 API.</span>
+<a id="__codelineno-0-281" name="__codelineno-0-281"></a>
+<a id="__codelineno-0-282" name="__codelineno-0-282"></a><span class="sd">    Overrides the `_build_request` method and `request_keys` attribute for devices</span>
+<a id="__codelineno-0-283" name="__codelineno-0-283"></a><span class="sd">    that use the Bypass V1 API- /cloud/v1/deviceManaged/bypass. The primary method to</span>
+<a id="__codelineno-0-284" name="__codelineno-0-284"></a><span class="sd">    call is `call_bypassv1_api`, which is a wrapper for setting up the request body and</span>
+<a id="__codelineno-0-285" name="__codelineno-0-285"></a><span class="sd">    calling the API. The `bypass` endpoint can also be overridden for specific API calls.</span>
+<a id="__codelineno-0-286" name="__codelineno-0-286"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-287" name="__codelineno-0-287"></a>
+<a id="__codelineno-0-288" name="__codelineno-0-288"></a>    <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+<a id="__codelineno-0-289" name="__codelineno-0-289"></a>        <span class="n">manager</span><span class="p">:</span> <span class="n">VeSync</span>
+<a id="__codelineno-0-290" name="__codelineno-0-290"></a>
+<a id="__codelineno-0-291" name="__codelineno-0-291"></a>    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+<a id="__codelineno-0-292" name="__codelineno-0-292"></a>    <span class="n">request_keys</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span>
+<a id="__codelineno-0-293" name="__codelineno-0-293"></a>        <span class="s1">&#39;acceptLanguage&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-294" name="__codelineno-0-294"></a>        <span class="s1">&#39;appVersion&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-295" name="__codelineno-0-295"></a>        <span class="s1">&#39;phoneBrand&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-296" name="__codelineno-0-296"></a>        <span class="s1">&#39;phoneOS&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-297" name="__codelineno-0-297"></a>        <span class="s1">&#39;accountID&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-298" name="__codelineno-0-298"></a>        <span class="s1">&#39;cid&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-299" name="__codelineno-0-299"></a>        <span class="s1">&#39;configModule&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-300" name="__codelineno-0-300"></a>        <span class="s1">&#39;debugMode&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-301" name="__codelineno-0-301"></a>        <span class="s1">&#39;traceId&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-302" name="__codelineno-0-302"></a>        <span class="s1">&#39;timeZone&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-303" name="__codelineno-0-303"></a>        <span class="s1">&#39;token&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-304" name="__codelineno-0-304"></a>        <span class="s1">&#39;userCountryCode&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-305" name="__codelineno-0-305"></a>        <span class="s1">&#39;uuid&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-306" name="__codelineno-0-306"></a>        <span class="s1">&#39;configModel&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-307" name="__codelineno-0-307"></a>        <span class="s1">&#39;deviceId&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-308" name="__codelineno-0-308"></a>    <span class="p">]</span>
+<a id="__codelineno-0-309" name="__codelineno-0-309"></a>
+<a id="__codelineno-0-310" name="__codelineno-0-310"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_build_request</span><span class="p">(</span>
+<a id="__codelineno-0-311" name="__codelineno-0-311"></a>        <span class="bp">self</span><span class="p">,</span>
+<a id="__codelineno-0-312" name="__codelineno-0-312"></a>        <span class="n">request_model</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">RequestBypassV1</span><span class="p">],</span>
+<a id="__codelineno-0-313" name="__codelineno-0-313"></a>        <span class="n">update_dict</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-314" name="__codelineno-0-314"></a>        <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;bypass&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-315" name="__codelineno-0-315"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RequestBypassV1</span><span class="p">:</span>
+<a id="__codelineno-0-316" name="__codelineno-0-316"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Build API request body for the Bypass V1 endpoint.</span>
+<a id="__codelineno-0-317" name="__codelineno-0-317"></a>
+<a id="__codelineno-0-318" name="__codelineno-0-318"></a><span class="sd">        Args:</span>
+<a id="__codelineno-0-319" name="__codelineno-0-319"></a><span class="sd">            request_model (type[RequestBypassV1]): The request model to use.</span>
+<a id="__codelineno-0-320" name="__codelineno-0-320"></a><span class="sd">            update_dict (dict | None): Additional keys to add on.</span>
+<a id="__codelineno-0-321" name="__codelineno-0-321"></a><span class="sd">            method (str): The method to use in the outer body, defaults to bypass.</span>
 <a id="__codelineno-0-322" name="__codelineno-0-322"></a>
-<a id="__codelineno-0-323" name="__codelineno-0-323"></a><span class="sd">        Args:</span>
-<a id="__codelineno-0-324" name="__codelineno-0-324"></a><span class="sd">            request_model (type[RequestBypassV1]): The request model to use.</span>
-<a id="__codelineno-0-325" name="__codelineno-0-325"></a><span class="sd">            update_dict (dict | None): Additional keys to add on.</span>
-<a id="__codelineno-0-326" name="__codelineno-0-326"></a><span class="sd">            method (str): The method to use in the outer body, defaults to bypass.</span>
-<a id="__codelineno-0-327" name="__codelineno-0-327"></a>
-<a id="__codelineno-0-328" name="__codelineno-0-328"></a><span class="sd">        Returns:</span>
-<a id="__codelineno-0-329" name="__codelineno-0-329"></a><span class="sd">            RequestBypassV1: The request body for the Bypass V1 endpoint, the correct</span>
-<a id="__codelineno-0-330" name="__codelineno-0-330"></a><span class="sd">            model is determined from the RequestBypassV1 discriminator.</span>
-<a id="__codelineno-0-331" name="__codelineno-0-331"></a><span class="sd">        &quot;&quot;&quot;</span>
-<a id="__codelineno-0-332" name="__codelineno-0-332"></a>        <span class="n">body</span> <span class="o">=</span> <span class="n">Helpers</span><span class="o">.</span><span class="n">get_class_attributes</span><span class="p">(</span><span class="n">DefaultValues</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request_keys</span><span class="p">)</span>
-<a id="__codelineno-0-333" name="__codelineno-0-333"></a>        <span class="n">body</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">Helpers</span><span class="o">.</span><span class="n">get_class_attributes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request_keys</span><span class="p">))</span>
-<a id="__codelineno-0-334" name="__codelineno-0-334"></a>        <span class="n">body</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">Helpers</span><span class="o">.</span><span class="n">get_class_attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request_keys</span><span class="p">))</span>
-<a id="__codelineno-0-335" name="__codelineno-0-335"></a>        <span class="n">body</span><span class="p">[</span><span class="s2">&quot;method&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">method</span>
-<a id="__codelineno-0-336" name="__codelineno-0-336"></a>        <span class="n">body</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">update_dict</span> <span class="ow">or</span> <span class="p">{})</span>
-<a id="__codelineno-0-337" name="__codelineno-0-337"></a>        <span class="k">return</span> <span class="n">request_model</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">body</span><span class="p">)</span>
-<a id="__codelineno-0-338" name="__codelineno-0-338"></a>
-<a id="__codelineno-0-339" name="__codelineno-0-339"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">call_bypassv1_api</span><span class="p">(</span>
-<a id="__codelineno-0-340" name="__codelineno-0-340"></a>        <span class="bp">self</span><span class="p">,</span>
-<a id="__codelineno-0-341" name="__codelineno-0-341"></a>        <span class="n">request_model</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">RequestBypassV1</span><span class="p">],</span>
-<a id="__codelineno-0-342" name="__codelineno-0-342"></a>        <span class="n">update_dict</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-343" name="__codelineno-0-343"></a>        <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;bypass&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-344" name="__codelineno-0-344"></a>        <span class="n">endpoint</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;bypass&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-345" name="__codelineno-0-345"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-346" name="__codelineno-0-346"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Send ByPass V1 API request.</span>
-<a id="__codelineno-0-347" name="__codelineno-0-347"></a>
-<a id="__codelineno-0-348" name="__codelineno-0-348"></a><span class="sd">        This uses the `_build_request` method to send API requests to the Bypass V1 API.</span>
-<a id="__codelineno-0-349" name="__codelineno-0-349"></a><span class="sd">        The endpoint can be overridden with the `endpoint` argument.</span>
-<a id="__codelineno-0-350" name="__codelineno-0-350"></a>
-<a id="__codelineno-0-351" name="__codelineno-0-351"></a><span class="sd">        Args:</span>
-<a id="__codelineno-0-352" name="__codelineno-0-352"></a><span class="sd">            request_model (type[RequestBypassV1]): The request model to use.</span>
-<a id="__codelineno-0-353" name="__codelineno-0-353"></a><span class="sd">            update_dict (dict): Additional keys to add on.</span>
-<a id="__codelineno-0-354" name="__codelineno-0-354"></a><span class="sd">            method (str): The method to use in the outer body.</span>
-<a id="__codelineno-0-355" name="__codelineno-0-355"></a><span class="sd">            endpoint (str | None): The last part of the url path, defaults to</span>
-<a id="__codelineno-0-356" name="__codelineno-0-356"></a><span class="sd">                `bypass`, e.g. `/cloud/v1/deviceManaged/bypass`.</span>
-<a id="__codelineno-0-357" name="__codelineno-0-357"></a>
-<a id="__codelineno-0-358" name="__codelineno-0-358"></a><span class="sd">        Returns:</span>
-<a id="__codelineno-0-359" name="__codelineno-0-359"></a><span class="sd">            bytes: The response from the API request.</span>
-<a id="__codelineno-0-360" name="__codelineno-0-360"></a><span class="sd">        &quot;&quot;&quot;</span>
-<a id="__codelineno-0-361" name="__codelineno-0-361"></a>        <span class="n">request</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_request</span><span class="p">(</span><span class="n">request_model</span><span class="p">,</span> <span class="n">update_dict</span><span class="p">,</span> <span class="n">method</span><span class="p">)</span>
-<a id="__codelineno-0-362" name="__codelineno-0-362"></a>        <span class="n">url_path</span> <span class="o">=</span> <span class="n">BYPASS_V1_PATH</span> <span class="o">+</span> <span class="n">endpoint</span>
-<a id="__codelineno-0-363" name="__codelineno-0-363"></a>        <span class="n">resp_dict</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">async_call_api</span><span class="p">(</span>
-<a id="__codelineno-0-364" name="__codelineno-0-364"></a>            <span class="n">url_path</span><span class="p">,</span> <span class="s2">&quot;post&quot;</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">Helpers</span><span class="o">.</span><span class="n">req_header_bypass</span><span class="p">()</span>
-<a id="__codelineno-0-365" name="__codelineno-0-365"></a>        <span class="p">)</span>
-<a id="__codelineno-0-366" name="__codelineno-0-366"></a>
-<a id="__codelineno-0-367" name="__codelineno-0-367"></a>        <span class="k">return</span> <span class="n">resp_dict</span>
+<a id="__codelineno-0-323" name="__codelineno-0-323"></a><span class="sd">        Returns:</span>
+<a id="__codelineno-0-324" name="__codelineno-0-324"></a><span class="sd">            RequestBypassV1: The request body for the Bypass V1 endpoint, the correct</span>
+<a id="__codelineno-0-325" name="__codelineno-0-325"></a><span class="sd">            model is determined from the RequestBypassV1 discriminator.</span>
+<a id="__codelineno-0-326" name="__codelineno-0-326"></a><span class="sd">        &quot;&quot;&quot;</span>
+<a id="__codelineno-0-327" name="__codelineno-0-327"></a>        <span class="n">body</span> <span class="o">=</span> <span class="n">Helpers</span><span class="o">.</span><span class="n">get_class_attributes</span><span class="p">(</span><span class="n">DefaultValues</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request_keys</span><span class="p">)</span>
+<a id="__codelineno-0-328" name="__codelineno-0-328"></a>        <span class="n">body</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">Helpers</span><span class="o">.</span><span class="n">get_class_attributes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request_keys</span><span class="p">))</span>
+<a id="__codelineno-0-329" name="__codelineno-0-329"></a>        <span class="n">body</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">Helpers</span><span class="o">.</span><span class="n">get_class_attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request_keys</span><span class="p">))</span>
+<a id="__codelineno-0-330" name="__codelineno-0-330"></a>        <span class="n">body</span><span class="p">[</span><span class="s1">&#39;method&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">method</span>
+<a id="__codelineno-0-331" name="__codelineno-0-331"></a>        <span class="n">body</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">update_dict</span> <span class="ow">or</span> <span class="p">{})</span>
+<a id="__codelineno-0-332" name="__codelineno-0-332"></a>        <span class="k">return</span> <span class="n">request_model</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">body</span><span class="p">)</span>
+<a id="__codelineno-0-333" name="__codelineno-0-333"></a>
+<a id="__codelineno-0-334" name="__codelineno-0-334"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">call_bypassv1_api</span><span class="p">(</span>
+<a id="__codelineno-0-335" name="__codelineno-0-335"></a>        <span class="bp">self</span><span class="p">,</span>
+<a id="__codelineno-0-336" name="__codelineno-0-336"></a>        <span class="n">request_model</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">RequestBypassV1</span><span class="p">],</span>
+<a id="__codelineno-0-337" name="__codelineno-0-337"></a>        <span class="n">update_dict</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-338" name="__codelineno-0-338"></a>        <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;bypass&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-339" name="__codelineno-0-339"></a>        <span class="n">endpoint</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;bypass&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-340" name="__codelineno-0-340"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-341" name="__codelineno-0-341"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Send ByPass V1 API request.</span>
+<a id="__codelineno-0-342" name="__codelineno-0-342"></a>
+<a id="__codelineno-0-343" name="__codelineno-0-343"></a><span class="sd">        This uses the `_build_request` method to send API requests to the Bypass V1 API.</span>
+<a id="__codelineno-0-344" name="__codelineno-0-344"></a><span class="sd">        The endpoint can be overridden with the `endpoint` argument.</span>
+<a id="__codelineno-0-345" name="__codelineno-0-345"></a>
+<a id="__codelineno-0-346" name="__codelineno-0-346"></a><span class="sd">        Args:</span>
+<a id="__codelineno-0-347" name="__codelineno-0-347"></a><span class="sd">            request_model (type[RequestBypassV1]): The request model to use.</span>
+<a id="__codelineno-0-348" name="__codelineno-0-348"></a><span class="sd">            update_dict (dict): Additional keys to add on.</span>
+<a id="__codelineno-0-349" name="__codelineno-0-349"></a><span class="sd">            method (str): The method to use in the outer body.</span>
+<a id="__codelineno-0-350" name="__codelineno-0-350"></a><span class="sd">            endpoint (str | None): The last part of the url path, defaults to</span>
+<a id="__codelineno-0-351" name="__codelineno-0-351"></a><span class="sd">                `bypass`, e.g. `/cloud/v1/deviceManaged/bypass`.</span>
+<a id="__codelineno-0-352" name="__codelineno-0-352"></a>
+<a id="__codelineno-0-353" name="__codelineno-0-353"></a><span class="sd">        Returns:</span>
+<a id="__codelineno-0-354" name="__codelineno-0-354"></a><span class="sd">            bytes: The response from the API request.</span>
+<a id="__codelineno-0-355" name="__codelineno-0-355"></a><span class="sd">        &quot;&quot;&quot;</span>
+<a id="__codelineno-0-356" name="__codelineno-0-356"></a>        <span class="n">request</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_request</span><span class="p">(</span><span class="n">request_model</span><span class="p">,</span> <span class="n">update_dict</span><span class="p">,</span> <span class="n">method</span><span class="p">)</span>
+<a id="__codelineno-0-357" name="__codelineno-0-357"></a>        <span class="n">url_path</span> <span class="o">=</span> <span class="n">BYPASS_V1_PATH</span> <span class="o">+</span> <span class="n">endpoint</span>
+<a id="__codelineno-0-358" name="__codelineno-0-358"></a>        <span class="n">resp_dict</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">async_call_api</span><span class="p">(</span>
+<a id="__codelineno-0-359" name="__codelineno-0-359"></a>            <span class="n">url_path</span><span class="p">,</span> <span class="s1">&#39;post&#39;</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">Helpers</span><span class="o">.</span><span class="n">req_header_bypass</span><span class="p">()</span>
+<a id="__codelineno-0-360" name="__codelineno-0-360"></a>        <span class="p">)</span>
+<a id="__codelineno-0-361" name="__codelineno-0-361"></a>
+<a id="__codelineno-0-362" name="__codelineno-0-362"></a>        <span class="k">return</span> <span class="n">resp_dict</span>
 </code></pre></div></td></tr></table></div>
               </details>
 
@@ -1796,7 +1796,12 @@ The endpoint can be overridden with the <code>endpoint</code> argument.</p>
 
             <details class="quote">
               <summary>Source code in <code>src\pyvesync\utils\device_mixins.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-339">339</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-334">334</a></span>
+<span class="normal"><a href="#__codelineno-0-335">335</a></span>
+<span class="normal"><a href="#__codelineno-0-336">336</a></span>
+<span class="normal"><a href="#__codelineno-0-337">337</a></span>
+<span class="normal"><a href="#__codelineno-0-338">338</a></span>
+<span class="normal"><a href="#__codelineno-0-339">339</a></span>
 <span class="normal"><a href="#__codelineno-0-340">340</a></span>
 <span class="normal"><a href="#__codelineno-0-341">341</a></span>
 <span class="normal"><a href="#__codelineno-0-342">342</a></span>
@@ -1819,40 +1824,35 @@ The endpoint can be overridden with the <code>endpoint</code> argument.</p>
 <span class="normal"><a href="#__codelineno-0-359">359</a></span>
 <span class="normal"><a href="#__codelineno-0-360">360</a></span>
 <span class="normal"><a href="#__codelineno-0-361">361</a></span>
-<span class="normal"><a href="#__codelineno-0-362">362</a></span>
-<span class="normal"><a href="#__codelineno-0-363">363</a></span>
-<span class="normal"><a href="#__codelineno-0-364">364</a></span>
-<span class="normal"><a href="#__codelineno-0-365">365</a></span>
-<span class="normal"><a href="#__codelineno-0-366">366</a></span>
-<span class="normal"><a href="#__codelineno-0-367">367</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-339" name="__codelineno-0-339"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">call_bypassv1_api</span><span class="p">(</span>
-<a id="__codelineno-0-340" name="__codelineno-0-340"></a>    <span class="bp">self</span><span class="p">,</span>
-<a id="__codelineno-0-341" name="__codelineno-0-341"></a>    <span class="n">request_model</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">RequestBypassV1</span><span class="p">],</span>
-<a id="__codelineno-0-342" name="__codelineno-0-342"></a>    <span class="n">update_dict</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-343" name="__codelineno-0-343"></a>    <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;bypass&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-344" name="__codelineno-0-344"></a>    <span class="n">endpoint</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;bypass&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-345" name="__codelineno-0-345"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-346" name="__codelineno-0-346"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Send ByPass V1 API request.</span>
-<a id="__codelineno-0-347" name="__codelineno-0-347"></a>
-<a id="__codelineno-0-348" name="__codelineno-0-348"></a><span class="sd">    This uses the `_build_request` method to send API requests to the Bypass V1 API.</span>
-<a id="__codelineno-0-349" name="__codelineno-0-349"></a><span class="sd">    The endpoint can be overridden with the `endpoint` argument.</span>
-<a id="__codelineno-0-350" name="__codelineno-0-350"></a>
-<a id="__codelineno-0-351" name="__codelineno-0-351"></a><span class="sd">    Args:</span>
-<a id="__codelineno-0-352" name="__codelineno-0-352"></a><span class="sd">        request_model (type[RequestBypassV1]): The request model to use.</span>
-<a id="__codelineno-0-353" name="__codelineno-0-353"></a><span class="sd">        update_dict (dict): Additional keys to add on.</span>
-<a id="__codelineno-0-354" name="__codelineno-0-354"></a><span class="sd">        method (str): The method to use in the outer body.</span>
-<a id="__codelineno-0-355" name="__codelineno-0-355"></a><span class="sd">        endpoint (str | None): The last part of the url path, defaults to</span>
-<a id="__codelineno-0-356" name="__codelineno-0-356"></a><span class="sd">            `bypass`, e.g. `/cloud/v1/deviceManaged/bypass`.</span>
-<a id="__codelineno-0-357" name="__codelineno-0-357"></a>
-<a id="__codelineno-0-358" name="__codelineno-0-358"></a><span class="sd">    Returns:</span>
-<a id="__codelineno-0-359" name="__codelineno-0-359"></a><span class="sd">        bytes: The response from the API request.</span>
-<a id="__codelineno-0-360" name="__codelineno-0-360"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-361" name="__codelineno-0-361"></a>    <span class="n">request</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_request</span><span class="p">(</span><span class="n">request_model</span><span class="p">,</span> <span class="n">update_dict</span><span class="p">,</span> <span class="n">method</span><span class="p">)</span>
-<a id="__codelineno-0-362" name="__codelineno-0-362"></a>    <span class="n">url_path</span> <span class="o">=</span> <span class="n">BYPASS_V1_PATH</span> <span class="o">+</span> <span class="n">endpoint</span>
-<a id="__codelineno-0-363" name="__codelineno-0-363"></a>    <span class="n">resp_dict</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">async_call_api</span><span class="p">(</span>
-<a id="__codelineno-0-364" name="__codelineno-0-364"></a>        <span class="n">url_path</span><span class="p">,</span> <span class="s2">&quot;post&quot;</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">Helpers</span><span class="o">.</span><span class="n">req_header_bypass</span><span class="p">()</span>
-<a id="__codelineno-0-365" name="__codelineno-0-365"></a>    <span class="p">)</span>
-<a id="__codelineno-0-366" name="__codelineno-0-366"></a>
-<a id="__codelineno-0-367" name="__codelineno-0-367"></a>    <span class="k">return</span> <span class="n">resp_dict</span>
+<span class="normal"><a href="#__codelineno-0-362">362</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-334" name="__codelineno-0-334"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">call_bypassv1_api</span><span class="p">(</span>
+<a id="__codelineno-0-335" name="__codelineno-0-335"></a>    <span class="bp">self</span><span class="p">,</span>
+<a id="__codelineno-0-336" name="__codelineno-0-336"></a>    <span class="n">request_model</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">RequestBypassV1</span><span class="p">],</span>
+<a id="__codelineno-0-337" name="__codelineno-0-337"></a>    <span class="n">update_dict</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-338" name="__codelineno-0-338"></a>    <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;bypass&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-339" name="__codelineno-0-339"></a>    <span class="n">endpoint</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;bypass&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-340" name="__codelineno-0-340"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-341" name="__codelineno-0-341"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Send ByPass V1 API request.</span>
+<a id="__codelineno-0-342" name="__codelineno-0-342"></a>
+<a id="__codelineno-0-343" name="__codelineno-0-343"></a><span class="sd">    This uses the `_build_request` method to send API requests to the Bypass V1 API.</span>
+<a id="__codelineno-0-344" name="__codelineno-0-344"></a><span class="sd">    The endpoint can be overridden with the `endpoint` argument.</span>
+<a id="__codelineno-0-345" name="__codelineno-0-345"></a>
+<a id="__codelineno-0-346" name="__codelineno-0-346"></a><span class="sd">    Args:</span>
+<a id="__codelineno-0-347" name="__codelineno-0-347"></a><span class="sd">        request_model (type[RequestBypassV1]): The request model to use.</span>
+<a id="__codelineno-0-348" name="__codelineno-0-348"></a><span class="sd">        update_dict (dict): Additional keys to add on.</span>
+<a id="__codelineno-0-349" name="__codelineno-0-349"></a><span class="sd">        method (str): The method to use in the outer body.</span>
+<a id="__codelineno-0-350" name="__codelineno-0-350"></a><span class="sd">        endpoint (str | None): The last part of the url path, defaults to</span>
+<a id="__codelineno-0-351" name="__codelineno-0-351"></a><span class="sd">            `bypass`, e.g. `/cloud/v1/deviceManaged/bypass`.</span>
+<a id="__codelineno-0-352" name="__codelineno-0-352"></a>
+<a id="__codelineno-0-353" name="__codelineno-0-353"></a><span class="sd">    Returns:</span>
+<a id="__codelineno-0-354" name="__codelineno-0-354"></a><span class="sd">        bytes: The response from the API request.</span>
+<a id="__codelineno-0-355" name="__codelineno-0-355"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-356" name="__codelineno-0-356"></a>    <span class="n">request</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_request</span><span class="p">(</span><span class="n">request_model</span><span class="p">,</span> <span class="n">update_dict</span><span class="p">,</span> <span class="n">method</span><span class="p">)</span>
+<a id="__codelineno-0-357" name="__codelineno-0-357"></a>    <span class="n">url_path</span> <span class="o">=</span> <span class="n">BYPASS_V1_PATH</span> <span class="o">+</span> <span class="n">endpoint</span>
+<a id="__codelineno-0-358" name="__codelineno-0-358"></a>    <span class="n">resp_dict</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">async_call_api</span><span class="p">(</span>
+<a id="__codelineno-0-359" name="__codelineno-0-359"></a>        <span class="n">url_path</span><span class="p">,</span> <span class="s1">&#39;post&#39;</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">Helpers</span><span class="o">.</span><span class="n">req_header_bypass</span><span class="p">()</span>
+<a id="__codelineno-0-360" name="__codelineno-0-360"></a>    <span class="p">)</span>
+<a id="__codelineno-0-361" name="__codelineno-0-361"></a>
+<a id="__codelineno-0-362" name="__codelineno-0-362"></a>    <span class="k">return</span> <span class="n">resp_dict</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -2011,8 +2011,7 @@ logging them as needed. The return value is the built model.</p>
 
             <details class="quote">
               <summary>Source code in <code>src\pyvesync\utils\device_mixins.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-37">37</a></span>
-<span class="normal"><a href="#__codelineno-0-38">38</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-38">38</a></span>
 <span class="normal"><a href="#__codelineno-0-39">39</a></span>
 <span class="normal"><a href="#__codelineno-0-40">40</a></span>
 <span class="normal"><a href="#__codelineno-0-41">41</a></span>
@@ -2053,51 +2052,48 @@ logging them as needed. The return value is the built model.</p>
 <span class="normal"><a href="#__codelineno-0-76">76</a></span>
 <span class="normal"><a href="#__codelineno-0-77">77</a></span>
 <span class="normal"><a href="#__codelineno-0-78">78</a></span>
-<span class="normal"><a href="#__codelineno-0-79">79</a></span>
-<span class="normal"><a href="#__codelineno-0-80">80</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-37" name="__codelineno-0-37"></a><span class="k">def</span><span class="w"> </span><span class="nf">process_bypassv1_result</span><span class="p">(</span>
-<a id="__codelineno-0-38" name="__codelineno-0-38"></a>    <span class="n">device</span><span class="p">:</span> <span class="n">VeSyncBaseDevice</span><span class="p">,</span>
-<a id="__codelineno-0-39" name="__codelineno-0-39"></a>    <span class="n">logger</span><span class="p">:</span> <span class="n">Logger</span><span class="p">,</span>
-<a id="__codelineno-0-40" name="__codelineno-0-40"></a>    <span class="n">method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-<a id="__codelineno-0-41" name="__codelineno-0-41"></a>    <span class="n">resp_dict</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-42" name="__codelineno-0-42"></a>    <span class="n">model</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">T_MODEL</span><span class="p">]</span>
-<a id="__codelineno-0-43" name="__codelineno-0-43"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T_MODEL</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-44" name="__codelineno-0-44"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Process the Bypass V1 API response.</span>
-<a id="__codelineno-0-45" name="__codelineno-0-45"></a>
-<a id="__codelineno-0-46" name="__codelineno-0-46"></a><span class="sd">    This will gracefully handle errors in the response and error codes,</span>
-<a id="__codelineno-0-47" name="__codelineno-0-47"></a><span class="sd">    logging them as needed. The return value is the built model.</span>
-<a id="__codelineno-0-48" name="__codelineno-0-48"></a>
-<a id="__codelineno-0-49" name="__codelineno-0-49"></a><span class="sd">    Args:</span>
-<a id="__codelineno-0-50" name="__codelineno-0-50"></a><span class="sd">        device (VeSyncBaseDevice): The device object.</span>
-<a id="__codelineno-0-51" name="__codelineno-0-51"></a><span class="sd">        logger (Logger): The logger to use for logging.</span>
-<a id="__codelineno-0-52" name="__codelineno-0-52"></a><span class="sd">        method (str): The method used in the payload.</span>
-<a id="__codelineno-0-53" name="__codelineno-0-53"></a><span class="sd">        resp_dict (dict | str): The api response.</span>
-<a id="__codelineno-0-54" name="__codelineno-0-54"></a><span class="sd">        model (type[T_MODEL]): The model to use for the response.</span>
-<a id="__codelineno-0-55" name="__codelineno-0-55"></a>
-<a id="__codelineno-0-56" name="__codelineno-0-56"></a><span class="sd">    Returns:</span>
-<a id="__codelineno-0-57" name="__codelineno-0-57"></a><span class="sd">        dict: The response data</span>
-<a id="__codelineno-0-58" name="__codelineno-0-58"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-59" name="__codelineno-0-59"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">resp_dict</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">or</span> <span class="s1">&#39;code&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">resp_dict</span><span class="p">:</span>
-<a id="__codelineno-0-60" name="__codelineno-0-60"></a>        <span class="n">LibraryLogger</span><span class="o">.</span><span class="n">log_device_api_response_error</span><span class="p">(</span>
-<a id="__codelineno-0-61" name="__codelineno-0-61"></a>            <span class="n">logger</span><span class="p">,</span>
-<a id="__codelineno-0-62" name="__codelineno-0-62"></a>            <span class="n">device</span><span class="o">.</span><span class="n">device_name</span><span class="p">,</span>
-<a id="__codelineno-0-63" name="__codelineno-0-63"></a>            <span class="n">device</span><span class="o">.</span><span class="n">device_type</span><span class="p">,</span>
-<a id="__codelineno-0-64" name="__codelineno-0-64"></a>            <span class="n">method</span><span class="p">,</span>
-<a id="__codelineno-0-65" name="__codelineno-0-65"></a>            <span class="s2">&quot;Error decoding JSON response&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-66" name="__codelineno-0-66"></a>        <span class="p">)</span>
-<a id="__codelineno-0-67" name="__codelineno-0-67"></a>        <span class="k">return</span> <span class="kc">None</span>
-<a id="__codelineno-0-68" name="__codelineno-0-68"></a>
-<a id="__codelineno-0-69" name="__codelineno-0-69"></a>    <span class="n">error_info</span> <span class="o">=</span> <span class="n">ErrorCodes</span><span class="o">.</span><span class="n">get_error_info</span><span class="p">(</span><span class="n">resp_dict</span><span class="p">[</span><span class="s1">&#39;code&#39;</span><span class="p">])</span>
-<a id="__codelineno-0-70" name="__codelineno-0-70"></a>    <span class="n">device</span><span class="o">.</span><span class="n">last_response</span> <span class="o">=</span> <span class="n">error_info</span>
-<a id="__codelineno-0-71" name="__codelineno-0-71"></a>    <span class="n">device</span><span class="o">.</span><span class="n">last_response</span><span class="o">.</span><span class="n">response_data</span> <span class="o">=</span> <span class="n">resp_dict</span>
-<a id="__codelineno-0-72" name="__codelineno-0-72"></a>    <span class="k">if</span> <span class="n">error_info</span><span class="o">.</span><span class="n">error_type</span> <span class="o">!=</span> <span class="n">ErrorTypes</span><span class="o">.</span><span class="n">SUCCESS</span><span class="p">:</span>
-<a id="__codelineno-0-73" name="__codelineno-0-73"></a>        <span class="n">_handle_bypass_error</span><span class="p">(</span>
-<a id="__codelineno-0-74" name="__codelineno-0-74"></a>            <span class="n">logger</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">error_info</span><span class="p">,</span> <span class="n">resp_dict</span><span class="p">[</span><span class="s1">&#39;code&#39;</span><span class="p">]</span>
-<a id="__codelineno-0-75" name="__codelineno-0-75"></a>        <span class="p">)</span>
-<a id="__codelineno-0-76" name="__codelineno-0-76"></a>        <span class="k">return</span> <span class="kc">None</span>
-<a id="__codelineno-0-77" name="__codelineno-0-77"></a>    <span class="n">result</span> <span class="o">=</span> <span class="n">resp_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;result&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-78" name="__codelineno-0-78"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-<a id="__codelineno-0-79" name="__codelineno-0-79"></a>        <span class="k">return</span> <span class="kc">None</span>
-<a id="__codelineno-0-80" name="__codelineno-0-80"></a>    <span class="k">return</span> <span class="n">Helpers</span><span class="o">.</span><span class="n">model_maker</span><span class="p">(</span><span class="n">logger</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span>
+<span class="normal"><a href="#__codelineno-0-79">79</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-38" name="__codelineno-0-38"></a><span class="k">def</span><span class="w"> </span><span class="nf">process_bypassv1_result</span><span class="p">(</span>
+<a id="__codelineno-0-39" name="__codelineno-0-39"></a>    <span class="n">device</span><span class="p">:</span> <span class="n">VeSyncBaseDevice</span><span class="p">,</span>
+<a id="__codelineno-0-40" name="__codelineno-0-40"></a>    <span class="n">logger</span><span class="p">:</span> <span class="n">Logger</span><span class="p">,</span>
+<a id="__codelineno-0-41" name="__codelineno-0-41"></a>    <span class="n">method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<a id="__codelineno-0-42" name="__codelineno-0-42"></a>    <span class="n">resp_dict</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-43" name="__codelineno-0-43"></a>    <span class="n">model</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">T_MODEL</span><span class="p">],</span>
+<a id="__codelineno-0-44" name="__codelineno-0-44"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T_MODEL</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-45" name="__codelineno-0-45"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Process the Bypass V1 API response.</span>
+<a id="__codelineno-0-46" name="__codelineno-0-46"></a>
+<a id="__codelineno-0-47" name="__codelineno-0-47"></a><span class="sd">    This will gracefully handle errors in the response and error codes,</span>
+<a id="__codelineno-0-48" name="__codelineno-0-48"></a><span class="sd">    logging them as needed. The return value is the built model.</span>
+<a id="__codelineno-0-49" name="__codelineno-0-49"></a>
+<a id="__codelineno-0-50" name="__codelineno-0-50"></a><span class="sd">    Args:</span>
+<a id="__codelineno-0-51" name="__codelineno-0-51"></a><span class="sd">        device (VeSyncBaseDevice): The device object.</span>
+<a id="__codelineno-0-52" name="__codelineno-0-52"></a><span class="sd">        logger (Logger): The logger to use for logging.</span>
+<a id="__codelineno-0-53" name="__codelineno-0-53"></a><span class="sd">        method (str): The method used in the payload.</span>
+<a id="__codelineno-0-54" name="__codelineno-0-54"></a><span class="sd">        resp_dict (dict | str): The api response.</span>
+<a id="__codelineno-0-55" name="__codelineno-0-55"></a><span class="sd">        model (type[T_MODEL]): The model to use for the response.</span>
+<a id="__codelineno-0-56" name="__codelineno-0-56"></a>
+<a id="__codelineno-0-57" name="__codelineno-0-57"></a><span class="sd">    Returns:</span>
+<a id="__codelineno-0-58" name="__codelineno-0-58"></a><span class="sd">        dict: The response data</span>
+<a id="__codelineno-0-59" name="__codelineno-0-59"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-60" name="__codelineno-0-60"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">resp_dict</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">or</span> <span class="s1">&#39;code&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">resp_dict</span><span class="p">:</span>
+<a id="__codelineno-0-61" name="__codelineno-0-61"></a>        <span class="n">LibraryLogger</span><span class="o">.</span><span class="n">log_device_api_response_error</span><span class="p">(</span>
+<a id="__codelineno-0-62" name="__codelineno-0-62"></a>            <span class="n">logger</span><span class="p">,</span>
+<a id="__codelineno-0-63" name="__codelineno-0-63"></a>            <span class="n">device</span><span class="o">.</span><span class="n">device_name</span><span class="p">,</span>
+<a id="__codelineno-0-64" name="__codelineno-0-64"></a>            <span class="n">device</span><span class="o">.</span><span class="n">device_type</span><span class="p">,</span>
+<a id="__codelineno-0-65" name="__codelineno-0-65"></a>            <span class="n">method</span><span class="p">,</span>
+<a id="__codelineno-0-66" name="__codelineno-0-66"></a>            <span class="s1">&#39;Error decoding JSON response&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-67" name="__codelineno-0-67"></a>        <span class="p">)</span>
+<a id="__codelineno-0-68" name="__codelineno-0-68"></a>        <span class="k">return</span> <span class="kc">None</span>
+<a id="__codelineno-0-69" name="__codelineno-0-69"></a>
+<a id="__codelineno-0-70" name="__codelineno-0-70"></a>    <span class="n">error_info</span> <span class="o">=</span> <span class="n">ErrorCodes</span><span class="o">.</span><span class="n">get_error_info</span><span class="p">(</span><span class="n">resp_dict</span><span class="p">[</span><span class="s1">&#39;code&#39;</span><span class="p">])</span>
+<a id="__codelineno-0-71" name="__codelineno-0-71"></a>    <span class="n">device</span><span class="o">.</span><span class="n">last_response</span> <span class="o">=</span> <span class="n">error_info</span>
+<a id="__codelineno-0-72" name="__codelineno-0-72"></a>    <span class="n">device</span><span class="o">.</span><span class="n">last_response</span><span class="o">.</span><span class="n">response_data</span> <span class="o">=</span> <span class="n">resp_dict</span>
+<a id="__codelineno-0-73" name="__codelineno-0-73"></a>    <span class="k">if</span> <span class="n">error_info</span><span class="o">.</span><span class="n">error_type</span> <span class="o">!=</span> <span class="n">ErrorTypes</span><span class="o">.</span><span class="n">SUCCESS</span><span class="p">:</span>
+<a id="__codelineno-0-74" name="__codelineno-0-74"></a>        <span class="n">_handle_bypass_error</span><span class="p">(</span><span class="n">logger</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">error_info</span><span class="p">,</span> <span class="n">resp_dict</span><span class="p">[</span><span class="s1">&#39;code&#39;</span><span class="p">])</span>
+<a id="__codelineno-0-75" name="__codelineno-0-75"></a>        <span class="k">return</span> <span class="kc">None</span>
+<a id="__codelineno-0-76" name="__codelineno-0-76"></a>    <span class="n">result</span> <span class="o">=</span> <span class="n">resp_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;result&#39;</span><span class="p">)</span>
+<a id="__codelineno-0-77" name="__codelineno-0-77"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+<a id="__codelineno-0-78" name="__codelineno-0-78"></a>        <span class="k">return</span> <span class="kc">None</span>
+<a id="__codelineno-0-79" name="__codelineno-0-79"></a>    <span class="k">return</span> <span class="n">Helpers</span><span class="o">.</span><span class="n">model_maker</span><span class="p">(</span><span class="n">logger</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -2132,7 +2128,12 @@ that use the Bypass V2 API- /cloud/v2/deviceManaged/bypassV2.</p>
 
               <details class="quote">
                 <summary>Source code in <code>src\pyvesync\utils\device_mixins.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-207">207</a></span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-202">202</a></span>
+<span class="normal"><a href="#__codelineno-0-203">203</a></span>
+<span class="normal"><a href="#__codelineno-0-204">204</a></span>
+<span class="normal"><a href="#__codelineno-0-205">205</a></span>
+<span class="normal"><a href="#__codelineno-0-206">206</a></span>
+<span class="normal"><a href="#__codelineno-0-207">207</a></span>
 <span class="normal"><a href="#__codelineno-0-208">208</a></span>
 <span class="normal"><a href="#__codelineno-0-209">209</a></span>
 <span class="normal"><a href="#__codelineno-0-210">210</a></span>
@@ -2201,86 +2202,81 @@ that use the Bypass V2 API- /cloud/v2/deviceManaged/bypassV2.</p>
 <span class="normal"><a href="#__codelineno-0-273">273</a></span>
 <span class="normal"><a href="#__codelineno-0-274">274</a></span>
 <span class="normal"><a href="#__codelineno-0-275">275</a></span>
-<span class="normal"><a href="#__codelineno-0-276">276</a></span>
-<span class="normal"><a href="#__codelineno-0-277">277</a></span>
-<span class="normal"><a href="#__codelineno-0-278">278</a></span>
-<span class="normal"><a href="#__codelineno-0-279">279</a></span>
-<span class="normal"><a href="#__codelineno-0-280">280</a></span>
-<span class="normal"><a href="#__codelineno-0-281">281</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-207" name="__codelineno-0-207"></a><span class="k">class</span><span class="w"> </span><span class="nc">BypassV2Mixin</span><span class="p">:</span>
-<a id="__codelineno-0-208" name="__codelineno-0-208"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Mixin for bypass V2 API.</span>
-<a id="__codelineno-0-209" name="__codelineno-0-209"></a>
-<a id="__codelineno-0-210" name="__codelineno-0-210"></a><span class="sd">    Overrides the `_build_request` method and `request_keys` attribute for devices</span>
-<a id="__codelineno-0-211" name="__codelineno-0-211"></a><span class="sd">    that use the Bypass V2 API- /cloud/v2/deviceManaged/bypassV2.</span>
-<a id="__codelineno-0-212" name="__codelineno-0-212"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-213" name="__codelineno-0-213"></a>
-<a id="__codelineno-0-214" name="__codelineno-0-214"></a>    <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-<a id="__codelineno-0-215" name="__codelineno-0-215"></a>        <span class="n">manager</span><span class="p">:</span> <span class="n">VeSync</span>
-<a id="__codelineno-0-216" name="__codelineno-0-216"></a>
-<a id="__codelineno-0-217" name="__codelineno-0-217"></a>    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
-<a id="__codelineno-0-218" name="__codelineno-0-218"></a>    <span class="n">request_keys</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span>
-<a id="__codelineno-0-219" name="__codelineno-0-219"></a>        <span class="s2">&quot;acceptLanguage&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-220" name="__codelineno-0-220"></a>        <span class="s2">&quot;appVersion&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-221" name="__codelineno-0-221"></a>        <span class="s2">&quot;phoneBrand&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-222" name="__codelineno-0-222"></a>        <span class="s2">&quot;phoneOS&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-223" name="__codelineno-0-223"></a>        <span class="s2">&quot;accountID&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-224" name="__codelineno-0-224"></a>        <span class="s2">&quot;cid&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-225" name="__codelineno-0-225"></a>        <span class="s2">&quot;configModule&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-226" name="__codelineno-0-226"></a>        <span class="s2">&quot;debugMode&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-227" name="__codelineno-0-227"></a>        <span class="s2">&quot;traceId&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-228" name="__codelineno-0-228"></a>        <span class="s2">&quot;timeZone&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-229" name="__codelineno-0-229"></a>        <span class="s2">&quot;token&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-230" name="__codelineno-0-230"></a>        <span class="s2">&quot;userCountryCode&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-231" name="__codelineno-0-231"></a>        <span class="s2">&quot;configModel&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-232" name="__codelineno-0-232"></a>        <span class="s2">&quot;deviceId&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-233" name="__codelineno-0-233"></a>    <span class="p">]</span>
-<a id="__codelineno-0-234" name="__codelineno-0-234"></a>
-<a id="__codelineno-0-235" name="__codelineno-0-235"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_build_request</span><span class="p">(</span>
-<a id="__codelineno-0-236" name="__codelineno-0-236"></a>        <span class="bp">self</span><span class="p">,</span>
-<a id="__codelineno-0-237" name="__codelineno-0-237"></a>        <span class="n">payload_method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-<a id="__codelineno-0-238" name="__codelineno-0-238"></a>        <span class="n">data</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-239" name="__codelineno-0-239"></a>        <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;bypassV2&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-240" name="__codelineno-0-240"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RequestBypassV2</span><span class="p">:</span>
-<a id="__codelineno-0-241" name="__codelineno-0-241"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Build API request body Bypass V2 endpoint.</span>
-<a id="__codelineno-0-242" name="__codelineno-0-242"></a>
-<a id="__codelineno-0-243" name="__codelineno-0-243"></a><span class="sd">        Args:</span>
-<a id="__codelineno-0-244" name="__codelineno-0-244"></a><span class="sd">            payload_method (str): The method to use in the payload dict.</span>
-<a id="__codelineno-0-245" name="__codelineno-0-245"></a><span class="sd">            data (dict | None): The data dict inside the payload value.</span>
-<a id="__codelineno-0-246" name="__codelineno-0-246"></a><span class="sd">            method (str): The method to use in the outer body, defaults to bypassV2.</span>
-<a id="__codelineno-0-247" name="__codelineno-0-247"></a><span class="sd">        &quot;&quot;&quot;</span>
-<a id="__codelineno-0-248" name="__codelineno-0-248"></a>        <span class="n">body</span> <span class="o">=</span> <span class="n">Helpers</span><span class="o">.</span><span class="n">get_class_attributes</span><span class="p">(</span><span class="n">DefaultValues</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request_keys</span><span class="p">)</span>
-<a id="__codelineno-0-249" name="__codelineno-0-249"></a>        <span class="n">body</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">Helpers</span><span class="o">.</span><span class="n">get_class_attributes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request_keys</span><span class="p">))</span>
-<a id="__codelineno-0-250" name="__codelineno-0-250"></a>        <span class="n">body</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">Helpers</span><span class="o">.</span><span class="n">get_class_attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request_keys</span><span class="p">))</span>
-<a id="__codelineno-0-251" name="__codelineno-0-251"></a>        <span class="n">body</span><span class="p">[</span><span class="s2">&quot;method&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">method</span>
-<a id="__codelineno-0-252" name="__codelineno-0-252"></a>        <span class="n">body</span><span class="p">[</span><span class="s2">&quot;payload&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="n">payload_method</span><span class="p">,</span> <span class="s2">&quot;source&quot;</span><span class="p">:</span> <span class="s2">&quot;APP&quot;</span><span class="p">,</span> <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="n">data</span> <span class="ow">or</span> <span class="p">{}}</span>
-<a id="__codelineno-0-253" name="__codelineno-0-253"></a>        <span class="k">return</span> <span class="n">RequestBypassV2</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">body</span><span class="p">)</span>
-<a id="__codelineno-0-254" name="__codelineno-0-254"></a>
-<a id="__codelineno-0-255" name="__codelineno-0-255"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">call_bypassv2_api</span><span class="p">(</span>
-<a id="__codelineno-0-256" name="__codelineno-0-256"></a>        <span class="bp">self</span><span class="p">,</span>
-<a id="__codelineno-0-257" name="__codelineno-0-257"></a>        <span class="n">payload_method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-<a id="__codelineno-0-258" name="__codelineno-0-258"></a>        <span class="n">data</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-259" name="__codelineno-0-259"></a>        <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;bypassV2&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-260" name="__codelineno-0-260"></a>        <span class="n">endpoint</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;bypassV2&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-261" name="__codelineno-0-261"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-262" name="__codelineno-0-262"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Send Bypass V2 API request.</span>
-<a id="__codelineno-0-263" name="__codelineno-0-263"></a>
-<a id="__codelineno-0-264" name="__codelineno-0-264"></a><span class="sd">        This uses the `_build_request` method to send API requests to the Bypass V2 API.</span>
-<a id="__codelineno-0-265" name="__codelineno-0-265"></a>
-<a id="__codelineno-0-266" name="__codelineno-0-266"></a><span class="sd">        Args:</span>
-<a id="__codelineno-0-267" name="__codelineno-0-267"></a><span class="sd">            payload_method (str): The method to use in the payload dict.</span>
-<a id="__codelineno-0-268" name="__codelineno-0-268"></a><span class="sd">            data (dict | None): The data to send in the request.</span>
-<a id="__codelineno-0-269" name="__codelineno-0-269"></a><span class="sd">            method (str): The method to use in the outer body.</span>
-<a id="__codelineno-0-270" name="__codelineno-0-270"></a><span class="sd">            endpoint (str | None): The last part of the API url, defaults to</span>
-<a id="__codelineno-0-271" name="__codelineno-0-271"></a><span class="sd">                `bypassV2`, e.g. `/cloud/v2/deviceManaged/bypassV2`.</span>
-<a id="__codelineno-0-272" name="__codelineno-0-272"></a>
-<a id="__codelineno-0-273" name="__codelineno-0-273"></a><span class="sd">        Returns:</span>
-<a id="__codelineno-0-274" name="__codelineno-0-274"></a><span class="sd">            bytes: The response from the API request.</span>
-<a id="__codelineno-0-275" name="__codelineno-0-275"></a><span class="sd">        &quot;&quot;&quot;</span>
-<a id="__codelineno-0-276" name="__codelineno-0-276"></a>        <span class="n">request</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_request</span><span class="p">(</span><span class="n">payload_method</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">method</span><span class="p">)</span>
-<a id="__codelineno-0-277" name="__codelineno-0-277"></a>        <span class="n">endpoint</span> <span class="o">=</span> <span class="n">BYPASS_V2_BASE</span> <span class="o">+</span> <span class="n">endpoint</span>
-<a id="__codelineno-0-278" name="__codelineno-0-278"></a>        <span class="n">resp_dict</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">async_call_api</span><span class="p">(</span>
-<a id="__codelineno-0-279" name="__codelineno-0-279"></a>            <span class="n">endpoint</span><span class="p">,</span> <span class="s2">&quot;post&quot;</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">Helpers</span><span class="o">.</span><span class="n">req_header_bypass</span><span class="p">()</span>
-<a id="__codelineno-0-280" name="__codelineno-0-280"></a>        <span class="p">)</span>
-<a id="__codelineno-0-281" name="__codelineno-0-281"></a>        <span class="k">return</span> <span class="n">resp_dict</span>
+<span class="normal"><a href="#__codelineno-0-276">276</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-202" name="__codelineno-0-202"></a><span class="k">class</span><span class="w"> </span><span class="nc">BypassV2Mixin</span><span class="p">:</span>
+<a id="__codelineno-0-203" name="__codelineno-0-203"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Mixin for bypass V2 API.</span>
+<a id="__codelineno-0-204" name="__codelineno-0-204"></a>
+<a id="__codelineno-0-205" name="__codelineno-0-205"></a><span class="sd">    Overrides the `_build_request` method and `request_keys` attribute for devices</span>
+<a id="__codelineno-0-206" name="__codelineno-0-206"></a><span class="sd">    that use the Bypass V2 API- /cloud/v2/deviceManaged/bypassV2.</span>
+<a id="__codelineno-0-207" name="__codelineno-0-207"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-208" name="__codelineno-0-208"></a>
+<a id="__codelineno-0-209" name="__codelineno-0-209"></a>    <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+<a id="__codelineno-0-210" name="__codelineno-0-210"></a>        <span class="n">manager</span><span class="p">:</span> <span class="n">VeSync</span>
+<a id="__codelineno-0-211" name="__codelineno-0-211"></a>
+<a id="__codelineno-0-212" name="__codelineno-0-212"></a>    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+<a id="__codelineno-0-213" name="__codelineno-0-213"></a>    <span class="n">request_keys</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span>
+<a id="__codelineno-0-214" name="__codelineno-0-214"></a>        <span class="s1">&#39;acceptLanguage&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-215" name="__codelineno-0-215"></a>        <span class="s1">&#39;appVersion&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-216" name="__codelineno-0-216"></a>        <span class="s1">&#39;phoneBrand&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-217" name="__codelineno-0-217"></a>        <span class="s1">&#39;phoneOS&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-218" name="__codelineno-0-218"></a>        <span class="s1">&#39;accountID&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-219" name="__codelineno-0-219"></a>        <span class="s1">&#39;cid&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-220" name="__codelineno-0-220"></a>        <span class="s1">&#39;configModule&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-221" name="__codelineno-0-221"></a>        <span class="s1">&#39;debugMode&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-222" name="__codelineno-0-222"></a>        <span class="s1">&#39;traceId&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-223" name="__codelineno-0-223"></a>        <span class="s1">&#39;timeZone&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-224" name="__codelineno-0-224"></a>        <span class="s1">&#39;token&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-225" name="__codelineno-0-225"></a>        <span class="s1">&#39;userCountryCode&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-226" name="__codelineno-0-226"></a>        <span class="s1">&#39;configModel&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-227" name="__codelineno-0-227"></a>        <span class="s1">&#39;deviceId&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-228" name="__codelineno-0-228"></a>    <span class="p">]</span>
+<a id="__codelineno-0-229" name="__codelineno-0-229"></a>
+<a id="__codelineno-0-230" name="__codelineno-0-230"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_build_request</span><span class="p">(</span>
+<a id="__codelineno-0-231" name="__codelineno-0-231"></a>        <span class="bp">self</span><span class="p">,</span>
+<a id="__codelineno-0-232" name="__codelineno-0-232"></a>        <span class="n">payload_method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<a id="__codelineno-0-233" name="__codelineno-0-233"></a>        <span class="n">data</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-234" name="__codelineno-0-234"></a>        <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;bypassV2&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-235" name="__codelineno-0-235"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RequestBypassV2</span><span class="p">:</span>
+<a id="__codelineno-0-236" name="__codelineno-0-236"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Build API request body Bypass V2 endpoint.</span>
+<a id="__codelineno-0-237" name="__codelineno-0-237"></a>
+<a id="__codelineno-0-238" name="__codelineno-0-238"></a><span class="sd">        Args:</span>
+<a id="__codelineno-0-239" name="__codelineno-0-239"></a><span class="sd">            payload_method (str): The method to use in the payload dict.</span>
+<a id="__codelineno-0-240" name="__codelineno-0-240"></a><span class="sd">            data (dict | None): The data dict inside the payload value.</span>
+<a id="__codelineno-0-241" name="__codelineno-0-241"></a><span class="sd">            method (str): The method to use in the outer body, defaults to bypassV2.</span>
+<a id="__codelineno-0-242" name="__codelineno-0-242"></a><span class="sd">        &quot;&quot;&quot;</span>
+<a id="__codelineno-0-243" name="__codelineno-0-243"></a>        <span class="n">body</span> <span class="o">=</span> <span class="n">Helpers</span><span class="o">.</span><span class="n">get_class_attributes</span><span class="p">(</span><span class="n">DefaultValues</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request_keys</span><span class="p">)</span>
+<a id="__codelineno-0-244" name="__codelineno-0-244"></a>        <span class="n">body</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">Helpers</span><span class="o">.</span><span class="n">get_class_attributes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request_keys</span><span class="p">))</span>
+<a id="__codelineno-0-245" name="__codelineno-0-245"></a>        <span class="n">body</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">Helpers</span><span class="o">.</span><span class="n">get_class_attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request_keys</span><span class="p">))</span>
+<a id="__codelineno-0-246" name="__codelineno-0-246"></a>        <span class="n">body</span><span class="p">[</span><span class="s1">&#39;method&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">method</span>
+<a id="__codelineno-0-247" name="__codelineno-0-247"></a>        <span class="n">body</span><span class="p">[</span><span class="s1">&#39;payload&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;method&#39;</span><span class="p">:</span> <span class="n">payload_method</span><span class="p">,</span> <span class="s1">&#39;source&#39;</span><span class="p">:</span> <span class="s1">&#39;APP&#39;</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="n">data</span> <span class="ow">or</span> <span class="p">{}}</span>
+<a id="__codelineno-0-248" name="__codelineno-0-248"></a>        <span class="k">return</span> <span class="n">RequestBypassV2</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">body</span><span class="p">)</span>
+<a id="__codelineno-0-249" name="__codelineno-0-249"></a>
+<a id="__codelineno-0-250" name="__codelineno-0-250"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">call_bypassv2_api</span><span class="p">(</span>
+<a id="__codelineno-0-251" name="__codelineno-0-251"></a>        <span class="bp">self</span><span class="p">,</span>
+<a id="__codelineno-0-252" name="__codelineno-0-252"></a>        <span class="n">payload_method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<a id="__codelineno-0-253" name="__codelineno-0-253"></a>        <span class="n">data</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-254" name="__codelineno-0-254"></a>        <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;bypassV2&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-255" name="__codelineno-0-255"></a>        <span class="n">endpoint</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;bypassV2&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-256" name="__codelineno-0-256"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-257" name="__codelineno-0-257"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Send Bypass V2 API request.</span>
+<a id="__codelineno-0-258" name="__codelineno-0-258"></a>
+<a id="__codelineno-0-259" name="__codelineno-0-259"></a><span class="sd">        This uses the `_build_request` method to send API requests to the Bypass V2 API.</span>
+<a id="__codelineno-0-260" name="__codelineno-0-260"></a>
+<a id="__codelineno-0-261" name="__codelineno-0-261"></a><span class="sd">        Args:</span>
+<a id="__codelineno-0-262" name="__codelineno-0-262"></a><span class="sd">            payload_method (str): The method to use in the payload dict.</span>
+<a id="__codelineno-0-263" name="__codelineno-0-263"></a><span class="sd">            data (dict | None): The data to send in the request.</span>
+<a id="__codelineno-0-264" name="__codelineno-0-264"></a><span class="sd">            method (str): The method to use in the outer body.</span>
+<a id="__codelineno-0-265" name="__codelineno-0-265"></a><span class="sd">            endpoint (str | None): The last part of the API url, defaults to</span>
+<a id="__codelineno-0-266" name="__codelineno-0-266"></a><span class="sd">                `bypassV2`, e.g. `/cloud/v2/deviceManaged/bypassV2`.</span>
+<a id="__codelineno-0-267" name="__codelineno-0-267"></a>
+<a id="__codelineno-0-268" name="__codelineno-0-268"></a><span class="sd">        Returns:</span>
+<a id="__codelineno-0-269" name="__codelineno-0-269"></a><span class="sd">            bytes: The response from the API request.</span>
+<a id="__codelineno-0-270" name="__codelineno-0-270"></a><span class="sd">        &quot;&quot;&quot;</span>
+<a id="__codelineno-0-271" name="__codelineno-0-271"></a>        <span class="n">request</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_request</span><span class="p">(</span><span class="n">payload_method</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">method</span><span class="p">)</span>
+<a id="__codelineno-0-272" name="__codelineno-0-272"></a>        <span class="n">endpoint</span> <span class="o">=</span> <span class="n">BYPASS_V2_BASE</span> <span class="o">+</span> <span class="n">endpoint</span>
+<a id="__codelineno-0-273" name="__codelineno-0-273"></a>        <span class="n">resp_dict</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">async_call_api</span><span class="p">(</span>
+<a id="__codelineno-0-274" name="__codelineno-0-274"></a>            <span class="n">endpoint</span><span class="p">,</span> <span class="s1">&#39;post&#39;</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">Helpers</span><span class="o">.</span><span class="n">req_header_bypass</span><span class="p">()</span>
+<a id="__codelineno-0-275" name="__codelineno-0-275"></a>        <span class="p">)</span>
+<a id="__codelineno-0-276" name="__codelineno-0-276"></a>        <span class="k">return</span> <span class="n">resp_dict</span>
 </code></pre></div></td></tr></table></div>
               </details>
 
@@ -2494,7 +2490,12 @@ that use the Bypass V2 API- /cloud/v2/deviceManaged/bypassV2.</p>
 
             <details class="quote">
               <summary>Source code in <code>src\pyvesync\utils\device_mixins.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-255">255</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-250">250</a></span>
+<span class="normal"><a href="#__codelineno-0-251">251</a></span>
+<span class="normal"><a href="#__codelineno-0-252">252</a></span>
+<span class="normal"><a href="#__codelineno-0-253">253</a></span>
+<span class="normal"><a href="#__codelineno-0-254">254</a></span>
+<span class="normal"><a href="#__codelineno-0-255">255</a></span>
 <span class="normal"><a href="#__codelineno-0-256">256</a></span>
 <span class="normal"><a href="#__codelineno-0-257">257</a></span>
 <span class="normal"><a href="#__codelineno-0-258">258</a></span>
@@ -2515,38 +2516,33 @@ that use the Bypass V2 API- /cloud/v2/deviceManaged/bypassV2.</p>
 <span class="normal"><a href="#__codelineno-0-273">273</a></span>
 <span class="normal"><a href="#__codelineno-0-274">274</a></span>
 <span class="normal"><a href="#__codelineno-0-275">275</a></span>
-<span class="normal"><a href="#__codelineno-0-276">276</a></span>
-<span class="normal"><a href="#__codelineno-0-277">277</a></span>
-<span class="normal"><a href="#__codelineno-0-278">278</a></span>
-<span class="normal"><a href="#__codelineno-0-279">279</a></span>
-<span class="normal"><a href="#__codelineno-0-280">280</a></span>
-<span class="normal"><a href="#__codelineno-0-281">281</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-255" name="__codelineno-0-255"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">call_bypassv2_api</span><span class="p">(</span>
-<a id="__codelineno-0-256" name="__codelineno-0-256"></a>    <span class="bp">self</span><span class="p">,</span>
-<a id="__codelineno-0-257" name="__codelineno-0-257"></a>    <span class="n">payload_method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-<a id="__codelineno-0-258" name="__codelineno-0-258"></a>    <span class="n">data</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-259" name="__codelineno-0-259"></a>    <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;bypassV2&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-260" name="__codelineno-0-260"></a>    <span class="n">endpoint</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;bypassV2&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-261" name="__codelineno-0-261"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-262" name="__codelineno-0-262"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Send Bypass V2 API request.</span>
-<a id="__codelineno-0-263" name="__codelineno-0-263"></a>
-<a id="__codelineno-0-264" name="__codelineno-0-264"></a><span class="sd">    This uses the `_build_request` method to send API requests to the Bypass V2 API.</span>
-<a id="__codelineno-0-265" name="__codelineno-0-265"></a>
-<a id="__codelineno-0-266" name="__codelineno-0-266"></a><span class="sd">    Args:</span>
-<a id="__codelineno-0-267" name="__codelineno-0-267"></a><span class="sd">        payload_method (str): The method to use in the payload dict.</span>
-<a id="__codelineno-0-268" name="__codelineno-0-268"></a><span class="sd">        data (dict | None): The data to send in the request.</span>
-<a id="__codelineno-0-269" name="__codelineno-0-269"></a><span class="sd">        method (str): The method to use in the outer body.</span>
-<a id="__codelineno-0-270" name="__codelineno-0-270"></a><span class="sd">        endpoint (str | None): The last part of the API url, defaults to</span>
-<a id="__codelineno-0-271" name="__codelineno-0-271"></a><span class="sd">            `bypassV2`, e.g. `/cloud/v2/deviceManaged/bypassV2`.</span>
-<a id="__codelineno-0-272" name="__codelineno-0-272"></a>
-<a id="__codelineno-0-273" name="__codelineno-0-273"></a><span class="sd">    Returns:</span>
-<a id="__codelineno-0-274" name="__codelineno-0-274"></a><span class="sd">        bytes: The response from the API request.</span>
-<a id="__codelineno-0-275" name="__codelineno-0-275"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-276" name="__codelineno-0-276"></a>    <span class="n">request</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_request</span><span class="p">(</span><span class="n">payload_method</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">method</span><span class="p">)</span>
-<a id="__codelineno-0-277" name="__codelineno-0-277"></a>    <span class="n">endpoint</span> <span class="o">=</span> <span class="n">BYPASS_V2_BASE</span> <span class="o">+</span> <span class="n">endpoint</span>
-<a id="__codelineno-0-278" name="__codelineno-0-278"></a>    <span class="n">resp_dict</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">async_call_api</span><span class="p">(</span>
-<a id="__codelineno-0-279" name="__codelineno-0-279"></a>        <span class="n">endpoint</span><span class="p">,</span> <span class="s2">&quot;post&quot;</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">Helpers</span><span class="o">.</span><span class="n">req_header_bypass</span><span class="p">()</span>
-<a id="__codelineno-0-280" name="__codelineno-0-280"></a>    <span class="p">)</span>
-<a id="__codelineno-0-281" name="__codelineno-0-281"></a>    <span class="k">return</span> <span class="n">resp_dict</span>
+<span class="normal"><a href="#__codelineno-0-276">276</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-250" name="__codelineno-0-250"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">call_bypassv2_api</span><span class="p">(</span>
+<a id="__codelineno-0-251" name="__codelineno-0-251"></a>    <span class="bp">self</span><span class="p">,</span>
+<a id="__codelineno-0-252" name="__codelineno-0-252"></a>    <span class="n">payload_method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<a id="__codelineno-0-253" name="__codelineno-0-253"></a>    <span class="n">data</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-254" name="__codelineno-0-254"></a>    <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;bypassV2&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-255" name="__codelineno-0-255"></a>    <span class="n">endpoint</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;bypassV2&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-256" name="__codelineno-0-256"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-257" name="__codelineno-0-257"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Send Bypass V2 API request.</span>
+<a id="__codelineno-0-258" name="__codelineno-0-258"></a>
+<a id="__codelineno-0-259" name="__codelineno-0-259"></a><span class="sd">    This uses the `_build_request` method to send API requests to the Bypass V2 API.</span>
+<a id="__codelineno-0-260" name="__codelineno-0-260"></a>
+<a id="__codelineno-0-261" name="__codelineno-0-261"></a><span class="sd">    Args:</span>
+<a id="__codelineno-0-262" name="__codelineno-0-262"></a><span class="sd">        payload_method (str): The method to use in the payload dict.</span>
+<a id="__codelineno-0-263" name="__codelineno-0-263"></a><span class="sd">        data (dict | None): The data to send in the request.</span>
+<a id="__codelineno-0-264" name="__codelineno-0-264"></a><span class="sd">        method (str): The method to use in the outer body.</span>
+<a id="__codelineno-0-265" name="__codelineno-0-265"></a><span class="sd">        endpoint (str | None): The last part of the API url, defaults to</span>
+<a id="__codelineno-0-266" name="__codelineno-0-266"></a><span class="sd">            `bypassV2`, e.g. `/cloud/v2/deviceManaged/bypassV2`.</span>
+<a id="__codelineno-0-267" name="__codelineno-0-267"></a>
+<a id="__codelineno-0-268" name="__codelineno-0-268"></a><span class="sd">    Returns:</span>
+<a id="__codelineno-0-269" name="__codelineno-0-269"></a><span class="sd">        bytes: The response from the API request.</span>
+<a id="__codelineno-0-270" name="__codelineno-0-270"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-271" name="__codelineno-0-271"></a>    <span class="n">request</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_request</span><span class="p">(</span><span class="n">payload_method</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">method</span><span class="p">)</span>
+<a id="__codelineno-0-272" name="__codelineno-0-272"></a>    <span class="n">endpoint</span> <span class="o">=</span> <span class="n">BYPASS_V2_BASE</span> <span class="o">+</span> <span class="n">endpoint</span>
+<a id="__codelineno-0-273" name="__codelineno-0-273"></a>    <span class="n">resp_dict</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">async_call_api</span><span class="p">(</span>
+<a id="__codelineno-0-274" name="__codelineno-0-274"></a>        <span class="n">endpoint</span><span class="p">,</span> <span class="s1">&#39;post&#39;</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">Helpers</span><span class="o">.</span><span class="n">req_header_bypass</span><span class="p">()</span>
+<a id="__codelineno-0-275" name="__codelineno-0-275"></a>    <span class="p">)</span>
+<a id="__codelineno-0-276" name="__codelineno-0-276"></a>    <span class="k">return</span> <span class="n">resp_dict</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -2706,7 +2702,10 @@ the API response.</p>
 
             <details class="quote">
               <summary>Source code in <code>src\pyvesync\utils\device_mixins.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-160">160</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-157">157</a></span>
+<span class="normal"><a href="#__codelineno-0-158">158</a></span>
+<span class="normal"><a href="#__codelineno-0-159">159</a></span>
+<span class="normal"><a href="#__codelineno-0-160">160</a></span>
 <span class="normal"><a href="#__codelineno-0-161">161</a></span>
 <span class="normal"><a href="#__codelineno-0-162">162</a></span>
 <span class="normal"><a href="#__codelineno-0-163">163</a></span>
@@ -2745,56 +2744,49 @@ the API response.</p>
 <span class="normal"><a href="#__codelineno-0-196">196</a></span>
 <span class="normal"><a href="#__codelineno-0-197">197</a></span>
 <span class="normal"><a href="#__codelineno-0-198">198</a></span>
-<span class="normal"><a href="#__codelineno-0-199">199</a></span>
-<span class="normal"><a href="#__codelineno-0-200">200</a></span>
-<span class="normal"><a href="#__codelineno-0-201">201</a></span>
-<span class="normal"><a href="#__codelineno-0-202">202</a></span>
-<span class="normal"><a href="#__codelineno-0-203">203</a></span>
-<span class="normal"><a href="#__codelineno-0-204">204</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-160" name="__codelineno-0-160"></a><span class="k">def</span><span class="w"> </span><span class="nf">process_bypassv2_result</span><span class="p">(</span>
-<a id="__codelineno-0-161" name="__codelineno-0-161"></a>    <span class="n">device</span><span class="p">:</span> <span class="n">VeSyncBaseDevice</span><span class="p">,</span>
-<a id="__codelineno-0-162" name="__codelineno-0-162"></a>    <span class="n">logger</span><span class="p">:</span> <span class="n">Logger</span><span class="p">,</span>
-<a id="__codelineno-0-163" name="__codelineno-0-163"></a>    <span class="n">method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-<a id="__codelineno-0-164" name="__codelineno-0-164"></a>    <span class="n">resp_dict</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-165" name="__codelineno-0-165"></a>    <span class="n">model</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">T_MODEL</span><span class="p">]</span>
-<a id="__codelineno-0-166" name="__codelineno-0-166"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T_MODEL</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-167" name="__codelineno-0-167"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Process the Bypass V1 API response.</span>
-<a id="__codelineno-0-168" name="__codelineno-0-168"></a>
-<a id="__codelineno-0-169" name="__codelineno-0-169"></a><span class="sd">    This will gracefully handle errors in the response and error codes,</span>
-<a id="__codelineno-0-170" name="__codelineno-0-170"></a><span class="sd">    logging them as needed. The return dictionary is the **inner** result value of</span>
-<a id="__codelineno-0-171" name="__codelineno-0-171"></a><span class="sd">    the API response.</span>
-<a id="__codelineno-0-172" name="__codelineno-0-172"></a>
-<a id="__codelineno-0-173" name="__codelineno-0-173"></a><span class="sd">    Args:</span>
-<a id="__codelineno-0-174" name="__codelineno-0-174"></a><span class="sd">        device (VeSyncBaseDevice): The device object.</span>
-<a id="__codelineno-0-175" name="__codelineno-0-175"></a><span class="sd">        logger (Logger): The logger to use for logging.</span>
-<a id="__codelineno-0-176" name="__codelineno-0-176"></a><span class="sd">        method (str): The method used in the payload.</span>
-<a id="__codelineno-0-177" name="__codelineno-0-177"></a><span class="sd">        resp_dict (dict | str): The api response.</span>
-<a id="__codelineno-0-178" name="__codelineno-0-178"></a><span class="sd">        model (type[T_MODEL]): The model to use for the response.</span>
-<a id="__codelineno-0-179" name="__codelineno-0-179"></a>
-<a id="__codelineno-0-180" name="__codelineno-0-180"></a><span class="sd">    Returns:</span>
-<a id="__codelineno-0-181" name="__codelineno-0-181"></a><span class="sd">        T_MODEL: An instance of the inner result model.</span>
-<a id="__codelineno-0-182" name="__codelineno-0-182"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-183" name="__codelineno-0-183"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">resp_dict</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">or</span> <span class="s1">&#39;code&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">resp_dict</span><span class="p">:</span>
-<a id="__codelineno-0-184" name="__codelineno-0-184"></a>        <span class="n">LibraryLogger</span><span class="o">.</span><span class="n">log_device_api_response_error</span><span class="p">(</span>
-<a id="__codelineno-0-185" name="__codelineno-0-185"></a>            <span class="n">logger</span><span class="p">,</span>
-<a id="__codelineno-0-186" name="__codelineno-0-186"></a>            <span class="n">device</span><span class="o">.</span><span class="n">device_name</span><span class="p">,</span>
-<a id="__codelineno-0-187" name="__codelineno-0-187"></a>            <span class="n">device</span><span class="o">.</span><span class="n">device_type</span><span class="p">,</span>
-<a id="__codelineno-0-188" name="__codelineno-0-188"></a>            <span class="n">method</span><span class="p">,</span>
-<a id="__codelineno-0-189" name="__codelineno-0-189"></a>            <span class="s2">&quot;Error decoding JSON response&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-190" name="__codelineno-0-190"></a>        <span class="p">)</span>
-<a id="__codelineno-0-191" name="__codelineno-0-191"></a>        <span class="k">return</span> <span class="kc">None</span>
-<a id="__codelineno-0-192" name="__codelineno-0-192"></a>
-<a id="__codelineno-0-193" name="__codelineno-0-193"></a>    <span class="n">error_info</span> <span class="o">=</span> <span class="n">ErrorCodes</span><span class="o">.</span><span class="n">get_error_info</span><span class="p">(</span><span class="n">resp_dict</span><span class="p">[</span><span class="s1">&#39;code&#39;</span><span class="p">])</span>
-<a id="__codelineno-0-194" name="__codelineno-0-194"></a>    <span class="n">device</span><span class="o">.</span><span class="n">last_response</span> <span class="o">=</span> <span class="n">error_info</span>
-<a id="__codelineno-0-195" name="__codelineno-0-195"></a>    <span class="n">device</span><span class="o">.</span><span class="n">last_response</span><span class="o">.</span><span class="n">response_data</span> <span class="o">=</span> <span class="n">resp_dict</span>
-<a id="__codelineno-0-196" name="__codelineno-0-196"></a>    <span class="k">if</span> <span class="n">error_info</span><span class="o">.</span><span class="n">error_type</span> <span class="o">!=</span> <span class="n">ErrorTypes</span><span class="o">.</span><span class="n">SUCCESS</span><span class="p">:</span>
-<a id="__codelineno-0-197" name="__codelineno-0-197"></a>        <span class="n">_handle_bypass_error</span><span class="p">(</span>
-<a id="__codelineno-0-198" name="__codelineno-0-198"></a>            <span class="n">logger</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">error_info</span><span class="p">,</span> <span class="n">resp_dict</span><span class="p">[</span><span class="s1">&#39;code&#39;</span><span class="p">]</span>
-<a id="__codelineno-0-199" name="__codelineno-0-199"></a>        <span class="p">)</span>
-<a id="__codelineno-0-200" name="__codelineno-0-200"></a>        <span class="k">return</span> <span class="kc">None</span>
-<a id="__codelineno-0-201" name="__codelineno-0-201"></a>    <span class="n">result</span> <span class="o">=</span> <span class="n">_get_inner_result</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">resp_dict</span><span class="p">)</span>
-<a id="__codelineno-0-202" name="__codelineno-0-202"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-<a id="__codelineno-0-203" name="__codelineno-0-203"></a>        <span class="k">return</span> <span class="kc">None</span>
-<a id="__codelineno-0-204" name="__codelineno-0-204"></a>    <span class="k">return</span> <span class="n">Helpers</span><span class="o">.</span><span class="n">model_maker</span><span class="p">(</span><span class="n">logger</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span>
+<span class="normal"><a href="#__codelineno-0-199">199</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-157" name="__codelineno-0-157"></a><span class="k">def</span><span class="w"> </span><span class="nf">process_bypassv2_result</span><span class="p">(</span>
+<a id="__codelineno-0-158" name="__codelineno-0-158"></a>    <span class="n">device</span><span class="p">:</span> <span class="n">VeSyncBaseDevice</span><span class="p">,</span>
+<a id="__codelineno-0-159" name="__codelineno-0-159"></a>    <span class="n">logger</span><span class="p">:</span> <span class="n">Logger</span><span class="p">,</span>
+<a id="__codelineno-0-160" name="__codelineno-0-160"></a>    <span class="n">method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<a id="__codelineno-0-161" name="__codelineno-0-161"></a>    <span class="n">resp_dict</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-162" name="__codelineno-0-162"></a>    <span class="n">model</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">T_MODEL</span><span class="p">],</span>
+<a id="__codelineno-0-163" name="__codelineno-0-163"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T_MODEL</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-164" name="__codelineno-0-164"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Process the Bypass V1 API response.</span>
+<a id="__codelineno-0-165" name="__codelineno-0-165"></a>
+<a id="__codelineno-0-166" name="__codelineno-0-166"></a><span class="sd">    This will gracefully handle errors in the response and error codes,</span>
+<a id="__codelineno-0-167" name="__codelineno-0-167"></a><span class="sd">    logging them as needed. The return dictionary is the **inner** result value of</span>
+<a id="__codelineno-0-168" name="__codelineno-0-168"></a><span class="sd">    the API response.</span>
+<a id="__codelineno-0-169" name="__codelineno-0-169"></a>
+<a id="__codelineno-0-170" name="__codelineno-0-170"></a><span class="sd">    Args:</span>
+<a id="__codelineno-0-171" name="__codelineno-0-171"></a><span class="sd">        device (VeSyncBaseDevice): The device object.</span>
+<a id="__codelineno-0-172" name="__codelineno-0-172"></a><span class="sd">        logger (Logger): The logger to use for logging.</span>
+<a id="__codelineno-0-173" name="__codelineno-0-173"></a><span class="sd">        method (str): The method used in the payload.</span>
+<a id="__codelineno-0-174" name="__codelineno-0-174"></a><span class="sd">        resp_dict (dict | str): The api response.</span>
+<a id="__codelineno-0-175" name="__codelineno-0-175"></a><span class="sd">        model (type[T_MODEL]): The model to use for the response.</span>
+<a id="__codelineno-0-176" name="__codelineno-0-176"></a>
+<a id="__codelineno-0-177" name="__codelineno-0-177"></a><span class="sd">    Returns:</span>
+<a id="__codelineno-0-178" name="__codelineno-0-178"></a><span class="sd">        T_MODEL: An instance of the inner result model.</span>
+<a id="__codelineno-0-179" name="__codelineno-0-179"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-180" name="__codelineno-0-180"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">resp_dict</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">or</span> <span class="s1">&#39;code&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">resp_dict</span><span class="p">:</span>
+<a id="__codelineno-0-181" name="__codelineno-0-181"></a>        <span class="n">LibraryLogger</span><span class="o">.</span><span class="n">log_device_api_response_error</span><span class="p">(</span>
+<a id="__codelineno-0-182" name="__codelineno-0-182"></a>            <span class="n">logger</span><span class="p">,</span>
+<a id="__codelineno-0-183" name="__codelineno-0-183"></a>            <span class="n">device</span><span class="o">.</span><span class="n">device_name</span><span class="p">,</span>
+<a id="__codelineno-0-184" name="__codelineno-0-184"></a>            <span class="n">device</span><span class="o">.</span><span class="n">device_type</span><span class="p">,</span>
+<a id="__codelineno-0-185" name="__codelineno-0-185"></a>            <span class="n">method</span><span class="p">,</span>
+<a id="__codelineno-0-186" name="__codelineno-0-186"></a>            <span class="s1">&#39;Error decoding JSON response&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-187" name="__codelineno-0-187"></a>        <span class="p">)</span>
+<a id="__codelineno-0-188" name="__codelineno-0-188"></a>        <span class="k">return</span> <span class="kc">None</span>
+<a id="__codelineno-0-189" name="__codelineno-0-189"></a>
+<a id="__codelineno-0-190" name="__codelineno-0-190"></a>    <span class="n">error_info</span> <span class="o">=</span> <span class="n">ErrorCodes</span><span class="o">.</span><span class="n">get_error_info</span><span class="p">(</span><span class="n">resp_dict</span><span class="p">[</span><span class="s1">&#39;code&#39;</span><span class="p">])</span>
+<a id="__codelineno-0-191" name="__codelineno-0-191"></a>    <span class="n">device</span><span class="o">.</span><span class="n">last_response</span> <span class="o">=</span> <span class="n">error_info</span>
+<a id="__codelineno-0-192" name="__codelineno-0-192"></a>    <span class="n">device</span><span class="o">.</span><span class="n">last_response</span><span class="o">.</span><span class="n">response_data</span> <span class="o">=</span> <span class="n">resp_dict</span>
+<a id="__codelineno-0-193" name="__codelineno-0-193"></a>    <span class="k">if</span> <span class="n">error_info</span><span class="o">.</span><span class="n">error_type</span> <span class="o">!=</span> <span class="n">ErrorTypes</span><span class="o">.</span><span class="n">SUCCESS</span><span class="p">:</span>
+<a id="__codelineno-0-194" name="__codelineno-0-194"></a>        <span class="n">_handle_bypass_error</span><span class="p">(</span><span class="n">logger</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">error_info</span><span class="p">,</span> <span class="n">resp_dict</span><span class="p">[</span><span class="s1">&#39;code&#39;</span><span class="p">])</span>
+<a id="__codelineno-0-195" name="__codelineno-0-195"></a>        <span class="k">return</span> <span class="kc">None</span>
+<a id="__codelineno-0-196" name="__codelineno-0-196"></a>    <span class="n">result</span> <span class="o">=</span> <span class="n">_get_inner_result</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">resp_dict</span><span class="p">)</span>
+<a id="__codelineno-0-197" name="__codelineno-0-197"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+<a id="__codelineno-0-198" name="__codelineno-0-198"></a>        <span class="k">return</span> <span class="kc">None</span>
+<a id="__codelineno-0-199" name="__codelineno-0-199"></a>    <span class="k">return</span> <span class="n">Helpers</span><span class="o">.</span><span class="n">model_maker</span><span class="p">(</span><span class="n">logger</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
