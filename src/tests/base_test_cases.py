@@ -39,8 +39,8 @@ class TestApiFunc:
         self.manager.verbose = True
         self.manager.enabled = True
         self.manager.redact = False
-        self.manager._token = TestDefaults.token
-        self.manager._account_id = TestDefaults.account_id
+        self.manager.auth._token = TestDefaults.token
+        self.manager.auth._account_id = TestDefaults.account_id
         caplog.set_level(logging.DEBUG)
         yield
         self.mock.stop()
@@ -94,8 +94,8 @@ class TestBase:
         self.manager.redact = False
         self.manager.time_zone = TestDefaults.time_zone
         self.manager.enabled = True
-        self.manager._token = TestDefaults.token
-        self.manager._account_id = TestDefaults.account_id
+        self.manager.auth._token = TestDefaults.token
+        self.manager.auth._account_id = TestDefaults.account_id
         caplog.set_level(logging.DEBUG)
         yield
         self.mock_api_call.stop()

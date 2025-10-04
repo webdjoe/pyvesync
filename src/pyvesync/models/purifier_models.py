@@ -192,7 +192,7 @@ class PurifierCoreDetailsConfig(ResponseBaseModel):
 
     display: bool
     display_forever: bool
-    auto_preference: None | PurifierCoreAutoConfig
+    auto_preference: None | PurifierCoreAutoConfig = None
 
 
 @dataclass
