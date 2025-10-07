@@ -416,7 +416,7 @@ outlet_modules = [
         setup_entry='wifi-switch-1.3',
     ),
     OutletMap(  # TODO: Add energy
-        dev_types=['ESW10-USA'],
+        dev_types=['ESW10-USA', 'ESW03-USA'],
         class_name='VeSyncESW10USA',
         features=[],
         model_name='10A WiFi Outlet USA',
