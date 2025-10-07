@@ -81,22 +81,19 @@ class PurifierDefaults:
 
 PURIFIER_DETAILS: dict[str, dict[str, Any]] = {
     "Core200S": {
-        "enabled": True,
-        "filter_life": PurifierDefaults.filter_life,
-        "mode": PurifierDefaults.purifier_mode,
-        "level": PurifierDefaults.fan_level,
-        "air_quality": PurifierDefaults.air_quality_enum.value,
-        "air_quality_value": PurifierDefaults.air_quality_value_pm25,
-        "display": bool(PurifierDefaults.display),
-        "child_lock": bool(PurifierDefaults.child_lock),
-        "configuration": {
-            "display": bool(PurifierDefaults.display_config),
-            "display_forever": PurifierDefaults.display_forever,
-            "auto_preference": {"type": "default", "room_size": 0},
+          "enabled": True,
+          "filter_life": PurifierDefaults.filter_life,
+          "mode": PurifierDefaults.purifier_mode,
+          "level": PurifierDefaults.fan_level,
+          "display": bool(PurifierDefaults.display),
+          "child_lock": bool(PurifierDefaults.child_lock),
+          "night_light": bool(PurifierDefaults.night_light),
+          "configuration": {
+            "display": bool(PurifierDefaults.display),
+            "display_forever": PurifierDefaults.display_forever
+          },
+          "device_error_code": 0
         },
-        "extension": {"schedule_count": 0, "timer_remain": 0},
-        "device_error_code": 0,
-    },
     "Core300S": {
         "enabled": True,
         "filter_life": PurifierDefaults.filter_life,
