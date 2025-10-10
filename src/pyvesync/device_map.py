@@ -750,7 +750,7 @@ purifier_modules: list[PurifierMap] = [
             PurifierAutoPreference.QUIET,
         ],
         features=[PurifierFeatures.AIR_QUALITY],
-        fan_levels=list(range(1, 5)),
+        fan_levels=list(range(1, 4)),
         device_alias='Core 300S',
         model_display='Core 300S',
         model_name='Core 300S',
