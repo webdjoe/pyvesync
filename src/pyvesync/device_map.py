@@ -888,7 +888,7 @@ purifier_modules: list[PurifierMap] = [
         setup_entry='EL551S',
     ),
     PurifierMap(
-        class_name='VeSyncAirBaseV2',
+        class_name='VeSyncAirSprout',
         dev_types=[
             'LAP-B851S-WEU',
             'LAP-B851S-WNA',
