@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - master
+      - dev
   push:
   workflow_dispatch:
 
