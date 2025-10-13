@@ -3,9 +3,8 @@ name: Release
 on:
     # Allows you to run this workflow manually from the Actions tab
     workflow_dispatch:
-    schedule:
-        # Runs at 8:00 AM UTC every day
-        - cron: "0 8 * * *"
+            
+
 jobs:
     build:
         runs-on: ubuntu-latest
