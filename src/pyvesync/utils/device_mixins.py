@@ -193,6 +193,8 @@ def process_bypassv2_result(
     if error_info.error_type != ErrorTypes.SUCCESS:
         _handle_bypass_error(logger, device, method, error_info, resp_dict['code'])
         return None
+    else:
+        device.state.connection_status = ConnectionStatus.from_bool(True)
     result = _get_inner_result(device, logger, method, resp_dict)
     if not isinstance(result, dict):
         return None
