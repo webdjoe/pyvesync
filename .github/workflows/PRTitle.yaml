@@ -1,9 +1,11 @@
 name: "Semantic Title"
 
 on:
-  push:
-    branches:
-      - master
+  pull_request_target:
+    types:
+      - opened
+      - edited
+      - synchronize
 jobs:
   main:
     runs-on: ubuntu-latest
