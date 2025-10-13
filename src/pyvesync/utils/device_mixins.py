@@ -196,7 +196,6 @@ def process_bypassv2_result(
     result = _get_inner_result(device, logger, method, resp_dict)
     if not isinstance(result, dict):
         return None
-    device.state.connection_status = ConnectionStatus.from_bool(True)
     return Helpers.model_maker(logger, model, method, result, device)
 
 
