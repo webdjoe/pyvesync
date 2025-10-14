@@ -87,13 +87,6 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
         self.state.humidity_high = resp_model.humidity_high
         self.state.water_tank_lifted = resp_model.water_tank_lifted
         self.state.auto_stop_target_reached = resp_model.automatic_stop_reach_target
-        if self.supports_nightlight and resp_model.night_light_brightness is not None:
-            self.state.nightlight_brightness = resp_model.night_light_brightness
-            self.state.nightlight_status = (
-                DeviceStatus.ON
-                if resp_model.night_light_brightness > 0
-                else DeviceStatus.OFF
-            )
         self.state.display_status = DeviceStatus.from_bool(resp_model.display)
         if self.supports_warm_mist and resp_model.warm_level is not None:
             self.state.warm_mist_level = resp_model.warm_level
