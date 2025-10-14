@@ -200,6 +200,12 @@ HUMIDIFIER_DETAILS: dict[str, Any] = {
         "autoStopState": int(HumidifierDefaults.auto_stop_reached),
         "screenSwitch": int(HumidifierDefaults.display_config),
         "screenState": int(HumidifierDefaults.display),
+        "deviceProp": {
+        "workMode": "auto",
+        "nightLight": {
+        "nightLightSwitch": 0,
+            "brightness": 97
+        },
         "scheduleCount": 0,
         "timerRemain": 0,
         "errorCode": 0,
