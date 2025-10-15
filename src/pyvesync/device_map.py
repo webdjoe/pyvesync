@@ -790,7 +790,7 @@ purifier_modules: list[PurifierMap] = [
     ),
     PurifierMap(
         class_name='VeSyncAir131',
-        dev_types=['LV-PUR131S', 'LV-RH131S',  'LV-RH131S-WM'],
+        dev_types=['LV-PUR131S', 'LV-RH131S', 'LV-RH131S-WM'],
         modes=[PurifierModes.SLEEP, PurifierModes.MANUAL, PurifierModes.AUTO],
         features=[PurifierFeatures.AIR_QUALITY],
         fan_levels=list(range(1, 4)),
