@@ -93,7 +93,7 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
                 DeviceStatus.ON
                 if resp_model.night_light_brightness > 0
                 else DeviceStatus.OFF
-        )
+            )
         self.state.display_status = DeviceStatus.from_bool(resp_model.display)
         if self.supports_warm_mist and resp_model.warm_level is not None:
             self.state.warm_mist_level = resp_model.warm_level
