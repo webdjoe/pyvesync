@@ -403,6 +403,9 @@ class VeSync:  # pylint: disable=function-redefined
     async def update_all_devices(self) -> None:
         """Run `get_details()` for each device and update state."""
         logger.debug('Start updating the device details one by one')
+        if len(self._device_container) == 0:
+            logger.error('No devices to update')
+            return
         update_tasks: list[asyncio.Task] = [
             asyncio.create_task(device.update()) for device in self._device_container
         ]
@@ -410,7 +413,7 @@ class VeSync:  # pylint: disable=function-redefined
         for task in done:
             exc = task.exception()
             if exc is not None and isinstance(exc, VeSyncError):
-                logger.debug('Error updating device: %s', exc)
+                logger.error('Error updating device: %s', exc)
 
     async def __aenter__(self) -> Self:
         """Asynchronous context manager enter."""
