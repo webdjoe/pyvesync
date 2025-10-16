@@ -37,6 +37,7 @@ Some of the major structural changes include:
 - Device Classes have been refactored to be more consistent and easier to manage. No more random property and method names for different types of the same device.
 - [`const`][pyvesync.const] module to hold all library constants.
 - [`device_map`][pyvesync.device_map] module holds all device type mappings and configuration.
+- Authentication logic has been moved to the [`auth`][pyvesync.auth] module and is now handled by the `VeSync.auth` attribute. This can store and load credentials, so login is not required every time.
 
 See [pyvesync V3](./pyvesync3.md) for more details.
 

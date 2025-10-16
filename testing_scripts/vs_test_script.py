@@ -45,7 +45,6 @@ if TYPE_CHECKING:
 
 _T_DEVS = Literal['bulbs', 'switchs', 'outlets', 'humidifiers', 'air_purifiers', 'fans']
 
-
 # Manually configure script arguments
 USERNAME: str | None = None
 PASSWORD: str | None = None

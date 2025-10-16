@@ -1,9 +1,8 @@
-# Documentation for `pyvesync.vesync` module
+# Documentation for `pyvesync.auth` module
 
-This module instantiates the vesync instance that holds the devices
-and maintains authentication information.
+This module handles the authentication logic for the VeSync API. It is stored as the `auth` instance attribute of the `VeSync` class.
 
-::: pyvesync.vesync.VeSync
+::: pyvesync.auth.VeSyncAuth
     handler: python
     options:
       group_by_category: true

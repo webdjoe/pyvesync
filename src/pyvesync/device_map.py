@@ -750,7 +750,7 @@ purifier_modules: list[PurifierMap] = [
             PurifierAutoPreference.QUIET,
         ],
         features=[PurifierFeatures.AIR_QUALITY],
-        fan_levels=list(range(1, 5)),
+        fan_levels=list(range(1, 4)),
         device_alias='Core 300S',
         model_display='Core 300S',
         model_name='Core 300S',
@@ -790,7 +790,7 @@ purifier_modules: list[PurifierMap] = [
     ),
     PurifierMap(
         class_name='VeSyncAir131',
-        dev_types=['LV-PUR131S', 'LV-RH131S'],
+        dev_types=['LV-PUR131S', 'LV-RH131S', 'LV-RH131S-WM'],
         modes=[PurifierModes.SLEEP, PurifierModes.MANUAL, PurifierModes.AUTO],
         features=[PurifierFeatures.AIR_QUALITY],
         fan_levels=list(range(1, 4)),
@@ -888,7 +888,7 @@ purifier_modules: list[PurifierMap] = [
         setup_entry='EL551S',
     ),
     PurifierMap(
-        class_name='VeSyncAirBaseV2',
+        class_name='VeSyncAirSprout',
         dev_types=[
             'LAP-B851S-WEU',
             'LAP-B851S-WNA',
@@ -925,7 +925,7 @@ objects for purifier devices."""
 fan_modules: list[FanMap] = [
     FanMap(
         class_name='VeSyncTowerFan',
-        dev_types=['LTF-F422S-KEU', 'LTF-F422S-WUSR', 'LTF-F422_WJP', 'LTF-F422S-WUS'],
+        dev_types=['LTF-F422S-KEU', 'LTF-F422S-WUSR', 'LTF-F422S-WJP', 'LTF-F422S-WUS'],
         modes=[
             FanModes.NORMAL,
             FanModes.TURBO,

@@ -665,6 +665,7 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
         self.state.device_status = DeviceStatus.from_int(resp_model.powerSwitch)
         self.state.connection_status = ConnectionStatus.ONLINE
         self.state.mode = resp_model.workMode
+        self.state.humidity = resp_model.humidity
         self.state.auto_target_humidity = resp_model.targetHumidity
         self.state.mist_level = resp_model.mistLevel
         self.state.mist_virtual_level = resp_model.virtualLevel
