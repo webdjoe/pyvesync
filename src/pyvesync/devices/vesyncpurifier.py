@@ -123,6 +123,7 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
             result (InnerPurifierResult): Data model for inner result in purifier
                 details response.
         """
+        self.state.connection_status = ConnectionStatus.ONLINE
         self.state.device_status = DeviceStatus.ON if result.enabled else DeviceStatus.OFF
         self.state.filter_life = result.filter_life or 0
         self.state.mode = result.mode
