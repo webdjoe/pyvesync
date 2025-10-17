@@ -34,6 +34,7 @@ from uuid import uuid4
 
 from pyvesync.utils.enum_utils import IntEnumMixin
 
+MAX_API_REAUTH_RETRIES = 3
 DEFAULT_LANGUAGE = 'en'
 API_BASE_URL = None  # Global URL (non-EU regions): "https://smartapi.vesync.com"
 # If device is out of reach, the cloud api sends a timeout response after 7 seconds,

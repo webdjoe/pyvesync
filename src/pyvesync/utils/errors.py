@@ -799,9 +799,11 @@ class VeSyncLoginError(VeSyncError):
 class VeSyncTokenError(VeSyncError):
     """Exception raised for VeSync API authentication errors."""
 
-    def __init__(self) -> None:
+    def __init__(self, msg: str | None = None) -> None:
         """Initialize the exception with a message."""
-        super().__init__('Token expired or invalid - please re-authenticate with login()')
+        super().__init__(
+            f'Token expired or invalid - {msg if msg else "Re-authentication required"}'
+        )
 
 
 class VeSyncServerError(VeSyncError):
@@ -857,8 +859,6 @@ def raise_api_errors(error_info: ResponseInfo) -> None:
             raise VeSyncRateLimitError
         case ErrorTypes.AUTHENTICATION:
             raise VeSyncLoginError(error_info.message)
-        case ErrorTypes.TOKEN_ERROR:
-            raise VeSyncTokenError
         case ErrorTypes.SERVER_ERROR:
             msg = (
                 f'{error_info.message} - '
