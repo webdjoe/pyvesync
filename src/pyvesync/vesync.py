@@ -138,7 +138,7 @@ class VeSync:  # pylint: disable=function-redefined
         self.language: str = 'en'
         self.enabled = False
         self.in_process = False
-        self._device_container: DeviceContainer = DeviceContainerInstance
+        self._device_container: DeviceContainer = DeviceContainer()
 
         # Initialize authentication manager
         self._auth = VeSyncAuth(
