@@ -87,7 +87,7 @@ PURIFIER_DETAILS: dict[str, dict[str, Any]] = {
           "level": PurifierDefaults.fan_level,
           "display": bool(PurifierDefaults.display),
           "child_lock": bool(PurifierDefaults.child_lock),
-          "night_light": bool(PurifierDefaults.night_light),
+          "night_light": PurifierDefaults.night_light.value,
           "configuration": {
             "display": bool(PurifierDefaults.display),
             "display_forever": PurifierDefaults.display_forever
