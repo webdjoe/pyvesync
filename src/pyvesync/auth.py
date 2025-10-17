@@ -145,6 +145,15 @@ class VeSyncAuth:
         self._country_code = country_code.upper()
         self._current_region = region
 
+    async def reauthenticate(self) -> bool:
+        """Re-authenticate using stored username and password.
+
+        Returns:
+            True if re-authentication successful, False otherwise
+        """
+        self.clear_credentials()
+        return await self.login()
+
     async def load_credentials_from_file(
         self, file_path: str | Path | None = None
     ) -> bool:
