@@ -146,7 +146,7 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
             self.state.pm25 = result.air_quality_value
             self.state.set_air_quality_level(result.air_quality)
         if result.night_light is not None:
-            self.state.nightlight_status = DeviceStatus.from_bool(result.night_light)
+            self.state.nightlight_status = DeviceStatus(result.night_light)
 
     async def get_details(self) -> None:
         r_dict = await self.call_bypassv2_api('getPurifierStatus')

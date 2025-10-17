@@ -8,36 +8,32 @@ from unittest.mock import patch, MagicMock
 
 from pyvesync import VeSync
 from pyvesync.utils.errors import VeSyncRateLimitError, VeSyncServerError
+
 from pyvesync.const import API_BASE_URL_US
 from pyvesync.utils.errors import (
     VeSyncAPIStatusCodeError
     )
+import call_json
 from defaults import TestDefaults
 from aiohttp_mocker import AiohttpMockSession
 
+
 DEFAULT_ENDPOINT = '/endpoint'
 DEFAULT_POST_DATA = {'key': 'value'}
-
-
-def response_dict(code, msg):
-    """Return a response dictionary."""
-    return {'code': code, 'msg': msg}
-
-
 PARAM_ARGS = "endpoint, method, resp_bytes, resp_status"
 
 # Successful API calls should return the response in bytes and a 200 status code
-SUCCESS_RESP = response_dict(0, 'Success')
+SUCCESS_RESP = call_json.response_body(0, 'Success')
 
 
 # Rate limit errors should raise an exception in `async_call_api`
 RATE_LIMIT_CODE = -11003000
-RATE_LIMIT_RESP = response_dict(RATE_LIMIT_CODE, "Rate limit exceeded")
+RATE_LIMIT_RESP = call_json.response_body(RATE_LIMIT_CODE, "Rate limit exceeded")
 
 
 # Server errors should raise an exception in `async_call_api`
 SERVER_ERROR = -11102000
-SERVER_ERROR_RESP = response_dict(SERVER_ERROR, "Server error")
+SERVER_ERROR_RESP = call_json.response_body(SERVER_ERROR, "Server error")
 
 
 # Status code errors should raise an exception in `async_call_api`
@@ -53,7 +49,7 @@ STATUS_CODE_RESP = None
 # Device errors should return the response and a 200 status code
 # with no exception thrown by `async_call_api`
 DEVICE_ERROR_CODE = -11901000
-DEVICE_ERROR_RESP = response_dict(DEVICE_ERROR_CODE, "Device error")
+DEVICE_ERROR_RESP = call_json.response_body(DEVICE_ERROR_CODE, "Device error")
 
 
 class TestApiFunc:
@@ -75,10 +71,6 @@ class TestApiFunc:
         self.caplog = caplog
         self.caplog.set_level(logging.DEBUG)
         self.loop = asyncio.new_event_loop()
-        # self.mock_api = self.mock_api_call.start()
-        # self.mock_api.return_value.ok = True
-        # self.mock = aioresponses()
-        # self.mock.start()
         self.mock = MagicMock()
         self.manager = VeSync('EMAIL', 'PASSWORD')
         self.manager.verbose = True
@@ -116,7 +108,7 @@ class TestApiFunc:
     @patch("pyvesync.vesync.ClientSession")
     def test_api_rate_limit(self, mock):
         """Test rate limit error - raises `VeSyncRateLimitError` from `VeSync.async_call_api`."""
-        rate_limit_resp = response_dict(RATE_LIMIT_CODE, "Rate limit exceeded")
+        rate_limit_resp = call_json.response_body(RATE_LIMIT_CODE, "Rate limit exceeded")
         mock.return_value.request.return_value = AiohttpMockSession(
             method="post",
             url=API_BASE_URL_US + DEFAULT_ENDPOINT,
