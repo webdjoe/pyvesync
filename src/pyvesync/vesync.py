@@ -16,6 +16,7 @@ from pyvesync.auth import VeSyncAuth
 from pyvesync.const import (
     DEFAULT_REGION,
     DEFAULT_TZ,
+    MAX_API_REAUTH_RETRIES,
     REGION_API_MAP,
     STATUS_OK,
 )
@@ -34,6 +35,7 @@ from pyvesync.utils.errors import (
     VeSyncAPIStatusCodeError,
     VeSyncError,
     VeSyncServerError,
+    VeSyncTokenError,
     raise_api_errors,
 )
 from pyvesync.utils.helpers import Helpers
@@ -47,6 +49,7 @@ class VeSync:  # pylint: disable=function-redefined
 
     __slots__ = (
         '__weakref__',
+        '_api_attempts',
         '_auth',
         '_close_session',
         '_debug',
@@ -130,6 +133,7 @@ class VeSync:  # pylint: disable=function-redefined
                 Object to store device state information
         """
         self.session = session
+        self._api_attempts = 0
         self._close_session = False
         self._debug = debug
         self.redact = redact
@@ -381,6 +385,7 @@ class VeSync:  # pylint: disable=function-redefined
             VeSyncAPIResponseError: If API response is invalid.
             VeSyncServerError: If server returns an error.
         """
+        self.enabled = False
         success = await self._auth.login()
         if success:
             self.enabled = True
@@ -427,6 +432,24 @@ class VeSync:  # pylint: disable=function-redefined
             return
         logger.debug('Session not closed, exiting context manager')
 
+    async def _reauthenticate(self) -> bool:
+        """Re-authenticate using stored username and password.
+
+        Returns:
+            True if re-authentication successful, False otherwise
+        """
+        self.enabled = False
+        self._api_attempts += 1
+        if self._api_attempts >= MAX_API_REAUTH_RETRIES:
+            logger.error('Max API re-authentication attempts reached')
+            raise VeSyncTokenError
+        success = await self.auth.reauthenticate()
+        if success:
+            self.enabled = True
+            self._api_attempts = 0
+            return True
+        return await self.auth.reauthenticate()
+
     async def async_call_api(
         self,
         api: str,
@@ -463,6 +486,7 @@ class VeSync:  # pylint: disable=function-redefined
         if self.session is None:
             self.session = ClientSession()
             self._close_session = True
+        self._api_attempts += 1
         response = None
         status_code = None
         if isinstance(json_object, DataClassORJSONMixin):
@@ -494,6 +518,13 @@ class VeSync:  # pylint: disable=function-redefined
                 resp_dict = Helpers.try_json_loads(resp_bytes)
                 if isinstance(resp_dict, dict):
                     error_info = ErrorCodes.get_error_info(resp_dict.get('code'))
+                    if error_info.error_type == ErrorTypes.TOKEN_ERROR:
+                        if await self._reauthenticate():
+                            self.enabled = True
+                            return await self.async_call_api(
+                                api, method, json_object, headers
+                            )
+                        raise VeSyncTokenError
                     if resp_dict.get('msg') is not None:
                         error_info.message = f'{error_info.message} ({resp_dict["msg"]})'
                         raise_api_errors(error_info)

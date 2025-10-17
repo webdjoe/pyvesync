@@ -124,7 +124,7 @@ class PurifierCoreDetailsResult(InnerPurifierBaseResult):
     configuration: PurifierCoreDetailsConfig | None = None
     extension: dict | None = None
     air_quality_value: int | None = None
-    night_light: bool | None = None
+    night_light: str | None = None
     fan_rotate: str | None = None
 
 
