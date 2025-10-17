@@ -19,7 +19,7 @@ from pyvesync.const import (
     REGION_API_MAP,
     STATUS_OK,
 )
-from pyvesync.device_container import DeviceContainer, DeviceContainerInstance
+from pyvesync.device_container import DeviceContainer
 from pyvesync.models.vesync_models import (
     FirmwareDeviceItemModel,
     RequestDeviceListModel,
