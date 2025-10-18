@@ -154,6 +154,26 @@ class TestHumidifiers(TestBase):
         method_call = getattr(fan_obj, method)
         self.run_in_loop(method_call)
 
+        # Test common purifier attributes
+        assert fan_obj.state.device_status == const.DeviceStatus.ON
+        assert fan_obj.state.connection_status == const.ConnectionStatus.ONLINE
+        assert fan_obj.state.mode == call_json_humidifiers.HumidifierDefaults.humidifier_mode
+        assert fan_obj.state.humidity == call_json_humidifiers.HumidifierDefaults.humidity
+        assert (
+            fan_obj.state.target_humidity
+            == call_json_humidifiers.HumidifierDefaults.target_humidity
+        )
+        assert fan_obj.state.mist_level == call_json_humidifiers.HumidifierDefaults.mist_level
+        assert fan_obj.state.display_status == const.DeviceStatus.from_bool(call_json_humidifiers.HumidifierDefaults.display)
+
+        if fan_obj.supports_nightlight:
+            assert fan_obj.state.nightlight_status == call_json_humidifiers.HumidifierDefaults.nightlight_status
+        if fan_obj.supports_nightlight_brightness:
+            assert (
+                fan_obj.state.nightlight_brightness
+                == call_json_humidifiers.HumidifierDefaults.nightlight_brightness
+            )
+
         # Parse mock_api args tuple from arg, kwargs to kwargs
         all_kwargs = parse_args(self.mock_api)
 
