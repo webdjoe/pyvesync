@@ -20,7 +20,7 @@ from pyvesync.const import (
     REGION_API_MAP,
     STATUS_OK,
 )
-from pyvesync.device_container import DeviceContainer
+from pyvesync.device_container import DeviceContainer, DeviceContainerInstance
 from pyvesync.models.vesync_models import (
     FirmwareDeviceItemModel,
     RequestDeviceListModel,
@@ -142,7 +142,7 @@ class VeSync:  # pylint: disable=function-redefined
         self.language: str = 'en'
         self.enabled = False
         self.in_process = False
-        self._device_container: DeviceContainer = DeviceContainer()
+        self._device_container: DeviceContainer = DeviceContainerInstance
 
         # Initialize authentication manager
         self._auth = VeSyncAuth(
