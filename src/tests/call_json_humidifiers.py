@@ -293,7 +293,7 @@ METHOD_RESPONSES = {
     "LUH-O451S-WUS": deepcopy(FunctionResponsesV2),
     "LUH-O451S-WEU": deepcopy(FunctionResponsesV2),
     "LUH-M101S-WEUR": deepcopy(FunctionResponsesV2),
-    "LUH-M101-WUS": deepcopy(FunctionResponsesV2),
+    "LUH-M101S-WUS": deepcopy(FunctionResponsesV2),
     "LEH-S601S": deepcopy(FunctionResponsesV2),
 }
 
