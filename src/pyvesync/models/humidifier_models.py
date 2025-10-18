@@ -200,3 +200,11 @@ class Levoit1000SResult(InnerHumidifierBaseResult):
     scheduleCount: int
     timerRemain: int
     errorCode: int
+    nightLight: Levoit1000SNightLight | None = None
+
+
+@dataclass
+class Levoit1000SNightLight(ResponseBaseModel):
+    """Night Light Model for Levoit 1000S Humidifier."""
+    nightLightSwitch: int
+    brightness: int

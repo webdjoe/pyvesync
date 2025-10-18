@@ -35,7 +35,7 @@ METHOD_RESPONSES['DEVTYPE'].default_factory = lambda: {"code": 0, "msg": "succes
 from typing import Any
 from copy import deepcopy
 from pyvesync.device_map import humidifier_modules
-from pyvesync.const import HumidifierModes, DeviceStatus
+from pyvesync.const import HumidifierModes, DeviceStatus, ConnectionStatus
 from defaults import TestDefaults, FunctionResponses, build_bypass_v2_response, FunctionResponsesV2
 
 HUMIDIFIERS = [m.setup_entry for m in humidifier_modules]
@@ -56,7 +56,11 @@ HUMIDIFIERS_NUM = len(HUMIDIFIERS)
 
 
 class HumidifierDefaults:
+    device_status = DeviceStatus.ON
+    connection_status = ConnectionStatus.ONLINE
     humidifier_mode = HumidifierModes.MANUAL
+    nightlight_status = DeviceStatus.ON
+    nightlight_brightness = 50
     humidity = 50
     target_humidity = 60
     mist_level = 3
@@ -74,7 +78,7 @@ class HumidifierDefaults:
 
 HUMIDIFIER_DETAILS: dict[str, Any] = {
     "Classic300S": {
-        "enabled": True,
+        "enabled": bool(HumidifierDefaults.device_status),
         "humidity": HumidifierDefaults.humidity,
         "mist_virtual_level": HumidifierDefaults.virtual_mist_level,
         "mist_level": HumidifierDefaults.mist_level,
@@ -84,7 +88,7 @@ HUMIDIFIER_DETAILS: dict[str, Any] = {
         "water_tank_lifted": HumidifierDefaults.water_tank_lifted,
         "display": HumidifierDefaults.display,
         "automatic_stop_reach_target": HumidifierDefaults.auto_stop_reached,
-        "night_light_brightness": 0,
+        "night_light_brightness": HumidifierDefaults.nightlight_brightness,
         "configuration": {
             "auto_target_humidity": HumidifierDefaults.target_humidity,
             "display": HumidifierDefaults.display_config,
@@ -92,7 +96,7 @@ HUMIDIFIER_DETAILS: dict[str, Any] = {
         },
     },
     "Classic200S": {
-        "enabled": True,
+        "enabled": bool(HumidifierDefaults.device_status),
         "humidity": HumidifierDefaults.humidity,
         "mist_virtual_level": HumidifierDefaults.virtual_mist_level,
         "mist_level": HumidifierDefaults.mist_level,
@@ -102,7 +106,6 @@ HUMIDIFIER_DETAILS: dict[str, Any] = {
         "water_tank_lifted": HumidifierDefaults.water_tank_lifted,
         "display": HumidifierDefaults.display,
         "automatic_stop_reach_target": HumidifierDefaults.auto_stop_reached,
-        "night_light_brightness": 0,
         "configuration": {
             "auto_target_humidity": HumidifierDefaults.target_humidity,
             "display": HumidifierDefaults.display_config,
@@ -110,7 +113,7 @@ HUMIDIFIER_DETAILS: dict[str, Any] = {
         },
     },
     "Dual200S": {
-        "enabled": True,
+        "enabled": bool(HumidifierDefaults.device_status),
         "humidity": HumidifierDefaults.humidity,
         "mist_virtual_level": HumidifierDefaults.virtual_mist_level,
         "mist_level": HumidifierDefaults.mist_level,
@@ -120,7 +123,7 @@ HUMIDIFIER_DETAILS: dict[str, Any] = {
         "water_tank_lifted": HumidifierDefaults.water_tank_lifted,
         "display": HumidifierDefaults.display,
         "automatic_stop_reach_target": HumidifierDefaults.auto_stop_reached,
-        "night_light_brightness": 0,
+        "night_light_brightness": HumidifierDefaults.nightlight_brightness,
         "configuration": {
             "auto_target_humidity": HumidifierDefaults.target_humidity,
             "display": HumidifierDefaults.display_config,
@@ -128,7 +131,7 @@ HUMIDIFIER_DETAILS: dict[str, Any] = {
         },
     },
     "LUH-A602S-WUS": {  # LV600S
-        "enabled": True,
+        "enabled": bool(HumidifierDefaults.device_status),
         "humidity": HumidifierDefaults.humidity,
         "mist_virtual_level": HumidifierDefaults.virtual_mist_level,
         "mist_level": HumidifierDefaults.mist_level,
@@ -138,7 +141,7 @@ HUMIDIFIER_DETAILS: dict[str, Any] = {
         "water_tank_lifted": HumidifierDefaults.water_tank_lifted,
         "display": HumidifierDefaults.display,
         "automatic_stop_reach_target": HumidifierDefaults.auto_stop_reached,
-        "night_light_brightness": 0,
+        "night_light_brightness": HumidifierDefaults.nightlight_brightness,
         "warm_mist_level": HumidifierDefaults.warm_mist_level,
         "warm_mist_enabled": HumidifierDefaults.warm_mist_enabled,
         "configuration": {
@@ -148,7 +151,7 @@ HUMIDIFIER_DETAILS: dict[str, Any] = {
         },
     },
     "LUH-O451S-WUS": {
-        "enabled": False,
+        "enabled": bool(HumidifierDefaults.device_status),
         "mist_virtual_level": HumidifierDefaults.virtual_mist_level,
         "mist_level": HumidifierDefaults.mist_level,
         "mode": HumidifierDefaults.humidifier_mode.value,
@@ -168,7 +171,7 @@ HUMIDIFIER_DETAILS: dict[str, Any] = {
         "extension": {"schedule_count": 0, "timer_remain": 0},
     },
     "LUH-O451S-WEU": {
-        "enabled": False,
+        "enabled": bool(HumidifierDefaults.device_status),
         "mist_virtual_level": HumidifierDefaults.virtual_mist_level,
         "mist_level": HumidifierDefaults.mist_level,
         "mode": HumidifierDefaults.humidifier_mode.value,
@@ -187,7 +190,24 @@ HUMIDIFIER_DETAILS: dict[str, Any] = {
         },
         "extension": {"schedule_count": 0, "timer_remain": 0},
     },
-    "LUH-M101S": {
+    "LUH-M101-WUS": {
+            "powerSwitch": int(HumidifierDefaults.device_status),
+            "humidity": int(HumidifierDefaults.humidity),
+            "targetHumidity": int(HumidifierDefaults.target_humidity),
+            "virtualLevel": int(HumidifierDefaults.virtual_mist_level),
+            "mistLevel": int(HumidifierDefaults.mist_level),
+            "workMode": HumidifierDefaults.humidifier_mode.value,
+            "waterLacksState": int(HumidifierDefaults.water_lacks),
+            "waterTankLifted": int(HumidifierDefaults.water_tank_lifted),
+            "autoStopSwitch": int(HumidifierDefaults.auto_stop),
+            "autoStopState": int(HumidifierDefaults.auto_stop_reached),
+            "screenSwitch": int(HumidifierDefaults.display_config),
+            "screenState": int(HumidifierDefaults.display),
+            "scheduleCount": 0,
+            "timerRemain": 0,
+            "errorCode": 0
+        },
+    "LUH-M101S-WEUR": {
         "powerSwitch": int(DeviceStatus.ON),
         "humidity": HumidifierDefaults.humidity,
         "targetHumidity": HumidifierDefaults.target_humidity,
@@ -200,12 +220,9 @@ HUMIDIFIER_DETAILS: dict[str, Any] = {
         "autoStopState": int(HumidifierDefaults.auto_stop_reached),
         "screenSwitch": int(HumidifierDefaults.display_config),
         "screenState": int(HumidifierDefaults.display),
-        "deviceProp": {
-            "workMode": "auto",
-            "nightLight": {
-                "nightLightSwitch": 0,
-                "brightness": 97
-            },
+        "nightLight": {
+            "nightLightSwitch": 0,
+            "brightness": HumidifierDefaults.nightlight_brightness,
         },
         "scheduleCount": 0,
         "timerRemain": 0,
@@ -252,7 +269,8 @@ DETAILS_RESPONSES = {
     "LUH-A602S-WUS": build_bypass_v2_response(inner_result=HUMIDIFIER_DETAILS["LUH-A602S-WUS"]),
     "LUH-O451S-WUS": build_bypass_v2_response(inner_result=HUMIDIFIER_DETAILS["LUH-O451S-WUS"]),
     "LUH-O451S-WEU": build_bypass_v2_response(inner_result=HUMIDIFIER_DETAILS["LUH-O451S-WEU"]),
-    "LUH-M101S": build_bypass_v2_response(inner_result=HUMIDIFIER_DETAILS["LUH-M101S"]),
+    "LUH-M101S-WEUR": build_bypass_v2_response(inner_result=HUMIDIFIER_DETAILS["LUH-M101S-WEUR"]),
+    "LUH-M101S-WUS": build_bypass_v2_response(inner_result=HUMIDIFIER_DETAILS["LUH-M101-WUS"]),
     "LEH-S601S": build_bypass_v2_response(inner_result=HUMIDIFIER_DETAILS["LEH-S601S"]),
 }
 
@@ -274,7 +292,8 @@ METHOD_RESPONSES = {
     "LUH-A602S-WUS": deepcopy(FunctionResponsesV2),
     "LUH-O451S-WUS": deepcopy(FunctionResponsesV2),
     "LUH-O451S-WEU": deepcopy(FunctionResponsesV2),
-    "LUH-M101S": deepcopy(FunctionResponsesV2),
+    "LUH-M101S-WEUR": deepcopy(FunctionResponsesV2),
+    "LUH-M101-WUS": deepcopy(FunctionResponsesV2),
     "LEH-S601S": deepcopy(FunctionResponsesV2),
 }
 

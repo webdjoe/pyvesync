@@ -692,7 +692,25 @@ humidifier_modules = [
         device_alias='Oasismist 1000S',
         model_display='Oasismist Series',
         model_name='Oasismist 1000S',
-        setup_entry='LUH-M101S',
+        setup_entry='LUH-M101S-WUS',
+    ),
+    HumidifierMap(
+        class_name='VeSyncHumid1000S',
+        dev_types=['LUH-M101S-WEUR'],
+        features=[
+            HumidifierFeatures.NIGHTLIGHT,
+            HumidifierFeatures.NIGHTLIGHT_BRIGHTNESS,
+        ],
+        mist_modes={
+            HumidifierModes.AUTO: 'auto',
+            HumidifierModes.SLEEP: 'sleep',
+            HumidifierModes.MANUAL: 'manual',
+        },
+        mist_levels=list(range(1, 10)),
+        device_alias='Oasismist 1000S EU',
+        model_display='Oasismist Series EU',
+        model_name='Oasismist 1000S EU',
+        setup_entry='LUH-M101S-WEUR',
     ),
     HumidifierMap(
         class_name='VeSyncSuperior6000S',

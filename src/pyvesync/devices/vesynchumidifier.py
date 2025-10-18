@@ -453,6 +453,7 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
         self.state.connection_status = ConnectionStatus.ONLINE
         self.state.mode = resp_model.workMode
         self.state.auto_target_humidity = resp_model.targetHumidity
+        self.state.humidity = resp_model.humidity
         self.state.mist_level = resp_model.mistLevel
         self.state.mist_virtual_level = resp_model.virtualLevel
         self.state.water_lacks = bool(resp_model.waterLacksState)
@@ -675,6 +676,11 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
         self.state.auto_stop_target_reached = bool(resp_model.autoStopState)
         self.state.display_set_status = DeviceStatus.from_int(resp_model.screenSwitch)
         self.state.display_status = DeviceStatus.from_int(resp_model.screenState)
+        if resp_model.nightLight is not None:
+            self.state.nightlight_brightness = resp_model.nightLight.brightness
+            self.state.nightlight_status = DeviceStatus.from_int(
+                resp_model.nightLight.nightLightSwitch
+            )
 
     async def get_details(self) -> None:
         r_dict = await self.call_bypassv2_api('getHumidifierStatus')
