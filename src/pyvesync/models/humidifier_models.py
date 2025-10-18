@@ -206,5 +206,6 @@ class Levoit1000SResult(InnerHumidifierBaseResult):
 @dataclass
 class Levoit1000SNightLight(ResponseBaseModel):
     """Night Light Model for Levoit 1000S Humidifier."""
+
     nightLightSwitch: int
     brightness: int
