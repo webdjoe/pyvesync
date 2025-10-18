@@ -242,7 +242,6 @@ class Purifier131Result(BypassV1Result):
     screenStatus: str
     activeTime: int
     levelNew: int
-    level: int | None
     mode: str
     airQuality: str
     deviceName: str
@@ -250,6 +249,7 @@ class Purifier131Result(BypassV1Result):
     deviceStatus: str
     connectionStatus: str
     filterLife: Purifier131Filter | None = None
+    level: int | None = None
 
 
 @dataclass
