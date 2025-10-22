@@ -95,6 +95,7 @@ class VeSyncTowerFan(BypassV2Mixin, VeSyncFanBase):
             return False
 
         self.state.fan_level = speed
+        self.state.fan_set_level = speed
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
