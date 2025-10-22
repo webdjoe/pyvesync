@@ -26,12 +26,12 @@ Attributes:
 
 from __future__ import annotations
 
+import platform
 import string
+import uuid
 from enum import Enum, IntEnum, StrEnum
 from random import choices, randint
 from types import MappingProxyType
-import platform
-import uuid
 
 from pyvesync.utils.enum_utils import IntEnumMixin
 
@@ -61,7 +61,9 @@ MOBILE_ID = str(randint(1000000000000000, 9999999999999999))  # noqa: S311
 USER_TYPE = '1'
 BYPASS_APP_V = f'VeSync {APP_VERSION}'
 BYPASS_HEADER_UA = 'okhttp/3.12.1'
-TERMINAL_ID = '2' + (uuid.uuid5(uuid.NAMESPACE_DNS, f"{uuid.getnode():x}-{platform.node() or ''}").hex)
+TERMINAL_ID = '2' + (
+    uuid.uuid5(uuid.NAMESPACE_DNS, f'{uuid.getnode():x}-{platform.node() or ""}').hex
+)
 
 CLIENT_TYPE = 'vesyncApp'
 
