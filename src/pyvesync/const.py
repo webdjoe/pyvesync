@@ -60,7 +60,7 @@ MOBILE_ID = str(randint(1000000000000000, 9999999999999999))  # noqa: S311
 USER_TYPE = '1'
 BYPASS_APP_V = f'VeSync {APP_VERSION}'
 BYPASS_HEADER_UA = 'okhttp/3.12.1'
-TERMINAL_ID = '2' + str(uuid4()).replace('-', '')
+TERMINAL_ID = '2' + (__import__('uuid').uuid5(__import__('uuid').NAMESPACE_DNS, f"{__import__('uuid').getnode():x}-{__import__('platform').node() or ''}").hex)
 CLIENT_TYPE = 'vesyncApp'
 
 STATUS_OK = 200
