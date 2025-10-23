@@ -174,7 +174,7 @@ class VeSyncAuth:
         else:
             file_path_object = Path(file_path)
         if not file_path_object or not file_path_object.exists():
-            logger.debug('No token file found to load credentials')
+            logger.debug('Credentials file not found: %s', file_path_object)
             return False
         try:
             data = await asyncio.to_thread(
@@ -184,7 +184,7 @@ class VeSyncAuth:
             self._token = data['token']
             self._account_id = data['account_id']
             self._country_code = data['country_code'].upper()
-            self._current_region = data['current_region']
+            self._current_region = data['current_region'].upper()
             logger.debug('Credentials loaded from file: %s', file_path)
         except orjson.JSONDecodeError as exc:
             logger.warning('Failed to load credentials from file: %s', exc)

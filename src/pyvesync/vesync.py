@@ -6,9 +6,9 @@ import asyncio
 import logging
 from dataclasses import MISSING, fields
 from pathlib import Path
-from typing import Self
+from typing import TYPE_CHECKING, Self
 
-from aiohttp import ClientSession
+from aiohttp import ClientResponse, ClientSession
 from aiohttp.client_exceptions import ClientResponseError
 from mashumaro.mixins.orjson import DataClassORJSONMixin
 
@@ -41,6 +41,9 @@ from pyvesync.utils.errors import (
 from pyvesync.utils.helpers import Helpers
 from pyvesync.utils.logs import LibraryLogger
 
+if TYPE_CHECKING:
+    from pyvesync.base_devices import VeSyncBaseDevice
+
 logger = logging.getLogger(__name__)
 
 
@@ -63,14 +66,13 @@ class VeSync:  # pylint: disable=function-redefined
         'time_zone',
     )
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         username: str,
         password: str,
         country_code: str = DEFAULT_REGION,
         session: ClientSession | None = None,
         time_zone: str = DEFAULT_TZ,
-        debug: bool = False,
         redact: bool = True,
     ) -> None:
         """Initialize VeSync Manager.
@@ -97,7 +99,6 @@ class VeSync:  # pylint: disable=function-redefined
             time_zone (str): Time zone for device from IANA database, by default
                 DEFAULT_TZ. This is automatically set to the time zone of the
                 VeSync account during login.
-            debug (bool): Enable debug logging, by default False.
             redact (bool): Enable redaction of sensitive information, by default True.
 
         Attributes:
@@ -135,7 +136,6 @@ class VeSync:  # pylint: disable=function-redefined
         self.session = session
         self._api_attempts = 0
         self._close_session = False
-        self._debug = debug
         self.redact = redact
         self._verbose: bool = False
         self.time_zone: str = time_zone
@@ -204,33 +204,11 @@ class VeSync:  # pylint: disable=function-redefined
     @property
     def debug(self) -> bool:
         """Return debug flag."""
-        return self._debug
+        return LibraryLogger.debug_enabled
 
-    @debug.setter
-    def debug(self, new_flag: bool) -> None:
-        """Set debug flag."""
-        if new_flag:
-            LibraryLogger.debug = True
-            LibraryLogger.configure_logger(logging.DEBUG)
-        else:
-            LibraryLogger.debug = False
-            LibraryLogger.configure_logger(logging.WARNING)
-        self._debug = new_flag
-
-    @property
-    def verbose(self) -> bool:
-        """Enable verbose logging."""
-        return LibraryLogger.verbose
-
-    @verbose.setter
-    def verbose(self, new_flag: bool) -> None:
-        """Set verbose logging."""
-        if new_flag:
-            LibraryLogger.verbose = True
-            LibraryLogger.configure_logger(logging.DEBUG)
-        else:
-            LibraryLogger.verbose = False
-        self._verbose = new_flag
+    def check_debug(self) -> bool:
+        """Check if debug logging is enabled - should be called minimally."""
+        return LibraryLogger.check_debug()
 
     @property
     def redact(self) -> bool:
@@ -287,15 +265,13 @@ class VeSync:  # pylint: disable=function-redefined
         """
         self._auth.set_credentials(token, account_id, country_code, region)
 
-    def log_to_file(self, filename: str | Path, std_out: bool = True) -> None:
+    def log_to_file(self, filename: str | Path) -> None:
         """Log to file and enable debug logging.
 
         Args:
             filename (str | Path): The name of the file to log to.
-            std_out (bool): If False, logs will not print to std out.
         """
-        self.debug = True
-        LibraryLogger.configure_logger(logging.DEBUG, file_name=filename, std_out=std_out)
+        LibraryLogger.configure_file_logging(filename, level=logging.DEBUG)
         logger.debug('Logging to file: %s', filename)
 
     def process_devices(self, dev_list_resp: ResponseDeviceListModel) -> bool:
@@ -305,14 +281,15 @@ class VeSync:  # pylint: disable=function-redefined
 
         """
         current_device_count = len(self._device_container)
-
-        self._device_container.remove_stale_devices(dev_list_resp)
-
+        if current_device_count > 0:
+            self._device_container.remove_stale_devices(dev_list_resp)
         new_device_count = len(self._device_container)
+
         if new_device_count != current_device_count:
             logger.debug(
                 'Removed %s devices', str(current_device_count - new_device_count)
             )
+
         current_device_count = new_device_count
         self._device_container.add_new_devices(dev_list_resp, self)
         new_device_count = len(self._device_container)
@@ -335,12 +312,13 @@ class VeSync:  # pylint: disable=function-redefined
         if not self.auth.is_authenticated or (
             not self.auth.token or not self.auth.account_id
         ):
-            logger.debug("Not logged in to VeSync, can't get devices")
+            logger.info("Not logged in to VeSync, can't get devices")
             return False
 
         request_model = RequestDeviceListModel(
             token=self.auth.token, accountID=self.auth.account_id, timeZone=self.time_zone
         )
+        logger.debug('Requesting device list from VeSync')
         response_dict, _ = await self.async_call_api(
             '/cloud/v1/deviceManaged/devices',
             'post',
@@ -358,11 +336,9 @@ class VeSync:  # pylint: disable=function-redefined
         if response.code == 0:
             proc_return = self.process_devices(response)
         else:
-            error_info = ErrorCodes.get_error_info(response.code)
-            resp_message = response.msg
-            info_msg = f'{error_info.message} ({resp_message})'
+            error_info = ErrorCodes.get_error_info(response.code, response.msg)
             if error_info.error_type == ErrorTypes.SERVER_ERROR:
-                raise VeSyncServerError(info_msg)
+                raise VeSyncServerError(error_info.message)
             raise VeSyncAPIResponseError(
                 'Error receiving response to device list request'
             )
@@ -456,7 +432,8 @@ class VeSync:  # pylint: disable=function-redefined
         method: str,
         json_object: dict | None | DataClassORJSONMixin = None,
         headers: dict | None = None,
-    ) -> tuple[dict | None, int | None]:
+        device: VeSyncBaseDevice | None = None,
+    ) -> tuple[dict | None, int]:
         """Make API calls by passing endpoint, header and body.
 
         api argument is appended to `API_BASE_URL`.
@@ -467,6 +444,7 @@ class VeSync:  # pylint: disable=function-redefined
             method (str): HTTP method to use.
             json_object (dict | RequestBaseModel): JSON object to send in body.
             headers (dict): Headers to send with request.
+            device (VeSyncBaseDevice | None): Device making the request, if any.
 
         Returns:
             tuple[dict | None, int]: Response and status code. Attempts to parse
@@ -483,6 +461,7 @@ class VeSync:  # pylint: disable=function-redefined
             Future releases will require the `json_object` argument to be a dataclass,
             instead of dictionary.
         """
+        self.check_debug()
         if self.session is None:
             self.session = ClientSession()
             self._close_session = True
@@ -503,37 +482,49 @@ class VeSync:  # pylint: disable=function-redefined
                 headers=headers,
                 raise_for_status=False,
             ) as response:
-                status_code = response.status
                 resp_bytes = await response.read()
-                if status_code != STATUS_OK:
-                    LibraryLogger.log_api_status_error(
-                        logger,
-                        request_body=req_dict,
-                        response=response,
-                        response_bytes=resp_bytes,
-                    )
-                    raise VeSyncAPIStatusCodeError(str(status_code))
 
                 LibraryLogger.log_api_call(logger, response, resp_bytes, req_dict)
-                resp_dict = Helpers.try_json_loads(resp_bytes)
-                if isinstance(resp_dict, dict):
-                    error_info = ErrorCodes.get_error_info(resp_dict.get('code'))
-                    if error_info.error_type == ErrorTypes.TOKEN_ERROR:
-                        if await self._reauthenticate():
-                            self.enabled = True
-                            return await self.async_call_api(
-                                api, method, json_object, headers
-                            )
-                        raise VeSyncTokenError
-                    if resp_dict.get('msg') is not None:
-                        error_info.message = f'{error_info.message} ({resp_dict["msg"]})'
-                        raise_api_errors(error_info)
-
-                return resp_dict, status_code
+                resp_dict, status_code = await self._api_response_wrapper(
+                    response, api, req_dict, device=device
+                )
 
         except ClientResponseError as e:
             LibraryLogger.log_api_exception(logger, exception=e, request_body=req_dict)
             raise
+        return resp_dict, status_code
+
+    async def _api_response_wrapper(
+        self,
+        response: ClientResponse,
+        endpoint: str,
+        request_body: dict | None,
+        device: VeSyncBaseDevice | None = None,
+    ) -> tuple[dict | None, int]:
+        """Internal wrapper used by async_call_api."""
+        if response.status != STATUS_OK:
+            LibraryLogger.log_api_status_error(
+                logger,
+                status_code=response.status,
+                response=response,
+            )
+            raise VeSyncAPIStatusCodeError(str(response.status))
+        resp_bytes = await response.read()
+        resp_dict = LibraryLogger.try_json_loads(resp_bytes)
+        if isinstance(resp_dict, dict):
+            error_info = ErrorCodes.get_error_info(resp_dict.get('code'))
+            if error_info.error_type == ErrorTypes.TOKEN_ERROR:
+                self.enabled = False
+                if await self._reauthenticate():
+                    return await self.async_call_api(
+                        endpoint, 'post', request_body, device=device
+                    )
+                raise VeSyncTokenError(resp_dict.get('msg'))
+            if resp_dict.get('msg') is not None:
+                error_info.message = f'{error_info.message} ({resp_dict["msg"]})'
+            raise_api_errors(error_info)
+
+        return resp_dict, response.status
 
     def _api_base_url_for_current_region(self) -> str:
         """Retrieve the API base url for the current region.
@@ -549,13 +540,13 @@ class VeSync:  # pylint: disable=function-redefined
     def _update_fw_version(self, info_list: list[FirmwareDeviceItemModel]) -> bool:
         """Update device firmware versions from API response."""
         if not info_list:
-            logger.debug('No devices found in firmware response')
+            logger.info('No devices found in firmware response')
             return False
         update_dict = {}
         for device in info_list:
             if not device.firmUpdateInfos:
                 if device.code != 0:
-                    logger.debug(
+                    logger.info(
                         'Device %s has error code %s with message: %s',
                         device.deviceName,
                         device.code,
@@ -587,7 +578,7 @@ class VeSync:  # pylint: disable=function-redefined
         each device and log the results.
         """
         if len(self._device_container) == 0:
-            logger.debug('No devices to check for firmware updates')
+            logger.warning('No devices to check for firmware updates')
             return False
         body_fields = [
             field.name
@@ -611,7 +602,7 @@ class VeSync:  # pylint: disable=function-redefined
             resp_message = resp_model.msg
             if resp_message is not None:
                 error_info.message = f'{error_info.message} ({resp_message})'
-            logger.debug('Error in firmware update response: %s', error_info.message)
+            logger.warning('Error in firmware update response: %s', error_info.message)
             return False
         info_list = resp_model.result.cidFwInfoList
         return self._update_fw_version(info_list)
