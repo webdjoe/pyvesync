@@ -161,8 +161,7 @@ class PurifierState(DeviceState):
         """Return air quality level as string."""
         if self._air_quality_level is None:
             return None
-        else:
-            return str(self._air_quality_level)
+        return str(self._air_quality_level)
 
     @property
     @deprecated('Use state.air_quality_level instead.')
