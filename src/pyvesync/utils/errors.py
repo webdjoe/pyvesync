@@ -812,9 +812,7 @@ class VeSyncTokenError(VeSyncError):
         """Initialize the exception with a message."""
         if msg is None or msg.strip() == '':
             msg = 'Re-authentication required'
-        super().__init__(
-            f'Token expired or invalid - {msg}'
-        )
+        super().__init__(f'Token expired or invalid - {msg}')
 
 
 class VeSyncServerError(VeSyncError):
