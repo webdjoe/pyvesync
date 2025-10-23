@@ -130,13 +130,13 @@ class PurifierState(DeviceState):
         self.fan_rotate_angle: int | None = None
 
     @property
-    def air_quality_level(self) -> int:
+    def air_quality_level(self) -> int | None:
         """Return air quality level in integer from 1-4.
 
-        Returns -1 if unknown.
+        Returns None if unknown.
         """
         if self._air_quality_level is None:
-            return -1
+            return None
         return int(self._air_quality_level)
 
     @air_quality_level.setter
@@ -144,6 +144,8 @@ class PurifierState(DeviceState):
         """Set air quality level."""
         if isinstance(value, int):
             self._air_quality_level = AirQualityLevel.from_int(value)
+        elif value is None:
+            self._air_quality_level = None
 
     def set_air_quality_level(self, value: int | str | None) -> None:
         """Set air quality level."""
@@ -151,11 +153,16 @@ class PurifierState(DeviceState):
             self._air_quality_level = AirQualityLevel.from_string(value)
         elif isinstance(value, int):
             self._air_quality_level = AirQualityLevel.from_int(value)
+        elif value is None:
+            self._air_quality_level = None
 
     @property
-    def air_quality_string(self) -> str:
+    def air_quality_string(self) -> str | None:
         """Return air quality level as string."""
-        return str(self._air_quality_level)
+        if self._air_quality_level is None:
+            return None
+        else:
+            return str(self._air_quality_level)
 
     @property
     @deprecated('Use state.air_quality_level instead.')
