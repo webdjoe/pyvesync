@@ -11,6 +11,10 @@
         <link rel="canonical" href="https://pyvesync.github.io/latest/development/auth_api/">
       
       
+        <link rel="prev" href="../vesync_api/">
+      
+      
+        <link rel="next" href="../data_models/">
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
@@ -18,7 +22,7 @@
     
     
       
-        <title>Documentation for pyvesync.auth module↲ - pyvesync</title>
+        <title>Authentication - pyvesync</title>
       
     
     
@@ -112,7 +116,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Documentation for pyvesync.auth module↲
+              Authentication
             
           </span>
         </div>
@@ -319,6 +323,8 @@
       
   
   
+    
+  
   
   
     
@@ -348,15 +354,17 @@
       
         
       
+        
+      
     
     
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
         
           
           <div class="md-nav__link md-nav__container">
@@ -379,7 +387,7 @@
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             Development
@@ -406,6 +414,278 @@
   
 
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Authentication
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Authentication
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#pyvesync.auth.VeSyncAuth" class="md-nav__link">
+    <span class="md-ellipsis">
+      VeSyncAuth
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="VeSyncAuth">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pyvesync.auth.VeSyncAuth-attributes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Attributes
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Attributes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pyvesync.auth.VeSyncAuth.account_id" class="md-nav__link">
+    <span class="md-ellipsis">
+      account_id
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyvesync.auth.VeSyncAuth.country_code" class="md-nav__link">
+    <span class="md-ellipsis">
+      country_code
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyvesync.auth.VeSyncAuth.current_region" class="md-nav__link">
+    <span class="md-ellipsis">
+      current_region
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyvesync.auth.VeSyncAuth.is_authenticated" class="md-nav__link">
+    <span class="md-ellipsis">
+      is_authenticated
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyvesync.auth.VeSyncAuth.token" class="md-nav__link">
+    <span class="md-ellipsis">
+      token
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyvesync.auth.VeSyncAuth-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Functions
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pyvesync.auth.VeSyncAuth.__repr__" class="md-nav__link">
+    <span class="md-ellipsis">
+      __repr__
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyvesync.auth.VeSyncAuth._country_code_to_region" class="md-nav__link">
+    <span class="md-ellipsis">
+      _country_code_to_region
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyvesync.auth.VeSyncAuth._exchange_authorization_code" class="md-nav__link">
+    <span class="md-ellipsis">
+      _exchange_authorization_code
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyvesync.auth.VeSyncAuth._get_authorization_code" class="md-nav__link">
+    <span class="md-ellipsis">
+      _get_authorization_code
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyvesync.auth.VeSyncAuth._login_with_credentials" class="md-nav__link">
+    <span class="md-ellipsis">
+      _login_with_credentials
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyvesync.auth.VeSyncAuth.clear_credentials" class="md-nav__link">
+    <span class="md-ellipsis">
+      clear_credentials
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyvesync.auth.VeSyncAuth.load_credentials_from_file" class="md-nav__link">
+    <span class="md-ellipsis">
+      load_credentials_from_file
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyvesync.auth.VeSyncAuth.login" class="md-nav__link">
+    <span class="md-ellipsis">
+      login
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyvesync.auth.VeSyncAuth.output_credentials_dict" class="md-nav__link">
+    <span class="md-ellipsis">
+      output_credentials_dict
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyvesync.auth.VeSyncAuth.output_credentials_json" class="md-nav__link">
+    <span class="md-ellipsis">
+      output_credentials_json
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyvesync.auth.VeSyncAuth.reauthenticate" class="md-nav__link">
+    <span class="md-ellipsis">
+      reauthenticate
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyvesync.auth.VeSyncAuth.save_credentials_to_file" class="md-nav__link">
+    <span class="md-ellipsis">
+      save_credentials_to_file
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyvesync.auth.VeSyncAuth.set_credentials" class="md-nav__link">
+    <span class="md-ellipsis">
+      set_credentials
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -622,10 +902,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_11" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_12" >
         
           
-          <label class="md-nav__link" for="__nav_5_11" id="__nav_5_11_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5_12" id="__nav_5_12_label" tabindex="0">
             
   
   
@@ -638,8 +918,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_11_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_11">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_12">
             <span class="md-nav__icon md-icon"></span>
             Utils
           </label>
@@ -1401,36 +1681,6 @@ credentials for VeSync API access.</p>
   
       module-attribute
    (pyvesync.const.DEFAULT_REGION)" href="../constants/#pyvesync.const.DEFAULT_REGION">DEFAULT_REGION</a></code>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td>
-                <code>current_region</code>
-            </td>
-            <td>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Current region code - determines API base URL</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td>
-                <code>token_file_path</code>
-            </td>
-            <td>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Path to store/load authentication token</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
             </td>
           </tr>
       </tbody>
