@@ -776,15 +776,15 @@ class VeSyncOutletBSDGO1(BypassV2Mixin, VeSyncOutlet):
 
     async def get_details(self) -> None:
         payload_data = {
-            "properties": [
-                "powerSwitch_1",
-                "realTimeVoltage",
-                "realTimePower",
-                "electricalEnergy",
-                "protectionStatus",
-                "voltageUpperThreshold",
-                "currentUpperThreshold",
-                "scheduleNum"
+            'properties': [
+                'powerSwitch_1',
+                'realTimeVoltage',
+                'realTimePower',
+                'electricalEnergy',
+                'protectionStatus',
+                'voltageUpperThreshold',
+                'currentUpperThreshold',
+                'scheduleNum',
             ]
         }
 
