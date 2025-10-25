@@ -79,7 +79,7 @@ def _inherit_docstrings(  # noqa: C901
 class InheritedNotation(Extension):
     """Griffe extension for inheriting docstrings."""
 
-    def on_package_loaded(
+    def on_package(
         self,
         *,
         pkg: Module,

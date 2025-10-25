@@ -55,13 +55,9 @@ async def main():
         country_code="US",  # Optional - country Code to select correct server
         session=session,  # Optional - aiohttp.ClientSession
         time_zone="America/New_York",  # Optional - Timezone, defaults to America/New_York
-        debug=False,  # Optional - Debug output
         redact=True  # Optional - Redact sensitive information from logs
         ) as manager:
 
-        # To enable debug mode - prints request and response content for
-        # api calls that return an error code
-        manager.debug = True
         # Redact mode is enabled by default, set to False to disable
         manager.redact = False
 
@@ -148,8 +144,7 @@ VeSync(
     password: str,
     country_code: str = DEFAULT_COUNTRY_CODE,  # US
     session: ClientSession | None = None,
-    time_zone: str = DEFAULT_TZ  # America/New_York
-    debug: bool = False,
+    time_zone: str = DEFAULT_TZ  # America/New_York,
     redact: bool = True,
     )
 ```
@@ -279,7 +274,7 @@ from pyvesync import VeSync
 from pyvesync.logs import VeSyncLoginError
 
 # VeSync is an asynchronous context manager
-# VeSync(username, password, debug=False, redact=True, session=None)
+# VeSync(username, password, redact=True, session=None)
 
 async def main():
     async with VeSync("user", "password") as manager:
@@ -304,7 +299,7 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-If you want to reuse your token and account_id between runs. The `VeSync.auth` object holds the credentials and helper methods to save and load credentials.
+If you want to reuse your token and account_id between runs. The `VeSync.auth` object holds the credentials and helper methods to save and load credentials.  See the [Authentication Documentation](https://webdjoe.github.io/pyvesync/latest/authentication.md) for more details.
 
 ```python
 import asyncio
@@ -312,7 +307,7 @@ from pyvesync import VeSync
 from pyvesync.logs import VeSyncLoginError
 
 # VeSync is an asynchronous context manager
-# VeSync(username, password, debug=False, redact=True, session=None)
+# VeSync(username, password, redact=True, session=None)
 
 async def main():
     async with VeSync("user", "password") as manager:
@@ -357,7 +352,7 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-Devices are stored in the respective lists in the instantiated `VeSync` class:
+Devices are stored in the `VeSync.devices` attribute, which is a `DeviceContainer` instance that acts as a mutable set. The `DeviceContainer` has properties for each product type that return lists of device instances:
 
 ```python
 await manager.login()  # Asynchronous
@@ -394,14 +389,21 @@ See the [device documentation](https://webdjoe.github.io/pyvesync/latest/devices
 
 ## Debug mode and redact
 
-To make it easier to debug, there is a `debug` argument in the `VeSync` method. This prints out your device list and any other debug log messages.
+To set debug, use the `logger` object in the `VeSync` class. Setting the logger level to `DEBUG` will print debug information to the console. The `log_to_file()` method can be used to log to a file.
 
 The `redact` argument removes any tokens and account identifiers from the output to allow for easier sharing. The `redact` argument has no impact if `debug` is not `True`.
 
+This is an example of debug mode with redact enabled:
+
 ```python
+import logging
 import asyncio
 import aiohttp
 from pyvesync.vesync import VeSync
+
+logger = logging.getLogger("pyvesync")
+logger.setLevel(logging.DEBUG)
+
 
 async def main():
     async with VeSync("user", "password") as manager:
@@ -418,6 +420,31 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+```
+
+### Logging to File
+
+To log to a file, use the `log_to_file()` method of the `VeSync` class. Pass the file path as an argument.
+
+```python
+
+import asyncio
+from pyvesync import VeSync
+
+async def main():
+    async with VeSync("user", "password") as manager:
+        manager.log_to_file("pyvesync.log", level=logging.DEBUG, stdout=True)  # stdout argument prints log to console as well
+        await manager.login()
+        await manager.update()
+
+        outlet = manager.outlets[0]
+        await outlet.update()
+        await outlet.turn_off()
+        outlet.display()
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
 ```
 
 ## Feature Requests
@@ -446,7 +473,7 @@ pip install git+https://github.com/webdjoe/pyvesync.git@refs/pull/PR_NUMBER/head
 
 Test functionality with a script, please adjust methods and logging statements to the device you are testing.
 
-`test.py`
+See `[testing_scripts](./testing_scripts/README.md)` for a fully functioning test script for all devices.
 
 ```python
 import asyncio
@@ -456,7 +483,10 @@ import json
 from functool import chain
 from pyvesync import VeSync
 
-logger = logging.getLogger(__name__)
+vs_logger = logging.getLogger("pyvesync")
+vs_logger.setLevel(logging.DEBUG)
+
+logger = logging.getLogger('pyvesync_test')
 logger.setLevel(logging.DEBUG)
 
 USERNAME = "YOUR USERNAME"
@@ -466,7 +496,7 @@ DEVICE_NAME = "Device" # Device to test
 
 async def test_device():
     # Instantiate VeSync class and login
-  async with VeSync(USERNAME, PASSWORD, debug=True, redact=True) as manager:
+  async with VeSync(USERNAME, PASSWORD, redact=True) as manager:
       await manager.login()
 
       # Pull and update devices
@@ -525,35 +555,11 @@ if __name__ == "__main__":
 
 ## Device Requests
 
-SSL pinning makes capturing packets much harder. In order to be able to capture packets, SSL pinning needs to be disabled before running an SSL proxy. Use an Android emulator such as Android Studio, which is available for Windows and Linux for free. Download the APK from APKPure or a similiar site and use [Objection](https://github.com/sensepost/objection) or [Frida](https://frida.re/docs/gadget/). Followed by capturing the packets with Charles Proxy or another SSL proxy application.
-
-Be sure to capture all packets from the device list and each of the possible device menus and actions. Please redact the `accountid` and `token` from the captured packets. If you feel you must redact other keys, please do not delete them entirely. Replace letters with "A" and numbers with "1", leave all punctuation intact and maintain length.
-
-For example:
-
-Before:
-
-```json
-{
-  "tk": "abc123abc123==3rf",
-  "accountId": "123456789",
-  "cid": "abcdef12-3gh-ij"
-}
-```
-
-After:
-
-```json
-{
-  "tk": "AAA111AAA111==1AA",
-  "accountId": "111111111",
-  "cid": "AAAAAA11-1AA-AA"
-}
-```
+If you would like to request a new device to be added to the library, please open an issue on GitHub. Be sure to include the device model number and a link to the product page. If you are able to provide packet captures or are willing to share the device temporarily, please indicate that in the issue. See the [Packet Capturing for New Device Support](https://webdjoe.github.io/pyvesync/latest/development/capturing.md) document for more details.
 
 ## Contributing
 
-All [contributions](CONTRIBUTING.md) are welcome.
+All [contributions](https://webdjoe.github.io/pyvesync/latest/development/CONTRIBUTING.md) are welcome.
 
 This project is licensed under [MIT](LICENSE).
 

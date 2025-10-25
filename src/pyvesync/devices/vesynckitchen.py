@@ -457,10 +457,9 @@ class VeSyncAirFryer158(VeSyncFryer):
 
         return_status = resp.get('result', {}).get('returnStatus')
         if return_status is None:
-            LibraryLogger.log_device_api_response_error(
+            LibraryLogger.error_device_response_content(
                 logger,
-                self.device_name,
-                self.device_type,
+                self,
                 'get_details',
                 msg='Return status not found in response',
             )

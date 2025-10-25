@@ -74,7 +74,10 @@ async def main():
             manager.save_credentials(token_file)
 
             # Output credentials as json string
-            print(manager.output_credentials())
+            print(manager.output_credentials_json())
+
+            # Output credentials as dictionary
+            print(manager.output_credentials_dict())
 
             print("Login successful and credentials saved!")
         else:

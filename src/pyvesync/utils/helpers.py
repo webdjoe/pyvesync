@@ -10,7 +10,6 @@ from collections.abc import Iterator
 from dataclasses import InitVar, dataclass, field
 from typing import TYPE_CHECKING, Any, TypeVar
 
-import orjson
 from mashumaro.exceptions import InvalidFieldValue, MissingField, UnserializableField
 from mashumaro.mixins.orjson import DataClassORJSONMixin
 from typing_extensions import deprecated
@@ -151,7 +150,7 @@ class Helpers:
         try:
             model_instance = model.from_dict(data)
         except (MissingField, UnserializableField, InvalidFieldValue) as err:
-            LibraryLogger.log_mashumaro_response_error(
+            LibraryLogger.error_mashumaro_response(
                 logger,
                 method_name,
                 data,
@@ -175,27 +174,8 @@ class Helpers:
                 return levels[idx + 1]
         return levels[0]
 
-    @staticmethod
-    def try_json_loads(data: str | bytes | None) -> dict | None:
-        """Try to load JSON data.
-
-        Gracefully handle errors and return None if loading fails.
-
-        Args:
-            data (str | bytes | None): JSON data to load.
-
-        Returns:
-            dict | None: Parsed JSON data or None if loading fails.
-        """
-        if data is None:
-            return None
-        try:
-            return orjson.loads(data)
-        except (orjson.JSONDecodeError, TypeError):
-            return None
-
     @classmethod
-    def process_dev_response(  # noqa: C901,PLR0912
+    def process_dev_response(
         cls,
         logger: logging.Logger,
         method_name: str,
@@ -221,7 +201,12 @@ class Helpers:
         """
         device.state.update_ts()
         if r_dict is None:
-            logger.error('No response from API for %s', method_name)
+            LibraryLogger.error_device_response_content(
+                logger,
+                device,
+                method_name,
+                'No response or cannot deserialize response from API',
+            )
             device.last_response = ResponseInfo(
                 name='INVALID_RESPONSE',
                 error_type=ErrorTypes.BAD_RESPONSE,
@@ -232,46 +217,34 @@ class Helpers:
         error_code = (
             r_dict.get('error', {}).get('code')
             if 'error' in r_dict
-            else r_dict.get('code')
+            else r_dict.get('code', -999999999)
         )
 
-        new_msg = None
+        new_msg = r_dict.get('msg')
         # Get error codes from nested dictionaries.
         if error_code == 0:
-            internal_codes = cls._get_internal_codes(r_dict)
-            for code_tuple in internal_codes:
-                if code_tuple[0] != 0:
-                    error_code = code_tuple[0]
-                    new_msg = code_tuple[1]
-                    break
+            internal_code, internal_msg = cls._get_internal_codes(r_dict)
+            if internal_code != 0:
+                error_code = internal_code
+                new_msg = internal_msg if internal_msg else new_msg
 
-        if isinstance(error_code, int):
-            error_int = error_code
-        elif isinstance(error_code, str):
-            try:
-                error_int = int(error_code)
-            except ValueError:
-                error_int = -999999999
-        else:
-            error_int = -999999999
-        error_info = ErrorCodes.get_error_info(error_int)
-        if new_msg is not None:
-            if error_info.error_type == ErrorTypes.UNKNOWN_ERROR:
-                error_info.message = new_msg
-            else:
-                error_info.message = f'{error_info.message} - {new_msg}'
+        error_info = ErrorCodes.get_error_info(int(error_code))
+
+        error_info.message = f'{error_info.message} - {new_msg}'
         if error_info.device_online is False:
             device.state.connection_status = ConnectionStatus.OFFLINE
+        else:
+            device.state.connection_status = ConnectionStatus.ONLINE
         LibraryLogger.log_device_return_code(
             logger,
             method_name,
             device.device_name,
             device.device_type,
-            error_int,
+            int(error_code),
             f'{error_info.error_type} - {error_info.name} {error_info.message}',
         )
         device.last_response = error_info
-        if error_int != 0:
+        if int(error_code) != 0:
             return None
         return r_dict
 
@@ -543,7 +516,7 @@ class Helpers:
         return hashlib.md5(string.encode('utf-8')).hexdigest()  # noqa: S324
 
     @staticmethod
-    def _get_internal_codes(response: dict) -> list[tuple[int, str | None]]:
+    def _get_internal_codes(response: dict) -> tuple[int, str | None]:  # noqa: C901
         """Get all error codes from nested dictionary.
 
         Args:
@@ -569,10 +542,16 @@ class Helpers:
                         for item in v:
                             yield from extract_all_error_codes(key, item)
 
-        errors = []
+        errors: list[tuple[int, str | None]] = []
         for error_key in error_keys:
             errors.extend(list(extract_all_error_codes(error_key, response)))
-        return errors
+        return_code = 0
+        return_msg = None
+        for code, msg in errors:
+            if code != 0:
+                return_code = code
+                return_msg = msg
+        return return_code, return_msg
 
 
 @dataclass(repr=False)

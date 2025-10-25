@@ -14,20 +14,18 @@ from typing import TYPE_CHECKING, ClassVar, TypeVar
 
 from mashumaro.mixins.orjson import DataClassORJSONMixin
 
-from pyvesync.const import ConnectionStatus
 from pyvesync.models.base_models import DefaultValues
 from pyvesync.models.bypass_models import (
     RequestBypassV1,
     RequestBypassV2,
 )
-from pyvesync.utils.errors import ErrorCodes, ErrorTypes, raise_api_errors
+from pyvesync.utils.errors import ErrorCodes
 from pyvesync.utils.helpers import Helpers
 from pyvesync.utils.logs import LibraryLogger
 
 if TYPE_CHECKING:
     from pyvesync import VeSync
     from pyvesync.base_devices import VeSyncBaseDevice
-    from pyvesync.utils.errors import ResponseInfo
 
 T_MODEL = TypeVar('T_MODEL', bound=DataClassORJSONMixin)
 
@@ -57,62 +55,11 @@ def process_bypassv1_result(
     Returns:
         dict: The response data
     """
-    if not isinstance(resp_dict, dict) or 'code' not in resp_dict:
-        LibraryLogger.log_device_api_response_error(
-            logger,
-            device.device_name,
-            device.device_type,
-            method,
-            'Error decoding JSON response',
-        )
+    r_dict = Helpers.process_dev_response(logger, method, device, resp_dict)
+    if r_dict is None or 'result' not in r_dict:
         return None
-
-    error_info = ErrorCodes.get_error_info(resp_dict['code'])
-    device.last_response = error_info
-    device.last_response.response_data = resp_dict
-    if error_info.error_type != ErrorTypes.SUCCESS:
-        _handle_bypass_error(logger, device, method, error_info, resp_dict['code'])
-        return None
-    result = resp_dict.get('result')
-    if not isinstance(result, dict):
-        return None
+    result = r_dict['result']
     return Helpers.model_maker(logger, model, method, result, device)
-
-
-def _handle_bypass_error(
-    logger: Logger,
-    device: VeSyncBaseDevice,
-    method: str,
-    error_info: ResponseInfo,
-    code: int,
-) -> None:
-    """Process the outer result error code.
-
-    Internal method for handling the error code in the response field
-    used by the `process_bypassv1_result` and `process_bypassv2_result` method.
-
-    Args:
-        logger (Logger): The logger to use for logging.
-        device (VeSyncBaseDevice): The device object.
-        method (str): The method used in the payload.
-        error_info (ResponseInfo): The error info object.
-        code (int): The error code.
-
-    Note:
-        This will raise the appropriate exception based on the error code. See
-        `pyvesync.utils.errors.ErrorCodes` for more information
-        about the error codes and their meanings.
-    """
-    raise_api_errors(error_info)
-    LibraryLogger.log_device_return_code(
-        logger,
-        method,
-        device.device_name,
-        device.product_type,
-        code,
-        error_info.message,
-    )
-    device.state.connection_status = ConnectionStatus.from_bool(error_info.device_online)
 
 
 def _get_inner_result(
@@ -127,10 +74,9 @@ def _get_inner_result(
         inner_result = outer_result['result']
         code = int(outer_result['code'])
     except (ValueError, TypeError, KeyError):
-        LibraryLogger.log_device_api_response_error(
+        LibraryLogger.error_device_response_content(
             logger,
-            device.device_name,
-            device.device_type,
+            device,
             method,
             'Error processing bypass V2 API response result.',
         )
@@ -177,23 +123,10 @@ def process_bypassv2_result(
     Returns:
         T_MODEL: An instance of the inner result model.
     """
-    if not isinstance(resp_dict, dict) or 'code' not in resp_dict:
-        LibraryLogger.log_device_api_response_error(
-            logger,
-            device.device_name,
-            device.device_type,
-            method,
-            'Error decoding JSON response',
-        )
+    r_dict = Helpers.process_dev_response(logger, method, device, resp_dict)
+    if r_dict is None:
         return None
-
-    error_info = ErrorCodes.get_error_info(resp_dict['code'])
-    device.last_response = error_info
-    device.last_response.response_data = resp_dict
-    if error_info.error_type != ErrorTypes.SUCCESS:
-        _handle_bypass_error(logger, device, method, error_info, resp_dict['code'])
-        return None
-    result = _get_inner_result(device, logger, method, resp_dict)
+    result = _get_inner_result(device, logger, method, r_dict)
     if not isinstance(result, dict):
         return None
     return Helpers.model_maker(logger, model, method, result, device)

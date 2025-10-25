@@ -51,7 +51,7 @@ For home assistant issues, please submit on that repository.
 
 ### New Devices
 
-If you would like to add a new device, packet captures must be provided. The iOS and Android VeSync app implements certificate pinning to prevent standard MITM intercepts. Currently, the only known way is to patch the APK and run on a rooted android emulator with frida. This is a complex process that has had varying levels of success. If you successful in capturing packets, please capture all functionality, including the device list and configuraiton screen. Redact accountId and token keys or contact me for a more secure way to share.
+If you would like to add a new device, packet captures must be provided. The iOS and Android VeSync app implements certificate pinning to prevent standard MITM intercepts. Currently, the only known way is to patch the APK and run on a rooted android emulator with frida. This is a complex process that has had varying levels of success. If you successful in capturing packets, please capture all functionality, including the device list and configuraiton screen. Redact accountId and token keys or contact me for a more secure way to share. See the [Packet Capturing for New Device Support](./development/capturing.md) document for more details.
 
 ## General Usage
 
@@ -64,18 +64,21 @@ See the [Usage](./usage.md) documentation for a quick start guide on how to use 
 The `VeSync` class has the following parameters, `username` and `password` are mandatory:
 
 ```python
+import asyncio
 from pyvesync import VeSync
 
-# debug and redact are optional arguments, the above values are
-# the defaults. The library will try to automatically pull in
-# the correct time zone from the API responses.
+# To enable debug logging:
+import logging
+vs_logger = logging.getLogger("pyvesync")
+vs_logger.setLevel(logging.DEBUG)
+
+async def main():
     async with VeSync(
         username="user",
         password="password",
         country_code="US",  # Optional - country Code to select correct server
         session=session,  # Optional - aiohttp.ClientSession
         time_zone="America/New_York",  # Optional - Timezone, defaults to America/New_York
-        debug=False,  # Optional - Debug output
         redact=True  # Optional - Redact sensitive information from logs
         ) as manager:
 
@@ -84,7 +87,6 @@ from pyvesync import VeSync
     # Check if logged in
     assert manager.enabled
     # Debug and Redact are optional arguments
-    manager.debug = True
     manager.redact = True
 
     # Get devices
@@ -100,6 +102,9 @@ from pyvesync import VeSync
     for outlet in manager.devices.outlets:
         await outlet.update()
 
+if __name__ == "__main__":
+    asyncio.run(main())
+
 ```
 
 
@@ -108,10 +113,9 @@ If you want to reuse your token and account_id between runs. The `VeSync.auth` o
 ```python
 import asyncio
 from pyvesync import VeSync
-from pyvesync.logs import VeSyncLoginError
 
 # VeSync is an asynchronous context manager
-# VeSync(username, password, debug=False, redact=True, session=None)
+# VeSync(username, password, redact=True, session=None)
 
 async def main():
     async with VeSync("user", "password") as manager:
@@ -156,13 +160,15 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
+### Getting Devices
+
 Once logged in, the next call should be to the `update()` method which:
 
-- Retrieves list of devices from server
+- calls the `get_devices()` method to retrieve the list of devices from the server
 - Removes stale devices that are not present in the new API call
 - Adds new devices to the device list attributes
-- Instantiates all device classes
-- Updates all devices via the device instance `update()` method
+- Instantiates all new device classes
+- Updates all devices via the device instance `device.update()` method
 
 ```python
 # Get/Update Devices from server - populate device lists
@@ -188,7 +194,7 @@ Updating all devices without pulling a device list:
 manager.update_all_devices()
 ```
 
-Each product type is a property in the `devices` attribute:
+The devices attribute is a [`DeviceContainer`][pyvesync.device_container.DeviceContainer] object that holds all devices in a mutable set-like structure. Each product type is a property in the `devices` attribute:
 
 ```python
 manager.devices.outlets = [VeSyncOutletInstances]
@@ -203,47 +209,80 @@ managers.devices.thermostats = [VeSyncThermostatInstances]
 
 ### Debugging and Getting Help
 
-The library has built-in debug logging that can be enabled by setting the `debug` attribute of the `VeSync` object to `True`. This will log the API calls and response codes to the console. This will not log the actual API calls.
+The library has built-in debug logging that can be enabled by setting the log level of the `pyvesync` logger to `DEBUG`. This will log the API calls and response codes to the console.
+
+```python
+import logging
+from pyvesync import VeSync
+# To enable debug logging:
+
+vs_logger = logging.getLogger("pyvesync")
+vs_logger.setLevel(logging.DEBUG)
+
+async def main():
+    async with VeSync(username="EMAIL", password="PASSWORD") as manager:
+        await manager.login()
+        await manager.update()
+```
+
+### Logging to a File
+
+Since verbose debugging can output a lot of information, there is a helper function to log to a file instead of the console. This will automatically set the logging level to `DEBUG` and log all API calls and responses to the specified file. Optionally, logging to stdout can also be enabled.
 
 ```python
 from pyvesync import VeSync
 
-async with VeSync(username="EMAIL", password="PASSWORD") as manager:
-    manager.debug = True  # Enable debug logging
-    await manager.login()
-    await manager.get_devices()
+async def main():
+    async with VeSync(username="EMAIL", password="PASSWORD") as manager:
+        manager.debug = True  # Enable debug logging
+        manager.verbose = True  # Enable verbose logging
+        await manager.log_to_file("debug.log", stdout=True)  # Can be an absolute or path relative to the current working directory
+        await manager.login()
+        await manager.get_devices()
 ```
 
-To log the full API request and response, set the `verbose` attribute to `True`. This will log the full request and response, including headers and body. This is useful for debugging issues with the API calls. Setting the `redact` attribute to `False` will not redact the sensitive information in the logs, such as the username and password. `redact` is `True` by default.
+### Authentication
+
+The `VeSync` object requires username and password to be instantiated, but once logged in the token and account_id can be stored and reused to prevent logging in every time. The `VeSync.auth` attribute holds the authentication logic and credentials with the `pyvesync.auth.VeSyncAuth` class. Username and password are required because the token can expire after a period of time. See the [Authentication](./authentication.md) and [VeSync](./development/vesync_api.md) documentation for more details.
 
 ```python
 from pyvesync import VeSync
 
-async with VeSync(username="EMAIL", password="PASSWORD") as manager:
-    manager.debug = True  # Enable debug logging
-    manager.verbose = True  # Enable verbose logging
-    await manager.login()
-    await manager.get_devices()
+
+async def main():
+    async with VeSync(username="EMAIL", password="PASSWORD") as manager:
+        await manager.login()  # Login with username and password
+        if not manager.enabled:
+            print("Login failed")
+            return
+
+        # Save credentials to file
+        await manager.save_credentials("/path/to/token_file")
+        # Will save to user's home directory as .vesync_token if no path is provided
+
+        # Load credentials from file
+        await manager.load_credentials_from_file("/path/to/token_file")
+        # Calling with no argument will load the .vesync_token file from user's home directory and then the current working directory.
+
+        # Or set credentials directly
+        creds = {
+            "token": "your_token",
+            "account_id": "your_account_id",
+            "country_code": "US"  # Optional
+            "region": "US"  # Optional
+        }
+        manager.set_credentials(**creds)
+
+        # Output credentials as JSON string
+        await manager.output_credentials_json()
+        # or as a dictionary
+        await manager.output_credentials_dict()
+
+        # No login needed if token is valid
+        # await manager.login()
 ```
 
-Since verbose debugging can output a lot of information, there is a helper function to log to a file instead of the console.
-
-```python
-from pyvesync import VeSync
-
-async with VeSync(username="EMAIL", password="PASSWORD") as manager:
-    manager.debug = True  # Enable debug logging
-    manager.verbose = True  # Enable verbose logging
-    await manager.log_to_file("debug.log")  # Can be an absolute or path relative to the current working directory
-    await manager.login()
-    await manager.get_devices()
-
-    # Log to a file instead of the console
-
-
-```
-
-### Device Usage
+## Device Usage
 
 Devices and their attributes and methods can be accessed via the device lists in the manager instance.
 

@@ -85,7 +85,7 @@ class VeSyncTowerFan(BypassV2Mixin, VeSyncFanBase):
             new_speed = speed
 
         if new_speed not in self.fan_levels:
-            logger.debug('Invalid fan speed level used - %s', speed)
+            logger.warning('Invalid fan speed level used - %s', speed)
             return False
 
         payload_data = {'manualSpeedLevel': speed, 'levelType': 'wind', 'levelIdx': 0}
@@ -105,7 +105,7 @@ class VeSyncTowerFan(BypassV2Mixin, VeSyncFanBase):
             return await self.turn_off()
 
         if mode.lower() not in self.modes:
-            logger.debug('Invalid purifier mode used - %s', mode)
+            logger.warning('Invalid purifier mode used - %s', mode)
             return False
 
         payload_data = {'workMode': mode}
@@ -192,7 +192,7 @@ class VeSyncTowerFan(BypassV2Mixin, VeSyncFanBase):
             return
         timer = r_model.timers[0]
         if not isinstance(timer, TimerModels.TimerItemV2):
-            logger.debug('Invalid timer found for %s', self.device_name)
+            logger.warning('Invalid timer found for %s', self.device_name)
             return
         self.state.timer = Timer(timer.remain, timer.action, timer.id)
 
@@ -204,7 +204,7 @@ class VeSyncTowerFan(BypassV2Mixin, VeSyncFanBase):
                 else DeviceStatus.ON
             )
         if action not in [DeviceStatus.ON, DeviceStatus.OFF]:
-            logger.debug('Invalid action used - %s', action)
+            logger.warning('Invalid action used - %s', action)
             return False
         payload_data = {
             'action': action,

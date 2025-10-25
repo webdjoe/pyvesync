@@ -49,6 +49,7 @@ ignore = [
   "D102",  # Missing docstring in public method - HANDLED BY flake8-docstrings
   "EXE002", # Use of exec - IGNORE
   # "Q000", # Quotes
+  # "ERA001", # Commented out code
 
 
 ]
