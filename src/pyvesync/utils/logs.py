@@ -481,7 +481,7 @@ class LibraryLogger:
             # Normalize module for compactness: strip root package
             human_mod = mod_name
             if human_mod.startswith(f'{pkg_root}.'):
-                human_mod = human_mod[len(pkg_root) + 1:]
+                human_mod = human_mod[len(pkg_root) + 1 :]
 
             if cls_name:
                 return f'{cls_name}.{func_name} [{human_mod}]'
