@@ -103,7 +103,14 @@ VeSync(
     )
 ```
 
-The VeSync class no longer accepts a `debug` or `redact` argument. To set debug the library set `manager.debug = True` to the instance and `manager.redact = True`.
+The VeSync class no longer accepts a `debug`. To set debug set the level of the `pyvesync` logger using:
+
+```python
+
+import logging
+vs_logger = logging.getLogger("pyvesync")
+vs_logger.setLevel(logging.DEBUG)
+```
 
 ## Product Types
 

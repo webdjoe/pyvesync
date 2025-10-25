@@ -224,9 +224,13 @@ class VeSync:  # pylint: disable=function-redefined
             LibraryLogger.shouldredact = False
         self._redact = new_flag
 
-    def output_credentials(self) -> str | None:
+    def output_credentials_json(self) -> str | None:
         """Output current authentication credentials as a JSON string."""
-        return self.auth.output_credentials()
+        return self.auth.output_credentials_json()
+
+    def output_credentials_dict(self) -> dict[str, str] | None:
+        """Output current authentication credentials as a dictionary."""
+        return self.auth.output_credentials_dict()
 
     async def save_credentials(self, filename: str | Path | None) -> None:
         """Save authentication credentials to a file.
@@ -265,13 +269,14 @@ class VeSync:  # pylint: disable=function-redefined
         """
         self._auth.set_credentials(token, account_id, country_code, region)
 
-    def log_to_file(self, filename: str | Path) -> None:
+    def log_to_file(self, filename: str | Path, stdout: bool = True) -> None:
         """Log to file and enable debug logging.
 
         Args:
             filename (str | Path): The name of the file to log to.
+            stdout (bool): Whether to also log to stdout, by default True.
         """
-        LibraryLogger.configure_file_logging(filename, level=logging.DEBUG)
+        LibraryLogger.configure_file_logging(filename, level=logging.DEBUG, stdout=stdout)
         logger.debug('Logging to file: %s', filename)
 
     def process_devices(self, dev_list_resp: ResponseDeviceListModel) -> bool:
@@ -484,7 +489,7 @@ class VeSync:  # pylint: disable=function-redefined
             ) as response:
                 resp_bytes = await response.read()
 
-                LibraryLogger.log_api_call(logger, response, resp_bytes, req_dict)
+                LibraryLogger.log_api_call(logger, response, resp_bytes, api, req_dict)
                 resp_dict, status_code = await self._api_response_wrapper(
                     response, api, req_dict, device=device
                 )

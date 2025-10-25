@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 from typing import Any
 
@@ -13,6 +14,12 @@ from pyvesync.models.vesync_models import RequestDeviceConfiguration
 
 USERNAME = ''
 PASSWORD = ''
+
+vs_logger = logging.getLogger('pyvesync')
+vs_logger.setLevel(logging.DEBUG)
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 def parse_config(data: dict) -> dict[str, list[dict]]:
@@ -62,9 +69,8 @@ async def fetch_config(manager: VeSync) -> dict[Any, Any] | None:
 
 async def main() -> None:
     """Main function to fetch and display device configurations."""
-    async with VeSync(USERNAME, PASSWORD, 'US', debug=True) as manager:
+    async with VeSync(USERNAME, PASSWORD, 'US') as manager:
         await manager.login()
-        manager.verbose = True
         config = await fetch_config(manager)
         if not config:
             print('Failed to fetch configuration.')

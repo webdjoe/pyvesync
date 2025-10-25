@@ -35,6 +35,7 @@ nav:
     - VeSyncDevice Base: development/vesync_device_base.md
     - Constants: development/constants.md
     - Contributing: development/contributing.md
+    - Capturing: development/capturing.md
     - Testing: development/testing.md
     - Utils:
       - Helpers: development/utils/helpers.md

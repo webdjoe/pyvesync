@@ -19,7 +19,6 @@ day trial is sufficient for this purpose. If you do like the software, support t
 
 5. **frida-server**: Download the latest frida-server from [frida-server](https://github.com/frida/frida/releases). Choose the release that matches the architecture of the MuMu emulator - `frida-server-x.x.x-android-x86_x64.xz`. Extract the `frida-server` binary and place it in the project directory.
 
-
 ## Steps
 
 1. **Set up project directory**:

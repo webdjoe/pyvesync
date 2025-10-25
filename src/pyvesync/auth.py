@@ -196,17 +196,26 @@ class VeSyncAuth:
         self.manager.enabled = True
         return True
 
-    def output_credentials(self) -> str | None:
-        """Output current credentials as JSON string."""
+    def output_credentials_dict(self) -> dict[str, str] | None:
+        """Output current credentials as a dictionary."""
         if not self.is_authenticated:
             logger.debug('No credentials to output, not authenticated')
             return None
-        credentials = {
-            'token': self._token,
-            'account_id': self._account_id,
+        return {
+            'token': self._token or '',
+            'account_id': self._account_id or '',
             'country_code': self._country_code,
             'current_region': self._current_region,
         }
+
+    def output_credentials_json(self) -> str | None:
+        """Output current authentication credentials as a JSON string."""
+        if not self.is_authenticated:
+            logger.debug('No credentials to output, not authenticated')
+            return None
+        credentials = self.output_credentials_dict()
+        if credentials is None:
+            return None
         try:
             return orjson.dumps(credentials).decode('utf-8')
         except orjson.JSONEncodeError as exc:
