@@ -775,7 +775,20 @@ class VeSyncOutletBSDGO1(BypassV2Mixin, VeSyncOutlet):
         super().__init__(details, manager, feature_map)
 
     async def get_details(self) -> None:
-        r_dict = await self.call_bypassv2_api('getProperty')
+        payload_data = {
+            "properties": [
+                "powerSwitch_1",
+                "realTimeVoltage",
+                "realTimePower",
+                "electricalEnergy",
+                "protectionStatus",
+                "voltageUpperThreshold",
+                "currentUpperThreshold",
+                "scheduleNum"
+            ]
+        }
+
+        r_dict = await self.call_bypassv2_api('getProperty', data=payload_data)
 
         resp_model = process_bypassv2_result(
             self, logger, 'get_details', r_dict, ResponseBSDGO1OutletResult
