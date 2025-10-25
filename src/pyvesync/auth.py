@@ -64,8 +64,6 @@ class VeSyncAuth:
             username: VeSync account username (email)
             password: VeSync account password
             country_code: Country code in ISO 3166 Alpha-2 format
-            current_region: Current region code - determines API base URL
-            token_file_path: Path to store/load authentication token
 
         Note:
             Either username/password or token/account_id must be provided.

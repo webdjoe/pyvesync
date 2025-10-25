@@ -299,7 +299,7 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-If you want to reuse your token and account_id between runs. The `VeSync.auth` object holds the credentials and helper methods to save and load credentials.
+If you want to reuse your token and account_id between runs. The `VeSync.auth` object holds the credentials and helper methods to save and load credentials.  See the [Authentication Documentation](https://webdjoe.github.io/pyvesync/latest/authentication.md) for more details.
 
 ```python
 import asyncio

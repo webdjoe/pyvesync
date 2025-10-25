@@ -243,7 +243,7 @@ async def main():
 
 ### Authentication
 
-The `VeSync` object requires username and password to be instantiated, but once logged in the token and account_id can be stored and reused to prevent logging in every time. The `VeSync.auth` attribute holds the authentication logic and credentials. Username and password are required because the token can expire after a period of time. See the [Authentication](./development/auth_api.md) and [VeSync](./development/vesync_api.md) documentation for more details.
+The `VeSync` object requires username and password to be instantiated, but once logged in the token and account_id can be stored and reused to prevent logging in every time. The `VeSync.auth` attribute holds the authentication logic and credentials with the `pyvesync.auth.VeSyncAuth` class. Username and password are required because the token can expire after a period of time. See the [Authentication](./authentication.md) and [VeSync](./development/vesync_api.md) documentation for more details.
 
 ```python
 from pyvesync import VeSync

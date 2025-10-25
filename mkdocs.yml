@@ -26,9 +26,11 @@ nav:
 - Supported Devices: supported_devices.md
 - pyvesync V3: pyvesync3.md
 - Usage: usage.md
+- Authentication: authentication.md
 - Development:
     - development/index.md
     - VeSync API: development/vesync_api.md
+    - Authentication: development/auth_api.md
     - Data Models: development/data_models.md
     - DeviceMap: development/device_map.md
     - DeviceContainer: development/device_container.md
