@@ -64,18 +64,18 @@ class OutletState(DeviceState):
     """
 
     __slots__ = (
+        'currentUpperThreshold',
         'energy',
         'monthly_history',
         'nightlight_automode',
         'nightlight_brightness',
         'nightlight_status',
         'power',
+        'protectionStatus',
         'voltage',
+        'voltageUpperThreshold',
         'weekly_history',
         'yearly_history',
-        'voltageUpperThreshold',
-        'protectionStatus',
-        'currentUpperThreshold',
     )
 
     def __init__(
