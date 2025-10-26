@@ -205,6 +205,7 @@ class ResponseBSDGO1OutletResult(ResponseBaseModel):
     protectionStatus: str
     currentUpperThreshold: float
 
+
 @dataclass
 class Timer7AItem(ResponseBaseModel):
     """Timer item for 7A outlet."""
