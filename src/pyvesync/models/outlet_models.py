@@ -198,10 +198,12 @@ class ResponseBSDGO1OutletResult(ResponseBaseModel):
     """Response model for BSDGO1 outlet."""
 
     powerSwitch_1: int
-    active_time: int
-    connectionStatus: str
-    code: int
-
+    realTimeVoltage: float
+    realTimePower: float
+    electricalEnergy: float
+    voltageUpperThreshold: float
+    protectionStatus: str
+    currentUpperThreshold: float
 
 @dataclass
 class Timer7AItem(ResponseBaseModel):

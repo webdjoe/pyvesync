@@ -799,8 +799,13 @@ class VeSyncOutletBSDGO1(BypassV2Mixin, VeSyncOutlet):
         device_state = resp_model.powerSwitch_1
         str_status = DeviceStatus.ON if device_state == 1 else DeviceStatus.OFF
         self.state.device_status = str_status
-        self.state.connection_status = resp_model.connectionStatus
-        self.state.active_time = resp_model.active_time
+        self.state.connection_status = ConnectionStatus.ONLINE
+        self.state.voltage = resp_model.realTimeVoltage
+        self.state.power = resp_model.realTimePower
+        self.state.energy = resp_model.electricalEnergy
+        self.state.voltageUpperThreshold = resp_model.voltageUpperThreshold
+        self.state.protectionStatus = resp_model.protectionStatus
+        self.state.currentUpperThreshold = resp_model.currentUpperThreshold
 
     async def toggle_switch(self, toggle: bool | None = None) -> bool:
         if toggle is None:

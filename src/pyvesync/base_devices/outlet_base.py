@@ -100,6 +100,9 @@ class OutletState(DeviceState):
         self.weekly_history: ResponseEnergyResult | None = None
         self.monthly_history: ResponseEnergyResult | None = None
         self.yearly_history: ResponseEnergyResult | None = None
+        self.voltageUpperThreshold: float | None = None
+        self.protectionStatus: str | None = None
+        self.currentUpperThreshold: float | None = None
 
     def annual_history_to_json(self) -> None | str:
         """Dump annual history."""
