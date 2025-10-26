@@ -73,6 +73,9 @@ class OutletState(DeviceState):
         'voltage',
         'weekly_history',
         'yearly_history',
+        'voltageUpperThreshold',
+        'protectionStatus',
+        'currentUpperThreshold',
     )
 
     def __init__(
