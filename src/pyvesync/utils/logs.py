@@ -481,7 +481,7 @@ class LibraryLogger:
             # Normalize module for compactness: strip root package
             human_mod = mod_name
             if human_mod.startswith(f'{pkg_root}.'):
-                human_mod = human_mod[len(pkg_root) + 1 :]
+                human_mod = human_mod[len(pkg_root) + 1 :]  # noqa: E203, RUF100
 
             if cls_name:
                 return f'{cls_name}.{func_name} [{human_mod}]'
@@ -496,7 +496,7 @@ class LibraryLogger:
         logger: logging.Logger,
         response: ClientResponse,
         response_body: bytes | None = None,
-        endpoint: str | None = None,
+        request_headers: dict | None = None,
         request_body: str | dict | None = None,
     ) -> None:
         """Log API calls in debug mode.
@@ -508,7 +508,7 @@ class LibraryLogger:
             logger (logging.Logger): The logger instance to use.
             response (aiohttp.ClientResponse): Requests response object from the API call.
             response_body (bytes, optional): The response body to log.
-            endpoint (str, optional): The API endpoint called.
+            request_headers (dict, optional): The request headers to log.
             request_body (dict | str, optional): The request body to log.
 
         Notes:
@@ -529,19 +529,21 @@ class LibraryLogger:
         except Exception:  # noqa: BLE001,S110
             pass
 
-        parts.append(f'API CALL to endpoint: {endpoint}')
-        if response.request_info and response.request_info.url:
-            parts.append(f'Full URL: {response.request_info.url}')
+        parts.append(f'API CALL to endpoint: {response.url.path}')
+        parts.append(f'Host: {response.url.host}')
+        parts.append(f'Full URL: {response.url}')
         parts.append(f'Response Status: {response.status}')
         parts.append(f'Method: {response.method}')
         parts.append('---------------Request-----------------')
 
-        request_headers = cls.api_printer(response.request_info.headers)
         if request_headers:
-            parts.append(f'Request Headers: {os.linesep} {request_headers}')
+            parts.append(
+                f'Request Headers: {os.linesep} {cls.api_printer(request_headers)}'
+            )
         if request_body is not None:
             request_body = cls.api_printer(request_body)
             parts.append(f'Request Body: {os.linesep} {request_body}')
+
         parts.append('---------------Response-----------------')
         response_headers = cls.api_printer(response.headers)
         if response_headers:

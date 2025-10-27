@@ -470,7 +470,6 @@ class VeSync:  # pylint: disable=function-redefined
         if self.session is None:
             self.session = ClientSession()
             self._close_session = True
-        self._api_attempts += 1
         response = None
         status_code = None
         if isinstance(json_object, DataClassORJSONMixin):
@@ -489,7 +488,9 @@ class VeSync:  # pylint: disable=function-redefined
             ) as response:
                 resp_bytes = await response.read()
 
-                LibraryLogger.log_api_call(logger, response, resp_bytes, api, req_dict)
+                LibraryLogger.log_api_call(
+                    logger, response, resp_bytes, headers, req_dict
+                )
                 resp_dict, status_code = await self._api_response_wrapper(
                     response, api, req_dict, device=device
                 )
