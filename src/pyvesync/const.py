@@ -26,11 +26,12 @@ Attributes:
 
 from __future__ import annotations
 
+import platform
 import string
+import uuid
 from enum import Enum, IntEnum, StrEnum
 from random import choices, randint
 from types import MappingProxyType
-from uuid import uuid4
 
 from pyvesync.utils.enum_utils import IntEnumMixin
 
@@ -60,7 +61,10 @@ MOBILE_ID = str(randint(1000000000000000, 9999999999999999))  # noqa: S311
 USER_TYPE = '1'
 BYPASS_APP_V = f'VeSync {APP_VERSION}'
 BYPASS_HEADER_UA = 'okhttp/3.12.1'
-TERMINAL_ID = '2' + str(uuid4()).replace('-', '')
+TERMINAL_ID = '2' + (
+    uuid.uuid5(uuid.NAMESPACE_DNS, f'{uuid.getnode():x}-{platform.node() or ""}').hex
+)
+
 CLIENT_TYPE = 'vesyncApp'
 
 STATUS_OK = 200
@@ -828,3 +832,33 @@ CUSTOM_RECIPE_ID = 1
 CUSTOM_RECIPE_TYPE = 3
 CUSTOM_RECIPE_NAME = 'Manual Cook'
 CUSTOM_COOK_MODE = 'custom'
+
+
+# ------------------- OUTLET CONST ------------------ #
+
+
+class EnergyIntervals(StrEnum):
+    """Energy history periods for VeSync outlets.
+
+    Attributes:
+        DAILY: Daily energy history.
+        WEEKLY: Weekly energy history.
+        MONTHLY: Monthly energy history.
+        YEARLY: Yearly energy history.
+    """
+
+    WEEK = 'week'
+    MONTH = 'month'
+    YEAR = 'year'
+
+
+ENERGY_HISTORY_MAP = {
+    EnergyIntervals.WEEK: 'getLastWeekEnergy',
+    EnergyIntervals.MONTH: 'getLastMonthEnergy',
+    EnergyIntervals.YEAR: 'getLastYearEnergy',
+}
+
+ENERGY_HISTORY_OFFSET_WHOGPLUG = {
+    EnergyIntervals.WEEK: 500000,
+    EnergyIntervals.MONTH: 2500000,
+}

@@ -73,7 +73,6 @@ class TestApiFunc:
         self.loop = asyncio.new_event_loop()
         self.mock = MagicMock()
         self.manager = VeSync('EMAIL', 'PASSWORD')
-        self.manager.verbose = True
         self.manager.enabled = True
         self.manager.auth._token = TestDefaults.token
         self.manager.auth._account_id = TestDefaults.account_id

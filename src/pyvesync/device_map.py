@@ -67,6 +67,7 @@ from typing import Union
 from pyvesync.const import (
     BulbFeatures,
     ColorMode,
+    EnergyIntervals,
     FanFeatures,
     FanModes,
     FanSleepPreference,
@@ -161,6 +162,11 @@ class OutletMap(DeviceMapTemplate):
     product_line: str = ProductLines.WIFI_LIGHT
     product_type: str = ProductTypes.OUTLET
     module: ModuleType = vesyncoutlet
+    energy_intervals: tuple[str, ...] = (
+        EnergyIntervals.YEAR,
+        EnergyIntervals.MONTH,
+        EnergyIntervals.WEEK,
+    )
     nightlight_modes: list[NightlightModes] = field(default_factory=list)
 
 
@@ -416,20 +422,20 @@ outlet_modules = [
         setup_entry='wifi-switch-1.3',
     ),
     OutletMap(  # TODO: Add energy
-        dev_types=['ESW10-USA'],
+        dev_types=['ESW10-USA', 'ESW10-EU'],
         class_name='VeSyncESW10USA',
         features=[],
         model_name='10A WiFi Outlet USA',
         model_display='ESW10-USA Series',
-        setup_entry='ESW03-USA',
+        setup_entry='ESW10-USA',
     ),
     OutletMap(
-        dev_types=['ESW01-EU'],
+        dev_types=['ESW01-EU', 'ESW01-USA', 'ESW03-USA', 'ESW03-EU'],
         class_name='VeSyncOutlet10A',
         features=[OutletFeatures.ENERGY_MONITOR],
-        model_name='10A WiFi Outlet Europe',
-        model_display='ESW01-EU',
-        setup_entry='ESW01-EU',
+        model_name='ESW03 10A WiFi Outlet',
+        model_display='ESW01/03 USA/EU',
+        setup_entry='ESW03',
     ),
     OutletMap(
         dev_types=['ESW15-USA'],
@@ -450,23 +456,33 @@ outlet_modules = [
     ),
     OutletMap(
         dev_types=[
-            'BSDOG01',
-            'WYSMTOD16A',
             'WHOGPLUG',
+        ],
+        class_name='VeSyncOutletWHOGPlug',
+        features=[OutletFeatures.ONOFF, OutletFeatures.ENERGY_MONITOR],
+        model_name='Smart Plug',
+        model_display='Smart Plug Series',
+        setup_entry='WHOGPLUG',
+        device_alias='Greensun Smart Plug',
+    ),
+    OutletMap(
+        dev_types=[
+            'BSDOG01',
+            'BSDOG02',
+            'WYSMTOD16A',
             'WM-PLUG',
             'JXUK13APLUG',
             'WYZYOGMINIPLUG',
-            'BSDOG02',
             'HWPLUG16A',
             'FY-PLUG',
             'HWPLUG16',
         ],
-        class_name='VeSyncOutletBSDGO1',
-        features=[OutletFeatures.ONOFF],
+        class_name='VeSyncBSDOGPlug',
+        features=[OutletFeatures.ONOFF, OutletFeatures.ENERGY_MONITOR],
         model_name='Smart Plug',
         model_display='Smart Plug Series',
         setup_entry='BSDOG01',
-        device_alias='Greensun Smart Plug',
+        device_alias='Smart Plug Series',
     ),
 ]
 """List of ['OutletMap'][pyvesync.device_map.OutletMap] configuration
@@ -692,7 +708,25 @@ humidifier_modules = [
         device_alias='Oasismist 1000S',
         model_display='Oasismist Series',
         model_name='Oasismist 1000S',
-        setup_entry='LUH-M101S',
+        setup_entry='LUH-M101S-WUS',
+    ),
+    HumidifierMap(
+        class_name='VeSyncHumid1000S',
+        dev_types=['LUH-M101S-WEUR'],
+        features=[
+            HumidifierFeatures.NIGHTLIGHT,
+            HumidifierFeatures.NIGHTLIGHT_BRIGHTNESS,
+        ],
+        mist_modes={
+            HumidifierModes.AUTO: 'auto',
+            HumidifierModes.SLEEP: 'sleep',
+            HumidifierModes.MANUAL: 'manual',
+        },
+        mist_levels=list(range(1, 10)),
+        device_alias='Oasismist 1000S EU',
+        model_display='Oasismist Series EU',
+        model_name='Oasismist 1000S EU',
+        setup_entry='LUH-M101S-WEUR',
     ),
     HumidifierMap(
         class_name='VeSyncSuperior6000S',
@@ -703,7 +737,6 @@ humidifier_modules = [
             HumidifierModes.SLEEP: 'sleep',
             HumidifierModes.HUMIDITY: 'humidity',
             HumidifierModes.MANUAL: 'manual',
-            HumidifierModes.AUTOPRO: 'autoPro',
         },
         mist_levels=list(range(1, 10)),
         device_alias='Superior 6000S',

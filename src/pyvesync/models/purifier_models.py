@@ -240,7 +240,6 @@ class Purifier131Result(BypassV1Result):
     """Purifier 131 Details Response Dict."""
 
     screenStatus: str
-    filterLife: Purifier131Filter
     activeTime: int
     levelNew: int
     level: int | None
@@ -250,6 +249,7 @@ class Purifier131Result(BypassV1Result):
     childLock: str
     deviceStatus: str
     connectionStatus: str
+    filterLife: Purifier131Filter | None = None
 
 
 @dataclass

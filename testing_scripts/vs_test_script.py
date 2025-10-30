@@ -69,6 +69,8 @@ stream_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
 logger.propagate = False
 
+vs_logger = logging.getLogger('pyvesync')
+vs_logger.setLevel(logging.DEBUG)
 
 _SEP = '-' * 18
 # Logging messages
@@ -113,50 +115,48 @@ async def vesync_test(  # noqa: PLR0913
     logger.addHandler(file_handler)
 
     # Instantiate VeSync object
-    vs = await VeSync(username, password, country_code or 'US').__aenter__()
-    vs.debug = True  # Enable debug mode
-    vs.verbose = True  # Enable verbose mode
-    vs.redact = True  # Redact sensitive information in logs
-    vs.log_to_file(str(output_path), std_out=False)  # Log to specified file
-    logger.info('VeSync instance created, logging to %s', output_path)
-    # Login to VeSync account and check for success
-    logger.info('Logging in to VeSync account...')
-    await vs.login()
-    logger.info('Login successful, pulling device list...')
-    await _random_await()
+    async with VeSync(username, password, country_code or 'US') as vs:
+        vs.redact = True  # Redact sensitive information in logs
+        vs.log_to_file(str(output_path), stdout=False)  # Log to specified file
+        logger.info('VeSync instance created, logging to %s', output_path)
+        # Login to VeSync account and check for success
+        logger.info('Logging in to VeSync account...')
+        await vs.login()
+        logger.info('Login successful, pulling device list...')
+        await _random_await()
 
-    # Pull device list and update all devices
-    await vs.update()
-    await _random_await()
-    logger.info('Device list pulled successfully.')
+        # Pull device list and update all devices
+        await vs.update()
+        await _random_await()
+        logger.info('Device list pulled successfully.')
 
-    # Run tests for outlets
-    if vs.devices.outlets and (test_devices is True or test_dev_type == 'outlets'):
-        await outlets(vs, update=False)
+        # Run tests for outlets
+        if vs.devices.outlets and (test_devices is True or test_dev_type == 'outlets'):
+            await outlets(vs, update=False)
 
-    # Run tests for air purifiers
-    if vs.devices.air_purifiers and (
-        test_devices is True or test_dev_type == 'air_purifiers'
-    ):
-        await air_purifiers(vs, update=False)
+        # Run tests for air purifiers
+        if vs.devices.air_purifiers and (
+            test_devices is True or test_dev_type == 'air_purifiers'
+        ):
+            await air_purifiers(vs, update=False)
 
-    # Run tests for humidifiers
-    if vs.devices.humidifiers and (
-        test_devices is True or test_dev_type == 'humidifiers'
-    ):
-        await humidifiers(vs, update=False)
+        # Run tests for humidifiers
+        if vs.devices.humidifiers and (
+            test_devices is True or test_dev_type == 'humidifiers'
+        ):
+            await humidifiers(vs, update=False)
 
-    # Run tests for bulbs
-    if vs.devices.bulbs and (test_devices is True or test_dev_type == 'bulbs'):
-        await bulbs(vs, update=False)
+        # Run tests for bulbs
+        if vs.devices.bulbs and (test_devices is True or test_dev_type == 'bulbs'):
+            await bulbs(vs, update=False)
 
-    # Run tests for switches
-    if vs.devices.switches and (test_devices is True or test_dev_type == 'switches'):
-        await switches(vs, update=False)
+        # Run tests for switches
+        if vs.devices.switches and (test_devices is True or test_dev_type == 'switches'):
+            await switches(vs, update=False)
 
-    # Test timers if requested
-    if test_timers is True:
-        await device_timers(vs.devices, update=False)
+        # Test timers if requested
+        if test_timers is True:
+            await device_timers(vs.devices, update=False)
 
     await vs.__aexit__(None, None, None)  # Clean up VeSync instance
     logger.info('Finished testing VeSync devices, results logged to %s', output_path)

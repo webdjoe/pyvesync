@@ -64,8 +64,6 @@ class VeSyncAuth:
             username: VeSync account username (email)
             password: VeSync account password
             country_code: Country code in ISO 3166 Alpha-2 format
-            current_region: Current region code - determines API base URL
-            token_file_path: Path to store/load authentication token
 
         Note:
             Either username/password or token/account_id must be provided.
@@ -174,7 +172,7 @@ class VeSyncAuth:
         else:
             file_path_object = Path(file_path)
         if not file_path_object or not file_path_object.exists():
-            logger.debug('No token file found to load credentials')
+            logger.debug('Credentials file not found: %s', file_path_object)
             return False
         try:
             data = await asyncio.to_thread(
@@ -184,7 +182,7 @@ class VeSyncAuth:
             self._token = data['token']
             self._account_id = data['account_id']
             self._country_code = data['country_code'].upper()
-            self._current_region = data['current_region']
+            self._current_region = data['current_region'].upper()
             logger.debug('Credentials loaded from file: %s', file_path)
         except orjson.JSONDecodeError as exc:
             logger.warning('Failed to load credentials from file: %s', exc)
@@ -196,17 +194,26 @@ class VeSyncAuth:
         self.manager.enabled = True
         return True
 
-    def output_credentials(self) -> str | None:
-        """Output current credentials as JSON string."""
+    def output_credentials_dict(self) -> dict[str, str] | None:
+        """Output current credentials as a dictionary."""
         if not self.is_authenticated:
             logger.debug('No credentials to output, not authenticated')
             return None
-        credentials = {
-            'token': self._token,
-            'account_id': self._account_id,
+        return {
+            'token': self._token or '',
+            'account_id': self._account_id or '',
             'country_code': self._country_code,
             'current_region': self._current_region,
         }
+
+    def output_credentials_json(self) -> str | None:
+        """Output current authentication credentials as a JSON string."""
+        if not self.is_authenticated:
+            logger.debug('No credentials to output, not authenticated')
+            return None
+        credentials = self.output_credentials_dict()
+        if credentials is None:
+            return None
         try:
             return orjson.dumps(credentials).decode('utf-8')
         except orjson.JSONEncodeError as exc:

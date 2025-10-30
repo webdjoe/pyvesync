@@ -56,4 +56,4 @@ Specific test environments:
 
 ## Requests to Add Devices
 
-Please see [CAPTURING.md](CAPTURING.md) for instructions on how to capture the necessary information to add a new device.
+Please see [CAPTURING.md](./capturing.md) for instructions on how to capture the necessary information to add a new device.

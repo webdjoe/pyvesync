@@ -6,8 +6,6 @@ import logging
 from abc import abstractmethod
 from typing import TYPE_CHECKING
 
-from typing_extensions import deprecated
-
 from pyvesync.base_devices.vesyncbasedevice import DeviceState, VeSyncBaseToggleDevice
 from pyvesync.const import DeviceStatus, HumidifierFeatures, HumidifierModes
 
@@ -129,16 +127,6 @@ class HumidifierState(DeviceState):
         return self.automatic_stop_config
 
     @property
-    @deprecated('Use auto_stop_target_reached instead.')
-    def automatic_stop_target_reached(self) -> bool:
-        """Deprecated function.
-
-        Returns:
-            bool: True if automatic stop target is reached, False otherwise.
-        """
-        return self.auto_stop_target_reached
-
-    @property
     def target_humidity(self) -> int | None:
         """Return the target humidity level.
 
@@ -160,16 +148,6 @@ class HumidifierState(DeviceState):
     def auto_enabled(self) -> bool:
         """Return True if auto mode is enabled."""
         return self.mode in [HumidifierModes.AUTO, self.mode, HumidifierModes.HUMIDITY]
-
-    @property
-    @deprecated('Use humidity property instead.')
-    def humidity_level(self) -> int | None:
-        """Deprecated function.
-
-        Returns:
-            int | None: Humidity level.
-        """
-        return self.humidity
 
     @property
     def drying_mode_state(self) -> str | None:

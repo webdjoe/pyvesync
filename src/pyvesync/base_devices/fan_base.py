@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 class FanState(DeviceState):
-    """Base state class for Purifiers.
+    """Base state class for Fans.
 
     Not all attributes are supported by all devices.
 
@@ -73,7 +73,7 @@ class FanState(DeviceState):
         details: ResponseDeviceDetailsModel,
         feature_map: FanMap,
     ) -> None:
-        """Initialize Purifier State.
+        """Initialize Fan State.
 
         Args:
             device (VeSyncFanBase): Device object.
@@ -187,7 +187,7 @@ class VeSyncFanBase(VeSyncBaseToggleDevice):
 
     @abstractmethod
     async def set_mode(self, mode: str) -> bool:
-        """Set Purifier Mode.
+        """Set Fan Mode.
 
         Args:
             mode (str): Mode to set, varies by device type.
@@ -198,7 +198,7 @@ class VeSyncFanBase(VeSyncBaseToggleDevice):
 
     @abstractmethod
     async def set_fan_speed(self, speed: int | None = None) -> bool:
-        """Set Purifier Fan Speed.
+        """Set Fan Fan Speed.
 
         Args:
             speed (int, optional): Fan speed level according to device specs.
@@ -208,7 +208,7 @@ class VeSyncFanBase(VeSyncBaseToggleDevice):
         """
 
     async def set_auto_mode(self) -> bool:
-        """Set Purifier to Auto Mode.
+        """Set Fan to Auto Mode.
 
         Returns:
             bool: Success of request.
@@ -223,7 +223,7 @@ class VeSyncFanBase(VeSyncBaseToggleDevice):
         return False
 
     async def set_advanced_sleep_mode(self) -> bool:
-        """Set Purifier to Advanced Sleep Mode.
+        """Set Fan to Advanced Sleep Mode.
 
         Returns:
             bool: Success of request.
@@ -238,7 +238,7 @@ class VeSyncFanBase(VeSyncBaseToggleDevice):
         return False
 
     async def set_sleep_mode(self) -> bool:
-        """Set Purifier to Sleep Mode.
+        """Set Fan to Sleep Mode.
 
         This is also referred to as Advanced Sleep Mode on some devices.
 
@@ -255,7 +255,7 @@ class VeSyncFanBase(VeSyncBaseToggleDevice):
         return False
 
     async def set_manual_mode(self) -> bool:
-        """Set Purifier to Manual Mode - Normal Mode.
+        """Set Fan to Manual Mode - Normal Mode.
 
         Returns:
             bool: Success of request.
@@ -270,7 +270,7 @@ class VeSyncFanBase(VeSyncBaseToggleDevice):
         return False
 
     async def set_normal_mode(self) -> bool:
-        """Set Purifier to Normal Mode.
+        """Set Fan to Normal Mode.
 
         Returns:
             bool: Success of request.
@@ -285,7 +285,7 @@ class VeSyncFanBase(VeSyncBaseToggleDevice):
         return False
 
     async def set_turbo_mode(self) -> bool:
-        """Set Purifier to Turbo Mode.
+        """Set Fan to Turbo Mode.
 
         Returns:
             bool: Success of request.

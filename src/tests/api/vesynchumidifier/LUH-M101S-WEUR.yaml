@@ -6,11 +6,11 @@ set_auto_mode:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    cid: LUH-M101S-CID
+    cid: LUH-M101S-WEUR-CID
     configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceId: LUH-M101S-CID
+    deviceId: LUH-M101S-WEUR-CID
     method: bypassV2
     payload:
       data:
@@ -33,11 +33,11 @@ set_humidity:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    cid: LUH-M101S-CID
+    cid: LUH-M101S-WEUR-CID
     configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceId: LUH-M101S-CID
+    deviceId: LUH-M101S-WEUR-CID
     method: bypassV2
     payload:
       data:
@@ -60,11 +60,11 @@ set_manual_mode:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    cid: LUH-M101S-CID
+    cid: LUH-M101S-WEUR-CID
     configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceId: LUH-M101S-CID
+    deviceId: LUH-M101S-WEUR-CID
     method: bypassV2
     payload:
       data:
@@ -87,11 +87,11 @@ set_mist_level:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    cid: LUH-M101S-CID
+    cid: LUH-M101S-WEUR-CID
     configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceId: LUH-M101S-CID
+    deviceId: LUH-M101S-WEUR-CID
     method: bypassV2
     payload:
       data:
@@ -116,11 +116,11 @@ turn_off:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    cid: LUH-M101S-CID
+    cid: LUH-M101S-WEUR-CID
     configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceId: LUH-M101S-CID
+    deviceId: LUH-M101S-WEUR-CID
     method: bypassV2
     payload:
       data:
@@ -144,11 +144,11 @@ turn_off_automatic_stop:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    cid: LUH-M101S-CID
+    cid: LUH-M101S-WEUR-CID
     configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceId: LUH-M101S-CID
+    deviceId: LUH-M101S-WEUR-CID
     method: bypassV2
     payload:
       data:
@@ -171,11 +171,11 @@ turn_off_display:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    cid: LUH-M101S-CID
+    cid: LUH-M101S-WEUR-CID
     configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceId: LUH-M101S-CID
+    deviceId: LUH-M101S-WEUR-CID
     method: bypassV2
     payload:
       data:
@@ -198,11 +198,11 @@ turn_on:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    cid: LUH-M101S-CID
+    cid: LUH-M101S-WEUR-CID
     configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceId: LUH-M101S-CID
+    deviceId: LUH-M101S-WEUR-CID
     method: bypassV2
     payload:
       data:
@@ -226,11 +226,11 @@ turn_on_automatic_stop:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    cid: LUH-M101S-CID
+    cid: LUH-M101S-WEUR-CID
     configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceId: LUH-M101S-CID
+    deviceId: LUH-M101S-WEUR-CID
     method: bypassV2
     payload:
       data:
@@ -253,11 +253,11 @@ turn_on_display:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    cid: LUH-M101S-CID
+    cid: LUH-M101S-WEUR-CID
     configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceId: LUH-M101S-CID
+    deviceId: LUH-M101S-WEUR-CID
     method: bypassV2
     payload:
       data:
@@ -280,11 +280,11 @@ update:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    cid: LUH-M101S-CID
+    cid: LUH-M101S-WEUR-CID
     configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceId: LUH-M101S-CID
+    deviceId: LUH-M101S-WEUR-CID
     method: bypassV2
     payload:
       data: {}

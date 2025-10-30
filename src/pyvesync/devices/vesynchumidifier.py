@@ -229,7 +229,7 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
 
     async def set_humidity(self, humidity: int) -> bool:
         if not Validators.validate_range(humidity, *self.target_minmax):
-            logger.debug(
+            logger.warning(
                 'Invalid humidity, must be between %s and %s', *self.target_minmax
             )
             return False
@@ -245,15 +245,15 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
 
     async def set_nightlight_brightness(self, brightness: int) -> bool:
         if not self.supports_nightlight:
-            logger.debug(
-                '%s is a %s does not have a nightlight',
+            logger.warning(
+                '%s is a %s does not have a nightlight or it is not supported.',
                 self.device_name,
                 self.device_type,
             )
             return False
 
         if not Validators.validate_zero_to_hundred(brightness):
-            logger.debug('Brightness value must be set between 0 and 100')
+            logger.warning('Brightness value must be set between 0 and 100')
             return False
 
         payload_data = {'night_light_brightness': brightness}
@@ -279,8 +279,8 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
 
     async def set_mode(self, mode: str) -> bool:
         if mode.lower() not in self.mist_modes:
-            logger.debug('Invalid humidity mode used - %s', mode)
-            logger.debug(
+            logger.warning('Invalid humidity mode used - %s', mode)
+            logger.info(
                 'Proper modes for this device are - %s',
                 orjson.dumps(
                     self.mist_modes, option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS
@@ -308,7 +308,7 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
             return False
 
         if warm_level not in self.warm_mist_levels:
-            logger.debug('warm_level value must be - %s', str(self.warm_mist_levels))
+            logger.warning('warm_level value must be - %s', str(self.warm_mist_levels))
             return False
 
         payload_data = {'type': 'warm', 'level': warm_level, 'id': 0}
@@ -324,7 +324,7 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
 
     async def set_mist_level(self, level: int) -> bool:
         if level not in self.mist_levels:
-            logger.debug(
+            logger.warning(
                 'Humidifier mist level must be between %s and %s',
                 self.mist_levels[0],
                 self.mist_levels[-1],
@@ -453,6 +453,7 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
         self.state.connection_status = ConnectionStatus.ONLINE
         self.state.mode = resp_model.workMode
         self.state.auto_target_humidity = resp_model.targetHumidity
+        self.state.humidity = resp_model.humidity
         self.state.mist_level = resp_model.mistLevel
         self.state.mist_virtual_level = resp_model.virtualLevel
         self.state.water_lacks = bool(resp_model.waterLacksState)
@@ -560,7 +561,7 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
 
     async def set_humidity(self, humidity: int) -> bool:
         if not Validators.validate_range(humidity, *self.target_minmax):
-            logger.debug('Humidity value must be set between 30 and 80')
+            logger.warning('Humidity value must be set between 30 and 80')
             return False
 
         payload_data = {'targetHumidity': humidity}
@@ -580,8 +581,8 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
 
     async def set_mode(self, mode: str) -> bool:
         if mode.lower() not in self.mist_modes:
-            logger.debug('Invalid humidity mode used - %s', mode)
-            logger.debug(
+            logger.warning('Invalid humidity mode used - %s', mode)
+            logger.info(
                 'Proper modes for this device are - %s',
                 orjson.dumps(
                     self.mist_modes, option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS
@@ -601,7 +602,7 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
 
     async def set_mist_level(self, level: int) -> bool:
         if level not in self.mist_levels:
-            logger.debug('Humidifier mist level must be between 0 and 9')
+            logger.warning('Humidifier mist level must be between 0 and 9')
             return False
 
         payload_data = {'levelIdx': 0, 'virtualLevel': level, 'levelType': 'mist'}
@@ -675,6 +676,11 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
         self.state.auto_stop_target_reached = bool(resp_model.autoStopState)
         self.state.display_set_status = DeviceStatus.from_int(resp_model.screenSwitch)
         self.state.display_status = DeviceStatus.from_int(resp_model.screenState)
+        if resp_model.nightLight is not None:
+            self.state.nightlight_brightness = resp_model.nightLight.brightness
+            self.state.nightlight_status = DeviceStatus.from_int(
+                resp_model.nightLight.nightLightSwitch
+            )
 
     async def get_details(self) -> None:
         r_dict = await self.call_bypassv2_api('getHumidifierStatus')
@@ -722,8 +728,8 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
 
     async def set_mode(self, mode: str) -> bool:
         if mode.lower() not in self.mist_modes:
-            logger.debug('Invalid humidity mode used - %s', mode)
-            logger.debug(
+            logger.warning('Invalid humidity mode used - %s', mode)
+            logger.info(
                 'Proper modes for this device are - %s',
                 orjson.dumps(
                     self.mist_modes, option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS
@@ -743,7 +749,7 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
 
     async def set_mist_level(self, level: int) -> bool:
         if level not in self.mist_levels:
-            logger.debug('Humidifier mist level out of range')
+            logger.warning('Humidifier mist level out of range')
             return False
 
         payload_data = {'levelIdx': 0, 'virtualLevel': level, 'levelType': 'mist'}
@@ -773,7 +779,7 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
 
     async def set_humidity(self, humidity: int) -> bool:
         if not Validators.validate_range(humidity, *self.target_minmax):
-            logger.debug(
+            logger.warning(
                 'Humidity value must be set between %s and %s',
                 self.target_minmax[0],
                 self.target_minmax[1],

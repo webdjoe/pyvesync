@@ -1,0 +1,11 @@
+version: 2
+updates:
+  # Enable version updates for Python
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
