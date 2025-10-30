@@ -746,14 +746,11 @@ class VeSyncOutletWHOGPlug(BypassV2Mixin, VeSyncOutlet):
         """Send ByPass V1 API request.
 
         This uses the `_build_request` method to send API requests to the Bypass V1 API.
-        The endpoint can be overridden with the `endpoint` argument.
 
         Args:
             request_model (type[RequestBypassV1]): The request model to use.
             update_dict (dict): Additional keys to add on.
             method (str): The method to use in the outer body.
-            endpoint (str | None): The last part of the url path, defaults to
-                `bypass`, e.g. `/cloud/v1/deviceManaged/bypass`.
 
         Returns:
             bytes: The response from the API request.
