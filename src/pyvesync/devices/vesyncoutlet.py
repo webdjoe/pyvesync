@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import calendar
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from typing_extensions import deprecated
@@ -921,7 +921,7 @@ class VeSyncOutletWHOGPlug(BypassV2Mixin, VeSyncOutlet):
             # Last day number in the month
             last_day = calendar.monthrange(year, month)[1]
             # 23:59:59 on the last day, in UTC
-            dt = datetime(year, month, last_day, 23, 59, 59, tzinfo=timezone.utc)
+            dt = datetime(year, month, last_day, 23, 59, 59, tzinfo=UTC)
             return int(dt.timestamp())
 
         out: dict[str, list[dict]] = {'energyInfos': []}
