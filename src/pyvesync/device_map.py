@@ -737,7 +737,6 @@ humidifier_modules = [
             HumidifierModes.SLEEP: 'sleep',
             HumidifierModes.HUMIDITY: 'humidity',
             HumidifierModes.MANUAL: 'manual',
-            HumidifierModes.AUTOPRO: 'autoPro',
         },
         mist_levels=list(range(1, 10)),
         device_alias='Superior 6000S',
