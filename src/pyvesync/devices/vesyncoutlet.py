@@ -115,10 +115,9 @@ class VeSyncOutlet7A(VeSyncOutlet):
         )
 
         if not isinstance(r_dict, dict):
-            LibraryLogger.log_device_api_response_error(
+            LibraryLogger.error_device_response_content(
                 logger,
-                self.device_name,
-                self.device_type,
+                self,
                 'get_details',
                 'Response is not valid JSON',
             )
@@ -145,7 +144,7 @@ class VeSyncOutlet7A(VeSyncOutlet):
             else:
                 power = float(energy)
         except ValueError:
-            logger.debug('Error parsing power response - %s', energy)
+            logger.warning('Error parsing power response - %s', energy)
             power = 0
         return power
 
@@ -160,10 +159,9 @@ class VeSyncOutlet7A(VeSyncOutlet):
         )
 
         if status_code != STATUS_OK:
-            LibraryLogger.log_device_api_response_error(
+            LibraryLogger.error_device_response_content(
                 logger,
-                self.device_name,
-                self.device_type,
+                self,
                 'toggle_switch',
                 'Response code is not 200',
             )
@@ -231,23 +229,25 @@ class VeSyncOutlet7A(VeSyncOutlet):
             json_object=update_dict,
         )
         if status_code != STATUS_OK or not isinstance(r_dict, dict):
-            logger.debug('Failed to set timer.')
+            logger.warning('Failed to set timer for %s.', self.device_name)
             return False
 
         if 'error' in r_dict:
-            logger.debug('Error in response: %s', r_dict['error'])
+            logger.warning('Error in response: %s', r_dict['error'])
             return False
 
         result_model = Helpers.model_maker(
             logger, TimerModels.ResultV1SetTimer, 'set_timer', r_dict, self
         )
         if result_model is None:
-            logger.debug('Failed to set timer.')
+            logger.warning('Failed to set timer.')
             return False
         if result_model.timerID == '':
-            logger.debug('Unable to set timer.')
+            logger.warning('Unable to set timer.')
             if result_model.conflictTimerIds:
-                logger.debug('Conflicting timer IDs - %s', result_model.conflictTimerIds)
+                logger.warning(
+                    'Conflicting timer IDs - %s', result_model.conflictTimerIds
+                )
             return False
         self.state.timer = Timer(duration, action, int(result_model.timerID))
         return True
@@ -507,7 +507,7 @@ class VeSyncOutlet15A(BypassV1Mixin, VeSyncOutlet):
             return
         timer = timers[0]
         if not isinstance(timer, TimerModels.TimerItemV1):
-            logger.debug('Invalid timer model - %s', timer)
+            logger.warning('Invalid timer model - %s', timer)
             return
         self.state.timer = Timer(
             timer_duration=int(timer.counterTimer),
@@ -687,7 +687,7 @@ class VeSyncOutdoorPlug(BypassV1Mixin, VeSyncOutlet):
             )
         timer = timers[0]
         if not isinstance(timer, TimerModels.TimerItemV1):
-            logger.debug('Invalid timer model - %s', timer)
+            logger.warning('Invalid timer model - %s', timer)
             return
         self.state.timer = Timer(
             timer_duration=int(timer.counterTimer),
@@ -1073,7 +1073,7 @@ class VeSyncESW10USA(BypassV2Mixin, VeSyncOutlet):
             self, logger, 'get_details', r_dict, ResultESW10Details
         )
         if not isinstance(result, dict) or not isinstance(result.get('enabled'), bool):
-            logger.debug('Error getting %s details', self.device_name)
+            logger.warning('Error getting %s details', self.device_name)
             self.state.connection_status = ConnectionStatus.OFFLINE
             return
         self.state.device_status = DeviceStatus.from_bool(result.enabled)
@@ -1090,7 +1090,7 @@ class VeSyncESW10USA(BypassV2Mixin, VeSyncOutlet):
         r_dict = await self.call_bypassv2_api(payload_method, payload_data)
         result = Helpers.process_dev_response(logger, 'toggle_switch', self, r_dict)
         if not isinstance(result, dict):
-            logger.debug('Error toggling %s switch', self.device_name)
+            logger.warning('Error toggling %s switch', self.device_name)
             return False
         self.state.device_status = DeviceStatus.from_bool(toggle)
         self.state.connection_status = ConnectionStatus.ONLINE
@@ -1144,7 +1144,7 @@ class VeSyncESW10USA(BypassV2Mixin, VeSyncOutlet):
         if result_model is None:
             return False
         if result_model.id is None:
-            logger.debug('Unable to set timer.')
+            logger.warning('Unable to set timer.')
             return False
         self.state.timer = Timer(duration, action, int(result_model.id))
         return True

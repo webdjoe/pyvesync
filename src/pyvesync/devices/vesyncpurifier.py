@@ -233,7 +233,7 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
 
         if speed is not None:
             if speed not in speeds:
-                _LOGGER.debug(
+                _LOGGER.warning(
                     '%s is invalid speed - valid speeds are %s', speed, str(speeds)
                 )
                 return False
@@ -300,7 +300,7 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
 
     async def set_mode(self, mode: str) -> bool:
         if mode.lower() not in self.modes:
-            _LOGGER.debug('Invalid purifier mode used - %s', mode)
+            _LOGGER.warning('Invalid purifier mode used - %s', mode)
             return False
 
         if mode.lower() == PurifierModes.MANUAL:
@@ -323,9 +323,6 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
     async def toggle_switch(self, toggle: bool | None = None) -> bool:
         if toggle is None:
             toggle = self.state.device_status != DeviceStatus.ON
-        if not isinstance(toggle, bool):
-            _LOGGER.debug('Invalid toggle value for purifier switch')
-            return False
 
         data = {'enabled': toggle, 'id': 0}
         r_dict = await self.call_bypassv2_api('setSwitch', data)
@@ -338,10 +335,6 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
         return True
 
     async def toggle_display(self, mode: bool) -> bool:
-        if not isinstance(mode, bool):
-            _LOGGER.debug('Mode must be True or False')
-            return False
-
         data = {'state': mode}
         r_dict = await self.call_bypassv2_api('setDisplay', data)
         r = Helpers.process_dev_response(_LOGGER, 'set_display', self, r_dict)
@@ -460,7 +453,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
     def _set_state(self, details: InnerPurifierBaseResult) -> None:
         """Set Purifier state from details response."""
         if not isinstance(details, PurifierVitalDetailsResult):
-            _LOGGER.debug('Invalid details model passed to _set_state')
+            _LOGGER.warning('Invalid details model passed to _set_state')
             return
         self.state.connection_status = ConnectionStatus.ONLINE
         self.state.device_status = DeviceStatus.from_int(details.powerSwitch)
@@ -553,9 +546,6 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
     async def toggle_switch(self, toggle: bool | None = None) -> bool:
         if toggle is None:
             toggle = not bool(self.state.device_status)
-        if not isinstance(toggle, bool):
-            _LOGGER.debug('Invalid toggle value for purifier switch')
-            return False
         if toggle == bool(self.state.device_status):
             _LOGGER.debug('Purifier is already %s', self.state.device_status)
             return True
@@ -615,7 +605,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
     async def set_timer(self, duration: int, action: str | None = None) -> bool:
         action = DeviceStatus.OFF  # No other actions available for this device
         if action not in [DeviceStatus.ON, DeviceStatus.OFF]:
-            _LOGGER.debug('Invalid action for timer')
+            _LOGGER.warning('Invalid action for timer')
             return False
 
         method = 'powerSwitch'
@@ -666,7 +656,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
                 Room size in square feet, by default 600
         """
         if preference not in self.auto_preferences:
-            _LOGGER.debug(
+            _LOGGER.warning(
                 '%s is invalid preference -'
                 ' valid preferences are default, efficient, quiet',
                 preference,
@@ -686,7 +676,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
     async def set_fan_speed(self, speed: None | int = None) -> bool:
         if speed is not None:
             if speed not in self.fan_levels:
-                _LOGGER.debug(
+                _LOGGER.warning(
                     '%s is invalid speed - valid speeds are %s',
                     speed,
                     str(self.fan_levels),
@@ -713,7 +703,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
 
     async def set_mode(self, mode: str) -> bool:
         if mode.lower() not in self.modes:
-            _LOGGER.debug('Invalid purifier mode used - %s', mode)
+            _LOGGER.warning('Invalid purifier mode used - %s', mode)
             return False
 
         # Call change_fan_speed if mode is set to manual
@@ -784,7 +774,7 @@ class VeSyncAirSprout(VeSyncAirBaseV2):  # pylint: disable=too-many-ancestors
     def _set_state(self, details: InnerPurifierBaseResult) -> None:
         """Set Purifier state from details response."""
         if not isinstance(details, PurifierSproutResult):
-            _LOGGER.debug('Invalid details model passed to _set_state')
+            _LOGGER.warning('Invalid details model passed to _set_state')
             return
         self.state.connection_status = ConnectionStatus.ONLINE
         self.state.device_status = DeviceStatus.from_int(details.powerSwitch)
@@ -939,7 +929,7 @@ class VeSyncAir131(BypassV1Mixin, VeSyncPurifier):
 
         if speed is not None:
             if speed not in self.fan_levels:
-                _LOGGER.debug(
+                _LOGGER.warning(
                     '%s is invalid speed - valid speeds are %s',
                     speed,
                     str(self.fan_levels),
@@ -968,7 +958,7 @@ class VeSyncAir131(BypassV1Mixin, VeSyncPurifier):
 
     async def set_mode(self, mode: str) -> bool:
         if mode not in self.modes:
-            _LOGGER.debug('Invalid purifier mode used - %s', mode)
+            _LOGGER.warning('Invalid purifier mode used - %s', mode)
             return False
 
         if mode == PurifierModes.MANUAL:

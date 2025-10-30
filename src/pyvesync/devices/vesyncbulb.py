@@ -132,7 +132,7 @@ class VeSyncBulbESL100MC(BypassV2Mixin, VeSyncBulb):
             return await self.set_status(
                 red=hsv.rgb.red, green=hsv.rgb.green, blue=hsv.rgb.blue
             )
-        logger.debug('Invalid HSV values')
+        logger.warning('Invalid HSV values')
         return False
 
     async def set_white_mode(self) -> bool:
@@ -176,7 +176,7 @@ class VeSyncBulbESL100MC(BypassV2Mixin, VeSyncBulb):
                 if Validators.validate_zero_to_hundred(brightness):
                     brightness_update = int(brightness)
                 else:
-                    logger.debug('Invalid brightness value')
+                    logger.warning('Invalid brightness value')
                     return False
                 if (
                     self.state.device_status == DeviceStatus.ON
@@ -186,7 +186,7 @@ class VeSyncBulbESL100MC(BypassV2Mixin, VeSyncBulb):
                     return True
                 color_mode = 'white'
             else:
-                logger.debug('Brightness and RGB values are not set')
+                logger.warning('Brightness and RGB values are not set')
                 return False
 
         data = {
@@ -349,7 +349,7 @@ class VeSyncBulbESL100(BypassV1Mixin, VeSyncBulb):
             logger.warning('%s is not dimmable', self.device_name)
             return False
         if not Validators.validate_zero_to_hundred(brightness):
-            logger.debug('Invalid brightness value')
+            logger.warning('Invalid brightness value')
             return False
         brightness_update = brightness
         if (
@@ -394,7 +394,7 @@ class VeSyncBulbESL100(BypassV1Mixin, VeSyncBulb):
             return
         timer = result_model.timers
         if not isinstance(timer, TimerModels.TimerItemV1):
-            logger.debug('Invalid timer item type')
+            logger.warning('Invalid timer item type')
             return
         self.state.timer = Timer(
             int(timer.counterTimer),
@@ -410,7 +410,7 @@ class VeSyncBulbESL100(BypassV1Mixin, VeSyncBulb):
                 else DeviceStatus.OFF
             )
         if action not in [DeviceStatus.ON, DeviceStatus.OFF]:
-            logger.debug("Invalid action value - must be 'on' or 'off'")
+            logger.warning("Invalid action value - must be 'on' or 'off'")
             return False
         update_dict = {
             'action': action,
@@ -537,7 +537,7 @@ class VeSyncBulbESL100CW(BypassV1Mixin, VeSyncBulb):
 
         r = Helpers.process_dev_response(logger, 'toggle', self, r_dict)
         if r is None:
-            logger.debug('%s offline', self.device_name)
+            logger.info('%s offline', self.device_name)
             return False
         self.state.device_status = status
         return True
@@ -554,7 +554,7 @@ class VeSyncBulbESL100CW(BypassV1Mixin, VeSyncBulb):
             if Validators.validate_zero_to_hundred(brightness):
                 brightness_update = int(brightness)
             else:
-                logger.debug('Invalid brightness value')
+                logger.warning('Invalid brightness value')
                 return False
         elif self.state.brightness is not None:
             brightness_update = self.state.brightness
@@ -564,7 +564,7 @@ class VeSyncBulbESL100CW(BypassV1Mixin, VeSyncBulb):
             if Validators.validate_zero_to_hundred(color_temp):
                 color_temp_update = color_temp
             else:
-                logger.debug('Invalid color temperature value')
+                logger.warning('Invalid color temperature value')
                 return False
         elif self.state.color_temp is not None:
             color_temp_update = self.state.color_temp
@@ -620,7 +620,7 @@ class VeSyncBulbESL100CW(BypassV1Mixin, VeSyncBulb):
             logger.debug('Multiple timers found, returning first timer')
         timer = timers[0]
         if not isinstance(timer, TimerModels.TimeItemV1):
-            logger.debug('Invalid timer item type')
+            logger.warning('Invalid timer item type')
             return
         self.state.timer = Timer(
             int(timer.counterTime),
@@ -636,7 +636,7 @@ class VeSyncBulbESL100CW(BypassV1Mixin, VeSyncBulb):
                 else DeviceStatus.OFF
             )
         if action not in [DeviceStatus.ON, DeviceStatus.OFF]:
-            logger.debug("Invalid action value - must be 'on' or 'off'")
+            logger.warning("Invalid action value - must be 'on' or 'off'")
             return False
         update_dict = {
             'action': action,
@@ -873,7 +873,7 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
             toggle = self.state.device_status == DeviceStatus.OFF
 
         if toggle == self.state.device_status:
-            logger.debug('Device already in requested state')
+            logger.warning('Device already in requested state')
             return True
 
         payload_data = {
@@ -894,7 +894,7 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
     async def set_rgb(self, red: float, green: float, blue: float) -> bool:
         new_color = Color.from_rgb(red=red, green=green, blue=blue)
         if new_color is None:
-            logger.debug('Invalid RGB values')
+            logger.warning('Invalid RGB values')
             return False
 
         return await self.set_hsv(
@@ -994,7 +994,9 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
             logger.debug('No state change.')
             return False
         if payload_data is None:
-            logger.debug('Invalid payload data')
+            logger.warning(
+                'Invalid payload data for set_status call for %s', self.device_name
+            )
             return False
 
         r_dict = await self._call_valceno_api('setLightStatusV2', payload_data)

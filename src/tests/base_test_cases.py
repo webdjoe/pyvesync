@@ -36,7 +36,6 @@ class TestApiFunc:
         self.loop = asyncio.new_event_loop()
         self.mock = MagicMock()
         self.manager = VeSync(API_DEFAULTS['EMAIL'], API_DEFAULTS['PASSWORD'])
-        self.manager.verbose = True
         self.manager.enabled = True
         self.manager.redact = False
         self.manager.auth._token = TestDefaults.token
@@ -89,8 +88,6 @@ class TestBase:
         self.mock_api = self.mock_api_call.start()
         self.mock_api.return_value.ok = True
         self.manager = VeSync(TestDefaults.email, TestDefaults.password)
-        self.manager.debug = True
-        self.manager.verbose = True
         self.manager.redact = False
         self.manager.time_zone = TestDefaults.time_zone
         self.manager.enabled = True

@@ -50,6 +50,7 @@ ignore = [
   "EXE002", # Use of exec - IGNORE
   "DTZ005",  # Use of datetime.now() without tz - IGNORE
   # "Q000", # Quotes
+  # "ERA001", # Commented out code
 
 
 ]
