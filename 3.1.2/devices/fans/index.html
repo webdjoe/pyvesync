@@ -4380,7 +4380,7 @@
               Bases: <code><a class="autorefs autorefs-internal" title="DeviceState (pyvesync.base_devices.vesyncbasedevice.DeviceState)" href="../../development/vesync_device_base/#pyvesync.base_devices.vesyncbasedevice.DeviceState">DeviceState</a></code></p>
 
 
-        <p>Base state class for Purifiers.</p>
+        <p>Base state class for Fans.</p>
 <p>Not all attributes are supported by all devices.</p>
 
 
@@ -4772,7 +4772,7 @@
 <span class="normal"><a href="#__codelineno-0-98"> 98</a></span>
 <span class="normal"><a href="#__codelineno-0-99"> 99</a></span>
 <span class="normal"><a href="#__codelineno-0-100">100</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-23" name="__codelineno-0-23"></a><span class="k">class</span><span class="w"> </span><span class="nc">FanState</span><span class="p">(</span><span class="n">DeviceState</span><span class="p">):</span>
-<a id="__codelineno-0-24" name="__codelineno-0-24"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Base state class for Purifiers.</span>
+<a id="__codelineno-0-24" name="__codelineno-0-24"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Base state class for Fans.</span>
 <a id="__codelineno-0-25" name="__codelineno-0-25"></a>
 <a id="__codelineno-0-26" name="__codelineno-0-26"></a><span class="sd">    Not all attributes are supported by all devices.</span>
 <a id="__codelineno-0-27" name="__codelineno-0-27"></a>
@@ -4824,7 +4824,7 @@
 <a id="__codelineno-0-73" name="__codelineno-0-73"></a>        <span class="n">details</span><span class="p">:</span> <span class="n">ResponseDeviceDetailsModel</span><span class="p">,</span>
 <a id="__codelineno-0-74" name="__codelineno-0-74"></a>        <span class="n">feature_map</span><span class="p">:</span> <span class="n">FanMap</span><span class="p">,</span>
 <a id="__codelineno-0-75" name="__codelineno-0-75"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-76" name="__codelineno-0-76"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize Purifier State.</span>
+<a id="__codelineno-0-76" name="__codelineno-0-76"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize Fan State.</span>
 <a id="__codelineno-0-77" name="__codelineno-0-77"></a>
 <a id="__codelineno-0-78" name="__codelineno-0-78"></a><span class="sd">        Args:</span>
 <a id="__codelineno-0-79" name="__codelineno-0-79"></a><span class="sd">            device (VeSyncFanBase): Device object.</span>
@@ -7036,7 +7036,7 @@ open an issue if there is an error.</p>
     <div class="doc doc-contents ">
 
         <p>Inherited From <a class="autorefs autorefs-internal" title="pyvesync.base_devices.fan_base.VeSyncFanBase" href="#pyvesync.base_devices.fan_base.VeSyncFanBase"><code>VeSyncFanBase</code></a></p>
-        <p>Set Purifier to Advanced Sleep Mode.</p>
+        <p>Set Fan to Advanced Sleep Mode.</p>
 
 
     <p><span class="doc-section-title">Returns:</span></p>
@@ -7090,7 +7090,7 @@ false with warning debug message if not supported.</p>
     <div class="doc doc-contents ">
 
         <p>Inherited From <a class="autorefs autorefs-internal" title="pyvesync.base_devices.fan_base.VeSyncFanBase" href="#pyvesync.base_devices.fan_base.VeSyncFanBase"><code>VeSyncFanBase</code></a></p>
-        <p>Set Purifier to Auto Mode.</p>
+        <p>Set Fan to Auto Mode.</p>
 
 
     <p><span class="doc-section-title">Returns:</span></p>
@@ -7144,7 +7144,7 @@ false with warning debug message if not supported.</p>
     <div class="doc doc-contents ">
 
         <p>Inherited From <a class="autorefs autorefs-internal" title="pyvesync.base_devices.fan_base.VeSyncFanBase" href="#pyvesync.base_devices.fan_base.VeSyncFanBase"><code>VeSyncFanBase</code></a></p>
-        <p>Set Purifier Fan Speed.</p>
+        <p>Set Fan Fan Speed.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -7223,7 +7223,7 @@ false with warning debug message if not supported.</p>
     <div class="doc doc-contents ">
 
         <p>Inherited From <a class="autorefs autorefs-internal" title="pyvesync.base_devices.fan_base.VeSyncFanBase" href="#pyvesync.base_devices.fan_base.VeSyncFanBase"><code>VeSyncFanBase</code></a></p>
-        <p>Set Purifier to Manual Mode - Normal Mode.</p>
+        <p>Set Fan to Manual Mode - Normal Mode.</p>
 
 
     <p><span class="doc-section-title">Returns:</span></p>
@@ -7277,7 +7277,7 @@ false with warning debug message if not supported.</p>
     <div class="doc doc-contents ">
 
         <p>Inherited From <a class="autorefs autorefs-internal" title="pyvesync.base_devices.fan_base.VeSyncFanBase" href="#pyvesync.base_devices.fan_base.VeSyncFanBase"><code>VeSyncFanBase</code></a></p>
-        <p>Set Purifier Mode.</p>
+        <p>Set Fan Mode.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -7356,7 +7356,7 @@ false with warning debug message if not supported.</p>
     <div class="doc doc-contents ">
 
         <p>Inherited From <a class="autorefs autorefs-internal" title="pyvesync.base_devices.fan_base.VeSyncFanBase" href="#pyvesync.base_devices.fan_base.VeSyncFanBase"><code>VeSyncFanBase</code></a></p>
-        <p>Set Purifier to Normal Mode.</p>
+        <p>Set Fan to Normal Mode.</p>
 
 
     <p><span class="doc-section-title">Returns:</span></p>
@@ -7410,7 +7410,7 @@ false with warning debug message if not supported.</p>
     <div class="doc doc-contents ">
 
         <p>Inherited From <a class="autorefs autorefs-internal" title="pyvesync.base_devices.fan_base.VeSyncFanBase" href="#pyvesync.base_devices.fan_base.VeSyncFanBase"><code>VeSyncFanBase</code></a></p>
-        <p>Set Purifier to Sleep Mode.</p>
+        <p>Set Fan to Sleep Mode.</p>
 <p>This is also referred to as Advanced Sleep Mode on some devices.</p>
 
 
@@ -7583,7 +7583,7 @@ if there is an error.</p>
     <div class="doc doc-contents ">
 
         <p>Inherited From <a class="autorefs autorefs-internal" title="pyvesync.base_devices.fan_base.VeSyncFanBase" href="#pyvesync.base_devices.fan_base.VeSyncFanBase"><code>VeSyncFanBase</code></a></p>
-        <p>Set Purifier to Turbo Mode.</p>
+        <p>Set Fan to Turbo Mode.</p>
 
 
     <p><span class="doc-section-title">Returns:</span></p>
@@ -9063,7 +9063,7 @@ and <a class="autorefs autorefs-internal" title="VeSyncBaseDevice" href="../../d
 <a id="__codelineno-0-187" name="__codelineno-0-187"></a>
 <a id="__codelineno-0-188" name="__codelineno-0-188"></a>    <span class="nd">@abstractmethod</span>
 <a id="__codelineno-0-189" name="__codelineno-0-189"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-190" name="__codelineno-0-190"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Set Purifier Mode.</span>
+<a id="__codelineno-0-190" name="__codelineno-0-190"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Set Fan Mode.</span>
 <a id="__codelineno-0-191" name="__codelineno-0-191"></a>
 <a id="__codelineno-0-192" name="__codelineno-0-192"></a><span class="sd">        Args:</span>
 <a id="__codelineno-0-193" name="__codelineno-0-193"></a><span class="sd">            mode (str): Mode to set, varies by device type.</span>
@@ -9074,7 +9074,7 @@ and <a class="autorefs autorefs-internal" title="VeSyncBaseDevice" href="../../d
 <a id="__codelineno-0-198" name="__codelineno-0-198"></a>
 <a id="__codelineno-0-199" name="__codelineno-0-199"></a>    <span class="nd">@abstractmethod</span>
 <a id="__codelineno-0-200" name="__codelineno-0-200"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_fan_speed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">speed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-201" name="__codelineno-0-201"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Set Purifier Fan Speed.</span>
+<a id="__codelineno-0-201" name="__codelineno-0-201"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Set Fan Fan Speed.</span>
 <a id="__codelineno-0-202" name="__codelineno-0-202"></a>
 <a id="__codelineno-0-203" name="__codelineno-0-203"></a><span class="sd">        Args:</span>
 <a id="__codelineno-0-204" name="__codelineno-0-204"></a><span class="sd">            speed (int, optional): Fan speed level according to device specs.</span>
@@ -9084,7 +9084,7 @@ and <a class="autorefs autorefs-internal" title="VeSyncBaseDevice" href="../../d
 <a id="__codelineno-0-208" name="__codelineno-0-208"></a><span class="sd">        &quot;&quot;&quot;</span>
 <a id="__codelineno-0-209" name="__codelineno-0-209"></a>
 <a id="__codelineno-0-210" name="__codelineno-0-210"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_auto_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-211" name="__codelineno-0-211"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Set Purifier to Auto Mode.</span>
+<a id="__codelineno-0-211" name="__codelineno-0-211"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Set Fan to Auto Mode.</span>
 <a id="__codelineno-0-212" name="__codelineno-0-212"></a>
 <a id="__codelineno-0-213" name="__codelineno-0-213"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-214" name="__codelineno-0-214"></a><span class="sd">            bool: Success of request.</span>
@@ -9099,7 +9099,7 @@ and <a class="autorefs autorefs-internal" title="VeSyncBaseDevice" href="../../d
 <a id="__codelineno-0-223" name="__codelineno-0-223"></a>        <span class="k">return</span> <span class="kc">False</span>
 <a id="__codelineno-0-224" name="__codelineno-0-224"></a>
 <a id="__codelineno-0-225" name="__codelineno-0-225"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_advanced_sleep_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-226" name="__codelineno-0-226"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Set Purifier to Advanced Sleep Mode.</span>
+<a id="__codelineno-0-226" name="__codelineno-0-226"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Set Fan to Advanced Sleep Mode.</span>
 <a id="__codelineno-0-227" name="__codelineno-0-227"></a>
 <a id="__codelineno-0-228" name="__codelineno-0-228"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-229" name="__codelineno-0-229"></a><span class="sd">            bool: Success of request.</span>
@@ -9114,7 +9114,7 @@ and <a class="autorefs autorefs-internal" title="VeSyncBaseDevice" href="../../d
 <a id="__codelineno-0-238" name="__codelineno-0-238"></a>        <span class="k">return</span> <span class="kc">False</span>
 <a id="__codelineno-0-239" name="__codelineno-0-239"></a>
 <a id="__codelineno-0-240" name="__codelineno-0-240"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_sleep_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-241" name="__codelineno-0-241"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Set Purifier to Sleep Mode.</span>
+<a id="__codelineno-0-241" name="__codelineno-0-241"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Set Fan to Sleep Mode.</span>
 <a id="__codelineno-0-242" name="__codelineno-0-242"></a>
 <a id="__codelineno-0-243" name="__codelineno-0-243"></a><span class="sd">        This is also referred to as Advanced Sleep Mode on some devices.</span>
 <a id="__codelineno-0-244" name="__codelineno-0-244"></a>
@@ -9131,7 +9131,7 @@ and <a class="autorefs autorefs-internal" title="VeSyncBaseDevice" href="../../d
 <a id="__codelineno-0-255" name="__codelineno-0-255"></a>        <span class="k">return</span> <span class="kc">False</span>
 <a id="__codelineno-0-256" name="__codelineno-0-256"></a>
 <a id="__codelineno-0-257" name="__codelineno-0-257"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_manual_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-258" name="__codelineno-0-258"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Set Purifier to Manual Mode - Normal Mode.</span>
+<a id="__codelineno-0-258" name="__codelineno-0-258"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Set Fan to Manual Mode - Normal Mode.</span>
 <a id="__codelineno-0-259" name="__codelineno-0-259"></a>
 <a id="__codelineno-0-260" name="__codelineno-0-260"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-261" name="__codelineno-0-261"></a><span class="sd">            bool: Success of request.</span>
@@ -9146,7 +9146,7 @@ and <a class="autorefs autorefs-internal" title="VeSyncBaseDevice" href="../../d
 <a id="__codelineno-0-270" name="__codelineno-0-270"></a>        <span class="k">return</span> <span class="kc">False</span>
 <a id="__codelineno-0-271" name="__codelineno-0-271"></a>
 <a id="__codelineno-0-272" name="__codelineno-0-272"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_normal_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-273" name="__codelineno-0-273"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Set Purifier to Normal Mode.</span>
+<a id="__codelineno-0-273" name="__codelineno-0-273"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Set Fan to Normal Mode.</span>
 <a id="__codelineno-0-274" name="__codelineno-0-274"></a>
 <a id="__codelineno-0-275" name="__codelineno-0-275"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-276" name="__codelineno-0-276"></a><span class="sd">            bool: Success of request.</span>
@@ -9161,7 +9161,7 @@ and <a class="autorefs autorefs-internal" title="VeSyncBaseDevice" href="../../d
 <a id="__codelineno-0-285" name="__codelineno-0-285"></a>        <span class="k">return</span> <span class="kc">False</span>
 <a id="__codelineno-0-286" name="__codelineno-0-286"></a>
 <a id="__codelineno-0-287" name="__codelineno-0-287"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_turbo_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-288" name="__codelineno-0-288"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Set Purifier to Turbo Mode.</span>
+<a id="__codelineno-0-288" name="__codelineno-0-288"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Set Fan to Turbo Mode.</span>
 <a id="__codelineno-0-289" name="__codelineno-0-289"></a>
 <a id="__codelineno-0-290" name="__codelineno-0-290"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-291" name="__codelineno-0-291"></a><span class="sd">            bool: Success of request.</span>
@@ -10526,7 +10526,7 @@ open an issue if there is an error.</p>
     <div class="doc doc-contents ">
 
         <p>Inherited From <a class="autorefs autorefs-internal" title="pyvesync.base_devices.fan_base.VeSyncFanBase" href="#pyvesync.base_devices.fan_base.VeSyncFanBase"><code>VeSyncFanBase</code></a></p>
-        <p>Set Purifier to Advanced Sleep Mode.</p>
+        <p>Set Fan to Advanced Sleep Mode.</p>
 
 
     <p><span class="doc-section-title">Returns:</span></p>
@@ -10574,7 +10574,7 @@ false with warning debug message if not supported.</p>
 <span class="normal"><a href="#__codelineno-0-236">236</a></span>
 <span class="normal"><a href="#__codelineno-0-237">237</a></span>
 <span class="normal"><a href="#__codelineno-0-238">238</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-225" name="__codelineno-0-225"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_advanced_sleep_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-226" name="__codelineno-0-226"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Set Purifier to Advanced Sleep Mode.</span>
+<a id="__codelineno-0-226" name="__codelineno-0-226"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Set Fan to Advanced Sleep Mode.</span>
 <a id="__codelineno-0-227" name="__codelineno-0-227"></a>
 <a id="__codelineno-0-228" name="__codelineno-0-228"></a><span class="sd">    Returns:</span>
 <a id="__codelineno-0-229" name="__codelineno-0-229"></a><span class="sd">        bool: Success of request.</span>
@@ -10611,7 +10611,7 @@ false with warning debug message if not supported.</p>
     <div class="doc doc-contents ">
 
         <p>Inherited From <a class="autorefs autorefs-internal" title="pyvesync.base_devices.fan_base.VeSyncFanBase" href="#pyvesync.base_devices.fan_base.VeSyncFanBase"><code>VeSyncFanBase</code></a></p>
-        <p>Set Purifier to Auto Mode.</p>
+        <p>Set Fan to Auto Mode.</p>
 
 
     <p><span class="doc-section-title">Returns:</span></p>
@@ -10659,7 +10659,7 @@ false with warning debug message if not supported.</p>
 <span class="normal"><a href="#__codelineno-0-221">221</a></span>
 <span class="normal"><a href="#__codelineno-0-222">222</a></span>
 <span class="normal"><a href="#__codelineno-0-223">223</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-210" name="__codelineno-0-210"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_auto_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-211" name="__codelineno-0-211"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Set Purifier to Auto Mode.</span>
+<a id="__codelineno-0-211" name="__codelineno-0-211"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Set Fan to Auto Mode.</span>
 <a id="__codelineno-0-212" name="__codelineno-0-212"></a>
 <a id="__codelineno-0-213" name="__codelineno-0-213"></a><span class="sd">    Returns:</span>
 <a id="__codelineno-0-214" name="__codelineno-0-214"></a><span class="sd">        bool: Success of request.</span>
@@ -10696,7 +10696,7 @@ false with warning debug message if not supported.</p>
 
     <div class="doc doc-contents ">
 
-        <p>Set Purifier Fan Speed.</p>
+        <p>Set Fan Fan Speed.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -10766,7 +10766,7 @@ false with warning debug message if not supported.</p>
 <span class="normal"><a href="#__codelineno-0-207">207</a></span>
 <span class="normal"><a href="#__codelineno-0-208">208</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-199" name="__codelineno-0-199"></a><span class="nd">@abstractmethod</span>
 <a id="__codelineno-0-200" name="__codelineno-0-200"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_fan_speed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">speed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-201" name="__codelineno-0-201"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Set Purifier Fan Speed.</span>
+<a id="__codelineno-0-201" name="__codelineno-0-201"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Set Fan Fan Speed.</span>
 <a id="__codelineno-0-202" name="__codelineno-0-202"></a>
 <a id="__codelineno-0-203" name="__codelineno-0-203"></a><span class="sd">    Args:</span>
 <a id="__codelineno-0-204" name="__codelineno-0-204"></a><span class="sd">        speed (int, optional): Fan speed level according to device specs.</span>
@@ -10798,7 +10798,7 @@ false with warning debug message if not supported.</p>
     <div class="doc doc-contents ">
 
         <p>Inherited From <a class="autorefs autorefs-internal" title="pyvesync.base_devices.fan_base.VeSyncFanBase" href="#pyvesync.base_devices.fan_base.VeSyncFanBase"><code>VeSyncFanBase</code></a></p>
-        <p>Set Purifier to Manual Mode - Normal Mode.</p>
+        <p>Set Fan to Manual Mode - Normal Mode.</p>
 
 
     <p><span class="doc-section-title">Returns:</span></p>
@@ -10846,7 +10846,7 @@ false with warning debug message if not supported.</p>
 <span class="normal"><a href="#__codelineno-0-268">268</a></span>
 <span class="normal"><a href="#__codelineno-0-269">269</a></span>
 <span class="normal"><a href="#__codelineno-0-270">270</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-257" name="__codelineno-0-257"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_manual_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-258" name="__codelineno-0-258"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Set Purifier to Manual Mode - Normal Mode.</span>
+<a id="__codelineno-0-258" name="__codelineno-0-258"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Set Fan to Manual Mode - Normal Mode.</span>
 <a id="__codelineno-0-259" name="__codelineno-0-259"></a>
 <a id="__codelineno-0-260" name="__codelineno-0-260"></a><span class="sd">    Returns:</span>
 <a id="__codelineno-0-261" name="__codelineno-0-261"></a><span class="sd">        bool: Success of request.</span>
@@ -10883,7 +10883,7 @@ false with warning debug message if not supported.</p>
 
     <div class="doc doc-contents ">
 
-        <p>Set Purifier Mode.</p>
+        <p>Set Fan Mode.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -10953,7 +10953,7 @@ false with warning debug message if not supported.</p>
 <span class="normal"><a href="#__codelineno-0-196">196</a></span>
 <span class="normal"><a href="#__codelineno-0-197">197</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-188" name="__codelineno-0-188"></a><span class="nd">@abstractmethod</span>
 <a id="__codelineno-0-189" name="__codelineno-0-189"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-190" name="__codelineno-0-190"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Set Purifier Mode.</span>
+<a id="__codelineno-0-190" name="__codelineno-0-190"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Set Fan Mode.</span>
 <a id="__codelineno-0-191" name="__codelineno-0-191"></a>
 <a id="__codelineno-0-192" name="__codelineno-0-192"></a><span class="sd">    Args:</span>
 <a id="__codelineno-0-193" name="__codelineno-0-193"></a><span class="sd">        mode (str): Mode to set, varies by device type.</span>
@@ -10985,7 +10985,7 @@ false with warning debug message if not supported.</p>
     <div class="doc doc-contents ">
 
         <p>Inherited From <a class="autorefs autorefs-internal" title="pyvesync.base_devices.fan_base.VeSyncFanBase" href="#pyvesync.base_devices.fan_base.VeSyncFanBase"><code>VeSyncFanBase</code></a></p>
-        <p>Set Purifier to Normal Mode.</p>
+        <p>Set Fan to Normal Mode.</p>
 
 
     <p><span class="doc-section-title">Returns:</span></p>
@@ -11033,7 +11033,7 @@ false with warning debug message if not supported.</p>
 <span class="normal"><a href="#__codelineno-0-283">283</a></span>
 <span class="normal"><a href="#__codelineno-0-284">284</a></span>
 <span class="normal"><a href="#__codelineno-0-285">285</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-272" name="__codelineno-0-272"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_normal_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-273" name="__codelineno-0-273"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Set Purifier to Normal Mode.</span>
+<a id="__codelineno-0-273" name="__codelineno-0-273"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Set Fan to Normal Mode.</span>
 <a id="__codelineno-0-274" name="__codelineno-0-274"></a>
 <a id="__codelineno-0-275" name="__codelineno-0-275"></a><span class="sd">    Returns:</span>
 <a id="__codelineno-0-276" name="__codelineno-0-276"></a><span class="sd">        bool: Success of request.</span>
@@ -11070,7 +11070,7 @@ false with warning debug message if not supported.</p>
     <div class="doc doc-contents ">
 
         <p>Inherited From <a class="autorefs autorefs-internal" title="pyvesync.base_devices.fan_base.VeSyncFanBase" href="#pyvesync.base_devices.fan_base.VeSyncFanBase"><code>VeSyncFanBase</code></a></p>
-        <p>Set Purifier to Sleep Mode.</p>
+        <p>Set Fan to Sleep Mode.</p>
 <p>This is also referred to as Advanced Sleep Mode on some devices.</p>
 
 
@@ -11121,7 +11121,7 @@ false with warning debug message if not supported.</p>
 <span class="normal"><a href="#__codelineno-0-253">253</a></span>
 <span class="normal"><a href="#__codelineno-0-254">254</a></span>
 <span class="normal"><a href="#__codelineno-0-255">255</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-240" name="__codelineno-0-240"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_sleep_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-241" name="__codelineno-0-241"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Set Purifier to Sleep Mode.</span>
+<a id="__codelineno-0-241" name="__codelineno-0-241"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Set Fan to Sleep Mode.</span>
 <a id="__codelineno-0-242" name="__codelineno-0-242"></a>
 <a id="__codelineno-0-243" name="__codelineno-0-243"></a><span class="sd">    This is also referred to as Advanced Sleep Mode on some devices.</span>
 <a id="__codelineno-0-244" name="__codelineno-0-244"></a>
@@ -11324,7 +11324,7 @@ if there is an error.</p>
     <div class="doc doc-contents ">
 
         <p>Inherited From <a class="autorefs autorefs-internal" title="pyvesync.base_devices.fan_base.VeSyncFanBase" href="#pyvesync.base_devices.fan_base.VeSyncFanBase"><code>VeSyncFanBase</code></a></p>
-        <p>Set Purifier to Turbo Mode.</p>
+        <p>Set Fan to Turbo Mode.</p>
 
 
     <p><span class="doc-section-title">Returns:</span></p>
@@ -11372,7 +11372,7 @@ false with warning debug message if not supported.</p>
 <span class="normal"><a href="#__codelineno-0-298">298</a></span>
 <span class="normal"><a href="#__codelineno-0-299">299</a></span>
 <span class="normal"><a href="#__codelineno-0-300">300</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-287" name="__codelineno-0-287"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_turbo_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-288" name="__codelineno-0-288"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Set Purifier to Turbo Mode.</span>
+<a id="__codelineno-0-288" name="__codelineno-0-288"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Set Fan to Turbo Mode.</span>
 <a id="__codelineno-0-289" name="__codelineno-0-289"></a>
 <a id="__codelineno-0-290" name="__codelineno-0-290"></a><span class="sd">    Returns:</span>
 <a id="__codelineno-0-291" name="__codelineno-0-291"></a><span class="sd">        bool: Success of request.</span>
