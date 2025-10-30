@@ -14,7 +14,11 @@ from pyvesync.models.base_models import (
     ResponseBaseModel,
     ResponseCodeModel,
 )
-from pyvesync.models.bypass_models import BypassV2InnerResult, RequestBypassV1
+from pyvesync.models.bypass_models import (
+    BypassV1Result,
+    BypassV2InnerResult,
+    RequestBypassV1,
+)
 
 T = TypeVar('T', bound='RequestWHOGYearlyEnergy')
 
@@ -77,6 +81,18 @@ class Response10ADetails(DataClassORJSONMixin):
     nightLightStatus: str | None = None
     nightLightAutoMode: str | None = None
     nightLightBrightness: int | None = None
+
+
+@dataclass
+class ResponseESW03Details(BypassV1Result):
+    """Response model for Etekcity 10A outlet details."""
+
+    activeTime: int
+    deviceStatus: str
+    connectionStatus: str
+    power: float | None = None
+    voltage: float | None = None
+    energy: float | None = None
 
 
 @dataclass

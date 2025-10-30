@@ -30,10 +30,10 @@ from pyvesync.models.outlet_models import (
     RequestOutdoorStatus,
     RequestWHOGYearlyEnergy,
     Response7AOutlet,
-    Response10ADetails,
     Response15ADetails,
     ResponseBSDGO1OutletResult,
     ResponseEnergyResult,
+    ResponseESW03Details,
     ResponseOutdoorDetails,
     ResponseWHOGResult,
     ResultESW10Details,
@@ -267,8 +267,8 @@ class VeSyncOutlet7A(VeSyncOutlet):
         return True
 
 
-class VeSyncOutlet10A(VeSyncOutlet):
-    """Etekcity 10A Round Outlets.
+class VeSyncOutlet10A(BypassV1Mixin, VeSyncOutlet):
+    """Etekcity 10A ESW01 and ESW03 Round Outlets.
 
     Args:
         details (ResponseDeviceDetailsModel): The device details.
@@ -305,83 +305,33 @@ class VeSyncOutlet10A(VeSyncOutlet):
     ) -> None:
         """Initialize 10A outlet class."""
         super().__init__(details, manager, feature_map)
-        self.request_keys = [
-            'acceptLanguage',
-            'appVersion',
-            'accountId',
-            'mobileId',
-            'phoneBrand',
-            'phoneOS',
-            'timeZone',
-            'token',
-            'traceId',
-            'uuid',
-        ]
-
-    def _build_headers(self) -> dict:
-        """Build auth headers for 10A Outlet."""
-        headers = RequestHeaders.copy()
-        headers.update(
-            {
-                'tz': self.manager.time_zone,
-                'tk': self.manager.token,
-                'accountid': self.manager.account_id,
-            }
-        )
-        return headers
-
-    def _build_detail_request(self, method: str) -> dict:
-        """Build 10A Outlet Request."""
-        body = Helpers.get_class_attributes(DefaultValues, self.request_keys)
-        body.update(Helpers.get_class_attributes(self.manager, self.request_keys))
-        body.update(Helpers.get_class_attributes(self, self.request_keys))
-        body['method'] = method
-        return body
-
-    def _build_status_request(self, status: str) -> dict:
-        """Build 10A Outlet Request to set status."""
-        status_keys = ['accountID', 'token', 'timeZone', 'uuid']
-        body = Helpers.get_class_attributes(self.manager, status_keys)
-        body.update(Helpers.get_class_attributes(self, status_keys))
-        body['status'] = status
-        return body
 
     async def get_details(self) -> None:
-        body = self._build_detail_request('devicedetail')
-
-        r_dict, _ = await self.manager.async_call_api(
-            '/10a/v1/device/devicedetail',
-            'post',
-            headers=Helpers.req_legacy_headers(self.manager),
-            json_object=body,
+        r_dict = await self.call_bypassv1_api(
+            RequestBypassV1, method='deviceDetail', endpoint='deviceDetail'
         )
-        r = Helpers.process_dev_response(logger, 'get_details', self, r_dict)
+        r = process_bypassv1_result(
+            self, logger, 'get_details', r_dict, ResponseESW03Details
+        )
         if r is None:
             return
 
-        resp_model = Response10ADetails.from_dict(r)
-
-        self.state.device_status = resp_model.deviceStatus or 'off'
-        self.state.connection_status = resp_model.connectionStatus or 'offline'
-        self.state.energy = resp_model.energy or 0
-        self.state.power = resp_model.power or 0
-        self.state.voltage = resp_model.voltage or 0
+        self.state.device_status = DeviceStatus(r.deviceStatus)
+        self.state.connection_status = ConnectionStatus(r.connectionStatus)
+        self.state.energy = r.energy or 0
+        self.state.power = r.power or 0
+        self.state.voltage = r.voltage or 0
 
     async def toggle_switch(self, toggle: bool | None = None) -> bool:
         if toggle is None:
             toggle = self.state.device_status != DeviceStatus.ON
         toggle_str = DeviceStatus.ON if toggle else DeviceStatus.OFF
-        body = self._build_status_request(toggle_str)
-        headers = self._build_headers()
 
-        r_dict, _ = await self.manager.async_call_api(
-            '/10a/v1/device/devicestatus',
-            'put',
-            headers=headers,
-            json_object=body,
+        response = await self.call_bypassv1_api(
+            RequestBypassV1, method='deviceStatus', endpoint='deviceStatus'
         )
-        response = Helpers.process_dev_response(logger, 'toggle_switch', self, r_dict)
-        if response is None:
+        r_dict = Helpers.process_dev_response(logger, 'toggle_switch', self, response)
+        if r_dict is None:
             return False
 
         self.state.device_status = toggle_str
