@@ -14,7 +14,11 @@ from pyvesync.models.base_models import (
     ResponseBaseModel,
     ResponseCodeModel,
 )
-from pyvesync.models.bypass_models import BypassV2InnerResult, RequestBypassV1, BypassV1Result
+from pyvesync.models.bypass_models import (
+    BypassV1Result,
+    BypassV2InnerResult,
+    RequestBypassV1,
+)
 
 T = TypeVar('T', bound='RequestWHOGYearlyEnergy')
 
