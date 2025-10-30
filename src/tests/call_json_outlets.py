@@ -81,31 +81,18 @@ OUTLET_DETAILS: dict[str, dict] = {
         "power": OutletDefaults.round_7a_power,
         "voltage": OutletDefaults.round_7a_voltage,
     },
-    "ESW03-USA": {
-        "code": 0,
-        "msg": None,
-        "deviceStatus": OutletDefaults.device_status.value,
-        "connectionStatus": OutletDefaults.connection_status.value,
+    "ESW03": {
         "activeTime": TestDefaults.active_time,
+        "deviceName": "ESW03",
+        "deviceStatus": OutletDefaults.device_status.value,
+        "power": str(OutletDefaults.power),
+        "voltage": str(OutletDefaults.voltage),
         "energy": OutletDefaults.energy,
-        "nightLightStatus": None,
-        "nightLightBrightness": None,
-        "nightLightAutomode": None,
-        "power": OutletDefaults.power,
-        "voltage": OutletDefaults.voltage,
+        "connectionStatus": OutletDefaults.connection_status.value,
     },
-    "ESW01-EU": {
-        "code": 0,
-        "msg": None,
-        "deviceStatus": OutletDefaults.device_status.value,
-        "connectionStatus": OutletDefaults.connection_status.value,
-        "activeTime": TestDefaults.active_time,
-        "energy": OutletDefaults.energy,
-        "nightLightStatus": None,
-        "nightLightBrightness": None,
-        "nightLightAutomode": None,
-        "power": OutletDefaults.power,
-        "voltage": OutletDefaults.voltage,
+    "ESW10-USA": {
+        "id": 0,
+        "enabled": bool(OutletDefaults.device_status),
     },
     "ESW15-USA": {  # V1
         "activeTime": TestDefaults.active_time,
@@ -171,8 +158,8 @@ OUTLET_DETAILS: dict[str, dict] = {
 
 DETAILS_RESPONSES = {
     "wifi-switch-1.3": OUTLET_DETAILS["wifi-switch-1.3"],
-    "ESW03-USA": OUTLET_DETAILS["ESW03-USA"],
-    "ESW01-EU": OUTLET_DETAILS["ESW01-EU"],
+    "ESW03": build_bypass_v1_response(result_dict=OUTLET_DETAILS["ESW03"]),
+    "ESW10-USA": build_bypass_v2_response(inner_result=OUTLET_DETAILS["ESW10-USA"]),
     "ESW15-USA": build_bypass_v1_response(result_dict=OUTLET_DETAILS["ESW15-USA"]),
     "ESO15-TB": build_bypass_v1_response(result_dict=OUTLET_DETAILS["ESO15-TB"]),
     "BSDOG01": build_bypass_v2_response(inner_result=OUTLET_DETAILS["BSDOG01"]),
@@ -237,8 +224,8 @@ WHOPLUG_YEAR_ENERGY_HISTORY = {
 
 METHOD_RESPONSES = {
     "wifi-switch-1.3": defaultdict(lambda: None),
-    "ESW03-USA": deepcopy(FunctionResponses),
-    "ESW01-EU": deepcopy(FunctionResponses),
+    "ESW10-USA": deepcopy(FunctionResponsesV2),
+    "ESW03": deepcopy(FunctionResponses),
     "ESW15-USA": deepcopy(FunctionResponsesV1),
     "ESO15-TB": deepcopy(FunctionResponsesV1),
     "BSDOG01": deepcopy(FunctionResponsesV2),
@@ -246,7 +233,11 @@ METHOD_RESPONSES = {
 }
 
 for k in METHOD_RESPONSES:
-    if k in ["BSDOG01", "WHOGPLUG"]:
+    if k in ["ESW10-USA"]:
+        METHOD_RESPONSES[k]["get_weekly_energy"] = None
+        METHOD_RESPONSES[k]["get_monthly_energy"] = None
+        METHOD_RESPONSES[k]["get_yearly_energy"] = None
+    elif k in ["BSDOG01", "WHOGPLUG"]:
         METHOD_RESPONSES[k]["get_weekly_energy"] = build_bypass_v2_response(
             inner_result=WHOPLUG_ENERGY_HISTORY_COMMON
         )
@@ -260,13 +251,3 @@ for k in METHOD_RESPONSES:
         METHOD_RESPONSES[k]["get_weekly_energy"] = ENERGY_HISTORY
         METHOD_RESPONSES[k]["get_monthly_energy"] = ENERGY_HISTORY
         METHOD_RESPONSES[k]["get_yearly_energy"] = ENERGY_HISTORY
-
-# # Add BSDGO1 specific responses
-# METHOD_RESPONSES['BSDOG01'] = defaultdict(lambda: ({
-#     "code": 0,
-#     "msg": "request success",
-#     "result": {
-#         "traceId": Defaults.trace_id,
-#         "code": 0
-#     }
-# }, 200))
