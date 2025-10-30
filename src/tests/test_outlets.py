@@ -26,15 +26,12 @@ See Also
 `call_json_outlets` - Contains API responses
 """
 
-from unittest.mock import MagicMock
 import pytest
 import logging
 import pyvesync.const as const
 from pyvesync.base_devices.outlet_base import VeSyncOutlet
-# from pyvesync.models.outlet_models import ResponseEnergyHistory
 from base_test_cases import TestBase
 from utils import assert_test, parse_args
-from aiohttp_mocker import AiohttpMockSession
 import call_json
 import call_json_outlets
 
