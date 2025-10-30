@@ -2,25 +2,40 @@
 
 from __future__ import annotations
 
+import calendar
 import logging
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from typing_extensions import deprecated
 
 from pyvesync.base_devices.outlet_base import VeSyncOutlet
-from pyvesync.const import STATUS_OK, ConnectionStatus, DeviceStatus
+from pyvesync.const import (
+    ENERGY_HISTORY_OFFSET_WHOGPLUG,
+    STATUS_OK,
+    ConnectionStatus,
+    DeviceStatus,
+    EnergyIntervals,
+)
 from pyvesync.models.base_models import DefaultValues, RequestHeaders
-from pyvesync.models.bypass_models import TimerModels
+from pyvesync.models.bypass_models import (
+    BypassV2InnerResult,
+    RequestBypassV1,
+    TimerModels,
+)
 from pyvesync.models.outlet_models import (
     Request15ADetails,
     Request15ANightlight,
     Request15AStatus,
     RequestOutdoorStatus,
+    RequestWHOGYearlyEnergy,
     Response7AOutlet,
     Response10ADetails,
     Response15ADetails,
     ResponseBSDGO1OutletResult,
+    ResponseEnergyResult,
     ResponseOutdoorDetails,
+    ResponseWHOGResult,
     ResultESW10Details,
     Timer7AItem,
 )
@@ -733,10 +748,8 @@ class VeSyncOutdoorPlug(BypassV1Mixin, VeSyncOutlet):
         return True
 
 
-class VeSyncOutletBSDGO1(BypassV2Mixin, VeSyncOutlet):
-    """VeSync BSDGO1 smart plug.
-
-    Note that this device does not support energy monitoring.
+class VeSyncOutletWHOGPlug(BypassV2Mixin, VeSyncOutlet):
+    """VeSync WHOG smart plug.
 
     Args:
         details (ResponseDeviceDetailsModel): The device details.
@@ -774,25 +787,72 @@ class VeSyncOutletBSDGO1(BypassV2Mixin, VeSyncOutlet):
         """Initialize BSDGO1 smart plug class."""
         super().__init__(details, manager, feature_map)
 
+    async def _bypass_v1_api_helper(
+        self,
+        request_model: type[RequestBypassV1],
+        update_dict: dict | None = None,
+        method: str = 'bypass',
+    ) -> dict | None:
+        """Send ByPass V1 API request.
+
+        This uses the `_build_request` method to send API requests to the Bypass V1 API.
+        The endpoint can be overridden with the `endpoint` argument.
+
+        Args:
+            request_model (type[RequestBypassV1]): The request model to use.
+            update_dict (dict): Additional keys to add on.
+            method (str): The method to use in the outer body.
+            endpoint (str | None): The last part of the url path, defaults to
+                `bypass`, e.g. `/cloud/v1/deviceManaged/bypass`.
+
+        Returns:
+            bytes: The response from the API request.
+        """
+        keys = BypassV1Mixin.request_keys
+        body = Helpers.get_class_attributes(DefaultValues, keys)
+        body.update(Helpers.get_class_attributes(self.manager, keys))
+        body.update(Helpers.get_class_attributes(self, keys))
+        body['method'] = method
+        body.update(update_dict or {})
+        model_instance = request_model.from_dict(body)
+        url_path = '/cloud/v1/outlet/getELECConsumePerMonthLastYear'
+        resp_dict, _ = await self.manager.async_call_api(
+            url_path, 'post', model_instance, Helpers.req_header_bypass()
+        )
+
+        return resp_dict
+
+    def _set_state(self, resp_model: BypassV2InnerResult) -> None:
+        """Set the state of the WHOGPLUG outlet from the response model."""
+        if not isinstance(resp_model, ResponseWHOGResult):
+            logger.debug('Invalid response model for _set_state: %s', type(resp_model))
+            return
+        self.state.device_status = DeviceStatus.from_int(resp_model.enabled)
+        self.state.connection_status = ConnectionStatus.ONLINE
+        self.state.voltage = resp_model.voltage
+        self.state.power = resp_model.power
+        self.state.energy = resp_model.energy
+        self.state.current = resp_model.current
+        self.state.voltageUpperThreshold = resp_model.highestVoltage
+        self.state.protectionStatus = 'on' if resp_model.voltagePtStatus else 'off'
+
     async def get_details(self) -> None:
-        r_dict = await self.call_bypassv2_api('getProperty')
+        r_dict = await self.call_bypassv2_api('getOutletStatus')
 
         resp_model = process_bypassv2_result(
-            self, logger, 'get_details', r_dict, ResponseBSDGO1OutletResult
+            self, logger, 'get_details', r_dict, ResponseWHOGResult
         )
         if resp_model is None:
+            logger.debug('Error getting %s details', self.device_name)
+            self.state.connection_status = ConnectionStatus.OFFLINE
             return
 
-        device_state = resp_model.powerSwitch_1
-        str_status = DeviceStatus.ON if device_state == 1 else DeviceStatus.OFF
-        self.state.device_status = str_status
-        self.state.connection_status = resp_model.connectionStatus
-        self.state.active_time = resp_model.active_time
+        self._set_state(resp_model)
 
     async def toggle_switch(self, toggle: bool | None = None) -> bool:
         if toggle is None:
             toggle = self.state.device_status != DeviceStatus.ON
-        toggle_int = 1 if toggle else 0
+        toggle_int = bool(toggle)
         r_dict = await self.call_bypassv2_api(
             'setProperty', data={'powerSwitch_1': toggle_int}
         )
@@ -804,9 +864,159 @@ class VeSyncOutletBSDGO1(BypassV2Mixin, VeSyncOutlet):
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
-    async def _set_power(self, power: bool) -> bool:
-        """Set power state of BSDGO1 outlet."""
-        return await self.toggle_switch(power)
+    async def _get_energy_history(self, history_interval: str | EnergyIntervals) -> None:
+        """Get energy history for BSDGO1 outlet."""
+        if history_interval not in self._energy_intervals:
+            logger.error('Invalid energy history interval - %s', history_interval)
+            return
+        if not isinstance(history_interval, EnergyIntervals):
+            history_interval = EnergyIntervals(history_interval)
+
+        if history_interval == EnergyIntervals.YEAR:
+            await self.get_yearly_energy()
+
+        offset = ENERGY_HISTORY_OFFSET_WHOGPLUG[history_interval]
+        current_ts = int(datetime.now().timestamp())
+        start_ts = current_ts - offset
+        payload_data = {
+            'fromDay': start_ts,
+            'toDay': current_ts,
+        }
+        r_dict = await self.call_bypassv2_api('getEnergyHistory', data=payload_data)
+        result_model = process_bypassv2_result(
+            self, logger, '_get_energy_history', r_dict, ResponseEnergyResult
+        )
+        if result_model is None:
+            return
+        match history_interval:
+            case EnergyIntervals.WEEK:
+                self.state.weekly_history = result_model
+            case EnergyIntervals.MONTH:
+                self.state.monthly_history = result_model
+        logger.debug('Energy history for %s updated', self.device_name)
+
+    async def get_yearly_energy(self) -> None:
+        """Get yearly energy for WHOG outlet."""
+        r_dict = await self._bypass_v1_api_helper(
+            RequestWHOGYearlyEnergy, method='getELECConsumePerMonthLastYear'
+        )
+        r_dict = Helpers.process_dev_response(logger, 'get_yearly_energy', self, r_dict)
+        if r_dict is None:
+            return
+        if not isinstance(r_dict.get('result', {}).get('ELECConsumeList'), list):
+            logger.debug('Error in last year energy response for %s', self.device_name)
+            return
+
+        self.state.yearly_history = ResponseEnergyResult.from_dict(
+            self._process_yearly_model(r_dict['result'])
+        )
+        logger.debug('Last year energy for %s updated', self.device_name)
+
+    def _process_yearly_model(
+        self, result_dict: dict[str, list[dict[str, str]]]
+    ) -> dict[str, list[dict]]:
+        """Process yearly WHOG energy model from response dict."""
+
+        def end_of_month_utc_timestamp(year: int, month: int) -> int:
+            # Last day number in the month
+            last_day = calendar.monthrange(year, month)[1]
+            # 23:59:59 on the last day, in UTC
+            dt = datetime(year, month, last_day, 23, 59, 59, tzinfo=UTC)
+            return int(dt.timestamp())
+
+        out: dict[str, list[dict]] = {'energyInfos': []}
+        for item in result_dict.get('ELECConsumeList', []):
+            ym = item['month']
+            year, month = map(int, ym.split('-'))
+            ts = end_of_month_utc_timestamp(year, month)
+            out['energyInfos'].append(
+                {
+                    'timestamp': ts,
+                    'energyKWH': item['ELECConsume'],
+                }
+            )
+        return out
+
+
+class VeSyncBSDOGPlug(VeSyncOutletWHOGPlug):
+    """VeSync BSDOG01/WYZYOG smart plugs.
+
+    Args:
+        details (ResponseDeviceDetailsModel): The device details.
+        manager (VeSync): The VeSync manager.
+        feature_map (OutletMap): The feature map for the device.
+
+    Attributes:
+        state (OutletState): The state of the outlet.
+        last_response (ResponseInfo): Last response from API call.
+        device_status (str): Device status.
+        connection_status (str): Connection status.
+        manager (VeSync): Manager object for API calls.
+        device_name (str): Name of device.
+        device_image (str): URL for device image.
+        cid (str): Device ID.
+        connection_type (str): Connection type of device.
+        device_type (str): Type of device.
+        type (str): Type of device.
+        uuid (str): UUID of device, not always present.
+        config_module (str): Configuration module of device.
+        mac_id (str): MAC ID of device.
+        current_firm_version (str): Current firmware version of device.
+        device_region (str): Region of device. (US, EU, etc.)
+        pid (str): Product ID of device, pulled by some devices on update.
+        sub_device_no (int): Sub-device number of device.
+        product_type (str): Product type of device.
+        features (dict): Features of device.
+
+    """
+
+    __slots__ = ()
+
+    def __init__(
+        self, details: ResponseDeviceDetailsModel, manager: VeSync, feature_map: OutletMap
+    ) -> None:
+        """Initialize BSDOG smart plug class."""
+        super().__init__(details, manager, feature_map)
+
+    def _set_state(self, resp_model: BypassV2InnerResult) -> None:
+        """Set the state of the BSDOG outlet from the response model."""
+        if not isinstance(resp_model, ResponseBSDGO1OutletResult):
+            logger.debug('Invalid response model for _set_state: %s', type(resp_model))
+            return
+        self.state.device_status = DeviceStatus.from_int(resp_model.powerSwitch_1)
+        self.state.connection_status = ConnectionStatus.ONLINE
+        self.state.voltage = resp_model.realTimeVoltage
+        self.state.power = resp_model.realTimePower
+        self.state.energy = resp_model.electricalEnergy
+        self.state.voltageUpperThreshold = resp_model.voltageUpperThreshold
+        self.state.protectionStatus = resp_model.protectionStatus
+        self.state.currentUpperThreshold = resp_model.currentUpperThreshold
+
+    async def get_details(self) -> None:
+        payload_data = {
+            'properties': [
+                'powerSwitch_1',
+                'realTimeVoltage',
+                'realTimePower',
+                'electricalEnergy',
+                'protectionStatus',
+                'voltageUpperThreshold',
+                'currentUpperThreshold',
+                'scheduleNum',
+            ]
+        }
+
+        r_dict = await self.call_bypassv2_api('getProperty', data=payload_data)
+
+        resp_model = process_bypassv2_result(
+            self, logger, 'get_details', r_dict, ResponseBSDGO1OutletResult
+        )
+        if resp_model is None:
+            logger.debug('Error getting %s details', self.device_name)
+            self.state.connection_status = ConnectionStatus.OFFLINE
+            return
+
+        self._set_state(resp_model)
 
 
 class VeSyncESW10USA(BypassV2Mixin, VeSyncOutlet):

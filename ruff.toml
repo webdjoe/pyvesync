@@ -48,6 +48,7 @@ ignore = [
   "TC003",  # Bug in TYPE_CHECKING recommendation for dataclasses - IGNORE
   "D102",  # Missing docstring in public method - HANDLED BY flake8-docstrings
   "EXE002", # Use of exec - IGNORE
+  "DTZ005",  # Use of datetime.now() without tz - IGNORE
   # "Q000", # Quotes
   # "ERA001", # Commented out code
 

@@ -6,11 +6,11 @@ turn_off:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    cid: BSDOG01-CID
+    cid: WHOGPLUG-CID
     configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceId: BSDOG01-CID
+    deviceId: WHOGPLUG-CID
     method: bypassV2
     payload:
       data:
@@ -33,11 +33,11 @@ turn_on:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    cid: BSDOG01-CID
+    cid: WHOGPLUG-CID
     configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceId: BSDOG01-CID
+    deviceId: WHOGPLUG-CID
     method: bypassV2
     payload:
       data:
@@ -60,24 +60,15 @@ update:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    cid: BSDOG01-CID
+    cid: WHOGPLUG-CID
     configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceId: BSDOG01-CID
+    deviceId: WHOGPLUG-CID
     method: bypassV2
     payload:
-      data:
-        properties:
-        - powerSwitch_1
-        - realTimeVoltage
-        - realTimePower
-        - electricalEnergy
-        - protectionStatus
-        - voltageUpperThreshold
-        - currentUpperThreshold
-        - scheduleNum
-      method: getProperty
+      data: {}
+      method: getOutletStatus
       source: APP
     phoneBrand: pyvesync
     phoneOS: Android

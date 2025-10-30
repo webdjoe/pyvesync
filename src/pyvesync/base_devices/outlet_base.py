@@ -6,7 +6,12 @@ import logging
 from typing import TYPE_CHECKING
 
 from pyvesync.base_devices.vesyncbasedevice import DeviceState, VeSyncBaseToggleDevice
-from pyvesync.const import NightlightModes, OutletFeatures
+from pyvesync.const import (
+    ENERGY_HISTORY_MAP,
+    EnergyIntervals,
+    NightlightModes,
+    OutletFeatures,
+)
 from pyvesync.models.base_models import DefaultValues
 from pyvesync.models.outlet_models import RequestEnergyHistory, ResponseEnergyHistory
 from pyvesync.utils.helpers import Helpers
@@ -64,13 +69,17 @@ class OutletState(DeviceState):
     """
 
     __slots__ = (
+        'current',
+        'currentUpperThreshold',
         'energy',
         'monthly_history',
         'nightlight_automode',
         'nightlight_brightness',
         'nightlight_status',
         'power',
+        'protectionStatus',
         'voltage',
+        'voltageUpperThreshold',
         'weekly_history',
         'yearly_history',
     )
@@ -94,12 +103,16 @@ class OutletState(DeviceState):
         self.power: float | None = None
         self.energy: float | None = None
         self.voltage: float | None = None
+        self.current: float | None = None
         self.nightlight_status: str | None = None
         self.nightlight_brightness: int | None = None
         self.nightlight_automode: str | None = None
         self.weekly_history: ResponseEnergyResult | None = None
         self.monthly_history: ResponseEnergyResult | None = None
         self.yearly_history: ResponseEnergyResult | None = None
+        self.voltageUpperThreshold: float | None = None
+        self.protectionStatus: str | None = None
+        self.currentUpperThreshold: float | None = None
 
     def annual_history_to_json(self) -> None | str:
         """Dump annual history."""
@@ -166,12 +179,15 @@ class VeSyncOutlet(VeSyncBaseToggleDevice):
         features (dict): Features of device.
     """
 
+    __slots__ = ('_energy_intervals', 'nightlight_modes')
+
     def __init__(
         self, details: ResponseDeviceDetailsModel, manager: VeSync, feature_map: OutletMap
     ) -> None:
         """Initialize VeSync Outlet base class."""
         super().__init__(details, manager, feature_map)
         self.state: OutletState = OutletState(self, details, feature_map)
+        self._energy_intervals = feature_map.energy_intervals
         self.nightlight_modes = feature_map.nightlight_modes
 
     def _build_energy_request(self, method: str) -> RequestEnergyHistory:
@@ -196,7 +212,7 @@ class VeSyncOutlet(VeSyncBaseToggleDevice):
         body['method'] = method
         return RequestEnergyHistory.from_dict(body)
 
-    async def _get_energy_history(self, history_interval: str) -> None:
+    async def _get_energy_history(self, history_interval: str | EnergyIntervals) -> None:
         """Pull energy history from API.
 
         Args:
@@ -209,18 +225,17 @@ class VeSyncOutlet(VeSyncBaseToggleDevice):
         if not self.supports_energy:
             logger.debug('Device does not support energy monitoring.')
             return
-        history_intervals = [
-            'getLastWeekEnergy',
-            'getLastMonthEnergy',
-            'getLastYearEnergy',
-        ]
-        if history_interval not in history_intervals:
+        if history_interval not in self._energy_intervals:
             logger.debug('Invalid history interval: %s', history_interval)
             return
-        body = self._build_energy_request(history_interval)
+        if not isinstance(history_interval, EnergyIntervals):
+            history_interval = EnergyIntervals(history_interval)
+        interval = ENERGY_HISTORY_MAP[history_interval]
+
+        body = self._build_energy_request(interval)
         headers = Helpers.req_header_bypass()
         r_bytes, _ = await self.manager.async_call_api(
-            f'/cloud/v1/device/{history_interval}',
+            f'/cloud/v1/device/{interval}',
             'post',
             headers=headers,
             json_object=body.to_dict(),
@@ -231,11 +246,11 @@ class VeSyncOutlet(VeSyncBaseToggleDevice):
             return
         response = ResponseEnergyHistory.from_dict(r)
         match history_interval:
-            case 'getLastWeekEnergy':
+            case EnergyIntervals.WEEK:
                 self.state.weekly_history = response.result
-            case 'getLastMonthEnergy':
+            case EnergyIntervals.MONTH:
                 self.state.monthly_history = response.result
-            case 'getLastYearEnergy':
+            case EnergyIntervals.YEAR:
                 self.state.yearly_history = response.result
 
     @property
@@ -262,7 +277,7 @@ class VeSyncOutlet(VeSyncBaseToggleDevice):
         The data is stored in the `device.state.weekly_history` attribute
         as a `ResponseEnergyResult` object.
         """
-        await self._get_energy_history('getLastWeekEnergy')
+        await self._get_energy_history(EnergyIntervals.WEEK)
 
     async def get_monthly_energy(self) -> None:
         """Build Monthly Energy History Dictionary.
@@ -270,7 +285,7 @@ class VeSyncOutlet(VeSyncBaseToggleDevice):
         The data is stored in the `device.state.monthly_history` attribute
         as a `ResponseEnergyResult` object.
         """
-        await self._get_energy_history('getLastMonthEnergy')
+        await self._get_energy_history(EnergyIntervals.MONTH)
 
     async def get_yearly_energy(self) -> None:
         """Build Yearly Energy Dictionary.
@@ -278,7 +293,7 @@ class VeSyncOutlet(VeSyncBaseToggleDevice):
         The data is stored in the `device.state.yearly_history` attribute
         as a `ResponseEnergyResult` object.
         """
-        await self._get_energy_history('getLastYearEnergy')
+        await self._get_energy_history(EnergyIntervals.YEAR)
 
     async def update_energy(self) -> None:
         """Build weekly, monthly and yearly dictionaries."""
