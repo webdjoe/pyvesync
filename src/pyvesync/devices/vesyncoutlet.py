@@ -825,9 +825,7 @@ class VeSyncOutletWHOGPlug(BypassV2Mixin, VeSyncOutlet):
     def _set_state(self, resp_model: BypassV2InnerResult) -> None:
         """Set the state of the WHOGPLUG outlet from the response model."""
         if not isinstance(resp_model, ResponseWHOGResult):
-            logger.debug(
-                'Invalid response model for _set_state: %s', type(resp_model)
-            )
+            logger.debug('Invalid response model for _set_state: %s', type(resp_model))
             return
         self.state.device_status = DeviceStatus.from_int(resp_model.enabled)
         self.state.connection_status = ConnectionStatus.ONLINE
@@ -839,7 +837,6 @@ class VeSyncOutletWHOGPlug(BypassV2Mixin, VeSyncOutlet):
         self.state.protectionStatus = 'on' if resp_model.voltagePtStatus else 'off'
 
     async def get_details(self) -> None:
-
         r_dict = await self.call_bypassv2_api('getOutletStatus')
 
         resp_model = process_bypassv2_result(
@@ -903,8 +900,7 @@ class VeSyncOutletWHOGPlug(BypassV2Mixin, VeSyncOutlet):
         r_dict = await self._bypass_v1_api_helper(
             RequestWHOGYearlyEnergy, method='getELECConsumePerMonthLastYear'
         )
-        r_dict = Helpers.process_dev_response(
-            logger, 'get_yearly_energy', self, r_dict)
+        r_dict = Helpers.process_dev_response(logger, 'get_yearly_energy', self, r_dict)
         if r_dict is None:
             return
         if not isinstance(r_dict.get('result', {}).get('ELECConsumeList'), list):
@@ -920,6 +916,7 @@ class VeSyncOutletWHOGPlug(BypassV2Mixin, VeSyncOutlet):
         self, result_dict: dict[str, list[dict[str, str]]]
     ) -> dict[str, list[dict]]:
         """Process yearly WHOG energy model from response dict."""
+
         def end_of_month_utc_timestamp(year: int, month: int) -> int:
             # Last day number in the month
             last_day = calendar.monthrange(year, month)[1]
@@ -932,10 +929,12 @@ class VeSyncOutletWHOGPlug(BypassV2Mixin, VeSyncOutlet):
             ym = item['month']
             year, month = map(int, ym.split('-'))
             ts = end_of_month_utc_timestamp(year, month)
-            out['energyInfos'].append({
-                'timestamp': ts,
-                'energyKWH': item['ELECConsume'],
-            })
+            out['energyInfos'].append(
+                {
+                    'timestamp': ts,
+                    'energyKWH': item['ELECConsume'],
+                }
+            )
         return out
 
 
@@ -982,9 +981,7 @@ class VeSyncBSDOGPlug(VeSyncOutletWHOGPlug):
     def _set_state(self, resp_model: BypassV2InnerResult) -> None:
         """Set the state of the BSDOG outlet from the response model."""
         if not isinstance(resp_model, ResponseBSDGO1OutletResult):
-            logger.debug(
-                'Invalid response model for _set_state: %s', type(resp_model)
-            )
+            logger.debug('Invalid response model for _set_state: %s', type(resp_model))
             return
         self.state.device_status = DeviceStatus.from_int(resp_model.powerSwitch_1)
         self.state.connection_status = ConnectionStatus.ONLINE

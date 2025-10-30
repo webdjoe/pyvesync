@@ -836,6 +836,7 @@ CUSTOM_COOK_MODE = 'custom'
 
 # ------------------- OUTLET CONST ------------------ #
 
+
 class EnergyIntervals(StrEnum):
     """Energy history periods for VeSync outlets.
 
