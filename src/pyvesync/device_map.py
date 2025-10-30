@@ -67,6 +67,7 @@ from typing import Union
 from pyvesync.const import (
     BulbFeatures,
     ColorMode,
+    EnergyIntervals,
     FanFeatures,
     FanModes,
     FanSleepPreference,
@@ -161,6 +162,11 @@ class OutletMap(DeviceMapTemplate):
     product_line: str = ProductLines.WIFI_LIGHT
     product_type: str = ProductTypes.OUTLET
     module: ModuleType = vesyncoutlet
+    energy_intervals: tuple[str, ...] = (
+        EnergyIntervals.YEAR,
+        EnergyIntervals.MONTH,
+        EnergyIntervals.WEEK,
+    )
     nightlight_modes: list[NightlightModes] = field(default_factory=list)
 
 
@@ -450,23 +456,33 @@ outlet_modules = [
     ),
     OutletMap(
         dev_types=[
-            'BSDOG01',
-            'WYSMTOD16A',
             'WHOGPLUG',
+        ],
+        class_name='VeSyncOutletWHOGPlug',
+        features=[OutletFeatures.ONOFF, OutletFeatures.ENERGY_MONITOR],
+        model_name='Smart Plug',
+        model_display='Smart Plug Series',
+        setup_entry='WHOGPLUG',
+        device_alias='Greensun Smart Plug',
+    ),
+    OutletMap(
+        dev_types=[
+            'BSDOG01',
+            'BSDOG02',
+            'WYSMTOD16A',
             'WM-PLUG',
             'JXUK13APLUG',
             'WYZYOGMINIPLUG',
-            'BSDOG02',
             'HWPLUG16A',
             'FY-PLUG',
             'HWPLUG16',
         ],
-        class_name='VeSyncOutletBSDGO1',
-        features=[OutletFeatures.ONOFF],
+        class_name='VeSyncBSDOGPlug',
+        features=[OutletFeatures.ONOFF, OutletFeatures.ENERGY_MONITOR],
         model_name='Smart Plug',
         model_display='Smart Plug Series',
         setup_entry='BSDOG01',
-        device_alias='Greensun Smart Plug',
+        device_alias='Smart Plug Series',
     ),
 ]
 """List of ['OutletMap'][pyvesync.device_map.OutletMap] configuration

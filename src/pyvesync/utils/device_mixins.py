@@ -177,7 +177,7 @@ def process_bypassv2_result(
     Returns:
         T_MODEL: An instance of the inner result model.
     """
-    if not isinstance(resp_dict, dict) or 'code' not in resp_dict:
+    if not isinstance(resp_dict, dict) or resp_dict.get('code') is None:
         LibraryLogger.log_device_api_response_error(
             logger,
             device.device_name,

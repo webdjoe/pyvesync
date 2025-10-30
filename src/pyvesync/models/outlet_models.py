@@ -3,17 +3,20 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Annotated, TypeVar
 
+from mashumaro.config import BaseConfig
 from mashumaro.mixins.orjson import DataClassORJSONMixin
+from mashumaro.types import Alias
 
 from pyvesync.models.base_models import (
     RequestBaseModel,
     ResponseBaseModel,
     ResponseCodeModel,
 )
-from pyvesync.models.bypass_models import (
-    RequestBypassV1,
-)
+from pyvesync.models.bypass_models import BypassV2InnerResult, RequestBypassV1
+
+T = TypeVar('T', bound='RequestWHOGYearlyEnergy')
 
 
 @dataclass
@@ -35,14 +38,14 @@ class ResponseEnergyHistory(ResponseCodeModel):
 
 
 @dataclass
-class ResponseEnergyResult(ResponseBaseModel):
+class ResponseEnergyResult(BypassV2InnerResult):
     """Response model for energy result."""
 
-    energyConsumptionOfToday: float
-    costPerKWH: float
-    maxEnergy: float
-    totalEnergy: float
     energyInfos: list[EnergyInfo]
+    energyConsumptionOfToday: float | None = None
+    costPerKWH: float | None = None
+    maxEnergy: float | None = None
+    totalEnergy: float | None = None
 
 
 @dataclass
@@ -50,8 +53,13 @@ class EnergyInfo:
     """Energy Info list items."""
 
     timestamp: int
-    energyKWH: float
-    money: float
+    energyKWH: Annotated[float, Alias('energy')]
+    money: float | None = None
+
+    class Config(BaseConfig):
+        """Allow deserialization not by alias."""
+
+        allow_deserialization_not_by_alias = True
 
 
 @dataclass
@@ -194,16 +202,29 @@ class ResponseBSDGO1Details(ResponseCodeModel):
 
 
 @dataclass
-class ResponseBSDGO1OutletResult(ResponseBaseModel):
+class ResponseWHOGResult(BypassV2InnerResult):
+    """Response model for WHOG outlet."""
+
+    enabled: bool
+    voltage: float | None = None
+    power: float | None = None
+    energy: float | None = None
+    current: float | None = None
+    highestVoltage: float | None = None
+    voltagePtStatus: bool | None = None
+
+
+@dataclass
+class ResponseBSDGO1OutletResult(BypassV2InnerResult):
     """Response model for BSDGO1 outlet."""
 
     powerSwitch_1: int
-    realTimeVoltage: float
-    realTimePower: float
-    electricalEnergy: float
-    voltageUpperThreshold: float
-    protectionStatus: str
-    currentUpperThreshold: float
+    realTimeVoltage: float | None = None
+    realTimePower: float | None = None
+    electricalEnergy: float | None = None
+    voltageUpperThreshold: float | None = None
+    protectionStatus: str | None = None
+    currentUpperThreshold: float | None = None
 
 
 @dataclass
@@ -221,3 +242,15 @@ class ResultESW10Details(ResponseBaseModel):
     """Response model for ESW10 outlet."""
 
     enabled: bool
+
+
+@dataclass
+class RequestWHOGYearlyEnergy(RequestBypassV1):
+    """Request model for WHOG yearly energy history."""
+
+    subDeviceNo: int = 0
+
+    def __post_serialize__(self: RequestWHOGYearlyEnergy, d: dict) -> dict:
+        """Remove unneeded keys after serialization."""
+        d.pop('uuid', None)
+        return d

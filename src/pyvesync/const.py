@@ -832,3 +832,32 @@ CUSTOM_RECIPE_ID = 1
 CUSTOM_RECIPE_TYPE = 3
 CUSTOM_RECIPE_NAME = 'Manual Cook'
 CUSTOM_COOK_MODE = 'custom'
+
+
+# ------------------- OUTLET CONST ------------------ #
+
+class EnergyIntervals(StrEnum):
+    """Energy history periods for VeSync outlets.
+
+    Attributes:
+        DAILY: Daily energy history.
+        WEEKLY: Weekly energy history.
+        MONTHLY: Monthly energy history.
+        YEARLY: Yearly energy history.
+    """
+
+    WEEK = 'week'
+    MONTH = 'month'
+    YEAR = 'year'
+
+
+ENERGY_HISTORY_MAP = {
+    EnergyIntervals.WEEK: 'getLastWeekEnergy',
+    EnergyIntervals.MONTH: 'getLastMonthEnergy',
+    EnergyIntervals.YEAR: 'getLastYearEnergy',
+}
+
+ENERGY_HISTORY_OFFSET_WHOGPLUG = {
+    EnergyIntervals.WEEK: 500000,
+    EnergyIntervals.MONTH: 2500000,
+}

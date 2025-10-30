@@ -26,6 +26,7 @@ See Also
 `call_json_outlets` - Contains API responses
 """
 
+from unittest.mock import MagicMock
 import pytest
 import logging
 import pyvesync.const as const
@@ -33,6 +34,7 @@ from pyvesync.base_devices.outlet_base import VeSyncOutlet
 # from pyvesync.models.outlet_models import ResponseEnergyHistory
 from base_test_cases import TestBase
 from utils import assert_test, parse_args
+from aiohttp_mocker import AiohttpMockSession
 import call_json
 import call_json_outlets
 
@@ -279,8 +281,12 @@ class TestOutlets(TestBase):
         if not outlet_obj.supports_energy:
             pytest.skip(f"{setup_entry} does not support energy monitoring.")
 
-        resp_dict = call_json_outlets.ENERGY_HISTORY
-        self.mock_api.return_value = resp_dict, 200
+        self.mock_api.side_effect = [
+            (dict(call_json_outlets.METHOD_RESPONSES[setup_entry]['get_weekly_energy']), 200),
+            (dict(call_json_outlets.METHOD_RESPONSES[setup_entry]['get_monthly_energy']), 200),
+            (dict(call_json_outlets.METHOD_RESPONSES[setup_entry]['get_yearly_energy']), 200),
+
+        ]
 
         self.run_in_loop(outlet_obj.update_energy)
         assert self.mock_api.call_count == 3
