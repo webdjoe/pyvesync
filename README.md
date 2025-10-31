@@ -299,7 +299,7 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-If you want to reuse your token and account_id between runs. The `VeSync.auth` object holds the credentials and helper methods to save and load credentials.  See the [Authentication Documentation](https://webdjoe.github.io/pyvesync/latest/authentication.md) for more details.
+If you want to reuse your token and account_id between runs. The `VeSync.auth` object holds the credentials and helper methods to save and load credentials.  See the [Authentication Documentation](https://webdjoe.github.io/pyvesync/latest/authentication) for more details.
 
 ```python
 import asyncio
@@ -555,11 +555,11 @@ if __name__ == "__main__":
 
 ## Device Requests
 
-If you would like to request a new device to be added to the library, please open an issue on GitHub. Be sure to include the device model number and a link to the product page. If you are able to provide packet captures or are willing to share the device temporarily, please indicate that in the issue. See the [Packet Capturing for New Device Support](https://webdjoe.github.io/pyvesync/latest/development/capturing.md) document for more details.
+If you would like to request a new device to be added to the library, please open an issue on GitHub. Be sure to include the device model number and a link to the product page. If you are able to provide packet captures or are willing to share the device temporarily, please indicate that in the issue. See the [Packet Capturing for New Device Support](https://webdjoe.github.io/pyvesync/latest/development/capturing) document for more details.
 
 ## Contributing
 
-All [contributions](https://webdjoe.github.io/pyvesync/latest/development/CONTRIBUTING.md) are welcome.
+All [contributions](https://webdjoe.github.io/pyvesync/latest/development/contributing) are welcome.
 
 This project is licensed under [MIT](LICENSE).
 
