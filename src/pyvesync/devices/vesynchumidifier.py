@@ -463,7 +463,7 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
         self.state.display_set_status = DeviceStatus.from_int(resp_model.screenSwitch)
         self.state.display_status = DeviceStatus.from_int(resp_model.screenState)
         self.state.auto_preference = resp_model.autoPreference
-        self.state.filter_life_percent = resp_model.filterLifePercent
+        self.state.filter_life = resp_model.filterLifePercent
         self.state.temperature = resp_model.temperature  # Unknown units
 
         drying_mode = resp_model.dryingMode
