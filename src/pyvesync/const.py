@@ -253,6 +253,11 @@ class DeviceStatus(StrEnum):
     def from_bool(cls, value: bool) -> DeviceStatus:
         """Convert boolean value to corresponding string."""
         return cls.ON if value is True else cls.OFF
+    
+    @classmethod
+    def from_bool_string(cls, value: str) -> DeviceStatus:
+        """Convert boolean value to corresponding string."""
+        return cls.ON if value == "true" else cls.OFF
 
 
 class ConnectionStatus(StrEnum):
