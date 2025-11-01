@@ -250,8 +250,10 @@ class DeviceStatus(StrEnum):
         return cls.UNKNOWN
 
     @classmethod
-    def from_bool(cls, value: bool) -> DeviceStatus:
+    def from_bool(cls, value: bool|str) -> DeviceStatus:
         """Convert boolean value to corresponding string."""
+        if isinstance(value, str):
+            return cls.from_bool_string(value)
         return cls.ON if value is True else cls.OFF
     
     @classmethod
