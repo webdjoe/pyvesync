@@ -464,7 +464,9 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
         self.state.display_status = DeviceStatus.from_int(resp_model.screenState)
         self.state.auto_preference = resp_model.autoPreference
         self.state.filter_life_percent = resp_model.filterLifePercent
-        self.state.temperature = resp_model.temperature/1000  # Fahrenheit but without decimals
+        self.state.temperature = (
+            resp_model.temperature / 1000
+        )  # Fahrenheit but without decimals
 
         drying_mode = resp_model.dryingMode
         if drying_mode is not None:
