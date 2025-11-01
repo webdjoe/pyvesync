@@ -70,6 +70,7 @@ class HumidifierState(DeviceState):
         'nightlight_brightness',
         'nightlight_status',
         'temperature',
+        'child_lock',
         'warm_mist_enabled',
         'warm_mist_level',
         'water_lacks',
