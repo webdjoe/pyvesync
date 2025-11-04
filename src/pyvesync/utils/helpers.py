@@ -690,6 +690,7 @@ class OscillationCoordinates:
         This should be used by VeSync device instances to manage internal status,
         does not interact with the VeSync API.
     """
+
     yaw: int
     pitch: int
 
@@ -702,6 +703,7 @@ class OscillationRange:
         This should be used by VeSync device instances to manage internal status,
         does not interact with the VeSync API.
     """
+
     left: int
     right: int
     top: int
