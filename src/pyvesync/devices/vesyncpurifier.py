@@ -871,7 +871,6 @@ class VeSyncAir131(BypassV1Mixin, VeSyncPurifier):
             self.state.filter_life = details.filterLife.percent
         self.state.display_status = DeviceStatus(details.screenStatus)
         self.state.display_set_status = details.screenStatus
-        self.state.child_lock = bool(DeviceStatus(details.childLock))
         self.state.mode = details.mode
         self.state.fan_level = details.level or 0
         self.state.fan_set_level = details.level or 0
