@@ -680,3 +680,29 @@ class Timer:
                 self._status = 'paused'
                 self._remain = current_remaining
             self._update_time = int(time.time())
+
+
+@dataclass(kw_only=True)
+class OscillationCoordinates:
+    """Dataclass to hold oscillation coordinates.
+
+    Note:
+        This should be used by VeSync device instances to manage internal status,
+        does not interact with the VeSync API.
+    """
+    yaw: int
+    pitch: int
+
+
+@dataclass(kw_only=True)
+class OscillationRange:
+    """Dataclass to hold oscillation range.
+
+    Note:
+        This should be used by VeSync device instances to manage internal status,
+        does not interact with the VeSync API.
+    """
+    left: int
+    right: int
+    top: int
+    bottom: int

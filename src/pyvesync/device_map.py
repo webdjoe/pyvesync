@@ -984,6 +984,33 @@ fan_modules: list[FanMap] = [
         model_name='Classic 42-Inch Tower Fan',
         setup_entry='LTF-F422S',
     ),
+    FanMap(
+        class_name='VeSyncPedestalFan',
+        dev_types=['LPF-R432S-AEU', 'LPF-R432S-AUS'],
+        modes=[
+            FanModes.NORMAL,
+            FanModes.TURBO,
+            FanModes.ECO,
+            FanModes.ADVANCED_SLEEP,
+        ],
+        setup_entry='LPF-R423S',
+        features=[
+            FanFeatures.SET_OSCILLATION_RANGE,
+            FanFeatures.HORIZONTAL_OSCILLATION,
+            FanFeatures.VERTICAL_OSCILLATION,
+        ],
+        fan_levels=list(range(1, 13)),
+        set_mode_method='setFanMode',
+        device_alias='Pedestal Fan',
+        sleep_preferences=[
+            FanSleepPreference.DEFAULT,
+            FanSleepPreference.ADVANCED,
+            FanSleepPreference.TURBO,
+            FanSleepPreference.QUIET,
+        ],  # Unknown sleep preferences, need to be verified
+        model_display='LPF-R432S Pedestal Fan Series',
+        model_name='Pedestal Fan'
+    )
 ]
 """List of ['FanMap'][pyvesync.device_map.FanMap] configuration
 objects for fan devices."""
