@@ -62,7 +62,7 @@ class HumidifierState(DeviceState):
         'drying_mode_level',
         'drying_mode_status',
         'drying_mode_time_remain',
-        'filter_life_percent',
+        'filter_life',
         'humidity',
         'humidity_high',
         'mist_level',
@@ -113,7 +113,7 @@ class HumidifierState(DeviceState):
         self.temperature: float | None = None  # Fahrenheit
         # Superior 6000S States
         self.auto_preference: int | None = None
-        self.filter_life_percent: int | None = None
+        self.filter_life: int | None = None
         self.drying_mode_level: int | None = None
         self.drying_mode_auto_switch: str | None = None
         self.drying_mode_status: str | None = None
