@@ -304,11 +304,7 @@ class VeSyncPedestalFan(BypassV2Mixin, VeSyncFanBase):
         if new_speed not in self.fan_levels:
             logger.warning('Invalid fan speed level used - %s', speed)
             return False
-        data = {
-            'levelIdx': 0,
-            'levelType': 'wind',
-            'manualSpeedLevel': speed
-        }
+        data = {'levelIdx': 0, 'levelType': 'wind', 'manualSpeedLevel': speed}
         r_dict = await self.call_bypassv2_api('setLevel', data)
         r = Helpers.process_dev_response(logger, 'set_fan_speed', self, r_dict)
         if r is None:
@@ -346,20 +342,14 @@ class VeSyncPedestalFan(BypassV2Mixin, VeSyncFanBase):
             bool: true if success.
         """
         if vertical is not None:
-            data = {
-                'verticalOscillationState': int(vertical),
-                'actType': 'default'
-            }
+            data = {'verticalOscillationState': int(vertical), 'actType': 'default'}
             if vertical is True and (top is not None and bottom is not None):
                 data |= {
                     'top': top,
                     'bottom': bottom,
                 }
         elif horizontal is not None:
-            data = {
-                'horizontalOscillationState': int(horizontal),
-                'actType': 'default'
-            }
+            data = {'horizontalOscillationState': int(horizontal), 'actType': 'default'}
             if horizontal is True and (left is not None and right is not None):
                 data |= {
                     'left': left,
@@ -369,12 +359,7 @@ class VeSyncPedestalFan(BypassV2Mixin, VeSyncFanBase):
             logger.warning('Either vertical or horizontal must be set.')
             return False
         r_dict = await self.call_bypassv2_api('setOscillationStatus', data)
-        r = Helpers.process_dev_response(
-            logger,
-            'set_oscillation_state',
-            self,
-            r_dict
-        )
+        r = Helpers.process_dev_response(logger, 'set_oscillation_state', self, r_dict)
         if r is None:
             return False
         if vertical is not None:
@@ -407,10 +392,7 @@ class VeSyncPedestalFan(BypassV2Mixin, VeSyncFanBase):
         return await self._set_oscillation_state(horizontal=toggle)
 
     async def set_vertical_oscillation_range(
-        self,
-        *,
-        top: int = 0,
-        bottom: int = 0
+        self, *, top: int = 0, bottom: int = 0
     ) -> bool:
         """Set vertical oscillation range.
 
@@ -421,17 +403,10 @@ class VeSyncPedestalFan(BypassV2Mixin, VeSyncFanBase):
         Returns:
             bool: true if success.
         """
-        return await self._set_oscillation_state(
-            vertical=True,
-            top=top,
-            bottom=bottom
-        )
+        return await self._set_oscillation_state(vertical=True, top=top, bottom=bottom)
 
     async def set_horizontal_oscillation_range(
-        self,
-        *,
-        left: int = 0,
-        right: int = 0
+        self, *, left: int = 0, right: int = 0
     ) -> bool:
         """Set horizontal oscillation range.
 
@@ -442,8 +417,4 @@ class VeSyncPedestalFan(BypassV2Mixin, VeSyncFanBase):
         Returns:
             bool: true if success.
         """
-        return await self._set_oscillation_state(
-            horizontal=True,
-            left=left,
-            right=right
-        )
+        return await self._set_oscillation_state(horizontal=True, left=left, right=right)

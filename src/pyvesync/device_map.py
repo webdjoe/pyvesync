@@ -1009,8 +1009,8 @@ fan_modules: list[FanMap] = [
             FanSleepPreference.QUIET,
         ],  # Unknown sleep preferences, need to be verified
         model_display='LPF-R432S Pedestal Fan Series',
-        model_name='Pedestal Fan'
-    )
+        model_name='Pedestal Fan',
+    ),
 ]
 """List of ['FanMap'][pyvesync.device_map.FanMap] configuration
 objects for fan devices."""
