@@ -460,11 +460,14 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
         self.state.water_tank_lifted = bool(resp_model.waterTankLifted)
         self.state.automatic_stop_config = bool(resp_model.autoStopSwitch)
         self.state.auto_stop_target_reached = bool(resp_model.autoStopState)
-        self.state.display_set_status = DeviceStatus.from_int(resp_model.screenSwitch)
+        self.state.display_set_status = DeviceStatus.from_int(resp_model.screenState)
         self.state.display_status = DeviceStatus.from_int(resp_model.screenState)
         self.state.auto_preference = resp_model.autoPreference
         self.state.filter_life = resp_model.filterLifePercent
-        self.state.temperature = resp_model.temperature  # Unknown units
+        self.state.child_lock = bool(resp_model.childLockSwitch)
+        self.state.temperature = (
+            resp_model.temperature / 10
+        )  # Fahrenheit but without decimals
 
         drying_mode = resp_model.dryingMode
         if drying_mode is not None:

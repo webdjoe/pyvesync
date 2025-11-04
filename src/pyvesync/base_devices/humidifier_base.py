@@ -43,7 +43,7 @@ class HumidifierState(DeviceState):
         mode (str): Current mode.
         nightlight_brightness (int): Nightlight brightness level.
         nightlight_status (str): Nightlight status.
-        temperature (int): Current temperature.
+        temperature (float): Current temperature.
         warm_mist_enabled (bool): Warm mist enabled status.
         warm_mist_level (int): Warm mist level.
         water_lacks (bool): Water lacks status.
@@ -55,6 +55,7 @@ class HumidifierState(DeviceState):
         'auto_stop_target_reached',
         'auto_target_humidity',
         'automatic_stop_config',
+        'child_lock',
         'display_set_status',
         'display_status',
         'drying_mode_auto_switch',
@@ -108,7 +109,8 @@ class HumidifierState(DeviceState):
         self.warm_mist_level: int | None = None
         self.water_lacks: bool = False
         self.water_tank_lifted: bool = False
-        self.temperature: int | None = None
+        self.child_lock: bool | None = None
+        self.temperature: float | None = None  # Fahrenheit
         # Superior 6000S States
         self.auto_preference: int | None = None
         self.filter_life: int | None = None
