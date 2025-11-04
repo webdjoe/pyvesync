@@ -246,7 +246,6 @@ class Purifier131Result(BypassV1Result):
     mode: str
     airQuality: str
     deviceName: str
-    childLock: str
     deviceStatus: str
     connectionStatus: str
     filterLife: Purifier131Filter | None = None
