@@ -733,7 +733,7 @@ humidifier_modules = [
         dev_types=['LEH-S601S-WUS', 'LEH-S601S-WUSR', 'LEH-S601S-WEUR'],
         features=[HumidifierFeatures.DRYING_MODE],
         mist_modes={
-            HumidifierModes.AUTO: 'auto',
+            HumidifierModes.AUTO: 'autoPro',
             HumidifierModes.SLEEP: 'sleep',
             HumidifierModes.HUMIDITY: 'humidity',
             HumidifierModes.MANUAL: 'manual',
