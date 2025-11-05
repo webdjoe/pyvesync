@@ -645,7 +645,7 @@ class HumidifierModes(Features):
     TURBO = 'turbo'
     PET = 'pet'
     UNKNOWN = 'unknown'
-    AUTOPRO = 'autopro'
+    AUTOPRO = 'autoPro'
 
 
 class FanModes(StrEnum):
