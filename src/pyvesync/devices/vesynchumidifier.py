@@ -9,7 +9,7 @@ import orjson
 from typing_extensions import deprecated
 
 from pyvesync.base_devices import VeSyncHumidifier
-from pyvesync.const import ConnectionStatus, DeviceStatus, HumidifierModes
+from pyvesync.const import ConnectionStatus, DeviceStatus
 from pyvesync.models.bypass_models import ResultV2GetTimer, ResultV2SetTimer
 from pyvesync.models.humidifier_models import (
     ClassicLVHumidResult,
@@ -452,10 +452,10 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
         """Set state from Superior 6000S API result model."""
         self.state.device_status = DeviceStatus.from_int(resp_model.powerSwitch)
         self.state.connection_status = ConnectionStatus.ONLINE
-        if resp_model.workMode == HumidifierModes.AUTOPRO:
-            self.state.mode = HumidifierModes.AUTO
-        else:
-            self.state.mode = resp_model.workMode
+        self.state.mode = Helpers.get_key(
+            self.mist_modes, resp_model.workMode, resp_model.workMode
+        )
+
         self.state.auto_target_humidity = resp_model.targetHumidity
         self.state.humidity = resp_model.humidity
         self.state.mist_level = resp_model.mistLevel
@@ -600,8 +600,7 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
         r = Helpers.process_dev_response(logger, 'set_humidity_mode', self, r_dict)
         if r is None:
             return False
-        if mode == HumidifierModes.AUTOPRO:
-            mode = HumidifierModes.AUTO
+
         self.state.mode = mode
         self.state.device_status = DeviceStatus.ON
         self.state.connection_status = ConnectionStatus.ONLINE
@@ -622,19 +621,6 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
         self.state.mist_virtual_level = level
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
-
-    # Override so that auto mode sets to autoPro
-
-    async def set_auto_mode(self) -> bool:
-        """Set Humidifier to Auto Mode.
-
-        Returns:
-            bool: Success of request.
-        """
-        if HumidifierModes.AUTO in self.mist_modes:
-            return await self.set_mode(HumidifierModes.AUTOPRO)
-        logger.debug('Auto mode not supported for this device.')
-        return False
 
 
 class VeSyncHumid1000S(VeSyncHumid200300S):

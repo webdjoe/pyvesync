@@ -553,6 +553,20 @@ class Helpers:
                 return_msg = msg
         return return_code, return_msg
 
+    @staticmethod
+    def get_key(data: dict[str, str], key: str, default: str | None = None) -> str | None:
+        """Get key from dictionary ignoring case sensitivity.
+
+        Args:
+            data (dict[str, Any]): Dictionary to search.
+            key (str): Key to search for.
+            default (Any): Default value to return if key not found.
+
+        Returns:
+            Any: Value associated with the key, or None if not found.
+        """
+        return next((v for k, v in data.items() if k.lower() == key.lower()), default)
+
 
 @dataclass(repr=False)
 class Timer:
