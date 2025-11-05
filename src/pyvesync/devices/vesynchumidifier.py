@@ -9,7 +9,7 @@ import orjson
 from typing_extensions import deprecated
 
 from pyvesync.base_devices import VeSyncHumidifier
-from pyvesync.const import ConnectionStatus, DeviceStatus
+from pyvesync.const import ConnectionStatus, DeviceStatus, HumidifierModes
 from pyvesync.models.bypass_models import ResultV2GetTimer, ResultV2SetTimer
 from pyvesync.models.humidifier_models import (
     ClassicLVHumidResult,
@@ -813,3 +813,16 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
         self.state.automatic_stop_config = toggle
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
+    
+    # Override so that auto mode sets to autoPro
+
+    async def set_auto_mode(self) -> bool:
+        """Set Humidifier to Auto Mode.
+
+        Returns:
+            bool: Success of request.
+        """
+        if HumidifierModes.AUTO in self.mist_modes:
+            return await self.set_mode(HumidifierModes.AUTOPRO)
+        logger.debug('Auto mode not supported for this device.')
+        return await self.set_mode(HumidifierModes.AUTO)
