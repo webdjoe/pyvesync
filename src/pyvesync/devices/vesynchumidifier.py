@@ -623,6 +623,19 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
+    # Override so that auto mode sets to autoPro
+
+    async def set_auto_mode(self) -> bool:
+        """Set Humidifier to Auto Mode.
+
+        Returns:
+            bool: Success of request.
+        """
+        if HumidifierModes.AUTO in self.mist_modes:
+            return await self.set_mode(HumidifierModes.AUTOPRO)
+        logger.debug('Auto mode not supported for this device.')
+        return False
+
 
 class VeSyncHumid1000S(VeSyncHumid200300S):
     """Levoit OasisMist 1000S Specific class.
@@ -823,16 +836,3 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
         self.state.automatic_stop_config = toggle
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
-
-    # Override so that auto mode sets to autoPro
-
-    async def set_auto_mode(self) -> bool:
-        """Set Humidifier to Auto Mode.
-
-        Returns:
-            bool: Success of request.
-        """
-        if HumidifierModes.AUTO in self.mist_modes:
-            return await self.set_mode(HumidifierModes.AUTOPRO)
-        logger.debug('Auto mode not supported for this device.')
-        return False
