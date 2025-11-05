@@ -597,7 +597,7 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
         r = Helpers.process_dev_response(logger, 'set_humidity_mode', self, r_dict)
         if r is None:
             return False
-        if mode is HumidifierModes.AUTOPRO:
+        if mode == HumidifierModes.AUTOPRO:
             mode = HumidifierModes.AUTO
         self.state.mode = mode
         self.state.device_status = DeviceStatus.ON
