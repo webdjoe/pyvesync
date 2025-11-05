@@ -295,6 +295,7 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
             return False
 
         self.state.mode = mode
+        self.state.device_status = DeviceStatus.ON
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
@@ -596,7 +597,10 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
         r = Helpers.process_dev_response(logger, 'set_humidity_mode', self, r_dict)
         if r is None:
             return False
+        if mode is HumidifierModes.AUTOPRO:
+            mode = HumidifierModes.AUTO
         self.state.mode = mode
+        self.state.device_status = DeviceStatus.ON
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
@@ -747,6 +751,8 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
             return False
 
         self.state.mode = mode
+
+        self.state.device_status = DeviceStatus.ON
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
@@ -763,6 +769,7 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
 
         self.state.mist_level = level
         self.state.mist_virtual_level = level
+        self.state.device_status = DeviceStatus.ON
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
@@ -828,4 +835,3 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
         if HumidifierModes.AUTO in self.mist_modes:
             return await self.set_mode(HumidifierModes.AUTOPRO)
         logger.debug('Auto mode not supported for this device.')
-        return await self.set_mode(HumidifierModes.AUTO)
