@@ -361,6 +361,7 @@ class VeSyncHumidifier(VeSyncBaseToggleDevice):
         if HumidifierModes.AUTO in self.mist_modes:
             return await self.set_mode(HumidifierModes.AUTO)
         logger.error('Auto mode not supported for this device.')
+        return False
 
     async def set_manual_mode(self) -> bool:
         """Set Humidifier to Manual Mode.
@@ -371,6 +372,7 @@ class VeSyncHumidifier(VeSyncBaseToggleDevice):
         if HumidifierModes.MANUAL in self.mist_modes:
             return await self.set_mode(HumidifierModes.MANUAL)
         logger.error('Manual mode not supported for this device.')
+        return False
 
     async def set_sleep_mode(self) -> bool:
         """Set Humidifier to Sleep Mode.
@@ -381,6 +383,7 @@ class VeSyncHumidifier(VeSyncBaseToggleDevice):
         if HumidifierModes.SLEEP in self.mist_modes:
             return await self.set_mode(HumidifierModes.SLEEP)
         logger.error('Sleep mode not supported for this device.')
+        return False
 
     async def set_humidity(self, humidity: int) -> bool:
         """Set Humidifier Target Humidity.
