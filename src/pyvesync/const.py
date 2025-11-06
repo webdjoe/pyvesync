@@ -655,7 +655,6 @@ class HumidifierModes(Features):
     TURBO = 'turbo'
     PET = 'pet'
     UNKNOWN = 'unknown'
-    AUTOPRO = 'autopro'
 
 
 class FanModes(StrEnum):
@@ -872,4 +871,26 @@ ENERGY_HISTORY_MAP = {
 ENERGY_HISTORY_OFFSET_WHOGPLUG = {
     EnergyIntervals.WEEK: 500000,
     EnergyIntervals.MONTH: 2500000,
+}
+
+# ------------------- HUMIDIFIER CONST ------------------ #
+
+
+class DryingModes(StrEnum):
+    """Drying modes for VeSync humidifiers.
+
+    Attributes:
+        ON: Drying mode is on.
+        OFF: Drying mode is off.
+    """
+
+    DONE = 'done'
+    RUNNING = 'on'
+    PAUSE = 'pause'
+
+
+DRYING_MODES: dict[str, int] = {
+    DryingModes.DONE: 0,
+    DryingModes.RUNNING: 1,
+    DryingModes.PAUSE: 2,
 }
