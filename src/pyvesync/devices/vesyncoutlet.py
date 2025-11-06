@@ -326,9 +326,9 @@ class VeSyncOutlet10A(BypassV1Mixin, VeSyncOutlet):
         if toggle is None:
             toggle = self.state.device_status != DeviceStatus.ON
         toggle_str = DeviceStatus.ON if toggle else DeviceStatus.OFF
-
+        update_dict = {'status': toggle_str.value}
         response = await self.call_bypassv1_api(
-            RequestBypassV1, method='deviceStatus', endpoint='deviceStatus'
+            RequestBypassV1, update_dict=update_dict, method='deviceStatus', endpoint='deviceStatus'
         )
         r_dict = Helpers.process_dev_response(logger, 'toggle_switch', self, response)
         if r_dict is None:
