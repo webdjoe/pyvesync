@@ -255,6 +255,8 @@ class VeSyncPedestalFan(BypassV2Mixin, VeSyncFanBase):
         self.state.fan_level = res.fanSpeedLevel
         self.state.temperature = (res.temperature / 10) if res.temperature else None
         self.state.mute_set_status = DeviceStatus.from_int(res.muteSwitch)
+        self.state.display_set_status = DeviceStatus.from_int(res.screenSwitch)
+        self.state.display_status = DeviceStatus.from_int(res.screenState)
         self.state.vertical_oscillation_status = DeviceStatus.from_int(
             res.verticalOscillationState
         )
@@ -310,6 +312,18 @@ class VeSyncPedestalFan(BypassV2Mixin, VeSyncFanBase):
         if r is None:
             return False
         self.state.fan_level = speed
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def toggle_switch(self, toggle: bool | None = None) -> bool:
+        if toggle is None:
+            toggle = self.state.device_status == DeviceStatus.OFF
+        data = {'powerSwitch': int(toggle), 'switchIdx': 0}
+        r_dict = await self.call_bypassv2_api('setSwitch', data)
+        r = Helpers.process_dev_response(logger, 'toggle_switch', self, r_dict)
+        if r is None:
+            return False
+        self.state.device_status = DeviceStatus.from_bool(toggle)
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
