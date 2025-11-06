@@ -8,6 +8,7 @@ import re
 import time
 from collections.abc import Iterator
 from dataclasses import InitVar, dataclass, field
+from enum import StrEnum
 from typing import TYPE_CHECKING, Any, TypeVar
 
 from mashumaro.exceptions import InvalidFieldValue, MissingField, UnserializableField
@@ -36,6 +37,8 @@ if TYPE_CHECKING:
 
 T = TypeVar('T')
 T_MODEL = TypeVar('T_MODEL', bound=DataClassORJSONMixin)
+
+ST = TypeVar('ST', str, int)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -554,18 +557,20 @@ class Helpers:
         return return_code, return_msg
 
     @staticmethod
-    def get_key(data: dict[str, str], key: str, default: str | None = None) -> str | None:
+    def get_key(
+        data: dict[StrEnum | str, ST], value: ST, default: str | None = None
+    ) -> str | StrEnum | None:
         """Get key from dictionary ignoring case sensitivity.
 
         Args:
             data (dict[str, Any]): Dictionary to search.
-            key (str): Key to search for.
+            value (str): Value to search for.
             default (Any): Default value to return if key not found.
 
         Returns:
             Any: Value associated with the key, or None if not found.
         """
-        return next((v for k, v in data.items() if k.lower() == key.lower()), default)
+        return next((k for k, v in data.items() if v == value), default)
 
 
 @dataclass(repr=False)

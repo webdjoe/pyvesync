@@ -438,3 +438,11 @@ class VeSyncHumidifier(VeSyncBaseToggleDevice):
             return False
         logger.error('Drying mode is not supported for this device.')
         return False
+
+    async def turn_on_drying_mode(self) -> bool:
+        """Turn on drying mode."""
+        return await self.toggle_drying_mode(True)
+
+    async def turn_off_drying_mode(self) -> bool:
+        """Turn off drying mode."""
+        return await self.toggle_drying_mode(False)
