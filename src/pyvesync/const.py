@@ -604,8 +604,11 @@ class FanFeatures(Features):
     """VeSync fan features."""
 
     OSCILLATION = 'oscillation'
+    SET_OSCILLATION_RANGE = 'set_oscillation_range'
     SOUND = 'sound'
     DISPLAYING_TYPE = 'displaying_type'  # Unknown functionality
+    HORIZONTAL_OSCILLATION = 'horizontal_oscillation'
+    VERTICAL_OSCILLATION = 'vertical_oscillation'
 
 
 # Modes
@@ -675,6 +678,7 @@ class FanModes(StrEnum):
     SLEEP = 'advancedSleep'
     TURBO = 'turbo'
     PET = 'pet'
+    ECO = 'eco'
     UNKNOWN = 'unknown'
     ADVANCED_SLEEP = 'advancedSleep'
 

@@ -35,7 +35,11 @@ METHOD_RESPONSES['DEVTYPE'].default_factory = lambda: ({"code": 0, "msg": "succe
 
 from copy import deepcopy
 from pyvesync.device_map import fan_modules
-from defaults import TestDefaults, FunctionResponses, build_bypass_v2_response, FunctionResponsesV2
+from pyvesync.const import DeviceStatus
+from defaults import (
+    build_bypass_v2_response,
+    FunctionResponsesV2,
+)
 from pyvesync.const import FanModes
 
 FANS = [m.setup_entry for m in fan_modules]
@@ -43,37 +47,95 @@ FANS_NUM = len(FANS)
 
 
 class FanDefaults:
+    fan_status = DeviceStatus.ON
+    screen_status = DeviceStatus.ON
+    oscillation_status = DeviceStatus.ON
+    oscillation_horizontal = DeviceStatus.ON
+    oscillation_vertical = DeviceStatus.ON
+    mute_status = DeviceStatus.ON
+    child_lock = DeviceStatus.OFF
     fan_mode = FanModes.NORMAL
+    yaw = 45
+    pitch = 90
+    top = 120
+    bottom = 0
+    left = 0
+    right = 90
     fan_level = 1
     fan_speed_level = 1
-    temperature_fan = 750
+    temperature_fan = 75.0
 
 
 FAN_DETAILS: dict[str, dict] = {
     "LTF-F422S": {
-        "powerSwitch": TestDefaults.bin_toggle,
+        "powerSwitch": int(FanDefaults.fan_status),
         "workMode": FanModes.NORMAL.value,
         "manualSpeedLevel": FanDefaults.fan_level,
         "fanSpeedLevel": FanDefaults.fan_speed_level,
-        "screenState": TestDefaults.bin_toggle,
-        "screenSwitch": TestDefaults.bin_toggle,
-        "oscillationSwitch": TestDefaults.bin_toggle,
-        "oscillationState": TestDefaults.bin_toggle,
-        "muteSwitch": TestDefaults.bin_toggle,
-        "muteState": TestDefaults.bin_toggle,
+        "screenState": int(FanDefaults.screen_status),
+        "screenSwitch": int(FanDefaults.screen_status),
+        "oscillationSwitch": int(FanDefaults.oscillation_status),
+        "oscillationState": int(FanDefaults.oscillation_status),
+        "muteSwitch": int(FanDefaults.mute_status),
+        "muteState": int(FanDefaults.mute_status),
         "timerRemain": 0,
         "temperature": FanDefaults.temperature_fan,
         "sleepPreference": {
             "sleepPreferenceType": "default",
-            "oscillationSwitch": TestDefaults.bin_toggle,
+            "oscillationSwitch": int(FanDefaults.oscillation_status),
             "initFanSpeedLevel": 0,
             "fallAsleepRemain": 0,
-            "autoChangeFanLevelSwitch": TestDefaults.bin_toggle,
+            "autoChangeFanLevelSwitch": int(FanDefaults.fan_status),
         },
         "scheduleCount": 0,
         "displayingType": 0,
         "errorCode": 0,
-    }
+    },
+    "LPF-R423S": {
+        "powerSwitch": int(FanDefaults.fan_status),
+        "workMode": FanDefaults.fan_mode.value,
+        "fanSpeedLevel": FanDefaults.fan_speed_level,
+        "scheduleCount": 0,
+        "timerRemain": 0,
+        "sleepPreference": {
+            "sleepPreferenceType": "default",
+            "oscillationState": int(FanDefaults.oscillation_status),
+            "initFanSpeedLevel": 0,
+            "fallAsleepRemain": 0,
+        },
+        "temperature": FanDefaults.temperature_fan * 10,
+        "muteState": int(FanDefaults.mute_status),
+        "muteSwitch": int(FanDefaults.mute_status),
+        "screenState": int(FanDefaults.screen_status),
+        "screenSwitch": int(FanDefaults.screen_status),
+        "errorCode": 0,
+        "horizontalOscillationState": int(FanDefaults.oscillation_horizontal),
+        "verticalOscillationState": int(FanDefaults.oscillation_vertical),
+        "childLock": FanDefaults.child_lock,
+        "oscillationCoordinate": {"yaw": FanDefaults.yaw, "pitch": FanDefaults.pitch},
+        "oscillationRange": {
+            "left": FanDefaults.left,
+            "right": FanDefaults.right,
+            "top": FanDefaults.top,
+            "bottom": FanDefaults.bottom,
+        },
+        "highTemperatureReminderState": 1,
+        "highTemperature": 806,
+        "smartCleaningReminderState": 1,
+        "oscillationCalibrationState": 0,
+        "oscillationCalibrationProgress": 0,
+        "levelMemory": [
+            {"workMode": "normal", "level": 2, "enable": 1},
+            {"workMode": "turbo", "level": 12, "enable": 0},
+            {"workMode": "eco", "level": 3, "enable": 1},
+            {"workMode": "advancedSleep", "level": 3, "enable": 1},
+        ],
+        "horizontalOscillationDemo": 0,
+        "verticalOscillationDemo": 0,
+        "isSupportSetOnceOscillation": 1,
+        "isTimerSupportPowerOn": 1,
+        "isSupportSetRelativeCoordinate": 1,
+    },
 }
 """Contains the result dictionary of the device response details for fans.
 
@@ -84,21 +146,13 @@ return dictionary for a successful `fan.update()` API request.
 
 DETAILS_RESPONSES = {
     "LTF-F422S": build_bypass_v2_response(inner_result=FAN_DETAILS["LTF-F422S"]),
-
+    "LPF-R423S": build_bypass_v2_response(inner_result=FAN_DETAILS["LPF-R423S"]),
 }
 
 
-FunctionResponses.default_factory = lambda: (
-    {
-        "traceId": TestDefaults.trace_id,
-        "code": 0,
-        "msg": "request success",
-        "result": {"traceId": TestDefaults.trace_id, "code": 0},
-    }
-)
-
 METHOD_RESPONSES = {
-    "LTF-F422S": deepcopy(FunctionResponsesV2)
+    "LTF-F422S": deepcopy(FunctionResponsesV2),
+    "LPF-R423S": deepcopy(FunctionResponsesV2)
 }
 """Default responses for device methods.
 
