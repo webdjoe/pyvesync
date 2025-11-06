@@ -27,6 +27,7 @@ from pyvesync.models.outlet_models import (
     Request15ADetails,
     Request15ANightlight,
     Request15AStatus,
+    RequestESW03Status,
     RequestOutdoorStatus,
     RequestWHOGYearlyEnergy,
     Response7AOutlet,
@@ -328,7 +329,7 @@ class VeSyncOutlet10A(BypassV1Mixin, VeSyncOutlet):
         toggle_str = DeviceStatus.ON if toggle else DeviceStatus.OFF
         update_dict = {'status': toggle_str.value}
         response = await self.call_bypassv1_api(
-            RequestBypassV1,
+            RequestESW03Status,
             update_dict=update_dict,
             method='deviceStatus',
             endpoint='deviceStatus',
