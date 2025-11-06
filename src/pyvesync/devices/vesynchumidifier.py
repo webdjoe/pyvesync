@@ -452,9 +452,7 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
         """Set state from Superior 6000S API result model."""
         self.state.device_status = DeviceStatus.from_int(resp_model.powerSwitch)
         self.state.connection_status = ConnectionStatus.ONLINE
-        self.state.mode = Helpers.get_key(
-            self.mist_modes, resp_model.workMode, None
-        )
+        self.state.mode = Helpers.get_key(self.mist_modes, resp_model.workMode, None)
         if self.state.mode is None:
             logger.warning('Unknown mist mode received: %s', resp_model.workMode)
 
@@ -475,7 +473,8 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
         drying_mode = resp_model.dryingMode
         if drying_mode is not None:
             self.state.drying_mode_status = Helpers.get_key(
-                DRYING_MODES, drying_mode.dryingState, None)
+                DRYING_MODES, drying_mode.dryingState, None
+            )
             self.state.drying_mode_level = drying_mode.dryingLevel
             self.state.drying_mode_auto_switch = DeviceStatus.from_int(
                 drying_mode.autoDryingSwitch
