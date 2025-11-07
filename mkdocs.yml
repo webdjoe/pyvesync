@@ -112,13 +112,15 @@ plugins:
             signature_crossrefs: true
             separate_signature: true
             extensions:
+            - griffe_warnings_deprecated:
+              kind: danger
+              title: Deprecated
+              label: "deprecated"
             - griffe_inherited_docstrings:
-                merge: true
+              merge: true
             - docstring_inheritance.griffe
             - scripts/docs_handler.py:InheritedNotation
-            - griffe_warnings_deprecated:
-                kind: danger
-                title: Deprecated
+
   - search
   - autorefs:
       resolve_closest: true
