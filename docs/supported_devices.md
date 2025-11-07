@@ -13,7 +13,7 @@ The VeSync API supports a variety of devices. The following is a list of devices
       - [Etekcity 10A Rount Outlet USA][pyvesync.devices.vesyncoutlet.VeSyncESW10USA]
       - [Etekcity 15A Rectangle Outlet][pyvesync.devices.vesyncoutlet.VeSyncOutlet15A]
       - [Etekcity 15A Outdoor Dual Outlet][pyvesync.devices.vesyncoutlet.VeSyncOutdoorPlug]
-      - [Round Smart Outlet Series][pyvesync.devices.vesyncoutlet.VeSyncOutletBSDGO1] - WHOPLUG / GREENSUN
+      - [BSDOG / Greensun Smart Outlet Series][pyvesync.devices.vesyncoutlet.VeSyncBSDOGPlug] - WHOPLUG / GREENSUN
 3. Switches
       - [ESWL01][pyvesync.devices.vesyncswitch.VeSyncWallSwitch] - Etekcity Wall Switch
       - [ESWL03][pyvesync.devices.vesyncswitch.VeSyncWallSwitch] - Etekcity 3-Way Switch
@@ -37,6 +37,7 @@ The VeSync API supports a variety of devices. The following is a list of devices
       - [Superior 6000S][pyvesync.devices.vesynchumidifier.VeSyncSuperior6000S] - 6L Smart Humidifier
 6. Fans
       - [42" Tower Fan][pyvesync.devices.vesyncfan.VeSyncTowerFan]
+      - [Pedestal Fan][pyvesync.devices.vesyncfan.VeSyncPedestalFan]
 7. Air Fryers
       - [CS137][pyvesync.devices.vesynckitchen.VeSyncAirFryer158] - 3.7qt Air Fryer
       - [CS158][pyvesync.devices.vesynckitchen.VeSyncAirFryer158] - 5.8qt Air Fryer
