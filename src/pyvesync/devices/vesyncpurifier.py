@@ -385,7 +385,7 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
     def display_state(self) -> bool:
         """Get display state.
 
-        See [pyvesync.VeSyncAirBypass.display_status][`self.display_status`]
+        See [self.state.display_status][`pyvesync.VeSyncAirBypass.state.display_status`]
         """
         return self.state.display_status == DeviceStatus.ON
 
