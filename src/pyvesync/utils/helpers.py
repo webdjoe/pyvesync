@@ -528,7 +528,7 @@ class Helpers:
         Returns:
             list[int]: List of error codes.
         """
-        error_keys = ['error', 'code', 'device_error_code', 'errorCode']
+        error_keys = ['error', 'code']
 
         def extract_all_error_codes(
             key: str, var: dict
