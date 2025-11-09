@@ -109,7 +109,7 @@ class PurifierState(DeviceState):
         self.auto_preference_type: str | None = None
         self.auto_room_size: int | None = None
         self._air_quality_level: AirQualityLevel | None = None
-        self.child_lock: bool = False
+        self.child_lock: bool | None = None
         self.filter_open_state: bool = False
         self.display_status: str | None = None
         self.display_set_status: str | None = None
