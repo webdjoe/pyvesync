@@ -57,6 +57,7 @@ docs = [
     "docstring-inheritance",
     "mkdocs-autorefs",
     "griffe-inherited-docstrings",
+    "griffe_warnings_deprecated",
 ]
 
 [tool.setuptools.packages.find]
