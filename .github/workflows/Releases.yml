@@ -58,7 +58,7 @@ jobs:
 
           if [ -z "$prev_tag" ]; then
             echo "No previous semantic tag found (x.x.x). Exiting workflow."
-            sys.exit(1)
+            exit 1
           else
             echo "Found previous tag: $prev_tag"
             echo "previous_tag=$prev_tag" >> "$GITHUB_OUTPUT"
@@ -116,3 +116,23 @@ jobs:
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
           # skip-existing: true
+
+      - name: Configure Git for mike
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+
+      - name: Fetch gh-pages branch for mike
+        run: |
+          git fetch origin gh-pages --depth=1 || true
+
+      - name: Install documentation dependencies
+        run: |
+          pip install .[docs]
+
+      - name: Deploy documentation with mike
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mike deploy --push --update-aliases ${{ steps.get_version.outputs.version }} latest
+          mike set-default --push latest
