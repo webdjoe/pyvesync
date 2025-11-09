@@ -803,7 +803,7 @@ class VeSyncOutletWHOGPlug(BypassV2Mixin, VeSyncOutlet):
     async def toggle_switch(self, toggle: bool | None = None) -> bool:
         if toggle is None:
             toggle = self.state.device_status != DeviceStatus.ON
-        toggle_int = bool(toggle)
+        toggle_int = int(toggle)
         r_dict = await self.call_bypassv2_api(
             'setProperty',
             data={'powerSwitch_1': toggle_int},
