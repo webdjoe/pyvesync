@@ -502,11 +502,11 @@ class VeSyncPurifier(VeSyncBaseToggleDevice):
 
     @property
     @deprecated('Use self.state.child_lock instead.')
-    def child_lock(self) -> bool:
+    def child_lock(self) -> bool | None:
         """Get child lock state.
 
         Returns:
-            bool : True if child lock is enabled, False if not.
+            bool | None : True if child lock is enabled, False if not, None if unknown.
         """
         return self.state.child_lock
 
