@@ -55,7 +55,7 @@ docs = [
     "mike",
     "mkdocs-git-revision-date-localized-plugin",
     "docstring-inheritance",
-    "mkdocs-autoref",
+    "mkdocs-autorefs",
     "griffe-inherited-docstrings",
 ]
 
