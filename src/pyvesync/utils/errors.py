@@ -40,7 +40,7 @@ Example:
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import StrEnum
 from types import MappingProxyType
 
@@ -767,7 +767,8 @@ class ErrorCodes:
                 error_info = cls.errors[error_str]
             else:
                 error_code = int(error_int / 1000) * 1000
-                error_info = cls.errors[str(error_code)]
+                error_object = cls.errors[str(error_code)]
+                error_info = replace(error_object)
 
             if msg:
                 error_info.message = f'{error_info.message} - {msg}'

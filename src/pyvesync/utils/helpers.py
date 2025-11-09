@@ -244,7 +244,7 @@ class Helpers:
             device.device_name,
             device.device_type,
             int(error_code),
-            f'{error_info.error_type} - {error_info.name} {error_info.message}',
+            f'{error_info.error_type} - {error_info.message}',
         )
         device.last_response = error_info
         if int(error_code) != 0:
