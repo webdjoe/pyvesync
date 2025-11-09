@@ -805,7 +805,9 @@ class VeSyncOutletWHOGPlug(BypassV2Mixin, VeSyncOutlet):
             toggle = self.state.device_status != DeviceStatus.ON
         toggle_int = bool(toggle)
         r_dict = await self.call_bypassv2_api(
-            'setProperty', data={'powerSwitch_1': toggle_int}
+            'setProperty',
+            data={'powerSwitch_1': toggle_int},
+            payload_update={'subDeviceNo': 0},
         )
         r = Helpers.process_dev_response(logger, 'toggle_switch', self, r_dict)
         if r is None:

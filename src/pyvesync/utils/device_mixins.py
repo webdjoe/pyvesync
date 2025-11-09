@@ -165,6 +165,7 @@ class BypassV2Mixin:
         payload_method: str,
         data: dict | None = None,
         method: str = 'bypassV2',
+        payload_update: dict | None = None,
     ) -> RequestBypassV2:
         """Build API request body Bypass V2 endpoint.
 
@@ -172,12 +173,14 @@ class BypassV2Mixin:
             payload_method (str): The method to use in the payload dict.
             data (dict | None): The data dict inside the payload value.
             method (str): The method to use in the outer body, defaults to bypassV2.
+            payload_update (dict | None): Additional keys to add to the payload.
         """
         body = Helpers.get_class_attributes(DefaultValues, self.request_keys)
         body.update(Helpers.get_class_attributes(self.manager, self.request_keys))
         body.update(Helpers.get_class_attributes(self, self.request_keys))
         body['method'] = method
         body['payload'] = {'method': payload_method, 'source': 'APP', 'data': data or {}}
+        body['payload'] |= payload_update or {}
         return RequestBypassV2.from_dict(body)
 
     async def call_bypassv2_api(
@@ -186,6 +189,7 @@ class BypassV2Mixin:
         data: dict | None = None,
         method: str = 'bypassV2',
         endpoint: str = 'bypassV2',
+        payload_update: dict | None = None,
     ) -> dict | None:
         """Send Bypass V2 API request.
 
@@ -197,11 +201,12 @@ class BypassV2Mixin:
             method (str): The method to use in the outer body.
             endpoint (str | None): The last part of the API url, defaults to
                 `bypassV2`, e.g. `/cloud/v2/deviceManaged/bypassV2`.
+            payload_update (dict | None): Additional keys to add to the payload.
 
         Returns:
             bytes: The response from the API request.
         """
-        request = self._build_request(payload_method, data, method)
+        request = self._build_request(payload_method, data, method, payload_update)
         endpoint = BYPASS_V2_BASE + endpoint
         resp_dict, _ = await self.manager.async_call_api(
             endpoint, 'post', request, Helpers.req_header_bypass()

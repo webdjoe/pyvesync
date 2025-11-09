@@ -16,6 +16,7 @@ turn_off:
       data:
         powerSwitch_1: false
       method: setProperty
+      subDeviceNo: 0
       source: APP
     phoneBrand: pyvesync
     phoneOS: Android
@@ -43,6 +44,7 @@ turn_on:
       data:
         powerSwitch_1: true
       method: setProperty
+      subDeviceNo: 0
       source: APP
     phoneBrand: pyvesync
     phoneOS: Android
