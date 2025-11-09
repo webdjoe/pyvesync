@@ -48,12 +48,20 @@ class RequestBypassV2(RequestBaseModel):
 
 
 @dataclass
-class BypassV2RequestPayload(RequestBaseModel):
+class BypassV2RequestPayload(DataClassORJSONMixin):
     """Generic Bypass V2 Payload Request model."""
 
     data: dict
     method: str
     source: str = 'APP'
+    subDeviceNo: int | None = None
+
+    class Config(BaseModelConfig):
+        """orjson config for dataclasses."""
+
+        forbid_extra_keys = True
+        orjson_options = orjson.OPT_NON_STR_KEYS
+        omit_none = True
 
 
 @dataclass
