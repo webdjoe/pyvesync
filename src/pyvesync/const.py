@@ -250,9 +250,16 @@ class DeviceStatus(StrEnum):
         return cls.UNKNOWN
 
     @classmethod
-    def from_bool(cls, value: bool) -> DeviceStatus:
+    def from_bool(cls, value: bool | str) -> DeviceStatus:
         """Convert boolean value to corresponding string."""
+        if isinstance(value, str):
+            return cls.from_bool_string(value)
         return cls.ON if value is True else cls.OFF
+
+    @classmethod
+    def from_bool_string(cls, value: str) -> DeviceStatus:
+        """Convert boolean value to corresponding string."""
+        return cls.ON if value == 'true' else cls.OFF
 
 
 class ConnectionStatus(StrEnum):
@@ -597,8 +604,11 @@ class FanFeatures(Features):
     """VeSync fan features."""
 
     OSCILLATION = 'oscillation'
+    SET_OSCILLATION_RANGE = 'set_oscillation_range'
     SOUND = 'sound'
     DISPLAYING_TYPE = 'displaying_type'  # Unknown functionality
+    HORIZONTAL_OSCILLATION = 'horizontal_oscillation'
+    VERTICAL_OSCILLATION = 'vertical_oscillation'
 
 
 # Modes
@@ -645,7 +655,6 @@ class HumidifierModes(Features):
     TURBO = 'turbo'
     PET = 'pet'
     UNKNOWN = 'unknown'
-    AUTOPRO = 'autopro'
 
 
 class FanModes(StrEnum):
@@ -668,6 +677,7 @@ class FanModes(StrEnum):
     SLEEP = 'advancedSleep'
     TURBO = 'turbo'
     PET = 'pet'
+    ECO = 'eco'
     UNKNOWN = 'unknown'
     ADVANCED_SLEEP = 'advancedSleep'
 
@@ -861,4 +871,26 @@ ENERGY_HISTORY_MAP = {
 ENERGY_HISTORY_OFFSET_WHOGPLUG = {
     EnergyIntervals.WEEK: 500000,
     EnergyIntervals.MONTH: 2500000,
+}
+
+# ------------------- HUMIDIFIER CONST ------------------ #
+
+
+class DryingModes(StrEnum):
+    """Drying modes for VeSync humidifiers.
+
+    Attributes:
+        ON: Drying mode is on.
+        OFF: Drying mode is off.
+    """
+
+    DONE = 'done'
+    RUNNING = 'on'
+    PAUSE = 'pause'
+
+
+DRYING_MODES: dict[str, int] = {
+    DryingModes.DONE: 0,
+    DryingModes.RUNNING: 1,
+    DryingModes.PAUSE: 2,
 }

@@ -1,26 +1,3 @@
-update:
-  headers:
-    Content-Type: application/json; charset=UTF-8
-    User-Agent: okhttp/3.12.1
-  json_object:
-    acceptLanguage: en
-    accountID: sample_id
-    appVersion: 5.6.60
-    cid: ESO15-TB-CID
-    configModel: ConfigModule
-    configModule: ConfigModule
-    debugMode: false
-    deviceId: ESO15-TB-CID
-    method: deviceDetail
-    phoneBrand: pyvesync
-    phoneOS: Android
-    timeZone: America/New_York
-    token: sample_tk
-    traceId: TRACE_ID
-    userCountryCode: US
-    uuid: ESO15-TB-UUID
-  method: post
-  url: /cloud/v1/deviceManaged/deviceDetail
 get_monthly_energy:
   headers:
     Content-Type: application/json; charset=UTF-8
@@ -131,3 +108,26 @@ turn_on:
     uuid: ESO15-TB-UUID
   method: post
   url: /cloud/v1/deviceManaged/deviceStatus
+update:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 5.6.60
+    cid: ESO15-TB-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: ESO15-TB-CID
+    method: deviceDetail
+    phoneBrand: pyvesync
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+    userCountryCode: US
+    uuid: ESO15-TB-UUID
+  method: post
+  url: /cloud/v1/deviceManaged/deviceDetail

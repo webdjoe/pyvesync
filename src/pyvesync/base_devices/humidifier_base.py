@@ -43,7 +43,7 @@ class HumidifierState(DeviceState):
         mode (str): Current mode.
         nightlight_brightness (int): Nightlight brightness level.
         nightlight_status (str): Nightlight status.
-        temperature (int): Current temperature.
+        temperature (float): Current temperature.
         warm_mist_enabled (bool): Warm mist enabled status.
         warm_mist_level (int): Warm mist level.
         water_lacks (bool): Water lacks status.
@@ -55,13 +55,14 @@ class HumidifierState(DeviceState):
         'auto_stop_target_reached',
         'auto_target_humidity',
         'automatic_stop_config',
+        'child_lock',
         'display_set_status',
         'display_status',
         'drying_mode_auto_switch',
         'drying_mode_level',
         'drying_mode_status',
         'drying_mode_time_remain',
-        'filter_life_percent',
+        'filter_life',
         'humidity',
         'humidity_high',
         'mist_level',
@@ -108,10 +109,11 @@ class HumidifierState(DeviceState):
         self.warm_mist_level: int | None = None
         self.water_lacks: bool = False
         self.water_tank_lifted: bool = False
-        self.temperature: int | None = None
+        self.child_lock: bool | None = None
+        self.temperature: float | None = None  # Fahrenheit
         # Superior 6000S States
         self.auto_preference: int | None = None
-        self.filter_life_percent: int | None = None
+        self.filter_life: int | None = None
         self.drying_mode_level: int | None = None
         self.drying_mode_auto_switch: str | None = None
         self.drying_mode_status: str | None = None
@@ -360,8 +362,8 @@ class VeSyncHumidifier(VeSyncBaseToggleDevice):
         """
         if HumidifierModes.AUTO in self.mist_modes:
             return await self.set_mode(HumidifierModes.AUTO)
-        logger.debug('Auto mode not supported for this device.')
-        return await self.set_mode(HumidifierModes.AUTO)
+        logger.error('Auto mode not supported for this device.')
+        return False
 
     async def set_manual_mode(self) -> bool:
         """Set Humidifier to Manual Mode.
@@ -371,8 +373,8 @@ class VeSyncHumidifier(VeSyncBaseToggleDevice):
         """
         if HumidifierModes.MANUAL in self.mist_modes:
             return await self.set_mode(HumidifierModes.MANUAL)
-        logger.debug('Manual mode not supported for this device.')
-        return await self.set_mode(HumidifierModes.MANUAL)
+        logger.error('Manual mode not supported for this device.')
+        return False
 
     async def set_sleep_mode(self) -> bool:
         """Set Humidifier to Sleep Mode.
@@ -382,8 +384,8 @@ class VeSyncHumidifier(VeSyncBaseToggleDevice):
         """
         if HumidifierModes.SLEEP in self.mist_modes:
             return await self.set_mode(HumidifierModes.SLEEP)
-        logger.debug('Sleep mode not supported for this device.')
-        return await self.set_mode(HumidifierModes.SLEEP)
+        logger.error('Sleep mode not supported for this device.')
+        return False
 
     async def set_humidity(self, humidity: int) -> bool:
         """Set Humidifier Target Humidity.
@@ -395,7 +397,7 @@ class VeSyncHumidifier(VeSyncBaseToggleDevice):
             bool: Success of request.
         """
         del humidity
-        logger.debug('Target humidity is not supported or configured for this device.')
+        logger.error('Target humidity is not supported or configured for this device.')
         return False
 
     async def set_nightlight_brightness(self, brightness: int) -> bool:
@@ -409,9 +411,9 @@ class VeSyncHumidifier(VeSyncBaseToggleDevice):
         """
         del brightness
         if not self.supports_nightlight_brightness:
-            logger.debug('Nightlight brightness is not supported for this device.')
+            logger.error('Nightlight brightness is not supported for this device.')
             return False
-        logger.debug('Nightlight brightness has not been configured.')
+        logger.error('Nightlight brightness has not been configured.')
         return False
 
     async def set_warm_level(self, warm_level: int) -> bool:
@@ -425,16 +427,24 @@ class VeSyncHumidifier(VeSyncBaseToggleDevice):
         """
         del warm_level
         if self.supports_warm_mist:
-            logger.debug('Warm level has not been configured.')
+            logger.error('Warm level has not been configured.')
             return False
-        logger.debug('Warm level is not supported for this device.')
+        logger.error('Warm level is not supported for this device.')
         return False
 
     async def toggle_drying_mode(self, toggle: bool | None = None) -> bool:
         """enable/disable drying filters after turning off."""
         del toggle
         if self.supports_drying_mode:
-            logger.debug('Drying mode is not configured for this device.')
+            logger.error('Drying mode is not configured for this device.')
             return False
-        logger.debug('Drying mode is not supported for this device.')
+        logger.error('Drying mode is not supported for this device.')
         return False
+
+    async def turn_on_drying_mode(self) -> bool:
+        """Turn on drying mode."""
+        return await self.toggle_drying_mode(True)
+
+    async def turn_off_drying_mode(self) -> bool:
+        """Turn off drying mode."""
+        return await self.toggle_drying_mode(False)

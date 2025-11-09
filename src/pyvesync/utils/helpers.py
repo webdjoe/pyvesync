@@ -8,6 +8,7 @@ import re
 import time
 from collections.abc import Iterator
 from dataclasses import InitVar, dataclass, field
+from enum import StrEnum
 from typing import TYPE_CHECKING, Any, TypeVar
 
 from mashumaro.exceptions import InvalidFieldValue, MissingField, UnserializableField
@@ -36,6 +37,8 @@ if TYPE_CHECKING:
 
 T = TypeVar('T')
 T_MODEL = TypeVar('T_MODEL', bound=DataClassORJSONMixin)
+
+ST = TypeVar('ST', str, int)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -241,7 +244,7 @@ class Helpers:
             device.device_name,
             device.device_type,
             int(error_code),
-            f'{error_info.error_type} - {error_info.name} {error_info.message}',
+            f'{error_info.error_type} - {error_info.message}',
         )
         device.last_response = error_info
         if int(error_code) != 0:
@@ -525,7 +528,7 @@ class Helpers:
         Returns:
             list[int]: List of error codes.
         """
-        error_keys = ['error', 'code', 'device_error_code', 'errorCode']
+        error_keys = ['error', 'code']
 
         def extract_all_error_codes(
             key: str, var: dict
@@ -552,6 +555,22 @@ class Helpers:
                 return_code = code
                 return_msg = msg
         return return_code, return_msg
+
+    @staticmethod
+    def get_key(
+        data: dict[StrEnum | str, ST], value: ST, default: str | None = None
+    ) -> str | StrEnum | None:
+        """Get key from dictionary ignoring case sensitivity.
+
+        Args:
+            data (dict[str, Any]): Dictionary to search.
+            value (str): Value to search for.
+            default (Any): Default value to return if key not found.
+
+        Returns:
+            Any: Value associated with the key, or None if not found.
+        """
+        return next((k for k, v in data.items() if v == value), default)
 
 
 @dataclass(repr=False)
@@ -680,3 +699,31 @@ class Timer:
                 self._status = 'paused'
                 self._remain = current_remaining
             self._update_time = int(time.time())
+
+
+@dataclass(kw_only=True)
+class OscillationCoordinates:
+    """Dataclass to hold oscillation coordinates.
+
+    Note:
+        This should be used by VeSync device instances to manage internal status,
+        does not interact with the VeSync API.
+    """
+
+    yaw: int
+    pitch: int
+
+
+@dataclass(kw_only=True)
+class OscillationRange:
+    """Dataclass to hold oscillation range.
+
+    Note:
+        This should be used by VeSync device instances to manage internal status,
+        does not interact with the VeSync API.
+    """
+
+    left: int
+    right: int
+    top: int
+    bottom: int

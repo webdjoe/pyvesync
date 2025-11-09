@@ -12,3 +12,4 @@ mike
 mkdocs-git-revision-date-localized-plugin
 docstring-inheritance
 mkdocs-autorefs
+griffe_warnings_deprecated

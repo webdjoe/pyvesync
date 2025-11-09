@@ -385,7 +385,7 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
     def display_state(self) -> bool:
         """Get display state.
 
-        See [pyvesync.VeSyncAirBypass.display_status][`self.display_status`]
+        See [self.state.display_status][`pyvesync.VeSyncAirBypass.state.display_status`]
         """
         return self.state.display_status == DeviceStatus.ON
 
@@ -871,7 +871,6 @@ class VeSyncAir131(BypassV1Mixin, VeSyncPurifier):
             self.state.filter_life = details.filterLife.percent
         self.state.display_status = DeviceStatus(details.screenStatus)
         self.state.display_set_status = details.screenStatus
-        self.state.child_lock = bool(DeviceStatus(details.childLock))
         self.state.mode = details.mode
         self.state.fan_level = details.level or 0
         self.state.fan_set_level = details.level or 0

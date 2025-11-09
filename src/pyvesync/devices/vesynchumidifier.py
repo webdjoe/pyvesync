@@ -9,7 +9,7 @@ import orjson
 from typing_extensions import deprecated
 
 from pyvesync.base_devices import VeSyncHumidifier
-from pyvesync.const import ConnectionStatus, DeviceStatus
+from pyvesync.const import DRYING_MODES, ConnectionStatus, DeviceStatus
 from pyvesync.models.bypass_models import ResultV2GetTimer, ResultV2SetTimer
 from pyvesync.models.humidifier_models import (
     ClassicLVHumidResult,
@@ -295,6 +295,7 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
             return False
 
         self.state.mode = mode
+        self.state.device_status = DeviceStatus.ON
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
@@ -451,7 +452,10 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
         """Set state from Superior 6000S API result model."""
         self.state.device_status = DeviceStatus.from_int(resp_model.powerSwitch)
         self.state.connection_status = ConnectionStatus.ONLINE
-        self.state.mode = resp_model.workMode
+        self.state.mode = Helpers.get_key(self.mist_modes, resp_model.workMode, None)
+        if self.state.mode is None:
+            logger.warning('Unknown mist mode received: %s', resp_model.workMode)
+
         self.state.auto_target_humidity = resp_model.targetHumidity
         self.state.humidity = resp_model.humidity
         self.state.mist_level = resp_model.mistLevel
@@ -460,15 +464,20 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
         self.state.water_tank_lifted = bool(resp_model.waterTankLifted)
         self.state.automatic_stop_config = bool(resp_model.autoStopSwitch)
         self.state.auto_stop_target_reached = bool(resp_model.autoStopState)
-        self.state.display_set_status = DeviceStatus.from_int(resp_model.screenSwitch)
+        self.state.display_set_status = DeviceStatus.from_int(resp_model.screenState)
         self.state.display_status = DeviceStatus.from_int(resp_model.screenState)
         self.state.auto_preference = resp_model.autoPreference
-        self.state.filter_life_percent = resp_model.filterLifePercent
-        self.state.temperature = resp_model.temperature  # Unknown units
+        self.state.filter_life = resp_model.filterLifePercent
+        self.state.child_lock = bool(resp_model.childLockSwitch)
+        self.state.temperature = (
+            resp_model.temperature / 10
+        )  # Fahrenheit but without decimals
 
         drying_mode = resp_model.dryingMode
         if drying_mode is not None:
-            self.state.drying_mode_status = DeviceStatus.from_int(drying_mode.dryingState)
+            self.state.drying_mode_status = Helpers.get_key(
+                DRYING_MODES, drying_mode.dryingState, None
+            )
             self.state.drying_mode_level = drying_mode.dryingLevel
             self.state.drying_mode_auto_switch = DeviceStatus.from_int(
                 drying_mode.autoDryingSwitch
@@ -518,32 +527,19 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
-    @deprecated('Use toggle_drying_mode() instead.')
-    async def set_drying_mode_enabled(self, mode: bool) -> bool:
-        """Set drying mode on/off."""
-        return await self.toggle_drying_mode(mode)
-
     async def toggle_drying_mode(self, toggle: bool | None = None) -> bool:
         if toggle is None:
             toggle = self.state.drying_mode_status != DeviceStatus.ON
 
         payload_data = {'autoDryingSwitch': int(toggle)}
         r_dict = await self.call_bypassv2_api('setDryingMode', payload_data)
-        r = Helpers.process_dev_response(logger, 'set_drying_mode_enabled', self, r_dict)
+        r = Helpers.process_dev_response(logger, 'toggle_drying_mode', self, r_dict)
         if r is None:
             return False
 
         self.state.connection_status = ConnectionStatus.ONLINE
         self.state.drying_mode_auto_switch = DeviceStatus.from_bool(toggle)
         return True
-
-    @deprecated('Use toggle_display() instead.')
-    async def set_display_enabled(self, mode: bool) -> bool:
-        """Set display on/off.
-
-        Deprecated method, please use toggle_display() instead.
-        """
-        return await self.toggle_display(mode)
 
     async def toggle_display(self, toggle: bool | None = None) -> bool:
         if toggle is None:
@@ -574,11 +570,6 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
-    @deprecated('Use set_mode(mode: str) instead.')
-    async def set_humidity_mode(self, mode: str) -> bool:
-        """Set humidifier mode."""
-        return await self.set_mode(mode)
-
     async def set_mode(self, mode: str) -> bool:
         if mode.lower() not in self.mist_modes:
             logger.warning('Invalid humidity mode used - %s', mode)
@@ -596,7 +587,9 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
         r = Helpers.process_dev_response(logger, 'set_humidity_mode', self, r_dict)
         if r is None:
             return False
+
         self.state.mode = mode
+        self.state.device_status = DeviceStatus.ON
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
@@ -744,6 +737,8 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
             return False
 
         self.state.mode = mode
+
+        self.state.device_status = DeviceStatus.ON
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
@@ -760,6 +755,7 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
 
         self.state.mist_level = level
         self.state.mist_virtual_level = level
+        self.state.device_status = DeviceStatus.ON
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
