@@ -6,6 +6,9 @@ on:
       - master
       - dev
   push:
+    branches-ignore:
+      - master
+      - dev
   workflow_dispatch:
 
 

@@ -116,3 +116,17 @@ jobs:
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
           # skip-existing: true
+
+      - name: Configure Git for mike
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+
+      - name: Install documentation dependencies
+        run: |
+          pip install .[docs]
+
+      - name: Deploy documentation with mike
+        run: |
+          mike deploy --push --update-aliases ${{ steps.get_version.outputs.version }} latest
+          mike set-default --push latest
