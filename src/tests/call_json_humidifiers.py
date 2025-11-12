@@ -211,7 +211,7 @@ HUMIDIFIER_DETAILS: dict[str, Any] = {
         "screenSwitch": int(HumidifierDefaults.display_config),
         "screenState": int(HumidifierDefaults.display),
         "nightLight": {
-            "nightLightSwitch": 0,
+            "nightLightSwitch": int(HumidifierDefaults.nightlight_status),
             "brightness": HumidifierDefaults.nightlight_brightness,
         },
         "scheduleCount": 0,

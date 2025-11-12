@@ -3,7 +3,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 import asyncio
-import logging
 import pytest
 from unittest.mock import MagicMock, patch
 
@@ -31,7 +30,6 @@ class TestApiFunc:
         """
         self.mock_api_call = patch("pyvesync.vesync.ClientSession")
         self.caplog = caplog
-        self.caplog.set_level(logging.DEBUG)
         self.mock_api = self.mock_api_call.start()
         self.loop = asyncio.new_event_loop()
         self.mock = MagicMock()
@@ -40,7 +38,6 @@ class TestApiFunc:
         self.manager.redact = False
         self.manager.auth._token = TestDefaults.token
         self.manager.auth._account_id = TestDefaults.account_id
-        caplog.set_level(logging.DEBUG)
         yield
         self.mock.stop()
         self.loop.stop()
@@ -84,7 +81,6 @@ class TestBase:
         self.loop = asyncio.new_event_loop()
         self.mock_api_call = patch('pyvesync.vesync.VeSync.async_call_api')
         self.caplog = caplog
-        self.caplog.set_level(logging.DEBUG)
         self.mock_api = self.mock_api_call.start()
         self.mock_api.return_value.ok = True
         self.manager = VeSync(TestDefaults.email, TestDefaults.password)
@@ -93,7 +89,6 @@ class TestBase:
         self.manager.enabled = True
         self.manager.auth._token = TestDefaults.token
         self.manager.auth._account_id = TestDefaults.account_id
-        caplog.set_level(logging.DEBUG)
         yield
         self.mock_api_call.stop()
 
