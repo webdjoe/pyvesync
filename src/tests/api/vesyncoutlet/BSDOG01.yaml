@@ -14,7 +14,7 @@ turn_off:
     method: bypassV2
     payload:
       data:
-        powerSwitch_1: false
+        powerSwitch_1: 0
       method: setProperty
       subDeviceNo: 0
       source: APP
@@ -42,7 +42,7 @@ turn_on:
     method: bypassV2
     payload:
       data:
-        powerSwitch_1: true
+        powerSwitch_1: 1
       method: setProperty
       subDeviceNo: 0
       source: APP

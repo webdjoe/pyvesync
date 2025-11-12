@@ -109,7 +109,7 @@ class PurifierState(DeviceState):
         self.auto_preference_type: str | None = None
         self.auto_room_size: int | None = None
         self._air_quality_level: AirQualityLevel | None = None
-        self.child_lock: bool = False
+        self.child_lock: bool | None = None
         self.filter_open_state: bool = False
         self.display_status: str | None = None
         self.display_set_status: str | None = None
@@ -502,11 +502,11 @@ class VeSyncPurifier(VeSyncBaseToggleDevice):
 
     @property
     @deprecated('Use self.state.child_lock instead.')
-    def child_lock(self) -> bool:
+    def child_lock(self) -> bool | None:
         """Get child lock state.
 
         Returns:
-            bool : True if child lock is enabled, False if not.
+            bool | None : True if child lock is enabled, False if not, None if unknown.
         """
         return self.state.child_lock
 
