@@ -1,0 +1,3125 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://pyvesync.github.io/latest/development/utils/device_mixins/">
+      
+      
+        <link rel="prev" href="../colors/">
+      
+      
+        <link rel="next" href="../errors/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+    
+    
+      
+        <title>Device Mixins - pyvesync</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.618322db.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../../../stylesheets/common.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="blue-grey" data-md-color-accent="blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#device-mixins" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="pyvesync" class="md-header__button md-logo" aria-label="pyvesync" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M515.9 240H496v144c0 35.3-28.7 64-64 64H295c-24-91.7-93.5-165-183-194.3V240H92.1C76.6 240 64 227.4 64 211.9c0-7.6 3.1-14.9 8.6-20.2L276.5-4.9C283.9-12 293.7-16 304-16s20.1 4 27.5 11.1l203.9 196.6c5.5 5.3 8.6 12.6 8.6 20.2 0 15.5-12.6 28.1-28.1 28.1M280 192c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24h48c13.3 0 24-10.7 24-24v-48c0-13.3-10.7-24-24-24zM24 288c128.1 0 232 103.9 232 232 0 13.3-10.7 24-24 24s-24-10.7-24-24c0-101.6-82.4-184-184-184-13.3 0-24-10.7-24-24s10.7-24 24-24m8 192a32 32 0 1 1 0 64 32 32 0 1 1 0-64M0 408c0-13.3 10.7-24 24-24 75.1 0 136 60.9 136 136 0 13.3-10.7 24-24 24s-24-10.7-24-24c0-48.6-39.4-88-88-88-13.3 0-24-10.7-24-24"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            pyvesync
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Device Mixins
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/webdjoe/pyvesync" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    webdjoe/pyvesync
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="pyvesync" class="md-nav__button md-logo" aria-label="pyvesync" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M515.9 240H496v144c0 35.3-28.7 64-64 64H295c-24-91.7-93.5-165-183-194.3V240H92.1C76.6 240 64 227.4 64 211.9c0-7.6 3.1-14.9 8.6-20.2L276.5-4.9C283.9-12 293.7-16 304-16s20.1 4 27.5 11.1l203.9 196.6c5.5 5.3 8.6 12.6 8.6 20.2 0 15.5-12.6 28.1-28.1 28.1M280 192c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24h48c13.3 0 24-10.7 24-24v-48c0-13.3-10.7-24-24-24zM24 288c128.1 0 232 103.9 232 232 0 13.3-10.7 24-24 24s-24-10.7-24-24c0-101.6-82.4-184-184-184-13.3 0-24-10.7-24-24s10.7-24 24-24m8 192a32 32 0 1 1 0 64 32 32 0 1 1 0-64M0 408c0-13.3 10.7-24 24-24 75.1 0 136 60.9 136 136 0 13.3-10.7 24-24 24s-24-10.7-24-24c0-48.6-39.4-88-88-88-13.3 0-24-10.7-24-24"/></svg>
+
+    </a>
+    pyvesync
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/webdjoe/pyvesync" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    webdjoe/pyvesync
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../supported_devices/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Supported Devices
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../pyvesync3/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    pyvesync V3
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../usage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Usage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../authentication/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Authentication
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Development
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../vesync_api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VeSync API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../auth_api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Authentication
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data_models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../device_map/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DeviceMap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../device_container/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DeviceContainer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../vesync_device_base/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VeSyncDevice Base
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../constants/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Constants
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../capturing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Capturing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_12" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_6_12" id="__nav_6_12_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Utils
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_12_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_6_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Utils
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../helpers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Helpers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../colors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Colors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Device Mixins
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Device Mixins
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#bypass-v1-mixins-and-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bypass V1 Mixins and functions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Bypass V1 Mixins and functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pyvesync.utils.device_mixins.BypassV1Mixin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BypassV1Mixin Class
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="BypassV1Mixin Class">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pyvesync.utils.device_mixins.BypassV1Mixin.manager" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        manager
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyvesync.utils.device_mixins.BypassV1Mixin.request_keys" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        request_keys
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyvesync.utils.device_mixins.BypassV1Mixin.call_bypassv1_api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        call_bypassv1_api
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyvesync.utils.device_mixins.process_bypassv1_result" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        process_bypassv1_result
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bypass-v2-mixins-and-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bypass V2 Mixins and functions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Bypass V2 Mixins and functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pyvesync.utils.device_mixins.BypassV2Mixin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BypassV2Mixin Class
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="BypassV2Mixin Class">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pyvesync.utils.device_mixins.BypassV2Mixin.manager" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        manager
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyvesync.utils.device_mixins.BypassV2Mixin.request_keys" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        request_keys
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyvesync.utils.device_mixins.BypassV2Mixin.call_bypassv2_api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        call_bypassv2_api
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyvesync.utils.device_mixins.process_bypassv2_result" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        process_bypassv2_result
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Errors & Exceptions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../logging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Logging
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../devices/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Devices
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_7" id="__nav_7_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Devices
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../devices/outlets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Outlets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../devices/switches/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Switches
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../devices/bulbs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Bulbs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../devices/air_purifiers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Air Purifiers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../devices/humidifiers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Humidifiers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../devices/fans/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fans
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../devices/kitchen/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Air Fryers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../devices/thermostats/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Thermostats
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#bypass-v1-mixins-and-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bypass V1 Mixins and functions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Bypass V1 Mixins and functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pyvesync.utils.device_mixins.BypassV1Mixin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BypassV1Mixin Class
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="BypassV1Mixin Class">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pyvesync.utils.device_mixins.BypassV1Mixin.manager" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        manager
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyvesync.utils.device_mixins.BypassV1Mixin.request_keys" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        request_keys
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyvesync.utils.device_mixins.BypassV1Mixin.call_bypassv1_api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        call_bypassv1_api
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyvesync.utils.device_mixins.process_bypassv1_result" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        process_bypassv1_result
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bypass-v2-mixins-and-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bypass V2 Mixins and functions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Bypass V2 Mixins and functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pyvesync.utils.device_mixins.BypassV2Mixin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BypassV2Mixin Class
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="BypassV2Mixin Class">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pyvesync.utils.device_mixins.BypassV2Mixin.manager" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        manager
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyvesync.utils.device_mixins.BypassV2Mixin.request_keys" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        request_keys
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyvesync.utils.device_mixins.BypassV2Mixin.call_bypassv2_api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        call_bypassv2_api
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyvesync.utils.device_mixins.process_bypassv2_result" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        process_bypassv2_result
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="device-mixins">Device Mixins<a class="toc-permalink" href="#device-mixins" title="Permanent link">↲</a></h1>
+<p>The <code>pyvesync.utils.device_mixins</code> modules are used to add boilerplate code for the common API requests that are used by different devices.</p>
+<p>Please reference <a href="../../#vesync-apis">Development</a> for more information on how to use the device mixins.</p>
+<h2 id="bypass-v1-mixins-and-functions">Bypass V1 Mixins and functions<a class="toc-permalink" href="#bypass-v1-mixins-and-functions" title="Permanent link">↲</a></h2>
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="pyvesync.utils.device_mixins.BypassV1Mixin" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">pyvesync.utils.device_mixins.BypassV1Mixin</span>
+
+
+<a href="#pyvesync.utils.device_mixins.BypassV1Mixin" class="toc-permalink" title="Permanent link">↲</a></h3>
+
+
+    <div class="doc doc-contents first">
+
+
+
+        <p>Mixin for bypass V1 API.</p>
+<p>Overrides the <code>_build_request</code> method and <code>request_keys</code> attribute for devices
+that use the Bypass V1 API- /cloud/v1/deviceManaged/bypass. The primary method to
+call is <code>call_bypassv1_api</code>, which is a wrapper for setting up the request body and
+calling the API. The <code>bypass</code> endpoint can also be overridden for specific API calls.</p>
+
+
+
+
+
+
+
+
+              <details class="mkdocstrings-source">
+                <summary>Source code in <code>src/pyvesync/utils/device_mixins.py</code></summary>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-217">217</a></span>
+<span class="normal"><a href="#__codelineno-0-218">218</a></span>
+<span class="normal"><a href="#__codelineno-0-219">219</a></span>
+<span class="normal"><a href="#__codelineno-0-220">220</a></span>
+<span class="normal"><a href="#__codelineno-0-221">221</a></span>
+<span class="normal"><a href="#__codelineno-0-222">222</a></span>
+<span class="normal"><a href="#__codelineno-0-223">223</a></span>
+<span class="normal"><a href="#__codelineno-0-224">224</a></span>
+<span class="normal"><a href="#__codelineno-0-225">225</a></span>
+<span class="normal"><a href="#__codelineno-0-226">226</a></span>
+<span class="normal"><a href="#__codelineno-0-227">227</a></span>
+<span class="normal"><a href="#__codelineno-0-228">228</a></span>
+<span class="normal"><a href="#__codelineno-0-229">229</a></span>
+<span class="normal"><a href="#__codelineno-0-230">230</a></span>
+<span class="normal"><a href="#__codelineno-0-231">231</a></span>
+<span class="normal"><a href="#__codelineno-0-232">232</a></span>
+<span class="normal"><a href="#__codelineno-0-233">233</a></span>
+<span class="normal"><a href="#__codelineno-0-234">234</a></span>
+<span class="normal"><a href="#__codelineno-0-235">235</a></span>
+<span class="normal"><a href="#__codelineno-0-236">236</a></span>
+<span class="normal"><a href="#__codelineno-0-237">237</a></span>
+<span class="normal"><a href="#__codelineno-0-238">238</a></span>
+<span class="normal"><a href="#__codelineno-0-239">239</a></span>
+<span class="normal"><a href="#__codelineno-0-240">240</a></span>
+<span class="normal"><a href="#__codelineno-0-241">241</a></span>
+<span class="normal"><a href="#__codelineno-0-242">242</a></span>
+<span class="normal"><a href="#__codelineno-0-243">243</a></span>
+<span class="normal"><a href="#__codelineno-0-244">244</a></span>
+<span class="normal"><a href="#__codelineno-0-245">245</a></span>
+<span class="normal"><a href="#__codelineno-0-246">246</a></span>
+<span class="normal"><a href="#__codelineno-0-247">247</a></span>
+<span class="normal"><a href="#__codelineno-0-248">248</a></span>
+<span class="normal"><a href="#__codelineno-0-249">249</a></span>
+<span class="normal"><a href="#__codelineno-0-250">250</a></span>
+<span class="normal"><a href="#__codelineno-0-251">251</a></span>
+<span class="normal"><a href="#__codelineno-0-252">252</a></span>
+<span class="normal"><a href="#__codelineno-0-253">253</a></span>
+<span class="normal"><a href="#__codelineno-0-254">254</a></span>
+<span class="normal"><a href="#__codelineno-0-255">255</a></span>
+<span class="normal"><a href="#__codelineno-0-256">256</a></span>
+<span class="normal"><a href="#__codelineno-0-257">257</a></span>
+<span class="normal"><a href="#__codelineno-0-258">258</a></span>
+<span class="normal"><a href="#__codelineno-0-259">259</a></span>
+<span class="normal"><a href="#__codelineno-0-260">260</a></span>
+<span class="normal"><a href="#__codelineno-0-261">261</a></span>
+<span class="normal"><a href="#__codelineno-0-262">262</a></span>
+<span class="normal"><a href="#__codelineno-0-263">263</a></span>
+<span class="normal"><a href="#__codelineno-0-264">264</a></span>
+<span class="normal"><a href="#__codelineno-0-265">265</a></span>
+<span class="normal"><a href="#__codelineno-0-266">266</a></span>
+<span class="normal"><a href="#__codelineno-0-267">267</a></span>
+<span class="normal"><a href="#__codelineno-0-268">268</a></span>
+<span class="normal"><a href="#__codelineno-0-269">269</a></span>
+<span class="normal"><a href="#__codelineno-0-270">270</a></span>
+<span class="normal"><a href="#__codelineno-0-271">271</a></span>
+<span class="normal"><a href="#__codelineno-0-272">272</a></span>
+<span class="normal"><a href="#__codelineno-0-273">273</a></span>
+<span class="normal"><a href="#__codelineno-0-274">274</a></span>
+<span class="normal"><a href="#__codelineno-0-275">275</a></span>
+<span class="normal"><a href="#__codelineno-0-276">276</a></span>
+<span class="normal"><a href="#__codelineno-0-277">277</a></span>
+<span class="normal"><a href="#__codelineno-0-278">278</a></span>
+<span class="normal"><a href="#__codelineno-0-279">279</a></span>
+<span class="normal"><a href="#__codelineno-0-280">280</a></span>
+<span class="normal"><a href="#__codelineno-0-281">281</a></span>
+<span class="normal"><a href="#__codelineno-0-282">282</a></span>
+<span class="normal"><a href="#__codelineno-0-283">283</a></span>
+<span class="normal"><a href="#__codelineno-0-284">284</a></span>
+<span class="normal"><a href="#__codelineno-0-285">285</a></span>
+<span class="normal"><a href="#__codelineno-0-286">286</a></span>
+<span class="normal"><a href="#__codelineno-0-287">287</a></span>
+<span class="normal"><a href="#__codelineno-0-288">288</a></span>
+<span class="normal"><a href="#__codelineno-0-289">289</a></span>
+<span class="normal"><a href="#__codelineno-0-290">290</a></span>
+<span class="normal"><a href="#__codelineno-0-291">291</a></span>
+<span class="normal"><a href="#__codelineno-0-292">292</a></span>
+<span class="normal"><a href="#__codelineno-0-293">293</a></span>
+<span class="normal"><a href="#__codelineno-0-294">294</a></span>
+<span class="normal"><a href="#__codelineno-0-295">295</a></span>
+<span class="normal"><a href="#__codelineno-0-296">296</a></span>
+<span class="normal"><a href="#__codelineno-0-297">297</a></span>
+<span class="normal"><a href="#__codelineno-0-298">298</a></span>
+<span class="normal"><a href="#__codelineno-0-299">299</a></span>
+<span class="normal"><a href="#__codelineno-0-300">300</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-217" name="__codelineno-0-217"></a><span class="k">class</span><span class="w"> </span><span class="nc">BypassV1Mixin</span><span class="p">:</span>
+<a id="__codelineno-0-218" name="__codelineno-0-218"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Mixin for bypass V1 API.</span>
+<a id="__codelineno-0-219" name="__codelineno-0-219"></a>
+<a id="__codelineno-0-220" name="__codelineno-0-220"></a><span class="sd">    Overrides the `_build_request` method and `request_keys` attribute for devices</span>
+<a id="__codelineno-0-221" name="__codelineno-0-221"></a><span class="sd">    that use the Bypass V1 API- /cloud/v1/deviceManaged/bypass. The primary method to</span>
+<a id="__codelineno-0-222" name="__codelineno-0-222"></a><span class="sd">    call is `call_bypassv1_api`, which is a wrapper for setting up the request body and</span>
+<a id="__codelineno-0-223" name="__codelineno-0-223"></a><span class="sd">    calling the API. The `bypass` endpoint can also be overridden for specific API calls.</span>
+<a id="__codelineno-0-224" name="__codelineno-0-224"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-225" name="__codelineno-0-225"></a>
+<a id="__codelineno-0-226" name="__codelineno-0-226"></a>    <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+<a id="__codelineno-0-227" name="__codelineno-0-227"></a>        <span class="n">manager</span><span class="p">:</span> <span class="n">VeSync</span>
+<a id="__codelineno-0-228" name="__codelineno-0-228"></a>
+<a id="__codelineno-0-229" name="__codelineno-0-229"></a>    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+<a id="__codelineno-0-230" name="__codelineno-0-230"></a>    <span class="n">request_keys</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span>
+<a id="__codelineno-0-231" name="__codelineno-0-231"></a>        <span class="s1">&#39;acceptLanguage&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-232" name="__codelineno-0-232"></a>        <span class="s1">&#39;appVersion&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-233" name="__codelineno-0-233"></a>        <span class="s1">&#39;phoneBrand&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-234" name="__codelineno-0-234"></a>        <span class="s1">&#39;phoneOS&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-235" name="__codelineno-0-235"></a>        <span class="s1">&#39;accountID&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-236" name="__codelineno-0-236"></a>        <span class="s1">&#39;cid&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-237" name="__codelineno-0-237"></a>        <span class="s1">&#39;configModule&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-238" name="__codelineno-0-238"></a>        <span class="s1">&#39;debugMode&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-239" name="__codelineno-0-239"></a>        <span class="s1">&#39;traceId&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-240" name="__codelineno-0-240"></a>        <span class="s1">&#39;timeZone&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-241" name="__codelineno-0-241"></a>        <span class="s1">&#39;token&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-242" name="__codelineno-0-242"></a>        <span class="s1">&#39;userCountryCode&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-243" name="__codelineno-0-243"></a>        <span class="s1">&#39;uuid&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-244" name="__codelineno-0-244"></a>        <span class="s1">&#39;configModel&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-245" name="__codelineno-0-245"></a>        <span class="s1">&#39;deviceId&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-246" name="__codelineno-0-246"></a>    <span class="p">]</span>
+<a id="__codelineno-0-247" name="__codelineno-0-247"></a>
+<a id="__codelineno-0-248" name="__codelineno-0-248"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_build_request</span><span class="p">(</span>
+<a id="__codelineno-0-249" name="__codelineno-0-249"></a>        <span class="bp">self</span><span class="p">,</span>
+<a id="__codelineno-0-250" name="__codelineno-0-250"></a>        <span class="n">request_model</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">RequestBypassV1</span><span class="p">],</span>
+<a id="__codelineno-0-251" name="__codelineno-0-251"></a>        <span class="n">update_dict</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-252" name="__codelineno-0-252"></a>        <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;bypass&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-253" name="__codelineno-0-253"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RequestBypassV1</span><span class="p">:</span>
+<a id="__codelineno-0-254" name="__codelineno-0-254"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Build API request body for the Bypass V1 endpoint.</span>
+<a id="__codelineno-0-255" name="__codelineno-0-255"></a>
+<a id="__codelineno-0-256" name="__codelineno-0-256"></a><span class="sd">        Args:</span>
+<a id="__codelineno-0-257" name="__codelineno-0-257"></a><span class="sd">            request_model (type[RequestBypassV1]): The request model to use.</span>
+<a id="__codelineno-0-258" name="__codelineno-0-258"></a><span class="sd">            update_dict (dict | None): Additional keys to add on.</span>
+<a id="__codelineno-0-259" name="__codelineno-0-259"></a><span class="sd">            method (str): The method to use in the outer body, defaults to bypass.</span>
+<a id="__codelineno-0-260" name="__codelineno-0-260"></a>
+<a id="__codelineno-0-261" name="__codelineno-0-261"></a><span class="sd">        Returns:</span>
+<a id="__codelineno-0-262" name="__codelineno-0-262"></a><span class="sd">            RequestBypassV1: The request body for the Bypass V1 endpoint, the correct</span>
+<a id="__codelineno-0-263" name="__codelineno-0-263"></a><span class="sd">            model is determined from the RequestBypassV1 discriminator.</span>
+<a id="__codelineno-0-264" name="__codelineno-0-264"></a><span class="sd">        &quot;&quot;&quot;</span>
+<a id="__codelineno-0-265" name="__codelineno-0-265"></a>        <span class="n">body</span> <span class="o">=</span> <span class="n">Helpers</span><span class="o">.</span><span class="n">get_class_attributes</span><span class="p">(</span><span class="n">DefaultValues</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request_keys</span><span class="p">)</span>
+<a id="__codelineno-0-266" name="__codelineno-0-266"></a>        <span class="n">body</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">Helpers</span><span class="o">.</span><span class="n">get_class_attributes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request_keys</span><span class="p">))</span>
+<a id="__codelineno-0-267" name="__codelineno-0-267"></a>        <span class="n">body</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">Helpers</span><span class="o">.</span><span class="n">get_class_attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request_keys</span><span class="p">))</span>
+<a id="__codelineno-0-268" name="__codelineno-0-268"></a>        <span class="n">body</span><span class="p">[</span><span class="s1">&#39;method&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">method</span>
+<a id="__codelineno-0-269" name="__codelineno-0-269"></a>        <span class="n">body</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">update_dict</span> <span class="ow">or</span> <span class="p">{})</span>
+<a id="__codelineno-0-270" name="__codelineno-0-270"></a>        <span class="k">return</span> <span class="n">request_model</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">body</span><span class="p">)</span>
+<a id="__codelineno-0-271" name="__codelineno-0-271"></a>
+<a id="__codelineno-0-272" name="__codelineno-0-272"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">call_bypassv1_api</span><span class="p">(</span>
+<a id="__codelineno-0-273" name="__codelineno-0-273"></a>        <span class="bp">self</span><span class="p">,</span>
+<a id="__codelineno-0-274" name="__codelineno-0-274"></a>        <span class="n">request_model</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">RequestBypassV1</span><span class="p">],</span>
+<a id="__codelineno-0-275" name="__codelineno-0-275"></a>        <span class="n">update_dict</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-276" name="__codelineno-0-276"></a>        <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;bypass&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-277" name="__codelineno-0-277"></a>        <span class="n">endpoint</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;bypass&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-278" name="__codelineno-0-278"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-279" name="__codelineno-0-279"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Send ByPass V1 API request.</span>
+<a id="__codelineno-0-280" name="__codelineno-0-280"></a>
+<a id="__codelineno-0-281" name="__codelineno-0-281"></a><span class="sd">        This uses the `_build_request` method to send API requests to the Bypass V1 API.</span>
+<a id="__codelineno-0-282" name="__codelineno-0-282"></a><span class="sd">        The endpoint can be overridden with the `endpoint` argument.</span>
+<a id="__codelineno-0-283" name="__codelineno-0-283"></a>
+<a id="__codelineno-0-284" name="__codelineno-0-284"></a><span class="sd">        Args:</span>
+<a id="__codelineno-0-285" name="__codelineno-0-285"></a><span class="sd">            request_model (type[RequestBypassV1]): The request model to use.</span>
+<a id="__codelineno-0-286" name="__codelineno-0-286"></a><span class="sd">            update_dict (dict): Additional keys to add on.</span>
+<a id="__codelineno-0-287" name="__codelineno-0-287"></a><span class="sd">            method (str): The method to use in the outer body.</span>
+<a id="__codelineno-0-288" name="__codelineno-0-288"></a><span class="sd">            endpoint (str | None): The last part of the url path, defaults to</span>
+<a id="__codelineno-0-289" name="__codelineno-0-289"></a><span class="sd">                `bypass`, e.g. `/cloud/v1/deviceManaged/bypass`.</span>
+<a id="__codelineno-0-290" name="__codelineno-0-290"></a>
+<a id="__codelineno-0-291" name="__codelineno-0-291"></a><span class="sd">        Returns:</span>
+<a id="__codelineno-0-292" name="__codelineno-0-292"></a><span class="sd">            bytes: The response from the API request.</span>
+<a id="__codelineno-0-293" name="__codelineno-0-293"></a><span class="sd">        &quot;&quot;&quot;</span>
+<a id="__codelineno-0-294" name="__codelineno-0-294"></a>        <span class="n">request</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_request</span><span class="p">(</span><span class="n">request_model</span><span class="p">,</span> <span class="n">update_dict</span><span class="p">,</span> <span class="n">method</span><span class="p">)</span>
+<a id="__codelineno-0-295" name="__codelineno-0-295"></a>        <span class="n">url_path</span> <span class="o">=</span> <span class="n">BYPASS_V1_PATH</span> <span class="o">+</span> <span class="n">endpoint</span>
+<a id="__codelineno-0-296" name="__codelineno-0-296"></a>        <span class="n">resp_dict</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">async_call_api</span><span class="p">(</span>
+<a id="__codelineno-0-297" name="__codelineno-0-297"></a>            <span class="n">url_path</span><span class="p">,</span> <span class="s1">&#39;post&#39;</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">Helpers</span><span class="o">.</span><span class="n">req_header_bypass</span><span class="p">()</span>
+<a id="__codelineno-0-298" name="__codelineno-0-298"></a>        <span class="p">)</span>
+<a id="__codelineno-0-299" name="__codelineno-0-299"></a>
+<a id="__codelineno-0-300" name="__codelineno-0-300"></a>        <span class="k">return</span> <span class="n">resp_dict</span>
+</code></pre></div></td></tr></table></div>
+              </details>
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h4 id="pyvesync.utils.device_mixins.BypassV1Mixin.manager" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">manager</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#pyvesync.utils.device_mixins.BypassV1Mixin.manager" class="toc-permalink" title="Permanent link">↲</a></h4>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">manager</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="pyvesync.vesync.VeSync (pyvesync.VeSync)" href="../../vesync_api/#pyvesync.vesync.VeSync">VeSync</a></span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Inherited From <a class="autorefs autorefs-internal" title="pyvesync.utils.device_mixins.BypassV1Mixin" href="#pyvesync.utils.device_mixins.BypassV1Mixin"><code>BypassV1Mixin</code></a></p>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h4 id="pyvesync.utils.device_mixins.BypassV1Mixin.request_keys" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">request_keys</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+  </span>
+
+<a href="#pyvesync.utils.device_mixins.BypassV1Mixin.request_keys" class="toc-permalink" title="Permanent link">↲</a></h4>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">request_keys</span><span class="p">:</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="s1">&#39;acceptLanguage&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="s1">&#39;appVersion&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="s1">&#39;phoneBrand&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="s1">&#39;phoneOS&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="s1">&#39;accountID&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="s1">&#39;cid&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="s1">&#39;configModule&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="s1">&#39;debugMode&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="s1">&#39;traceId&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="s1">&#39;timeZone&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    <span class="s1">&#39;token&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    <span class="s1">&#39;userCountryCode&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    <span class="s1">&#39;uuid&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    <span class="s1">&#39;configModel&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    <span class="s1">&#39;deviceId&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Inherited From <a class="autorefs autorefs-internal" title="pyvesync.utils.device_mixins.BypassV1Mixin" href="#pyvesync.utils.device_mixins.BypassV1Mixin"><code>BypassV1Mixin</code></a></p>
+
+    </div>
+
+</div>
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="pyvesync.utils.device_mixins.BypassV1Mixin.call_bypassv1_api" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">call_bypassv1_api</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
+  </span>
+
+<a href="#pyvesync.utils.device_mixins.BypassV1Mixin.call_bypassv1_api" class="toc-permalink" title="Permanent link">↲</a></h4>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">call_bypassv1_api</span><span class="p">(</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">request_model</span><span class="p">:</span> <span class="n"><span title="type">type</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="RequestBypassV1
+
+
+  
+      dataclass
+   (pyvesync.models.bypass_models.RequestBypassV1)" href="../../data_models/#pyvesync.models.bypass_models.RequestBypassV1">RequestBypassV1</a></span><span class="p">],</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">update_dict</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">method</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">=</span> <span class="s1">&#39;bypass&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">endpoint</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">=</span> <span class="s1">&#39;bypass&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="dict">dict</span></span> <span class="o">|</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Inherited From <a class="autorefs autorefs-internal" title="pyvesync.utils.device_mixins.BypassV1Mixin" href="#pyvesync.utils.device_mixins.BypassV1Mixin"><code>BypassV1Mixin</code></a></p>
+        <p>Send ByPass V1 API request.</p>
+<p>This uses the <code>_build_request</code> method to send API requests to the Bypass V1 API.
+The endpoint can be overridden with the <code>endpoint</code> argument.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>request_model</code>
+            </td>
+            <td>
+                  <code><span title="type">type</span>[<a class="autorefs autorefs-internal" title="RequestBypassV1
+
+
+  
+      dataclass
+   (pyvesync.models.bypass_models.RequestBypassV1)" href="../../data_models/#pyvesync.models.bypass_models.RequestBypassV1">RequestBypassV1</a>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The request model to use.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>update_dict</code>
+            </td>
+            <td>
+                  <code><span title="dict">dict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Additional keys to add on.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>method</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The method to use in the outer body.</p>
+              </div>
+            </td>
+            <td>
+                  <code>&#39;bypass&#39;</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>endpoint</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The last part of the url path, defaults to
+<code>bypass</code>, e.g. <code>/cloud/v1/deviceManaged/bypass</code>.</p>
+              </div>
+            </td>
+            <td>
+                  <code>&#39;bypass&#39;</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+<th>Name</th>          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+<td><code>bytes</code></td>            <td>
+                  <code><span title="dict">dict</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The response from the API request.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/pyvesync/utils/device_mixins.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-272">272</a></span>
+<span class="normal"><a href="#__codelineno-0-273">273</a></span>
+<span class="normal"><a href="#__codelineno-0-274">274</a></span>
+<span class="normal"><a href="#__codelineno-0-275">275</a></span>
+<span class="normal"><a href="#__codelineno-0-276">276</a></span>
+<span class="normal"><a href="#__codelineno-0-277">277</a></span>
+<span class="normal"><a href="#__codelineno-0-278">278</a></span>
+<span class="normal"><a href="#__codelineno-0-279">279</a></span>
+<span class="normal"><a href="#__codelineno-0-280">280</a></span>
+<span class="normal"><a href="#__codelineno-0-281">281</a></span>
+<span class="normal"><a href="#__codelineno-0-282">282</a></span>
+<span class="normal"><a href="#__codelineno-0-283">283</a></span>
+<span class="normal"><a href="#__codelineno-0-284">284</a></span>
+<span class="normal"><a href="#__codelineno-0-285">285</a></span>
+<span class="normal"><a href="#__codelineno-0-286">286</a></span>
+<span class="normal"><a href="#__codelineno-0-287">287</a></span>
+<span class="normal"><a href="#__codelineno-0-288">288</a></span>
+<span class="normal"><a href="#__codelineno-0-289">289</a></span>
+<span class="normal"><a href="#__codelineno-0-290">290</a></span>
+<span class="normal"><a href="#__codelineno-0-291">291</a></span>
+<span class="normal"><a href="#__codelineno-0-292">292</a></span>
+<span class="normal"><a href="#__codelineno-0-293">293</a></span>
+<span class="normal"><a href="#__codelineno-0-294">294</a></span>
+<span class="normal"><a href="#__codelineno-0-295">295</a></span>
+<span class="normal"><a href="#__codelineno-0-296">296</a></span>
+<span class="normal"><a href="#__codelineno-0-297">297</a></span>
+<span class="normal"><a href="#__codelineno-0-298">298</a></span>
+<span class="normal"><a href="#__codelineno-0-299">299</a></span>
+<span class="normal"><a href="#__codelineno-0-300">300</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-272" name="__codelineno-0-272"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">call_bypassv1_api</span><span class="p">(</span>
+<a id="__codelineno-0-273" name="__codelineno-0-273"></a>    <span class="bp">self</span><span class="p">,</span>
+<a id="__codelineno-0-274" name="__codelineno-0-274"></a>    <span class="n">request_model</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">RequestBypassV1</span><span class="p">],</span>
+<a id="__codelineno-0-275" name="__codelineno-0-275"></a>    <span class="n">update_dict</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-276" name="__codelineno-0-276"></a>    <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;bypass&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-277" name="__codelineno-0-277"></a>    <span class="n">endpoint</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;bypass&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-278" name="__codelineno-0-278"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-279" name="__codelineno-0-279"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Send ByPass V1 API request.</span>
+<a id="__codelineno-0-280" name="__codelineno-0-280"></a>
+<a id="__codelineno-0-281" name="__codelineno-0-281"></a><span class="sd">    This uses the `_build_request` method to send API requests to the Bypass V1 API.</span>
+<a id="__codelineno-0-282" name="__codelineno-0-282"></a><span class="sd">    The endpoint can be overridden with the `endpoint` argument.</span>
+<a id="__codelineno-0-283" name="__codelineno-0-283"></a>
+<a id="__codelineno-0-284" name="__codelineno-0-284"></a><span class="sd">    Args:</span>
+<a id="__codelineno-0-285" name="__codelineno-0-285"></a><span class="sd">        request_model (type[RequestBypassV1]): The request model to use.</span>
+<a id="__codelineno-0-286" name="__codelineno-0-286"></a><span class="sd">        update_dict (dict): Additional keys to add on.</span>
+<a id="__codelineno-0-287" name="__codelineno-0-287"></a><span class="sd">        method (str): The method to use in the outer body.</span>
+<a id="__codelineno-0-288" name="__codelineno-0-288"></a><span class="sd">        endpoint (str | None): The last part of the url path, defaults to</span>
+<a id="__codelineno-0-289" name="__codelineno-0-289"></a><span class="sd">            `bypass`, e.g. `/cloud/v1/deviceManaged/bypass`.</span>
+<a id="__codelineno-0-290" name="__codelineno-0-290"></a>
+<a id="__codelineno-0-291" name="__codelineno-0-291"></a><span class="sd">    Returns:</span>
+<a id="__codelineno-0-292" name="__codelineno-0-292"></a><span class="sd">        bytes: The response from the API request.</span>
+<a id="__codelineno-0-293" name="__codelineno-0-293"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-294" name="__codelineno-0-294"></a>    <span class="n">request</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_request</span><span class="p">(</span><span class="n">request_model</span><span class="p">,</span> <span class="n">update_dict</span><span class="p">,</span> <span class="n">method</span><span class="p">)</span>
+<a id="__codelineno-0-295" name="__codelineno-0-295"></a>    <span class="n">url_path</span> <span class="o">=</span> <span class="n">BYPASS_V1_PATH</span> <span class="o">+</span> <span class="n">endpoint</span>
+<a id="__codelineno-0-296" name="__codelineno-0-296"></a>    <span class="n">resp_dict</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">async_call_api</span><span class="p">(</span>
+<a id="__codelineno-0-297" name="__codelineno-0-297"></a>        <span class="n">url_path</span><span class="p">,</span> <span class="s1">&#39;post&#39;</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">Helpers</span><span class="o">.</span><span class="n">req_header_bypass</span><span class="p">()</span>
+<a id="__codelineno-0-298" name="__codelineno-0-298"></a>    <span class="p">)</span>
+<a id="__codelineno-0-299" name="__codelineno-0-299"></a>
+<a id="__codelineno-0-300" name="__codelineno-0-300"></a>    <span class="k">return</span> <span class="n">resp_dict</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="pyvesync.utils.device_mixins.process_bypassv1_result" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">pyvesync.utils.device_mixins.process_bypassv1_result</span>
+
+
+<a href="#pyvesync.utils.device_mixins.process_bypassv1_result" class="toc-permalink" title="Permanent link">↲</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">process_bypassv1_result</span><span class="p">(</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">device</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="VeSyncBaseDevice (pyvesync.base_devices.VeSyncBaseDevice)" href="../../vesync_device_base/#pyvesync.base_devices.vesyncbasedevice.VeSyncBaseDevice">VeSyncBaseDevice</a></span><span class="p">,</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">logger</span><span class="p">:</span> <span class="n"><span title="logging.Logger">Logger</span></span><span class="p">,</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">method</span><span class="p">:</span> <span class="n"><span title="str">str</span></span><span class="p">,</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">resp_dict</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">model</span><span class="p">:</span> <span class="n"><span title="type">type</span></span><span class="p">[</span><span class="n"><span title="pyvesync.utils.device_mixins.T_MODEL">T_MODEL</span></span><span class="p">],</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="pyvesync.utils.device_mixins.T_MODEL">T_MODEL</span></span> <span class="o">|</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents first">
+
+        <p>Process the Bypass V1 API response.</p>
+<p>This will gracefully handle errors in the response and error codes,
+logging them as needed. The return value is the built model.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>device</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="VeSyncBaseDevice (pyvesync.base_devices.VeSyncBaseDevice)" href="../../vesync_device_base/#pyvesync.base_devices.vesyncbasedevice.VeSyncBaseDevice">VeSyncBaseDevice</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The device object.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>logger</code>
+            </td>
+            <td>
+                  <code><span title="logging.Logger">Logger</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The logger to use for logging.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>method</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The method used in the payload.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>resp_dict</code>
+            </td>
+            <td>
+                  <code><span title="dict">dict</span> | <span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The api response.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>model</code>
+            </td>
+            <td>
+                  <code><span title="type">type</span>[<span title="pyvesync.utils.device_mixins.T_MODEL">T_MODEL</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The model to use for the response.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+<th>Name</th>          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+<td><code>dict</code></td>            <td>
+                  <code><span title="pyvesync.utils.device_mixins.T_MODEL">T_MODEL</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The response data</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/pyvesync/utils/device_mixins.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-36">36</a></span>
+<span class="normal"><a href="#__codelineno-0-37">37</a></span>
+<span class="normal"><a href="#__codelineno-0-38">38</a></span>
+<span class="normal"><a href="#__codelineno-0-39">39</a></span>
+<span class="normal"><a href="#__codelineno-0-40">40</a></span>
+<span class="normal"><a href="#__codelineno-0-41">41</a></span>
+<span class="normal"><a href="#__codelineno-0-42">42</a></span>
+<span class="normal"><a href="#__codelineno-0-43">43</a></span>
+<span class="normal"><a href="#__codelineno-0-44">44</a></span>
+<span class="normal"><a href="#__codelineno-0-45">45</a></span>
+<span class="normal"><a href="#__codelineno-0-46">46</a></span>
+<span class="normal"><a href="#__codelineno-0-47">47</a></span>
+<span class="normal"><a href="#__codelineno-0-48">48</a></span>
+<span class="normal"><a href="#__codelineno-0-49">49</a></span>
+<span class="normal"><a href="#__codelineno-0-50">50</a></span>
+<span class="normal"><a href="#__codelineno-0-51">51</a></span>
+<span class="normal"><a href="#__codelineno-0-52">52</a></span>
+<span class="normal"><a href="#__codelineno-0-53">53</a></span>
+<span class="normal"><a href="#__codelineno-0-54">54</a></span>
+<span class="normal"><a href="#__codelineno-0-55">55</a></span>
+<span class="normal"><a href="#__codelineno-0-56">56</a></span>
+<span class="normal"><a href="#__codelineno-0-57">57</a></span>
+<span class="normal"><a href="#__codelineno-0-58">58</a></span>
+<span class="normal"><a href="#__codelineno-0-59">59</a></span>
+<span class="normal"><a href="#__codelineno-0-60">60</a></span>
+<span class="normal"><a href="#__codelineno-0-61">61</a></span>
+<span class="normal"><a href="#__codelineno-0-62">62</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-36" name="__codelineno-0-36"></a><span class="k">def</span><span class="w"> </span><span class="nf">process_bypassv1_result</span><span class="p">(</span>
+<a id="__codelineno-0-37" name="__codelineno-0-37"></a>    <span class="n">device</span><span class="p">:</span> <span class="n">VeSyncBaseDevice</span><span class="p">,</span>
+<a id="__codelineno-0-38" name="__codelineno-0-38"></a>    <span class="n">logger</span><span class="p">:</span> <span class="n">Logger</span><span class="p">,</span>
+<a id="__codelineno-0-39" name="__codelineno-0-39"></a>    <span class="n">method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<a id="__codelineno-0-40" name="__codelineno-0-40"></a>    <span class="n">resp_dict</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-41" name="__codelineno-0-41"></a>    <span class="n">model</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">T_MODEL</span><span class="p">],</span>
+<a id="__codelineno-0-42" name="__codelineno-0-42"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T_MODEL</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-43" name="__codelineno-0-43"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Process the Bypass V1 API response.</span>
+<a id="__codelineno-0-44" name="__codelineno-0-44"></a>
+<a id="__codelineno-0-45" name="__codelineno-0-45"></a><span class="sd">    This will gracefully handle errors in the response and error codes,</span>
+<a id="__codelineno-0-46" name="__codelineno-0-46"></a><span class="sd">    logging them as needed. The return value is the built model.</span>
+<a id="__codelineno-0-47" name="__codelineno-0-47"></a>
+<a id="__codelineno-0-48" name="__codelineno-0-48"></a><span class="sd">    Args:</span>
+<a id="__codelineno-0-49" name="__codelineno-0-49"></a><span class="sd">        device (VeSyncBaseDevice): The device object.</span>
+<a id="__codelineno-0-50" name="__codelineno-0-50"></a><span class="sd">        logger (Logger): The logger to use for logging.</span>
+<a id="__codelineno-0-51" name="__codelineno-0-51"></a><span class="sd">        method (str): The method used in the payload.</span>
+<a id="__codelineno-0-52" name="__codelineno-0-52"></a><span class="sd">        resp_dict (dict | str): The api response.</span>
+<a id="__codelineno-0-53" name="__codelineno-0-53"></a><span class="sd">        model (type[T_MODEL]): The model to use for the response.</span>
+<a id="__codelineno-0-54" name="__codelineno-0-54"></a>
+<a id="__codelineno-0-55" name="__codelineno-0-55"></a><span class="sd">    Returns:</span>
+<a id="__codelineno-0-56" name="__codelineno-0-56"></a><span class="sd">        dict: The response data</span>
+<a id="__codelineno-0-57" name="__codelineno-0-57"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-58" name="__codelineno-0-58"></a>    <span class="n">r_dict</span> <span class="o">=</span> <span class="n">Helpers</span><span class="o">.</span><span class="n">process_dev_response</span><span class="p">(</span><span class="n">logger</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">resp_dict</span><span class="p">)</span>
+<a id="__codelineno-0-59" name="__codelineno-0-59"></a>    <span class="k">if</span> <span class="n">r_dict</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="s1">&#39;result&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">r_dict</span><span class="p">:</span>
+<a id="__codelineno-0-60" name="__codelineno-0-60"></a>        <span class="k">return</span> <span class="kc">None</span>
+<a id="__codelineno-0-61" name="__codelineno-0-61"></a>    <span class="n">result</span> <span class="o">=</span> <span class="n">r_dict</span><span class="p">[</span><span class="s1">&#39;result&#39;</span><span class="p">]</span>
+<a id="__codelineno-0-62" name="__codelineno-0-62"></a>    <span class="k">return</span> <span class="n">Helpers</span><span class="o">.</span><span class="n">model_maker</span><span class="p">(</span><span class="n">logger</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div><h2 id="bypass-v2-mixins-and-functions">Bypass V2 Mixins and functions<a class="toc-permalink" href="#bypass-v2-mixins-and-functions" title="Permanent link">↲</a></h2>
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="pyvesync.utils.device_mixins.BypassV2Mixin" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">pyvesync.utils.device_mixins.BypassV2Mixin</span>
+
+
+<a href="#pyvesync.utils.device_mixins.BypassV2Mixin" class="toc-permalink" title="Permanent link">↲</a></h3>
+
+
+    <div class="doc doc-contents first">
+
+
+
+        <p>Mixin for bypass V2 API.</p>
+<p>Overrides the <code>_build_request</code> method and <code>request_keys</code> attribute for devices
+that use the Bypass V2 API- /cloud/v2/deviceManaged/bypassV2.</p>
+
+
+
+
+
+
+
+
+              <details class="mkdocstrings-source">
+                <summary>Source code in <code>src/pyvesync/utils/device_mixins.py</code></summary>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-135">135</a></span>
+<span class="normal"><a href="#__codelineno-0-136">136</a></span>
+<span class="normal"><a href="#__codelineno-0-137">137</a></span>
+<span class="normal"><a href="#__codelineno-0-138">138</a></span>
+<span class="normal"><a href="#__codelineno-0-139">139</a></span>
+<span class="normal"><a href="#__codelineno-0-140">140</a></span>
+<span class="normal"><a href="#__codelineno-0-141">141</a></span>
+<span class="normal"><a href="#__codelineno-0-142">142</a></span>
+<span class="normal"><a href="#__codelineno-0-143">143</a></span>
+<span class="normal"><a href="#__codelineno-0-144">144</a></span>
+<span class="normal"><a href="#__codelineno-0-145">145</a></span>
+<span class="normal"><a href="#__codelineno-0-146">146</a></span>
+<span class="normal"><a href="#__codelineno-0-147">147</a></span>
+<span class="normal"><a href="#__codelineno-0-148">148</a></span>
+<span class="normal"><a href="#__codelineno-0-149">149</a></span>
+<span class="normal"><a href="#__codelineno-0-150">150</a></span>
+<span class="normal"><a href="#__codelineno-0-151">151</a></span>
+<span class="normal"><a href="#__codelineno-0-152">152</a></span>
+<span class="normal"><a href="#__codelineno-0-153">153</a></span>
+<span class="normal"><a href="#__codelineno-0-154">154</a></span>
+<span class="normal"><a href="#__codelineno-0-155">155</a></span>
+<span class="normal"><a href="#__codelineno-0-156">156</a></span>
+<span class="normal"><a href="#__codelineno-0-157">157</a></span>
+<span class="normal"><a href="#__codelineno-0-158">158</a></span>
+<span class="normal"><a href="#__codelineno-0-159">159</a></span>
+<span class="normal"><a href="#__codelineno-0-160">160</a></span>
+<span class="normal"><a href="#__codelineno-0-161">161</a></span>
+<span class="normal"><a href="#__codelineno-0-162">162</a></span>
+<span class="normal"><a href="#__codelineno-0-163">163</a></span>
+<span class="normal"><a href="#__codelineno-0-164">164</a></span>
+<span class="normal"><a href="#__codelineno-0-165">165</a></span>
+<span class="normal"><a href="#__codelineno-0-166">166</a></span>
+<span class="normal"><a href="#__codelineno-0-167">167</a></span>
+<span class="normal"><a href="#__codelineno-0-168">168</a></span>
+<span class="normal"><a href="#__codelineno-0-169">169</a></span>
+<span class="normal"><a href="#__codelineno-0-170">170</a></span>
+<span class="normal"><a href="#__codelineno-0-171">171</a></span>
+<span class="normal"><a href="#__codelineno-0-172">172</a></span>
+<span class="normal"><a href="#__codelineno-0-173">173</a></span>
+<span class="normal"><a href="#__codelineno-0-174">174</a></span>
+<span class="normal"><a href="#__codelineno-0-175">175</a></span>
+<span class="normal"><a href="#__codelineno-0-176">176</a></span>
+<span class="normal"><a href="#__codelineno-0-177">177</a></span>
+<span class="normal"><a href="#__codelineno-0-178">178</a></span>
+<span class="normal"><a href="#__codelineno-0-179">179</a></span>
+<span class="normal"><a href="#__codelineno-0-180">180</a></span>
+<span class="normal"><a href="#__codelineno-0-181">181</a></span>
+<span class="normal"><a href="#__codelineno-0-182">182</a></span>
+<span class="normal"><a href="#__codelineno-0-183">183</a></span>
+<span class="normal"><a href="#__codelineno-0-184">184</a></span>
+<span class="normal"><a href="#__codelineno-0-185">185</a></span>
+<span class="normal"><a href="#__codelineno-0-186">186</a></span>
+<span class="normal"><a href="#__codelineno-0-187">187</a></span>
+<span class="normal"><a href="#__codelineno-0-188">188</a></span>
+<span class="normal"><a href="#__codelineno-0-189">189</a></span>
+<span class="normal"><a href="#__codelineno-0-190">190</a></span>
+<span class="normal"><a href="#__codelineno-0-191">191</a></span>
+<span class="normal"><a href="#__codelineno-0-192">192</a></span>
+<span class="normal"><a href="#__codelineno-0-193">193</a></span>
+<span class="normal"><a href="#__codelineno-0-194">194</a></span>
+<span class="normal"><a href="#__codelineno-0-195">195</a></span>
+<span class="normal"><a href="#__codelineno-0-196">196</a></span>
+<span class="normal"><a href="#__codelineno-0-197">197</a></span>
+<span class="normal"><a href="#__codelineno-0-198">198</a></span>
+<span class="normal"><a href="#__codelineno-0-199">199</a></span>
+<span class="normal"><a href="#__codelineno-0-200">200</a></span>
+<span class="normal"><a href="#__codelineno-0-201">201</a></span>
+<span class="normal"><a href="#__codelineno-0-202">202</a></span>
+<span class="normal"><a href="#__codelineno-0-203">203</a></span>
+<span class="normal"><a href="#__codelineno-0-204">204</a></span>
+<span class="normal"><a href="#__codelineno-0-205">205</a></span>
+<span class="normal"><a href="#__codelineno-0-206">206</a></span>
+<span class="normal"><a href="#__codelineno-0-207">207</a></span>
+<span class="normal"><a href="#__codelineno-0-208">208</a></span>
+<span class="normal"><a href="#__codelineno-0-209">209</a></span>
+<span class="normal"><a href="#__codelineno-0-210">210</a></span>
+<span class="normal"><a href="#__codelineno-0-211">211</a></span>
+<span class="normal"><a href="#__codelineno-0-212">212</a></span>
+<span class="normal"><a href="#__codelineno-0-213">213</a></span>
+<span class="normal"><a href="#__codelineno-0-214">214</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-135" name="__codelineno-0-135"></a><span class="k">class</span><span class="w"> </span><span class="nc">BypassV2Mixin</span><span class="p">:</span>
+<a id="__codelineno-0-136" name="__codelineno-0-136"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Mixin for bypass V2 API.</span>
+<a id="__codelineno-0-137" name="__codelineno-0-137"></a>
+<a id="__codelineno-0-138" name="__codelineno-0-138"></a><span class="sd">    Overrides the `_build_request` method and `request_keys` attribute for devices</span>
+<a id="__codelineno-0-139" name="__codelineno-0-139"></a><span class="sd">    that use the Bypass V2 API- /cloud/v2/deviceManaged/bypassV2.</span>
+<a id="__codelineno-0-140" name="__codelineno-0-140"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-141" name="__codelineno-0-141"></a>
+<a id="__codelineno-0-142" name="__codelineno-0-142"></a>    <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+<a id="__codelineno-0-143" name="__codelineno-0-143"></a>        <span class="n">manager</span><span class="p">:</span> <span class="n">VeSync</span>
+<a id="__codelineno-0-144" name="__codelineno-0-144"></a>
+<a id="__codelineno-0-145" name="__codelineno-0-145"></a>    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+<a id="__codelineno-0-146" name="__codelineno-0-146"></a>    <span class="n">request_keys</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span>
+<a id="__codelineno-0-147" name="__codelineno-0-147"></a>        <span class="s1">&#39;acceptLanguage&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-148" name="__codelineno-0-148"></a>        <span class="s1">&#39;appVersion&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-149" name="__codelineno-0-149"></a>        <span class="s1">&#39;phoneBrand&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-150" name="__codelineno-0-150"></a>        <span class="s1">&#39;phoneOS&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-151" name="__codelineno-0-151"></a>        <span class="s1">&#39;accountID&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-152" name="__codelineno-0-152"></a>        <span class="s1">&#39;cid&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-153" name="__codelineno-0-153"></a>        <span class="s1">&#39;configModule&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-154" name="__codelineno-0-154"></a>        <span class="s1">&#39;debugMode&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-155" name="__codelineno-0-155"></a>        <span class="s1">&#39;traceId&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-156" name="__codelineno-0-156"></a>        <span class="s1">&#39;timeZone&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-157" name="__codelineno-0-157"></a>        <span class="s1">&#39;token&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-158" name="__codelineno-0-158"></a>        <span class="s1">&#39;userCountryCode&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-159" name="__codelineno-0-159"></a>        <span class="s1">&#39;configModel&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-160" name="__codelineno-0-160"></a>        <span class="s1">&#39;deviceId&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-161" name="__codelineno-0-161"></a>    <span class="p">]</span>
+<a id="__codelineno-0-162" name="__codelineno-0-162"></a>
+<a id="__codelineno-0-163" name="__codelineno-0-163"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_build_request</span><span class="p">(</span>
+<a id="__codelineno-0-164" name="__codelineno-0-164"></a>        <span class="bp">self</span><span class="p">,</span>
+<a id="__codelineno-0-165" name="__codelineno-0-165"></a>        <span class="n">payload_method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<a id="__codelineno-0-166" name="__codelineno-0-166"></a>        <span class="n">data</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-167" name="__codelineno-0-167"></a>        <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;bypassV2&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-168" name="__codelineno-0-168"></a>        <span class="n">payload_update</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-169" name="__codelineno-0-169"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RequestBypassV2</span><span class="p">:</span>
+<a id="__codelineno-0-170" name="__codelineno-0-170"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Build API request body Bypass V2 endpoint.</span>
+<a id="__codelineno-0-171" name="__codelineno-0-171"></a>
+<a id="__codelineno-0-172" name="__codelineno-0-172"></a><span class="sd">        Args:</span>
+<a id="__codelineno-0-173" name="__codelineno-0-173"></a><span class="sd">            payload_method (str): The method to use in the payload dict.</span>
+<a id="__codelineno-0-174" name="__codelineno-0-174"></a><span class="sd">            data (dict | None): The data dict inside the payload value.</span>
+<a id="__codelineno-0-175" name="__codelineno-0-175"></a><span class="sd">            method (str): The method to use in the outer body, defaults to bypassV2.</span>
+<a id="__codelineno-0-176" name="__codelineno-0-176"></a><span class="sd">            payload_update (dict | None): Additional keys to add to the payload.</span>
+<a id="__codelineno-0-177" name="__codelineno-0-177"></a><span class="sd">        &quot;&quot;&quot;</span>
+<a id="__codelineno-0-178" name="__codelineno-0-178"></a>        <span class="n">body</span> <span class="o">=</span> <span class="n">Helpers</span><span class="o">.</span><span class="n">get_class_attributes</span><span class="p">(</span><span class="n">DefaultValues</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request_keys</span><span class="p">)</span>
+<a id="__codelineno-0-179" name="__codelineno-0-179"></a>        <span class="n">body</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">Helpers</span><span class="o">.</span><span class="n">get_class_attributes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request_keys</span><span class="p">))</span>
+<a id="__codelineno-0-180" name="__codelineno-0-180"></a>        <span class="n">body</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">Helpers</span><span class="o">.</span><span class="n">get_class_attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request_keys</span><span class="p">))</span>
+<a id="__codelineno-0-181" name="__codelineno-0-181"></a>        <span class="n">body</span><span class="p">[</span><span class="s1">&#39;method&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">method</span>
+<a id="__codelineno-0-182" name="__codelineno-0-182"></a>        <span class="n">body</span><span class="p">[</span><span class="s1">&#39;payload&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;method&#39;</span><span class="p">:</span> <span class="n">payload_method</span><span class="p">,</span> <span class="s1">&#39;source&#39;</span><span class="p">:</span> <span class="s1">&#39;APP&#39;</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="n">data</span> <span class="ow">or</span> <span class="p">{}}</span>
+<a id="__codelineno-0-183" name="__codelineno-0-183"></a>        <span class="n">body</span><span class="p">[</span><span class="s1">&#39;payload&#39;</span><span class="p">]</span> <span class="o">|=</span> <span class="n">payload_update</span> <span class="ow">or</span> <span class="p">{}</span>
+<a id="__codelineno-0-184" name="__codelineno-0-184"></a>        <span class="k">return</span> <span class="n">RequestBypassV2</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">body</span><span class="p">)</span>
+<a id="__codelineno-0-185" name="__codelineno-0-185"></a>
+<a id="__codelineno-0-186" name="__codelineno-0-186"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">call_bypassv2_api</span><span class="p">(</span>
+<a id="__codelineno-0-187" name="__codelineno-0-187"></a>        <span class="bp">self</span><span class="p">,</span>
+<a id="__codelineno-0-188" name="__codelineno-0-188"></a>        <span class="n">payload_method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<a id="__codelineno-0-189" name="__codelineno-0-189"></a>        <span class="n">data</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-190" name="__codelineno-0-190"></a>        <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;bypassV2&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-191" name="__codelineno-0-191"></a>        <span class="n">endpoint</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;bypassV2&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-192" name="__codelineno-0-192"></a>        <span class="n">payload_update</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-193" name="__codelineno-0-193"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-194" name="__codelineno-0-194"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Send Bypass V2 API request.</span>
+<a id="__codelineno-0-195" name="__codelineno-0-195"></a>
+<a id="__codelineno-0-196" name="__codelineno-0-196"></a><span class="sd">        This uses the `_build_request` method to send API requests to the Bypass V2 API.</span>
+<a id="__codelineno-0-197" name="__codelineno-0-197"></a>
+<a id="__codelineno-0-198" name="__codelineno-0-198"></a><span class="sd">        Args:</span>
+<a id="__codelineno-0-199" name="__codelineno-0-199"></a><span class="sd">            payload_method (str): The method to use in the payload dict.</span>
+<a id="__codelineno-0-200" name="__codelineno-0-200"></a><span class="sd">            data (dict | None): The data to send in the request.</span>
+<a id="__codelineno-0-201" name="__codelineno-0-201"></a><span class="sd">            method (str): The method to use in the outer body.</span>
+<a id="__codelineno-0-202" name="__codelineno-0-202"></a><span class="sd">            endpoint (str | None): The last part of the API url, defaults to</span>
+<a id="__codelineno-0-203" name="__codelineno-0-203"></a><span class="sd">                `bypassV2`, e.g. `/cloud/v2/deviceManaged/bypassV2`.</span>
+<a id="__codelineno-0-204" name="__codelineno-0-204"></a><span class="sd">            payload_update (dict | None): Additional keys to add to the payload.</span>
+<a id="__codelineno-0-205" name="__codelineno-0-205"></a>
+<a id="__codelineno-0-206" name="__codelineno-0-206"></a><span class="sd">        Returns:</span>
+<a id="__codelineno-0-207" name="__codelineno-0-207"></a><span class="sd">            bytes: The response from the API request.</span>
+<a id="__codelineno-0-208" name="__codelineno-0-208"></a><span class="sd">        &quot;&quot;&quot;</span>
+<a id="__codelineno-0-209" name="__codelineno-0-209"></a>        <span class="n">request</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_request</span><span class="p">(</span><span class="n">payload_method</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">payload_update</span><span class="p">)</span>
+<a id="__codelineno-0-210" name="__codelineno-0-210"></a>        <span class="n">endpoint</span> <span class="o">=</span> <span class="n">BYPASS_V2_BASE</span> <span class="o">+</span> <span class="n">endpoint</span>
+<a id="__codelineno-0-211" name="__codelineno-0-211"></a>        <span class="n">resp_dict</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">async_call_api</span><span class="p">(</span>
+<a id="__codelineno-0-212" name="__codelineno-0-212"></a>            <span class="n">endpoint</span><span class="p">,</span> <span class="s1">&#39;post&#39;</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">Helpers</span><span class="o">.</span><span class="n">req_header_bypass</span><span class="p">()</span>
+<a id="__codelineno-0-213" name="__codelineno-0-213"></a>        <span class="p">)</span>
+<a id="__codelineno-0-214" name="__codelineno-0-214"></a>        <span class="k">return</span> <span class="n">resp_dict</span>
+</code></pre></div></td></tr></table></div>
+              </details>
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h4 id="pyvesync.utils.device_mixins.BypassV2Mixin.manager" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">manager</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#pyvesync.utils.device_mixins.BypassV2Mixin.manager" class="toc-permalink" title="Permanent link">↲</a></h4>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">manager</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="pyvesync.vesync.VeSync (pyvesync.VeSync)" href="../../vesync_api/#pyvesync.vesync.VeSync">VeSync</a></span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Inherited From <a class="autorefs autorefs-internal" title="pyvesync.utils.device_mixins.BypassV2Mixin" href="#pyvesync.utils.device_mixins.BypassV2Mixin"><code>BypassV2Mixin</code></a></p>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h4 id="pyvesync.utils.device_mixins.BypassV2Mixin.request_keys" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">request_keys</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+  </span>
+
+<a href="#pyvesync.utils.device_mixins.BypassV2Mixin.request_keys" class="toc-permalink" title="Permanent link">↲</a></h4>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">request_keys</span><span class="p">:</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="s1">&#39;acceptLanguage&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="s1">&#39;appVersion&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="s1">&#39;phoneBrand&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="s1">&#39;phoneOS&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="s1">&#39;accountID&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="s1">&#39;cid&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="s1">&#39;configModule&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="s1">&#39;debugMode&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="s1">&#39;traceId&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="s1">&#39;timeZone&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    <span class="s1">&#39;token&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    <span class="s1">&#39;userCountryCode&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    <span class="s1">&#39;configModel&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    <span class="s1">&#39;deviceId&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Inherited From <a class="autorefs autorefs-internal" title="pyvesync.utils.device_mixins.BypassV2Mixin" href="#pyvesync.utils.device_mixins.BypassV2Mixin"><code>BypassV2Mixin</code></a></p>
+
+    </div>
+
+</div>
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="pyvesync.utils.device_mixins.BypassV2Mixin.call_bypassv2_api" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">call_bypassv2_api</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
+  </span>
+
+<a href="#pyvesync.utils.device_mixins.BypassV2Mixin.call_bypassv2_api" class="toc-permalink" title="Permanent link">↲</a></h4>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">call_bypassv2_api</span><span class="p">(</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">payload_method</span><span class="p">:</span> <span class="n"><span title="str">str</span></span><span class="p">,</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">data</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">method</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">=</span> <span class="s1">&#39;bypassV2&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">endpoint</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">=</span> <span class="s1">&#39;bypassV2&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">payload_update</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="dict">dict</span></span> <span class="o">|</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Inherited From <a class="autorefs autorefs-internal" title="pyvesync.utils.device_mixins.BypassV2Mixin" href="#pyvesync.utils.device_mixins.BypassV2Mixin"><code>BypassV2Mixin</code></a></p>
+        <p>Send Bypass V2 API request.</p>
+<p>This uses the <code>_build_request</code> method to send API requests to the Bypass V2 API.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>payload_method</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The method to use in the payload dict.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>data</code>
+            </td>
+            <td>
+                  <code><span title="dict">dict</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The data to send in the request.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>method</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The method to use in the outer body.</p>
+              </div>
+            </td>
+            <td>
+                  <code>&#39;bypassV2&#39;</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>endpoint</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The last part of the API url, defaults to
+<code>bypassV2</code>, e.g. <code>/cloud/v2/deviceManaged/bypassV2</code>.</p>
+              </div>
+            </td>
+            <td>
+                  <code>&#39;bypassV2&#39;</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>payload_update</code>
+            </td>
+            <td>
+                  <code><span title="dict">dict</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Additional keys to add to the payload.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+<th>Name</th>          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+<td><code>bytes</code></td>            <td>
+                  <code><span title="dict">dict</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The response from the API request.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/pyvesync/utils/device_mixins.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-186">186</a></span>
+<span class="normal"><a href="#__codelineno-0-187">187</a></span>
+<span class="normal"><a href="#__codelineno-0-188">188</a></span>
+<span class="normal"><a href="#__codelineno-0-189">189</a></span>
+<span class="normal"><a href="#__codelineno-0-190">190</a></span>
+<span class="normal"><a href="#__codelineno-0-191">191</a></span>
+<span class="normal"><a href="#__codelineno-0-192">192</a></span>
+<span class="normal"><a href="#__codelineno-0-193">193</a></span>
+<span class="normal"><a href="#__codelineno-0-194">194</a></span>
+<span class="normal"><a href="#__codelineno-0-195">195</a></span>
+<span class="normal"><a href="#__codelineno-0-196">196</a></span>
+<span class="normal"><a href="#__codelineno-0-197">197</a></span>
+<span class="normal"><a href="#__codelineno-0-198">198</a></span>
+<span class="normal"><a href="#__codelineno-0-199">199</a></span>
+<span class="normal"><a href="#__codelineno-0-200">200</a></span>
+<span class="normal"><a href="#__codelineno-0-201">201</a></span>
+<span class="normal"><a href="#__codelineno-0-202">202</a></span>
+<span class="normal"><a href="#__codelineno-0-203">203</a></span>
+<span class="normal"><a href="#__codelineno-0-204">204</a></span>
+<span class="normal"><a href="#__codelineno-0-205">205</a></span>
+<span class="normal"><a href="#__codelineno-0-206">206</a></span>
+<span class="normal"><a href="#__codelineno-0-207">207</a></span>
+<span class="normal"><a href="#__codelineno-0-208">208</a></span>
+<span class="normal"><a href="#__codelineno-0-209">209</a></span>
+<span class="normal"><a href="#__codelineno-0-210">210</a></span>
+<span class="normal"><a href="#__codelineno-0-211">211</a></span>
+<span class="normal"><a href="#__codelineno-0-212">212</a></span>
+<span class="normal"><a href="#__codelineno-0-213">213</a></span>
+<span class="normal"><a href="#__codelineno-0-214">214</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-186" name="__codelineno-0-186"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">call_bypassv2_api</span><span class="p">(</span>
+<a id="__codelineno-0-187" name="__codelineno-0-187"></a>    <span class="bp">self</span><span class="p">,</span>
+<a id="__codelineno-0-188" name="__codelineno-0-188"></a>    <span class="n">payload_method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<a id="__codelineno-0-189" name="__codelineno-0-189"></a>    <span class="n">data</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-190" name="__codelineno-0-190"></a>    <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;bypassV2&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-191" name="__codelineno-0-191"></a>    <span class="n">endpoint</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;bypassV2&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-192" name="__codelineno-0-192"></a>    <span class="n">payload_update</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-193" name="__codelineno-0-193"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-194" name="__codelineno-0-194"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Send Bypass V2 API request.</span>
+<a id="__codelineno-0-195" name="__codelineno-0-195"></a>
+<a id="__codelineno-0-196" name="__codelineno-0-196"></a><span class="sd">    This uses the `_build_request` method to send API requests to the Bypass V2 API.</span>
+<a id="__codelineno-0-197" name="__codelineno-0-197"></a>
+<a id="__codelineno-0-198" name="__codelineno-0-198"></a><span class="sd">    Args:</span>
+<a id="__codelineno-0-199" name="__codelineno-0-199"></a><span class="sd">        payload_method (str): The method to use in the payload dict.</span>
+<a id="__codelineno-0-200" name="__codelineno-0-200"></a><span class="sd">        data (dict | None): The data to send in the request.</span>
+<a id="__codelineno-0-201" name="__codelineno-0-201"></a><span class="sd">        method (str): The method to use in the outer body.</span>
+<a id="__codelineno-0-202" name="__codelineno-0-202"></a><span class="sd">        endpoint (str | None): The last part of the API url, defaults to</span>
+<a id="__codelineno-0-203" name="__codelineno-0-203"></a><span class="sd">            `bypassV2`, e.g. `/cloud/v2/deviceManaged/bypassV2`.</span>
+<a id="__codelineno-0-204" name="__codelineno-0-204"></a><span class="sd">        payload_update (dict | None): Additional keys to add to the payload.</span>
+<a id="__codelineno-0-205" name="__codelineno-0-205"></a>
+<a id="__codelineno-0-206" name="__codelineno-0-206"></a><span class="sd">    Returns:</span>
+<a id="__codelineno-0-207" name="__codelineno-0-207"></a><span class="sd">        bytes: The response from the API request.</span>
+<a id="__codelineno-0-208" name="__codelineno-0-208"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-209" name="__codelineno-0-209"></a>    <span class="n">request</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_request</span><span class="p">(</span><span class="n">payload_method</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">payload_update</span><span class="p">)</span>
+<a id="__codelineno-0-210" name="__codelineno-0-210"></a>    <span class="n">endpoint</span> <span class="o">=</span> <span class="n">BYPASS_V2_BASE</span> <span class="o">+</span> <span class="n">endpoint</span>
+<a id="__codelineno-0-211" name="__codelineno-0-211"></a>    <span class="n">resp_dict</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">async_call_api</span><span class="p">(</span>
+<a id="__codelineno-0-212" name="__codelineno-0-212"></a>        <span class="n">endpoint</span><span class="p">,</span> <span class="s1">&#39;post&#39;</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">Helpers</span><span class="o">.</span><span class="n">req_header_bypass</span><span class="p">()</span>
+<a id="__codelineno-0-213" name="__codelineno-0-213"></a>    <span class="p">)</span>
+<a id="__codelineno-0-214" name="__codelineno-0-214"></a>    <span class="k">return</span> <span class="n">resp_dict</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="pyvesync.utils.device_mixins.process_bypassv2_result" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">pyvesync.utils.device_mixins.process_bypassv2_result</span>
+
+
+<a href="#pyvesync.utils.device_mixins.process_bypassv2_result" class="toc-permalink" title="Permanent link">↲</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">process_bypassv2_result</span><span class="p">(</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">device</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="VeSyncBaseDevice (pyvesync.base_devices.VeSyncBaseDevice)" href="../../vesync_device_base/#pyvesync.base_devices.vesyncbasedevice.VeSyncBaseDevice">VeSyncBaseDevice</a></span><span class="p">,</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">logger</span><span class="p">:</span> <span class="n"><span title="logging.Logger">Logger</span></span><span class="p">,</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">method</span><span class="p">:</span> <span class="n"><span title="str">str</span></span><span class="p">,</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">resp_dict</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">model</span><span class="p">:</span> <span class="n"><span title="type">type</span></span><span class="p">[</span><span class="n"><span title="pyvesync.utils.device_mixins.T_MODEL">T_MODEL</span></span><span class="p">],</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="pyvesync.utils.device_mixins.T_MODEL">T_MODEL</span></span> <span class="o">|</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents first">
+
+        <p>Process the Bypass V1 API response.</p>
+<p>This will gracefully handle errors in the response and error codes,
+logging them as needed. The return dictionary is the <strong>inner</strong> result value of
+the API response.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>device</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="VeSyncBaseDevice (pyvesync.base_devices.VeSyncBaseDevice)" href="../../vesync_device_base/#pyvesync.base_devices.vesyncbasedevice.VeSyncBaseDevice">VeSyncBaseDevice</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The device object.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>logger</code>
+            </td>
+            <td>
+                  <code><span title="logging.Logger">Logger</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The logger to use for logging.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>method</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The method used in the payload.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>resp_dict</code>
+            </td>
+            <td>
+                  <code><span title="dict">dict</span> | <span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The api response.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>model</code>
+            </td>
+            <td>
+                  <code><span title="type">type</span>[<span title="pyvesync.utils.device_mixins.T_MODEL">T_MODEL</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The model to use for the response.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+<th>Name</th>          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+<td><code>T_MODEL</code></td>            <td>
+                  <code><span title="pyvesync.utils.device_mixins.T_MODEL">T_MODEL</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>An instance of the inner result model.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/pyvesync/utils/device_mixins.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-103">103</a></span>
+<span class="normal"><a href="#__codelineno-0-104">104</a></span>
+<span class="normal"><a href="#__codelineno-0-105">105</a></span>
+<span class="normal"><a href="#__codelineno-0-106">106</a></span>
+<span class="normal"><a href="#__codelineno-0-107">107</a></span>
+<span class="normal"><a href="#__codelineno-0-108">108</a></span>
+<span class="normal"><a href="#__codelineno-0-109">109</a></span>
+<span class="normal"><a href="#__codelineno-0-110">110</a></span>
+<span class="normal"><a href="#__codelineno-0-111">111</a></span>
+<span class="normal"><a href="#__codelineno-0-112">112</a></span>
+<span class="normal"><a href="#__codelineno-0-113">113</a></span>
+<span class="normal"><a href="#__codelineno-0-114">114</a></span>
+<span class="normal"><a href="#__codelineno-0-115">115</a></span>
+<span class="normal"><a href="#__codelineno-0-116">116</a></span>
+<span class="normal"><a href="#__codelineno-0-117">117</a></span>
+<span class="normal"><a href="#__codelineno-0-118">118</a></span>
+<span class="normal"><a href="#__codelineno-0-119">119</a></span>
+<span class="normal"><a href="#__codelineno-0-120">120</a></span>
+<span class="normal"><a href="#__codelineno-0-121">121</a></span>
+<span class="normal"><a href="#__codelineno-0-122">122</a></span>
+<span class="normal"><a href="#__codelineno-0-123">123</a></span>
+<span class="normal"><a href="#__codelineno-0-124">124</a></span>
+<span class="normal"><a href="#__codelineno-0-125">125</a></span>
+<span class="normal"><a href="#__codelineno-0-126">126</a></span>
+<span class="normal"><a href="#__codelineno-0-127">127</a></span>
+<span class="normal"><a href="#__codelineno-0-128">128</a></span>
+<span class="normal"><a href="#__codelineno-0-129">129</a></span>
+<span class="normal"><a href="#__codelineno-0-130">130</a></span>
+<span class="normal"><a href="#__codelineno-0-131">131</a></span>
+<span class="normal"><a href="#__codelineno-0-132">132</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-103" name="__codelineno-0-103"></a><span class="k">def</span><span class="w"> </span><span class="nf">process_bypassv2_result</span><span class="p">(</span>
+<a id="__codelineno-0-104" name="__codelineno-0-104"></a>    <span class="n">device</span><span class="p">:</span> <span class="n">VeSyncBaseDevice</span><span class="p">,</span>
+<a id="__codelineno-0-105" name="__codelineno-0-105"></a>    <span class="n">logger</span><span class="p">:</span> <span class="n">Logger</span><span class="p">,</span>
+<a id="__codelineno-0-106" name="__codelineno-0-106"></a>    <span class="n">method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<a id="__codelineno-0-107" name="__codelineno-0-107"></a>    <span class="n">resp_dict</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-108" name="__codelineno-0-108"></a>    <span class="n">model</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">T_MODEL</span><span class="p">],</span>
+<a id="__codelineno-0-109" name="__codelineno-0-109"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T_MODEL</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-110" name="__codelineno-0-110"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Process the Bypass V1 API response.</span>
+<a id="__codelineno-0-111" name="__codelineno-0-111"></a>
+<a id="__codelineno-0-112" name="__codelineno-0-112"></a><span class="sd">    This will gracefully handle errors in the response and error codes,</span>
+<a id="__codelineno-0-113" name="__codelineno-0-113"></a><span class="sd">    logging them as needed. The return dictionary is the **inner** result value of</span>
+<a id="__codelineno-0-114" name="__codelineno-0-114"></a><span class="sd">    the API response.</span>
+<a id="__codelineno-0-115" name="__codelineno-0-115"></a>
+<a id="__codelineno-0-116" name="__codelineno-0-116"></a><span class="sd">    Args:</span>
+<a id="__codelineno-0-117" name="__codelineno-0-117"></a><span class="sd">        device (VeSyncBaseDevice): The device object.</span>
+<a id="__codelineno-0-118" name="__codelineno-0-118"></a><span class="sd">        logger (Logger): The logger to use for logging.</span>
+<a id="__codelineno-0-119" name="__codelineno-0-119"></a><span class="sd">        method (str): The method used in the payload.</span>
+<a id="__codelineno-0-120" name="__codelineno-0-120"></a><span class="sd">        resp_dict (dict | str): The api response.</span>
+<a id="__codelineno-0-121" name="__codelineno-0-121"></a><span class="sd">        model (type[T_MODEL]): The model to use for the response.</span>
+<a id="__codelineno-0-122" name="__codelineno-0-122"></a>
+<a id="__codelineno-0-123" name="__codelineno-0-123"></a><span class="sd">    Returns:</span>
+<a id="__codelineno-0-124" name="__codelineno-0-124"></a><span class="sd">        T_MODEL: An instance of the inner result model.</span>
+<a id="__codelineno-0-125" name="__codelineno-0-125"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-126" name="__codelineno-0-126"></a>    <span class="n">r_dict</span> <span class="o">=</span> <span class="n">Helpers</span><span class="o">.</span><span class="n">process_dev_response</span><span class="p">(</span><span class="n">logger</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">resp_dict</span><span class="p">)</span>
+<a id="__codelineno-0-127" name="__codelineno-0-127"></a>    <span class="k">if</span> <span class="n">r_dict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-128" name="__codelineno-0-128"></a>        <span class="k">return</span> <span class="kc">None</span>
+<a id="__codelineno-0-129" name="__codelineno-0-129"></a>    <span class="n">result</span> <span class="o">=</span> <span class="n">_get_inner_result</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">r_dict</span><span class="p">)</span>
+<a id="__codelineno-0-130" name="__codelineno-0-130"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+<a id="__codelineno-0-131" name="__codelineno-0-131"></a>        <span class="k">return</span> <span class="kc">None</span>
+<a id="__codelineno-0-132" name="__codelineno-0-132"></a>    <span class="k">return</span> <span class="n">Helpers</span><span class="o">.</span><span class="n">model_maker</span><span class="p">(</span><span class="n">logger</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["search.suggest", "navigation.indexes", "search.highlight", "toc.follow", "navigation.top"], "search": "../../../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "default": "latest", "provider": "mike"}}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      
+    
+  </body>
+</html>
