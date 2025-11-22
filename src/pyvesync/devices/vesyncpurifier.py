@@ -1012,6 +1012,7 @@ class VeSyncAirRH131(BypassV2Mixin, VeSyncPurifier):
         nightlight_modes (list[str]): List of nightlight modes supported by the device.
         auto_preferences (list[str]): List of auto preferences supported by the device.
     """
+
     __slots__ = ()
 
     def __init__(
@@ -1063,9 +1064,7 @@ class VeSyncAirRH131(BypassV2Mixin, VeSyncPurifier):
 
     async def toggle_display(self, mode: bool) -> bool:
         update_dict = {'state': mode}
-        r_dict = await self.call_bypassv2_api(
-            'setDisplay', update_dict
-        )
+        r_dict = await self.call_bypassv2_api('setDisplay', update_dict)
         r = Helpers.process_dev_response(_LOGGER, 'toggle_display', self, r_dict)
         if r is None:
             return False
@@ -1081,9 +1080,7 @@ class VeSyncAirRH131(BypassV2Mixin, VeSyncPurifier):
             return False
 
         payload_data = {'mode': mode}
-        r_dict = await self.call_bypassv2_api(
-            'setPurifierMode', payload_data
-        )
+        r_dict = await self.call_bypassv2_api('setPurifierMode', payload_data)
         r = Helpers.process_dev_response(_LOGGER, 'set_mode', self, r_dict)
         if r is None:
             return False
@@ -1107,9 +1104,7 @@ class VeSyncAirRH131(BypassV2Mixin, VeSyncPurifier):
 
         payload_data = {'level': new_speed, 'id': 0, 'type': 'wind'}
 
-        r_dict = await self.call_bypassv2_api(
-            'setLevel', payload_data
-        )
+        r_dict = await self.call_bypassv2_api('setLevel', payload_data)
 
         r = Helpers.process_dev_response(_LOGGER, 'set_fan_speed', self, r_dict)
         if r is None:
