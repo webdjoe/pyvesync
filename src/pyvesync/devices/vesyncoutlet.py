@@ -169,7 +169,7 @@ class VeSyncOutlet7A(VeSyncOutlet):
             return False
 
         if isinstance(r_dict, dict) and 'error' in r_dict:
-            _ = Helpers.process_dev_response(logger, 'get_details', self, r_dict)
+            _ = Helpers.process_dev_response(logger, 'toggle_switch', self, r_dict)
             return False
 
         self.state.update_ts()
