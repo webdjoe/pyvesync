@@ -818,9 +818,7 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
 
         payload_data = {'nightLightSwitch': int(toggle)}
         r_dict = await self.call_bypassv2_api('setNightLightStatus', payload_data)
-        r = Helpers.process_dev_response(
-            logger, 'toggle_nightlight', self, r_dict
-        )
+        r = Helpers.process_dev_response(logger, 'toggle_nightlight', self, r_dict)
         if r is None:
             return False
 
