@@ -269,13 +269,19 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
         )
         return True
 
-    @deprecated('Use set_mode(mode: str) instead.')
-    async def set_humidity_mode(self, mode: str) -> bool:
-        """Deprecated - set humidifier mode.
+    async def toggle_nightlight(self, toggle: bool | None = None) -> bool:
+        if not self.supports_nightlight:
+            logger.warning(
+                '%s is a %s does not have a nightlight or it is not supported.',
+                self.device_name,
+                self.device_type,
+            )
+            return False
 
-        Use `set_mode(mode: str)` instead.
-        """
-        return await self.set_mode(mode)
+        if toggle is None:
+            toggle = self.state.nightlight_status != DeviceStatus.ON
+        brightness = 100 if toggle else 0
+        return await self.set_nightlight_brightness(brightness)
 
     async def set_mode(self, mode: str) -> bool:
         if mode.lower() not in self.mist_modes:
@@ -711,14 +717,6 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
-    @deprecated('Use set_mode() instead.')
-    async def set_humidity_mode(self, mode: str) -> bool:
-        """Set humidifier mode - sleep, auto or manual.
-
-        Deprecated, please use set_mode() instead.
-        """
-        return await self.set_mode(mode)
-
     async def set_mode(self, mode: str) -> bool:
         if mode.lower() not in self.mist_modes:
             logger.warning('Invalid humidity mode used - %s', mode)
@@ -792,10 +790,6 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
-    @deprecated('Use toggle_automatic_stop() instead.')
-    async def set_automatic_stop(self, mode: bool) -> bool:
-        return await self.toggle_automatic_stop(mode)
-
     async def toggle_automatic_stop(self, toggle: bool | None = None) -> bool:
         if toggle is None:
             toggle = self.state.automatic_stop_config != DeviceStatus.ON
@@ -807,5 +801,60 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
         if r is None:
             return False
         self.state.automatic_stop_config = toggle
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def toggle_nightlight(self, toggle: bool | None = None) -> bool:
+        if not self.supports_nightlight:
+            logger.warning(
+                '%s is a %s does not have a nightlight or it is not supported.',
+                self.device_name,
+                self.device_type,
+            )
+            return False
+
+        if toggle is None:
+            toggle = self.state.nightlight_status != DeviceStatus.ON
+
+        payload_data = {'nightLightSwitch': int(toggle)}
+        r_dict = await self.call_bypassv2_api('setNightLightStatus', payload_data)
+        r = Helpers.process_dev_response(
+            logger, 'toggle_nightlight', self, r_dict
+        )
+        if r is None:
+            return False
+
+        self.state.nightlight_status = DeviceStatus.from_bool(toggle)
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def set_nightlight_brightness(self, brightness: int) -> bool:
+        if not self.supports_nightlight:
+            logger.warning(
+                '%s is a %s does not have a nightlight or it is not supported.',
+                self.device_name,
+                self.device_type,
+            )
+            return False
+
+        if not Validators.validate_zero_to_hundred(brightness):
+            logger.warning('Brightness value must be set between 0 and 100')
+            return False
+
+        payload_data = {
+            'brightness': brightness,
+            'nightLightSwitch': 1 if brightness > 0 else 0,
+        }
+        r_dict = await self.call_bypassv2_api('setLightStatus', payload_data)
+        r = Helpers.process_dev_response(
+            logger, 'set_night_light_brightness', self, r_dict
+        )
+        if r is None:
+            return False
+
+        self.state.nightlight_brightness = brightness
+        self.state.nightlight_status = (
+            DeviceStatus.ON if brightness > 0 else DeviceStatus.OFF
+        )
         self.state.connection_status = ConnectionStatus.ONLINE
         return True

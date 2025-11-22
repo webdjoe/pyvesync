@@ -416,6 +416,22 @@ class VeSyncHumidifier(VeSyncBaseToggleDevice):
         logger.error('Nightlight brightness has not been configured.')
         return False
 
+    async def toggle_nightlight(self, toggle: bool | None = None) -> bool:
+        """Toggle night light on/off.
+
+        Args:
+            toggle (bool): True to turn on night light, False to turn off.
+
+        Returns:
+            bool: Success of request.
+        """
+        del toggle
+        if not self.supports_nightlight:
+            logger.error('Nightlight is not supported for this device.')
+            return False
+        logger.error('Nightlight has not been configured.')
+        return False
+
     async def set_warm_level(self, warm_level: int) -> bool:
         """Set Humidifier Warm Level.
 
@@ -431,6 +447,22 @@ class VeSyncHumidifier(VeSyncBaseToggleDevice):
             return False
         logger.error('Warm level is not supported for this device.')
         return False
+
+    async def turn_on_nightlight(self) -> bool:
+        """Turn on night light.
+
+        Returns:
+            bool: Success of request.
+        """
+        return await self.toggle_nightlight(True)
+
+    async def turn_off_nightlight(self) -> bool:
+        """Turn off night light.
+
+        Returns:
+            bool: Success of request.
+        """
+        return await self.toggle_nightlight(False)
 
     async def toggle_drying_mode(self, toggle: bool | None = None) -> bool:
         """enable/disable drying filters after turning off."""
