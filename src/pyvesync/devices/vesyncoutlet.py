@@ -94,6 +94,7 @@ class VeSyncOutlet7A(VeSyncOutlet):
         self, details: ResponseDeviceDetailsModel, manager: VeSync, feature_map: OutletMap
     ) -> None:
         """Initialize Etekcity 7A round outlet class."""
+        self.request_keys: list[str] = []
         super().__init__(details, manager, feature_map)
 
     def _build_headers(self) -> dict:
@@ -169,7 +170,7 @@ class VeSyncOutlet7A(VeSyncOutlet):
             return False
 
         if isinstance(r_dict, dict) and 'error' in r_dict:
-            _ = Helpers.process_dev_response(logger, 'get_details', self, r_dict)
+            _ = Helpers.process_dev_response(logger, 'toggle_switch', self, r_dict)
             return False
 
         self.state.update_ts()

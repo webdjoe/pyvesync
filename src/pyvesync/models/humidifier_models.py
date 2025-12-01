@@ -72,7 +72,7 @@ class ClassicLVHumidResult(InnerHumidifierBaseResult):
     mist_virtual_level: int
     mist_level: int
     mode: str
-    display: Annotated[bool, Alias('indicator_light_status')]
+    display: Annotated[bool, Alias('indicator_light_switch')]
     water_lacks: bool
     humidity: int | None = None
     humidity_high: bool = False
@@ -89,7 +89,7 @@ class ClassicConfig(ResponseBaseModel):
     """Classic 200S Humidifier Configuration Model."""
 
     auto_target_humidity: int = 0
-    display: Annotated[bool, Alias('indicator_light_status')] = False
+    display: Annotated[bool, Alias('indicator_light_switch')] = False
     automatic_stop: bool = False
 
     class Config(BaseConfig):  # type: ignore[override]
