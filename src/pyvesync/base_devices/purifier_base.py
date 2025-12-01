@@ -301,6 +301,10 @@ class VeSyncPurifier(VeSyncBaseToggleDevice):
             bool: True if successful, False otherwise.
         """
         del mode
+        if not self.supports_nightlight:
+            logger.error('Nightlight not supported for this device.')
+        else:
+            logger.error('Nightlight not configured for this device.')
         return False
 
     async def set_nightlight_dim(self) -> bool:
@@ -491,34 +495,6 @@ class VeSyncPurifier(VeSyncBaseToggleDevice):
         This has been deprecated, use `turn_on_child_lock()` instead.
         """
         return await self.toggle_child_lock(True)
-
-    @deprecated('Use `turn_off_child_lock()` instead.')
-    async def child_lock_off(self) -> bool:
-        """Turn off child lock (display lock).
-
-        This has been deprecated, use `turn_off_child_lock()` instead.
-        """
-        return await self.toggle_child_lock(False)
-
-    @property
-    @deprecated('Use self.state.child_lock instead.')
-    def child_lock(self) -> bool | None:
-        """Get child lock state.
-
-        Returns:
-            bool | None : True if child lock is enabled, False if not, None if unknown.
-        """
-        return self.state.child_lock
-
-    @property
-    @deprecated('Use self.state.nightlight_status instead.')
-    def night_light(self) -> str | None:
-        """Get night light state.
-
-        Returns:
-            str : Night light state (on, dim, off)
-        """
-        return self.state.nightlight_status
 
     @deprecated('Use turn_on_light_detection() instead.')
     async def set_light_detection_on(self) -> bool:
