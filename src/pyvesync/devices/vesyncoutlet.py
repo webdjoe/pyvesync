@@ -94,6 +94,7 @@ class VeSyncOutlet7A(VeSyncOutlet):
         self, details: ResponseDeviceDetailsModel, manager: VeSync, feature_map: OutletMap
     ) -> None:
         """Initialize Etekcity 7A round outlet class."""
+        self.request_keys: list[str] = []
         super().__init__(details, manager, feature_map)
 
     def _build_headers(self) -> dict:
