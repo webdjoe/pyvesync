@@ -249,7 +249,7 @@ def assert_test(test_func, all_kwargs, dev_type=None,
         writer.write_api(method_name, all_kwargs, overwrite)
         return True
     if writer.existing_api(method_name) is False:
-        logger.error("No existing, API data for %s %s %s", mod, cls_name, method_name)
+        logger.warning("No existing, API data for %s %s %s", mod, cls_name, method_name)
         if write_api is True:
             logger.debug("Writing API data for %s %s %s", mod, cls_name, method_name)
             writer.write_api(method_name, all_kwargs, overwrite)
