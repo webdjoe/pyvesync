@@ -48,7 +48,7 @@ USER_AGENT = (
 DEFAULT_TZ = 'America/New_York'
 DEFAULT_REGION = 'US'
 APP_VERSION = '5.6.60'
-APP_ID = ''.join(choices(string.ascii_lowercase + string.digits, k=8))  # noqa: S311
+APP_ID = 'pyvesync'
 PHONE_BRAND = 'pyvesync'
 PHONE_OS = 'Android'
 MOBILE_ID = str(randint(1000000000000000, 9999999999999999))  # noqa: S311
