@@ -27,10 +27,9 @@ Attributes:
 from __future__ import annotations
 
 import platform
-import string
 import uuid
 from enum import Enum, IntEnum, StrEnum
-from random import choices, randint
+from random import randint
 from types import MappingProxyType
 
 from pyvesync.utils.enum_utils import IntEnumMixin
