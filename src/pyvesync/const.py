@@ -26,21 +26,27 @@ Attributes:
 
 from __future__ import annotations
 
+import platform
 import string
+import uuid
 from enum import Enum, IntEnum, StrEnum
 from random import choices, randint
 from types import MappingProxyType
-from uuid import uuid4
 
 from pyvesync.utils.enum_utils import IntEnumMixin
 
+MAX_API_REAUTH_RETRIES = 3
 DEFAULT_LANGUAGE = 'en'
 API_BASE_URL = None  # Global URL (non-EU regions): "https://smartapi.vesync.com"
 # If device is out of reach, the cloud api sends a timeout response after 7 seconds,
 # using 8 here so there is time enough to catch that message
 API_BASE_URL_US = 'https://smartapi.vesync.com'
 API_BASE_URL_EU = 'https://smartapi.vesync.eu'
-NON_EU_REGIONS = ['US', 'CA', 'MX', 'JP']
+REGION_API_MAP = {
+    'US': API_BASE_URL_US,
+    'EU': API_BASE_URL_EU,
+}
+NON_EU_COUNTRY_CODES = ['US', 'CA', 'MX', 'JP']
 API_TIMEOUT = 8
 USER_AGENT = (
     'VeSync/3.2.39 (com.etekcity.vesyncPlatform; build:5; iOS 15.5.0) Alamofire/5.2.1'
@@ -55,7 +61,10 @@ MOBILE_ID = str(randint(1000000000000000, 9999999999999999))  # noqa: S311
 USER_TYPE = '1'
 BYPASS_APP_V = f'VeSync {APP_VERSION}'
 BYPASS_HEADER_UA = 'okhttp/3.12.1'
-TERMINAL_ID = '2' + str(uuid4()).replace('-', '')
+TERMINAL_ID = '2' + (
+    uuid.uuid5(uuid.NAMESPACE_DNS, f'{uuid.getnode():x}-{platform.node() or ""}').hex
+)
+
 CLIENT_TYPE = 'vesyncApp'
 
 STATUS_OK = 200
@@ -241,9 +250,16 @@ class DeviceStatus(StrEnum):
         return cls.UNKNOWN
 
     @classmethod
-    def from_bool(cls, value: bool) -> DeviceStatus:
+    def from_bool(cls, value: bool | str) -> DeviceStatus:
         """Convert boolean value to corresponding string."""
+        if isinstance(value, str):
+            return cls.from_bool_string(value)
         return cls.ON if value is True else cls.OFF
+
+    @classmethod
+    def from_bool_string(cls, value: str) -> DeviceStatus:
+        """Convert boolean value to corresponding string."""
+        return cls.ON if value == 'true' else cls.OFF
 
 
 class ConnectionStatus(StrEnum):
@@ -588,8 +604,11 @@ class FanFeatures(Features):
     """VeSync fan features."""
 
     OSCILLATION = 'oscillation'
+    SET_OSCILLATION_RANGE = 'set_oscillation_range'
     SOUND = 'sound'
     DISPLAYING_TYPE = 'displaying_type'  # Unknown functionality
+    HORIZONTAL_OSCILLATION = 'horizontal_oscillation'
+    VERTICAL_OSCILLATION = 'vertical_oscillation'
 
 
 # Modes
@@ -636,7 +655,6 @@ class HumidifierModes(Features):
     TURBO = 'turbo'
     PET = 'pet'
     UNKNOWN = 'unknown'
-    AUTOPRO = 'autopro'
 
 
 class FanModes(StrEnum):
@@ -659,6 +677,7 @@ class FanModes(StrEnum):
     SLEEP = 'advancedSleep'
     TURBO = 'turbo'
     PET = 'pet'
+    ECO = 'eco'
     UNKNOWN = 'unknown'
     ADVANCED_SLEEP = 'advancedSleep'
 
@@ -823,3 +842,55 @@ CUSTOM_RECIPE_ID = 1
 CUSTOM_RECIPE_TYPE = 3
 CUSTOM_RECIPE_NAME = 'Manual Cook'
 CUSTOM_COOK_MODE = 'custom'
+
+
+# ------------------- OUTLET CONST ------------------ #
+
+
+class EnergyIntervals(StrEnum):
+    """Energy history periods for VeSync outlets.
+
+    Attributes:
+        DAILY: Daily energy history.
+        WEEKLY: Weekly energy history.
+        MONTHLY: Monthly energy history.
+        YEARLY: Yearly energy history.
+    """
+
+    WEEK = 'week'
+    MONTH = 'month'
+    YEAR = 'year'
+
+
+ENERGY_HISTORY_MAP = {
+    EnergyIntervals.WEEK: 'getLastWeekEnergy',
+    EnergyIntervals.MONTH: 'getLastMonthEnergy',
+    EnergyIntervals.YEAR: 'getLastYearEnergy',
+}
+
+ENERGY_HISTORY_OFFSET_WHOGPLUG = {
+    EnergyIntervals.WEEK: 500000,
+    EnergyIntervals.MONTH: 2500000,
+}
+
+# ------------------- HUMIDIFIER CONST ------------------ #
+
+
+class DryingModes(StrEnum):
+    """Drying modes for VeSync humidifiers.
+
+    Attributes:
+        ON: Drying mode is on.
+        OFF: Drying mode is off.
+    """
+
+    DONE = 'done'
+    RUNNING = 'on'
+    PAUSE = 'pause'
+
+
+DRYING_MODES: dict[str, int] = {
+    DryingModes.DONE: 0,
+    DryingModes.RUNNING: 1,
+    DryingModes.PAUSE: 2,
+}

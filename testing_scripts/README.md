@@ -6,10 +6,10 @@ This script can be used to test the function of the `pyvesync` library and log o
 
 ### From Repository
 
-1. Clone the repo branch `dev-2.0`:
+1. Clone the repo branch `dev` or replace `dev` with the branch you wish to test:
 
 ```bash
-git clone -b dev-2.0 --single-branch https://github.com/webdjoe/pyvesync.git
+git clone -b dev --single-branch https://github.com/webdjoe/pyvesync.git
 ```
 
 2. Navigate to the repository directory: `cd pyvesync`
@@ -33,7 +33,7 @@ Optionally create a virtual environment:
    python testing_scripts/vs_console_script.py --email <your_email> --password <your_password> [optional arguments]
     ```
 
-### Just the script
+### Just run the script
 
 1. Create a directory and navigate to it:
 
@@ -49,22 +49,25 @@ Optionally create a virtual environment:
     source venv/bin/activate  # On Powershell use `venv\Scripts\activate.ps1`
     ```
 
-3. Install the `pyvesync` library branch `dev-2.0`:
+3. Install the `pyvesync` library branch `dev` or replace `dev` with the branch you wish to test:
 
    ```bash
-   pip install git+https://github.com/webdjoe/pyvesync.git@dev-2.0
+   pip install git+https://github.com/webdjoe/pyvesync.git@dev
+
+   # Or install from a PR
+   pip install git+https://github.com/webdjoe/pyvesync.git@refs/pull/<PR_NUMBER>/head
    ```
 
 4. Download the `vs_console_script.py` file from the `testing_scripts` directory of the repository and place it in your current directory using a browser or `wget`/`curl` command:
 
    ```bash
-   wget https://raw.githubusercontent.com/webdjoe/pyvesync/dev-2.0/testing_scripts/vs_console_script.py
+   wget https://raw.githubusercontent.com/webdjoe/pyvesync/dev/testing_scripts/vs_console_script.py
    ```
 
 5. Run the testing script:
 
    ```bash
-    python vs_console_script.py --email <your_email> --password <your_password> [optional arguments]
+    python vs_test_script.py --email <your_email> --password <your_password> [optional arguments]
     ```
 
 ### Running in VS Code or other IDE's
@@ -89,7 +92,7 @@ CONFIGURING VIA COMMAND LINE:
 You can also configure the script via command line arguments:
 
 ```bash
-python vs_console_script.py \  # or testing_scripts/vs_console_script.py if using repository method
+python vs_test_script.py \  # or testing_scripts/vs_test_script.py if using repository method
    --email <your_email> \
    --password <your_password> \
    --test-devices \  # Include device methods in the test

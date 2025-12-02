@@ -109,7 +109,7 @@ class PurifierState(DeviceState):
         self.auto_preference_type: str | None = None
         self.auto_room_size: int | None = None
         self._air_quality_level: AirQualityLevel | None = None
-        self.child_lock: bool = False
+        self.child_lock: bool | None = None
         self.filter_open_state: bool = False
         self.display_status: str | None = None
         self.display_set_status: str | None = None
@@ -130,13 +130,13 @@ class PurifierState(DeviceState):
         self.fan_rotate_angle: int | None = None
 
     @property
-    def air_quality_level(self) -> int:
+    def air_quality_level(self) -> int | None:
         """Return air quality level in integer from 1-4.
 
-        Returns -1 if unknown.
+        Returns None if unknown.
         """
         if self._air_quality_level is None:
-            return -1
+            return None
         return int(self._air_quality_level)
 
     @air_quality_level.setter
@@ -144,6 +144,8 @@ class PurifierState(DeviceState):
         """Set air quality level."""
         if isinstance(value, int):
             self._air_quality_level = AirQualityLevel.from_int(value)
+        elif value is None:
+            self._air_quality_level = None
 
     def set_air_quality_level(self, value: int | str | None) -> None:
         """Set air quality level."""
@@ -151,10 +153,14 @@ class PurifierState(DeviceState):
             self._air_quality_level = AirQualityLevel.from_string(value)
         elif isinstance(value, int):
             self._air_quality_level = AirQualityLevel.from_int(value)
+        elif value is None:
+            self._air_quality_level = None
 
     @property
-    def air_quality_string(self) -> str:
+    def air_quality_string(self) -> str | None:
         """Return air quality level as string."""
+        if self._air_quality_level is None:
+            return None
         return str(self._air_quality_level)
 
     @property
@@ -295,6 +301,10 @@ class VeSyncPurifier(VeSyncBaseToggleDevice):
             bool: True if successful, False otherwise.
         """
         del mode
+        if not self.supports_nightlight:
+            logger.error('Nightlight not supported for this device.')
+        else:
+            logger.error('Nightlight not configured for this device.')
         return False
 
     async def set_nightlight_dim(self) -> bool:
@@ -485,34 +495,6 @@ class VeSyncPurifier(VeSyncBaseToggleDevice):
         This has been deprecated, use `turn_on_child_lock()` instead.
         """
         return await self.toggle_child_lock(True)
-
-    @deprecated('Use `turn_off_child_lock()` instead.')
-    async def child_lock_off(self) -> bool:
-        """Turn off child lock (display lock).
-
-        This has been deprecated, use `turn_off_child_lock()` instead.
-        """
-        return await self.toggle_child_lock(False)
-
-    @property
-    @deprecated('Use self.state.child_lock instead.')
-    def child_lock(self) -> bool:
-        """Get child lock state.
-
-        Returns:
-            bool : True if child lock is enabled, False if not.
-        """
-        return self.state.child_lock
-
-    @property
-    @deprecated('Use self.state.nightlight_status instead.')
-    def night_light(self) -> str | None:
-        """Get night light state.
-
-        Returns:
-            str : Night light state (on, dim, off)
-        """
-        return self.state.nightlight_status
 
     @deprecated('Use turn_on_light_detection() instead.')
     async def set_light_detection_on(self) -> bool:

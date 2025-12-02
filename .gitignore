@@ -38,3 +38,5 @@ overrides/
 testing_scripts/api_test_editor.py
 testing_scripts/yamltest.yaml
 testing_scripts/yamltest copy.yaml
+creds.json
+docstest/*

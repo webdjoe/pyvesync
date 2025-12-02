@@ -40,7 +40,7 @@ Example:
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import StrEnum
 from types import MappingProxyType
 
@@ -68,7 +68,7 @@ class ResponseInfo(DataClassORJSONMixin):
     message: str
     critical_error: bool = False
     operational_error: bool = False  # Device connected but API error
-    device_online: bool | None = None  # Defaults to connected
+    device_online: bool = True  # Defaults to connected
     response_data: dict | None = None  # Response data from API
 
 
@@ -695,7 +695,7 @@ class ErrorCodes:
                 'TOKEN_EXPIRED', ErrorTypes.TOKEN_ERROR, 'Invalid token'
             ),
             '-999999999': ResponseInfo(
-                'UNKNOWN', ErrorTypes.SERVER_ERROR, 'Unknown error'
+                'UNKNOWN', ErrorTypes.UNKNOWN_ERROR, 'Unknown error'
             ),
             '-11307000': ResponseInfo(
                 'UUID_NOT_EXIST',
@@ -735,11 +735,14 @@ class ErrorCodes:
     )
 
     @classmethod
-    def get_error_info(cls, error_code: str | int | None) -> ResponseInfo:
+    def get_error_info(
+        cls, error_code: str | int | None, msg: str | None = None
+    ) -> ResponseInfo:
         """Return error dictionary for the given error code.
 
         Args:
             error_code (str | int): Error code to lookup.
+            msg: (str | None): Optional message from API.
 
         Returns:
             dict: Error dictionary for the given error code.
@@ -754,17 +757,24 @@ class ErrorCodes:
         """
         try:
             if error_code is None:
-                return ResponseInfo('UNKNOWN', ErrorTypes.UNKNOWN_ERROR, 'Unknown error')
+                error_code = '-999999999'
             error_str = str(error_code)
             error_int = int(error_code)
             if error_str == '0':
-                return ResponseInfo('SUCCESS', ErrorTypes.SUCCESS, 'Success')
-            if error_str in cls.errors:
-                return cls.errors[error_str]
-            error_code = int(error_int / 1000) * 1000
-            return cls.errors[str(error_code)]
+                error_info = ResponseInfo('SUCCESS', ErrorTypes.SUCCESS, 'Success')
+            elif error_str in cls.errors:
+                error_info = cls.errors[error_str]
+            else:
+                error_code = int(error_int / 1000) * 1000
+                error_info = cls.errors[str(error_code)]
+            if msg:
+                error_info = replace(error_info)
+                error_info.message = f'{error_info.message} - {msg}'
         except (ValueError, TypeError, KeyError):
-            return ResponseInfo('UNKNOWN', ErrorTypes.UNKNOWN_ERROR, 'Unknown error')
+            error_info = ResponseInfo(
+                'UNKNOWN', ErrorTypes.UNKNOWN_ERROR, 'Unknown error'
+            )
+        return error_info
 
     @classmethod
     def is_critical(cls, error_code: str | int) -> bool:
@@ -799,9 +809,11 @@ class VeSyncLoginError(VeSyncError):
 class VeSyncTokenError(VeSyncError):
     """Exception raised for VeSync API authentication errors."""
 
-    def __init__(self) -> None:
+    def __init__(self, msg: str | None = None) -> None:
         """Initialize the exception with a message."""
-        super().__init__('Token expired or invalid - please re-authenticate with login()')
+        if msg is None or msg.strip() == '':
+            msg = 'Re-authentication required'
+        super().__init__(f'Token expired or invalid - {msg}')
 
 
 class VeSyncServerError(VeSyncError):
@@ -857,8 +869,6 @@ def raise_api_errors(error_info: ResponseInfo) -> None:
             raise VeSyncRateLimitError
         case ErrorTypes.AUTHENTICATION:
             raise VeSyncLoginError(error_info.message)
-        case ErrorTypes.TOKEN_ERROR:
-            raise VeSyncTokenError
         case ErrorTypes.SERVER_ERROR:
             msg = (
                 f'{error_info.message} - '

@@ -117,8 +117,8 @@ class TestHumidifiers(TestBase):
         ["set_mist_level", {"level": 2}],
     ]
     device_methods = {
-        "LUH-A602S-WUSR": [["set_warm_level", {"warm_level": 3}]],
-        "LEH-S601S-WUS": [["set_drying_mode_enabled", {"mode": False}]],
+        "LUH-A602S-WUS": [["set_warm_level", {"warm_level": 3}]],
+        "LEH-S601S": [["turn_off_drying_mode"]],
     }
 
     def test_details(self, setup_entry, method):
@@ -153,6 +153,29 @@ class TestHumidifiers(TestBase):
 
         method_call = getattr(fan_obj, method)
         self.run_in_loop(method_call)
+
+        # Test common purifier attributes
+        assert fan_obj.state.device_status == const.DeviceStatus.ON
+        assert fan_obj.state.connection_status == const.ConnectionStatus.ONLINE
+        assert fan_obj.state.mode == call_json_humidifiers.HumidifierDefaults.humidifier_mode
+        assert fan_obj.state.humidity == call_json_humidifiers.HumidifierDefaults.humidity
+        assert (
+            fan_obj.state.target_humidity
+            == call_json_humidifiers.HumidifierDefaults.target_humidity
+        )
+        assert fan_obj.state.mist_level == call_json_humidifiers.HumidifierDefaults.mist_level
+        assert fan_obj.state.display_status == const.DeviceStatus.from_bool(call_json_humidifiers.HumidifierDefaults.display)
+
+        if fan_obj.supports_nightlight:
+            assert fan_obj.state.nightlight_status == call_json_humidifiers.HumidifierDefaults.nightlight_status
+        if fan_obj.supports_nightlight_brightness:
+            assert (
+                fan_obj.state.nightlight_brightness
+                == call_json_humidifiers.HumidifierDefaults.nightlight_brightness
+            )
+        if fan_obj.supports_drying_mode:
+            assert fan_obj.state.drying_mode_auto_switch == call_json_humidifiers.HumidifierDefaults.drying_mode_switch
+            assert fan_obj.state.drying_mode_state == call_json_humidifiers.HumidifierDefaults.drying_state
 
         # Parse mock_api args tuple from arg, kwargs to kwargs
         all_kwargs = parse_args(self.mock_api)
@@ -219,12 +242,29 @@ class TestHumidifiers(TestBase):
             fan_obj.state.device_status = const.DeviceStatus.OFF
         elif method[0] == "turn_off":
             fan_obj.state.device_status = const.DeviceStatus.ON
+        elif method[0] == "set_auto_mode":
+            fan_obj.state.mode = const.HumidifierModes.MANUAL
+        elif method[0] == "set_manual_mode":
+            fan_obj.state.mode = const.HumidifierModes.AUTO
 
         # Call method with kwargs if defined
         if method_kwargs:
             self.run_in_loop(method_call, **method_kwargs)
         else:
             self.run_in_loop(method_call)
+
+        if method[0] == "set_auto_mode":
+            assert fan_obj.state.mode == const.HumidifierModes.AUTO
+        elif method[0] == "set_manual_mode":
+            assert fan_obj.state.mode == const.HumidifierModes.MANUAL
+        elif method[0] == "set_humidity":
+            assert fan_obj.state.target_humidity == method_kwargs["humidity"]
+        elif method[0] == "set_mist_level":
+            assert fan_obj.state.mist_level == method_kwargs["level"]
+        elif method[0] == "set_warm_level":
+            assert fan_obj.state.warm_mist_level == method_kwargs["warm_level"]
+        elif method[0] == "turn_off_drying_mode":
+            assert fan_obj.state.drying_mode_auto_switch == const.DeviceStatus.OFF
 
         # Parse arguments from mock_api call into a dictionary
         all_kwargs = parse_args(self.mock_api)

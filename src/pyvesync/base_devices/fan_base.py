@@ -10,6 +10,7 @@ from typing_extensions import deprecated
 
 from pyvesync.base_devices.vesyncbasedevice import DeviceState, VeSyncBaseToggleDevice
 from pyvesync.const import FanFeatures, FanModes
+from pyvesync.utils.helpers import OscillationCoordinates, OscillationRange
 
 if TYPE_CHECKING:
     from pyvesync import VeSync
@@ -21,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 class FanState(DeviceState):
-    """Base state class for Purifiers.
+    """Base state class for Fans.
 
     Not all attributes are supported by all devices.
 
@@ -48,23 +49,28 @@ class FanState(DeviceState):
     """
 
     __slots__ = (
+        '_oscillation_status',
+        'child_lock',
         'display_set_status',
         'display_status',
         'displaying_type',
         'fan_level',
         'fan_set_level',
+        'horizontal_oscillation_status',
         'humidity',
         'mode',
         'mute_set_status',
         'mute_status',
+        'oscillation_coordinates',
+        'oscillation_range',
         'oscillation_set_status',
-        'oscillation_status',
         'sleep_change_fan_level',
         'sleep_fallasleep_remain',
         'sleep_oscillation_switch',
         'sleep_preference_type',
         'temperature',
         'thermal_comfort',
+        'vertical_oscillation_status',
     )
 
     def __init__(
@@ -73,7 +79,7 @@ class FanState(DeviceState):
         details: ResponseDeviceDetailsModel,
         feature_map: FanMap,
     ) -> None:
-        """Initialize Purifier State.
+        """Initialize Fan State.
 
         Args:
             device (VeSyncFanBase): Device object.
@@ -84,8 +90,9 @@ class FanState(DeviceState):
         self.mode: str = FanModes.UNKNOWN
         self.fan_level: int | None = None
         self.fan_set_level: int | None = None
-        self.humidity: int | None = None
-        self.temperature: int | None = None
+        self.child_lock: str | None = None
+        self.humidity: float | None = None
+        self.temperature: float | None = None
         self.thermal_comfort: int | None = None
         self.sleep_preference_type: str | None = None
         self.sleep_fallasleep_remain: str | None = None
@@ -93,11 +100,35 @@ class FanState(DeviceState):
         self.sleep_change_fan_level: str | None = None
         self.mute_status: str | None = None
         self.mute_set_status: str | None = None
-        self.oscillation_status: str | None = None
+        self.horizontal_oscillation_status: str | None = None
+        self.vertical_oscillation_status: str | None = None
+        self._oscillation_status: str | None = None
         self.oscillation_set_status: str | None = None
         self.display_status: str | None = None
         self.display_set_status: str | None = None
         self.displaying_type: str | None = None
+        self.oscillation_coordinates: OscillationCoordinates | None = None
+        if FanFeatures.SET_OSCILLATION_RANGE in feature_map.features:
+            self.oscillation_range: OscillationRange | None = OscillationRange(
+                left=0, right=0, top=0, bottom=0
+            )
+        else:
+            self.oscillation_range = None
+
+    @property
+    def oscillation_status(self) -> str | None:
+        """Get oscillation status.
+
+        Returns:
+            str | None: Oscillation status.
+        """
+        if self.horizontal_oscillation_status and self.vertical_oscillation_status:
+            return self.horizontal_oscillation_status or self.vertical_oscillation_status
+        return self._oscillation_status
+
+    @oscillation_status.setter
+    def oscillation_status(self, value: str | None) -> None:
+        self._oscillation_status = value
 
 
 class VeSyncFanBase(VeSyncBaseToggleDevice):
@@ -148,6 +179,21 @@ class VeSyncFanBase(VeSyncBaseToggleDevice):
         return FanFeatures.OSCILLATION in self.features
 
     @property
+    def supports_set_oscillation_range(self) -> bool:
+        """Return True if device supports setting oscillation range."""
+        return FanFeatures.SET_OSCILLATION_RANGE in self.features
+
+    @property
+    def supports_vertical_oscillation(self) -> bool:
+        """Return True if device supports vertical oscillation."""
+        return FanFeatures.VERTICAL_OSCILLATION in self.features
+
+    @property
+    def supports_horizontal_oscillation(self) -> bool:
+        """Return True if device supports horizontal oscillation."""
+        return FanFeatures.HORIZONTAL_OSCILLATION in self.features
+
+    @property
     def supports_mute(self) -> bool:
         """Return True if device supports mute."""
         return FanFeatures.SOUND in self.features
@@ -187,7 +233,7 @@ class VeSyncFanBase(VeSyncBaseToggleDevice):
 
     @abstractmethod
     async def set_mode(self, mode: str) -> bool:
-        """Set Purifier Mode.
+        """Set Fan Mode.
 
         Args:
             mode (str): Mode to set, varies by device type.
@@ -198,7 +244,7 @@ class VeSyncFanBase(VeSyncBaseToggleDevice):
 
     @abstractmethod
     async def set_fan_speed(self, speed: int | None = None) -> bool:
-        """Set Purifier Fan Speed.
+        """Set Fan Fan Speed.
 
         Args:
             speed (int, optional): Fan speed level according to device specs.
@@ -208,7 +254,7 @@ class VeSyncFanBase(VeSyncBaseToggleDevice):
         """
 
     async def set_auto_mode(self) -> bool:
-        """Set Purifier to Auto Mode.
+        """Set Fan to Auto Mode.
 
         Returns:
             bool: Success of request.
@@ -223,7 +269,7 @@ class VeSyncFanBase(VeSyncBaseToggleDevice):
         return False
 
     async def set_advanced_sleep_mode(self) -> bool:
-        """Set Purifier to Advanced Sleep Mode.
+        """Set Fan to Advanced Sleep Mode.
 
         Returns:
             bool: Success of request.
@@ -238,7 +284,7 @@ class VeSyncFanBase(VeSyncBaseToggleDevice):
         return False
 
     async def set_sleep_mode(self) -> bool:
-        """Set Purifier to Sleep Mode.
+        """Set Fan to Sleep Mode.
 
         This is also referred to as Advanced Sleep Mode on some devices.
 
@@ -255,7 +301,7 @@ class VeSyncFanBase(VeSyncBaseToggleDevice):
         return False
 
     async def set_manual_mode(self) -> bool:
-        """Set Purifier to Manual Mode - Normal Mode.
+        """Set Fan to Manual Mode - Normal Mode.
 
         Returns:
             bool: Success of request.
@@ -270,7 +316,7 @@ class VeSyncFanBase(VeSyncBaseToggleDevice):
         return False
 
     async def set_normal_mode(self) -> bool:
-        """Set Purifier to Normal Mode.
+        """Set Fan to Normal Mode.
 
         Returns:
             bool: Success of request.
@@ -285,7 +331,7 @@ class VeSyncFanBase(VeSyncBaseToggleDevice):
         return False
 
     async def set_turbo_mode(self) -> bool:
-        """Set Purifier to Turbo Mode.
+        """Set Fan to Turbo Mode.
 
         Returns:
             bool: Success of request.
@@ -323,12 +369,97 @@ class VeSyncFanBase(VeSyncBaseToggleDevice):
         """Set toggle_oscillation to off."""
         return await self.toggle_oscillation(False)
 
+    async def toggle_vertical_oscillation(self, toggle: bool) -> bool:
+        """Toggle Vertical Oscillation on/off.
+
+        Args:
+            toggle (bool): Vertical Oscillation state.
+
+        Returns:
+            bool: true if success.
+        """
+        del toggle
+        if self.supports_vertical_oscillation:
+            logger.debug('Vertical Oscillation not configured for this device.')
+        else:
+            logger.debug('Vertical Oscillation not supported for this device.')
+        return False
+
+    async def turn_on_vertical_oscillation(self) -> bool:
+        """Set toggle_vertical_oscillation to on."""
+        return await self.toggle_vertical_oscillation(True)
+
+    async def turn_off_vertical_oscillation(self) -> bool:
+        """Set toggle_vertical_oscillation to off."""
+        return await self.toggle_vertical_oscillation(False)
+
+    async def toggle_horizontal_oscillation(self, toggle: bool) -> bool:
+        """Toggle Horizontal Oscillation on/off.
+
+        Args:
+            toggle (bool): Horizontal Oscillation state.
+
+        Returns:
+            bool: true if success.
+        """
+        del toggle
+        if self.supports_horizontal_oscillation:
+            logger.debug('Horizontal Oscillation not configured for this device.')
+        else:
+            logger.debug('Horizontal Oscillation not supported for this device.')
+        return False
+
+    async def turn_on_horizontal_oscillation(self) -> bool:
+        """Set toggle_horizontal_oscillation to on."""
+        return await self.toggle_horizontal_oscillation(True)
+
+    async def turn_off_horizontal_oscillation(self) -> bool:
+        """Set toggle_horizontal_oscillation to off."""
+        return await self.toggle_horizontal_oscillation(False)
+
+    async def set_vertical_oscillation_range(
+        self, *, top: int = 0, bottom: int = 0
+    ) -> bool:
+        """Set Vertical Oscillation Range.
+
+        Args:
+            top (int): Top range.
+            bottom (int): Bottom range.
+
+        Returns:
+            bool: true if success.
+        """
+        del top, bottom
+        if self.supports_set_oscillation_range:
+            logger.debug('Vertical oscillation range not configured for this device.')
+        else:
+            logger.debug('Vertical oscillation range not supported for this device.')
+        return False
+
+    async def set_horizontal_oscillation_range(
+        self, *, left: int = 0, right: int = 0
+    ) -> bool:
+        """Set Horizontal Oscillation Range.
+
+        Args:
+            left (int): Left range.
+            right (int): Right range.
+
+        Returns:
+            bool: true if success.
+        """
+        del left, right
+        if self.supports_set_oscillation_range:
+            logger.debug('Horizontal oscillation range not configured for this device.')
+        else:
+            logger.debug('Horizontal oscillation range not supported for this device.')
+        return False
+
     async def toggle_mute(self, toggle: bool) -> bool:
         """Toggle mute on/off.
 
         Parameters:
-            toggle : bool
-                True to turn mute on, False to turn off
+            toggle (bool): True to turn mute on, False to turn off
 
         Returns:
             bool : True if successful, False if not

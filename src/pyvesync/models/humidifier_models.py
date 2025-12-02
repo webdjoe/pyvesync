@@ -72,7 +72,7 @@ class ClassicLVHumidResult(InnerHumidifierBaseResult):
     mist_virtual_level: int
     mist_level: int
     mode: str
-    display: Annotated[bool, Alias('indicator_light_status')]
+    display: Annotated[bool, Alias('indicator_light_switch')]
     water_lacks: bool
     humidity: int | None = None
     humidity_high: bool = False
@@ -89,7 +89,7 @@ class ClassicConfig(ResponseBaseModel):
     """Classic 200S Humidifier Configuration Model."""
 
     auto_target_humidity: int = 0
-    display: Annotated[bool, Alias('indicator_light_status')] = False
+    display: Annotated[bool, Alias('indicator_light_switch')] = False
     automatic_stop: bool = False
 
     class Config(BaseConfig):  # type: ignore[override]
@@ -200,3 +200,12 @@ class Levoit1000SResult(InnerHumidifierBaseResult):
     scheduleCount: int
     timerRemain: int
     errorCode: int
+    nightLight: Levoit1000SNightLight | None = None
+
+
+@dataclass
+class Levoit1000SNightLight(ResponseBaseModel):
+    """Night Light Model for Levoit 1000S Humidifier."""
+
+    nightLightSwitch: int
+    brightness: int

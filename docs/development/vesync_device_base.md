@@ -36,9 +36,8 @@ All methods and attributes are available on all devices.
       show_if_no_docstring: true
       show_signature_annotations: true
       docstring_options:
-            ignore_init_summary: false
+        ignore_init_summary: false
       filters:
-        - "!.*pid"
         - "!^__*"
         - "!displayJSON"
 
@@ -54,7 +53,7 @@ All methods and attributes are available on all devices.
       show_if_no_docstring: true
       show_signature_annotations: true
       docstring_options:
-            ignore_init_summary: false
+        ignore_init_summary: false
       filters:
         - "!.*pid"
         - "!^__*"

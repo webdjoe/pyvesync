@@ -26,15 +26,18 @@ nav:
 - Supported Devices: supported_devices.md
 - pyvesync V3: pyvesync3.md
 - Usage: usage.md
+- Authentication: authentication.md
 - Development:
     - development/index.md
     - VeSync API: development/vesync_api.md
+    - Authentication: development/auth_api.md
     - Data Models: development/data_models.md
     - DeviceMap: development/device_map.md
     - DeviceContainer: development/device_container.md
     - VeSyncDevice Base: development/vesync_device_base.md
     - Constants: development/constants.md
     - Contributing: development/contributing.md
+    - Capturing: development/capturing.md
     - Testing: development/testing.md
     - Utils:
       - Helpers: development/utils/helpers.md
@@ -109,13 +112,15 @@ plugins:
             signature_crossrefs: true
             separate_signature: true
             extensions:
+            - griffe_warnings_deprecated:
+              kind: danger
+              title: Deprecated
+              label: "deprecated"
             - griffe_inherited_docstrings:
-                merge: true
+              merge: true
             - docstring_inheritance.griffe
             - scripts/docs_handler.py:InheritedNotation
-            - griffe_warnings_deprecated:
-                kind: danger
-                title: Deprecated
+
   - search
   - autorefs:
       resolve_closest: true

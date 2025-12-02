@@ -127,7 +127,7 @@ class IntResponseRoomListModel:
     deviceList: list[IntResponseRoomDeviceListModel]
     plantComformHumidityRangeLower: int | None = None
     plantComformHumidityRangeHigher: int | None = None
-    # group_list = []  # TODO: Create group model  # noqa: ERA001
+    group_list: list[None] = field(default_factory=list)  # TODO: Add group model
 
 
 @dataclass

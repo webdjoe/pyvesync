@@ -1,30 +1,3 @@
-update:
-  headers:
-    Content-Type: application/json; charset=UTF-8
-    User-Agent: okhttp/3.12.1
-  json_object:
-    acceptLanguage: en
-    accountID: sample_id
-    appVersion: 5.6.60
-    cid: ESW03-USA-CID
-    configModel: ConfigModule
-    configModule: ConfigModule
-    debugMode: false
-    deviceId: ESW03-USA-CID
-    method: bypassV2
-    payload:
-      data:
-        id: 0
-      method: getSwitch
-      source: APP
-    phoneBrand: pyvesync
-    phoneOS: Android
-    timeZone: America/New_York
-    token: sample_tk
-    traceId: TRACE_ID
-    userCountryCode: US
-  method: post
-  url: /cloud/v2/deviceManaged/bypassV2
 turn_off:
   headers:
     Content-Type: application/json; charset=UTF-8
@@ -33,26 +6,22 @@ turn_off:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    cid: ESW03-USA-CID
+    cid: ESW03-CID
     configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceId: ESW03-USA-CID
-    method: bypassV2
-    payload:
-      data:
-        enabled: false
-        id: 0
-      method: setSwitch
-      source: APP
+    deviceId: ESW03-CID
+    method: deviceStatus
     phoneBrand: pyvesync
     phoneOS: Android
+    status: 'off'
     timeZone: America/New_York
     token: sample_tk
     traceId: TRACE_ID
     userCountryCode: US
+    uuid: ESW03-UUID
   method: post
-  url: /cloud/v2/deviceManaged/bypassV2
+  url: /cloud/v1/deviceManaged/deviceStatus
 turn_on:
   headers:
     Content-Type: application/json; charset=UTF-8
@@ -61,23 +30,42 @@ turn_on:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    cid: ESW03-USA-CID
+    cid: ESW03-CID
     configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceId: ESW03-USA-CID
-    method: bypassV2
-    payload:
-      data:
-        enabled: true
-        id: 0
-      method: setSwitch
-      source: APP
+    deviceId: ESW03-CID
+    method: deviceStatus
+    phoneBrand: pyvesync
+    phoneOS: Android
+    status: 'on'
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+    userCountryCode: US
+    uuid: ESW03-UUID
+  method: post
+  url: /cloud/v1/deviceManaged/deviceStatus
+update:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 5.6.60
+    cid: ESW03-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: ESW03-CID
+    method: deviceDetail
     phoneBrand: pyvesync
     phoneOS: Android
     timeZone: America/New_York
     token: sample_tk
     traceId: TRACE_ID
     userCountryCode: US
+    uuid: ESW03-UUID
   method: post
-  url: /cloud/v2/deviceManaged/bypassV2
+  url: /cloud/v1/deviceManaged/deviceDetail

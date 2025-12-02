@@ -1,4 +1,4 @@
-get_monthly_energy:
+set_fan_speed:
   headers:
     Content-Type: application/json; charset=UTF-8
     User-Agent: okhttp/3.12.1
@@ -6,19 +6,28 @@ get_monthly_energy:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
+    cid: LV-RH131S-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
     debugMode: false
-    homeTimeZone: America/New_York
-    method: getLastMonthEnergy
+    deviceId: LV-RH131S-CID
+    method: bypassV2
+    payload:
+      data:
+        id: 0
+        level: 3
+        type: wind
+      method: setLevel
+      source: APP
     phoneBrand: pyvesync
     phoneOS: Android
     timeZone: America/New_York
     token: sample_tk
     traceId: TRACE_ID
     userCountryCode: US
-    uuid: ESO15-TB-UUID
   method: post
-  url: /cloud/v1/device/getLastMonthEnergy
-get_weekly_energy:
+  url: /cloud/v2/deviceManaged/bypassV2
+set_manual_mode:
   headers:
     Content-Type: application/json; charset=UTF-8
     User-Agent: okhttp/3.12.1
@@ -26,19 +35,26 @@ get_weekly_energy:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
+    cid: LV-RH131S-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
     debugMode: false
-    homeTimeZone: America/New_York
-    method: getLastWeekEnergy
+    deviceId: LV-RH131S-CID
+    method: bypassV2
+    payload:
+      data:
+        mode: manual
+      method: setPurifierMode
+      source: APP
     phoneBrand: pyvesync
     phoneOS: Android
     timeZone: America/New_York
     token: sample_tk
     traceId: TRACE_ID
     userCountryCode: US
-    uuid: ESO15-TB-UUID
   method: post
-  url: /cloud/v1/device/getLastWeekEnergy
-get_yearly_energy:
+  url: /cloud/v2/deviceManaged/bypassV2
+set_sleep_mode:
   headers:
     Content-Type: application/json; charset=UTF-8
     User-Agent: okhttp/3.12.1
@@ -46,18 +62,25 @@ get_yearly_energy:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
+    cid: LV-RH131S-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
     debugMode: false
-    homeTimeZone: America/New_York
-    method: getLastYearEnergy
+    deviceId: LV-RH131S-CID
+    method: bypassV2
+    payload:
+      data:
+        mode: sleep
+      method: setPurifierMode
+      source: APP
     phoneBrand: pyvesync
     phoneOS: Android
     timeZone: America/New_York
     token: sample_tk
     traceId: TRACE_ID
     userCountryCode: US
-    uuid: ESO15-TB-UUID
   method: post
-  url: /cloud/v1/device/getLastYearEnergy
+  url: /cloud/v2/deviceManaged/bypassV2
 turn_off:
   headers:
     Content-Type: application/json; charset=UTF-8
@@ -66,23 +89,26 @@ turn_off:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    cid: ESO15-TB-CID
+    cid: LV-RH131S-CID
     configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceId: ESO15-TB-CID
-    method: deviceStatus
+    deviceId: LV-RH131S-CID
+    method: bypassV2
+    payload:
+      data:
+        enabled: false
+        id: 0
+      method: setSwitch
+      source: APP
     phoneBrand: pyvesync
     phoneOS: Android
-    status: 'off'
-    switchNo: '1'
     timeZone: America/New_York
     token: sample_tk
     traceId: TRACE_ID
     userCountryCode: US
-    uuid: ESO15-TB-UUID
   method: post
-  url: /cloud/v1/deviceManaged/deviceStatus
+  url: /cloud/v2/deviceManaged/bypassV2
 turn_on:
   headers:
     Content-Type: application/json; charset=UTF-8
@@ -91,23 +117,26 @@ turn_on:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    cid: ESO15-TB-CID
+    cid: LV-RH131S-CID
     configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceId: ESO15-TB-CID
-    method: deviceStatus
+    deviceId: LV-RH131S-CID
+    method: bypassV2
+    payload:
+      data:
+        enabled: true
+        id: 0
+      method: setSwitch
+      source: APP
     phoneBrand: pyvesync
     phoneOS: Android
-    status: 'on'
-    switchNo: '1'
     timeZone: America/New_York
     token: sample_tk
     traceId: TRACE_ID
     userCountryCode: US
-    uuid: ESO15-TB-UUID
   method: post
-  url: /cloud/v1/deviceManaged/deviceStatus
+  url: /cloud/v2/deviceManaged/bypassV2
 update:
   headers:
     Content-Type: application/json; charset=UTF-8
@@ -116,18 +145,21 @@ update:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    cid: ESO15-TB-CID
+    cid: LV-RH131S-CID
     configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceId: ESO15-TB-CID
-    method: deviceDetail
+    deviceId: LV-RH131S-CID
+    method: bypassV2
+    payload:
+      data: {}
+      method: getPurifierStatus
+      source: APP
     phoneBrand: pyvesync
     phoneOS: Android
     timeZone: America/New_York
     token: sample_tk
     traceId: TRACE_ID
     userCountryCode: US
-    uuid: ESO15-TB-UUID
   method: post
-  url: /cloud/v1/deviceManaged/deviceDetail
+  url: /cloud/v2/deviceManaged/bypassV2

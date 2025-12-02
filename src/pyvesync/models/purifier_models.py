@@ -192,7 +192,7 @@ class PurifierCoreDetailsConfig(ResponseBaseModel):
 
     display: bool
     display_forever: bool
-    auto_preference: None | PurifierCoreAutoConfig
+    auto_preference: None | PurifierCoreAutoConfig = None
 
 
 @dataclass
@@ -240,16 +240,15 @@ class Purifier131Result(BypassV1Result):
     """Purifier 131 Details Response Dict."""
 
     screenStatus: str
-    filterLife: Purifier131Filter
     activeTime: int
     levelNew: int
     level: int | None
     mode: str
     airQuality: str
     deviceName: str
-    childLock: str
     deviceStatus: str
     connectionStatus: str
+    filterLife: Purifier131Filter | None = None
 
 
 @dataclass
@@ -259,3 +258,27 @@ class Purifier131Filter(ResponseBaseModel):
     change: bool
     useHour: int
     percent: int
+
+
+@dataclass
+class PurifierRH131Result(BypassV2InnerResult):
+    """Purifier RH131 Details Response Dict."""
+
+    enabled: bool
+    filter_life: int
+    mode: str
+    level: int
+    air_quality: int
+    display: bool
+    child_lock: bool
+    buzzer: bool
+    configuration: dict
+    extension: PurifierRH131DetailsExtension | None = None
+
+
+@dataclass
+class PurifierRH131DetailsExtension(ResponseBaseModel):
+    """Extension dict in RH131 purifier details response."""
+
+    schedule_count: int
+    timer_remain: int

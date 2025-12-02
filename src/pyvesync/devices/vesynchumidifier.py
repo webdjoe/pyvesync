@@ -9,7 +9,7 @@ import orjson
 from typing_extensions import deprecated
 
 from pyvesync.base_devices import VeSyncHumidifier
-from pyvesync.const import ConnectionStatus, DeviceStatus
+from pyvesync.const import DRYING_MODES, ConnectionStatus, DeviceStatus
 from pyvesync.models.bypass_models import ResultV2GetTimer, ResultV2SetTimer
 from pyvesync.models.humidifier_models import (
     ClassicLVHumidResult,
@@ -229,7 +229,7 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
 
     async def set_humidity(self, humidity: int) -> bool:
         if not Validators.validate_range(humidity, *self.target_minmax):
-            logger.debug(
+            logger.warning(
                 'Invalid humidity, must be between %s and %s', *self.target_minmax
             )
             return False
@@ -245,15 +245,15 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
 
     async def set_nightlight_brightness(self, brightness: int) -> bool:
         if not self.supports_nightlight:
-            logger.debug(
-                '%s is a %s does not have a nightlight',
+            logger.warning(
+                '%s is a %s does not have a nightlight or it is not supported.',
                 self.device_name,
                 self.device_type,
             )
             return False
 
         if not Validators.validate_zero_to_hundred(brightness):
-            logger.debug('Brightness value must be set between 0 and 100')
+            logger.warning('Brightness value must be set between 0 and 100')
             return False
 
         payload_data = {'night_light_brightness': brightness}
@@ -269,18 +269,24 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
         )
         return True
 
-    @deprecated('Use set_mode(mode: str) instead.')
-    async def set_humidity_mode(self, mode: str) -> bool:
-        """Deprecated - set humidifier mode.
+    async def toggle_nightlight(self, toggle: bool | None = None) -> bool:
+        if not self.supports_nightlight:
+            logger.warning(
+                '%s is a %s does not have a nightlight or it is not supported.',
+                self.device_name,
+                self.device_type,
+            )
+            return False
 
-        Use `set_mode(mode: str)` instead.
-        """
-        return await self.set_mode(mode)
+        if toggle is None:
+            toggle = self.state.nightlight_status != DeviceStatus.ON
+        brightness = 100 if toggle else 0
+        return await self.set_nightlight_brightness(brightness)
 
     async def set_mode(self, mode: str) -> bool:
         if mode.lower() not in self.mist_modes:
-            logger.debug('Invalid humidity mode used - %s', mode)
-            logger.debug(
+            logger.warning('Invalid humidity mode used - %s', mode)
+            logger.info(
                 'Proper modes for this device are - %s',
                 orjson.dumps(
                     self.mist_modes, option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS
@@ -295,6 +301,7 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
             return False
 
         self.state.mode = mode
+        self.state.device_status = DeviceStatus.ON
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
@@ -308,7 +315,7 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
             return False
 
         if warm_level not in self.warm_mist_levels:
-            logger.debug('warm_level value must be - %s', str(self.warm_mist_levels))
+            logger.warning('warm_level value must be - %s', str(self.warm_mist_levels))
             return False
 
         payload_data = {'type': 'warm', 'level': warm_level, 'id': 0}
@@ -324,7 +331,7 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
 
     async def set_mist_level(self, level: int) -> bool:
         if level not in self.mist_levels:
-            logger.debug(
+            logger.warning(
                 'Humidifier mist level must be between %s and %s',
                 self.mist_levels[0],
                 self.mist_levels[-1],
@@ -451,23 +458,32 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
         """Set state from Superior 6000S API result model."""
         self.state.device_status = DeviceStatus.from_int(resp_model.powerSwitch)
         self.state.connection_status = ConnectionStatus.ONLINE
-        self.state.mode = resp_model.workMode
+        self.state.mode = Helpers.get_key(self.mist_modes, resp_model.workMode, None)
+        if self.state.mode is None:
+            logger.warning('Unknown mist mode received: %s', resp_model.workMode)
+
         self.state.auto_target_humidity = resp_model.targetHumidity
+        self.state.humidity = resp_model.humidity
         self.state.mist_level = resp_model.mistLevel
         self.state.mist_virtual_level = resp_model.virtualLevel
         self.state.water_lacks = bool(resp_model.waterLacksState)
         self.state.water_tank_lifted = bool(resp_model.waterTankLifted)
         self.state.automatic_stop_config = bool(resp_model.autoStopSwitch)
         self.state.auto_stop_target_reached = bool(resp_model.autoStopState)
-        self.state.display_set_status = DeviceStatus.from_int(resp_model.screenSwitch)
+        self.state.display_set_status = DeviceStatus.from_int(resp_model.screenState)
         self.state.display_status = DeviceStatus.from_int(resp_model.screenState)
         self.state.auto_preference = resp_model.autoPreference
-        self.state.filter_life_percent = resp_model.filterLifePercent
-        self.state.temperature = resp_model.temperature  # Unknown units
+        self.state.filter_life = resp_model.filterLifePercent
+        self.state.child_lock = bool(resp_model.childLockSwitch)
+        self.state.temperature = (
+            resp_model.temperature / 10
+        )  # Fahrenheit but without decimals
 
         drying_mode = resp_model.dryingMode
         if drying_mode is not None:
-            self.state.drying_mode_status = DeviceStatus.from_int(drying_mode.dryingState)
+            self.state.drying_mode_status = Helpers.get_key(
+                DRYING_MODES, drying_mode.dryingState, None
+            )
             self.state.drying_mode_level = drying_mode.dryingLevel
             self.state.drying_mode_auto_switch = DeviceStatus.from_int(
                 drying_mode.autoDryingSwitch
@@ -517,32 +533,19 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
-    @deprecated('Use toggle_drying_mode() instead.')
-    async def set_drying_mode_enabled(self, mode: bool) -> bool:
-        """Set drying mode on/off."""
-        return await self.toggle_drying_mode(mode)
-
     async def toggle_drying_mode(self, toggle: bool | None = None) -> bool:
         if toggle is None:
             toggle = self.state.drying_mode_status != DeviceStatus.ON
 
         payload_data = {'autoDryingSwitch': int(toggle)}
         r_dict = await self.call_bypassv2_api('setDryingMode', payload_data)
-        r = Helpers.process_dev_response(logger, 'set_drying_mode_enabled', self, r_dict)
+        r = Helpers.process_dev_response(logger, 'toggle_drying_mode', self, r_dict)
         if r is None:
             return False
 
         self.state.connection_status = ConnectionStatus.ONLINE
         self.state.drying_mode_auto_switch = DeviceStatus.from_bool(toggle)
         return True
-
-    @deprecated('Use toggle_display() instead.')
-    async def set_display_enabled(self, mode: bool) -> bool:
-        """Set display on/off.
-
-        Deprecated method, please use toggle_display() instead.
-        """
-        return await self.toggle_display(mode)
 
     async def toggle_display(self, toggle: bool | None = None) -> bool:
         if toggle is None:
@@ -560,7 +563,7 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
 
     async def set_humidity(self, humidity: int) -> bool:
         if not Validators.validate_range(humidity, *self.target_minmax):
-            logger.debug('Humidity value must be set between 30 and 80')
+            logger.warning('Humidity value must be set between 30 and 80')
             return False
 
         payload_data = {'targetHumidity': humidity}
@@ -573,15 +576,10 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
-    @deprecated('Use set_mode(mode: str) instead.')
-    async def set_humidity_mode(self, mode: str) -> bool:
-        """Set humidifier mode."""
-        return await self.set_mode(mode)
-
     async def set_mode(self, mode: str) -> bool:
         if mode.lower() not in self.mist_modes:
-            logger.debug('Invalid humidity mode used - %s', mode)
-            logger.debug(
+            logger.warning('Invalid humidity mode used - %s', mode)
+            logger.info(
                 'Proper modes for this device are - %s',
                 orjson.dumps(
                     self.mist_modes, option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS
@@ -595,13 +593,15 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
         r = Helpers.process_dev_response(logger, 'set_humidity_mode', self, r_dict)
         if r is None:
             return False
+
         self.state.mode = mode
+        self.state.device_status = DeviceStatus.ON
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
     async def set_mist_level(self, level: int) -> bool:
         if level not in self.mist_levels:
-            logger.debug('Humidifier mist level must be between 0 and 9')
+            logger.warning('Humidifier mist level must be between 0 and 9')
             return False
 
         payload_data = {'levelIdx': 0, 'virtualLevel': level, 'levelType': 'mist'}
@@ -665,6 +665,7 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
         self.state.device_status = DeviceStatus.from_int(resp_model.powerSwitch)
         self.state.connection_status = ConnectionStatus.ONLINE
         self.state.mode = resp_model.workMode
+        self.state.humidity = resp_model.humidity
         self.state.auto_target_humidity = resp_model.targetHumidity
         self.state.mist_level = resp_model.mistLevel
         self.state.mist_virtual_level = resp_model.virtualLevel
@@ -674,6 +675,11 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
         self.state.auto_stop_target_reached = bool(resp_model.autoStopState)
         self.state.display_set_status = DeviceStatus.from_int(resp_model.screenSwitch)
         self.state.display_status = DeviceStatus.from_int(resp_model.screenState)
+        if resp_model.nightLight is not None:
+            self.state.nightlight_brightness = resp_model.nightLight.brightness
+            self.state.nightlight_status = DeviceStatus.from_int(
+                resp_model.nightLight.nightLightSwitch
+            )
 
     async def get_details(self) -> None:
         r_dict = await self.call_bypassv2_api('getHumidifierStatus')
@@ -711,18 +717,10 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
-    @deprecated('Use set_mode() instead.')
-    async def set_humidity_mode(self, mode: str) -> bool:
-        """Set humidifier mode - sleep, auto or manual.
-
-        Deprecated, please use set_mode() instead.
-        """
-        return await self.set_mode(mode)
-
     async def set_mode(self, mode: str) -> bool:
         if mode.lower() not in self.mist_modes:
-            logger.debug('Invalid humidity mode used - %s', mode)
-            logger.debug(
+            logger.warning('Invalid humidity mode used - %s', mode)
+            logger.info(
                 'Proper modes for this device are - %s',
                 orjson.dumps(
                     self.mist_modes, option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS
@@ -737,12 +735,14 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
             return False
 
         self.state.mode = mode
+
+        self.state.device_status = DeviceStatus.ON
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
     async def set_mist_level(self, level: int) -> bool:
         if level not in self.mist_levels:
-            logger.debug('Humidifier mist level out of range')
+            logger.warning('Humidifier mist level out of range')
             return False
 
         payload_data = {'levelIdx': 0, 'virtualLevel': level, 'levelType': 'mist'}
@@ -753,6 +753,7 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
 
         self.state.mist_level = level
         self.state.mist_virtual_level = level
+        self.state.device_status = DeviceStatus.ON
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
@@ -772,7 +773,7 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
 
     async def set_humidity(self, humidity: int) -> bool:
         if not Validators.validate_range(humidity, *self.target_minmax):
-            logger.debug(
+            logger.warning(
                 'Humidity value must be set between %s and %s',
                 self.target_minmax[0],
                 self.target_minmax[1],
@@ -789,10 +790,6 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
-    @deprecated('Use toggle_automatic_stop() instead.')
-    async def set_automatic_stop(self, mode: bool) -> bool:
-        return await self.toggle_automatic_stop(mode)
-
     async def toggle_automatic_stop(self, toggle: bool | None = None) -> bool:
         if toggle is None:
             toggle = self.state.automatic_stop_config != DeviceStatus.ON
@@ -804,5 +801,58 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
         if r is None:
             return False
         self.state.automatic_stop_config = toggle
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def toggle_nightlight(self, toggle: bool | None = None) -> bool:
+        if not self.supports_nightlight:
+            logger.warning(
+                '%s is a %s does not have a nightlight or it is not supported.',
+                self.device_name,
+                self.device_type,
+            )
+            return False
+
+        if toggle is None:
+            toggle = self.state.nightlight_status != DeviceStatus.ON
+
+        payload_data = {'nightLightSwitch': int(toggle)}
+        r_dict = await self.call_bypassv2_api('setNightLightStatus', payload_data)
+        r = Helpers.process_dev_response(logger, 'toggle_nightlight', self, r_dict)
+        if r is None:
+            return False
+
+        self.state.nightlight_status = DeviceStatus.from_bool(toggle)
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def set_nightlight_brightness(self, brightness: int) -> bool:
+        if not self.supports_nightlight:
+            logger.warning(
+                '%s is a %s does not have a nightlight or it is not supported.',
+                self.device_name,
+                self.device_type,
+            )
+            return False
+
+        if not Validators.validate_zero_to_hundred(brightness):
+            logger.warning('Brightness value must be set between 0 and 100')
+            return False
+
+        payload_data = {
+            'brightness': brightness,
+            'nightLightSwitch': 1 if brightness > 0 else 0,
+        }
+        r_dict = await self.call_bypassv2_api('setLightStatus', payload_data)
+        r = Helpers.process_dev_response(
+            logger, 'set_night_light_brightness', self, r_dict
+        )
+        if r is None:
+            return False
+
+        self.state.nightlight_brightness = brightness
+        self.state.nightlight_status = (
+            DeviceStatus.ON if brightness > 0 else DeviceStatus.OFF
+        )
         self.state.connection_status = ConnectionStatus.ONLINE
         return True

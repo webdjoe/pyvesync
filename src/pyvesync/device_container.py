@@ -182,6 +182,11 @@ class DeviceContainer(_DeviceContainerBase):
         device_obj = self._build_device_instance(device, manager)
         if device_obj is not None:
             self.add(device_obj)
+            logger.debug(
+                'Added device %s - %s to container.',
+                device_obj.device_name,
+                device_obj.device_type,
+            )
 
     def device_exists(self, cid: str, sub_device_no: int | None = None) -> bool:
         """Check if a device with the given cid & sub_dev_no exists.

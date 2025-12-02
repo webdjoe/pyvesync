@@ -67,6 +67,7 @@ from typing import Union
 from pyvesync.const import (
     BulbFeatures,
     ColorMode,
+    EnergyIntervals,
     FanFeatures,
     FanModes,
     FanSleepPreference,
@@ -161,6 +162,11 @@ class OutletMap(DeviceMapTemplate):
     product_line: str = ProductLines.WIFI_LIGHT
     product_type: str = ProductTypes.OUTLET
     module: ModuleType = vesyncoutlet
+    energy_intervals: tuple[str, ...] = (
+        EnergyIntervals.YEAR,
+        EnergyIntervals.MONTH,
+        EnergyIntervals.WEEK,
+    )
     nightlight_modes: list[NightlightModes] = field(default_factory=list)
 
 
@@ -416,20 +422,20 @@ outlet_modules = [
         setup_entry='wifi-switch-1.3',
     ),
     OutletMap(  # TODO: Add energy
-        dev_types=['ESW10-USA'],
+        dev_types=['ESW10-USA', 'ESW10-EU'],
         class_name='VeSyncESW10USA',
         features=[],
         model_name='10A WiFi Outlet USA',
         model_display='ESW10-USA Series',
-        setup_entry='ESW03-USA',
+        setup_entry='ESW10-USA',
     ),
     OutletMap(
-        dev_types=['ESW01-EU'],
+        dev_types=['ESW01-EU', 'ESW01-USA', 'ESW03-USA', 'ESW03-EU'],
         class_name='VeSyncOutlet10A',
         features=[OutletFeatures.ENERGY_MONITOR],
-        model_name='10A WiFi Outlet Europe',
-        model_display='ESW01-EU',
-        setup_entry='ESW01-EU',
+        model_name='ESW03 10A WiFi Outlet',
+        model_display='ESW01/03 USA/EU',
+        setup_entry='ESW03',
     ),
     OutletMap(
         dev_types=['ESW15-USA'],
@@ -450,23 +456,33 @@ outlet_modules = [
     ),
     OutletMap(
         dev_types=[
-            'BSDOG01',
-            'WYSMTOD16A',
             'WHOGPLUG',
+        ],
+        class_name='VeSyncOutletWHOGPlug',
+        features=[OutletFeatures.ONOFF, OutletFeatures.ENERGY_MONITOR],
+        model_name='Smart Plug',
+        model_display='Smart Plug Series',
+        setup_entry='WHOGPLUG',
+        device_alias='Greensun Smart Plug',
+    ),
+    OutletMap(
+        dev_types=[
+            'BSDOG01',
+            'BSDOG02',
+            'WYSMTOD16A',
             'WM-PLUG',
             'JXUK13APLUG',
             'WYZYOGMINIPLUG',
-            'BSDOG02',
             'HWPLUG16A',
             'FY-PLUG',
             'HWPLUG16',
         ],
-        class_name='VeSyncOutletBSDGO1',
-        features=[OutletFeatures.ONOFF],
+        class_name='VeSyncBSDOGPlug',
+        features=[OutletFeatures.ONOFF, OutletFeatures.ENERGY_MONITOR],
         model_name='Smart Plug',
         model_display='Smart Plug Series',
         setup_entry='BSDOG01',
-        device_alias='Greensun Smart Plug',
+        device_alias='Smart Plug Series',
     ),
 ]
 """List of ['OutletMap'][pyvesync.device_map.OutletMap] configuration
@@ -681,7 +697,7 @@ humidifier_modules = [
     ),
     HumidifierMap(
         class_name='VeSyncHumid1000S',
-        dev_types=['LUH-M101S-WUS', 'LUH-M101S-WEUR', 'LUH-M101S-WUSR'],
+        dev_types=['LUH-M101S-WUS', 'LUH-M101S-WUSR'],
         features=[],
         mist_modes={
             HumidifierModes.AUTO: 'auto',
@@ -692,7 +708,25 @@ humidifier_modules = [
         device_alias='Oasismist 1000S',
         model_display='Oasismist Series',
         model_name='Oasismist 1000S',
-        setup_entry='LUH-M101S',
+        setup_entry='LUH-M101S-WUS',
+    ),
+    HumidifierMap(
+        class_name='VeSyncHumid1000S',
+        dev_types=['LUH-M101S-WEUR'],
+        features=[
+            HumidifierFeatures.NIGHTLIGHT,
+            HumidifierFeatures.NIGHTLIGHT_BRIGHTNESS,
+        ],
+        mist_modes={
+            HumidifierModes.AUTO: 'auto',
+            HumidifierModes.SLEEP: 'sleep',
+            HumidifierModes.MANUAL: 'manual',
+        },
+        mist_levels=list(range(1, 10)),
+        device_alias='Oasismist 1000S EU',
+        model_display='Oasismist Series EU',
+        model_name='Oasismist 1000S EU',
+        setup_entry='LUH-M101S-WEUR',
     ),
     HumidifierMap(
         class_name='VeSyncSuperior6000S',
@@ -703,7 +737,6 @@ humidifier_modules = [
             HumidifierModes.SLEEP: 'sleep',
             HumidifierModes.HUMIDITY: 'humidity',
             HumidifierModes.MANUAL: 'manual',
-            HumidifierModes.AUTOPRO: 'autoPro',
         },
         mist_levels=list(range(1, 10)),
         device_alias='Superior 6000S',
@@ -750,7 +783,7 @@ purifier_modules: list[PurifierMap] = [
             PurifierAutoPreference.QUIET,
         ],
         features=[PurifierFeatures.AIR_QUALITY],
-        fan_levels=list(range(1, 5)),
+        fan_levels=list(range(1, 4)),
         device_alias='Core 300S',
         model_display='Core 300S',
         model_name='Core 300S',
@@ -790,14 +823,25 @@ purifier_modules: list[PurifierMap] = [
     ),
     PurifierMap(
         class_name='VeSyncAir131',
-        dev_types=['LV-PUR131S', 'LV-RH131S'],
+        dev_types=['LV-PUR131S'],
         modes=[PurifierModes.SLEEP, PurifierModes.MANUAL, PurifierModes.AUTO],
         features=[PurifierFeatures.AIR_QUALITY],
         fan_levels=list(range(1, 4)),
         device_alias='LV-PUR131S',
-        model_display='LV-PUR131S/RH131S Series',
+        model_display='LV-PUR131S Series',
         model_name='LV131S',
         setup_entry='LV-PUR131S',
+    ),
+    PurifierMap(
+        class_name='VeSyncAirRH131',
+        dev_types=['LV-RH131S-WM', 'LV-RH131S'],
+        modes=[PurifierModes.SLEEP, PurifierModes.MANUAL, PurifierModes.AUTO],
+        features=[PurifierFeatures.AIR_QUALITY],
+        fan_levels=list(range(1, 4)),
+        device_alias='LV-RH131S',
+        model_display='LV-RH131S Series',
+        model_name='LV131S',
+        setup_entry='LV-RH131S',
     ),
     PurifierMap(
         class_name='VeSyncAirBaseV2',
@@ -888,7 +932,7 @@ purifier_modules: list[PurifierMap] = [
         setup_entry='EL551S',
     ),
     PurifierMap(
-        class_name='VeSyncAirBaseV2',
+        class_name='VeSyncAirSprout',
         dev_types=[
             'LAP-B851S-WEU',
             'LAP-B851S-WNA',
@@ -925,7 +969,7 @@ objects for purifier devices."""
 fan_modules: list[FanMap] = [
     FanMap(
         class_name='VeSyncTowerFan',
-        dev_types=['LTF-F422S-KEU', 'LTF-F422S-WUSR', 'LTF-F422_WJP', 'LTF-F422S-WUS'],
+        dev_types=['LTF-F422S-KEU', 'LTF-F422S-WUSR', 'LTF-F422S-WJP', 'LTF-F422S-WUS'],
         modes=[
             FanModes.NORMAL,
             FanModes.TURBO,
@@ -951,6 +995,33 @@ fan_modules: list[FanMap] = [
         model_name='Classic 42-Inch Tower Fan',
         setup_entry='LTF-F422S',
     ),
+    FanMap(
+        class_name='VeSyncPedestalFan',
+        dev_types=['LPF-R432S-AEU', 'LPF-R432S-AUS'],
+        modes=[
+            FanModes.NORMAL,
+            FanModes.TURBO,
+            FanModes.ECO,
+            FanModes.ADVANCED_SLEEP,
+        ],
+        setup_entry='LPF-R423S',
+        features=[
+            FanFeatures.SET_OSCILLATION_RANGE,
+            FanFeatures.HORIZONTAL_OSCILLATION,
+            FanFeatures.VERTICAL_OSCILLATION,
+        ],
+        fan_levels=list(range(1, 13)),
+        set_mode_method='setFanMode',
+        device_alias='Pedestal Fan',
+        sleep_preferences=[
+            FanSleepPreference.DEFAULT,
+            FanSleepPreference.ADVANCED,
+            FanSleepPreference.TURBO,
+            FanSleepPreference.QUIET,
+        ],  # Unknown sleep preferences, need to be verified
+        model_display='LPF-R432S Pedestal Fan Series',
+        model_name='Pedestal Fan',
+    ),
 ]
 """List of ['FanMap'][pyvesync.device_map.FanMap] configuration
 objects for fan devices."""
@@ -960,7 +1031,7 @@ air_fryer_modules: list[AirFryerMap] = [
     AirFryerMap(
         class_name='VeSyncAirFryer158',
         module=vesynckitchen,
-        dev_types=['CS137-AF/CS158-AF', 'CS158-AF', 'CS137-AF', 'CS358-AF'],
+        dev_types=['CS137-AF/CS158-AF', 'CS158-AF', 'CS137-AF'],
         device_alias='Air Fryer',
         model_display='CS158/159/168/169-AF Series',
         model_name='Smart/Pro/Pro Gen 2 5.8 Qt. Air Fryer',

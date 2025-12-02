@@ -96,6 +96,15 @@ DEFAULT_HEADER_BYPASS = {
 }
 
 
+def response_body(code: int = 0, msg: str | None = 'Success') -> dict[str, Any]:
+    """Return base response dictionary."""
+    return {
+        'code': code,
+        'traceId': TestDefaults.trace_id,
+        'msg': msg
+    }
+
+
 class LoginResponses:
     GET_TOKEN_RESPONSE_SUCCESS = {
         "traceId": TestDefaults.trace_id,

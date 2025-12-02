@@ -6,17 +6,17 @@ turn_off:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    cid: BSDOG01-CID
+    cid: ESW10-USA-CID
     configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceId: BSDOG01-CID
+    deviceId: ESW10-USA-CID
     method: bypassV2
     payload:
       data:
-        powerSwitch_1: 0
-      method: setProperty
-      subDeviceNo: 0
+        enabled: false
+        id: 0
+      method: setSwitch
       source: APP
     phoneBrand: pyvesync
     phoneOS: Android
@@ -34,17 +34,17 @@ turn_on:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    cid: BSDOG01-CID
+    cid: ESW10-USA-CID
     configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceId: BSDOG01-CID
+    deviceId: ESW10-USA-CID
     method: bypassV2
     payload:
       data:
-        powerSwitch_1: 1
-      method: setProperty
-      subDeviceNo: 0
+        enabled: true
+        id: 0
+      method: setSwitch
       source: APP
     phoneBrand: pyvesync
     phoneOS: Android
@@ -62,24 +62,16 @@ update:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    cid: BSDOG01-CID
+    cid: ESW10-USA-CID
     configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceId: BSDOG01-CID
+    deviceId: ESW10-USA-CID
     method: bypassV2
     payload:
       data:
-        properties:
-        - powerSwitch_1
-        - realTimeVoltage
-        - realTimePower
-        - electricalEnergy
-        - protectionStatus
-        - voltageUpperThreshold
-        - currentUpperThreshold
-        - scheduleNum
-      method: getProperty
+        id: 0
+      method: getSwitch
       source: APP
     phoneBrand: pyvesync
     phoneOS: Android
