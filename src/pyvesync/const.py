@@ -27,10 +27,9 @@ Attributes:
 from __future__ import annotations
 
 import platform
-import string
 import uuid
 from enum import Enum, IntEnum, StrEnum
-from random import choices, randint
+from random import randint
 from types import MappingProxyType
 
 from pyvesync.utils.enum_utils import IntEnumMixin
@@ -54,7 +53,7 @@ USER_AGENT = (
 DEFAULT_TZ = 'America/New_York'
 DEFAULT_REGION = 'US'
 APP_VERSION = '5.6.60'
-APP_ID = ''.join(choices(string.ascii_lowercase + string.digits, k=8))  # noqa: S311
+APP_ID = 'eldodkfj'
 PHONE_BRAND = 'pyvesync'
 PHONE_OS = 'Android'
 MOBILE_ID = str(randint(1000000000000000, 9999999999999999))  # noqa: S311
