@@ -1023,7 +1023,7 @@ class VeSyncESW10USA(BypassV2Mixin, VeSyncOutlet):
         result = process_bypassv2_result(
             self, logger, 'get_details', r_dict, ResultESW10Details
         )
-        if not isinstance(result, dict) or not isinstance(result.get('enabled'), bool):
+        if result is None:
             logger.warning('Error getting %s details', self.device_name)
             self.state.connection_status = ConnectionStatus.OFFLINE
             return
