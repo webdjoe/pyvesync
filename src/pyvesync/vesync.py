@@ -341,7 +341,9 @@ class VeSync:  # pylint: disable=function-redefined
         if response.code == 0:
             proc_return = self.process_devices(response)
         else:
-            error_info = ErrorCodes.get_error_info(response.code, response.msg)
+            error_info = ErrorCodes.get_error_info(response.code)
+            if response.msg is not None:
+                error_info.message = f'{error_info.message} ({response.msg})'
             if error_info.error_type == ErrorTypes.SERVER_ERROR:
                 raise VeSyncServerError(error_info.message)
             raise VeSyncAPIResponseError(

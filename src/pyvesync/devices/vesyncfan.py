@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 from pyvesync.base_devices import VeSyncFanBase
 from pyvesync.const import ConnectionStatus, DeviceStatus
 from pyvesync.models.bypass_models import TimerModels
-from pyvesync.models.fan_models import TowerFanResult
+from pyvesync.models.fan_models import PedestalFanResult, TowerFanResult
 from pyvesync.utils.device_mixins import BypassV2Mixin, process_bypassv2_result
 from pyvesync.utils.helpers import Helpers, Timer
 
@@ -232,3 +232,203 @@ class VeSyncTowerFan(BypassV2Mixin, VeSyncFanBase):
             return False
         self.state.timer = None
         return True
+
+
+class VeSyncPedestalFan(BypassV2Mixin, VeSyncFanBase):
+    """Levoit Pedestal Fan Device Class."""
+
+    __slots__ = ()
+
+    def __init__(
+        self,
+        details: ResponseDeviceDetailsModel,
+        manager: VeSync,
+        feature_map: FanMap,
+    ) -> None:
+        """Initialize the VeSync Base API V2 Fan Class."""
+        super().__init__(details, manager, feature_map)
+
+    def _set_fan_state(self, res: PedestalFanResult) -> None:
+        """Set the fan state from the result."""
+        self.state.device_status = DeviceStatus.from_int(res.powerSwitch)
+        self.state.mode = res.workMode
+        self.state.fan_level = res.fanSpeedLevel
+        self.state.temperature = (res.temperature / 10) if res.temperature else None
+        self.state.mute_set_status = DeviceStatus.from_int(res.muteSwitch)
+        self.state.display_set_status = DeviceStatus.from_int(res.screenSwitch)
+        self.state.display_status = DeviceStatus.from_int(res.screenState)
+        self.state.vertical_oscillation_status = DeviceStatus.from_int(
+            res.verticalOscillationState
+        )
+        self.state.horizontal_oscillation_status = DeviceStatus.from_int(
+            res.horizontalOscillationState
+        )
+        self.state.child_lock = DeviceStatus.from_int(res.childLock)
+        if res.sleepPreference is not None:
+            self.state.sleep_change_fan_level = DeviceStatus.from_int(
+                res.sleepPreference.initFanSpeedLevel
+            )
+            self.state.sleep_fallasleep_remain = DeviceStatus.from_int(
+                res.sleepPreference.fallAsleepRemain
+            )
+            self.state.sleep_oscillation_switch = DeviceStatus.from_int(
+                res.sleepPreference.oscillationState
+            )
+            self.state.sleep_preference_type = res.sleepPreference.sleepPreferenceType
+
+    async def get_details(self) -> None:
+        r_dict = await self.call_bypassv2_api('getFanStatus')
+        result = process_bypassv2_result(
+            self, logger, 'get_details', r_dict, PedestalFanResult
+        )
+        if result is None:
+            return
+        self._set_fan_state(result)
+
+    async def set_mode(self, mode: str) -> bool:
+        if mode not in self.modes:
+            logger.warning('Invalid fan mode used - %s', mode)
+            return False
+        data = {'workMode': mode}
+        r_dict = await self.call_bypassv2_api('setFanMode', data)
+        r = Helpers.process_dev_response(logger, 'set_mode', self, r_dict)
+        if r is None:
+            return False
+        self.state.mode = mode
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def set_fan_speed(self, speed: int | None = None) -> bool:
+        if speed is None:
+            new_speed = Helpers.bump_level(self.state.fan_level, self.fan_levels)
+        else:
+            new_speed = speed
+        if new_speed not in self.fan_levels:
+            logger.warning('Invalid fan speed level used - %s', speed)
+            return False
+        data = {'levelIdx': 0, 'levelType': 'wind', 'manualSpeedLevel': speed}
+        r_dict = await self.call_bypassv2_api('setLevel', data)
+        r = Helpers.process_dev_response(logger, 'set_fan_speed', self, r_dict)
+        if r is None:
+            return False
+        self.state.fan_level = speed
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def toggle_switch(self, toggle: bool | None = None) -> bool:
+        if toggle is None:
+            toggle = self.state.device_status == DeviceStatus.OFF
+        data = {'powerSwitch': int(toggle), 'switchIdx': 0}
+        r_dict = await self.call_bypassv2_api('setSwitch', data)
+        r = Helpers.process_dev_response(logger, 'toggle_switch', self, r_dict)
+        if r is None:
+            return False
+        self.state.device_status = DeviceStatus.from_bool(toggle)
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def _set_oscillation_state(
+        self,
+        *,
+        vertical: bool | None = None,
+        horizontal: bool | None = None,
+        left: int | None = None,
+        right: int | None = None,
+        top: int | None = None,
+        bottom: int | None = None,
+    ) -> bool:
+        """Internal method to set oscillation state.
+
+        Can only set horizontal or vertical at one time. If the vertical argument
+        is set (True or False), the horizontal argument and ranges are ignored.
+        If the horizontal argument is set (True or False), the vertical
+        argument and ranges are ignored. Either vertical or horizontal must be set.
+
+        Args:
+            vertical (bool | None): True if setting vertical oscillation.
+            horizontal (bool | None): True if setting horizontal oscillation.
+            left (int | None): Left range for oscillation (if applicable).
+            right (int | None): Right range for oscillation (if applicable).
+            top (int | None): Top range for oscillation (if applicable).
+            bottom (int | None): Bottom range for oscillation (if applicable).
+
+        Returns:
+            bool: true if success.
+        """
+        if vertical is not None:
+            data = {'verticalOscillationState': int(vertical), 'actType': 'default'}
+            if vertical is True and (top is not None and bottom is not None):
+                data |= {
+                    'top': top,
+                    'bottom': bottom,
+                }
+        elif horizontal is not None:
+            data = {'horizontalOscillationState': int(horizontal), 'actType': 'default'}
+            if horizontal is True and (left is not None and right is not None):
+                data |= {
+                    'left': left,
+                    'right': right,
+                }
+        else:
+            logger.warning('Either vertical or horizontal must be set.')
+            return False
+        r_dict = await self.call_bypassv2_api('setOscillationStatus', data)
+        r = Helpers.process_dev_response(logger, 'set_oscillation_state', self, r_dict)
+        if r is None:
+            return False
+        if vertical is not None:
+            self.state.vertical_oscillation_status = DeviceStatus.from_bool(vertical)
+        elif horizontal is not None:
+            self.state.horizontal_oscillation_status = DeviceStatus.from_bool(horizontal)
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def toggle_vertical_oscillation(self, toggle: bool) -> bool:
+        """Toggle vertical oscillation on/off.
+
+        Args:
+            toggle (bool): True to enable, False to disable.
+
+        Returns:
+            bool: true if success.
+        """
+        return await self._set_oscillation_state(vertical=toggle)
+
+    async def toggle_horizontal_oscillation(self, toggle: bool) -> bool:
+        """Toggle horizontal oscillation on/off.
+
+        Args:
+            toggle (bool): True to enable, False to disable.
+
+        Returns:
+            bool: true if success.
+        """
+        return await self._set_oscillation_state(horizontal=toggle)
+
+    async def set_vertical_oscillation_range(
+        self, *, top: int = 0, bottom: int = 0
+    ) -> bool:
+        """Set vertical oscillation range.
+
+        Args:
+            top (int): Top range for oscillation.
+            bottom (int): Bottom range for oscillation.
+
+        Returns:
+            bool: true if success.
+        """
+        return await self._set_oscillation_state(vertical=True, top=top, bottom=bottom)
+
+    async def set_horizontal_oscillation_range(
+        self, *, left: int = 0, right: int = 0
+    ) -> bool:
+        """Set horizontal oscillation range.
+
+        Args:
+            left (int): Left range for oscillation.
+            right (int): Right range for oscillation.
+
+        Returns:
+            bool: true if success.
+        """
+        return await self._set_oscillation_state(horizontal=True, left=left, right=right)

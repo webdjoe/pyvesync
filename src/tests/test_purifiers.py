@@ -136,6 +136,11 @@ class TestAirPurifiers(TestBase):
         method_call = getattr(fan_obj, method)
         self.run_in_loop(method_call)
 
+        # Test state attributes
+        assert fan_obj.state.device_status == const.DeviceStatus.ON
+        assert fan_obj.state.mode == call_json_purifiers.PurifierDefaults.purifier_mode
+        assert fan_obj.state.fan_level == call_json_purifiers.PurifierDefaults.fan_level
+
         # Parse mock_api args tuple from arg, kwargs to kwargs
         all_kwargs = parse_args(self.mock_api)
 

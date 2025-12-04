@@ -84,6 +84,13 @@ class Response10ADetails(DataClassORJSONMixin):
 
 
 @dataclass
+class RequestESW03Status(RequestBypassV1):
+    """Request model for Etekcity 10A outlet status."""
+
+    status: str
+
+
+@dataclass
 class ResponseESW03Details(BypassV1Result):
     """Response model for Etekcity 10A outlet details."""
 

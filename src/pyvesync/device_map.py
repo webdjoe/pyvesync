@@ -697,7 +697,7 @@ humidifier_modules = [
     ),
     HumidifierMap(
         class_name='VeSyncHumid1000S',
-        dev_types=['LUH-M101S-WUS', 'LUH-M101S-WEUR', 'LUH-M101S-WUSR'],
+        dev_types=['LUH-M101S-WUS', 'LUH-M101S-WUSR'],
         features=[],
         mist_modes={
             HumidifierModes.AUTO: 'auto',
@@ -823,14 +823,25 @@ purifier_modules: list[PurifierMap] = [
     ),
     PurifierMap(
         class_name='VeSyncAir131',
-        dev_types=['LV-PUR131S', 'LV-RH131S', 'LV-RH131S-WM'],
+        dev_types=['LV-PUR131S'],
         modes=[PurifierModes.SLEEP, PurifierModes.MANUAL, PurifierModes.AUTO],
         features=[PurifierFeatures.AIR_QUALITY],
         fan_levels=list(range(1, 4)),
         device_alias='LV-PUR131S',
-        model_display='LV-PUR131S/RH131S Series',
+        model_display='LV-PUR131S Series',
         model_name='LV131S',
         setup_entry='LV-PUR131S',
+    ),
+    PurifierMap(
+        class_name='VeSyncAirRH131',
+        dev_types=['LV-RH131S-WM', 'LV-RH131S'],
+        modes=[PurifierModes.SLEEP, PurifierModes.MANUAL, PurifierModes.AUTO],
+        features=[PurifierFeatures.AIR_QUALITY],
+        fan_levels=list(range(1, 4)),
+        device_alias='LV-RH131S',
+        model_display='LV-RH131S Series',
+        model_name='LV131S',
+        setup_entry='LV-RH131S',
     ),
     PurifierMap(
         class_name='VeSyncAirBaseV2',
@@ -983,6 +994,33 @@ fan_modules: list[FanMap] = [
         model_display='LTF-F422S Series',
         model_name='Classic 42-Inch Tower Fan',
         setup_entry='LTF-F422S',
+    ),
+    FanMap(
+        class_name='VeSyncPedestalFan',
+        dev_types=['LPF-R432S-AEU', 'LPF-R432S-AUS'],
+        modes=[
+            FanModes.NORMAL,
+            FanModes.TURBO,
+            FanModes.ECO,
+            FanModes.ADVANCED_SLEEP,
+        ],
+        setup_entry='LPF-R423S',
+        features=[
+            FanFeatures.SET_OSCILLATION_RANGE,
+            FanFeatures.HORIZONTAL_OSCILLATION,
+            FanFeatures.VERTICAL_OSCILLATION,
+        ],
+        fan_levels=list(range(1, 13)),
+        set_mode_method='setFanMode',
+        device_alias='Pedestal Fan',
+        sleep_preferences=[
+            FanSleepPreference.DEFAULT,
+            FanSleepPreference.ADVANCED,
+            FanSleepPreference.TURBO,
+            FanSleepPreference.QUIET,
+        ],  # Unknown sleep preferences, need to be verified
+        model_display='LPF-R432S Pedestal Fan Series',
+        model_name='Pedestal Fan',
     ),
 ]
 """List of ['FanMap'][pyvesync.device_map.FanMap] configuration

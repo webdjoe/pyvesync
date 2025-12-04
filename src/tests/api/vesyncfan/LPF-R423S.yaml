@@ -1,4 +1,4 @@
-set_auto_mode:
+set_fan_speed:
   headers:
     Content-Type: application/json; charset=UTF-8
     User-Agent: okhttp/3.12.1
@@ -6,16 +6,18 @@ set_auto_mode:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    cid: LUH-A602S-WUS-CID
+    cid: LPF-R423S-CID
     configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceId: LUH-A602S-WUS-CID
+    deviceId: LPF-R423S-CID
     method: bypassV2
     payload:
       data:
-        mode: auto
-      method: setHumidityMode
+        levelIdx: 0
+        levelType: wind
+        manualSpeedLevel: 3
+      method: setLevel
       source: APP
     phoneBrand: pyvesync
     phoneOS: Android
@@ -25,7 +27,7 @@ set_auto_mode:
     userCountryCode: US
   method: post
   url: /cloud/v2/deviceManaged/bypassV2
-set_humidity:
+set_horizontal_oscillation_range:
   headers:
     Content-Type: application/json; charset=UTF-8
     User-Agent: okhttp/3.12.1
@@ -33,16 +35,19 @@ set_humidity:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    cid: LUH-A602S-WUS-CID
+    cid: LPF-R423S-CID
     configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceId: LUH-A602S-WUS-CID
+    deviceId: LPF-R423S-CID
     method: bypassV2
     payload:
       data:
-        target_humidity: 50
-      method: setTargetHumidity
+        actType: default
+        horizontalOscillationState: 1
+        left: 10
+        right: 80
+      method: setOscillationStatus
       source: APP
     phoneBrand: pyvesync
     phoneOS: Android
@@ -52,7 +57,7 @@ set_humidity:
     userCountryCode: US
   method: post
   url: /cloud/v2/deviceManaged/bypassV2
-set_manual_mode:
+set_vertical_oscillation_range:
   headers:
     Content-Type: application/json; charset=UTF-8
     User-Agent: okhttp/3.12.1
@@ -60,74 +65,19 @@ set_manual_mode:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    cid: LUH-A602S-WUS-CID
+    cid: LPF-R423S-CID
     configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceId: LUH-A602S-WUS-CID
+    deviceId: LPF-R423S-CID
     method: bypassV2
     payload:
       data:
-        mode: manual
-      method: setHumidityMode
-      source: APP
-    phoneBrand: pyvesync
-    phoneOS: Android
-    timeZone: America/New_York
-    token: sample_tk
-    traceId: TRACE_ID
-    userCountryCode: US
-  method: post
-  url: /cloud/v2/deviceManaged/bypassV2
-set_mist_level:
-  headers:
-    Content-Type: application/json; charset=UTF-8
-    User-Agent: okhttp/3.12.1
-  json_object:
-    acceptLanguage: en
-    accountID: sample_id
-    appVersion: 5.6.60
-    cid: LUH-A602S-WUS-CID
-    configModel: ConfigModule
-    configModule: ConfigModule
-    debugMode: false
-    deviceId: LUH-A602S-WUS-CID
-    method: bypassV2
-    payload:
-      data:
-        id: 0
-        level: 2
-        type: mist
-      method: setVirtualLevel
-      source: APP
-    phoneBrand: pyvesync
-    phoneOS: Android
-    timeZone: America/New_York
-    token: sample_tk
-    traceId: TRACE_ID
-    userCountryCode: US
-  method: post
-  url: /cloud/v2/deviceManaged/bypassV2
-set_warm_level:
-  headers:
-    Content-Type: application/json; charset=UTF-8
-    User-Agent: okhttp/3.12.1
-  json_object:
-    acceptLanguage: en
-    accountID: sample_id
-    appVersion: 5.6.60
-    cid: LUH-A602S-WUS-CID
-    configModel: ConfigModule
-    configModule: ConfigModule
-    debugMode: false
-    deviceId: LUH-A602S-WUS-CID
-    method: bypassV2
-    payload:
-      data:
-        id: 0
-        level: 3
-        type: warm
-      method: setVirtualLevel
+        actType: default
+        bottom: 20
+        top: 100
+        verticalOscillationState: 1
+      method: setOscillationStatus
       source: APP
     phoneBrand: pyvesync
     phoneOS: Android
@@ -145,16 +95,16 @@ turn_off:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    cid: LUH-A602S-WUS-CID
+    cid: LPF-R423S-CID
     configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceId: LUH-A602S-WUS-CID
+    deviceId: LPF-R423S-CID
     method: bypassV2
     payload:
       data:
-        enabled: false
-        id: 0
+        powerSwitch: 0
+        switchIdx: 0
       method: setSwitch
       source: APP
     phoneBrand: pyvesync
@@ -165,7 +115,7 @@ turn_off:
     userCountryCode: US
   method: post
   url: /cloud/v2/deviceManaged/bypassV2
-turn_off_automatic_stop:
+turn_off_horizontal_oscillation:
   headers:
     Content-Type: application/json; charset=UTF-8
     User-Agent: okhttp/3.12.1
@@ -173,16 +123,17 @@ turn_off_automatic_stop:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    cid: LUH-A602S-WUS-CID
+    cid: LPF-R423S-CID
     configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceId: LUH-A602S-WUS-CID
+    deviceId: LPF-R423S-CID
     method: bypassV2
     payload:
       data:
-        enabled: false
-      method: setAutomaticStop
+        actType: default
+        horizontalOscillationState: 0
+      method: setOscillationStatus
       source: APP
     phoneBrand: pyvesync
     phoneOS: Android
@@ -192,7 +143,7 @@ turn_off_automatic_stop:
     userCountryCode: US
   method: post
   url: /cloud/v2/deviceManaged/bypassV2
-turn_off_display:
+turn_off_vertical_oscillation:
   headers:
     Content-Type: application/json; charset=UTF-8
     User-Agent: okhttp/3.12.1
@@ -200,16 +151,17 @@ turn_off_display:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    cid: LUH-A602S-WUS-CID
+    cid: LPF-R423S-CID
     configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceId: LUH-A602S-WUS-CID
+    deviceId: LPF-R423S-CID
     method: bypassV2
     payload:
       data:
-        state: false
-      method: setDisplay
+        actType: default
+        verticalOscillationState: 0
+      method: setOscillationStatus
       source: APP
     phoneBrand: pyvesync
     phoneOS: Android
@@ -227,71 +179,17 @@ turn_on:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    cid: LUH-A602S-WUS-CID
+    cid: LPF-R423S-CID
     configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceId: LUH-A602S-WUS-CID
+    deviceId: LPF-R423S-CID
     method: bypassV2
     payload:
       data:
-        enabled: true
-        id: 0
+        powerSwitch: 1
+        switchIdx: 0
       method: setSwitch
-      source: APP
-    phoneBrand: pyvesync
-    phoneOS: Android
-    timeZone: America/New_York
-    token: sample_tk
-    traceId: TRACE_ID
-    userCountryCode: US
-  method: post
-  url: /cloud/v2/deviceManaged/bypassV2
-turn_on_automatic_stop:
-  headers:
-    Content-Type: application/json; charset=UTF-8
-    User-Agent: okhttp/3.12.1
-  json_object:
-    acceptLanguage: en
-    accountID: sample_id
-    appVersion: 5.6.60
-    cid: LUH-A602S-WUS-CID
-    configModel: ConfigModule
-    configModule: ConfigModule
-    debugMode: false
-    deviceId: LUH-A602S-WUS-CID
-    method: bypassV2
-    payload:
-      data:
-        enabled: true
-      method: setAutomaticStop
-      source: APP
-    phoneBrand: pyvesync
-    phoneOS: Android
-    timeZone: America/New_York
-    token: sample_tk
-    traceId: TRACE_ID
-    userCountryCode: US
-  method: post
-  url: /cloud/v2/deviceManaged/bypassV2
-turn_on_display:
-  headers:
-    Content-Type: application/json; charset=UTF-8
-    User-Agent: okhttp/3.12.1
-  json_object:
-    acceptLanguage: en
-    accountID: sample_id
-    appVersion: 5.6.60
-    cid: LUH-A602S-WUS-CID
-    configModel: ConfigModule
-    configModule: ConfigModule
-    debugMode: false
-    deviceId: LUH-A602S-WUS-CID
-    method: bypassV2
-    payload:
-      data:
-        state: true
-      method: setDisplay
       source: APP
     phoneBrand: pyvesync
     phoneOS: Android
@@ -309,15 +207,15 @@ update:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    cid: LUH-A602S-WUS-CID
+    cid: LPF-R423S-CID
     configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceId: LUH-A602S-WUS-CID
+    deviceId: LPF-R423S-CID
     method: bypassV2
     payload:
       data: {}
-      method: getHumidifierStatus
+      method: getFanStatus
       source: APP
     phoneBrand: pyvesync
     phoneOS: Android

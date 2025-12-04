@@ -1,6 +1,5 @@
 """General VeSync tests."""
 
-import logging
 import asyncio
 import orjson
 import pytest
@@ -69,14 +68,12 @@ class TestApiFunc:
         Class instance with mocked call_api() function and VeSync object
         """
         self.caplog = caplog
-        self.caplog.set_level(logging.DEBUG)
         self.loop = asyncio.new_event_loop()
         self.mock = MagicMock()
         self.manager = VeSync('EMAIL', 'PASSWORD')
         self.manager.enabled = True
         self.manager.auth._token = TestDefaults.token
         self.manager.auth._account_id = TestDefaults.account_id
-        caplog.set_level(logging.DEBUG)
         yield
         self.mock.stop()
         self.loop.stop()

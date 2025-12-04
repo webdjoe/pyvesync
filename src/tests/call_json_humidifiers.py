@@ -34,25 +34,13 @@ METHOD_RESPONSES['DEVTYPE'].default_factory = lambda: {"code": 0, "msg": "succes
 """
 from typing import Any
 from copy import deepcopy
+
 from pyvesync.device_map import humidifier_modules
-from pyvesync.const import HumidifierModes, DeviceStatus, ConnectionStatus
+from pyvesync.const import DRYING_MODES, HumidifierModes, DeviceStatus, ConnectionStatus, DryingModes
 from defaults import TestDefaults, FunctionResponses, build_bypass_v2_response, FunctionResponsesV2
 
 HUMIDIFIERS = [m.setup_entry for m in humidifier_modules]
 HUMIDIFIERS_NUM = len(HUMIDIFIERS)
-# FANS = ['Core200S', 'Core300S', 'Core400S', 'Core600S', 'LV-PUR131S', 'LV600S',
-#         'Classic300S', 'Classic200S', 'Dual200S', 'LV600S']
-
-
-# def INNER_RESULT(inner: dict) -> dict:
-#     return {
-#         "traceId": Defaults.trace_id,
-#         "code": 0,
-#         "msg": "request success",
-#         "module": None,
-#         "stacktrace": None,
-#         "result": {"traceId": Defaults.trace_id, "code": 0, "result": inner},
-#     }
 
 
 class HumidifierDefaults:
@@ -60,6 +48,8 @@ class HumidifierDefaults:
     connection_status = ConnectionStatus.ONLINE
     humidifier_mode = HumidifierModes.MANUAL
     nightlight_status = DeviceStatus.ON
+    drying_state = DryingModes.RUNNING
+    drying_mode_switch = DeviceStatus.ON
     nightlight_brightness = 50
     humidity = 50
     target_humidity = 60
@@ -97,18 +87,18 @@ HUMIDIFIER_DETAILS: dict[str, Any] = {
     },
     "Classic200S": {
         "enabled": bool(HumidifierDefaults.device_status),
-        "humidity": HumidifierDefaults.humidity,
         "mist_virtual_level": HumidifierDefaults.virtual_mist_level,
         "mist_level": HumidifierDefaults.mist_level,
         "mode": HumidifierDefaults.humidifier_mode.value,
         "water_lacks": HumidifierDefaults.water_lacks,
-        "humidity_high": HumidifierDefaults.humidity_high,
         "water_tank_lifted": HumidifierDefaults.water_tank_lifted,
-        "display": HumidifierDefaults.display,
+        "humidity": HumidifierDefaults.humidity,
+        "humidity_high": HumidifierDefaults.humidity_high,
+        "indicator_light_switch": HumidifierDefaults.display,
         "automatic_stop_reach_target": HumidifierDefaults.auto_stop_reached,
         "configuration": {
             "auto_target_humidity": HumidifierDefaults.target_humidity,
-            "display": HumidifierDefaults.display_config,
+            "indicator_light_switch": HumidifierDefaults.display_config,
             "automatic_stop": HumidifierDefaults.auto_stop,
         },
     },
@@ -221,7 +211,7 @@ HUMIDIFIER_DETAILS: dict[str, Any] = {
         "screenSwitch": int(HumidifierDefaults.display_config),
         "screenState": int(HumidifierDefaults.display),
         "nightLight": {
-            "nightLightSwitch": 0,
+            "nightLightSwitch": int(HumidifierDefaults.nightlight_status),
             "brightness": HumidifierDefaults.nightlight_brightness,
         },
         "scheduleCount": 0,
@@ -246,8 +236,8 @@ HUMIDIFIER_DETAILS: dict[str, Any] = {
         "errorCode": 0,
         "dryingMode": {
             "dryingLevel": 1,
-            "autoDryingSwitch": 1,
-            "dryingState": 2,
+            "autoDryingSwitch": int(HumidifierDefaults.drying_mode_switch),
+            "dryingState": DRYING_MODES[HumidifierDefaults.drying_state],
             "dryingRemain": 7200,
         },
         "autoPreference": 1,

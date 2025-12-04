@@ -27,10 +27,9 @@ Attributes:
 from __future__ import annotations
 
 import platform
-import string
 import uuid
 from enum import Enum, IntEnum, StrEnum
-from random import choices, randint
+from random import randint
 from types import MappingProxyType
 
 from pyvesync.utils.enum_utils import IntEnumMixin
@@ -54,7 +53,7 @@ USER_AGENT = (
 DEFAULT_TZ = 'America/New_York'
 DEFAULT_REGION = 'US'
 APP_VERSION = '5.6.60'
-APP_ID = ''.join(choices(string.ascii_lowercase + string.digits, k=8))  # noqa: S311
+APP_ID = 'eldodkfj'
 PHONE_BRAND = 'pyvesync'
 PHONE_OS = 'Android'
 MOBILE_ID = str(randint(1000000000000000, 9999999999999999))  # noqa: S311
@@ -604,8 +603,11 @@ class FanFeatures(Features):
     """VeSync fan features."""
 
     OSCILLATION = 'oscillation'
+    SET_OSCILLATION_RANGE = 'set_oscillation_range'
     SOUND = 'sound'
     DISPLAYING_TYPE = 'displaying_type'  # Unknown functionality
+    HORIZONTAL_OSCILLATION = 'horizontal_oscillation'
+    VERTICAL_OSCILLATION = 'vertical_oscillation'
 
 
 # Modes
@@ -652,7 +654,6 @@ class HumidifierModes(Features):
     TURBO = 'turbo'
     PET = 'pet'
     UNKNOWN = 'unknown'
-    AUTOPRO = 'autopro'
 
 
 class FanModes(StrEnum):
@@ -675,6 +676,7 @@ class FanModes(StrEnum):
     SLEEP = 'advancedSleep'
     TURBO = 'turbo'
     PET = 'pet'
+    ECO = 'eco'
     UNKNOWN = 'unknown'
     ADVANCED_SLEEP = 'advancedSleep'
 
@@ -868,4 +870,26 @@ ENERGY_HISTORY_MAP = {
 ENERGY_HISTORY_OFFSET_WHOGPLUG = {
     EnergyIntervals.WEEK: 500000,
     EnergyIntervals.MONTH: 2500000,
+}
+
+# ------------------- HUMIDIFIER CONST ------------------ #
+
+
+class DryingModes(StrEnum):
+    """Drying modes for VeSync humidifiers.
+
+    Attributes:
+        ON: Drying mode is on.
+        OFF: Drying mode is off.
+    """
+
+    DONE = 'done'
+    RUNNING = 'on'
+    PAUSE = 'pause'
+
+
+DRYING_MODES: dict[str, int] = {
+    DryingModes.DONE: 0,
+    DryingModes.RUNNING: 1,
+    DryingModes.PAUSE: 2,
 }

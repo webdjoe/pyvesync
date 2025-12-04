@@ -96,8 +96,17 @@ class TestFans(TestBase):
     fans = call_json_fans.FANS
     base_methods = [['turn_on'], ['turn_off'], ['set_fan_speed', {'speed': 3}],]
     device_methods = {
-        'LTF-F422S': [['turn_off_oscillation',], ['turn_off_mute']],
-        }
+        "LTF-F422S": [
+            ["turn_off_oscillation",],
+            ["turn_off_mute",],
+        ],
+        "LPF-R423S": [
+            ["turn_off_vertical_oscillation",],
+            ["turn_off_horizontal_oscillation",],
+            ["set_horizontal_oscillation_range", {"left": 10, "right": 80}],
+            ["set_vertical_oscillation_range", {"top": 100, "bottom": 20}],
+        ],
+    }
 
     def test_details(self, setup_entry, method):
         """Test the device details API request and response.
@@ -133,6 +142,19 @@ class TestFans(TestBase):
 
         # Parse mock_api args tuple from arg, kwargs to kwargs
         all_kwargs = parse_args(self.mock_api)
+
+        # Assert state is set correctly
+        assert fan_obj.state.device_status == call_json_fans.FanDefaults.fan_status
+        assert fan_obj.state.display_set_status == call_json_fans.FanDefaults.screen_status
+        if fan_obj.supports_oscillation:
+            assert fan_obj.state.oscillation_status == call_json_fans.FanDefaults.oscillation_status
+
+        if fan_obj.supports_horizontal_oscillation:
+            assert fan_obj.state.horizontal_oscillation_status == call_json_fans.FanDefaults.oscillation_horizontal
+        if fan_obj.supports_vertical_oscillation:
+            assert fan_obj.state.vertical_oscillation_status == call_json_fans.FanDefaults.oscillation_vertical
+        if fan_obj.supports_mute:
+            assert fan_obj.state.mute_status == call_json_fans.FanDefaults.mute_status
 
         # Assert request matches recorded request or write new records
         assert assert_test(

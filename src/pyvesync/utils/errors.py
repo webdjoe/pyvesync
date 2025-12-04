@@ -40,7 +40,7 @@ Example:
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import StrEnum
 from types import MappingProxyType
 
@@ -695,7 +695,7 @@ class ErrorCodes:
                 'TOKEN_EXPIRED', ErrorTypes.TOKEN_ERROR, 'Invalid token'
             ),
             '-999999999': ResponseInfo(
-                'UNKNOWN', ErrorTypes.SERVER_ERROR, 'Unknown error'
+                'UNKNOWN', ErrorTypes.UNKNOWN_ERROR, 'Unknown error'
             ),
             '-11307000': ResponseInfo(
                 'UUID_NOT_EXIST',
@@ -757,22 +757,23 @@ class ErrorCodes:
         """
         try:
             if error_code is None:
-                return ResponseInfo('UNKNOWN', ErrorTypes.UNKNOWN_ERROR, 'Unknown error')
+                error_code = '-999999999'
             error_str = str(error_code)
             error_int = int(error_code)
             if error_str == '0':
-                return ResponseInfo('SUCCESS', ErrorTypes.SUCCESS, 'Success')
-
-            if error_str in cls.errors:
+                error_info = ResponseInfo('SUCCESS', ErrorTypes.SUCCESS, 'Success')
+            elif error_str in cls.errors:
                 error_info = cls.errors[error_str]
             else:
                 error_code = int(error_int / 1000) * 1000
                 error_info = cls.errors[str(error_code)]
-
             if msg:
+                error_info = replace(error_info)
                 error_info.message = f'{error_info.message} - {msg}'
         except (ValueError, TypeError, KeyError):
-            return ResponseInfo('UNKNOWN', ErrorTypes.UNKNOWN_ERROR, 'Unknown error')
+            error_info = ResponseInfo(
+                'UNKNOWN', ErrorTypes.UNKNOWN_ERROR, 'Unknown error'
+            )
         return error_info
 
     @classmethod
