@@ -62,6 +62,9 @@ docs = [
 where = ["src"]
 exclude = ["tests", "test*"]
 
+[tool.setuptools.package-data]
+pyvesync = ["py.typed"]
+
 [tool.pytest.ini_options]
 addopts = "--tb=short --color=yes"
 testpaths = ["src/tests"]
