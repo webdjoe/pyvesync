@@ -85,7 +85,7 @@ You can configure the script by modifying the following variables in the `vs_con
 - `TEST_DEVICES`: Set to `True` to test device functionality.
 - `TEST_TIMERS`: Set to `True` to test timer functionality.
 - `OUTPUT_FILE`: Path to the output file for logging.
-- `TEST_DEV_TYPE`: Specific device type to test (Options are  "bulbs", "switchs", "outlets", "humidifiers", "air_purifiers", "fans").
+- `TEST_DEV_TYPE`: Specific device type to test (Options are  "bulbs", "switches", "outlets", "humidifiers", "air_purifiers", "fans").
 
 CONFIGURING VIA COMMAND LINE:
 
@@ -98,7 +98,7 @@ python vs_test_script.py \  # or testing_scripts/vs_test_script.py if using repo
    --test-devices \  # Include device methods in the test
    --test-timers \  # Include timer methods in the test
    --output-file <output_file> \
-   --test-dev-type <device_type> # Options: "bulbs", "switchs", "outlets", "humidifiers", "air_purifiers", "fans"
+   --test-dev-type <device_type> # Options: "bulbs", "switches", "outlets", "humidifiers", "air_purifiers", "fans"
 ```
 
 ## Logging
