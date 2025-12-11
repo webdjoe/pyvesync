@@ -81,7 +81,7 @@ class VeSyncBulbESL100MC(BypassV2Mixin, VeSyncBulb):
         features (dict): Features of device.
 
     Notes:
-        The details dictionary contains the device information retreived by the
+        The details dictionary contains the device information retrieved by the
         `update()` method:
         ```python
         details = {
@@ -1056,7 +1056,7 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
         If color_mode is not set, brightness and/or color_temp must be set.
 
         This builds the `request_body['payload']['data']` dict for api calls that
-        set teh status of the bulb.
+        set the status of the bulb.
 
         Args:
             brightness (float, optional): Brightness of bulb (0-100).

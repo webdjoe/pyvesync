@@ -131,9 +131,9 @@ See [Supported Devices](./supported_devices.md) for a complete list of supported
 
 Exceptions are no longer caught by the library and must be handled by the user. Exceptions are raised by server errors and aiohttp connection errors.
 
-Errors that occur at the aiohttp level are raised automatically and propogated to the user. That means exceptions raised by aiohttp that inherit from `aiohttp.ClientError` are propogated.
+Errors that occur at the aiohttp level are raised automatically and propagated to the user. That means exceptions raised by aiohttp that inherit from `aiohttp.ClientError` are propagated.
 
-When the connection to the VeSync API succeeds but returns an error code that prevents the library from functioning a custom exception inherrited from `pyvesync.utils.errors.VeSyncError` is raised.
+When the connection to the VeSync API succeeds but returns an error code that prevents the library from functioning a custom exception inherited from `pyvesync.utils.errors.VeSyncError` is raised.
 
 Custom Exceptions raised by all API calls:
 
@@ -273,7 +273,7 @@ api_response = {
     }
 }
 
-# Response will already be in bytes, so this is unecessary
+# Response will already be in bytes, so this is unnecessary
 response_bytes = orjson.dumps(api_response, options=orjson.OPT_NON_STR_KEYS)
 
 response_model = ResponseESL100CWDeviceDetail.from_json(response_bytes)

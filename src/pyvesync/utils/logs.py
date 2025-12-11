@@ -396,7 +396,7 @@ class LibraryLogger:
         """Log return code from device API call.
 
         When API responds with JSON, if the code key is not 0,
-        it indicates an error has occured.
+        it indicates an error has occurred.
 
         Args:
             logger (logging.Logger): module logger instance

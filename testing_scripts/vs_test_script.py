@@ -43,7 +43,7 @@ if TYPE_CHECKING:
     from pyvesync.base_devices import VeSyncBaseToggleDevice
     from pyvesync.device_container import DeviceContainer
 
-_T_DEVS = Literal['bulbs', 'switchs', 'outlets', 'humidifiers', 'air_purifiers', 'fans']
+_T_DEVS = Literal['bulbs', 'switches', 'outlets', 'humidifiers', 'air_purifiers', 'fans']
 
 # Manually configure script arguments
 USERNAME: str | None = None

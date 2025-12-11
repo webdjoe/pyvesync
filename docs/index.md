@@ -51,7 +51,7 @@ For home assistant issues, please submit on that repository.
 
 ### New Devices
 
-If you would like to add a new device, packet captures must be provided. The iOS and Android VeSync app implements certificate pinning to prevent standard MITM intercepts. Currently, the only known way is to patch the APK and run on a rooted android emulator with frida. This is a complex process that has had varying levels of success. If you successful in capturing packets, please capture all functionality, including the device list and configuraiton screen. Redact accountId and token keys or contact me for a more secure way to share. See the [Packet Capturing for New Device Support](./development/capturing.md) document for more details.
+If you would like to add a new device, packet captures must be provided. The iOS and Android VeSync app implements certificate pinning to prevent standard MITM intercepts. Currently, the only known way is to patch the APK and run on a rooted android emulator with frida. This is a complex process that has had varying levels of success. If you successful in capturing packets, please capture all functionality, including the device list and configuration screen. Redact accountId and token keys or contact me for a more secure way to share. See the [Packet Capturing for New Device Support](./development/capturing.md) document for more details.
 
 ## General Usage
 
@@ -369,9 +369,9 @@ dev_dict["device_status"] # Returns device status as a StrEnum
 
 Exceptions are no longer caught by the library and must be handled by the user. Exceptions are raised by server errors and aiohttp connection errors.
 
-Errors that occur at the aiohttp level are raised automatically and propogated to the user. That means exceptions raised by aiohttp that inherit from `aiohttp.ClientError` are propogated.
+Errors that occur at the aiohttp level are raised automatically and propagated to the user. That means exceptions raised by aiohttp that inherit from `aiohttp.ClientError` are propagated.
 
-When the connection to the VeSync API succeeds but returns an error code that prevents the library from functioning a custom exception inherrited from `pyvesync.logs.VeSyncError` is raised.
+When the connection to the VeSync API succeeds but returns an error code that prevents the library from functioning a custom exception inherited from `pyvesync.logs.VeSyncError` is raised.
 
 Custom Exceptions raised by all API calls:
 

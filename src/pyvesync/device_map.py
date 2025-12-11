@@ -10,7 +10,7 @@ from the `deviceType` field in the device list API.
 
 The AirFryerMap, OutletMap, SwitchMap, BulbMap, FanMap, HumidifierMap, PurifierMap
 and ThermostatMap dataclasses are used to define the mappings for each product type
-with the assocated module, class, features and other device specific configuration. The
+with the associated module, class, features and other device specific configuration. The
 [`get_device_config`][pyvesync.device_map.get_device_config] function is used
 to get the device map object from the device type to instantiate the appropriate class.
 The individual `get_<product-type>` functions are used to get the device details
