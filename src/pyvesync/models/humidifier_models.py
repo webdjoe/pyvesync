@@ -214,6 +214,7 @@ class Levoit1000SNightLight(ResponseBaseModel):
 @dataclass
 class SproutHumidifierResult(InnerHumidifierBaseResult):
     """Sprout Humidifier Result Model."""
+
     powerSwitch: int
     humidity: int
     targetHumidity: int
@@ -250,6 +251,7 @@ class SproutHumidifierResult(InnerHumidifierBaseResult):
 @dataclass
 class SproutSensorcontent(ResponseBaseModel):
     """Sprout Humidifier Sensor Content Model."""
+
     selfSensorMac: str
     selfSenorBattery: int
     selfSensorStatus: str
@@ -258,6 +260,7 @@ class SproutSensorcontent(ResponseBaseModel):
 @dataclass
 class SproutNightlight(ResponseBaseModel):
     """Sprout Humidifier Night Light Model."""
+
     nightLightSwitch: int
     brightness: int
     colorTemperature: int
@@ -266,6 +269,7 @@ class SproutNightlight(ResponseBaseModel):
 @dataclass
 class SproutBreathinglamp(ResponseBaseModel):
     """Sprout Humidifier Breathing Lamp Model."""
+
     breathingLampSwitch: int
     colorTemperature: int
     timeInterval: int
@@ -276,5 +280,6 @@ class SproutBreathinglamp(ResponseBaseModel):
 @dataclass
 class SproutGuardinginfo(ResponseBaseModel):
     """Sprout Humidifier Guarding Info Model."""
+
     guarding: int
     remainTS: int

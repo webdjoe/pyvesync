@@ -536,6 +536,7 @@ class VeSyncHumidifier(VeSyncBaseToggleDevice):
 @dataclass
 class BreathingLampState(ResponseBaseModel):
     """Breathing Lamp State Object."""
+
     breathing_lamp_switch: str
     color_temperature: int
     time_interval: int
