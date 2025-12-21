@@ -83,7 +83,7 @@ class ErrorTypes(StrEnum):
         REQUEST_ERROR: Error in Request parameters or method
         DEVICE_ERROR: Device operational error, device
             connected but cannot perform requested action
-        CONFIG_ERROR: Configuration error in user profie
+        CONFIG_ERROR: Configuration error in user profile
         DEVICE_OFFLINE: Device is offline, not connected
         UNKNOWN_ERROR: Unknown error
         BAD_RESPONSE: Bad response from API

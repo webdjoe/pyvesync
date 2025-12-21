@@ -7,7 +7,7 @@ DETAILS_RESPONSES variable is a dictionary of responses from the API
 for get_details() methods.  The keys are the device types and the
 values are the responses.  The responses are tuples of (response, status)
 
-METHOD_RESPONSES variable is a defaultdict of responses from the API. This is
+METHOD_RESPONSES variable is a Default Dictionary of responses from the API. This is
 the FunctionResponse variable from the utils module in the tests dir.
 The default response is a tuple with the value ({"code": 0, "msg": "success"}, 200).
 

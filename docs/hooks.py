@@ -6,7 +6,7 @@ import urllib.request
 def replacer(match: re.Match) -> str:
     """Find and replace github links with code snippets.
 
-    This function parses a Github link and retreives the specified
+    This function parses a Github link and retrieves the specified
     lines of code from the file, formatting it as a markdown code block.
     """
     filename = f'{match.group(3)}.{match.group(4)}'

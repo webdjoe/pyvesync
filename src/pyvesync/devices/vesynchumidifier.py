@@ -479,7 +479,7 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
             self.state.drying_mode_status = DryingModes.from_int(drying_mode.dryingState)
             self.state.drying_mode_auto_switch = DeviceStatus.from_int(
                 drying_mode.autoDryingSwitch
-                )
+            )
             self.state.drying_mode_level = drying_mode.dryingLevel
             self.state.drying_mode_time_remain = drying_mode.dryingRemain
         if resp_model.timerRemain > 0:
@@ -921,7 +921,7 @@ class VeSyncSproutHumid(BypassV2Mixin, VeSyncHumidifier):
         self.state.auto_preference = resp_model.autoPreference
         self.state.water_lacks_drying_switch = DeviceStatus.from_int(
             resp_model.waterShortageDryingSwitch
-            )
+        )
         self.state.child_lock = bool(resp_model.childLockSwitch)
         self.state.filter_life = resp_model.filterLifePercent
         self.state.hepa_filter_life = resp_model.hepaFilterLifePercent
@@ -1094,9 +1094,7 @@ class VeSyncSproutHumid(BypassV2Mixin, VeSyncHumidifier):
             'nightLightSwitch': int(toggle),
         }
         r_dict = await self.call_bypassv2_api('setLightStatus', payload_data)
-        r = Helpers.process_dev_response(
-            logger, 'set_night_light_state', self, r_dict
-        )
+        r = Helpers.process_dev_response(logger, 'set_night_light_state', self, r_dict)
         if r is None:
             return False
 

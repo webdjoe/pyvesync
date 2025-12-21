@@ -1,4 +1,4 @@
-"""VeSync API Device Libary."""
+"""VeSync API Device Library."""
 
 from __future__ import annotations
 

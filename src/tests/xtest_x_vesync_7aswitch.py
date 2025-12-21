@@ -30,7 +30,7 @@ class TestVesync7ASwitch(TestBase):
     """Test 7A outlet API."""
 
     def test_7aswitch_conf(self):
-        """Test inizialization of 7A outlet."""
+        """Test initialization of 7A outlet."""
         self.mock_api.return_value = CORRECT_7A_LIST
         self.run_in_loop(self.manager.get_devices)
         outlets = self.manager.outlets
