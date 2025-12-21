@@ -887,6 +887,31 @@ class DryingModes(StrEnum):
     RUNNING = 'on'
     PAUSE = 'pause'
 
+    @classmethod
+    def from_int(cls, value: int) -> DryingModes | None:
+        """Convert integer value to corresponding string.
+
+        If value is 1, return ON and if 0, return OFF.
+        If value is -999, return NOT_SUPPORTED.
+        """
+        if value == 0:
+            return cls.DONE
+        if value == 1:
+            return cls.RUNNING
+        if value == 2:  # noqa: PLR2004
+            return cls.PAUSE
+        return None
+
+    def __int__(self) -> int:
+        """Return integer representation of the enum."""
+        match self:
+            case DryingModes.DONE:
+                return 0
+            case DryingModes.RUNNING:
+                return 1
+            case DryingModes.PAUSE:
+                return 2
+
 
 DRYING_MODES: dict[str, int] = {
     DryingModes.DONE: 0,

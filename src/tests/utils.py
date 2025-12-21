@@ -329,3 +329,48 @@ def dicts_equal(a: dict, b: dict, *, show_diff: bool = True):
         # print(format_diffs(diffs))
         return 'Differences found:\n' + format_diffs(diffs)
     return "No differences found"
+
+
+def print_dataclass(d: dict[str, Any]) -> None:
+    """Prints dataclass(es) from nested dictionary."""
+    def py_type(v: Any) -> str:
+        if isinstance(v, bool):
+            return "bool"
+        if isinstance(v, int):
+            return "int"
+        if isinstance(v, float):
+            return "float"
+        if isinstance(v, str):
+            return "str"
+        if isinstance(v, list):
+            return "list[Any]"
+        if isinstance(v, dict):
+            return "dict[str, Any]"
+        return "Any"
+
+    def make_class_name(prefix: str) -> str:
+        parts = prefix.split("_")
+        return "".join(p.capitalize() for p in parts if p)
+
+    def print_dataclass(name: str, mapping: dict[str, Any]) -> None:
+        print("@dataclass")
+        print(f"class {name}:")
+        if not mapping:
+            print("    pass")
+            return
+
+        nested: list[tuple[str, dict[str, Any]]] = []
+
+        for key, value in mapping.items():
+            if isinstance(value, dict):
+                nested_name = make_class_name(f"{name}_{key}")
+                print(f"    {key}: {nested_name}")
+                nested.append((nested_name, value))
+            else:
+                print(f"    {key}: {py_type(value)}")
+
+        for nested_name, nested_dict in nested:
+            print()
+            print_dataclass(nested_name, nested_dict)
+
+    print_dataclass("LehB381s", d)

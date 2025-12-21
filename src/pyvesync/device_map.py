@@ -744,6 +744,25 @@ humidifier_modules = [
         model_name='Superior 6000S',
         setup_entry='LEH-S601S',
     ),
+    HumidifierMap(
+        class_name='VeSyncSproutHumid',
+        dev_types=['LEH-B381S-WUS', 'LEH-B381S-WEU'],
+        features=[
+            HumidifierFeatures.DRYING_MODE,
+            HumidifierFeatures.NIGHTLIGHT,
+            HumidifierFeatures.NIGHTLIGHT_BRIGHTNESS,
+        ],
+        mist_modes={
+            HumidifierModes.AUTO: 'autoPro',
+            HumidifierModes.SLEEP: 'sleep',
+            HumidifierModes.MANUAL: 'manual',
+        },
+        mist_levels=list(range(1, 3)),
+        device_alias='Sprout Humidifier',
+        model_display='LEH-B381S Series',
+        model_name='Sprout Humidifier',
+        setup_entry='LEH-B381S',
+    ),
 ]
 """List of ['HumidifierMap'][pyvesync.device_map.HumidifierMap] configuration
 objects for humidifier devices."""
