@@ -6,7 +6,7 @@ and methods needed to run the tests.
 
 The `helpers.call_api` method is patched to return a mock response.
 The method, endpoint, headers and json arguments are recorded
-in YAML files in the api directory, catagorized in folders by
+in YAML files in the api directory, categorized in folders by
 module and files by the class name.
 
 The default is to record requests that do not exist and compare requests
