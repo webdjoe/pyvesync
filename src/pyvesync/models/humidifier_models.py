@@ -209,3 +209,31 @@ class Levoit1000SNightLight(ResponseBaseModel):
 
     nightLightSwitch: int
     brightness: int
+
+
+@dataclass
+class LV600SResult(InnerHumidifierBaseResult):
+    """LV600S (LUH-A603S) Humidifier Result Model.
+
+    Uses the newer API format with powerSwitch, workMode, etc.
+    Includes warm mist support via warmPower and warmLevel.
+    """
+
+    powerSwitch: int
+    humidity: int
+    targetHumidity: int
+    virtualLevel: int
+    mistLevel: int
+    workMode: str
+    waterLacksState: int
+    waterTankLifted: int
+    autoStopSwitch: int
+    autoStopState: int
+    screenSwitch: int
+    screenState: int
+    scheduleCount: int
+    timerRemain: int
+    errorCode: int
+    totalWorkTime: int = 0
+    warmPower: bool = False
+    warmLevel: int = 0

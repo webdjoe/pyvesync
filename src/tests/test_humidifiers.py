@@ -118,6 +118,7 @@ class TestHumidifiers(TestBase):
     ]
     device_methods = {
         "LUH-A602S-WUS": [["set_warm_level", {"warm_level": 3}]],
+        "LUH-A603S-WUS": [["set_warm_level", {"warm_level": 3}]],
         "LEH-S601S": [["turn_off_drying_mode"]],
     }
 

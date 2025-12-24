@@ -663,6 +663,24 @@ humidifier_modules = [
         setup_entry='LUH-A602S-WUS',
     ),
     HumidifierMap(
+        class_name='VeSyncLV600S',
+        dev_types=[
+            'LUH-A603S-WUS',
+        ],
+        features=[HumidifierFeatures.WARM_MIST],
+        mist_modes={
+            HumidifierModes.AUTO: 'humidity',
+            HumidifierModes.SLEEP: 'sleep',
+            HumidifierModes.MANUAL: 'manual',
+        },
+        mist_levels=list(range(1, 10)),
+        warm_mist_levels=[0, 1, 2, 3],
+        device_alias='LV600S',
+        model_display='LUH-A603S Series',
+        model_name='LV600S',
+        setup_entry='LUH-A603S-WUS',
+    ),
+    HumidifierMap(
         class_name='VeSyncHumid200300S',
         dev_types=['LUH-O451S-WEU'],
         features=[HumidifierFeatures.WARM_MIST],
