@@ -1116,9 +1116,7 @@ class VeSyncLV600S(BypassV2Mixin, VeSyncHumidifier):
         act_val = 1 if action == DeviceStatus.ON else 0
 
         payload_data = {
-            'startAct': [
-                {'type': 'powerSwitch', 'num': 0, 'act': act_val}
-            ],
+            'startAct': [{'type': 'powerSwitch', 'num': 0, 'act': act_val}],
             'total': duration,
         }
         r_dict = await self.call_bypassv2_api('addTimerV2', payload_data)
