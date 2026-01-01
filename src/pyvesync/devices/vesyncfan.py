@@ -104,8 +104,8 @@ class VeSyncTowerFan(BypassV2Mixin, VeSyncFanBase):
             logger.warning('Deprecated - Use `turn_off` method to turn off device')
             return await self.turn_off()
 
-        if mode.lower() not in self.modes:
-            logger.warning('Invalid purifier mode used - %s', mode)
+        if mode not in self.modes:
+            logger.warning('Invalid fan mode used - %s', mode)
             return False
 
         payload_data = {'workMode': mode}
