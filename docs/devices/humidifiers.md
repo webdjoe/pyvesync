@@ -99,6 +99,24 @@
             ignore_init_summary: true
         merge_init_into_class: true
 
+::: pyvesync.devices.vesynchumidifier.VeSyncSproutHumid
+    options:
+        toc_label: "VeSync Sprout Humidifier"
+        filters:
+            - "!^_.*"
+        summary:
+            functions: false
+        group_by_category: true
+        show_root_heading: true
+        show_root_toc_entry: true
+        show_category_heading: true
+        show_source: true
+        show_if_no_docstring: true
+        inherited_members: true
+        docstring_options:
+            ignore_init_summary: true
+        merge_init_into_class: true
+
 ::: pyvesync.base_devices.humidifier_base.VeSyncHumidifier
     options:
         filters:

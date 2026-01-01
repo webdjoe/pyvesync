@@ -96,6 +96,7 @@ pip install .
 ```
 
 #### Windows via pip from github
+
 This method installs the library or a specific branch from the repository. The `BRANCHNAME` is the name of the branch you want to install.
 
 ```powershell
@@ -145,6 +146,9 @@ async def main():
         # OR Iterate through devices and update individually
         for device in manager.outlets:
             await device.update()
+
+if __name__ == "__main__":
+    asyncio.run(main())
 ```
 
 Devices are held in the `manager.devices` attribute, which is the instance of [`DeviceContainer`][pyvesync.device_container.DeviceContainer] that acts as a mutable set. The entire device list can be iterated over or there are properties for each product type that return a list of those device instances. For example, to get all the outlets, use `manager.devices.outlets` or `manager.devices.purifiers`.
@@ -184,6 +188,9 @@ async def main():
         await outlet.toggle() # Toggle the outlet state
 
         await outlet.set_timer(10, DeviceStatus.OFF) # Set a timer to turn off the outlet in 10 seconds
+
+if __name__ == "__main__":
+    asyncio.run(main())
 ```
 
 For more information on the device methods and properties, see the [device pages](./devices/index.md).
@@ -201,6 +208,9 @@ async def main():
         # State objects also have these methods
         print(outlet.state.to_json(state=True, indent=True)) # Print the JSON string of the outlet state
         print(outlet.state.to_jsonb(state=True)) # Print the JSON object of the outlet state
+
+if __name__ == "__main__":
+    asyncio.run(main())
 ```
 
 The `to_dict()` and `as_tuple()` methods are also available for each device and state object. The `to_dict()` method returns a dictionary of the device attributes, while the `as_tuple()` method returns a tuple of the device attributes.

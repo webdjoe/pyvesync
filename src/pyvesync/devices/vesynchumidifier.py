@@ -8,15 +8,10 @@ from typing import TYPE_CHECKING
 import orjson
 from typing_extensions import deprecated
 
-from pyvesync.base_devices import VeSyncHumidifier
-from pyvesync.const import DRYING_MODES, ConnectionStatus, DeviceStatus
+from pyvesync.base_devices.humidifier_base import BreathingLampState, VeSyncHumidifier
+from pyvesync.const import ConnectionStatus, DeviceStatus, DryingModes
+from pyvesync.models import humidifier_models as models
 from pyvesync.models.bypass_models import ResultV2GetTimer, ResultV2SetTimer
-from pyvesync.models.humidifier_models import (
-    ClassicLVHumidResult,
-    InnerHumidifierBaseResult,
-    Levoit1000SResult,
-    Superior6000SResult,
-)
 from pyvesync.utils.device_mixins import BypassV2Mixin, process_bypassv2_result
 from pyvesync.utils.helpers import Helpers, Timer, Validators
 
@@ -75,7 +70,7 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
         """Initialize 200S/300S Humidifier class."""
         super().__init__(details, manager, feature_map)
 
-    def _set_state(self, resp_model: ClassicLVHumidResult) -> None:
+    def _set_state(self, resp_model: models.ClassicLVHumidResult) -> None:
         """Set state from get_details API model."""
         self.state.connection_status = ConnectionStatus.ONLINE
         self.state.device_status = DeviceStatus.from_bool(resp_model.enabled)
@@ -107,7 +102,7 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
     async def get_details(self) -> None:
         r_dict = await self.call_bypassv2_api('getHumidifierStatus')
         r_model = process_bypassv2_result(
-            self, logger, 'get_details', r_dict, ClassicLVHumidResult
+            self, logger, 'get_details', r_dict, models.ClassicLVHumidResult
         )
         if r_model is None:
             return
@@ -454,7 +449,7 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
         """Initialize Superior 6000S Humidifier class."""
         super().__init__(details, manager, feature_map)
 
-    def _set_state(self, resp_model: Superior6000SResult) -> None:
+    def _set_state(self, resp_model: models.Superior6000SResult) -> None:
         """Set state from Superior 6000S API result model."""
         self.state.device_status = DeviceStatus.from_int(resp_model.powerSwitch)
         self.state.connection_status = ConnectionStatus.ONLINE
@@ -481,14 +476,12 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
 
         drying_mode = resp_model.dryingMode
         if drying_mode is not None:
-            self.state.drying_mode_status = Helpers.get_key(
-                DRYING_MODES, drying_mode.dryingState, None
-            )
-            self.state.drying_mode_level = drying_mode.dryingLevel
+            self.state.drying_mode_status = DryingModes.from_int(drying_mode.dryingState)
             self.state.drying_mode_auto_switch = DeviceStatus.from_int(
                 drying_mode.autoDryingSwitch
             )
-
+            self.state.drying_mode_level = drying_mode.dryingLevel
+            self.state.drying_mode_time_remain = drying_mode.dryingRemain
         if resp_model.timerRemain > 0:
             self.state.timer = Timer(
                 resp_model.timerRemain,
@@ -498,7 +491,7 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
     async def get_details(self) -> None:
         r_dict = await self.call_bypassv2_api('getHumidifierStatus')
         r_model = process_bypassv2_result(
-            self, logger, 'get_details', r_dict, Superior6000SResult
+            self, logger, 'get_details', r_dict, models.Superior6000SResult
         )
         if r_model is None:
             return
@@ -615,6 +608,20 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
+    async def toggle_child_lock(self, toggle: bool | None = None) -> bool:
+        if toggle is None:
+            toggle = self.state.child_lock is True
+
+        payload_data = {'childLockSwitch': int(toggle)}
+        r_dict = await self.call_bypassv2_api('setChildLock', payload_data)
+        r = Helpers.process_dev_response(logger, 'toggle_child_lock', self, r_dict)
+        if r is None:
+            return False
+
+        self.state.child_lock = toggle
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
 
 class VeSyncHumid1000S(VeSyncHumid200300S):
     """Levoit OasisMist 1000S Specific class.
@@ -658,9 +665,9 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
         """Initialize levoit 1000S device class."""
         super().__init__(details, manager, feature_map)
 
-    def _set_state(self, resp_model: InnerHumidifierBaseResult) -> None:
+    def _set_state(self, resp_model: models.InnerHumidifierBaseResult) -> None:
         """Set state of Levoit 1000S from API result model."""
-        if not isinstance(resp_model, Levoit1000SResult):
+        if not isinstance(resp_model, models.Levoit1000SResult):
             return
         self.state.device_status = DeviceStatus.from_int(resp_model.powerSwitch)
         self.state.connection_status = ConnectionStatus.ONLINE
@@ -684,7 +691,7 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
     async def get_details(self) -> None:
         r_dict = await self.call_bypassv2_api('getHumidifierStatus')
         r_model = process_bypassv2_result(
-            self, logger, 'get_details', r_dict, Levoit1000SResult
+            self, logger, 'get_details', r_dict, models.Levoit1000SResult
         )
         if r_model is None:
             return
@@ -854,5 +861,258 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
         self.state.nightlight_status = (
             DeviceStatus.ON if brightness > 0 else DeviceStatus.OFF
         )
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+
+class VeSyncSproutHumid(BypassV2Mixin, VeSyncHumidifier):
+    """VeSync Sprout Humidifier class.
+
+    Args:
+        details (ResponseDeviceDetailsModel): The device details.
+        manager (VeSync): The manager object for API calls.
+        feature_map (HumidifierMap): The feature map for the device.
+
+    Attributes:
+        state (HumidifierState): The state of the humidifier.
+        last_response (ResponseInfo): Last response from API call.
+        manager (VeSync): Manager object for API calls.
+        device_name (str): Name of device.
+        device_image (str): URL for device image.
+        cid (str): Device ID.
+        connection_type (str): Connection type of device.
+        device_type (str): Type of device.
+        type (str): Type of device.
+        uuid (str): UUID of device, not always present.
+        config_module (str): Configuration module of device.
+        mac_id (str): MAC ID of device.
+        current_firm_version (str): Current firmware version of device.
+        device_region (str): Region of device. (US, EU, etc.)
+        pid (str): Product ID of device, pulled by some devices on update.
+        sub_device_no (int): Sub-device number of device.
+        product_type (str): Product type of device.
+        features (dict): Features of device.
+    """
+
+    def __init__(
+        self,
+        details: ResponseDeviceDetailsModel,
+        manager: VeSync,
+        feature_map: HumidifierMap,
+    ) -> None:
+        """Initialize Sprout Humidifier class."""
+        super().__init__(details, manager, feature_map)
+
+    def _set_state(self, resp_model: models.SproutHumidifierResult) -> None:
+        """Set state from Sprout Humidifier API result model."""
+        self.state.device_status = DeviceStatus.from_int(resp_model.powerSwitch)
+        self.state.connection_status = ConnectionStatus.ONLINE
+        self.state.humidity = resp_model.humidity
+        self.state.auto_target_humidity = resp_model.targetHumidity
+        self.state.mist_virtual_level = resp_model.virtualLevel
+        self.state.mist_level = resp_model.mistLevel
+        self.state.mode = resp_model.workMode
+        self.state.water_lacks = bool(resp_model.waterLacksState)
+        self.state.water_tank_lifted = bool(resp_model.waterTankLifted)
+        self.state.automatic_stop_config = bool(resp_model.autoStopSwitch)
+        self.state.auto_stop_target_reached = bool(resp_model.autoStopState)
+        self.state.display_set_status = DeviceStatus.from_int(resp_model.screenSwitch)
+        self.state.display_status = DeviceStatus.from_int(resp_model.screenState)
+        self.state.auto_preference = resp_model.autoPreference
+        self.state.water_lacks_drying_switch = DeviceStatus.from_int(
+            resp_model.waterShortageDryingSwitch
+        )
+        self.state.child_lock = bool(resp_model.childLockSwitch)
+        self.state.filter_life = resp_model.filterLifePercent
+        self.state.hepa_filter_life = resp_model.hepaFilterLifePercent
+        self.state.temperature = (
+            resp_model.temperature / 10
+        )  # Response needs to be divided by 10
+        if resp_model.breathingLamp is not None:
+            self.state.breathing_lamp = BreathingLampState.from_model(
+                resp_model.breathingLamp
+            )
+        if resp_model.nightLight is not None:
+            self.state.nightlight_brightness = resp_model.nightLight.brightness
+            self.state.nightlight_status = DeviceStatus.from_int(
+                resp_model.nightLight.nightLightSwitch
+            )
+            self.state.nightlight_color_temp = resp_model.nightLight.colorTemperature
+        if resp_model.dryingMode is not None:
+            drying_mode = resp_model.dryingMode
+            self.state.drying_mode_status = DryingModes.from_int(drying_mode.dryingState)
+            self.state.drying_mode_auto_switch = DeviceStatus.from_int(
+                drying_mode.autoDryingSwitch
+            )
+            self.state.drying_mode_time_remain = drying_mode.dryingRemain
+            self.state.drying_mode_level = drying_mode.dryingLevel
+
+    async def get_details(self) -> None:
+        r_dict = await self.call_bypassv2_api('getHumidifierStatus')
+        r_model = process_bypassv2_result(
+            self, logger, 'get_details', r_dict, models.SproutHumidifierResult
+        )
+        if r_model is None:
+            return
+        self._set_state(r_model)
+
+    async def toggle_switch(self, toggle: bool | None = None) -> bool:
+        if toggle is None:
+            toggle = self.state.device_status != DeviceStatus.ON
+
+        payload_data = {'powerSwitch': int(toggle), 'switchIdx': 0}
+        r_dict = await self.call_bypassv2_api('setSwitch', payload_data)
+        r = Helpers.process_dev_response(logger, 'toggle_switch', self, r_dict)
+        if r is None:
+            return False
+
+        self.state.device_status = DeviceStatus.from_bool(toggle)
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def set_mode(self, mode: str) -> bool:
+        if mode not in self.mist_modes:
+            logger.warning('Invalid humidity mode used - %s', mode)
+            logger.info(
+                'Proper modes for this device are - %s',
+                orjson.dumps(
+                    self.mist_modes, option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS
+                ),
+            )
+            return False
+        payload_data = {'workMode': self.mist_modes[mode]}
+        r_dict = await self.call_bypassv2_api('setHumidityMode', payload_data)
+        r = Helpers.process_dev_response(logger, 'set_mode', self, r_dict)
+        if r is None:
+            return False
+        self.state.mode = mode
+        self.state.device_status = DeviceStatus.ON
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def toggle_display(self, toggle: bool | None = None) -> bool:
+        if toggle is None:
+            toggle = self.state.display_set_status != DeviceStatus.ON
+
+        payload_data = {'screenSwitch': int(toggle)}
+        r_dict = await self.call_bypassv2_api('setDisplay', payload_data)
+        r = Helpers.process_dev_response(logger, 'set_display', self, r_dict)
+        if r is None:
+            return False
+
+        self.state.display_set_status = DeviceStatus.from_bool(toggle)
+        self.state.connection_status = ConnectionStatus.ONLINE
+        self.state.display_status = DeviceStatus.from_bool(toggle)
+        return True
+
+    async def set_mist_level(self, level: int) -> bool:
+        if level not in self.mist_levels:
+            logger.warning('Humidifier mist level out of range')
+            return False
+
+        payload_data = {'levelIdx': 0, 'virtualLevel': level, 'levelType': 'mist'}
+        r_dict = await self.call_bypassv2_api('setVirtualLevel', payload_data)
+        r = Helpers.process_dev_response(logger, 'set_mist_level', self, r_dict)
+        if r is None:
+            return False
+
+        self.state.mist_level = level
+        self.state.mist_virtual_level = level
+        self.state.device_status = DeviceStatus.ON
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def set_humidity(self, humidity: int) -> bool:
+        if not Validators.validate_range(humidity, *self.target_minmax):
+            logger.warning(
+                'Humidity value must be set between %s and %s',
+                self.target_minmax[0],
+                self.target_minmax[1],
+            )
+            return False
+
+        payload_data = {'targetHumidity': humidity}
+        r_dict = await self.call_bypassv2_api('setTargetHumidity', payload_data)
+        r = Helpers.process_dev_response(logger, 'set_humidity', self, r_dict)
+        if r is None:
+            return False
+
+        self.state.auto_target_humidity = humidity
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def toggle_drying_mode(self, toggle: bool | None = None) -> bool:
+        if toggle is None:
+            toggle = self.state.drying_mode_status != DeviceStatus.ON
+
+        payload_data = {'autoDryingSwitch': int(toggle)}
+        r_dict = await self.call_bypassv2_api('setDryingMode', payload_data)
+        r = Helpers.process_dev_response(logger, 'toggle_drying_mode', self, r_dict)
+        if r is None:
+            return False
+
+        self.state.connection_status = ConnectionStatus.ONLINE
+        self.state.drying_mode_auto_switch = DeviceStatus.from_bool(toggle)
+        return True
+
+    async def toggle_child_lock(self, toggle: bool | None = None) -> bool:
+        if toggle is None:
+            toggle = self.state.child_lock is True
+
+        payload_data = {'childLockSwitch': int(toggle)}
+        r_dict = await self.call_bypassv2_api('setChildLock', payload_data)
+        r = Helpers.process_dev_response(logger, 'toggle_child_lock', self, r_dict)
+        if r is None:
+            return False
+
+        self.state.child_lock = toggle
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def _set_nightlight_state(
+        self,
+        toggle: bool,
+        brightness: int | None = None,
+        color_temp: int | None = None,
+    ) -> bool:
+        if brightness is not None and not Validators.validate_zero_to_hundred(brightness):
+            logger.warning('Brightness value must be set between 0 and 100')
+            return False
+
+        if color_temp is not None and not Validators.validate_range(
+            color_temp, 2000, 3500
+        ):
+            logger.warning('Color temperature must be set between 2000K and 3500K')
+            return False
+
+        if self.state.nightlight_color_temp is None:
+            self.state.nightlight_color_temp = 3500  # Default color temp if not set
+
+        payload_data = {
+            'brightness': brightness or self.state.nightlight_brightness,
+            'colorTemperature': color_temp or self.state.nightlight_color_temp,
+            'nightLightSwitch': int(toggle),
+        }
+        r_dict = await self.call_bypassv2_api('setLightStatus', payload_data)
+        r = Helpers.process_dev_response(logger, 'set_night_light_state', self, r_dict)
+        if r is None:
+            return False
+
+        self.state.nightlight_brightness = brightness
+        self.state.nightlight_status = DeviceStatus.from_bool(toggle)
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def toggle_automatic_stop(self, toggle: bool | None = None) -> bool:
+        if toggle is None:
+            toggle = self.state.automatic_stop_config is not True
+
+        payload_data = {'autoStopSwitch': int(toggle)}
+        r_dict = await self.call_bypassv2_api('setAutoStopSwitch', payload_data)
+        r = Helpers.process_dev_response(logger, 'toggle_automatic_stop', self, r_dict)
+        if r is None:
+            return False
+
+        self.state.device_status = DeviceStatus.from_bool(toggle)
         self.state.connection_status = ConnectionStatus.ONLINE
         return True

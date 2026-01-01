@@ -165,11 +165,11 @@ class Superior6000SResult(InnerHumidifierBaseResult):
     childLockSwitch: int
     filterLifePercent: int
     temperature: int
-    dryingMode: Superior6000SDryingMode | None = None
+    dryingMode: DryingModeModel | None = None
 
 
 @dataclass
-class Superior6000SDryingMode(ResponseBaseModel):
+class DryingModeModel(ResponseBaseModel):
     """Drying Mode Model for Superior 6000S Humidifier."""
 
     dryingLevel: int
@@ -209,3 +209,77 @@ class Levoit1000SNightLight(ResponseBaseModel):
 
     nightLightSwitch: int
     brightness: int
+
+
+@dataclass
+class SproutHumidifierResult(InnerHumidifierBaseResult):
+    """Sprout Humidifier Result Model."""
+
+    powerSwitch: int
+    humidity: int
+    targetHumidity: int
+    virtualLevel: int
+    mistLevel: int
+    workMode: str
+    waterLacksState: int
+    waterTankLifted: int
+    autoStopSwitch: int
+    autoStopState: int
+    screenSwitch: int
+    screenState: int
+    autoModePreference: int
+    autoPreference: int
+    waterShortageDryingSwitch: int
+    childLockSwitch: int
+    filterLifePercent: int
+    hepaFilterLifePercent: int
+    temperature: int
+    lampSwitch: int
+    lampType: int
+    dumpedState: int
+    roomSize: int
+    supportLampAct: int
+    lastDryingCompletedTime: int
+    afterDryLastHumidityTime: int
+    sensorContent: SproutSensorcontent | None = None
+    breathingLamp: SproutBreathinglamp | None = None
+    guardingInfo: SproutGuardinginfo | None = None
+    dryingMode: DryingModeModel | None = None
+    nightLight: SproutNightlight | None = None
+
+
+@dataclass
+class SproutSensorcontent(ResponseBaseModel):
+    """Sprout Humidifier Sensor Content Model."""
+
+    selfSensorMac: str
+    selfSenorBattery: int
+    selfSensorStatus: str
+
+
+@dataclass
+class SproutNightlight(ResponseBaseModel):
+    """Sprout Humidifier Night Light Model."""
+
+    nightLightSwitch: int
+    brightness: int
+    colorTemperature: int
+
+
+@dataclass
+class SproutBreathinglamp(ResponseBaseModel):
+    """Sprout Humidifier Breathing Lamp Model."""
+
+    breathingLampSwitch: int
+    colorTemperature: int
+    timeInterval: int
+    brightnessStart: int
+    brightnessEnd: int
+
+
+@dataclass
+class SproutGuardinginfo(ResponseBaseModel):
+    """Sprout Humidifier Guarding Info Model."""
+
+    guarding: int
+    remainTS: int
