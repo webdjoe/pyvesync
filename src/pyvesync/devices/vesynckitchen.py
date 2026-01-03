@@ -363,7 +363,6 @@ class VeSyncAirFryer158(VeSyncFryer):
 
     __slots__ = (
         'cook_temps',
-        'fryer_status',
         'last_update',
         'ready_start',
         'refresh_interval',
