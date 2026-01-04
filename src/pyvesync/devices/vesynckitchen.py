@@ -165,7 +165,10 @@ class AirFryer158138State(FryerState):
         if self.preheat_last_time is not None and self.last_timestamp is not None:
             return int(
                 max(
-                    (self.preheat_last_time * 60- (int(time.time()) - self.last_timestamp))
+                    (
+                        self.preheat_last_time * 60
+                        - (int(time.time()) - self.last_timestamp)
+                    )
                     // 60,
                     0,
                 )
