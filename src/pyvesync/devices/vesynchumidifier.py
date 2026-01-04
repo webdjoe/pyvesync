@@ -78,7 +78,7 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
         """Set state from get_details API model."""
         self.state.connection_status = ConnectionStatus.ONLINE
         self.state.device_status = DeviceStatus.from_bool(resp_model.enabled)
-        self.state.mode = resp_model.mode
+        self.state.mode = Helpers.get_key(self.mist_modes, resp_model.mode, None)
         self.state.humidity = resp_model.humidity
         self.state.mist_virtual_level = resp_model.mist_virtual_level or 0
         self.state.mist_level = resp_model.mist_level or 0
@@ -284,7 +284,7 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
         return await self.set_nightlight_brightness(brightness)
 
     async def set_mode(self, mode: str) -> bool:
-        if mode.lower() not in self.mist_modes:
+        if mode not in self.mist_modes:
             logger.warning('Invalid humidity mode used - %s', mode)
             logger.info(
                 'Proper modes for this device are - %s',
@@ -294,7 +294,7 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
             )
             return False
 
-        payload_data = {'mode': self.mist_modes[mode.lower()]}
+        payload_data = {'mode': self.mist_modes[mode]}
         r_dict = await self.call_bypassv2_api('setHumidityMode', payload_data)
         r = Helpers.process_dev_response(logger, 'set_humidity_mode', self, r_dict)
         if r is None:
@@ -575,7 +575,7 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
         return True
 
     async def set_mode(self, mode: str) -> bool:
-        if mode.lower() not in self.mist_modes:
+        if mode not in self.mist_modes:
             logger.warning('Invalid humidity mode used - %s', mode)
             logger.info(
                 'Proper modes for this device are - %s',
@@ -585,7 +585,7 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
             )
             return False
 
-        payload_data = {'workMode': self.mist_modes[mode.lower()]}
+        payload_data = {'workMode': self.mist_modes[mode]}
         r_dict = await self.call_bypassv2_api('setHumidityMode', payload_data)
 
         r = Helpers.process_dev_response(logger, 'set_humidity_mode', self, r_dict)
@@ -676,7 +676,7 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
             return
         self.state.device_status = DeviceStatus.from_int(resp_model.powerSwitch)
         self.state.connection_status = ConnectionStatus.ONLINE
-        self.state.mode = resp_model.workMode
+        self.state.mode = Helpers.get_key(self.mist_modes, resp_model.workMode, None)
         self.state.humidity = resp_model.humidity
         self.state.auto_target_humidity = resp_model.targetHumidity
         self.state.mist_level = resp_model.mistLevel
@@ -730,7 +730,7 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
         return True
 
     async def set_mode(self, mode: str) -> bool:
-        if mode.lower() not in self.mist_modes:
+        if mode not in self.mist_modes:
             logger.warning('Invalid humidity mode used - %s', mode)
             logger.info(
                 'Proper modes for this device are - %s',
@@ -740,7 +740,7 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
             )
             return False
 
-        payload_data = {'workMode': mode.lower()}
+        payload_data = {'workMode': self.mist_modes[mode]}
         r_dict = await self.call_bypassv2_api('setHumidityMode', payload_data)
         r = Helpers.process_dev_response(logger, 'set_mode', self, r_dict)
         if r is None:
@@ -916,7 +916,7 @@ class VeSyncSproutHumid(BypassV2Mixin, VeSyncHumidifier):
         self.state.auto_target_humidity = resp_model.targetHumidity
         self.state.mist_virtual_level = resp_model.virtualLevel
         self.state.mist_level = resp_model.mistLevel
-        self.state.mode = resp_model.workMode
+        self.state.mode = Helpers.get_key(self.mist_modes, resp_model.workMode, None)
         self.state.water_lacks = bool(resp_model.waterLacksState)
         self.state.water_tank_lifted = bool(resp_model.waterTankLifted)
         self.state.automatic_stop_config = bool(resp_model.autoStopSwitch)
@@ -1242,7 +1242,7 @@ class VeSyncLV600S(BypassV2Mixin, VeSyncHumidifier):
         return True
 
     async def set_mode(self, mode: str) -> bool:
-        if mode.lower() not in self.mist_modes:
+        if mode not in self.mist_modes:
             logger.warning('Invalid humidity mode used - %s', mode)
             logger.info(
                 'Proper modes for this device are - %s',
@@ -1252,7 +1252,7 @@ class VeSyncLV600S(BypassV2Mixin, VeSyncHumidifier):
             )
             return False
 
-        payload_data = {'workMode': self.mist_modes[mode.lower()]}
+        payload_data = {'workMode': self.mist_modes[mode]}
         r_dict = await self.call_bypassv2_api('setHumidityMode', payload_data)
 
         r = Helpers.process_dev_response(logger, 'set_mode', self, r_dict)

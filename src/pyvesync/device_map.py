@@ -245,7 +245,7 @@ class FanMap(DeviceMapTemplate):
     product_type: str = ProductTypes.FAN
     module: ModuleType = vesyncfan
     fan_levels: list[int] = field(default_factory=list)
-    modes: list[str] = field(default_factory=list)
+    modes: dict[str, str] = field(default_factory=dict)
     sleep_preferences: list[str] = field(default_factory=list)
     set_mode_method: str = ''
 
@@ -1010,12 +1010,12 @@ fan_modules: list[FanMap] = [
     FanMap(
         class_name='VeSyncTowerFan',
         dev_types=['LTF-F422S-KEU', 'LTF-F422S-WUSR', 'LTF-F422S-WJP', 'LTF-F422S-WUS'],
-        modes=[
-            FanModes.NORMAL,
-            FanModes.TURBO,
-            FanModes.AUTO,
-            FanModes.ADVANCED_SLEEP,
-        ],
+        modes={
+            FanModes.NORMAL: 'normal',
+            FanModes.TURBO: 'turbo',
+            FanModes.AUTO: 'auto',
+            FanModes.SLEEP: 'advancedSleep',
+        },
         set_mode_method='setTowerFanMode',
         features=[
             FanFeatures.OSCILLATION,
@@ -1038,12 +1038,12 @@ fan_modules: list[FanMap] = [
     FanMap(
         class_name='VeSyncPedestalFan',
         dev_types=['LPF-R432S-AEU', 'LPF-R432S-AUS'],
-        modes=[
-            FanModes.NORMAL,
-            FanModes.TURBO,
-            FanModes.ECO,
-            FanModes.ADVANCED_SLEEP,
-        ],
+        modes={
+            FanModes.NORMAL: 'normal',
+            FanModes.TURBO: 'turbo',
+            FanModes.ECO: 'eco',
+            FanModes.SLEEP: 'advancedSleep',
+        },
         setup_entry='LPF-R423S',
         features=[
             FanFeatures.SET_OSCILLATION_RANGE,
