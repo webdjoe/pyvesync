@@ -262,7 +262,7 @@ HUMIDIFIER_DETAILS: dict[str, Any] = {
         "filterLifePercent": HumidifierDefaults.wick_life_percent,
         "temperature": HumidifierDefaults.temperature,
     },
-    "LEH-B381S": {
+    "LEH-B381S": {  # Sprout Humidifier
         "powerSwitch": int(HumidifierDefaults.device_status),
         "humidity": HumidifierDefaults.humidity,
         "targetHumidity": HumidifierDefaults.target_humidity,

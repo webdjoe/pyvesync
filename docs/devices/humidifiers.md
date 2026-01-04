@@ -7,7 +7,9 @@
 - [VeSync 200S Humidifiers][pyvesync.devices.vesynchumidifier.VeSyncHumid200S] - Same as 300S class with override for toggle display method
 - [VeSync Superior 6000S Humidifiers][pyvesync.devices.vesynchumidifier.VeSyncSuperior6000S]
 - [VeSync OasisMist 1000S Humidifiers][pyvesync.devices.vesynchumidifier.VeSyncHumid1000S]
-- [VeSync Humidifier Base Class][pyvesync.base_devices.humidifier_base.VeSyncHumidifier] - Abstract base class
+- [VeSync Sprout Humidifiers][pyvesync.devices.vesynchumidifier.VeSyncSproutHumid]
+- [VeSync LV600S (603S) Humidifiers][pyvesync.devices.vesynchumidifier.VeSyncLV600S]
+- [VeSync Humidifier Base Class][pyvesync.base_devices.humidifier_base.VeSyncHumidifier] - Abstract humidifier base class
 
 ::: pyvesync.base_devices.humidifier_base.HumidifierState
     options:
@@ -100,6 +102,24 @@
         merge_init_into_class: true
 
 ::: pyvesync.devices.vesynchumidifier.VeSyncSproutHumid
+    options:
+        toc_label: "VeSync Sprout Humidifier"
+        filters:
+            - "!^_.*"
+        summary:
+            functions: false
+        group_by_category: true
+        show_root_heading: true
+        show_root_toc_entry: true
+        show_category_heading: true
+        show_source: true
+        show_if_no_docstring: true
+        inherited_members: true
+        docstring_options:
+            ignore_init_summary: true
+        merge_init_into_class: true
+
+::: pyvesync.devices.vesynchumidifier.VeSyncLV600S
     options:
         toc_label: "VeSync Sprout Humidifier"
         filters:
