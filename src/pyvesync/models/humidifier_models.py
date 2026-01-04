@@ -165,11 +165,11 @@ class Superior6000SResult(InnerHumidifierBaseResult):
     childLockSwitch: int
     filterLifePercent: int
     temperature: int
-    dryingMode: Superior6000SDryingMode | None = None
+    dryingMode: DryingModeModel | None = None
 
 
 @dataclass
-class Superior6000SDryingMode(ResponseBaseModel):
+class DryingModeModel(ResponseBaseModel):
     """Drying Mode Model for Superior 6000S Humidifier."""
 
     dryingLevel: int

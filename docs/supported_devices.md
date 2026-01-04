@@ -35,6 +35,7 @@ The VeSync API supports a variety of devices. The following is a list of devices
       - [OasisMist 4.5L Humidifier][pyvesync.devices.vesynchumidifier.VeSyncHumid200300S]
       - [OasisMist 1000S Humidifier][pyvesync.devices.vesynchumidifier.VeSyncHumid1000S]
       - [Superior 6000S][pyvesync.devices.vesynchumidifier.VeSyncSuperior6000S] - 6L Smart Humidifier
+      - [Sprout Humidifier][pyvesync.devices.vesynchumidifier.VeSyncSproutHumid]
 6. Fans
       - [42" Tower Fan][pyvesync.devices.vesyncfan.VeSyncTowerFan]
       - [Pedestal Fan][pyvesync.devices.vesyncfan.VeSyncPedestalFan]

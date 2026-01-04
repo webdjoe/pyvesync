@@ -8,8 +8,9 @@ from typing import TYPE_CHECKING
 import orjson
 from typing_extensions import deprecated
 
-from pyvesync.base_devices import VeSyncHumidifier
-from pyvesync.const import DRYING_MODES, ConnectionStatus, DeviceStatus
+from pyvesync.base_devices.humidifier_base import BreathingLampState, VeSyncHumidifier
+from pyvesync.const import ConnectionStatus, DeviceStatus, DryingModes
+from pyvesync.models import humidifier_models as models
 from pyvesync.models.bypass_models import (
     ResultV2GetTimer,
     ResultV2GetTimerV2,
@@ -80,7 +81,7 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
         """Initialize 200S/300S Humidifier class."""
         super().__init__(details, manager, feature_map)
 
-    def _set_state(self, resp_model: ClassicLVHumidResult) -> None:
+    def _set_state(self, resp_model: models.ClassicLVHumidResult) -> None:
         """Set state from get_details API model."""
         self.state.connection_status = ConnectionStatus.ONLINE
         self.state.device_status = DeviceStatus.from_bool(resp_model.enabled)
@@ -112,7 +113,7 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
     async def get_details(self) -> None:
         r_dict = await self.call_bypassv2_api('getHumidifierStatus')
         r_model = process_bypassv2_result(
-            self, logger, 'get_details', r_dict, ClassicLVHumidResult
+            self, logger, 'get_details', r_dict, models.ClassicLVHumidResult
         )
         if r_model is None:
             return
@@ -459,7 +460,7 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
         """Initialize Superior 6000S Humidifier class."""
         super().__init__(details, manager, feature_map)
 
-    def _set_state(self, resp_model: Superior6000SResult) -> None:
+    def _set_state(self, resp_model: models.Superior6000SResult) -> None:
         """Set state from Superior 6000S API result model."""
         self.state.device_status = DeviceStatus.from_int(resp_model.powerSwitch)
         self.state.connection_status = ConnectionStatus.ONLINE
@@ -486,14 +487,12 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
 
         drying_mode = resp_model.dryingMode
         if drying_mode is not None:
-            self.state.drying_mode_status = Helpers.get_key(
-                DRYING_MODES, drying_mode.dryingState, None
-            )
-            self.state.drying_mode_level = drying_mode.dryingLevel
+            self.state.drying_mode_status = DryingModes.from_int(drying_mode.dryingState)
             self.state.drying_mode_auto_switch = DeviceStatus.from_int(
                 drying_mode.autoDryingSwitch
             )
-
+            self.state.drying_mode_level = drying_mode.dryingLevel
+            self.state.drying_mode_time_remain = drying_mode.dryingRemain
         if resp_model.timerRemain > 0:
             self.state.timer = Timer(
                 resp_model.timerRemain,
@@ -503,7 +502,7 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
     async def get_details(self) -> None:
         r_dict = await self.call_bypassv2_api('getHumidifierStatus')
         r_model = process_bypassv2_result(
-            self, logger, 'get_details', r_dict, Superior6000SResult
+            self, logger, 'get_details', r_dict, models.Superior6000SResult
         )
         if r_model is None:
             return
@@ -620,6 +619,20 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
+    async def toggle_child_lock(self, toggle: bool | None = None) -> bool:
+        if toggle is None:
+            toggle = self.state.child_lock is True
+
+        payload_data = {'childLockSwitch': int(toggle)}
+        r_dict = await self.call_bypassv2_api('setChildLock', payload_data)
+        r = Helpers.process_dev_response(logger, 'toggle_child_lock', self, r_dict)
+        if r is None:
+            return False
+
+        self.state.child_lock = toggle
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
 
 class VeSyncHumid1000S(VeSyncHumid200300S):
     """Levoit OasisMist 1000S Specific class.
@@ -663,9 +676,9 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
         """Initialize levoit 1000S device class."""
         super().__init__(details, manager, feature_map)
 
-    def _set_state(self, resp_model: InnerHumidifierBaseResult) -> None:
+    def _set_state(self, resp_model: models.InnerHumidifierBaseResult) -> None:
         """Set state of Levoit 1000S from API result model."""
-        if not isinstance(resp_model, Levoit1000SResult):
+        if not isinstance(resp_model, models.Levoit1000SResult):
             return
         self.state.device_status = DeviceStatus.from_int(resp_model.powerSwitch)
         self.state.connection_status = ConnectionStatus.ONLINE
@@ -689,7 +702,7 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
     async def get_details(self) -> None:
         r_dict = await self.call_bypassv2_api('getHumidifierStatus')
         r_model = process_bypassv2_result(
-            self, logger, 'get_details', r_dict, Levoit1000SResult
+            self, logger, 'get_details', r_dict, models.Levoit1000SResult
         )
         if r_model is None:
             return
