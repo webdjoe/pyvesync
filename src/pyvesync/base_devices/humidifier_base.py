@@ -300,6 +300,9 @@ class VeSyncHumidifier(VeSyncBaseToggleDevice):
             bool: Success of request.
         """
         del toggle
+        if HumidifierFeatures.AUTO_STOP in self.features:
+            logger.warning('Automatic stop has not been configured for this device.')
+            return False
         logger.warning('Automatic stop is not supported or configured for this device.')
         return False
 
