@@ -38,7 +38,7 @@ class VeSyncTowerFan(BypassV2Mixin, VeSyncFanBase):
         """Set fan state attributes from API response."""
         self.state.connection_status = ConnectionStatus.ONLINE
         self.state.device_status = DeviceStatus.from_int(res.powerSwitch)
-        self.state.mode = res.workMode
+        self.state.mode = Helpers.get_key(self.modes, res.workMode, None)
         self.state.fan_level = res.fanSpeedLevel
         self.state.fan_set_level = res.manualSpeedLevel
         self.state.temperature = res.temperature
@@ -100,15 +100,11 @@ class VeSyncTowerFan(BypassV2Mixin, VeSyncFanBase):
         return True
 
     async def set_mode(self, mode: str) -> bool:
-        if mode.lower() == DeviceStatus.OFF:
-            logger.warning('Deprecated - Use `turn_off` method to turn off device')
-            return await self.turn_off()
-
-        if mode.lower() not in self.modes:
+        if mode not in self.modes:
             logger.warning('Invalid purifier mode used - %s', mode)
             return False
 
-        payload_data = {'workMode': mode}
+        payload_data = {'workMode': self.modes[mode]}
         r_dict = await self.call_bypassv2_api('setTowerFanMode', payload_data)
         r = Helpers.process_dev_response(logger, 'set_mode', self, r_dict)
         if r is None:
@@ -289,7 +285,7 @@ class VeSyncPedestalFan(BypassV2Mixin, VeSyncFanBase):
         if mode not in self.modes:
             logger.warning('Invalid fan mode used - %s', mode)
             return False
-        data = {'workMode': mode}
+        data = {'workMode': self.modes[mode]}
         r_dict = await self.call_bypassv2_api('setFanMode', data)
         r = Helpers.process_dev_response(logger, 'set_mode', self, r_dict)
         if r is None:

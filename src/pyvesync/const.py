@@ -673,12 +673,11 @@ class FanModes(StrEnum):
     AUTO = 'auto'
     NORMAL = 'normal'
     MANUAL = 'normal'
-    SLEEP = 'advancedSleep'
+    SLEEP = 'sleep'
     TURBO = 'turbo'
     PET = 'pet'
     ECO = 'eco'
     UNKNOWN = 'unknown'
-    ADVANCED_SLEEP = 'advancedSleep'
 
 
 # Air Fryer Constants
