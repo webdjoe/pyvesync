@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 import orjson
 from typing_extensions import deprecated
 
-from pyvesync.base_devices.humidifier_base import BreathingLampState, VeSyncHumidifier
+from pyvesync.base_devices.humidifier_base import VeSyncHumidifier
 from pyvesync.const import ConnectionStatus, DeviceStatus, DryingModes
 from pyvesync.models import humidifier_models as models
 from pyvesync.models.bypass_models import (
@@ -17,11 +17,7 @@ from pyvesync.models.bypass_models import (
     ResultV2SetTimer,
 )
 from pyvesync.models.humidifier_models import (
-    ClassicLVHumidResult,
-    InnerHumidifierBaseResult,
-    Levoit1000SResult,
     LV600SResult,
-    Superior6000SResult,
 )
 from pyvesync.utils.device_mixins import BypassV2Mixin, process_bypassv2_result
 from pyvesync.utils.helpers import Helpers, Timer, Validators
