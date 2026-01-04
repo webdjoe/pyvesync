@@ -161,11 +161,11 @@ class AirFryer158138State(FryerState):
         if self.cook_status in ['pullOut', 'preheatStop']:
             if self.preheat_last_time is None:
                 return 0
-            return int(self.preheat_last_time // 60)
+            return int(self.preheat_last_time)
         if self.preheat_last_time is not None and self.last_timestamp is not None:
             return int(
                 max(
-                    (self.preheat_last_time - (int(time.time()) - self.last_timestamp))
+                    (self.preheat_last_time * 60- (int(time.time()) - self.last_timestamp))
                     // 60,
                     0,
                 )
@@ -180,11 +180,11 @@ class AirFryer158138State(FryerState):
         if self.cook_status in ['pullOut', 'cookStop']:
             if self.cook_last_time is None:
                 return 0
-            return int(max(self.cook_last_time // 60, 0))
+            return int(max(self.cook_last_time, 0))
         if self.cook_last_time is not None and self.last_timestamp is not None:
             return int(
                 max(
-                    (self.cook_last_time - (int(time.time()) - self.last_timestamp))
+                    (self.cook_last_time * 60 - (int(time.time()) - self.last_timestamp))
                     // 60,
                     0,
                 )
