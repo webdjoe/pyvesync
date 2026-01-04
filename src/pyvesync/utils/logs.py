@@ -565,20 +565,18 @@ class LibraryLogger:
         cls,
         logger: logging.Logger,
         *,
-        status_code: int,
         response: ClientResponse,
     ) -> None:
         """Log API response with non-200 status codes.
 
         Args:
             logger (logging.Logger): The logger instance to use.
-            status_code (int): KW only, The HTTP status code to log.
             response (aiohttp.ClientResponse): KW only, dictionary
                 containing the request information.
         """
         # Build the log message parts.
         msg = (
-            f'Status Code {status_code} error in {response.method}'
+            f'Status Code {response.status} error in {response.method}'
             f' API CALL to endpoint: {response.url.path}'
         )
         logger.error(msg)
