@@ -8,7 +8,7 @@ from dataclasses import MISSING, fields
 from pathlib import Path
 from typing import TYPE_CHECKING, Self
 
-from aiohttp import ClientResponse, ClientSession
+from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientResponseError
 from mashumaro.mixins.orjson import DataClassORJSONMixin
 
@@ -489,12 +489,17 @@ class VeSync:  # pylint: disable=function-redefined
                 raise_for_status=False,
             ) as response:
                 resp_bytes = await response.read()
+                resp_status = response.status
+
+                if resp_status != STATUS_OK:
+                    LibraryLogger.log_api_status_error(logger, response=response)
+                    raise VeSyncAPIStatusCodeError(str(resp_status))
 
                 LibraryLogger.log_api_call(
-                    logger, response, resp_bytes, headers, req_dict
+                    logger, response=response, request_body=req_dict
                 )
                 resp_dict, status_code = await self._api_response_wrapper(
-                    response, api, req_dict, device=device
+                    resp_bytes, resp_status, api, req_dict, device=device
                 )
 
         except ClientResponseError as e:
@@ -504,21 +509,14 @@ class VeSync:  # pylint: disable=function-redefined
 
     async def _api_response_wrapper(
         self,
-        response: ClientResponse,
+        response_bytes: bytes | None,
+        status_code: int,
         endpoint: str,
         request_body: dict | None,
         device: VeSyncBaseDevice | None = None,
     ) -> tuple[dict | None, int]:
         """Internal wrapper used by async_call_api."""
-        if response.status != STATUS_OK:
-            LibraryLogger.log_api_status_error(
-                logger,
-                status_code=response.status,
-                response=response,
-            )
-            raise VeSyncAPIStatusCodeError(str(response.status))
-        resp_bytes = await response.read()
-        resp_dict = LibraryLogger.try_json_loads(resp_bytes)
+        resp_dict = LibraryLogger.try_json_loads(response_bytes)
         if isinstance(resp_dict, dict):
             error_info = ErrorCodes.get_error_info(resp_dict.get('code'))
             if error_info.error_type == ErrorTypes.TOKEN_ERROR:
@@ -532,7 +530,7 @@ class VeSync:  # pylint: disable=function-redefined
                 error_info.message = f'{error_info.message} ({resp_dict["msg"]})'
             raise_api_errors(error_info)
 
-        return resp_dict, response.status
+        return resp_dict, status_code
 
     def _api_base_url_for_current_region(self) -> str:
         """Retrieve the API base url for the current region.

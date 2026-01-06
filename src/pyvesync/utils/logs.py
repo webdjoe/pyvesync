@@ -30,6 +30,8 @@ import orjson
 from mashumaro.exceptions import InvalidFieldValue, MissingField, UnserializableField
 from multidict import CIMultiDictProxy
 
+from pyvesync.utils.errors import ErrorTypes, ResponseInfo
+
 if TYPE_CHECKING:
     from aiohttp import ClientResponse
     from aiohttp.client_exceptions import ClientResponseError
@@ -390,8 +392,7 @@ class LibraryLogger:
         method: str,
         device_name: str,
         device_type: str,
-        code: int,
-        message: str = '',
+        error_info: ResponseInfo,
     ) -> None:
         """Log return code from device API call.
 
@@ -403,30 +404,42 @@ class LibraryLogger:
             method (str): method that caused the error
             device_name (str): device name
             device_type (str): device type
-            code (int): api response code
-            message (str): api response message
+            error_info (ResponseInfo): response info dataclass
         """
         try:
-            code_str = str(code)
+            code_str = str(error_info.code)
         except (TypeError, ValueError):
             code_str = 'UNKNOWN'
-        if code == 0:
+        if error_info.code == 0:
             logger.debug(
                 '%s for %s API from %s returned code: %s, message: %s',
                 device_name,
                 device_type,
                 method,
                 code_str,
-                message,
+                error_info.message,
             )
-        else:
-            logger.warning(
-                '%s for %s API from %s returned error code: %s, message: %s',
+        elif error_info.error_type == ErrorTypes.DEVICE_OFFLINE:
+            logger.debug(
+                '%s for %s API from %s returned DEVICE OFFLINE code: %s, message: %s',
                 device_name,
                 device_type,
                 method,
                 code_str,
-                message,
+                error_info.message,
+            )
+        else:
+            logger.warning(
+                (
+                    '%s for %s API from %s returned error code: %s,'
+                    ' error type: %s, message: %s'
+                ),
+                device_name,
+                device_type,
+                method,
+                code_str,
+                error_info.error_type,
+                error_info.message,
             )
 
     @staticmethod
@@ -565,20 +578,18 @@ class LibraryLogger:
         cls,
         logger: logging.Logger,
         *,
-        status_code: int,
         response: ClientResponse,
     ) -> None:
         """Log API response with non-200 status codes.
 
         Args:
             logger (logging.Logger): The logger instance to use.
-            status_code (int): KW only, The HTTP status code to log.
             response (aiohttp.ClientResponse): KW only, dictionary
                 containing the request information.
         """
         # Build the log message parts.
         msg = (
-            f'Status Code {status_code} error in {response.method}'
+            f'Status Code {response.status} error in {response.method}'
             f' API CALL to endpoint: {response.url.path}'
         )
         logger.error(msg)

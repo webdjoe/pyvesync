@@ -243,10 +243,10 @@ class Helpers:
             method_name,
             device.device_name,
             device.device_type,
-            int(error_code),
-            f'{error_info.error_type} - {error_info.message}',
+            error_info,
         )
         device.last_response = error_info
+        device.last_response.response_data = r_dict
         if int(error_code) != 0:
             return None
         return r_dict

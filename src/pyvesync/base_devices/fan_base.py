@@ -145,6 +145,7 @@ class VeSyncFanBase(VeSyncBaseToggleDevice):
     """
 
     __slots__ = (
+        '_reverse_modes',
         'fan_levels',
         'modes',
         'sleep_preferences',
@@ -170,6 +171,9 @@ class VeSyncFanBase(VeSyncBaseToggleDevice):
         self.features: list[str] = feature_map.features
         self.state: FanState = FanState(self, details, feature_map)
         self.modes: dict[str, str] = feature_map.modes
+        self._reverse_modes: dict[str, str] = {}
+        for k, v in self.modes.items():
+            self._reverse_modes[v] = k
         self.fan_levels: list[int] = feature_map.fan_levels
         self.sleep_preferences: list[str] = feature_map.sleep_preferences
 

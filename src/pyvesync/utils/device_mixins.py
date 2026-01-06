@@ -84,16 +84,14 @@ def _get_inner_result(
 
     if code != 0:
         error_info = ErrorCodes.get_error_info(code)
-        error_msg = f'{error_info.message}'
         if inner_result.get('msg') is not None:
             error_info.message = f'{error_info.message} - {inner_result["msg"]}'
         LibraryLogger.log_device_return_code(
             logger,
             method,
             device.device_name,
-            device.product_type,
-            code,
-            error_msg,
+            device.device_type,
+            error_info,
         )
         device.last_response = error_info
         return None

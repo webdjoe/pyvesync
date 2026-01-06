@@ -38,7 +38,7 @@ class VeSyncTowerFan(BypassV2Mixin, VeSyncFanBase):
         """Set fan state attributes from API response."""
         self.state.connection_status = ConnectionStatus.ONLINE
         self.state.device_status = DeviceStatus.from_int(res.powerSwitch)
-        self.state.mode = Helpers.get_key(self.modes, res.workMode, None)
+        self.state.mode = self._reverse_modes.get(res.workMode)
         self.state.fan_level = res.fanSpeedLevel
         self.state.fan_set_level = res.manualSpeedLevel
         self.state.temperature = res.temperature
@@ -247,7 +247,7 @@ class VeSyncPedestalFan(BypassV2Mixin, VeSyncFanBase):
     def _set_fan_state(self, res: PedestalFanResult) -> None:
         """Set the fan state from the result."""
         self.state.device_status = DeviceStatus.from_int(res.powerSwitch)
-        self.state.mode = res.workMode
+        self.state.mode = self._reverse_modes.get(res.workMode)
         self.state.fan_level = res.fanSpeedLevel
         self.state.temperature = (res.temperature / 10) if res.temperature else None
         self.state.mute_set_status = DeviceStatus.from_int(res.muteSwitch)

@@ -78,7 +78,7 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
         """Set state from get_details API model."""
         self.state.connection_status = ConnectionStatus.ONLINE
         self.state.device_status = DeviceStatus.from_bool(resp_model.enabled)
-        self.state.mode = Helpers.get_key(self.mist_modes, resp_model.mode, None)
+        self.state.mode = self._reverse_mist_modes.get(resp_model.mode)
         self.state.humidity = resp_model.humidity
         self.state.mist_virtual_level = resp_model.mist_virtual_level or 0
         self.state.mist_level = resp_model.mist_level or 0
@@ -386,6 +386,8 @@ class VeSyncHumid200S(VeSyncHumid200300S):
         warm_mist_levels (list): List of warm mist levels.
     """
 
+    __slots__ = ()
+
     def __init__(
         self,
         details: ResponseDeviceDetailsModel,
@@ -445,6 +447,8 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
         warm_mist_levels (list): List of warm mist levels.
     """
 
+    __slots__ = ()
+
     def __init__(
         self,
         details: ResponseDeviceDetailsModel,
@@ -458,7 +462,7 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
         """Set state from Superior 6000S API result model."""
         self.state.device_status = DeviceStatus.from_int(resp_model.powerSwitch)
         self.state.connection_status = ConnectionStatus.ONLINE
-        self.state.mode = Helpers.get_key(self.mist_modes, resp_model.workMode, None)
+        self.state.mode = self._reverse_mist_modes.get(resp_model.workMode)
         if self.state.mode is None:
             logger.warning('Unknown mist mode received: %s', resp_model.workMode)
 
@@ -661,6 +665,8 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
         warm_mist_levels (list): List of warm mist levels.
     """
 
+    __slots__ = ()
+
     def __init__(
         self,
         details: ResponseDeviceDetailsModel,
@@ -676,7 +682,7 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
             return
         self.state.device_status = DeviceStatus.from_int(resp_model.powerSwitch)
         self.state.connection_status = ConnectionStatus.ONLINE
-        self.state.mode = Helpers.get_key(self.mist_modes, resp_model.workMode, None)
+        self.state.mode = self._reverse_mist_modes.get(resp_model.workMode)
         self.state.humidity = resp_model.humidity
         self.state.auto_target_humidity = resp_model.targetHumidity
         self.state.mist_level = resp_model.mistLevel
@@ -899,6 +905,8 @@ class VeSyncSproutHumid(BypassV2Mixin, VeSyncHumidifier):
         features (dict): Features of device.
     """
 
+    __slots__ = ()
+
     def __init__(
         self,
         details: ResponseDeviceDetailsModel,
@@ -916,7 +924,7 @@ class VeSyncSproutHumid(BypassV2Mixin, VeSyncHumidifier):
         self.state.auto_target_humidity = resp_model.targetHumidity
         self.state.mist_virtual_level = resp_model.virtualLevel
         self.state.mist_level = resp_model.mistLevel
-        self.state.mode = Helpers.get_key(self.mist_modes, resp_model.workMode, None)
+        self.state.mode = self._reverse_mist_modes.get(resp_model.workMode)
         self.state.water_lacks = bool(resp_model.waterLacksState)
         self.state.water_tank_lifted = bool(resp_model.waterTankLifted)
         self.state.automatic_stop_config = bool(resp_model.autoStopSwitch)
@@ -1174,7 +1182,7 @@ class VeSyncLV600S(BypassV2Mixin, VeSyncHumidifier):
         """Set state from LV600S API result model."""
         self.state.device_status = DeviceStatus.from_int(resp_model.powerSwitch)
         self.state.connection_status = ConnectionStatus.ONLINE
-        self.state.mode = Helpers.get_key(self.mist_modes, resp_model.workMode, None)
+        self.state.mode = self._reverse_mist_modes.get(resp_model.workMode)
         if self.state.mode is None:
             logger.warning('Unknown mist mode received: %s', resp_model.workMode)
 

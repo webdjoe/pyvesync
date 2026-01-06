@@ -58,6 +58,7 @@ class ResponseInfo(DataClassORJSONMixin):
         critical_error (bool): A major error, such as a short or voltage error
         operational_error (bool): Device connected but API error
         device_online (bool | None): Device online status
+        code (str | int | None): Error code from API
         response_data (dict | None): Response data from API - populated by the
             process_dev_response method in the Helpers class and bypass mixin
             methods.
@@ -69,6 +70,7 @@ class ResponseInfo(DataClassORJSONMixin):
     critical_error: bool = False
     operational_error: bool = False  # Device connected but API error
     device_online: bool = True  # Defaults to connected
+    code: str | int | None = None
     response_data: dict | None = None  # Response data from API
 
 
@@ -774,6 +776,7 @@ class ErrorCodes:
             error_info = ResponseInfo(
                 'UNKNOWN', ErrorTypes.UNKNOWN_ERROR, 'Unknown error'
             )
+        error_info.code = error_code
         return error_info
 
     @classmethod
