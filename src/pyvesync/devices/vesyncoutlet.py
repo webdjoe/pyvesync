@@ -477,10 +477,7 @@ class VeSyncOutlet15A(BypassV1Mixin, VeSyncOutlet):
                 if self.state.device_status == DeviceStatus.OFF
                 else DeviceStatus.OFF
             )
-        if not isinstance(action, str) or action not in [
-            DeviceStatus.ON,
-            DeviceStatus.OFF,
-        ]:
+        if not action not in [DeviceStatus.ON, DeviceStatus.OFF]:
             logger.error('Invalid action for timer - %s', action)
             return False
         update_dict = {
