@@ -134,7 +134,7 @@ class YAMLWriter:
         else:
             self.existing_yaml = {method: yaml_dict}
         with open(self.file, 'w', encoding='utf-8') as f:
-            yaml.dump(self.existing_yaml, f, encoding='utf-8')
+            yaml.dump(dict(sorted(self.existing_yaml.items())), f, encoding='utf-8')
 
 
 def api_scrub(api_dict, device_type=None):
