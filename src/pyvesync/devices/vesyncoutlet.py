@@ -17,7 +17,7 @@ from pyvesync.const import (
     DeviceStatus,
     EnergyIntervals,
 )
-from pyvesync.models.base_models import DefaultValues, RequestHeaders
+from pyvesync.models.base_models import RequestHeaders
 from pyvesync.models.bypass_models import (
     BypassV2InnerResult,
     RequestBypassV1,
@@ -477,10 +477,7 @@ class VeSyncOutlet15A(BypassV1Mixin, VeSyncOutlet):
                 if self.state.device_status == DeviceStatus.OFF
                 else DeviceStatus.OFF
             )
-        if not isinstance(action, str) or action not in [
-            DeviceStatus.ON,
-            DeviceStatus.OFF,
-        ]:
+        if not action not in [DeviceStatus.ON, DeviceStatus.OFF]:
             logger.error('Invalid action for timer - %s', action)
             return False
         update_dict = {
@@ -761,9 +758,9 @@ class VeSyncOutletWHOGPlug(BypassV2Mixin, VeSyncOutlet):
             bytes: The response from the API request.
         """
         keys = BypassV1Mixin.request_keys
-        body = Helpers.get_class_attributes(DefaultValues, keys)
-        body.update(Helpers.get_class_attributes(self.manager, keys))
-        body.update(Helpers.get_class_attributes(self, keys))
+        body = Helpers.get_defaultvalues_attributes(keys)
+        body.update(Helpers.get_manager_attributes(self.manager, keys))
+        body.update(Helpers.get_device_attributes(self, keys))
         body['method'] = method
         body.update(update_dict or {})
         model_instance = request_model.from_dict(body)
@@ -804,11 +801,13 @@ class VeSyncOutletWHOGPlug(BypassV2Mixin, VeSyncOutlet):
     async def toggle_switch(self, toggle: bool | None = None) -> bool:
         if toggle is None:
             toggle = self.state.device_status != DeviceStatus.ON
-        toggle_int = int(toggle)
+        payload_data = {
+            'id': 0,
+            'enabled': toggle,
+        }
         r_dict = await self.call_bypassv2_api(
-            'setProperty',
-            data={'powerSwitch_1': toggle_int},
-            payload_update={'subDeviceNo': 0},
+            payload_method='setSwitch',
+            data=payload_data,
         )
         r = Helpers.process_dev_response(logger, 'toggle_switch', self, r_dict)
         if r is None:
@@ -972,6 +971,23 @@ class VeSyncBSDOGPlug(VeSyncOutletWHOGPlug):
 
         self._set_state(resp_model)
 
+    async def toggle_switch(self, toggle: bool | None = None) -> bool:
+        if toggle is None:
+            toggle = self.state.device_status != DeviceStatus.ON
+        toggle_int = int(toggle)
+        r_dict = await self.call_bypassv2_api(
+            'setProperty',
+            data={'powerSwitch_1': toggle_int},
+            payload_update={'subDeviceNo': 0},
+        )
+        r = Helpers.process_dev_response(logger, 'toggle_switch', self, r_dict)
+        if r is None:
+            return False
+
+        self.state.device_status = DeviceStatus.ON if toggle else DeviceStatus.OFF
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
 
 class VeSyncESW10USA(BypassV2Mixin, VeSyncOutlet):
     """VeSync ESW10 USA outlet.
@@ -1023,7 +1039,7 @@ class VeSyncESW10USA(BypassV2Mixin, VeSyncOutlet):
         result = process_bypassv2_result(
             self, logger, 'get_details', r_dict, ResultESW10Details
         )
-        if not isinstance(result, dict) or not isinstance(result.get('enabled'), bool):
+        if result is None:
             logger.warning('Error getting %s details', self.device_name)
             self.state.connection_status = ConnectionStatus.OFFLINE
             return

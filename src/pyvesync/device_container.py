@@ -17,22 +17,22 @@ from __future__ import annotations
 import logging
 import re
 from collections.abc import Iterator, MutableSet, Sequence
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING, TypeVar, cast
 
-from pyvesync.base_devices.bulb_base import VeSyncBulb
-from pyvesync.base_devices.fan_base import VeSyncFanBase
-from pyvesync.base_devices.fryer_base import VeSyncFryer
-from pyvesync.base_devices.humidifier_base import VeSyncHumidifier
-from pyvesync.base_devices.outlet_base import VeSyncOutlet
-from pyvesync.base_devices.purifier_base import VeSyncPurifier
-from pyvesync.base_devices.switch_base import VeSyncSwitch
-from pyvesync.base_devices.thermostat_base import VeSyncThermostat
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
 from pyvesync.const import ProductTypes
 from pyvesync.device_map import get_device_config
 
 if TYPE_CHECKING:
     from pyvesync import VeSync
+    from pyvesync.base_devices.bulb_base import VeSyncBulb
+    from pyvesync.base_devices.fan_base import VeSyncFanBase
+    from pyvesync.base_devices.fryer_base import VeSyncFryer
+    from pyvesync.base_devices.humidifier_base import VeSyncHumidifier
+    from pyvesync.base_devices.outlet_base import VeSyncOutlet
+    from pyvesync.base_devices.purifier_base import VeSyncPurifier
+    from pyvesync.base_devices.switch_base import VeSyncSwitch
+    from pyvesync.base_devices.thermostat_base import VeSyncThermostat
     from pyvesync.models.vesync_models import (
         ResponseDeviceDetailsModel,
         ResponseDeviceListModel,
@@ -291,82 +291,72 @@ class DeviceContainer(_DeviceContainerBase):
     def outlets(self) -> list[VeSyncOutlet]:
         """Return a list of devices that are outlets."""
         return [
-            device
+            cast('VeSyncOutlet', device)
             for device in self
-            if isinstance(device, VeSyncOutlet)
-            and device.product_type == ProductTypes.OUTLET
+            if device.product_type == ProductTypes.OUTLET
         ]
 
     @property
     def switches(self) -> list[VeSyncSwitch]:
         """Return a list of devices that are switches."""
         return [
-            device
+            cast('VeSyncSwitch', device)
             for device in self
-            if (
-                isinstance(device, VeSyncSwitch)
-                and device.product_type == ProductTypes.SWITCH
-            )
+            if device.product_type == ProductTypes.SWITCH
         ]
 
     @property
     def bulbs(self) -> list[VeSyncBulb]:
         """Return a list of devices that are lights."""
         return [
-            device
+            cast('VeSyncBulb', device)
             for device in self
-            if isinstance(device, VeSyncBulb)
-            and (device.product_type == ProductTypes.BULB)
+            if device.product_type == ProductTypes.BULB
         ]
 
     @property
     def air_purifiers(self) -> list[VeSyncPurifier]:
         """Return a list of devices that are air purifiers."""
         return [
-            device
+            cast('VeSyncPurifier', device)
             for device in self
-            if isinstance(device, VeSyncPurifier)
-            and device.product_type == ProductTypes.PURIFIER
+            if device.product_type == ProductTypes.PURIFIER
         ]
 
     @property
     def fans(self) -> list[VeSyncFanBase]:
         """Return a list of devices that are fans."""
         return [
-            device
+            cast('VeSyncFanBase', device)
             for device in self
-            if isinstance(device, VeSyncFanBase)
-            and device.product_type == ProductTypes.FAN
+            if device.product_type == ProductTypes.FAN
         ]
 
     @property
     def humidifiers(self) -> list[VeSyncHumidifier]:
         """Return a list of devices that are humidifiers."""
         return [
-            device
+            cast('VeSyncHumidifier', device)
             for device in self
-            if isinstance(device, VeSyncHumidifier)
-            and device.product_type == ProductTypes.HUMIDIFIER
+            if device.product_type == ProductTypes.HUMIDIFIER
         ]
 
     @property
     def air_fryers(self) -> list[VeSyncFryer]:
         """Return a list of devices that are air fryers."""
         return [
-            device
+            cast('VeSyncFryer', device)
             for device in self
-            if isinstance(device, VeSyncFryer)
-            and device.product_type == ProductTypes.AIR_FRYER
+            if device.product_type == ProductTypes.AIR_FRYER
         ]
 
     @property
     def thermostats(self) -> list[VeSyncThermostat]:
         """Return a list of devices that are thermostats."""
         return [
-            device
+            cast('VeSyncThermostat', device)
             for device in self
-            if isinstance(device, VeSyncThermostat)
-            and device.product_type == ProductTypes.THERMOSTAT
+            if device.product_type == ProductTypes.THERMOSTAT
         ]
 
 

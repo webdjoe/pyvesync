@@ -22,7 +22,6 @@ from typing_extensions import deprecated
 from pyvesync.base_devices import VeSyncBulb
 from pyvesync.const import ConnectionStatus, DeviceStatus
 from pyvesync.models import bulb_models
-from pyvesync.models.base_models import DefaultValues
 from pyvesync.models.bypass_models import TimerModels
 from pyvesync.utils.colors import Color
 from pyvesync.utils.device_mixins import (
@@ -81,7 +80,7 @@ class VeSyncBulbESL100MC(BypassV2Mixin, VeSyncBulb):
         features (dict): Features of device.
 
     Notes:
-        The details dictionary contains the device information retreived by the
+        The details dictionary contains the device information retrieved by the
         `update()` method:
         ```python
         details = {
@@ -717,7 +716,7 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
     ) -> None:
         """Initialize Multicolor bulb."""
         super().__init__(details, manager, feature_map)
-        self.request_keys = [
+        self.request_keys = (
             'acceptLanguage',
             'accountID',
             'appVersion',
@@ -730,7 +729,7 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
             'timeZone',
             'token',
             'traceId',
-        ]
+        )
 
     def _payload_base(self) -> bulb_models.ValcenoStatusPayload:
         """Return the payload base for the set status request.
@@ -787,9 +786,11 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
             }
             ```
         """
-        default_dict = Helpers.get_class_attributes(DefaultValues, self.request_keys)
-        default_dict.update(Helpers.get_class_attributes(self, self.request_keys))
-        default_dict.update(Helpers.get_class_attributes(self.manager, self.request_keys))
+        default_dict = Helpers.get_defaultvalues_attributes(self.request_keys)
+        default_dict.update(Helpers.get_device_attributes(self, self.request_keys))
+        default_dict.update(
+            Helpers.get_manager_attributes(self.manager, self.request_keys)
+        )
         default_dict['method'] = 'bypassV2'
         default_dict['payload'] = payload
         return default_dict
@@ -1056,7 +1057,7 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
         If color_mode is not set, brightness and/or color_temp must be set.
 
         This builds the `request_body['payload']['data']` dict for api calls that
-        set teh status of the bulb.
+        set the status of the bulb.
 
         Args:
             brightness (float, optional): Brightness of bulb (0-100).

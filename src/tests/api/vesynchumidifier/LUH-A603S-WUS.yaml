@@ -6,23 +6,26 @@ set_auto_mode:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    cid: LV-PUR131S-CID
+    cid: LUH-A603S-WUS-CID
     configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceId: LV-PUR131S-CID
-    method: airPurifierRunModeCtl
-    mode: auto
+    deviceId: LUH-A603S-WUS-CID
+    method: bypassV2
+    payload:
+      data:
+        workMode: humidity
+      method: setHumidityMode
+      source: APP
     phoneBrand: pyvesync
     phoneOS: Android
     timeZone: America/New_York
     token: sample_tk
     traceId: TRACE_ID
     userCountryCode: US
-    uuid: LV-PUR131S-UUID
   method: post
-  url: /cloud/v1/deviceManaged/airPurifierRunModeCtl
-set_fan_speed:
+  url: /cloud/v2/deviceManaged/bypassV2
+set_humidity:
   headers:
     Content-Type: application/json; charset=UTF-8
     User-Agent: okhttp/3.12.1
@@ -30,22 +33,25 @@ set_fan_speed:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    cid: LV-PUR131S-CID
+    cid: LUH-A603S-WUS-CID
     configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceId: LV-PUR131S-CID
-    level: 3
-    method: airPurifierSpeedCtl
+    deviceId: LUH-A603S-WUS-CID
+    method: bypassV2
+    payload:
+      data:
+        targetHumidity: 50
+      method: setTargetHumidity
+      source: APP
     phoneBrand: pyvesync
     phoneOS: Android
     timeZone: America/New_York
     token: sample_tk
     traceId: TRACE_ID
     userCountryCode: US
-    uuid: LV-PUR131S-UUID
   method: post
-  url: /cloud/v1/deviceManaged/airPurifierSpeedCtl
+  url: /cloud/v2/deviceManaged/bypassV2
 set_manual_mode:
   headers:
     Content-Type: application/json; charset=UTF-8
@@ -54,23 +60,26 @@ set_manual_mode:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    cid: LV-PUR131S-CID
+    cid: LUH-A603S-WUS-CID
     configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceId: LV-PUR131S-CID
-    level: 1
-    method: airPurifierSpeedCtl
+    deviceId: LUH-A603S-WUS-CID
+    method: bypassV2
+    payload:
+      data:
+        workMode: manual
+      method: setHumidityMode
+      source: APP
     phoneBrand: pyvesync
     phoneOS: Android
     timeZone: America/New_York
     token: sample_tk
     traceId: TRACE_ID
     userCountryCode: US
-    uuid: LV-PUR131S-UUID
   method: post
-  url: /cloud/v1/deviceManaged/airPurifierSpeedCtl
-set_sleep_mode:
+  url: /cloud/v2/deviceManaged/bypassV2
+set_mist_level:
   headers:
     Content-Type: application/json; charset=UTF-8
     User-Agent: okhttp/3.12.1
@@ -78,22 +87,57 @@ set_sleep_mode:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    cid: LV-PUR131S-CID
+    cid: LUH-A603S-WUS-CID
     configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceId: LV-PUR131S-CID
-    method: airPurifierRunModeCtl
-    mode: sleep
+    deviceId: LUH-A603S-WUS-CID
+    method: bypassV2
+    payload:
+      data:
+        levelIdx: 0
+        levelType: mist
+        virtualLevel: 2
+      method: setVirtualLevel
+      source: APP
     phoneBrand: pyvesync
     phoneOS: Android
     timeZone: America/New_York
     token: sample_tk
     traceId: TRACE_ID
     userCountryCode: US
-    uuid: LV-PUR131S-UUID
   method: post
-  url: /cloud/v1/deviceManaged/airPurifierRunModeCtl
+  url: /cloud/v2/deviceManaged/bypassV2
+set_warm_level:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 5.6.60
+    cid: LUH-A603S-WUS-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: LUH-A603S-WUS-CID
+    method: bypassV2
+    payload:
+      data:
+        levelIdx: 0
+        levelType: warm
+        mistLevel: 0
+        warmLevel: 3
+      method: setLevel
+      source: APP
+    phoneBrand: pyvesync
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+    userCountryCode: US
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
 turn_off:
   headers:
     Content-Type: application/json; charset=UTF-8
@@ -102,22 +146,26 @@ turn_off:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    cid: LV-PUR131S-CID
+    cid: LUH-A603S-WUS-CID
     configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceId: LV-PUR131S-CID
-    method: airPurifierPowerSwitchCtl
+    deviceId: LUH-A603S-WUS-CID
+    method: bypassV2
+    payload:
+      data:
+        powerSwitch: 0
+        switchIdx: 0
+      method: setSwitch
+      source: APP
     phoneBrand: pyvesync
     phoneOS: Android
-    status: 'off'
     timeZone: America/New_York
     token: sample_tk
     traceId: TRACE_ID
     userCountryCode: US
-    uuid: LV-PUR131S-UUID
   method: post
-  url: /cloud/v1/deviceManaged/airPurifierPowerSwitchCtl
+  url: /cloud/v2/deviceManaged/bypassV2
 turn_off_display:
   headers:
     Content-Type: application/json; charset=UTF-8
@@ -126,22 +174,25 @@ turn_off_display:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    cid: LV-PUR131S-CID
+    cid: LUH-A603S-WUS-CID
     configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceId: LV-PUR131S-CID
-    method: airPurifierScreenCtl
+    deviceId: LUH-A603S-WUS-CID
+    method: bypassV2
+    payload:
+      data:
+        screenSwitch: 0
+      method: setDisplay
+      source: APP
     phoneBrand: pyvesync
     phoneOS: Android
-    status: 'off'
     timeZone: America/New_York
     token: sample_tk
     traceId: TRACE_ID
     userCountryCode: US
-    uuid: LV-PUR131S-UUID
   method: post
-  url: /cloud/v1/deviceManaged/airPurifierScreenCtl
+  url: /cloud/v2/deviceManaged/bypassV2
 turn_on:
   headers:
     Content-Type: application/json; charset=UTF-8
@@ -150,22 +201,26 @@ turn_on:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    cid: LV-PUR131S-CID
+    cid: LUH-A603S-WUS-CID
     configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceId: LV-PUR131S-CID
-    method: airPurifierPowerSwitchCtl
+    deviceId: LUH-A603S-WUS-CID
+    method: bypassV2
+    payload:
+      data:
+        powerSwitch: 1
+        switchIdx: 0
+      method: setSwitch
+      source: APP
     phoneBrand: pyvesync
     phoneOS: Android
-    status: 'on'
     timeZone: America/New_York
     token: sample_tk
     traceId: TRACE_ID
     userCountryCode: US
-    uuid: LV-PUR131S-UUID
   method: post
-  url: /cloud/v1/deviceManaged/airPurifierPowerSwitchCtl
+  url: /cloud/v2/deviceManaged/bypassV2
 turn_on_display:
   headers:
     Content-Type: application/json; charset=UTF-8
@@ -174,22 +229,25 @@ turn_on_display:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    cid: LV-PUR131S-CID
+    cid: LUH-A603S-WUS-CID
     configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceId: LV-PUR131S-CID
-    method: airPurifierScreenCtl
+    deviceId: LUH-A603S-WUS-CID
+    method: bypassV2
+    payload:
+      data:
+        screenSwitch: 1
+      method: setDisplay
+      source: APP
     phoneBrand: pyvesync
     phoneOS: Android
-    status: 'on'
     timeZone: America/New_York
     token: sample_tk
     traceId: TRACE_ID
     userCountryCode: US
-    uuid: LV-PUR131S-UUID
   method: post
-  url: /cloud/v1/deviceManaged/airPurifierScreenCtl
+  url: /cloud/v2/deviceManaged/bypassV2
 update:
   headers:
     Content-Type: application/json; charset=UTF-8
@@ -198,18 +256,21 @@ update:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    cid: LV-PUR131S-CID
+    cid: LUH-A603S-WUS-CID
     configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceId: LV-PUR131S-CID
-    method: deviceDetail
+    deviceId: LUH-A603S-WUS-CID
+    method: bypassV2
+    payload:
+      data: {}
+      method: getHumidifierStatus
+      source: APP
     phoneBrand: pyvesync
     phoneOS: Android
     timeZone: America/New_York
     token: sample_tk
     traceId: TRACE_ID
     userCountryCode: US
-    uuid: LV-PUR131S-UUID
   method: post
-  url: /cloud/v1/deviceManaged/deviceDetail
+  url: /cloud/v2/deviceManaged/bypassV2

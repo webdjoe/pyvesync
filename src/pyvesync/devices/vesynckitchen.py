@@ -35,7 +35,6 @@ from typing_extensions import deprecated
 
 from pyvesync.base_devices import FryerState, VeSyncFryer
 from pyvesync.const import AIRFRYER_PID_MAP, ConnectionStatus, DeviceStatus
-from pyvesync.models.base_models import DefaultValues
 from pyvesync.utils.errors import VeSyncError
 from pyvesync.utils.helpers import Helpers
 from pyvesync.utils.logs import LibraryLogger
@@ -161,11 +160,14 @@ class AirFryer158138State(FryerState):
         if self.cook_status in ['pullOut', 'preheatStop']:
             if self.preheat_last_time is None:
                 return 0
-            return int(self.preheat_last_time // 60)
+            return int(self.preheat_last_time)
         if self.preheat_last_time is not None and self.last_timestamp is not None:
             return int(
                 max(
-                    (self.preheat_last_time - (int(time.time()) - self.last_timestamp))
+                    (
+                        self.preheat_last_time * 60
+                        - (int(time.time()) - self.last_timestamp)
+                    )
                     // 60,
                     0,
                 )
@@ -180,11 +182,11 @@ class AirFryer158138State(FryerState):
         if self.cook_status in ['pullOut', 'cookStop']:
             if self.cook_last_time is None:
                 return 0
-            return int(max(self.cook_last_time // 60, 0))
+            return int(max(self.cook_last_time, 0))
         if self.cook_last_time is not None and self.last_timestamp is not None:
             return int(
                 max(
-                    (self.cook_last_time - (int(time.time()) - self.last_timestamp))
+                    (self.cook_last_time * 60 - (int(time.time()) - self.last_timestamp))
                     // 60,
                     0,
                 )
@@ -360,7 +362,6 @@ class VeSyncAirFryer158(VeSyncFryer):
 
     __slots__ = (
         'cook_temps',
-        'fryer_status',
         'last_update',
         'ready_start',
         'refresh_interval',
@@ -387,7 +388,7 @@ class VeSyncAirFryer158(VeSyncFryer):
             )
             raise VeSyncError(msg)
         self.pid = AIRFRYER_PID_MAP[self.config_module]
-        self.request_keys = [
+        self.request_keys = (
             'acceptLanguage',
             'accountID',
             'appVersion',
@@ -404,7 +405,7 @@ class VeSyncAirFryer158(VeSyncFryer):
             'debugMode',
             'uuid',
             'pid',
-        ]
+        )
 
     @deprecated('There is no on/off function for Air Fryers.')
     async def toggle_switch(self, toggle: bool | None = None) -> bool:
@@ -417,9 +418,9 @@ class VeSyncAirFryer158(VeSyncFryer):
         method: str | None = None,
     ) -> dict:
         """Return body of api calls."""
-        req_dict = Helpers.get_class_attributes(DefaultValues, self.request_keys)
-        req_dict.update(Helpers.get_class_attributes(self.manager, self.request_keys))
-        req_dict.update(Helpers.get_class_attributes(self, self.request_keys))
+        req_dict = Helpers.get_defaultvalues_attributes(self.request_keys)
+        req_dict.update(Helpers.get_manager_attributes(self.manager, self.request_keys))
+        req_dict.update(Helpers.get_device_attributes(self, self.request_keys))
         req_dict['method'] = method or 'bypass'
         req_dict['jsonCmd'] = json_cmd or {}
         return req_dict

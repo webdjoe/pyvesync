@@ -213,6 +213,32 @@ class TimerItemV2(ResponseBaseModel):
 
 
 @dataclass
+class TimerV2StartAct(ResponseBaseModel):
+    """Action item for Timer V2 startAct array."""
+
+    type: str
+    act: int
+    num: int
+
+
+@dataclass
+class TimerItemV2Alt(ResponseBaseModel):
+    """Data model for Timer V2 API with startAct format."""
+
+    id: int
+    remain: int
+    total: int
+    startAct: list[TimerV2StartAct] = field(default_factory=list)
+
+
+@dataclass
+class ResultV2GetTimerV2(BypassV2InnerResult):
+    """Inner result for GetTimerV2 method."""
+
+    timers: list[TimerItemV2Alt] = field(default_factory=list)
+
+
+@dataclass
 class ResultV1SetTimer(BypassV1Result):
     """Result model for setting Bypass V1 API timer."""
 

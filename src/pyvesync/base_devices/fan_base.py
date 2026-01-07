@@ -87,7 +87,7 @@ class FanState(DeviceState):
             feature_map (FanMap): Feature map.
         """
         super().__init__(device, details, feature_map)
-        self.mode: str = FanModes.UNKNOWN
+        self.mode: str | None = None
         self.fan_level: int | None = None
         self.fan_set_level: int | None = None
         self.child_lock: str | None = None
@@ -145,6 +145,7 @@ class VeSyncFanBase(VeSyncBaseToggleDevice):
     """
 
     __slots__ = (
+        '_reverse_modes',
         'fan_levels',
         'modes',
         'sleep_preferences',
@@ -169,7 +170,10 @@ class VeSyncFanBase(VeSyncBaseToggleDevice):
         super().__init__(details, manager, feature_map)
         self.features: list[str] = feature_map.features
         self.state: FanState = FanState(self, details, feature_map)
-        self.modes: list[str] = feature_map.modes
+        self.modes: dict[str, str] = feature_map.modes
+        self._reverse_modes: dict[str, str] = {}
+        for k, v in self.modes.items():
+            self._reverse_modes[v] = k
         self.fan_levels: list[int] = feature_map.fan_levels
         self.sleep_preferences: list[str] = feature_map.sleep_preferences
 
@@ -278,9 +282,9 @@ class VeSyncFanBase(VeSyncBaseToggleDevice):
             This method is not supported by all devices, will return
             false with warning debug message if not supported.
         """
-        if FanModes.ADVANCED_SLEEP in self.modes:
-            return await self.set_mode(FanModes.ADVANCED_SLEEP)
-        logger.warning('Advanced Sleep mode not supported for this device.')
+        if FanModes.SLEEP in self.modes:
+            return await self.set_mode(FanModes.SLEEP)
+        logger.warning('Sleep mode not supported for this device.')
         return False
 
     async def set_sleep_mode(self) -> bool:
@@ -295,8 +299,8 @@ class VeSyncFanBase(VeSyncBaseToggleDevice):
             This method is not supported by all devices, will return
             false with warning debug message if not supported.
         """
-        if FanModes.ADVANCED_SLEEP in self.modes:
-            return await self.set_mode(FanModes.ADVANCED_SLEEP)
+        if FanModes.SLEEP in self.modes:
+            return await self.set_mode(FanModes.SLEEP)
         logger.warning('Sleep mode not supported for this device.')
         return False
 
@@ -510,7 +514,7 @@ class VeSyncFanBase(VeSyncBaseToggleDevice):
     @deprecated('Use `set_advanced_sleep_mode` method instead')
     async def advanced_sleep_mode(self) -> bool:
         """Set advanced sleep mode."""
-        return await self.set_mode('advancedSleep')
+        return await self.set_mode(FanModes.SLEEP)
 
     @deprecated('Use `set_sleep_mode` method instead')
     async def sleep_mode(self) -> bool:

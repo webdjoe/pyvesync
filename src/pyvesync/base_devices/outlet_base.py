@@ -12,7 +12,6 @@ from pyvesync.const import (
     NightlightModes,
     OutletFeatures,
 )
-from pyvesync.models.base_models import DefaultValues
 from pyvesync.models.outlet_models import RequestEnergyHistory, ResponseEnergyHistory
 from pyvesync.utils.helpers import Helpers
 
@@ -192,7 +191,7 @@ class VeSyncOutlet(VeSyncBaseToggleDevice):
 
     def _build_energy_request(self, method: str) -> RequestEnergyHistory:
         """Build energy request post."""
-        request_keys = [
+        request_keys = (
             'acceptLanguage',
             'accountID',
             'appVersion',
@@ -205,10 +204,11 @@ class VeSyncOutlet(VeSyncBaseToggleDevice):
             'debugMode',
             'homeTimeZone',
             'uuid',
-        ]
-        body = Helpers.get_class_attributes(DefaultValues, request_keys)
-        body.update(Helpers.get_class_attributes(self.manager, request_keys))
-        body.update(Helpers.get_class_attributes(self, request_keys))
+        )
+
+        body = Helpers.get_defaultvalues_attributes(request_keys)
+        body.update(Helpers.get_manager_attributes(self.manager, request_keys))
+        body.update(Helpers.get_device_attributes(self, request_keys))
         body['method'] = method
         return RequestEnergyHistory.from_dict(body)
 

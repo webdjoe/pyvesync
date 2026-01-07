@@ -11,7 +11,7 @@ devices, test methods and arguments.
 
 The `helpers.call_api` method is patched to return a mock response.
 The method, endpoint, headers and json arguments are recorded
-in YAML files in the api directory, catagorized in folders by
+in YAML files in the api directory, categorized in folders by
 module and files by the class name.
 
 The default is to record requests that do not exist and compare requests
@@ -28,6 +28,7 @@ See Also
 
 import logging
 from dataclasses import asdict
+import pytest
 import pyvesync.const as const
 from pyvesync.base_devices.humidifier_base import VeSyncHumidifier
 from base_test_cases import TestBase
@@ -118,6 +119,7 @@ class TestHumidifiers(TestBase):
     ]
     device_methods = {
         "LUH-A602S-WUS": [["set_warm_level", {"warm_level": 3}]],
+        "LUH-A603S-WUS": [["set_warm_level", {"warm_level": 3}]],
         "LEH-S601S": [["turn_off_drying_mode"]],
     }
 
@@ -222,6 +224,14 @@ class TestHumidifiers(TestBase):
 
         # Set return value for call_api based on call_json_fans.METHOD_RESPONSES
         method_response = call_json_humidifiers.METHOD_RESPONSES[setup_entry][method_name]
+
+        fan_obj = self.get_device("humidifiers", setup_entry)
+        assert isinstance(fan_obj, VeSyncHumidifier)
+
+        if method_name in ["turn_on_automatic_stop", "turn_off_automatic_stop"] \
+                and const.HumidifierFeatures.AUTO_STOP not in fan_obj.features:
+            pytest.skip("Automatic stop not supported for this device.")
+
         if callable(method_response):
             if method_kwargs:
                 self.mock_api.return_value = method_response(method_kwargs), 200
@@ -229,10 +239,6 @@ class TestHumidifiers(TestBase):
                 self.mock_api.return_value = method_response(), 200
         else:
             self.mock_api.return_value = method_response, 200
-
-        # Get device configuration from call_json.DeviceList.device_list_item()
-        fan_obj = self.get_device("humidifiers", setup_entry)
-        assert isinstance(fan_obj, VeSyncHumidifier)
 
         # Get method from device object
         method_call = getattr(fan_obj, method[0])
@@ -265,11 +271,14 @@ class TestHumidifiers(TestBase):
             assert fan_obj.state.warm_mist_level == method_kwargs["warm_level"]
         elif method[0] == "turn_off_drying_mode":
             assert fan_obj.state.drying_mode_auto_switch == const.DeviceStatus.OFF
-
+        elif method[0] == "turn_on_automatic_stop":
+            assert fan_obj.state.automatic_stop_config is True
+        elif method[0] == "turn_off_automatic_stop":
+            assert fan_obj.state.automatic_stop_config is False
         # Parse arguments from mock_api call into a dictionary
         all_kwargs = parse_args(self.mock_api)
 
-        # Assert request matches recored request or write new records
+        # Assert request matches recorded request or write new records
         assert assert_test(
             method_call, all_kwargs, setup_entry, self.write_api, self.overwrite
         )

@@ -7,7 +7,7 @@ DETAILS_RESPONSES variable is a dictionary of responses from the API
 for get_details() methods.  The keys are the device types and the
 values are the responses.  The responses are tuples of (response, status)
 
-METHOD_RESPONSES variable is a defaultdict of responses from the API. This is
+METHOD_RESPONSES variable is a Default Dictionary of responses from the API. This is
 the FunctionResponse variable from the utils module in the tests dir.
 The default response is a tuple with the value ({"code": 0, "msg": "success"}, 200).
 
@@ -36,7 +36,7 @@ from typing import Any
 from copy import deepcopy
 
 from pyvesync.device_map import humidifier_modules
-from pyvesync.const import DRYING_MODES, HumidifierModes, DeviceStatus, ConnectionStatus, DryingModes
+from pyvesync.const import HumidifierModes, DeviceStatus, ConnectionStatus, DryingModes
 from defaults import TestDefaults, FunctionResponses, build_bypass_v2_response, FunctionResponsesV2
 
 HUMIDIFIERS = [m.setup_entry for m in humidifier_modules]
@@ -47,16 +47,14 @@ class HumidifierDefaults:
     device_status = DeviceStatus.ON
     connection_status = ConnectionStatus.ONLINE
     humidifier_mode = HumidifierModes.MANUAL
-    nightlight_status = DeviceStatus.ON
-    drying_state = DryingModes.RUNNING
-    drying_mode_switch = DeviceStatus.ON
-    nightlight_brightness = 50
+    child_lock_switch = DeviceStatus.OFF
+    temperature = 70 * 10
     humidity = 50
+    wick_life_percent = 85
+    auto_mode_preference = 1
     target_humidity = 60
     mist_level = 3
     virtual_mist_level = 3
-    warm_mist_level = 1
-    warm_mist_enabled = True
     water_lacks = False
     water_tank_lifted = False
     auto_stop = False
@@ -64,6 +62,25 @@ class HumidifierDefaults:
     display = True
     display_config = True
     humidity_high = False
+    hepa_filter_pct = 78
+    # Warm Mist Defaults
+    warm_mist_level = 1
+    warm_mist_enabled = True
+    # Nightlight Default
+    nightlight_status = DeviceStatus.OFF
+    nightlight_brightness = 0
+    nightlight_color_temperature = 4000
+    # Drying Defaults
+    drying_level = 1
+    drying_state = DryingModes.DONE
+    water_shortage_drying_switch = DeviceStatus.ON
+    drying_mode_switch = DeviceStatus.ON
+    # Breating Lamp Defaults
+    breathing_lamp_switch = DeviceStatus.OFF
+    breathing_lamp_color_temperature = 4000
+    breathing_lamp_time_interval = 10
+    breathing_lamp_brightness_start = 0
+    breathing_lamp_brightness_end = 50
 
 
 HUMIDIFIER_DETAILS: dict[str, Any] = {
@@ -181,22 +198,22 @@ HUMIDIFIER_DETAILS: dict[str, Any] = {
         "extension": {"schedule_count": 0, "timer_remain": 0},
     },
     "LUH-M101-WUS": {
-            "powerSwitch": int(HumidifierDefaults.device_status),
-            "humidity": int(HumidifierDefaults.humidity),
-            "targetHumidity": int(HumidifierDefaults.target_humidity),
-            "virtualLevel": int(HumidifierDefaults.virtual_mist_level),
-            "mistLevel": int(HumidifierDefaults.mist_level),
-            "workMode": HumidifierDefaults.humidifier_mode.value,
-            "waterLacksState": int(HumidifierDefaults.water_lacks),
-            "waterTankLifted": int(HumidifierDefaults.water_tank_lifted),
-            "autoStopSwitch": int(HumidifierDefaults.auto_stop),
-            "autoStopState": int(HumidifierDefaults.auto_stop_reached),
-            "screenSwitch": int(HumidifierDefaults.display_config),
-            "screenState": int(HumidifierDefaults.display),
-            "scheduleCount": 0,
-            "timerRemain": 0,
-            "errorCode": 0
-        },
+        "powerSwitch": int(HumidifierDefaults.device_status),
+        "humidity": int(HumidifierDefaults.humidity),
+        "targetHumidity": int(HumidifierDefaults.target_humidity),
+        "virtualLevel": int(HumidifierDefaults.virtual_mist_level),
+        "mistLevel": int(HumidifierDefaults.mist_level),
+        "workMode": HumidifierDefaults.humidifier_mode.value,
+        "waterLacksState": int(HumidifierDefaults.water_lacks),
+        "waterTankLifted": int(HumidifierDefaults.water_tank_lifted),
+        "autoStopSwitch": int(HumidifierDefaults.auto_stop),
+        "autoStopState": int(HumidifierDefaults.auto_stop_reached),
+        "screenSwitch": int(HumidifierDefaults.display_config),
+        "screenState": int(HumidifierDefaults.display),
+        "scheduleCount": 0,
+        "timerRemain": 0,
+        "errorCode": 0,
+    },
     "LUH-M101S-WEUR": {
         "powerSwitch": int(DeviceStatus.ON),
         "humidity": HumidifierDefaults.humidity,
@@ -235,15 +252,87 @@ HUMIDIFIER_DETAILS: dict[str, Any] = {
         "timerRemain": 0,
         "errorCode": 0,
         "dryingMode": {
-            "dryingLevel": 1,
+            "dryingLevel": HumidifierDefaults.drying_level,
             "autoDryingSwitch": int(HumidifierDefaults.drying_mode_switch),
-            "dryingState": DRYING_MODES[HumidifierDefaults.drying_state],
+            "dryingState": int(HumidifierDefaults.drying_state),
             "dryingRemain": 7200,
         },
-        "autoPreference": 1,
-        "childLockSwitch": 0,
-        "filterLifePercent": 93,
-        "temperature": 662,
+        "autoPreference": HumidifierDefaults.auto_mode_preference,
+        "childLockSwitch": int(HumidifierDefaults.child_lock_switch),
+        "filterLifePercent": HumidifierDefaults.wick_life_percent,
+        "temperature": HumidifierDefaults.temperature,
+    },
+    "LEH-B381S": {  # Sprout Humidifier
+        "powerSwitch": int(HumidifierDefaults.device_status),
+        "humidity": HumidifierDefaults.humidity,
+        "targetHumidity": HumidifierDefaults.target_humidity,
+        "virtualLevel": HumidifierDefaults.virtual_mist_level,
+        "mistLevel": HumidifierDefaults.mist_level,
+        "workMode": HumidifierDefaults.humidifier_mode.value,
+        "waterLacksState": int(HumidifierDefaults.water_lacks),
+        "waterTankLifted": int(HumidifierDefaults.water_tank_lifted),
+        "autoStopSwitch": int(HumidifierDefaults.auto_stop),
+        "autoStopState": int(HumidifierDefaults.auto_stop_reached),
+        "screenSwitch": int(HumidifierDefaults.display_config),
+        "screenState": int(HumidifierDefaults.display),
+        "autoModePreference": HumidifierDefaults.auto_mode_preference,
+        "autoPreference": 4,  # Unknown value - autoModePreference shows the set mode
+        "dryingMode": {
+            "dryingLevel": HumidifierDefaults.drying_level,
+            "autoDryingSwitch": HumidifierDefaults.drying_mode_switch,
+            "dryingState": int(HumidifierDefaults.drying_state),
+            "dryingRemain": 0,
+        },
+        "waterShortageDryingSwitch": int(HumidifierDefaults.water_shortage_drying_switch),
+        "childLockSwitch": int(HumidifierDefaults.child_lock_switch),
+        "filterLifePercent": HumidifierDefaults.wick_life_percent,
+        "hepaFilterLifePercent": HumidifierDefaults.hepa_filter_pct,
+        "sensorContent": {
+            "selfSensorMac": "a4:c1:38:83:16:9b",
+            "selfSenorBattery": 100,
+            "selfSensorStatus": "on",
+        },
+        "temperature": HumidifierDefaults.temperature,
+        "nightLight": {
+            "nightLightSwitch": int(HumidifierDefaults.nightlight_status),
+            "brightness": HumidifierDefaults.nightlight_brightness,
+            "colorTemperature": HumidifierDefaults.nightlight_color_temperature,
+        },
+        "breathingLamp": {
+            "breathingLampSwitch": int(HumidifierDefaults.breathing_lamp_switch),
+            "colorTemperature": HumidifierDefaults.breathing_lamp_color_temperature,
+            "timeInterval": HumidifierDefaults.breathing_lamp_time_interval,
+            "brightnessStart": HumidifierDefaults.breathing_lamp_brightness_start,
+            "brightnessEnd": HumidifierDefaults.breathing_lamp_brightness_end,
+        },
+        "lampSwitch": int(HumidifierDefaults.breathing_lamp_switch),
+        "lampType": 1,
+        "dumpedState": 0,
+        "guardingInfo": {"guarding": 1, "remainTS": 0},
+        "roomSize": 242,
+        "supportLampAct": 1,
+        "lastDryingCompletedTime": 1764685402,
+        "afterDryLastHumidityTime": 1764651910,
+    },
+    "LUH-A603S-WUS": {  # LV600S with warm mist
+        "powerSwitch": int(DeviceStatus.ON),
+        "humidity": HumidifierDefaults.humidity,
+        "targetHumidity": HumidifierDefaults.target_humidity,
+        "virtualLevel": HumidifierDefaults.virtual_mist_level,
+        "mistLevel": HumidifierDefaults.mist_level,
+        "workMode": HumidifierDefaults.humidifier_mode.value,
+        "waterLacksState": int(HumidifierDefaults.water_lacks),
+        "waterTankLifted": int(HumidifierDefaults.water_tank_lifted),
+        "autoStopSwitch": int(HumidifierDefaults.auto_stop),
+        "autoStopState": int(HumidifierDefaults.auto_stop_reached),
+        "screenSwitch": int(HumidifierDefaults.display_config),
+        "screenState": int(HumidifierDefaults.display),
+        "scheduleCount": 0,
+        "timerRemain": 0,
+        "errorCode": 0,
+        "totalWorkTime": 0,
+        "warmPower": HumidifierDefaults.warm_mist_enabled,
+        "warmLevel": HumidifierDefaults.warm_mist_level,
     },
 }
 """This dictionary contains the details response for each humidifier.
@@ -257,11 +346,13 @@ DETAILS_RESPONSES = {
     "Classic200S": build_bypass_v2_response(inner_result=HUMIDIFIER_DETAILS["Classic200S"]),
     "Dual200S": build_bypass_v2_response(inner_result=HUMIDIFIER_DETAILS["Dual200S"]),
     "LUH-A602S-WUS": build_bypass_v2_response(inner_result=HUMIDIFIER_DETAILS["LUH-A602S-WUS"]),
+    "LUH-A603S-WUS": build_bypass_v2_response(inner_result=HUMIDIFIER_DETAILS["LUH-A603S-WUS"]),
     "LUH-O451S-WUS": build_bypass_v2_response(inner_result=HUMIDIFIER_DETAILS["LUH-O451S-WUS"]),
     "LUH-O451S-WEU": build_bypass_v2_response(inner_result=HUMIDIFIER_DETAILS["LUH-O451S-WEU"]),
     "LUH-M101S-WEUR": build_bypass_v2_response(inner_result=HUMIDIFIER_DETAILS["LUH-M101S-WEUR"]),
     "LUH-M101S-WUS": build_bypass_v2_response(inner_result=HUMIDIFIER_DETAILS["LUH-M101-WUS"]),
     "LEH-S601S": build_bypass_v2_response(inner_result=HUMIDIFIER_DETAILS["LEH-S601S"]),
+    "LEH-B381S": build_bypass_v2_response(inner_result=HUMIDIFIER_DETAILS["LEH-B381S"]),
 }
 
 
@@ -280,11 +371,13 @@ METHOD_RESPONSES = {
     "Classic200S": deepcopy(FunctionResponsesV2),
     "Dual200S": deepcopy(FunctionResponsesV2),
     "LUH-A602S-WUS": deepcopy(FunctionResponsesV2),
+    "LUH-A603S-WUS": deepcopy(FunctionResponsesV2),
     "LUH-O451S-WUS": deepcopy(FunctionResponsesV2),
     "LUH-O451S-WEU": deepcopy(FunctionResponsesV2),
     "LUH-M101S-WEUR": deepcopy(FunctionResponsesV2),
     "LUH-M101S-WUS": deepcopy(FunctionResponsesV2),
     "LEH-S601S": deepcopy(FunctionResponsesV2),
+    "LEH-B381S": deepcopy(FunctionResponsesV2),
 }
 
 

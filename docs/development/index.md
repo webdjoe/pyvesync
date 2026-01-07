@@ -31,9 +31,9 @@ All attributes and methods should be named using snake_case and follow the namin
 
 States that have a string value, such as "on" or "off", should be appended with `_status`. For example, `device_status` or `connection_status`. The use of bool for on/off state attributes should be avoided. The `status` attributes should use a `StrEnum` constant from the `pyvesync.const` module. The `status` attributes should be set to `StrEnum.NOT_SUPPORTED` if the feature is not supported by all devices.
 
-The general method to act on an on/off attribue should be `toggle_` and accept a boolean value. The method should be named `toggle_<attribute>` and the attribute should be set to the appropriate value. For example, `toggle_power` or `toggle_light_detection`. The method should accept a boolean value and set the attribute to the appropriate value.
+The general method to act on an on/off attribute should be `toggle_` and accept a boolean value. The method should be named `toggle_<attribute>` and the attribute should be set to the appropriate value. For example, `toggle_power` or `toggle_light_detection`. The method should accept a boolean value and set the attribute to the appropriate value.
 
-The methods that spefically turn a device or or off should be named `turn_on_<attribute>` or `turn_off_<attribute>`. The attribute should be set to the appropriate value. For example, `turn_on_power` or `turn_off_light_detection`. The method should accept a boolean value and set the attribute to the appropriate value.
+The methods that specifically turn a device or or off should be named `turn_on_<attribute>` or `turn_off_<attribute>`. The attribute should be set to the appropriate value. For example, `turn_on_power` or `turn_off_light_detection`. The method should accept a boolean value and set the attribute to the appropriate value.
 
 With the exception of Air Fryers, all devices inherit from the `VeSyncToggleDevice` class, which includes the `toggle_power`, `turn_on` and `turn_off` methods.
 
@@ -291,9 +291,9 @@ The `DeviceContainer` object has a property for each product type that returns a
 
 Exceptions are no longer caught by the library and must be handled by the user. Exceptions are raised by server errors and aiohttp connection errors.
 
-Errors that occur at the aiohttp level are raised automatically and propogated to the user. That means exceptions raised by aiohttp that inherit from `aiohttp.ClientError` are propogated.
+Errors that occur at the aiohttp level are raised automatically and propagated to the user. That means exceptions raised by aiohttp that inherit from `aiohttp.ClientError` are propagated.
 
-When the connection to the VeSync API succeeds but returns an error code that prevents the library from functioning a custom exception inherrited from `pyvesync.logs.VeSyncError` is raised.
+When the connection to the VeSync API succeeds but returns an error code that prevents the library from functioning a custom exception inherited from `pyvesync.logs.VeSyncError` is raised.
 
 Custom Exceptions raised by all API calls:
 
@@ -470,7 +470,7 @@ The Bypass V2 API is used for newer devices, such as humidifiers. The API calls 
 
 #### Bypass V2 Request Structure
 
-The bypass V2 request structure is very similiar between API calls. The outer `method` key always has the `bypassv2` attribute. The payload structure is always the same with the `method`, `data` and `source` keys. The `source` key always contains the value `APP`. The payload `method` and `data` keys change.
+The bypass V2 request structure is very similar between API calls. The outer `method` key always has the `bypassv2` attribute. The payload structure is always the same with the `method`, `data` and `source` keys. The `source` key always contains the value `APP`. The payload `method` and `data` keys change.
 
 ```json
 {
@@ -499,7 +499,7 @@ The bypass V2 request structure is very similiar between API calls. The outer `m
 
 #### Bypass V2 Response Structure
 
-The response structure has a relatively similiar structure for all calls with a nested result dictionary, containing an additional `code` and `device_error_code` key that provides information on errors that are specific to the device:
+The response structure has a relatively similar structure for all calls with a nested result dictionary, containing an additional `code` and `device_error_code` key that provides information on errors that are specific to the device:
 
 ```json
 {

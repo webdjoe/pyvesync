@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyvesync"
-version = "3.3.3"
+version = "3.4.0"
 description = "pyvesync is a library to manage Etekcity Devices, Cosori Air Fryers, and Levoit Air Purifiers run on the VeSync app."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -63,6 +63,9 @@ docs = [
 [tool.setuptools.packages.find]
 where = ["src"]
 exclude = ["tests", "test*"]
+
+[tool.setuptools.package-data]
+pyvesync = ["py.typed"]
 
 [tool.pytest.ini_options]
 addopts = "--tb=short --color=yes"

@@ -10,7 +10,7 @@ from the `deviceType` field in the device list API.
 
 The AirFryerMap, OutletMap, SwitchMap, BulbMap, FanMap, HumidifierMap, PurifierMap
 and ThermostatMap dataclasses are used to define the mappings for each product type
-with the assocated module, class, features and other device specific configuration. The
+with the associated module, class, features and other device specific configuration. The
 [`get_device_config`][pyvesync.device_map.get_device_config] function is used
 to get the device map object from the device type to instantiate the appropriate class.
 The individual `get_<product-type>` functions are used to get the device details
@@ -245,7 +245,7 @@ class FanMap(DeviceMapTemplate):
     product_type: str = ProductTypes.FAN
     module: ModuleType = vesyncfan
     fan_levels: list[int] = field(default_factory=list)
-    modes: list[str] = field(default_factory=list)
+    modes: dict[str, str] = field(default_factory=dict)
     sleep_preferences: list[str] = field(default_factory=list)
     set_mode_method: str = ''
 
@@ -593,6 +593,7 @@ humidifier_modules = [
         features=[
             HumidifierFeatures.NIGHTLIGHT,
             HumidifierFeatures.NIGHTLIGHT_BRIGHTNESS,
+            HumidifierFeatures.AUTO_STOP,
         ],
         mist_modes={
             HumidifierModes.AUTO: 'auto',
@@ -608,7 +609,7 @@ humidifier_modules = [
     HumidifierMap(
         class_name='VeSyncHumid200S',
         dev_types=['Classic200S'],
-        features=[],
+        features=[HumidifierFeatures.AUTO_STOP],
         mist_modes={
             HumidifierModes.AUTO: 'auto',
             HumidifierModes.MANUAL: 'manual',
@@ -628,7 +629,7 @@ humidifier_modules = [
             'LUH-D301S-WEU',
             'LUH-D301S-KEUR',
         ],
-        features=[],
+        features=[HumidifierFeatures.AUTO_STOP],
         mist_modes={
             HumidifierModes.AUTO: 'auto',
             HumidifierModes.MANUAL: 'manual',
@@ -649,7 +650,7 @@ humidifier_modules = [
             'LUH-A602S-WJP',
             'LUH-A602S-WUSC',
         ],
-        features=[HumidifierFeatures.WARM_MIST],
+        features=[HumidifierFeatures.WARM_MIST, HumidifierFeatures.AUTO_STOP],
         mist_modes={
             HumidifierModes.AUTO: 'auto',
             HumidifierModes.SLEEP: 'sleep',
@@ -663,9 +664,27 @@ humidifier_modules = [
         setup_entry='LUH-A602S-WUS',
     ),
     HumidifierMap(
+        class_name='VeSyncLV600S',
+        dev_types=[
+            'LUH-A603S-WUS',
+        ],
+        features=[HumidifierFeatures.WARM_MIST],
+        mist_modes={
+            HumidifierModes.AUTO: 'humidity',
+            HumidifierModes.SLEEP: 'sleep',
+            HumidifierModes.MANUAL: 'manual',
+        },
+        mist_levels=list(range(1, 10)),
+        warm_mist_levels=[0, 1, 2, 3],
+        device_alias='LV600S',
+        model_display='LUH-A603S Series',
+        model_name='LV600S',
+        setup_entry='LUH-A603S-WUS',
+    ),
+    HumidifierMap(
         class_name='VeSyncHumid200300S',
         dev_types=['LUH-O451S-WEU'],
-        features=[HumidifierFeatures.WARM_MIST],
+        features=[HumidifierFeatures.WARM_MIST, HumidifierFeatures.AUTO_STOP],
         mist_modes={
             HumidifierModes.AUTO: 'auto',
             HumidifierModes.SLEEP: 'sleep',
@@ -681,7 +700,7 @@ humidifier_modules = [
     HumidifierMap(
         class_name='VeSyncHumid200300S',
         dev_types=['LUH-O451S-WUS', 'LUH-O451S-WUSR', 'LUH-O601S-WUS', 'LUH-O601S-KUS'],
-        features=[HumidifierFeatures.WARM_MIST],
+        features=[HumidifierFeatures.WARM_MIST, HumidifierFeatures.AUTO_STOP],
         mist_modes={
             HumidifierModes.AUTO: 'auto',
             HumidifierModes.SLEEP: 'sleep',
@@ -698,7 +717,7 @@ humidifier_modules = [
     HumidifierMap(
         class_name='VeSyncHumid1000S',
         dev_types=['LUH-M101S-WUS', 'LUH-M101S-WUSR'],
-        features=[],
+        features=[HumidifierFeatures.AUTO_STOP],
         mist_modes={
             HumidifierModes.AUTO: 'auto',
             HumidifierModes.SLEEP: 'sleep',
@@ -716,6 +735,7 @@ humidifier_modules = [
         features=[
             HumidifierFeatures.NIGHTLIGHT,
             HumidifierFeatures.NIGHTLIGHT_BRIGHTNESS,
+            HumidifierFeatures.AUTO_STOP,
         ],
         mist_modes={
             HumidifierModes.AUTO: 'auto',
@@ -731,7 +751,7 @@ humidifier_modules = [
     HumidifierMap(
         class_name='VeSyncSuperior6000S',
         dev_types=['LEH-S601S-WUS', 'LEH-S601S-WUSR', 'LEH-S601S-WEUR'],
-        features=[HumidifierFeatures.DRYING_MODE],
+        features=[HumidifierFeatures.DRYING_MODE, HumidifierFeatures.AUTO_STOP],
         mist_modes={
             HumidifierModes.AUTO: 'autoPro',
             HumidifierModes.SLEEP: 'sleep',
@@ -743,6 +763,26 @@ humidifier_modules = [
         model_display='LEH-S601S Series',
         model_name='Superior 6000S',
         setup_entry='LEH-S601S',
+    ),
+    HumidifierMap(
+        class_name='VeSyncSproutHumid',
+        dev_types=['LEH-B381S-WUS', 'LEH-B381S-WEU'],
+        features=[
+            HumidifierFeatures.DRYING_MODE,
+            HumidifierFeatures.NIGHTLIGHT,
+            HumidifierFeatures.NIGHTLIGHT_BRIGHTNESS,
+            HumidifierFeatures.AUTO_STOP,
+        ],
+        mist_modes={
+            HumidifierModes.AUTO: 'autoPro',
+            HumidifierModes.SLEEP: 'sleep',
+            HumidifierModes.MANUAL: 'manual',
+        },
+        mist_levels=list(range(1, 3)),
+        device_alias='Sprout Humidifier',
+        model_display='LEH-B381S Series',
+        model_name='Sprout Humidifier',
+        setup_entry='LEH-B381S',
     ),
 ]
 """List of ['HumidifierMap'][pyvesync.device_map.HumidifierMap] configuration
@@ -970,12 +1010,12 @@ fan_modules: list[FanMap] = [
     FanMap(
         class_name='VeSyncTowerFan',
         dev_types=['LTF-F422S-KEU', 'LTF-F422S-WUSR', 'LTF-F422S-WJP', 'LTF-F422S-WUS'],
-        modes=[
-            FanModes.NORMAL,
-            FanModes.TURBO,
-            FanModes.AUTO,
-            FanModes.ADVANCED_SLEEP,
-        ],
+        modes={
+            FanModes.NORMAL: 'normal',
+            FanModes.TURBO: 'turbo',
+            FanModes.AUTO: 'auto',
+            FanModes.SLEEP: 'advancedSleep',
+        },
         set_mode_method='setTowerFanMode',
         features=[
             FanFeatures.OSCILLATION,
@@ -998,12 +1038,12 @@ fan_modules: list[FanMap] = [
     FanMap(
         class_name='VeSyncPedestalFan',
         dev_types=['LPF-R432S-AEU', 'LPF-R432S-AUS'],
-        modes=[
-            FanModes.NORMAL,
-            FanModes.TURBO,
-            FanModes.ECO,
-            FanModes.ADVANCED_SLEEP,
-        ],
+        modes={
+            FanModes.NORMAL: 'normal',
+            FanModes.TURBO: 'turbo',
+            FanModes.ECO: 'eco',
+            FanModes.SLEEP: 'advancedSleep',
+        },
         setup_entry='LPF-R423S',
         features=[
             FanFeatures.SET_OSCILLATION_RANGE,

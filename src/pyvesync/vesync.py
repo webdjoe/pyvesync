@@ -1,4 +1,4 @@
-"""VeSync API Device Libary."""
+"""VeSync API Device Library."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from dataclasses import MISSING, fields
 from pathlib import Path
 from typing import TYPE_CHECKING, Self
 
-from aiohttp import ClientResponse, ClientSession
+from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientResponseError
 from mashumaro.mixins.orjson import DataClassORJSONMixin
 
@@ -489,12 +489,21 @@ class VeSync:  # pylint: disable=function-redefined
                 raise_for_status=False,
             ) as response:
                 resp_bytes = await response.read()
+                resp_status = response.status
+
+                if resp_status != STATUS_OK:
+                    LibraryLogger.log_api_status_error(logger, response=response)
+                    raise VeSyncAPIStatusCodeError(str(resp_status))
 
                 LibraryLogger.log_api_call(
-                    logger, response, resp_bytes, headers, req_dict
+                    logger,
+                    response=response,
+                    response_body=resp_bytes,
+                    request_headers=headers,
+                    request_body=req_dict,
                 )
                 resp_dict, status_code = await self._api_response_wrapper(
-                    response, api, req_dict, device=device
+                    resp_bytes, resp_status, api, req_dict, device=device
                 )
 
         except ClientResponseError as e:
@@ -504,35 +513,28 @@ class VeSync:  # pylint: disable=function-redefined
 
     async def _api_response_wrapper(
         self,
-        response: ClientResponse,
+        response_bytes: bytes | None,
+        status_code: int,
         endpoint: str,
         request_body: dict | None,
         device: VeSyncBaseDevice | None = None,
     ) -> tuple[dict | None, int]:
         """Internal wrapper used by async_call_api."""
-        if response.status != STATUS_OK:
-            LibraryLogger.log_api_status_error(
-                logger,
-                status_code=response.status,
-                response=response,
-            )
-            raise VeSyncAPIStatusCodeError(str(response.status))
-        resp_bytes = await response.read()
-        resp_dict = LibraryLogger.try_json_loads(resp_bytes)
-        if isinstance(resp_dict, dict):
-            error_info = ErrorCodes.get_error_info(resp_dict.get('code'))
-            if error_info.error_type == ErrorTypes.TOKEN_ERROR:
-                self.enabled = False
-                if await self._reauthenticate():
-                    return await self.async_call_api(
-                        endpoint, 'post', request_body, device=device
-                    )
-                raise VeSyncTokenError(resp_dict.get('msg'))
-            if resp_dict.get('msg') is not None:
-                error_info.message = f'{error_info.message} ({resp_dict["msg"]})'
-            raise_api_errors(error_info)
+        resp_dict = LibraryLogger.try_json_loads(response_bytes)
+        if not isinstance(resp_dict, dict):
+            return None, status_code
 
-        return resp_dict, response.status
+        error_info = Helpers.parse_error_code(resp_dict)
+        if error_info.error_type == ErrorTypes.TOKEN_ERROR:
+            self.enabled = False
+            if await self._reauthenticate():
+                return await self.async_call_api(
+                    endpoint, 'post', request_body, device=device
+                )
+            raise VeSyncTokenError(error_info.message)
+        raise_api_errors(error_info)
+
+        return resp_dict, status_code
 
     def _api_base_url_for_current_region(self) -> str:
         """Retrieve the API base url for the current region.
@@ -588,12 +590,12 @@ class VeSync:  # pylint: disable=function-redefined
         if len(self._device_container) == 0:
             logger.warning('No devices to check for firmware updates')
             return False
-        body_fields = [
+        body_fields = tuple(
             field.name
             for field in fields(RequestFirmwareModel)
             if field.default_factory is MISSING and field.default is MISSING
-        ]
-        body = Helpers.get_class_attributes(self, body_fields)
+        )
+        body = Helpers.get_manager_attributes(self, body_fields)
         body['cidList'] = [device.cid for device in self._device_container]
         resp_dict, _ = await self.async_call_api(
             '/cloud/v2/deviceManaged/getFirmwareUpdateInfoList',
