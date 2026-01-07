@@ -19,7 +19,6 @@ from pyvesync.models.bypass_models import (
     RequestBypassV1,
     RequestBypassV2,
 )
-from pyvesync.utils.errors import ErrorCodes
 from pyvesync.utils.helpers import Helpers
 from pyvesync.utils.logs import LibraryLogger
 
@@ -83,17 +82,6 @@ def _get_inner_result(
         return None
 
     if code != 0:
-        error_info = ErrorCodes.get_error_info(code)
-        if inner_result.get('msg') is not None:
-            error_info.message = f'{error_info.message} - {inner_result["msg"]}'
-        LibraryLogger.log_device_return_code(
-            logger,
-            method,
-            device.device_name,
-            device.device_type,
-            error_info,
-        )
-        device.last_response = error_info
         return None
     return inner_result
 

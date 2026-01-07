@@ -496,7 +496,11 @@ class VeSync:  # pylint: disable=function-redefined
                     raise VeSyncAPIStatusCodeError(str(resp_status))
 
                 LibraryLogger.log_api_call(
-                    logger, response=response, request_body=req_dict
+                    logger,
+                    response=response,
+                    response_body=resp_bytes,
+                    request_headers=headers,
+                    request_body=req_dict,
                 )
                 resp_dict, status_code = await self._api_response_wrapper(
                     resp_bytes, resp_status, api, req_dict, device=device
@@ -517,18 +521,18 @@ class VeSync:  # pylint: disable=function-redefined
     ) -> tuple[dict | None, int]:
         """Internal wrapper used by async_call_api."""
         resp_dict = LibraryLogger.try_json_loads(response_bytes)
-        if isinstance(resp_dict, dict):
-            error_info = ErrorCodes.get_error_info(resp_dict.get('code'))
-            if error_info.error_type == ErrorTypes.TOKEN_ERROR:
-                self.enabled = False
-                if await self._reauthenticate():
-                    return await self.async_call_api(
-                        endpoint, 'post', request_body, device=device
-                    )
-                raise VeSyncTokenError(resp_dict.get('msg'))
-            if resp_dict.get('msg') is not None:
-                error_info.message = f'{error_info.message} ({resp_dict["msg"]})'
-            raise_api_errors(error_info)
+        if not isinstance(resp_dict, dict):
+            return None, status_code
+
+        error_info = Helpers.parse_error_code(resp_dict)
+        if error_info.error_type == ErrorTypes.TOKEN_ERROR:
+            self.enabled = False
+            if await self._reauthenticate():
+                return await self.async_call_api(
+                    endpoint, 'post', request_body, device=device
+                )
+            raise VeSyncTokenError(error_info.message)
+        raise_api_errors(error_info)
 
         return resp_dict, status_code
 

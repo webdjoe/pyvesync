@@ -217,23 +217,7 @@ class Helpers:
             )
             return None
 
-        error_code = (
-            r_dict.get('error', {}).get('code')
-            if 'error' in r_dict
-            else r_dict.get('code', -999999999)
-        )
-
-        new_msg = r_dict.get('msg')
-        # Get error codes from nested dictionaries.
-        if error_code == 0:
-            internal_code, internal_msg = cls._get_internal_codes(r_dict)
-            if internal_code != 0:
-                error_code = internal_code
-                new_msg = internal_msg if internal_msg else new_msg
-
-        error_info = ErrorCodes.get_error_info(int(error_code))
-
-        error_info.message = f'{error_info.message} - {new_msg}'
+        error_info = cls.parse_error_code(r_dict)
         if error_info.device_online is False:
             device.state.connection_status = ConnectionStatus.OFFLINE
         else:
@@ -247,7 +231,7 @@ class Helpers:
         )
         device.last_response = error_info
         device.last_response.response_data = r_dict
-        if int(error_code) != 0:
+        if error_info.code != 0:
             return None
         return r_dict
 
@@ -519,7 +503,7 @@ class Helpers:
         return hashlib.md5(string.encode('utf-8')).hexdigest()  # noqa: S324
 
     @staticmethod
-    def _get_internal_codes(response: dict) -> tuple[int, str | None]:  # noqa: C901
+    def parse_error_code(response: dict) -> ResponseInfo:  # noqa: C901
         """Get all error codes from nested dictionary.
 
         Args:
@@ -528,7 +512,7 @@ class Helpers:
         Returns:
             list[int]: List of error codes.
         """
-        error_keys = ['error', 'code']
+        error_keys = ['error', 'code', 'error_code', 'errorCode']
 
         def extract_all_error_codes(
             key: str, var: dict
@@ -546,6 +530,14 @@ class Helpers:
                             yield from extract_all_error_codes(key, item)
 
         errors: list[tuple[int, str | None]] = []
+
+        if 'code' in response:
+            outside_code = response.get('code', '')
+            outside_msg = response.get('msg')
+
+            if str(outside_code) != '0':
+                return ErrorCodes.get_error_info(int(outside_code), outside_msg)
+
         for error_key in error_keys:
             errors.extend(list(extract_all_error_codes(error_key, response)))
         return_code = 0
@@ -554,7 +546,7 @@ class Helpers:
             if code != 0:
                 return_code = code
                 return_msg = msg
-        return return_code, return_msg
+        return ErrorCodes.get_error_info(int(return_code), return_msg)
 
     @staticmethod
     def get_key(
