@@ -14,9 +14,9 @@ turn_off:
     method: bypassV2
     payload:
       data:
-        powerSwitch_1: false
-      method: setProperty
-      subDeviceNo: 0
+        enabled: false
+        id: 0
+      method: setSwitch
       source: APP
     phoneBrand: pyvesync
     phoneOS: Android
@@ -42,9 +42,9 @@ turn_on:
     method: bypassV2
     payload:
       data:
-        powerSwitch_1: true
-      method: setProperty
-      subDeviceNo: 0
+        enabled: true
+        id: 0
+      method: setSwitch
       source: APP
     phoneBrand: pyvesync
     phoneOS: Android
