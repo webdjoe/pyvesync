@@ -590,12 +590,12 @@ class VeSync:  # pylint: disable=function-redefined
         if len(self._device_container) == 0:
             logger.warning('No devices to check for firmware updates')
             return False
-        body_fields = [
+        body_fields = tuple(
             field.name
             for field in fields(RequestFirmwareModel)
             if field.default_factory is MISSING and field.default is MISSING
-        ]
-        body = Helpers.get_class_attributes(self, body_fields)
+            )
+        body = Helpers.get_manager_attributes(self, body_fields)
         body['cidList'] = [device.cid for device in self._device_container]
         resp_dict, _ = await self.async_call_api(
             '/cloud/v2/deviceManaged/getFirmwareUpdateInfoList',

@@ -9,6 +9,7 @@ import time
 from collections.abc import Iterator
 from dataclasses import InitVar, dataclass, field
 from enum import StrEnum
+from functools import lru_cache
 from typing import TYPE_CHECKING, Any, TypeVar
 
 from mashumaro.exceptions import InvalidFieldValue, MissingField, UnserializableField
@@ -27,6 +28,7 @@ from pyvesync.const import (
     USER_TYPE,
     ConnectionStatus,
 )
+from pyvesync.models.base_models import DefaultValues
 from pyvesync.utils.errors import ErrorCodes, ErrorTypes, ResponseInfo
 from pyvesync.utils.logs import LibraryLogger
 
@@ -236,7 +238,7 @@ class Helpers:
         return r_dict
 
     @staticmethod
-    def get_class_attributes(target_class: object, keys: list[str]) -> dict[str, Any]:
+    def get_class_attributes(target_class: object, keys: tuple[str]) -> dict[str, Any]:
         """Find matching attributes, static methods, and class methods from list of keys.
 
         This function is case insensitive and will remove underscores from the keys before
@@ -245,7 +247,7 @@ class Helpers:
 
         Args:
             target_class (object): Class to search for attributes
-            keys (list[str]): List of keys to search for
+            keys (tuple[str]): Tuple of keys to search for
 
         Returns:
             dict[str, Any]: Dictionary of keys and their values from the class
@@ -289,6 +291,55 @@ class Helpers:
                         result[key_val] = attr_val
 
         return result
+
+    @classmethod
+    @lru_cache(maxsize=128, typed=True)
+    def get_defaultvalues_attributes(cls, keys: tuple[str]) -> dict[str, Any]:
+        """Get default values for dataclass attributes.
+
+        This method uses lru_cache to cache results for faster subsequent lookups.
+
+        Args:
+            keys (list[str]): List of attribute names to get default values for.
+
+        Returns:
+            dict[str, Any]: Dictionary of attribute names and their default values.
+        """
+        return cls.get_class_attributes(DefaultValues, keys)
+
+    @classmethod
+    @lru_cache(maxsize=128, typed=True)
+    def get_manager_attributes(cls, manager: VeSync, keys: tuple[str]) -> dict[str, Any]:
+        """Get VeSync manager attributes.
+
+        This method uses lru_cache to cache results for faster subsequent lookups.
+
+        Args:
+            manager (VeSyncManager): Instance of VeSyncManager.
+            keys (list[str]): List of attribute names to get values for.
+
+        Returns:
+            dict[str, Any]: Dictionary of attribute names and their values.
+        """
+        return cls.get_class_attributes(manager, keys)
+
+    @classmethod
+    @lru_cache(maxsize=128, typed=True)
+    def get_device_attributes(
+        cls, device: VeSyncBaseDevice, keys: tuple[str]
+    ) -> dict[str, Any]:
+        """Get VeSync device attributes.
+
+        This method uses lru_cache to cache results for faster subsequent lookups.
+
+        Args:
+            device (VeSyncBaseDevice): Instance of VeSyncBaseDevice.
+            keys (list[str]): List of attribute names to get values for.
+
+        Returns:
+            dict[str, Any]: Dictionary of attribute names and their values.
+        """
+        return cls.get_class_attributes(device, keys)
 
     @staticmethod
     def req_legacy_headers(manager: VeSync) -> dict[str, str]:
@@ -520,7 +571,7 @@ class Helpers:
             """Find all error code keys in nested dictionary."""
             if hasattr(var, 'items'):
                 for k, v in var.items():
-                    if k == key and int(v) != 0:
+                    if k == key and isinstance(v, int) and v != 0:
                         msg = var.get('msg') or var.get('result', {}).get('msg')
                         yield v, msg
                     if isinstance(v, dict):

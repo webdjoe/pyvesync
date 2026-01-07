@@ -1,3 +1,27 @@
+set_auto_mode:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 5.6.60
+    cid: LV-PUR131S-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: LV-PUR131S-CID
+    method: airPurifierRunModeCtl
+    mode: auto
+    phoneBrand: pyvesync
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+    userCountryCode: US
+    uuid: LV-PUR131S-UUID
+  method: post
+  url: /cloud/v1/deviceManaged/airPurifierRunModeCtl
 set_fan_speed:
   headers:
     Content-Type: application/json; charset=UTF-8
@@ -94,6 +118,30 @@ turn_off:
     uuid: LV-PUR131S-UUID
   method: post
   url: /cloud/v1/deviceManaged/airPurifierPowerSwitchCtl
+turn_off_display:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 5.6.60
+    cid: LV-PUR131S-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: LV-PUR131S-CID
+    method: airPurifierScreenCtl
+    phoneBrand: pyvesync
+    phoneOS: Android
+    status: 'off'
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+    userCountryCode: US
+    uuid: LV-PUR131S-UUID
+  method: post
+  url: /cloud/v1/deviceManaged/airPurifierScreenCtl
 turn_on:
   headers:
     Content-Type: application/json; charset=UTF-8
@@ -118,6 +166,30 @@ turn_on:
     uuid: LV-PUR131S-UUID
   method: post
   url: /cloud/v1/deviceManaged/airPurifierPowerSwitchCtl
+turn_on_display:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 5.6.60
+    cid: LV-PUR131S-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: LV-PUR131S-CID
+    method: airPurifierScreenCtl
+    phoneBrand: pyvesync
+    phoneOS: Android
+    status: 'on'
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+    userCountryCode: US
+    uuid: LV-PUR131S-UUID
+  method: post
+  url: /cloud/v1/deviceManaged/airPurifierScreenCtl
 update:
   headers:
     Content-Type: application/json; charset=UTF-8

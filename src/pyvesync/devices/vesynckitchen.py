@@ -35,7 +35,6 @@ from typing_extensions import deprecated
 
 from pyvesync.base_devices import FryerState, VeSyncFryer
 from pyvesync.const import AIRFRYER_PID_MAP, ConnectionStatus, DeviceStatus
-from pyvesync.models.base_models import DefaultValues
 from pyvesync.utils.errors import VeSyncError
 from pyvesync.utils.helpers import Helpers
 from pyvesync.utils.logs import LibraryLogger
@@ -389,7 +388,7 @@ class VeSyncAirFryer158(VeSyncFryer):
             )
             raise VeSyncError(msg)
         self.pid = AIRFRYER_PID_MAP[self.config_module]
-        self.request_keys = [
+        self.request_keys = (
             'acceptLanguage',
             'accountID',
             'appVersion',
@@ -406,7 +405,7 @@ class VeSyncAirFryer158(VeSyncFryer):
             'debugMode',
             'uuid',
             'pid',
-        ]
+            )
 
     @deprecated('There is no on/off function for Air Fryers.')
     async def toggle_switch(self, toggle: bool | None = None) -> bool:
@@ -419,9 +418,9 @@ class VeSyncAirFryer158(VeSyncFryer):
         method: str | None = None,
     ) -> dict:
         """Return body of api calls."""
-        req_dict = Helpers.get_class_attributes(DefaultValues, self.request_keys)
-        req_dict.update(Helpers.get_class_attributes(self.manager, self.request_keys))
-        req_dict.update(Helpers.get_class_attributes(self, self.request_keys))
+        req_dict = Helpers.get_defaultvalues_attributes(self.request_keys)
+        req_dict.update(Helpers.get_manager_attributes(self.manager, self.request_keys))
+        req_dict.update(Helpers.get_device_attributes(self, self.request_keys))
         req_dict['method'] = method or 'bypass'
         req_dict['jsonCmd'] = json_cmd or {}
         return req_dict

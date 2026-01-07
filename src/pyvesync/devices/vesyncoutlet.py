@@ -17,7 +17,7 @@ from pyvesync.const import (
     DeviceStatus,
     EnergyIntervals,
 )
-from pyvesync.models.base_models import DefaultValues, RequestHeaders
+from pyvesync.models.base_models import RequestHeaders
 from pyvesync.models.bypass_models import (
     BypassV2InnerResult,
     RequestBypassV1,
@@ -758,9 +758,9 @@ class VeSyncOutletWHOGPlug(BypassV2Mixin, VeSyncOutlet):
             bytes: The response from the API request.
         """
         keys = BypassV1Mixin.request_keys
-        body = Helpers.get_class_attributes(DefaultValues, keys)
-        body.update(Helpers.get_class_attributes(self.manager, keys))
-        body.update(Helpers.get_class_attributes(self, keys))
+        body = Helpers.get_defaultvalues_attributes(keys)
+        body.update(Helpers.get_manager_attributes(self.manager, keys))
+        body.update(Helpers.get_device_attributes(self, keys))
         body['method'] = method
         body.update(update_dict or {})
         model_instance = request_model.from_dict(body)

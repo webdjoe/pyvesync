@@ -7,7 +7,6 @@ import logging
 from dataclasses import fields
 from typing import TYPE_CHECKING
 
-from pyvesync.models.base_models import DefaultValues
 from pyvesync.models.home_models import (
     IntResponseHomeListModel,
     IntResponseHomeResultModel,
@@ -58,9 +57,9 @@ class VeSyncHome:
         manager: VeSync, request_model: type[RequestBaseModel]
     ) -> RequestBaseModel:
         """Build the request model for home data."""
-        req_fields = [field.name for field in fields(request_model) if field.init]
-        body = Helpers.get_class_attributes(DefaultValues, req_fields)
-        body.update(Helpers.get_class_attributes(manager, req_fields))
+        req_fields = tuple(field.name for field in fields(request_model) if field.init)
+        body = Helpers.get_defaultvalues_attributes(req_fields)
+        body.update(Helpers.get_manager_attributes(manager, req_fields))
         return request_model(**body)
 
     @classmethod
@@ -148,7 +147,7 @@ class VeSyncRoom:
         manager: VeSync, request_model: type[RequestBaseModel]
     ) -> RequestBaseModel:
         """Build the request model for room data."""
-        req_fields = [field.name for field in fields(request_model) if field.init]
-        body = Helpers.get_class_attributes(DefaultValues, req_fields)
-        body.update(Helpers.get_class_attributes(manager, req_fields))
+        req_fields = tuple(field.name for field in fields(request_model) if field.init)
+        body = Helpers.get_defaultvalues_attributes(req_fields)
+        body.update(Helpers.get_manager_attributes(manager, req_fields))
         return request_model(**body)
