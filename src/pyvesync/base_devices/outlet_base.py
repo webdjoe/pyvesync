@@ -204,7 +204,7 @@ class VeSyncOutlet(VeSyncBaseToggleDevice):
             'debugMode',
             'homeTimeZone',
             'uuid',
-            )
+        )
 
         body = Helpers.get_defaultvalues_attributes(request_keys)
         body.update(Helpers.get_manager_attributes(self.manager, request_keys))

@@ -594,7 +594,7 @@ class VeSync:  # pylint: disable=function-redefined
             field.name
             for field in fields(RequestFirmwareModel)
             if field.default_factory is MISSING and field.default is MISSING
-            )
+        )
         body = Helpers.get_manager_attributes(self, body_fields)
         body['cidList'] = [device.cid for device in self._device_container]
         resp_dict, _ = await self.async_call_api(

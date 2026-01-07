@@ -405,7 +405,7 @@ class VeSyncAirFryer158(VeSyncFryer):
             'debugMode',
             'uuid',
             'pid',
-            )
+        )
 
     @deprecated('There is no on/off function for Air Fryers.')
     async def toggle_switch(self, toggle: bool | None = None) -> bool:

@@ -729,7 +729,7 @@ class VeSyncBulbValcenoA19MC(VeSyncBulb):
             'timeZone',
             'token',
             'traceId',
-            )
+        )
 
     def _payload_base(self) -> bulb_models.ValcenoStatusPayload:
         """Return the payload base for the set status request.
