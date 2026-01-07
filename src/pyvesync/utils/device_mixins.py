@@ -10,16 +10,14 @@ devices that use the `/cloud/v2/deviceManaged/bypassV2` endpoint, while the
 from __future__ import annotations
 
 from logging import Logger
-from typing import TYPE_CHECKING, ClassVar, TypeVar
+from typing import TYPE_CHECKING, TypeVar
 
 from mashumaro.mixins.orjson import DataClassORJSONMixin
 
-from pyvesync.models.base_models import DefaultValues
 from pyvesync.models.bypass_models import (
     RequestBypassV1,
     RequestBypassV2,
 )
-from pyvesync.utils.errors import ErrorCodes
 from pyvesync.utils.helpers import Helpers
 from pyvesync.utils.logs import LibraryLogger
 
@@ -83,17 +81,6 @@ def _get_inner_result(
         return None
 
     if code != 0:
-        error_info = ErrorCodes.get_error_info(code)
-        if inner_result.get('msg') is not None:
-            error_info.message = f'{error_info.message} - {inner_result["msg"]}'
-        LibraryLogger.log_device_return_code(
-            logger,
-            method,
-            device.device_name,
-            device.device_type,
-            error_info,
-        )
-        device.last_response = error_info
         return None
     return inner_result
 
@@ -141,7 +128,7 @@ class BypassV2Mixin:
         manager: VeSync
 
     __slots__ = ()
-    request_keys: ClassVar[list[str]] = [
+    request_keys: tuple[str, ...] = (
         'acceptLanguage',
         'appVersion',
         'phoneBrand',
@@ -156,7 +143,7 @@ class BypassV2Mixin:
         'userCountryCode',
         'configModel',
         'deviceId',
-    ]
+    )
 
     def _build_request(
         self,
@@ -173,9 +160,10 @@ class BypassV2Mixin:
             method (str): The method to use in the outer body, defaults to bypassV2.
             payload_update (dict | None): Additional keys to add to the payload.
         """
-        body = Helpers.get_class_attributes(DefaultValues, self.request_keys)
-        body.update(Helpers.get_class_attributes(self.manager, self.request_keys))
-        body.update(Helpers.get_class_attributes(self, self.request_keys))
+        body = {}
+        body = Helpers.get_defaultvalues_attributes(self.request_keys).copy()
+        body.update(Helpers.get_manager_attributes(self.manager, self.request_keys))
+        body.update(Helpers.get_device_attributes(self, self.request_keys))
         body['method'] = method
         body['payload'] = {'method': payload_method, 'source': 'APP', 'data': data or {}}
         body['payload'] |= payload_update or {}
@@ -225,7 +213,7 @@ class BypassV1Mixin:
         manager: VeSync
 
     __slots__ = ()
-    request_keys: ClassVar[list[str]] = [
+    request_keys: tuple[str, ...] = (
         'acceptLanguage',
         'appVersion',
         'phoneBrand',
@@ -241,7 +229,7 @@ class BypassV1Mixin:
         'uuid',
         'configModel',
         'deviceId',
-    ]
+    )
 
     def _build_request(
         self,
@@ -260,9 +248,9 @@ class BypassV1Mixin:
             RequestBypassV1: The request body for the Bypass V1 endpoint, the correct
             model is determined from the RequestBypassV1 discriminator.
         """
-        body = Helpers.get_class_attributes(DefaultValues, self.request_keys)
-        body.update(Helpers.get_class_attributes(self.manager, self.request_keys))
-        body.update(Helpers.get_class_attributes(self, self.request_keys))
+        body = Helpers.get_defaultvalues_attributes(self.request_keys).copy()
+        body.update(Helpers.get_manager_attributes(self.manager, self.request_keys))
+        body.update(Helpers.get_device_attributes(self, self.request_keys))
         body['method'] = method
         body.update(update_dict or {})
         return request_model.from_dict(body)

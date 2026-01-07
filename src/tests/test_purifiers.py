@@ -98,9 +98,17 @@ class TestAirPurifiers(TestBase):
     ]
     # TODO: Add timer tests
     device_methods = {
-        "Core300S": [["set_auto_mode"], ["turn_on_display"], ["turn_off_display"]],
-        "Core400S": [["set_auto_mode"], ["turn_on_display"], ["turn_off_display"]],
-        "Core600S": [["set_auto_mode"], ["turn_on_display"], ["turn_off_display"]],
+        "Core200S": [["set_sleep_mode"],],
+        "Core300S": [["set_auto_mode"], ['set_sleep_mode'], ["turn_on_display"], ["turn_off_display"]],
+        "Core400S": [["set_auto_mode"], ['set_sleep_mode'], ["turn_on_display"], ["turn_off_display"]],
+        "Core600S": [["set_auto_mode"], ['set_sleep_mode'], ["turn_on_display"], ["turn_off_display"]],
+        "LV-PUR131S": [["set_auto_mode"], ['set_sleep_mode'], ["turn_on_display"], ["turn_off_display"]],
+        "LV-RH131S": [["set_auto_mode"], ['set_sleep_mode'], ["turn_on_display"], ["turn_off_display"]],
+        "LAP-V102S": [["set_auto_mode"], ['set_sleep_mode'], ['set_pet_mode'], ["turn_on_display"], ["turn_off_display"]],
+        "LAP-V201S": [["set_auto_mode"], ['set_sleep_mode'], ['set_pet_mode'], ["turn_on_display"], ["turn_off_display"]],
+        "EL551S": [["set_auto_mode"], ["set_sleep_mode"], ["set_turbo_mode"], ["turn_on_display"], ["turn_off_display"]],
+        "LAP-B851S-WUS": [["set_auto_mode"], ['set_sleep_mode'], ["turn_on_display"], ["turn_off_display"]],
+
     }
 
     def test_details(self, setup_entry, method):
@@ -203,23 +211,48 @@ class TestAirPurifiers(TestBase):
         assert isinstance(fan_obj, VeSyncPurifier)
 
         # Get method from device object
-        method_call = getattr(fan_obj, method[0])
+        method_call = getattr(fan_obj, method_name)
 
         # Ensure method runs based on device configuration
-        if method[0] == "turn_on":
+        if method_name == "turn_on":
             fan_obj.state.device_status = const.DeviceStatus.OFF
-        elif method[0] == "turn_off":
+        elif method_name == "turn_off":
             fan_obj.state.device_status = const.DeviceStatus.ON
-        elif method[0] == "change_fan_speed":
+        elif method_name == "set_fan_speed":
             fan_obj.state.mode = const.PurifierModes.MANUAL
-        # elif method[0] == 'clear_timer':
-        #     fan_obj.timer = call_json_fans.FAN_TIMER
+        elif method_name in ["set_auto_mode", "set_sleep_mode", "set_pet_mode", "set_turbo_mode"]:
+            fan_obj.state.mode = const.PurifierModes.MANUAL
+        elif method_name == "set_manual_mode":
+            fan_obj.state.mode = const.PurifierModes.AUTO
+        elif method_name in ["turn_on_display"]:
+            fan_obj.state.display_set_status = const.DeviceStatus.OFF
+        elif method_name in ["turn_off_display"]:
+            fan_obj.state.display_set_status = const.DeviceStatus.ON
 
         # Call method with kwargs if defined
         if method_kwargs:
             self.run_in_loop(method_call, **method_kwargs)
         else:
             self.run_in_loop(method_call)
+
+        if method_name == "turn_on":
+            assert fan_obj.state.device_status == const.DeviceStatus.ON
+        elif method_name == "turn_off":
+            assert fan_obj.state.device_status == const.DeviceStatus.OFF
+        elif method_name == "set_fan_speed":
+            assert fan_obj.state.fan_level == method_kwargs["speed"]
+        elif method_name in ["set_auto_mode"]:
+            assert fan_obj.state.mode == const.PurifierModes.AUTO
+        elif method_name in ["set_sleep_mode"]:
+            assert fan_obj.state.mode == const.PurifierModes.SLEEP
+        elif method_name in ["set_pet_mode"]:
+            assert fan_obj.state.mode == const.PurifierModes.PET
+        elif method_name in ["set_turbo_mode"]:
+            assert fan_obj.state.mode == const.PurifierModes.TURBO
+        elif method_name in ["turn_on_display"]:
+            assert fan_obj.state.display_set_status == const.DeviceStatus.ON
+        elif method_name in ["turn_off_display"]:
+            assert fan_obj.state.display_set_status == const.DeviceStatus.OFF
 
         # Parse arguments from mock_api call into a dictionary
         all_kwargs = parse_args(self.mock_api)

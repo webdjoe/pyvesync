@@ -9,6 +9,7 @@ import time
 from collections.abc import Iterator
 from dataclasses import InitVar, dataclass, field
 from enum import StrEnum
+from functools import lru_cache
 from typing import TYPE_CHECKING, Any, TypeVar
 
 from mashumaro.exceptions import InvalidFieldValue, MissingField, UnserializableField
@@ -27,6 +28,7 @@ from pyvesync.const import (
     USER_TYPE,
     ConnectionStatus,
 )
+from pyvesync.models.base_models import DefaultValues
 from pyvesync.utils.errors import ErrorCodes, ErrorTypes, ResponseInfo
 from pyvesync.utils.logs import LibraryLogger
 
@@ -217,23 +219,7 @@ class Helpers:
             )
             return None
 
-        error_code = (
-            r_dict.get('error', {}).get('code')
-            if 'error' in r_dict
-            else r_dict.get('code', -999999999)
-        )
-
-        new_msg = r_dict.get('msg')
-        # Get error codes from nested dictionaries.
-        if error_code == 0:
-            internal_code, internal_msg = cls._get_internal_codes(r_dict)
-            if internal_code != 0:
-                error_code = internal_code
-                new_msg = internal_msg if internal_msg else new_msg
-
-        error_info = ErrorCodes.get_error_info(int(error_code))
-
-        error_info.message = f'{error_info.message} - {new_msg}'
+        error_info = cls.parse_error_code(r_dict)
         if error_info.device_online is False:
             device.state.connection_status = ConnectionStatus.OFFLINE
         else:
@@ -247,12 +233,12 @@ class Helpers:
         )
         device.last_response = error_info
         device.last_response.response_data = r_dict
-        if int(error_code) != 0:
+        if error_info.code != 0:
             return None
         return r_dict
 
     @staticmethod
-    def get_class_attributes(target_class: object, keys: list[str]) -> dict[str, Any]:
+    def get_class_attributes(target_class: object, keys: tuple[str]) -> dict[str, Any]:
         """Find matching attributes, static methods, and class methods from list of keys.
 
         This function is case insensitive and will remove underscores from the keys before
@@ -261,7 +247,7 @@ class Helpers:
 
         Args:
             target_class (object): Class to search for attributes
-            keys (list[str]): List of keys to search for
+            keys (tuple[str]): Tuple of keys to search for
 
         Returns:
             dict[str, Any]: Dictionary of keys and their values from the class
@@ -305,6 +291,55 @@ class Helpers:
                         result[key_val] = attr_val
 
         return result
+
+    @classmethod
+    @lru_cache(maxsize=128, typed=True)
+    def get_defaultvalues_attributes(cls, keys: tuple[str]) -> dict[str, Any]:
+        """Get default values for dataclass attributes.
+
+        This method uses lru_cache to cache results for faster subsequent lookups.
+
+        Args:
+            keys (list[str]): List of attribute names to get default values for.
+
+        Returns:
+            dict[str, Any]: Dictionary of attribute names and their default values.
+        """
+        return cls.get_class_attributes(DefaultValues, keys)
+
+    @classmethod
+    @lru_cache(maxsize=128, typed=True)
+    def get_manager_attributes(cls, manager: VeSync, keys: tuple[str]) -> dict[str, Any]:
+        """Get VeSync manager attributes.
+
+        This method uses lru_cache to cache results for faster subsequent lookups.
+
+        Args:
+            manager (VeSyncManager): Instance of VeSyncManager.
+            keys (list[str]): List of attribute names to get values for.
+
+        Returns:
+            dict[str, Any]: Dictionary of attribute names and their values.
+        """
+        return cls.get_class_attributes(manager, keys)
+
+    @classmethod
+    @lru_cache(maxsize=128, typed=True)
+    def get_device_attributes(
+        cls, device: VeSyncBaseDevice, keys: tuple[str]
+    ) -> dict[str, Any]:
+        """Get VeSync device attributes.
+
+        This method uses lru_cache to cache results for faster subsequent lookups.
+
+        Args:
+            device (VeSyncBaseDevice): Instance of VeSyncBaseDevice.
+            keys (list[str]): List of attribute names to get values for.
+
+        Returns:
+            dict[str, Any]: Dictionary of attribute names and their values.
+        """
+        return cls.get_class_attributes(device, keys)
 
     @staticmethod
     def req_legacy_headers(manager: VeSync) -> dict[str, str]:
@@ -519,7 +554,7 @@ class Helpers:
         return hashlib.md5(string.encode('utf-8')).hexdigest()  # noqa: S324
 
     @staticmethod
-    def _get_internal_codes(response: dict) -> tuple[int, str | None]:  # noqa: C901
+    def parse_error_code(response: dict) -> ResponseInfo:  # noqa: C901
         """Get all error codes from nested dictionary.
 
         Args:
@@ -528,7 +563,7 @@ class Helpers:
         Returns:
             list[int]: List of error codes.
         """
-        error_keys = ['error', 'code']
+        error_keys = ['error', 'code', 'error_code', 'errorCode']
 
         def extract_all_error_codes(
             key: str, var: dict
@@ -536,7 +571,7 @@ class Helpers:
             """Find all error code keys in nested dictionary."""
             if hasattr(var, 'items'):
                 for k, v in var.items():
-                    if k == key and int(v) != 0:
+                    if k == key and isinstance(v, int) and v != 0:
                         msg = var.get('msg') or var.get('result', {}).get('msg')
                         yield v, msg
                     if isinstance(v, dict):
@@ -546,6 +581,14 @@ class Helpers:
                             yield from extract_all_error_codes(key, item)
 
         errors: list[tuple[int, str | None]] = []
+
+        if 'code' in response:
+            outside_code = response.get('code', '')
+            outside_msg = response.get('msg')
+
+            if str(outside_code) != '0':
+                return ErrorCodes.get_error_info(int(outside_code), outside_msg)
+
         for error_key in error_keys:
             errors.extend(list(extract_all_error_codes(error_key, response)))
         return_code = 0
@@ -554,7 +597,7 @@ class Helpers:
             if code != 0:
                 return_code = code
                 return_msg = msg
-        return return_code, return_msg
+        return ErrorCodes.get_error_info(int(return_code), return_msg)
 
     @staticmethod
     def get_key(

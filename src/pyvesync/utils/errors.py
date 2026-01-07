@@ -70,7 +70,7 @@ class ResponseInfo(DataClassORJSONMixin):
     critical_error: bool = False
     operational_error: bool = False  # Device connected but API error
     device_online: bool = True  # Defaults to connected
-    code: str | int | None = None
+    code: int | None = None
     response_data: dict | None = None  # Response data from API
 
 
@@ -769,14 +769,17 @@ class ErrorCodes:
             else:
                 error_code = int(error_int / 1000) * 1000
                 error_info = cls.errors[str(error_code)]
-            if msg:
-                error_info = replace(error_info)
+
+            error_info = replace(error_info)
+            if msg is not None:
                 error_info.message = f'{error_info.message} - {msg}'
+            error_info.code = error_int
+
         except (ValueError, TypeError, KeyError):
             error_info = ResponseInfo(
                 'UNKNOWN', ErrorTypes.UNKNOWN_ERROR, 'Unknown error'
             )
-        error_info.code = error_code
+
         return error_info
 
     @classmethod
