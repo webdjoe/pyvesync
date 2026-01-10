@@ -90,7 +90,7 @@ class FanState(DeviceState):
         self.mode: str | None = None
         self.fan_level: int | None = None
         self.fan_set_level: int | None = None
-        self.child_lock: str | None = None
+        self.child_lock: bool | None = None
         self.humidity: float | None = None
         self.temperature: float | None = None
         self.thermal_comfort: int | None = None
