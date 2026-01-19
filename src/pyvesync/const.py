@@ -331,7 +331,7 @@ class TemperatureUnits(StrEnum):
 
     @property
     def code(self) -> str:
-        """Return the code for the temperature unit."""
+        """Return the code for the temperature unit 'f' or 'c'."""
         return self.value
 
     @property
@@ -761,18 +761,27 @@ CUSTOM_COOK_MODE = 'custom'
 class AirFryerPresetRecipe:
     """Preset recipe for VeSync Air Fryers.
 
+    Set preheat_time to enable preheat mode.
+
     Attributes:
         recipe_id (int): Recipe ID.
         recipe_type (int): Recipe type.
-        name (str): Recipe name.
+        recipe_name (str): Recipe name.
+        cook_mode (str): Cooking mode.
+        target_temp (int): Target temperature.
+        temp_unit (str): Temperature unit ('f' or 'c').
+        cook_time (int): Cooking time in seconds.
+        preheat_time (int | None): Preheating time in seconds, if any.
     """
 
+    recipe_name: str
     cook_mode: str
     recipe_id: int
     recipe_type: int
     target_temp: int
     temp_unit: str
     cook_time: int
+    preheat_time: int | None = None
 
 
 class AirFryerPresets:
@@ -783,25 +792,28 @@ class AirFryerPresets:
     """
     custom: AirFryerPresetRecipe = AirFryerPresetRecipe(
         cook_mode='Custom',
+        recipe_name='Manual Cook',
         recipe_id=1,
         recipe_type=3,
         target_temp=350,
         temp_unit='f',
-        cook_time=20,
+        cook_time=10*60,
     )
     air_fry: AirFryerPresetRecipe = AirFryerPresetRecipe(
         cook_mode='AirFry',
-        recipe_id=4,
+        recipe_name='AirFry',
+        recipe_id=14,
         recipe_type=3,
         target_temp=400,
         temp_unit='f',
-        cook_time=25,
+        cook_time=10*60,
     )
 
 
 AIRFRYER_PRESET_MAP = {
     'custom': AirFryerPresetRecipe(
         cook_mode='Custom',
+        recipe_name='Manual Cook',
         recipe_id=1,
         recipe_type=3,
         target_temp=350,
@@ -810,6 +822,7 @@ AIRFRYER_PRESET_MAP = {
     ),
     'airfry': AirFryerPresetRecipe(
         cook_mode='AirFry',
+        recipe_name='AirFry',
         recipe_id=4,
         recipe_type=3,
         target_temp=400,
@@ -876,17 +889,17 @@ class AirFryerCookStatus(StrEnum):
     """
 
     COOKING = 'cooking'
-    COOK_STOP = 'cook_stop'
-    COOK_END = 'cook_end'
-    PULL_OUT = 'pull_out'
+    COOK_STOP = 'cookStop'
+    COOK_END = 'cookEnd'
+    PULL_OUT = 'pullOut'
     PAUSED = 'paused'
     COMPLETED = 'completed'
     HEATING = 'heating'
     STOPPED = 'stopped'
     UNKNOWN = 'unknown'
     STANDBY = 'standby'
-    PREHEAT_END = 'preheat_end'
-    PREHEAT_STOP = 'preheat_stop'
+    PREHEAT_END = 'preheatEnd'
+    PREHEAT_STOP = 'preheatStop'
 
 
 # Thermostat Constants

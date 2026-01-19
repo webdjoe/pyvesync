@@ -62,6 +62,7 @@ class VeSync:  # pylint: disable=function-redefined
         'enabled',
         'in_process',
         'language',
+        'measure_unit',
         'session',
         'time_zone',
     )
@@ -142,6 +143,7 @@ class VeSync:  # pylint: disable=function-redefined
         self.language: str = 'en'
         self.enabled = False
         self.in_process = False
+        self.measure_unit: str | None = None
         self._device_container: DeviceContainer = DeviceContainer()
 
         # Initialize authentication manager
