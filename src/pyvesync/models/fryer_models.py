@@ -8,7 +8,11 @@ from typing import Annotated
 from mashumaro.types import Discriminator
 
 from pyvesync.models.base_models import RequestBaseModel, ResponseBaseModel
-from pyvesync.models.bypass_models import BypassV1Result, RequestBypassV1
+from pyvesync.models.bypass_models import (
+    BypassV1Result,
+    BypassV2InnerResult,
+    RequestBypassV1,
+)
 
 
 @dataclass
@@ -122,6 +126,65 @@ class Fryer158PreheatModeStart(Fryer158PreheatModeBase):
     customRecipe: str = 'Manual'
     recipeId: int = 1
     recipeType: int = 3
+
+
+@dataclass
+class FryerTurboBlazeDetailResult(BypassV2InnerResult):
+    """Result model for TurboBlaze air fryer details."""
+
+    stepArray: list[FryerTurboBlazeStepItem]
+    cookMode: str
+    tempUnit: str
+    stepIndex: int
+    cookStatus: str
+    preheatSetTime: int
+    preheatLastTime: int
+    preheatEndTime: int
+    preheatTemp: int
+    startTime: int
+    totalTimeRemaining: int
+    currentTemp: int
+    shakeStatus: int
+
+
+@dataclass
+class FryerTurboBlazeStepItem(ResponseBaseModel):
+    """Data model for TurboBlaze air fryer cooking steps."""
+
+    cookSetTime: int
+    cookTemp: int
+    mode: str
+    cookLastTime: int
+    shakeTime: int
+    cookEndTime: int
+    recipeName: str
+    recipeId: int
+    recipeType: int
+
+
+@dataclass
+class FryerTurboBlazeRequestData(RequestBaseModel):
+    """Request model for TurboBlaze air fryer cooking commands."""
+
+    accountId: str
+    hasPreheat: int
+    hasWarm: bool
+    readyStart: bool
+    recipeId: int
+    recipeName: str
+    recipeType: int
+    tempUnit: str
+    startAct: list[FryerTurboBlazeStartActItem]
+
+
+@dataclass
+class FryerTurboBlazeStartActItem(RequestBaseModel):
+    """Data model for TurboBlaze air fryer startAct items."""
+
+    cookSetTime: int
+    cookTemp: int
+    preheatTemp: int = 0
+    shakeTime: int = 0
 
 
 # a = {

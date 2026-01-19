@@ -1097,11 +1097,30 @@ air_fryer_modules: list[AirFryerMap] = [
         features=[AirFryerFeatures.PREHEAT, AirFryerFeatures.RESUMABLE],
         cook_modes={
             AirFryerCookModes.AIRFRY: 'custom',
-            AirFryerCookModes.PREHEAT: 'preheat',
         },
         default_preset=AirFryerPresets.custom,
-        default_cook_mode=AirFryerCookModes.CUSTOM
+        default_cook_mode=AirFryerCookModes.CUSTOM,
+        time_units=TimeUnits.MINUTES,
     ),
+    AirFryerMap(
+        class_name='VeSyncTurboBlazeFryer',
+        module=vesynckitchen,
+        dev_types=['CAF-DC601S-WUSR', 'CAF-DC601S-WUS'],
+        setup_entry='CAF-DC601S',
+        device_alias='TurboBlaze Air Fryer',
+        model_display='CAF-DC601S Series',
+        model_name='TurboBlaze 6 Qt. Air Fryer',
+        temperature_step_f=5,
+        features=[AirFryerFeatures.PREHEAT, AirFryerFeatures.RESUMABLE],
+        cook_modes={
+            AirFryerCookModes.AIRFRY: 'AirFry',
+        },
+        default_cook_mode=AirFryerCookModes.AIRFRY,
+        default_preset=AirFryerPresets.air_fry,
+        time_units=TimeUnits.SECONDS,
+        temperature_range_f=(90, 450),
+        temperature_range_c=(30, 230),
+    )
 ]
 """List of ['AirFryerMap'][pyvesync.device_map.AirFryerMap] configuration
 for air fryer devices."""

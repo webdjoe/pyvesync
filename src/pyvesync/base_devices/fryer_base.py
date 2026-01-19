@@ -152,6 +152,7 @@ class FryerState(DeviceState):
             AirFryerCookStatus.COOK_STOP,
         ]:
             return self.cook_last_time
+
         if self.cook_last_time is not None and self.last_timestamp is not None:
             return max(
                 0,
@@ -180,15 +181,17 @@ class FryerState(DeviceState):
         self.last_timestamp = None
         self._clear_preheat()
 
-    def set_state(  # noqa: PLR0913
+    def set_state(  # noqa: PLR0913, C901
         self,
         *,
         cook_status: str,
         cook_time: int | None = None,
+        cook_last_time: int | None = None,
         cook_temp: int | None = None,
         temp_unit: str | None = None,
         cook_mode: str | None = None,
         preheat_time: int | None = None,
+        preheat_last_time: int | None = None,
         current_temp: int | None = None,
     ) -> None:
         """Set the cook state parameters.
@@ -196,31 +199,42 @@ class FryerState(DeviceState):
         Args:
             cook_status (str): The cooking status.
             cook_time (int | None): The cooking time in seconds.
+            cook_last_time (int | None): The last cooking time in seconds.
             cook_temp (int | None): The cooking temperature.
             temp_unit (str | None): The temperature units (F or C).
             cook_mode (str | None): The cooking mode.
             preheat_time (int | None): The preheating time in seconds.
+            preheat_last_time (int | None): The remaining preheat time in seconds.
             current_temp (int | None): The current temperature.
         """
         if cook_status == AirFryerCookStatus.STANDBY:
             self.set_standby()
             return
-        self.cook_status = cook_status
-        self.cook_set_time = cook_time
-        self.cook_set_temp = cook_temp
-        self.cook_mode = cook_mode
-        self.current_temp = current_temp
+
+        self.preheat_set_time = preheat_time
+        self.preheat_last_time = preheat_last_time
+
+        if cook_status is not None:
+            self.cook_status = AirFryerCookStatus(cook_status)
+        if cook_time is not None:
+            self.cook_set_time = cook_time
+        if cook_temp is not None:
+            self.cook_set_temp = cook_temp
+        if cook_mode is not None:
+            self.cook_mode = cook_mode
+        if current_temp is not None:
+            self.current_temp = current_temp
         if temp_unit is not None:
-            self.device.temp_unit = temp_unit
+            self.device.temp_unit = TemperatureUnits.from_string(temp_unit)
         if preheat_time is not None:
             self.preheat_set_time = preheat_time
+        if cook_last_time is not None:
+            self.cook_last_time = cook_last_time
         if cook_status in [
             AirFryerCookStatus.COOKING,
             AirFryerCookStatus.HEATING,
         ]:
             self.last_timestamp = int(time.time())
-        else:
-            self.last_timestamp = None
 
 
 class VeSyncFryer(VeSyncBaseDevice):
@@ -237,6 +251,8 @@ class VeSyncFryer(VeSyncBaseDevice):
         'state_chamber_1',
         'state_chamber_2',
         'sync_chambers',
+        'temperature_interval',
+        'time_units',
     )
 
     def __init__(
@@ -262,29 +278,76 @@ class VeSyncFryer(VeSyncBaseDevice):
         self.state_chamber_1: FryerState = FryerState(self, details, feature_map)
         self.state_chamber_2: FryerState = FryerState(self, details, feature_map)
         self.sync_chambers: bool = False
-        self._temp_unit: TemperatureUnits | None = None
         self.min_temp_f: int = feature_map.temperature_range_f[0]
         self.max_temp_f: int = feature_map.temperature_range_f[1]
         self.min_temp_c: int = feature_map.temperature_range_c[0]
         self.max_temp_c: int = feature_map.temperature_range_c[1]
+        self.temperature_interval: int = feature_map.temperature_step_f
+        self.time_units: TimeUnits = feature_map.time_units
+
+        # attempt to set temp unit from country code before first update
+        self._temp_unit: TemperatureUnits = TemperatureUnits.CELSIUS
+        if self.manager.measure_unit and self.manager.measure_unit.lower() == 'imperial':
+            self._temp_unit = TemperatureUnits.FAHRENHEIT
 
         # Use single state attribute if not dual chamber fryer for compatibility
         if AirFryerFeatures.DUAL_CHAMBER not in self.features:
             self.state = self.state_chamber_1
 
     @property
-    def temp_unit(self) -> TemperatureUnits | None:
+    def temp_unit(self) -> TemperatureUnits:
         """Return the temperature unit (F or C)."""
         return self._temp_unit
 
     @temp_unit.setter
-    def temp_unit(self, value: str) -> None:
+    def temp_unit(self, value: TemperatureUnits) -> None:
         """Set the temperature unit.
 
         Args:
-            value (str): The temperature unit (F or C).
+            value (TemperatureUnits): The temperature unit (F or C).
         """
         self._temp_unit = TemperatureUnits.from_string(value)
+
+    def validate_temperature(self, temperature: int) -> bool:
+        """Validate the temperature is within the allowed range.
+
+        Args:
+            temperature (int): The temperature to validate.
+
+        Returns:
+            bool: True if the temperature is valid, False otherwise.
+        """
+        if self.temp_unit == TemperatureUnits.FAHRENHEIT:
+            return self.min_temp_f <= temperature <= self.max_temp_f
+        return self.min_temp_c <= temperature <= self.max_temp_c
+
+    def round_temperature(self, temperature: int) -> int:
+        """Round the temperature to the nearest valid step.
+
+        Args:
+            temperature (int): The temperature to round.
+
+        Returns:
+            int: The rounded temperature.
+        """
+        if self.temp_unit == TemperatureUnits.FAHRENHEIT:
+            step: float = self.temperature_interval
+            return int(round(temperature / step) * step)
+        step = self.temperature_interval * 5 / 9
+        return int(round(temperature / step) * step)
+
+    def convert_time(self, time_in_seconds: int) -> int:
+        """Convert time in seconds to the device's time units.
+
+        Args:
+            time_in_seconds (int): The time in seconds.
+
+        Returns:
+            int: The time converted to the device's time units.
+        """
+        if self.time_units == TimeUnits.MINUTES:
+            return int(time_in_seconds / 60)
+        return time_in_seconds
 
     async def end(self, chamber: int = 1) -> bool:
         """End the current cooking or preheating session.
@@ -309,7 +372,7 @@ class VeSyncFryer(VeSyncBaseDevice):
             bool: True if the command was successful, False otherwise.
         """
         del chamber
-        logger.info('stop not configured for this fryer.')
+        logger.info('stop not supported by this fryer.')
         return False
 
     async def resume(self, chamber: int = 1) -> bool:
@@ -322,14 +385,15 @@ class VeSyncFryer(VeSyncBaseDevice):
             bool: True if the command was successful, False otherwise.
         """
         del chamber
-        logger.info('resume not configured for this fryer.')
+        logger.info('resume not supported by this fryer.')
         return False
 
-    async def set_cook_mode(
+    async def set_mode(
         self,
         cook_time: int,
         cook_temp: int,
-        cook_mode: str | None = None,
+        *,
+        preheat_time: int | None = None,
         chamber: int = 1,
     ) -> bool:
         """Set the cooking mode.
@@ -337,39 +401,46 @@ class VeSyncFryer(VeSyncBaseDevice):
         Args:
             cook_time (int): The cooking time in seconds.
             cook_temp (int): The cooking temperature.
-            cook_mode (str): The cooking mode, defaults to default_cook_mode attribute.
+            preheat_time (int | None): The preheating time in seconds, if any.
             chamber (int): The chamber number to set cooking for. Default is 1.
 
         Returns:
             bool: True if the command was successful, False otherwise.
         """
-        del cook_time, cook_temp, cook_mode, chamber
-        logger.warning('set_cook_mode method not implemented for base fryer class.')
+        del cook_time, cook_temp, chamber, preheat_time
+        logger.warning('set_mode method not implemented for base fryer class.')
         return False
 
-    async def set_preheat_mode(
+    async def set_mode_from_recipe(
         self,
-        target_temp: int,
-        preheat_time: int,
-        cook_time: int,
-        cook_mode: str | None = None,
-        chamber: int = 1,
+        recipe: AirFryerPresetRecipe,
     ) -> bool:
-        """Set the preheating mode.
+        """Set the cooking mode from a preset recipe.
 
         Args:
-            target_temp (int): The target temperature for preheating.
-            preheat_time (int): The preheating time in seconds.
-            cook_time (int): The cooking time in seconds after preheating.
-            cook_mode (str): The cooking mode, defaults to default_cook_mode attribute.
-            chamber (int): The chamber number to set preheating for. Default is 1.
+            recipe (AirFryerPresetRecipe): The preset recipe to use.
 
         Returns:
             bool: True if the command was successful, False otherwise.
         """
-        del target_temp, preheat_time, cook_time, cook_mode, chamber
+        del recipe
+        logger.warning(
+            'set_mode_from_recipe method not implemented for base fryer class.'
+        )
+        return False
+
+    async def cook_from_preheat(self, chamber: int = 1) -> bool:
+        """Start cooking after preheating, cookStatus must be preheatEnd.
+
+        Args:
+            chamber (int): The chamber number to start cooking for. Default is 1.
+
+        Returns:
+            bool: True if the command was successful, False otherwise.
+        """
+        del chamber
         if AirFryerFeatures.PREHEAT not in self.features:
-            logger.warning('set_preheat_mode method not supported for this fryer.')
+            logger.info('Preheat feature not supported on this fryer.')
             return False
-        logger.warning('set_preheat_mode method not implemented for base fryer class.')
+        logger.info('cook_from_preheat not configured for this fryer.')
         return False
