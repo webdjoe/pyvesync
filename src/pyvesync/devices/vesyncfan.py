@@ -259,7 +259,7 @@ class VeSyncPedestalFan(BypassV2Mixin, VeSyncFanBase):
         self.state.horizontal_oscillation_status = DeviceStatus.from_int(
             res.horizontalOscillationState
         )
-        self.state.child_lock = DeviceStatus.from_int(res.childLock)
+        self.state.child_lock = bool(res.childLock)
         if res.sleepPreference is not None:
             self.state.sleep_change_fan_level = DeviceStatus.from_int(
                 res.sleepPreference.initFanSpeedLevel

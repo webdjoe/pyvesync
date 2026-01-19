@@ -273,11 +273,11 @@ class HumidifierMap(DeviceMapTemplate):
 
     product_line: str = ProductLines.WIFI_AIR
     mist_modes: dict[str, str] = field(default_factory=dict)
-    mist_levels: list[int | str] = field(default_factory=list)
+    mist_levels: list[int] = field(default_factory=list)
     product_type: str = ProductTypes.HUMIDIFIER
     module: ModuleType = vesynchumidifier
     target_minmax: tuple[int, int] = (30, 80)
-    warm_mist_levels: list[int | str] = field(default_factory=list)
+    warm_mist_levels: list[int] = field(default_factory=list)
 
 
 @dataclass(kw_only=True)
@@ -750,7 +750,7 @@ humidifier_modules = [
     ),
     HumidifierMap(
         class_name='VeSyncSuperior6000S',
-        dev_types=['LEH-S601S-WUS', 'LEH-S601S-WUSR', 'LEH-S601S-WEUR'],
+        dev_types=['LEH-S601S-WUS', 'LEH-S601S-WUSR', 'LEH-S601S-WEUR', 'LEH-S602S-WUS'],
         features=[HumidifierFeatures.DRYING_MODE, HumidifierFeatures.AUTO_STOP],
         mist_modes={
             HumidifierModes.AUTO: 'autoPro',

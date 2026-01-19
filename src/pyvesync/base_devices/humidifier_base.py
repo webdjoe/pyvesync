@@ -261,9 +261,9 @@ class VeSyncHumidifier(VeSyncBaseToggleDevice):
         self._reverse_mist_modes: dict[str, str] = {}
         for k, v in self.mist_modes.items():
             self._reverse_mist_modes[v] = k
-        self.mist_levels: list[str | int] = feature_map.mist_levels
+        self.mist_levels: list[int] = feature_map.mist_levels
         self.features: list[str] = feature_map.features
-        self.warm_mist_levels: list[int | str] = feature_map.warm_mist_levels
+        self.warm_mist_levels: list[int] = feature_map.warm_mist_levels
         self.target_minmax: tuple[int, int] = feature_map.target_minmax
 
     @property
