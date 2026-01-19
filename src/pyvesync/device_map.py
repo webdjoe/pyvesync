@@ -65,6 +65,10 @@ from types import ModuleType
 from typing import Union
 
 from pyvesync.const import (
+    AirFryerCookModes,
+    AirFryerFeatures,
+    AirFryerPresetRecipe,
+    AirFryerPresets,
     BulbFeatures,
     ColorMode,
     EnergyIntervals,
@@ -86,6 +90,7 @@ from pyvesync.const import (
     ThermostatHoldOptions,
     ThermostatRoutineTypes,
     ThermostatWorkModes,
+    TimeUnits,
 )
 from pyvesync.devices import (
     vesyncbulb,
@@ -135,8 +140,8 @@ class DeviceMapTemplate:
     setup_entry: str
     model_display: str
     model_name: str
-    device_alias: str | None = None
-    features: list[str] = field(default_factory=list)
+    features: list[str]
+    device_alias: str
 
 
 @dataclass(kw_only=True)
@@ -241,11 +246,11 @@ class FanMap(DeviceMapTemplate):
         set_mode_method (str): Method to set the mode for the device.
     """
 
+    modes: dict[str, str]
+    fan_levels: list[int]
     product_line: str = ProductLines.WIFI_AIR
     product_type: str = ProductTypes.FAN
     module: ModuleType = vesyncfan
-    fan_levels: list[int] = field(default_factory=list)
-    modes: dict[str, str] = field(default_factory=dict)
     sleep_preferences: list[str] = field(default_factory=list)
     set_mode_method: str = ''
 
@@ -271,9 +276,9 @@ class HumidifierMap(DeviceMapTemplate):
         warm_mist_levels (list[int | str]): List of warm mist levels for the device.
     """
 
+    mist_modes: dict[str, str]
+    mist_levels: list[int]
     product_line: str = ProductLines.WIFI_AIR
-    mist_modes: dict[str, str] = field(default_factory=dict)
-    mist_levels: list[int] = field(default_factory=list)
     product_type: str = ProductTypes.HUMIDIFIER
     module: ModuleType = vesynchumidifier
     target_minmax: tuple[int, int] = (30, 80)
@@ -302,11 +307,11 @@ class PurifierMap(DeviceMapTemplate):
         auto_preferences (list[str]): List of auto preferences for the device.
     """
 
+    fan_levels: list[int]
+    modes: list[str]
     product_line: str = ProductLines.WIFI_AIR
     product_type: str = ProductTypes.PURIFIER
     module: ModuleType = vesyncpurifier
-    fan_levels: list[int] = field(default_factory=list)
-    modes: list[str] = field(default_factory=list)
     nightlight_modes: list[str] = field(default_factory=list)
     auto_preferences: list[str] = field(default_factory=list)
 
@@ -330,11 +335,16 @@ class AirFryerMap(DeviceMapTemplate):
         module (ModuleType): Module for the device.
     """
 
+    time_units: TimeUnits = TimeUnits.MINUTES
     temperature_range_f: tuple[int, int] = (200, 400)
     temperature_range_c: tuple[int, int] = (75, 200)
+    temperature_step_f: int = 10
     product_line: str = ProductLines.WIFI_KITCHEN
     product_type: str = ProductTypes.AIR_FRYER
     module: ModuleType = vesynckitchen
+    default_preset: AirFryerPresetRecipe = AirFryerPresets.custom
+    cook_modes: dict[str, str] = field(default_factory=dict)
+    default_cook_mode: str = AirFryerCookModes.AIRFRY
 
 
 @dataclass(kw_only=True)
@@ -373,6 +383,7 @@ thermostat_modules = [
     ThermostatMap(
         dev_types=['LTM-A401S-WUS'],
         class_name='VeSyncAuraThermostat',
+        features=[],
         fan_modes=[
             ThermostatFanModes.AUTO,
             ThermostatFanModes.CIRCULATE,
@@ -407,6 +418,7 @@ thermostat_modules = [
         ],
         setup_entry='LTM-A401S-WUS',
         model_display='LTM-A401S Series',
+        device_alias='Aura Thermostat',
         model_name='Aura Thermostat',
     )
 ]
@@ -418,6 +430,7 @@ outlet_modules = [
         class_name='VeSyncOutlet7A',
         features=[OutletFeatures.ENERGY_MONITOR],
         model_name='WiFi Outlet US/CA',
+        device_alias='Round 7A WiFi Outlet',
         model_display='ESW01-USA Series',
         setup_entry='wifi-switch-1.3',
     ),
@@ -427,6 +440,7 @@ outlet_modules = [
         features=[],
         model_name='10A WiFi Outlet USA',
         model_display='ESW10-USA Series',
+        device_alias='10A Round WiFi Outlet',
         setup_entry='ESW10-USA',
     ),
     OutletMap(
@@ -435,6 +449,7 @@ outlet_modules = [
         features=[OutletFeatures.ENERGY_MONITOR],
         model_name='ESW03 10A WiFi Outlet',
         model_display='ESW01/03 USA/EU',
+        device_alias='10A Round WiFi Outlet',
         setup_entry='ESW03',
     ),
     OutletMap(
@@ -444,6 +459,7 @@ outlet_modules = [
         nightlight_modes=[NightlightModes.ON, NightlightModes.OFF, NightlightModes.AUTO],
         model_name='15A WiFi Outlet US/CA',
         model_display='ESW15-USA Series',
+        device_alias='15A Rectangular WiFi Outlet',
         setup_entry='ESW15-USA',
     ),
     OutletMap(
@@ -452,6 +468,7 @@ outlet_modules = [
         features=[OutletFeatures.ENERGY_MONITOR],
         model_name='Outdoor Plug',
         model_display='ESO15-TB Series',
+        device_alias='Outdoor Smart Plug',
         setup_entry='ESO15-TB',
     ),
     OutletMap(
@@ -1075,8 +1092,16 @@ air_fryer_modules: list[AirFryerMap] = [
         device_alias='Air Fryer',
         model_display='CS158/159/168/169-AF Series',
         model_name='Smart/Pro/Pro Gen 2 5.8 Qt. Air Fryer',
-        setup_entry='CS137-AF/CS158-AF',
-    )
+        setup_entry='CS158-AF',
+        temperature_step_f=10,
+        features=[AirFryerFeatures.PREHEAT, AirFryerFeatures.RESUMABLE],
+        cook_modes={
+            AirFryerCookModes.AIRFRY: 'custom',
+            AirFryerCookModes.PREHEAT: 'preheat',
+        },
+        default_preset=AirFryerPresets.custom,
+        default_cook_mode=AirFryerCookModes.CUSTOM
+    ),
 ]
 """List of ['AirFryerMap'][pyvesync.device_map.AirFryerMap] configuration
 for air fryer devices."""
