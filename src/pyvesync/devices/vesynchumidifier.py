@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import colorsys
 import logging
-from typing import TYPE_CHECKING
+import time
+from typing import TYPE_CHECKING, ClassVar
 
 import orjson
 from typing_extensions import deprecated
@@ -26,6 +28,10 @@ if TYPE_CHECKING:
 
 
 logger = logging.getLogger(__name__)
+
+# RGB nightlight constants
+RGB_STALE_DATA_TIMEOUT = 180  # Seconds to ignore stale API data after setting values
+RGB_FULL_BRIGHTNESS = 100  # Full brightness percentage
 
 
 class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
@@ -97,6 +103,42 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
         if self.supports_warm_mist and resp_model.warm_level is not None:
             self.state.warm_mist_level = resp_model.warm_level
             self.state.warm_mist_enabled = resp_model.warm_enabled
+        # Handle RGB nightlight
+        if self.supports_rgb_nightlight and resp_model.rgbNightLight is not None:
+            rgb = resp_model.rgbNightLight
+            # Skip updating RGB nightlight state if we recently set it
+            # The VeSync API returns stale data for several minutes after setting values
+            # so we ignore updates briefly after a set command
+            skip_rgb_update = (
+                self.state.rgb_nightlight_set_time is not None
+                and (time.time() - self.state.rgb_nightlight_set_time)
+                < RGB_STALE_DATA_TIMEOUT
+            )
+            if not skip_rgb_update:
+                self.state.rgb_nightlight_status = rgb.action
+                self.state.rgb_nightlight_brightness = rgb.brightness
+                self.state.rgb_nightlight_color_mode = rgb.colorMode
+                # The API uses brightness-adjusted RGB values. We need to store the
+                # "base" color (at full brightness) so that changing only brightness
+                # doesn't cause color drift. Normalize RGB back to full brightness.
+                brightness_adjusted = (
+                    rgb.brightness is not None
+                    and 0 < rgb.brightness < RGB_FULL_BRIGHTNESS
+                )
+                if brightness_adjusted:
+                    base_r, base_g, base_b = self._normalize_rgb_to_full_brightness(
+                        rgb.red, rgb.green, rgb.blue
+                    )
+                    self.state.rgb_nightlight_red = base_r
+                    self.state.rgb_nightlight_green = base_g
+                    self.state.rgb_nightlight_blue = base_b
+                else:
+                    self.state.rgb_nightlight_red = rgb.red
+                    self.state.rgb_nightlight_green = rgb.green
+                    self.state.rgb_nightlight_blue = rgb.blue
+                # Clear the set time since we've now received valid data from API
+                self.state.rgb_nightlight_set_time = None
+
         config = resp_model.configuration
         if config is not None:
             self.state.auto_target_humidity = config.auto_target_humidity
@@ -282,6 +324,233 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
             toggle = self.state.nightlight_status != DeviceStatus.ON
         brightness = 100 if toggle else 0
         return await self.set_nightlight_brightness(brightness)
+
+    # 8-color gradient used by VeSync app for RGB nightlight color slider
+    _RGB_NIGHTLIGHT_GRADIENT: ClassVar[list[tuple[int, int, int]]] = [
+        (252, 50, 0),    # #fc3200 - Red (position 0)
+        (255, 171, 2),   # #ffab02 - Orange (position ~14.3)
+        (181, 255, 0),   # #b5ff00 - Yellow-Green (position ~28.6)
+        (2, 255, 120),   # #02ff78 - Green (position ~42.9)
+        (3, 200, 254),   # #03c8fe - Cyan (position ~57.1)
+        (0, 40, 255),    # #0028ff - Blue (position ~71.4)
+        (220, 0, 255),   # #dc00ff - Purple (position ~85.7)
+        (254, 0, 60),    # #fe003c - Pink/Red (position 100)
+    ]
+
+    @staticmethod
+    def _color_distance(r1: int, g1: int, b1: int, r2: int, g2: int, b2: int) -> float:
+        """Calculate Euclidean distance between two RGB colors.
+
+        From decompiled app: yv/p.java method c()
+        """
+        return ((r1 - r2) ** 2 + (g1 - g2) ** 2 + (b1 - b2) ** 2) ** 0.5
+
+    @staticmethod
+    def _interpolate_color(
+        color1: tuple[int, int, int], color2: tuple[int, int, int], fraction: float
+    ) -> tuple[int, int, int]:
+        """Linearly interpolate between two colors."""
+        r = int(color1[0] + (color2[0] - color1[0]) * fraction)
+        g = int(color1[1] + (color2[1] - color1[1]) * fraction)
+        b = int(color1[2] + (color2[2] - color1[2]) * fraction)
+        return (r, g, b)
+
+    @staticmethod
+    def _apply_brightness_to_rgb(
+        red: int, green: int, blue: int, brightness: int
+    ) -> tuple[int, int, int]:
+        """Apply brightness to RGB color using HSV color space.
+
+        The VeSync app applies brightness by converting to HSV, setting the V
+        (value) component to brightness/100, then converting back to RGB.
+
+        From decompiled app: yv/p.java method b()
+
+        Args:
+            red: Red value (0-255).
+            green: Green value (0-255).
+            blue: Blue value (0-255).
+            brightness: Brightness level (0-100).
+
+        Returns:
+            tuple: Brightness-adjusted (red, green, blue) values.
+        """
+        # Convert RGB to HSV
+        h, s, _ = colorsys.rgb_to_hsv(red / 255.0, green / 255.0, blue / 255.0)
+
+        # Set V (value/brightness) to brightness/100
+        v = brightness / 100.0
+
+        # Convert back to RGB
+        r, g, b = colorsys.hsv_to_rgb(h, s, v)
+        return (int(r * 255), int(g * 255), int(b * 255))
+
+    @staticmethod
+    def _normalize_rgb_to_full_brightness(
+        red: int, green: int, blue: int
+    ) -> tuple[int, int, int]:
+        """Normalize brightness-adjusted RGB back to full brightness (100%).
+
+        This is the inverse of _apply_brightness_to_rgb. Given RGB values that
+        have been dimmed, recover the original "full brightness" color by
+        setting HSV value to 1.0 while preserving hue and saturation.
+
+        Args:
+            red: Red value (0-255), brightness-adjusted.
+            green: Green value (0-255), brightness-adjusted.
+            blue: Blue value (0-255), brightness-adjusted.
+
+        Returns:
+            tuple: Normalized (red, green, blue) values at full brightness.
+        """
+        # Convert RGB to HSV
+        h, s, _ = colorsys.rgb_to_hsv(red / 255.0, green / 255.0, blue / 255.0)
+
+        # Restore V to 1.0 (full brightness) while keeping hue and saturation
+        v = 1.0
+
+        # Convert back to RGB
+        r, g, b = colorsys.hsv_to_rgb(h, s, v)
+        return (int(r * 255), int(g * 255), int(b * 255))
+
+    @classmethod
+    def _rgb_to_color_slider_location(cls, red: int, green: int, blue: int) -> int:
+        """Convert RGB values to colorSliderLocation (0-100).
+
+        The VeSync app uses an 8-color gradient for the color slider.
+        This finds the closest position on that gradient by checking
+        each segment and finding where the input color best fits.
+
+        Note: Input RGB should be at full brightness for accurate results.
+        If the input has reduced brightness, first normalize it.
+
+        From decompiled app: yv/p.java (HumidifierColor.kt)
+
+        Args:
+            red: Red value (0-255).
+            green: Green value (0-255).
+            blue: Blue value (0-255).
+
+        Returns:
+            int: Color slider location (0-100).
+        """
+        gradient = cls._RGB_NIGHTLIGHT_GRADIENT
+        num_colors = len(gradient)
+        segment_size = 100.0 / (num_colors - 1)  # ~14.29 for 8 colors
+
+        best_position = 0.0
+        best_distance = float('inf')
+
+        # Check each segment of the gradient
+        for i in range(num_colors - 1):
+            color1 = gradient[i]
+            color2 = gradient[i + 1]
+            start_pos = i * segment_size
+
+            # Check multiple points along this segment for precision
+            for step in range(101):
+                fraction = step / 100.0
+                interp_color = cls._interpolate_color(color1, color2, fraction)
+                distance = cls._color_distance(
+                    red, green, blue,
+                    interp_color[0], interp_color[1], interp_color[2]
+                )
+
+                if distance < best_distance:
+                    best_distance = distance
+                    best_position = start_pos + (fraction * segment_size)
+
+        return round(best_position)
+
+    async def set_rgb_nightlight(
+        self,
+        power: bool | None = None,
+        brightness: int | None = None,
+        red: int | None = None,
+        green: int | None = None,
+        blue: int | None = None,
+    ) -> bool:
+        """Set RGB nightlight state and color.
+
+        Args:
+            power: Turn nightlight on (True) or off (False).
+            brightness: Brightness level (40-100). Values below 40 will be clamped.
+            red: Red color value (0-255).
+            green: Green color value (0-255).
+            blue: Blue color value (0-255).
+
+        Returns:
+            bool: Success of request.
+        """
+        if not self.supports_rgb_nightlight:
+            logger.warning('RGB Nightlight is not supported for %s', self.device_name)
+            return False
+
+        # API requires all fields, so use current state for any not provided
+        if power is not None:
+            action = 'on' if power else 'off'
+        else:
+            action = self.state.rgb_nightlight_status or 'on'
+
+        if brightness is None:
+            brightness = self.state.rgb_nightlight_brightness or 40
+
+        if red is None:
+            red = self.state.rgb_nightlight_red or 255
+        if green is None:
+            green = self.state.rgb_nightlight_green or 255
+        if blue is None:
+            blue = self.state.rgb_nightlight_blue or 255
+
+        # Brightness range is 40-100 per VeSync app
+        brightness = max(40, min(100, brightness))
+
+        # Clamp RGB values to valid range
+        red = max(0, min(255, red))
+        green = max(0, min(255, green))
+        blue = max(0, min(255, blue))
+
+        color_mode = self.state.rgb_nightlight_color_mode or 'color'
+
+        # Calculate colorSliderLocation from the base RGB color (at full brightness)
+        color_slider_location = self._rgb_to_color_slider_location(red, green, blue)
+
+        # Apply brightness to RGB values - the VeSync app sends brightness-adjusted
+        # RGB values to the API, not raw colors with separate brightness.
+        # From decompiled app: yv/p.java method b() and RGBNightLightView.java
+        if brightness != RGB_FULL_BRIGHTNESS:
+            adj_red, adj_green, adj_blue = self._apply_brightness_to_rgb(
+                red, green, blue, brightness
+            )
+        else:
+            adj_red, adj_green, adj_blue = red, green, blue
+
+        payload_data: dict[str, int | str] = {
+            'action': action,
+            'brightness': brightness,
+            'red': adj_red,
+            'green': adj_green,
+            'blue': adj_blue,
+            'colorMode': color_mode,
+            'speed': 0,
+            'colorSliderLocation': color_slider_location,
+        }
+
+        r_dict = await self.call_bypassv2_api('setLightStatus', payload_data)
+        r = Helpers.process_dev_response(logger, 'set_rgb_nightlight', self, r_dict)
+        if r is None:
+            return False
+
+        # Update state and record timestamp to ignore stale API responses
+        self.state.rgb_nightlight_status = action
+        self.state.rgb_nightlight_brightness = brightness
+        self.state.rgb_nightlight_red = red
+        self.state.rgb_nightlight_green = green
+        self.state.rgb_nightlight_blue = blue
+        self.state.rgb_nightlight_color_mode = color_mode
+        self.state.rgb_nightlight_set_time = time.time()
+
+        return True
 
     async def set_mode(self, mode: str) -> bool:
         if mode not in self.mist_modes:

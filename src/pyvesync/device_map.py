@@ -684,7 +684,11 @@ humidifier_modules = [
     HumidifierMap(
         class_name='VeSyncHumid200300S',
         dev_types=['LUH-O451S-WEU'],
-        features=[HumidifierFeatures.WARM_MIST, HumidifierFeatures.AUTO_STOP],
+        features=[
+            HumidifierFeatures.WARM_MIST,
+            HumidifierFeatures.AUTO_STOP,
+            HumidifierFeatures.RGB_NIGHTLIGHT,
+        ],
         mist_modes={
             HumidifierModes.AUTO: 'auto',
             HumidifierModes.SLEEP: 'sleep',

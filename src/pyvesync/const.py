@@ -497,6 +497,7 @@ class HumidifierFeatures(Features):
         WARM_MIST: Warm mist status.
         AUTO_STOP: Auto stop when target humidity is reached.
             Different from auto, which adjusts fan level to maintain humidity.
+        RGB_NIGHTLIGHT: RGB nightlight with color control.
     """
 
     ONOFF = 'onoff'
@@ -507,6 +508,7 @@ class HumidifierFeatures(Features):
     AUTO_STOP = 'auto_stop'
     NIGHTLIGHT_BRIGHTNESS = 'nightlight_brightness'
     DRYING_MODE = 'drying_mode'
+    RGB_NIGHTLIGHT = 'rgb_nightlight'
 
 
 class PurifierFeatures(Features):
