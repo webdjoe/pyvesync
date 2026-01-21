@@ -327,14 +327,14 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
 
     # 8-color gradient used by VeSync app for RGB nightlight color slider
     _RGB_NIGHTLIGHT_GRADIENT: ClassVar[list[tuple[int, int, int]]] = [
-        (252, 50, 0),    # #fc3200 - Red (position 0)
-        (255, 171, 2),   # #ffab02 - Orange (position ~14.3)
-        (181, 255, 0),   # #b5ff00 - Yellow-Green (position ~28.6)
-        (2, 255, 120),   # #02ff78 - Green (position ~42.9)
-        (3, 200, 254),   # #03c8fe - Cyan (position ~57.1)
-        (0, 40, 255),    # #0028ff - Blue (position ~71.4)
-        (220, 0, 255),   # #dc00ff - Purple (position ~85.7)
-        (254, 0, 60),    # #fe003c - Pink/Red (position 100)
+        (252, 50, 0),  # #fc3200 - Red (position 0)
+        (255, 171, 2),  # #ffab02 - Orange (position ~14.3)
+        (181, 255, 0),  # #b5ff00 - Yellow-Green (position ~28.6)
+        (2, 255, 120),  # #02ff78 - Green (position ~42.9)
+        (3, 200, 254),  # #03c8fe - Cyan (position ~57.1)
+        (0, 40, 255),  # #0028ff - Blue (position ~71.4)
+        (220, 0, 255),  # #dc00ff - Purple (position ~85.7)
+        (254, 0, 60),  # #fe003c - Pink/Red (position 100)
     ]
 
     @staticmethod
@@ -452,8 +452,7 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
                 fraction = step / 100.0
                 interp_color = cls._interpolate_color(color1, color2, fraction)
                 distance = cls._color_distance(
-                    red, green, blue,
-                    interp_color[0], interp_color[1], interp_color[2]
+                    red, green, blue, interp_color[0], interp_color[1], interp_color[2]
                 )
 
                 if distance < best_distance:
