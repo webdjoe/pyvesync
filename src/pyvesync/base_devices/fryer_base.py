@@ -75,9 +75,7 @@ class FryerState(DeviceState):
         self.last_timestamp: int | None = None
         self.preheat_set_time: int | None = None
         self.preheat_last_time: int | None = None
-        self._time_conv: float = (
-            60 if feature_map.time_units == TimeUnits.MINUTES else 1
-        )
+        self._time_conv: float = 60 if feature_map.time_units == TimeUnits.MINUTES else 1
 
     @property
     def is_in_preheat_mode(self) -> bool:

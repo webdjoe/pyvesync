@@ -57,12 +57,14 @@ class Fryer158CookingReturnStatus(ResponseBaseModel):
 @dataclass
 class Fryer158CookRequest(RequestBaseModel):
     """Base request model for air fryer cooking commands."""
+
     cookMode: Annotated[Fryer158CookModeBase, Discriminator(include_subtypes=True)]
 
 
 @dataclass
 class Fryer158PreheatRequest(RequestBaseModel):
     """Base request model for air fryer preheat commands."""
+
     preheat: Annotated[Fryer158PreheatModeBase, Discriminator(include_subtypes=True)]
 
 
@@ -74,6 +76,7 @@ class Fryer158CookModeBase(RequestBaseModel):
 @dataclass
 class Fryer158CookModeFromPreheat(Fryer158CookModeBase):
     """Model for continuing a cooking mode."""
+
     cookStatus: str
     accountId: str
     mode: str
@@ -82,12 +85,14 @@ class Fryer158CookModeFromPreheat(Fryer158CookModeBase):
 @dataclass
 class Fryer158CookModeChange(Fryer158CookModeBase):
     """Model for stopping a cooking mode."""
+
     cookStatus: str
 
 
 @dataclass
 class Fryer158CookModeStart(Fryer158CookModeBase):
     """Model for starting a cooking mode."""
+
     cookStatus: str
     accountId: str
     mode: str
@@ -109,12 +114,14 @@ class Fryer158PreheatModeBase(RequestBaseModel):
 @dataclass
 class Fryer158PreheatModeChange(Fryer158PreheatModeBase):
     """Model for continuing a preheat mode."""
+
     preheatStatus: str
 
 
 @dataclass
 class Fryer158PreheatModeStart(Fryer158PreheatModeBase):
     """Model for starting a preheat mode."""
+
     preheatStatus: str
     accountId: str
     mode: str

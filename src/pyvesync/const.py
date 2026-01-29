@@ -790,6 +790,7 @@ class AirFryerPresets:
     Attributes:
         custom (AirFryerPresetRecipe): Custom preset recipe.
     """
+
     custom: AirFryerPresetRecipe = AirFryerPresetRecipe(
         cook_mode='Custom',
         recipe_name='Manual Cook',
@@ -797,7 +798,7 @@ class AirFryerPresets:
         recipe_type=3,
         target_temp=350,
         temp_unit='f',
-        cook_time=10*60,
+        cook_time=10 * 60,
     )
     air_fry: AirFryerPresetRecipe = AirFryerPresetRecipe(
         cook_mode='AirFry',
@@ -806,7 +807,7 @@ class AirFryerPresets:
         recipe_type=3,
         target_temp=400,
         temp_unit='f',
-        cook_time=10*60,
+        cook_time=10 * 60,
     )
 
 
@@ -829,7 +830,6 @@ AIRFRYER_PRESET_MAP = {
         temp_unit='f',
         cook_time=25,
     ),
-
 }
 
 
