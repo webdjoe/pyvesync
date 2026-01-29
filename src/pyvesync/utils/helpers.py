@@ -123,6 +123,16 @@ class Converters:
         """Convert Celsius to Fahrenheit."""
         return celsius * 9.0 / 5.0 + 32
 
+    @staticmethod
+    def minutes_to_seconds(minutes: int) -> int:
+        """Convert minutes to seconds."""
+        return minutes * 60
+
+    @staticmethod
+    def seconds_to_minutes(seconds: int) -> int:
+        """Convert seconds to minutes."""
+        return seconds // 60
+
 
 class Helpers:
     """VeSync Helper Functions."""
