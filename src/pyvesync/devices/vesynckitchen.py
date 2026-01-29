@@ -299,12 +299,12 @@ class VeSyncAirFryer158(BypassV1Mixin, VeSyncFryer):
         if r is None:
             return False
         self.state.set_state(
-                cook_status=cook_status,
-                cook_time=recipe.cook_time,
-                cook_temp=recipe.target_temp,
-                cook_mode=recipe.cook_mode,
-                preheat_time=recipe.preheat_time,
-            )
+            cook_status=cook_status,
+            cook_time=recipe.cook_time,
+            cook_temp=recipe.target_temp,
+            cook_mode=recipe.cook_mode,
+            preheat_time=recipe.preheat_time,
+        )
         return True
 
     async def set_mode(
@@ -393,7 +393,6 @@ class VeSyncTurboBlazeFryer(BypassV2Mixin, VeSyncFryer):
         return models.FryerTurboBlazeRequestData.from_dict(cook_req)
 
     async def get_details(self) -> None:
-
         resp = await self.call_bypassv2_api(payload_method='getAirfyerStatus')
         resp_model = process_bypassv2_result(
             self,

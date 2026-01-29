@@ -1120,7 +1120,7 @@ air_fryer_modules: list[AirFryerMap] = [
         time_units=TimeUnits.SECONDS,
         temperature_range_f=(90, 450),
         temperature_range_c=(30, 230),
-    )
+    ),
 ]
 """List of ['AirFryerMap'][pyvesync.device_map.AirFryerMap] configuration
 for air fryer devices."""
