@@ -30,6 +30,7 @@ tools/__init__.py
 tools/vesyncdevice.py
 pyvesync.und
 .venv
+pyvesync-venv/
 
 models.json
 site/
