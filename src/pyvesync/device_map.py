@@ -1143,6 +1143,37 @@ air_fryer_modules: list[AirFryerMap] = [
             'cookEnd': AirFryerCookStatus.COOK_END,
             }),
     ),
+    AirFryerMap(
+        class_name='VeSyncDualAirFryer',
+        module=vesynckitchen,
+        dev_types=['CAF-TF101S-AEU'],
+        setup_entry='CAF-TF101S',
+        device_alias='Dual Air Fryer',
+        model_display='CAF-TF101S Series',
+        model_name='Cosori Dual Air Fryer',
+        temperature_step_f=5,
+        features=[AirFryerFeatures.DUAL_CHAMBER],
+        cook_modes={
+            AirFryerCookModes.AIRFRY: 'AirFry',
+            AirFryerCookModes.BAKE: 'Bake',
+            AirFryerCookModes.ROAST: 'Roast',
+            AirFryerCookModes.GRILL: 'Grill',
+            AirFryerCookModes.DRY: 'Dry',
+            AirFryerCookModes.REHEAT: 'Reheat',
+        },
+        default_cook_mode=AirFryerCookModes.AIRFRY,
+        default_preset=AirFryerPresets.air_fry,
+        time_units=TimeUnits.SECONDS,
+        temperature_range_f=(130, 450),
+        temperature_range_c=(55, 240),
+        status_map=MappingProxyType({
+            'standby': AirFryerCookStatus.STANDBY,
+            'ready': AirFryerCookStatus.COOK_STOP,
+            'cooking': AirFryerCookStatus.COOKING,
+            'cookStop': AirFryerCookStatus.COOK_STOP,
+            'pullOut': AirFryerCookStatus.PULL_OUT,
+        }),
+    ),
 ]
 """List of ['AirFryerMap'][pyvesync.device_map.AirFryerMap] configuration
 for air fryer devices."""

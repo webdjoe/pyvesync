@@ -482,9 +482,8 @@ class VeSyncFryer(VeSyncBaseDevice):
         if self.manager.measure_unit and self.manager.measure_unit.lower() == 'imperial':
             self._temp_unit = TemperatureUnits.FAHRENHEIT
 
-        # Use single state attribute if not dual chamber fryer for compatibility
-        if AirFryerFeatures.DUAL_CHAMBER not in self.features:
-            self.state = self.state_chamber_1
+        # Set state to primary chamber (chamber 1) for base class compatibility
+        self.state = self.state_chamber_1
 
     @property
     def temp_unit(self) -> TemperatureUnits:

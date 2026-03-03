@@ -218,6 +218,63 @@ class FryerTurboBlazeStartActItem(RequestBaseModel):
     shakeTime: int = 0
 
 
+# Dual Air Fryer Models (CAF-TF101S)
+
+
+@dataclass
+class FryerDualChamberStatusItem(ResponseBaseModel):
+    """Status item for a single chamber in dual air fryer status response."""
+
+    cookStatus: str
+    chamber: int
+    cookSetTime: int = 0
+    cookTemp: int = 0
+    mode: str = ''
+    currentRemainingTime: int = 0
+    totalTimeRemaining: int = 0
+    startTime: int = 0
+    recipeType: int = 3
+    recipeId: int = 0
+    recipeName: str = ''
+    upc: str = ''
+    holdTime: int = 0
+
+
+@dataclass
+class FryerDualMultiStatusResult(BypassV2InnerResult):
+    """Result model for dual air fryer getAirfryerMultiStatus response."""
+
+    statusList: list[FryerDualChamberStatusItem]
+    tempUnit: str = 'c'
+    syncType: int = 0
+    workChamber: int = 0
+
+
+@dataclass
+class FryerDualCookConfig(RequestBaseModel):
+    """Cook configuration for a single chamber in startMultiCook request."""
+
+    chamber: int
+    cookSetTime: int
+    cookTemp: int
+    mode: str
+    recipeId: int
+    recipeName: str
+    recipeType: int
+
+
+@dataclass
+class FryerDualStartCookData(RequestBaseModel):
+    """Request data for dual air fryer startMultiCook command."""
+
+    accountId: str
+    cookConfigs: list[FryerDualCookConfig]
+    readyStart: bool
+    syncType: int
+    tempUnit: str
+    workChamber: int
+
+
 # a = {
 #     'cookMode': {
 #         'accountId': '1221391',

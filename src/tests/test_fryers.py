@@ -1,5 +1,5 @@
 """
-This tests requests for FANS (not fryers or humidifiers).
+This tests requests for AIR FRYERS.
 
 All tests inherit from the TestBase class which contains the fixtures
 and methods needed to run the tests.
@@ -28,12 +28,10 @@ See Also
 
 import logging
 import pytest
-from dataclasses import asdict
 import pyvesync.const as const
 from pyvesync.base_devices.fryer_base import VeSyncFryer
 from base_test_cases import TestBase
 from utils import assert_test, parse_args
-from defaults import TestDefaults
 import call_json_fryers
 
 
@@ -56,6 +54,13 @@ DETAILS_PARAMS_STANDBY = [
         call_json_fryers.DETAILS_RESPONSES_STANDBY["CAF-DC601S"],
         id="CAF-DC601S.update.standby",
     ),
+    pytest.param(
+        const.AirFryerCookStatus.STANDBY,
+        "CAF-TF101S",
+        "update",
+        call_json_fryers.DETAILS_RESPONSES_STANDBY["CAF-TF101S"],
+        id="CAF-TF101S.update.standby",
+    ),
 ]
 
 DETAILS_PARAMS_COOKING = [
@@ -72,6 +77,13 @@ DETAILS_PARAMS_COOKING = [
         "update",
         call_json_fryers.DETAILS_RESPONSES_COOKING["CAF-DC601S"],
         id="CAF-DC601S.update.cooking",
+    ),
+    pytest.param(
+        const.AirFryerCookStatus.COOKING,
+        "CAF-TF101S",
+        "update",
+        call_json_fryers.DETAILS_RESPONSES_COOKING["CAF-TF101S"],
+        id="CAF-TF101S.update.cooking",
     ),
 ]
 
@@ -130,6 +142,7 @@ class TestFryers(TestBase):
     device_methods = {  # type: ignore
         "CS158-AF": [],
         "CAF-DC601S": [],
+        "CAF-TF101S": [],
     }
 
     @pytest.mark.parametrize(
@@ -190,79 +203,17 @@ class TestFryers(TestBase):
                 assert fryer_obj.state_chamber_2.cook_last_time is None
                 assert fryer_obj.state_chamber_2.last_timestamp is None
 
+        elif cook_status == const.AirFryerCookStatus.COOKING:
+            assert fryer_obj.state_chamber_1.cook_status == cook_status
+            assert fryer_obj.state_chamber_1.cook_set_temp == call_json_fryers.AirFryerDefaults.cook_temp_f
+            assert fryer_obj.state_chamber_1.cook_set_time == call_json_fryers.AirFryerDefaults.cook_time_s
+            assert fryer_obj.state_chamber_1.cook_mode is not None
+            assert fryer_obj.state_chamber_1.cook_last_time == call_json_fryers.AirFryerDefaults.cook_last_time_s
+            if const.AirFryerFeatures.DUAL_CHAMBER in fryer_obj.features:
+                # Chamber 2 should be standby in cooking test data
+                assert fryer_obj.state_chamber_2.cook_status == const.AirFryerCookStatus.STANDBY
+
         # Assert request matches recorded request or write new records
         assert assert_test(
             method_call, all_kwargs, setup_entry, self.write_api, self.overwrite
         )
-
-    # def test_methods(self, setup_entry, method):
-    #     """Test device methods API request and response.
-
-    #     This method is automatically parametrized by `pytest_generate_tests`
-    #     based on class variables `device` (name of product class - humidifiers),
-    #     device name (humidifiers) list of setup_entry's, `base_methods` - list of
-    #     methods for all devices, and `device_methods` - list of methods for
-    #     each device type.
-
-    #     Example:
-    #         >>> base_methods = [['turn_on'], ['turn_off'], ['update']]
-    #         >>> device_methods = {
-    #             'setup_entry': [['method1'], ['method2', {'kwargs': 'value'}]]
-    #             }
-
-    #     Notes
-    #     -----
-    #     The response can be a callable that accepts the `kwargs` argument to
-    #     sync the device response with the API response. In some cases the API
-    #     returns data from the method call, such as `get_yearly_energy`, in other cases the
-    #     API returns a simple confirmation the command was successful.
-
-    #     See Also
-    #     --------
-    #     `TestBase` class method
-    #     `call_json_fans` module
-
-    #     """
-    #     # Get method name and kwargs from method fixture
-    #     method_name = method[0]
-    #     if len(method) == 2 and isinstance(method[1], dict):
-    #         method_kwargs = method[1]
-    #     else:
-    #         method_kwargs = {}
-
-    #     # Set return value for call_api based on call_json_fans.METHOD_RESPONSES
-    #     method_response = call_json_fans.METHOD_RESPONSES[setup_entry][method_name]
-    #     if callable(method_response):
-    #         if method_kwargs:
-    #             self.mock_api.return_value = method_response(method_kwargs), 200
-    #         else:
-    #             self.mock_api.return_value = method_response(), 200
-    #     else:
-    #         self.mock_api.return_value = method_response, 200
-
-    #     # Get device configuration from call_json.DeviceList.device_list_item()
-    #     fan_obj = self.get_device("fans", setup_entry)
-    #     assert isinstance(fan_obj, VeSyncFanBase)
-
-    #     # Get method from device object
-    #     method_call = getattr(fan_obj, method[0])
-
-    #     # Ensure method runs based on device configuration
-    #     if method[0] == 'turn_on':
-    #         fan_obj.state.device_status = const.DeviceStatus.OFF
-    #     elif method[0] == 'turn_off':
-    #         fan_obj.state.device_status = const.DeviceStatus.ON
-
-    #     # Call method with kwargs if defined
-    #     if method_kwargs:
-    #         self.run_in_loop(method_call, **method_kwargs)
-    #     else:
-    #         self.run_in_loop(method_call)
-
-    #     # Parse arguments from mock_api call into a dictionary
-    #     all_kwargs = parse_args(self.mock_api)
-
-    #     # Assert request matches recorded request or write new records
-    #     assert assert_test(
-    #         method_call, all_kwargs, setup_entry, self.write_api, self.overwrite
-    #     )

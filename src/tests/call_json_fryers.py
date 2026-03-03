@@ -37,8 +37,6 @@ METHOD_RESPONSES['CS158-AF'].default_factory = lambda: ({"code": 0, "msg": "succ
 from copy import deepcopy
 from pyvesync.device_map import air_fryer_modules
 from pyvesync.const import (
-    # DeviceStatus,
-    # ConnectionStatus,
     AirFryerPresetRecipe,
     TemperatureUnits,
     AirFryerCookStatus,
@@ -47,6 +45,8 @@ from defaults import (
     TestDefaults,
     FunctionResponsesV2,
     FunctionResponsesV1,
+    build_bypass_v1_response,
+    build_bypass_v2_response,
 )
 
 FRYERS = [m.setup_entry for m in air_fryer_modules]
@@ -80,8 +80,19 @@ DC601_RECIPE = AirFryerPresetRecipe(
     preheat_time=AirFryerDefaults.preheat_time_s,
 )
 
+TF101S_RECIPE = AirFryerPresetRecipe(
+    recipe_name="Air Fry",
+    cook_mode="AirFry",
+    recipe_id=14,
+    recipe_type=3,
+    target_temp=AirFryerDefaults.cook_temp_f,
+    temp_unit=AirFryerDefaults.temp_unit,
+    cook_time=AirFryerDefaults.cook_time_s,
+)
 
-AIR_FRYER_COOKING_DETAILS: dict[str, dict[str, list | str | float | dict | None]] = {
+
+# Raw detail data for each device (V1 result or V2 inner result)
+AIR_FRYER_COOKING_DETAILS: dict[str, dict] = {
     "CS158-AF": {
         "returnStatus": {
             "curentTemp": AirFryerDefaults.current_temp_f,
@@ -96,39 +107,73 @@ AIR_FRYER_COOKING_DETAILS: dict[str, dict[str, list | str | float | dict | None]
         }
     },
     "CAF-DC601S": {
-        "traceId": "1767318172645",
-        "code": 0,
-        "result": {
-            "stepArray": [
-                {
-                    "cookSetTime": AirFryerDefaults.cook_time_s,  # Seconds
-                    "cookTemp": AirFryerDefaults.cook_temp_f,
-                    "mode": DC601_RECIPE.cook_mode,
-                    "cookLastTime": AirFryerDefaults.cook_last_time_s,  # Seconds
-                    "shakeTime": 0,
-                    "cookEndTime": 0,
-                    "recipeName": DC601_RECIPE.recipe_name,
-                    "recipeId": DC601_RECIPE.recipe_id,
-                    "recipeType": DC601_RECIPE.recipe_type,
-                }
-            ],
-            "cookMode": "normal",
-            "tempUnit": AirFryerDefaults.temp_unit.label,
-            "stepIndex": 0,
-            "cookStatus": AirFryerDefaults.cook_status.value,
-            "preheatSetTime": 0,
-            "preheatLastTime": 0,
-            "preheatEndTime": 0,
-            "preheatTemp": 0,
-            "startTime": 1767318116,
-            "totalTimeRemaining": 1176,
-            "currentTemp": 89,
-            "shakeStatus": 0,
-        },
+        "stepArray": [
+            {
+                "cookSetTime": AirFryerDefaults.cook_time_s,  # Seconds
+                "cookTemp": AirFryerDefaults.cook_temp_f,
+                "mode": DC601_RECIPE.cook_mode,
+                "cookLastTime": AirFryerDefaults.cook_last_time_s,  # Seconds
+                "shakeTime": 0,
+                "cookEndTime": 0,
+                "recipeName": DC601_RECIPE.recipe_name,
+                "recipeId": DC601_RECIPE.recipe_id,
+                "recipeType": DC601_RECIPE.recipe_type,
+            }
+        ],
+        "cookMode": "normal",
+        "tempUnit": AirFryerDefaults.temp_unit.label,
+        "stepIndex": 0,
+        "cookStatus": AirFryerDefaults.cook_status.value,
+        "preheatSetTime": 0,
+        "preheatLastTime": 0,
+        "preheatEndTime": 0,
+        "preheatTemp": 0,
+        "startTime": 1767318116,
+        "totalTimeRemaining": 1176,
+        "currentTemp": 89,
+        "shakeStatus": 0,
+    },
+    "CAF-TF101S": {
+        "statusList": [
+            {
+                "cookStatus": AirFryerDefaults.cook_status.value,
+                "chamber": 1,
+                "cookSetTime": AirFryerDefaults.cook_time_s,  # Seconds
+                "cookTemp": AirFryerDefaults.cook_temp_f,
+                "mode": TF101S_RECIPE.cook_mode,
+                "currentRemainingTime": AirFryerDefaults.cook_last_time_s,
+                "totalTimeRemaining": AirFryerDefaults.cook_last_time_s,
+                "startTime": 1767318116,
+                "recipeType": TF101S_RECIPE.recipe_type,
+                "recipeId": TF101S_RECIPE.recipe_id,
+                "recipeName": TF101S_RECIPE.recipe_name,
+                "upc": "",
+                "holdTime": 0,
+            },
+            {
+                "cookStatus": "standby",
+                "chamber": 2,
+                "cookSetTime": 0,
+                "cookTemp": 0,
+                "mode": "",
+                "currentRemainingTime": 0,
+                "totalTimeRemaining": 0,
+                "startTime": 0,
+                "recipeType": 3,
+                "recipeId": 0,
+                "recipeName": "",
+                "upc": "",
+                "holdTime": 0,
+            },
+        ],
+        "tempUnit": AirFryerDefaults.temp_unit.label,
+        "syncType": 0,
+        "workChamber": 1,
     },
 }
 
-AIR_FRYER_STANDYBY_DETAILS: dict[str, dict[str, list | str | float | dict | None]] = {
+AIR_FRYER_STANDBY_DETAILS: dict[str, dict] = {
+    "CS158-AF": {"returnStatus": {"cookStatus": "standby"}},
     "CAF-DC601S": {
         "stepArray": [],
         "cookMode": "normal",
@@ -144,23 +189,46 @@ AIR_FRYER_STANDYBY_DETAILS: dict[str, dict[str, list | str | float | dict | None
         "currentTemp": 43,
         "shakeStatus": 0,
     },
-    "CS158-AF": {"returnStatus": {"cookStatus": "standby"}},
+    "CAF-TF101S": {
+        "statusList": [
+            {"cookStatus": "standby", "chamber": 1},
+            {"cookStatus": "standby", "chamber": 2},
+        ],
+        "tempUnit": AirFryerDefaults.temp_unit.label,
+        "syncType": 0,
+        "workChamber": 0,
+    },
 }
 
 
 METHOD_RESPONSES = {
     'CS158-AF': deepcopy(FunctionResponsesV1),
     'CAF-DC601S': deepcopy(FunctionResponsesV2),
+    'CAF-TF101S': deepcopy(FunctionResponsesV2),
 }
 
 
 DETAILS_RESPONSES_COOKING = {
-    "CS158-AF": deepcopy(AIR_FRYER_COOKING_DETAILS['CS158-AF']),
-    "CAF-DC601S": deepcopy(AIR_FRYER_COOKING_DETAILS['CAF-DC601S']),
+    "CS158-AF": build_bypass_v1_response(
+        result_dict=deepcopy(AIR_FRYER_COOKING_DETAILS["CS158-AF"]),
+    ),
+    "CAF-DC601S": build_bypass_v2_response(
+        inner_result=deepcopy(AIR_FRYER_COOKING_DETAILS["CAF-DC601S"]),
+    ),
+    "CAF-TF101S": build_bypass_v2_response(
+        inner_result=deepcopy(AIR_FRYER_COOKING_DETAILS["CAF-TF101S"]),
+    ),
 }
 
 
 DETAILS_RESPONSES_STANDBY = {
-    "CS158-AF": deepcopy(AIR_FRYER_STANDYBY_DETAILS['CS158-AF']),
-    "CAF-DC601S": deepcopy(AIR_FRYER_STANDYBY_DETAILS['CAF-DC601S']),
+    "CS158-AF": build_bypass_v1_response(
+        result_dict=deepcopy(AIR_FRYER_STANDBY_DETAILS["CS158-AF"]),
+    ),
+    "CAF-DC601S": build_bypass_v2_response(
+        inner_result=deepcopy(AIR_FRYER_STANDBY_DETAILS["CAF-DC601S"]),
+    ),
+    "CAF-TF101S": build_bypass_v2_response(
+        inner_result=deepcopy(AIR_FRYER_STANDBY_DETAILS["CAF-TF101S"]),
+    ),
 }
