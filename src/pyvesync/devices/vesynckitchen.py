@@ -301,9 +301,7 @@ class VeSyncAirFryer158(VeSyncFryer):
             )
             return False
         json_cmd = {'jsonCmd': cmd}
-        resp = await self.call_158_api(
-            models.Fryer158RequestModel, update_dict=json_cmd
-        )
+        resp = await self.call_158_api(models.Fryer158RequestModel, update_dict=json_cmd)
         r = Helpers.process_dev_response(logger, 'end', self, resp)
         if r is None:
             return False
@@ -322,9 +320,7 @@ class VeSyncAirFryer158(VeSyncFryer):
             )
             return False
         json_cmd = {'jsonCmd': cmd}
-        resp = await self.call_158_api(
-            models.Fryer158RequestModel, update_dict=json_cmd
-        )
+        resp = await self.call_158_api(models.Fryer158RequestModel, update_dict=json_cmd)
         r = Helpers.process_dev_response(logger, 'stop', self, resp)
         if r is None:
             return False
@@ -346,9 +342,7 @@ class VeSyncAirFryer158(VeSyncFryer):
             )
             return False
         json_cmd = {'jsonCmd': cmd}
-        resp = await self.call_158_api(
-            models.Fryer158RequestModel, update_dict=json_cmd
-        )
+        resp = await self.call_158_api(models.Fryer158RequestModel, update_dict=json_cmd)
         r = Helpers.process_dev_response(logger, 'resume', self, resp)
         if r is None:
             return False
@@ -379,9 +373,7 @@ class VeSyncAirFryer158(VeSyncFryer):
             )
             cmd = {'cookMode': cook_req}
         json_cmd = {'jsonCmd': cmd}
-        resp = await self.call_158_api(
-            models.Fryer158RequestModel, update_dict=json_cmd
-        )
+        resp = await self.call_158_api(models.Fryer158RequestModel, update_dict=json_cmd)
         r = Helpers.process_dev_response(logger, 'set_mode_from_recipe', self, resp)
         if r is None:
             return False
@@ -433,9 +425,7 @@ class VeSyncAirFryer158(VeSyncFryer):
             }
         }
         json_cmd = {'jsonCmd': cmd}
-        resp = await self.call_158_api(
-            models.Fryer158RequestModel, update_dict=json_cmd
-        )
+        resp = await self.call_158_api(models.Fryer158RequestModel, update_dict=json_cmd)
         r = Helpers.process_dev_response(logger, 'cook_from_preheat', self, resp)
         if r is None:
             return False
@@ -737,17 +727,11 @@ class VeSyncDualAirFryer(BypassV2Mixin, VeSyncFryer):
 
         if self.sync_chambers:
             return [
-                models.FryerDualCookConfig.from_dict(
-                    {**config_dict, 'chamber': 1}
-                ),
-                models.FryerDualCookConfig.from_dict(
-                    {**config_dict, 'chamber': 2}
-                ),
+                models.FryerDualCookConfig.from_dict({**config_dict, 'chamber': 1}),
+                models.FryerDualCookConfig.from_dict({**config_dict, 'chamber': 2}),
             ]
         return [
-            models.FryerDualCookConfig.from_dict(
-                {**config_dict, 'chamber': chamber}
-            ),
+            models.FryerDualCookConfig.from_dict({**config_dict, 'chamber': chamber}),
         ]
 
     async def set_mode_from_recipe(
@@ -770,14 +754,16 @@ class VeSyncDualAirFryer(BypassV2Mixin, VeSyncFryer):
         work_chamber = self._get_work_chamber(chamber)
         sync_type = self._get_sync_type()
 
-        start_data = models.FryerDualStartCookData.from_dict({
-            'accountId': self.manager.account_id,
-            'cookConfigs': [c.to_dict() for c in cook_configs],
-            'readyStart': True,
-            'syncType': sync_type,
-            'tempUnit': self.temp_unit.code,
-            'workChamber': work_chamber,
-        })
+        start_data = models.FryerDualStartCookData.from_dict(
+            {
+                'accountId': self.manager.account_id,
+                'cookConfigs': [c.to_dict() for c in cook_configs],
+                'readyStart': True,
+                'syncType': sync_type,
+                'tempUnit': self.temp_unit.code,
+                'workChamber': work_chamber,
+            }
+        )
 
         resp = await self.call_bypassv2_api(
             payload_method='startMultiCook',

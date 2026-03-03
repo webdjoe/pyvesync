@@ -1107,14 +1107,16 @@ air_fryer_modules: list[AirFryerMap] = [
         default_preset=AirFryerPresets.custom,
         default_cook_mode=AirFryerCookModes.CUSTOM,
         time_units=TimeUnits.MINUTES,
-        status_map=MappingProxyType({
-            'heating': AirFryerCookStatus.HEATING,
-            'cooking': AirFryerCookStatus.COOKING,
-            'cookStop': AirFryerCookStatus.COOK_STOP,
-            'heatStop': AirFryerCookStatus.PREHEAT_STOP,
-            'heatEnd': AirFryerCookStatus.PREHEAT_END,
-            'standby': AirFryerCookStatus.STANDBY,
-        })
+        status_map=MappingProxyType(
+            {
+                'heating': AirFryerCookStatus.HEATING,
+                'cooking': AirFryerCookStatus.COOKING,
+                'cookStop': AirFryerCookStatus.COOK_STOP,
+                'heatStop': AirFryerCookStatus.PREHEAT_STOP,
+                'heatEnd': AirFryerCookStatus.PREHEAT_END,
+                'standby': AirFryerCookStatus.STANDBY,
+            }
+        ),
     ),
     AirFryerMap(
         class_name='VeSyncTurboBlazeFryer',
@@ -1134,14 +1136,16 @@ air_fryer_modules: list[AirFryerMap] = [
         time_units=TimeUnits.SECONDS,
         temperature_range_f=(90, 450),
         temperature_range_c=(30, 230),
-        status_map=MappingProxyType({
-            'ready': AirFryerCookStatus.COOK_STOP,
-            'cooking': AirFryerCookStatus.COOKING,
-            'heating': AirFryerCookStatus.HEATING,
-            'cookStop': AirFryerCookStatus.COOK_STOP,
-            'pullOut': AirFryerCookStatus.PULL_OUT,
-            'cookEnd': AirFryerCookStatus.COOK_END,
-            }),
+        status_map=MappingProxyType(
+            {
+                'ready': AirFryerCookStatus.COOK_STOP,
+                'cooking': AirFryerCookStatus.COOKING,
+                'heating': AirFryerCookStatus.HEATING,
+                'cookStop': AirFryerCookStatus.COOK_STOP,
+                'pullOut': AirFryerCookStatus.PULL_OUT,
+                'cookEnd': AirFryerCookStatus.COOK_END,
+            }
+        ),
     ),
     AirFryerMap(
         class_name='VeSyncDualAirFryer',
@@ -1166,13 +1170,15 @@ air_fryer_modules: list[AirFryerMap] = [
         time_units=TimeUnits.SECONDS,
         temperature_range_f=(130, 450),
         temperature_range_c=(55, 240),
-        status_map=MappingProxyType({
-            'standby': AirFryerCookStatus.STANDBY,
-            'ready': AirFryerCookStatus.COOK_STOP,
-            'cooking': AirFryerCookStatus.COOKING,
-            'cookStop': AirFryerCookStatus.COOK_STOP,
-            'pullOut': AirFryerCookStatus.PULL_OUT,
-        }),
+        status_map=MappingProxyType(
+            {
+                'standby': AirFryerCookStatus.STANDBY,
+                'ready': AirFryerCookStatus.COOK_STOP,
+                'cooking': AirFryerCookStatus.COOKING,
+                'cookStop': AirFryerCookStatus.COOK_STOP,
+                'pullOut': AirFryerCookStatus.PULL_OUT,
+            }
+        ),
     ),
 ]
 """List of ['AirFryerMap'][pyvesync.device_map.AirFryerMap] configuration

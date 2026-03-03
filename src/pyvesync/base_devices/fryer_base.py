@@ -244,9 +244,7 @@ class FryerState(DeviceState):
         """Set the fryer state to preheat stopped."""
         self.cook_status = AirFryerCookStatus.PREHEAT_STOP
         if preheat_set_time is not None:
-            self.preheat_set_time = self.device.convert_time_for_state(
-                preheat_set_time
-            )
+            self.preheat_set_time = self.device.convert_time_for_state(preheat_set_time)
         self.preheat_last_time = self.preheat_time_remaining
         self.last_timestamp = None
 
@@ -254,9 +252,7 @@ class FryerState(DeviceState):
         """Set the fryer state to preheat resumed."""
         self.cook_status = AirFryerCookStatus.HEATING
         if preheat_set_time is not None:
-            self.preheat_set_time = self.device.convert_time_for_state(
-                preheat_set_time
-            )
+            self.preheat_set_time = self.device.convert_time_for_state(preheat_set_time)
         self.preheat_last_time = self.preheat_time_remaining
         self.last_timestamp = datetime.now(timezone.utc)
 
@@ -363,9 +359,7 @@ class FryerState(DeviceState):
 
         # Handle preheat attributes
         if preheat_set_time is not None:
-            self.preheat_set_time = self.device.convert_time_for_state(
-                preheat_set_time
-            )
+            self.preheat_set_time = self.device.convert_time_for_state(preheat_set_time)
             self.preheat_last_time = (
                 self.device.convert_time_for_state(preheat_last_time)
                 if preheat_last_time is not None
