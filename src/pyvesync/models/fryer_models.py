@@ -5,30 +5,53 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Annotated
 
+from mashumaro.exceptions import MissingField
 from mashumaro.types import Discriminator
 
 from pyvesync.models.base_models import RequestBaseModel, ResponseBaseModel
 from pyvesync.models.bypass_models import (
     BypassV1Result,
     BypassV2InnerResult,
-    RequestBypassV1,
 )
 
 
 @dataclass
-class Fryer158RequestModel(RequestBypassV1):
+class Fryer158RequestModel(RequestBaseModel):
     """Request model for air fryer commands."""
 
-    pid: str  # type: ignore[misc]  # bug in mypy invalid argument ordering
-    jsonCmd: dict  # type: ignore[misc]  # bug in mypy invalid argument ordering
-    deviceId: str = field(default_factory=str)
-    configModel: str = field(default_factory=lambda: '')
+    acceptLanguage: str
+    accountID: str
+    appVersion: str
+    cid: str
+    configModule: str
+    debugMode: bool
+    method: str
+    phoneBrand: str
+    phoneOS: str
+    traceId: str
+    timeZone: str
+    token: str
+    userCountryCode: str
+    uuid: str
+    pid: str = field(default_factory=str)
+    jsonCmd: dict = field(default_factory=dict)
+    # deviceId: str = field(default_factory=str)
+    # configModel: str = field(default_factory=lambda: '')
 
-    def __post_serialize__(self, d: dict) -> dict:
-        """Remove empty strings before serialization."""
-        for attrs in ['deviceId', 'configModel']:
-            d.pop(attrs, None)
-        return d
+    @classmethod
+    def __post_deserialize__(cls, obj: Fryer158RequestModel) -> Fryer158RequestModel:  # type: ignore[reportIncompatibleMethodOverride]
+        """Validate required fields after deserialization."""
+        if not obj.pid:
+            raise MissingField('pid', str, Fryer158RequestModel)
+        if not obj.jsonCmd:
+            raise MissingField('jsonCmd', dict, Fryer158RequestModel)
+        return obj
+
+    # def __post_serialize__(self, d: dict) -> dict:
+    #     """Remove empty strings before serialization."""
+    #     for attrs in ['deviceId', 'configModel']:
+    #         d.pop(attrs, None)
+    #     return d
 
 
 @dataclass
@@ -52,6 +75,7 @@ class Fryer158CookingReturnStatus(ResponseBaseModel):
     preheatLastTime: int | None = None
     preheatSetTime: int | None = None
     targetTemp: int | None = None
+    customRecipe: str | None = None
 
 
 @dataclass

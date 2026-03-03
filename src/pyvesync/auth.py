@@ -236,6 +236,7 @@ class VeSyncAuth:
             'token': self._token,
             'account_id': self._account_id,
             'country_code': self._country_code,
+            'current_region': self.current_region,
         }
         try:
             data = orjson.dumps(credentials).decode('utf-8')

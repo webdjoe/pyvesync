@@ -40,3 +40,5 @@ testing_scripts/yamltest.yaml
 testing_scripts/yamltest copy.yaml
 creds.json
 docstest/*
+/.claude
+.mcp.json

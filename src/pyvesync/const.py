@@ -892,14 +892,35 @@ class AirFryerCookStatus(StrEnum):
     COOK_STOP = 'cookStop'
     COOK_END = 'cookEnd'
     PULL_OUT = 'pullOut'
-    PAUSED = 'paused'
     COMPLETED = 'completed'
     HEATING = 'heating'
-    STOPPED = 'stopped'
     UNKNOWN = 'unknown'
     STANDBY = 'standby'
     PREHEAT_END = 'preheatEnd'
     PREHEAT_STOP = 'preheatStop'
+
+
+PREHEAT_STATUSES = [
+    AirFryerCookStatus.PREHEAT_END,
+    AirFryerCookStatus.PREHEAT_STOP,
+    AirFryerCookStatus.HEATING,
+]
+
+COOK_STATUSES = [
+    AirFryerCookStatus.COOKING,
+    AirFryerCookStatus.COOK_STOP,
+    AirFryerCookStatus.COOK_END,
+]
+
+RESUMABLE_STATUSES = [
+    AirFryerCookStatus.COOK_STOP,
+    AirFryerCookStatus.PREHEAT_STOP,
+]
+
+RUNNING_STATUSES = [
+    AirFryerCookStatus.COOKING,
+    AirFryerCookStatus.HEATING,
+]
 
 
 # Thermostat Constants

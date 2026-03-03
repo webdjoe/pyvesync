@@ -61,11 +61,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from itertools import chain
-from types import ModuleType
+from types import MappingProxyType, ModuleType
 from typing import Union
 
 from pyvesync.const import (
     AirFryerCookModes,
+    AirFryerCookStatus,
     AirFryerFeatures,
     AirFryerPresetRecipe,
     AirFryerPresets,
@@ -342,9 +343,14 @@ class AirFryerMap(DeviceMapTemplate):
     product_line: str = ProductLines.WIFI_KITCHEN
     product_type: str = ProductTypes.AIR_FRYER
     module: ModuleType = vesynckitchen
-    default_preset: AirFryerPresetRecipe = AirFryerPresets.custom
+    default_preset: AirFryerPresetRecipe = field(
+        default_factory=lambda: AirFryerPresets.custom
+    )
     cook_modes: dict[str, str] = field(default_factory=dict)
     default_cook_mode: str = AirFryerCookModes.AIRFRY
+    status_map: MappingProxyType[str, AirFryerCookStatus] = field(
+        default_factory=lambda: MappingProxyType({})
+    )
 
 
 @dataclass(kw_only=True)
@@ -1101,6 +1107,14 @@ air_fryer_modules: list[AirFryerMap] = [
         default_preset=AirFryerPresets.custom,
         default_cook_mode=AirFryerCookModes.CUSTOM,
         time_units=TimeUnits.MINUTES,
+        status_map=MappingProxyType({
+            'heating': AirFryerCookStatus.HEATING,
+            'cooking': AirFryerCookStatus.COOKING,
+            'cookStop': AirFryerCookStatus.COOK_STOP,
+            'heatStop': AirFryerCookStatus.PREHEAT_STOP,
+            'heatEnd': AirFryerCookStatus.PREHEAT_END,
+            'standby': AirFryerCookStatus.STANDBY,
+        })
     ),
     AirFryerMap(
         class_name='VeSyncTurboBlazeFryer',
@@ -1120,6 +1134,14 @@ air_fryer_modules: list[AirFryerMap] = [
         time_units=TimeUnits.SECONDS,
         temperature_range_f=(90, 450),
         temperature_range_c=(30, 230),
+        status_map=MappingProxyType({
+            'ready': AirFryerCookStatus.COOK_STOP,
+            'cooking': AirFryerCookStatus.COOKING,
+            'heating': AirFryerCookStatus.HEATING,
+            'cookStop': AirFryerCookStatus.COOK_STOP,
+            'pullOut': AirFryerCookStatus.PULL_OUT,
+            'cookEnd': AirFryerCookStatus.COOK_END,
+            }),
     ),
 ]
 """List of ['AirFryerMap'][pyvesync.device_map.AirFryerMap] configuration
