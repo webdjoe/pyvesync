@@ -856,6 +856,7 @@ class AirFryerCookModes(StrEnum):
     WARM = 'warm'
     AIRFRY = 'airfry'
     DRY = 'dry'
+    GRILL = 'grill'
     PREHEAT = 'preheat'
 
 

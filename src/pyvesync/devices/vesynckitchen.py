@@ -43,6 +43,7 @@ from pyvesync.utils.helpers import Helpers
 
 if TYPE_CHECKING:
     from pyvesync import VeSync
+    from pyvesync.base_devices.fryer_base import FryerState
     from pyvesync.device_map import AirFryerMap
     from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
 
@@ -237,35 +238,6 @@ class VeSyncAirFryer158(VeSyncFryer):
         preheat_mode['preheatSetTime'] = cook_time
         preheat_mode['preheatStatus'] = self.status_map[AirFryerCookStatus.HEATING]
         return preheat_mode
-
-# "jsonCmd": {
-# 		"preheat": {
-# 			"tempUnit": "fahrenheit",
-# 			"accountId": "1221391",
-# 			"mode": "steak",
-# 			"recipeType": 3,
-# 			"readyStart": false,
-# 			"preheatStatus": "heating",
-# 			"recipeId": 2,
-# 			"customRecipe": "Steak",
-# 			"cookSetTime": 10,
-# 			"preheatSetTime": 5,
-# 			"targetTemp": 400
-# 		}
-# 	},
-# "cookMode": {
-# 			"cookSetTime": 15,
-# 			"cookSetTemp": 350,
-# 			"appointmentTs": 0,
-# 			"recipeId": 1,
-# 			"readyStart": false,
-# 			"recipeType": 3,
-# 			"customRecipe": "Manual",
-# 			"mode": "custom",
-# 			"accountId": "1221391",
-# 			"cookStatus": "cooking",
-# 			"tempUnit": "fahrenheit"
-# 		}
 
     async def get_details(self) -> None:
         cmd = {'getStatus': 'status'}
@@ -585,3 +557,282 @@ class VeSyncTurboBlazeFryer(BypassV2Mixin, VeSyncFryer):
         if preheat_time is not None:
             recipe.preheat_time = self.convert_time_for_api(preheat_time)
         return await self.set_mode_from_recipe(recipe)
+
+
+class VeSyncDualAirFryer(BypassV2Mixin, VeSyncFryer):
+    """Cosori Dual Air Fryer Class (CAF-TF101S).
+
+    Supports dual-chamber cooking with three operating modes:
+    - Single chamber (left or right)
+    - Whole chamber (merged)
+    - Sync mode (both chambers with identical settings)
+
+    The device has no preheat, pause, or resume API. Pausing is handled
+    physically by pulling the basket out, which triggers a ``cookStop``
+    or ``pullOut`` state. Pushing the basket back in resumes cooking
+    automatically.
+
+    Args:
+        details (ResponseDeviceDetailsModel): Device details.
+        manager (VeSync): Manager class.
+        feature_map (AirFryerMap): Device feature map.
+
+    Attributes:
+        state_chamber_1 (FryerState): State for chamber 1 (left) or whole.
+        state_chamber_2 (FryerState): State for chamber 2 (right).
+        sync_chambers (bool): Whether chambers are synced for cooking.
+    """
+
+    __slots__ = ()
+
+    # workChamber API values
+    _WC_NONE = 0
+    _WC_LEFT = 1
+    _WC_RIGHT = 2
+    _WC_WHOLE = 3
+    _WC_SYNC = 4
+    _SYNC_TYPE_SYNCED = 2
+
+    def _get_chamber_state(self, chamber: int) -> FryerState:
+        """Return the FryerState for the given chamber number.
+
+        Args:
+            chamber: Chamber number (1=left, 2=right, 3=whole maps to chamber 1).
+        """
+        if chamber == self._WC_RIGHT:
+            return self.state_chamber_2
+        return self.state_chamber_1
+
+    def _get_work_chamber(self, chamber: int) -> int:
+        """Return the API workChamber value for the given chamber.
+
+        Args:
+            chamber: Chamber number (1, 2, or 3).
+
+        Returns:
+            API workChamber value (1, 2, 3, or 4 for sync).
+        """
+        if self.sync_chambers:
+            return self._WC_SYNC
+        return chamber
+
+    def _get_sync_type(self) -> int:
+        """Return the API syncType value."""
+        return self._SYNC_TYPE_SYNCED if self.sync_chambers else 0
+
+    async def get_details(self) -> None:
+        """Get device details from the API.
+
+        Polls ``getAirfryerMultiStatus`` and updates state for each chamber.
+        """
+        resp = await self.call_bypassv2_api(
+            payload_method='getAirfryerMultiStatus',
+        )
+        resp_model = process_bypassv2_result(
+            self,
+            logger,
+            'get_details',
+            resp,
+            models.FryerDualMultiStatusResult,
+        )
+
+        if resp_model is None:
+            self.state_chamber_1.set_standby()
+            self.state_chamber_2.set_standby()
+            return
+
+        # Update sync state from API response
+        self.sync_chambers = resp_model.syncType == self._SYNC_TYPE_SYNCED
+        self.state_chamber_1.sync_chambers = self.sync_chambers
+        self.state_chamber_2.sync_chambers = self.sync_chambers
+
+        # Track which chambers were updated
+        updated_chambers: set[int] = set()
+
+        for status_item in resp_model.statusList:
+            ch_num = status_item.chamber
+            updated_chambers.add(ch_num)
+            chamber_state = self._get_chamber_state(ch_num)
+
+            if (
+                status_item.cookStatus not in self.status_map
+                or status_item.cookStatus == AirFryerCookStatus.STANDBY.value
+            ):
+                chamber_state.set_standby()
+                continue
+
+            chamber_state.set_state(
+                cook_status=self.status_map[status_item.cookStatus],
+                cook_time=status_item.cookSetTime,
+                cook_last_time=status_item.currentRemainingTime,
+                cook_temp=status_item.cookTemp,
+                temp_unit=resp_model.tempUnit,
+                cook_mode=status_item.mode,
+                recipe=status_item.recipeName or None,
+            )
+
+        # Set any chambers not in the response to standby
+        if (
+            self._WC_LEFT not in updated_chambers
+            and self._WC_WHOLE not in updated_chambers
+        ):
+            self.state_chamber_1.set_standby()
+        if (
+            self._WC_RIGHT not in updated_chambers
+            and self._WC_WHOLE not in updated_chambers
+        ):
+            self.state_chamber_2.set_standby()
+
+    async def end(self, chamber: int = 1) -> bool:
+        """End the current cooking session.
+
+        Args:
+            chamber: Chamber to end (1=left, 2=right, 3=whole).
+                If sync mode is active, ends both chambers.
+
+        Returns:
+            True if the command was successful.
+        """
+        api_chamber = self._get_work_chamber(chamber)
+        resp = await self.call_bypassv2_api(
+            payload_method='endCook',
+            data={'chamber': api_chamber},
+        )
+        r = Helpers.process_dev_response(logger, 'end', self, resp)
+        if r is None:
+            return False
+
+        if self.sync_chambers or api_chamber == self._WC_SYNC:
+            self.state_chamber_1.set_standby()
+            self.state_chamber_2.set_standby()
+            self.sync_chambers = False
+        elif chamber == self._WC_WHOLE:
+            self.state_chamber_1.set_standby()
+        else:
+            self._get_chamber_state(chamber).set_standby()
+        return True
+
+    def _build_cook_configs(
+        self,
+        recipe: AirFryerPresetRecipe,
+        chamber: int,
+    ) -> list[models.FryerDualCookConfig]:
+        """Build cookConfigs list for startMultiCook request.
+
+        Args:
+            recipe: The recipe to cook.
+            chamber: Chamber number (1, 2, or 3 for whole).
+
+        Returns:
+            List of FryerDualCookConfig for the API request.
+        """
+        config_dict = {
+            'cookSetTime': recipe.cook_time,
+            'cookTemp': recipe.target_temp,
+            'mode': recipe.cook_mode,
+            'recipeId': recipe.recipe_id,
+            'recipeName': recipe.recipe_name,
+            'recipeType': recipe.recipe_type,
+        }
+
+        if self.sync_chambers:
+            return [
+                models.FryerDualCookConfig.from_dict(
+                    {**config_dict, 'chamber': 1}
+                ),
+                models.FryerDualCookConfig.from_dict(
+                    {**config_dict, 'chamber': 2}
+                ),
+            ]
+        return [
+            models.FryerDualCookConfig.from_dict(
+                {**config_dict, 'chamber': chamber}
+            ),
+        ]
+
+    async def set_mode_from_recipe(
+        self,
+        recipe: AirFryerPresetRecipe,
+        *,
+        chamber: int = 1,
+    ) -> bool:
+        """Start cooking with a preset recipe.
+
+        Args:
+            recipe: The preset recipe to use.
+            chamber: Chamber to cook in (1=left, 2=right, 3=whole).
+                If ``sync_chambers`` is True, both chambers cook in sync.
+
+        Returns:
+            True if the command was successful.
+        """
+        cook_configs = self._build_cook_configs(recipe, chamber)
+        work_chamber = self._get_work_chamber(chamber)
+        sync_type = self._get_sync_type()
+
+        start_data = models.FryerDualStartCookData.from_dict({
+            'accountId': self.manager.account_id,
+            'cookConfigs': [c.to_dict() for c in cook_configs],
+            'readyStart': True,
+            'syncType': sync_type,
+            'tempUnit': self.temp_unit.code,
+            'workChamber': work_chamber,
+        })
+
+        resp = await self.call_bypassv2_api(
+            payload_method='startMultiCook',
+            data=start_data.to_dict(),
+        )
+        r = Helpers.process_dev_response(logger, 'set_mode_from_recipe', self, resp)
+        if r is None:
+            return False
+
+        # Update state for affected chambers
+        chambers = (
+            [self.state_chamber_1, self.state_chamber_2]
+            if self.sync_chambers
+            else [self._get_chamber_state(chamber)]
+        )
+        for ch_state in chambers:
+            ch_state.set_state(
+                cook_status=AirFryerCookStatus.COOKING,
+                cook_time=recipe.cook_time,
+                cook_last_time=recipe.cook_time,
+                cook_temp=recipe.target_temp,
+                cook_mode=recipe.cook_mode,
+                recipe=recipe.recipe_name,
+            )
+        return True
+
+    async def set_mode(
+        self,
+        cook_time: int,
+        cook_temp: int,
+        *,
+        preheat_time: int | None = None,
+        cook_mode: str | None = None,
+        chamber: int = 1,
+    ) -> bool:
+        """Set cooking mode with manual parameters.
+
+        Args:
+            cook_time: Cooking time in seconds.
+            cook_temp: Cooking temperature.
+            preheat_time: Not used for this device.
+            cook_mode: Cooking mode string (e.g. 'AirFry').
+            chamber: Chamber number (1=left, 2=right, 3=whole).
+
+        Returns:
+            True if the command was successful.
+        """
+        del preheat_time  # not supported by this device
+        if not self.validate_temperature(cook_temp):
+            logger.warning('Invalid cook temperature for %s', self.device_name)
+            return False
+        cook_temp = self.round_temperature(cook_temp)
+        recipe = replace(self.default_preset)
+        recipe.cook_time = cook_time
+        recipe.target_temp = cook_temp
+        if cook_mode is not None:
+            recipe.cook_mode = cook_mode
+        return await self.set_mode_from_recipe(recipe, chamber=chamber)
