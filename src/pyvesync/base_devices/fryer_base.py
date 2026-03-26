@@ -473,7 +473,7 @@ class VeSyncFryer(VeSyncBaseDevice):
 
         # attempt to set temp unit from country code before first update
         self._temp_unit: TemperatureUnits = TemperatureUnits.CELSIUS
-        if self.manager.measure_unit and self.manager.measure_unit.lower() == 'imperial':
+        if self.manager.country_code == 'US':
             self._temp_unit = TemperatureUnits.FAHRENHEIT
 
         # Set state to primary chamber (chamber 1) for base class compatibility

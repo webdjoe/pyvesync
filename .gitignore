@@ -42,3 +42,4 @@ creds.json
 docstest/*
 /.claude
 .mcp.json
+.vesync_auth

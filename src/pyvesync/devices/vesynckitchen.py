@@ -28,6 +28,7 @@ from pyvesync.const import (
     AirFryerCookStatus,
     AirFryerPresetRecipe,
     ConnectionStatus,
+    TemperatureUnits,
 )
 from pyvesync.models import fryer_models as models
 from pyvesync.utils.device_mixins import (
@@ -488,7 +489,7 @@ class VeSyncTurboBlazeFryer(BypassV2Mixin, VeSyncFryer):
             self.state.set_standby()
             return
 
-        self.state.set_state(
+        self.state_chamber_1.set_state(
             cook_status=self.status_map[resp_model.cookStatus],
             cook_time=cook_step.cookSetTime,
             cook_last_time=cook_step.cookLastTime,
@@ -631,6 +632,8 @@ class VeSyncDualAirFryer(BypassV2Mixin, VeSyncFryer):
             self.state_chamber_2.set_standby()
             return
 
+        self.temp_unit = TemperatureUnits.from_string(resp_model.tempUnit)
+
         # Update sync state from API response
         self.sync_chambers = resp_model.syncType == self._SYNC_TYPE_SYNCED
         self.state_chamber_1.sync_chambers = self.sync_chambers
@@ -648,6 +651,13 @@ class VeSyncDualAirFryer(BypassV2Mixin, VeSyncFryer):
                 status_item.cookStatus not in self.status_map
                 or status_item.cookStatus == AirFryerCookStatus.STANDBY.value
             ):
+                if status_item.cookStatus not in self.status_map:
+                    logger.warning(
+                        'Unknown cook status %s for %s chamber %d',
+                        status_item.cookStatus,
+                        self.device_name,
+                        ch_num,
+                    )
                 chamber_state.set_standby()
                 continue
 

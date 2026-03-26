@@ -37,6 +37,20 @@ class VeSyncAuth:
 
     Handles login, token management, and persistent storage of authentication
     credentials for VeSync API access.
+
+    Args:
+        manager: VeSync manager instance for API calls
+        username: VeSync account username (email)
+        password: VeSync account password
+        country_code: Country code in ISO 3166 Alpha-2 format
+
+    Note:
+        Either username/password or token/account_id must be provided.
+        If token_file_path is provided, credentials will be saved/loaded
+        automatically. When loading credentials, the current working directory
+        and home directory are checked for the token file if no path is provided.
+        When saving credentials, if no path is provided, it will save to the current
+        working directory.
     """
 
     __slots__ = (
@@ -57,19 +71,7 @@ class VeSyncAuth:
         password: str,
         country_code: str = DEFAULT_REGION,
     ) -> None:
-        """Initialize VeSync Authentication Manager.
-
-        Args:
-            manager: VeSync manager instance for API calls
-            username: VeSync account username (email)
-            password: VeSync account password
-            country_code: Country code in ISO 3166 Alpha-2 format
-
-        Note:
-            Either username/password or token/account_id must be provided.
-            If token_file_path is provided, credentials will be saved/loaded
-            automatically.
-        """
+        """Initialize VeSync Authentication Manager."""
         self.manager = manager
         self._username = username
         self._password = password
@@ -84,6 +86,11 @@ class VeSyncAuth:
         if self._country_code in NON_EU_COUNTRY_CODES:
             return 'US'
         return 'EU'
+
+    @property
+    def credentials_saved(self) -> bool:
+        """Return whether credentials have been saved to file."""
+        return self._token_file_path is not None and self._token_file_path.exists()
 
     @property
     def token(self) -> str:
@@ -150,17 +157,25 @@ class VeSyncAuth:
             True if re-authentication successful, False otherwise
         """
         self.clear_credentials()
-        return await self.login()
+        success = await self.login()
+        if success:
+            logger.debug('Re-authentication successful for user: %s', self._username)
+            if self.credentials_saved:
+                await self.save_credentials_to_file(self._token_file_path)
+        else:
+            logger.debug('Re-authentication failed for user: %s', self._username)
+            return False
+        return success
 
     async def load_credentials_from_file(
         self, file_path: str | Path | None = None
     ) -> bool:
         """Load credentials from token file if path is set.
 
-        If no path is provided, it will try to load from the users home directory and
-        then the current working directory.
+        If no path is provided, it will try to load from the current working directory and
+        then the user's home directory.
         """
-        locations = [Path.home() / '.vesync_auth', Path.cwd() / '.vesync_auth']
+        locations = [Path.cwd() / '.vesync_auth', Path.home() / '.vesync_auth']
         file_path_object: Path | None = None
         if file_path is None:
             for location in locations:
@@ -174,6 +189,7 @@ class VeSyncAuth:
         if not file_path_object or not file_path_object.exists():
             logger.debug('Credentials file not found: %s', file_path_object)
             return False
+        self._token_file_path = file_path_object
         try:
             data = await asyncio.to_thread(
                 Path(file_path_object).read_text, encoding='utf-8'
@@ -228,7 +244,7 @@ class VeSyncAuth:
             file_path_object = self._token_file_path
         else:
             logger.debug('No token file path set, saving to default location')
-            file_path_object = Path.home() / '.vesync_auth'
+            file_path_object = Path.cwd() / '.vesync_auth'
         if not self.is_authenticated:
             logger.debug('No credentials to save, not authenticated')
             return
