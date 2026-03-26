@@ -243,8 +243,7 @@ class VeSync:  # pylint: disable=function-redefined
             filename (str | Path | None): The name of the file to save credentials to.
                 If None, no action is taken.
         """
-        if filename is not None:
-            await self.auth.save_credentials_to_file(filename)
+        await self.auth.save_credentials_to_file(filename)
 
     async def load_credentials_from_file(
         self, filename: str | Path | None = None

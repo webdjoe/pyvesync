@@ -42,5 +42,9 @@ creds.json
 docstest/*
 .claude/settings.local.json
 .mcp.json
+<<<<<<< HEAD
 .vesync_auth
 **/CLAUDE.md
+=======
+.vesync_auth
+>>>>>>> 0e29ad8 (Fix fryer and auth bug)
