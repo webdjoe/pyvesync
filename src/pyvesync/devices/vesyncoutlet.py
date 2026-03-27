@@ -1005,7 +1005,7 @@ class VeSyncWYLDRPlug(VeSyncBSDOGPlug):
 
     __slots__ = ()
 
-    async def _get_energy_history(self, history_interval: str) -> None:
+    async def _get_energy_history(self, _history_interval: str) -> None:
         """Energy history is not supported by this device type."""
         logger.debug(
             '%s (%s) does not support energy history retrieval',
