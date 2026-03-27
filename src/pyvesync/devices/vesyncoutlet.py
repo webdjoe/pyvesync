@@ -989,6 +989,31 @@ class VeSyncBSDOGPlug(VeSyncOutletWHOGPlug):
         return True
 
 
+class VeSyncWYLDRPlug(VeSyncBSDOGPlug):
+    """VeSync WYLDR16A1081 smart plug.
+
+    Identical to VeSyncBSDOGPlug but does not support energy history
+    (weekly/monthly) via the bypassV2 API. Calls to getEnergyHistory
+    return result code -1 for this device type.
+
+    Args:
+        details (ResponseDeviceDetailsModel): The device details.
+        manager (VeSync): The VeSync manager.
+        feature_map (OutletMap): The feature map for the device.
+
+    """
+
+    __slots__ = ()
+
+    async def _get_energy_history(self, history_interval: str) -> None:
+        """Energy history is not supported by this device type."""
+        logger.debug(
+            '%s (%s) does not support energy history retrieval',
+            self.device_name,
+            self.device_type,
+        )
+
+
 class VeSyncESW10USA(BypassV2Mixin, VeSyncOutlet):
     """VeSync ESW10 USA outlet.
 

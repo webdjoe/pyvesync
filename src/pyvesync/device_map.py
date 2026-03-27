@@ -484,6 +484,15 @@ outlet_modules = [
         setup_entry='BSDOG01',
         device_alias='Smart Plug Series',
     ),
+    OutletMap(
+        dev_types=['WYLDR16A1081'],
+        class_name='VeSyncWYLDRPlug',
+        features=[OutletFeatures.ONOFF, OutletFeatures.ENERGY_MONITOR],
+        model_name='Smart Plug',
+        model_display='WYLDR Smart Plug',
+        setup_entry='WYLDR16A1081',
+        device_alias='WYLDR Smart Plug',
+    ),
 ]
 """List of ['OutletMap'][pyvesync.device_map.OutletMap] configuration
 objects for outlet devices."""
