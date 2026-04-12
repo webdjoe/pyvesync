@@ -40,11 +40,7 @@ testing_scripts/yamltest.yaml
 testing_scripts/yamltest copy.yaml
 creds.json
 docstest/*
-.claude/settings.local.json
+.claude/
 .mcp.json
-<<<<<<< HEAD
 .vesync_auth
 **/CLAUDE.md
-=======
-.vesync_auth
->>>>>>> 0e29ad8 (Fix fryer and auth bug)
