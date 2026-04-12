@@ -191,9 +191,7 @@ class VeSyncAuth:
             return False
         self._token_file_path = file_path_object
         try:
-            data = await asyncio.to_thread(
-                file_path_object.read_text, encoding='utf-8'
-            )
+            data = await asyncio.to_thread(file_path_object.read_text, encoding='utf-8')
             data = orjson.loads(data)
             self._token = data['token']
             self._account_id = data['account_id']
