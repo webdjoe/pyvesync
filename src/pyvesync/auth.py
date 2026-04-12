@@ -155,16 +155,18 @@ class VeSyncAuth:
 
         Returns:
             True if re-authentication successful, False otherwise
+
+        Raises:
+            VeSyncLoginError: If login fails due to invalid credentials
+            VeSyncAPIResponseError: If API response is invalid
+            VeSyncServerError: If server returns an error
         """
+        had_saved_credentials = self.credentials_saved
         self.clear_credentials()
         success = await self.login()
-        if success:
-            logger.debug('Re-authentication successful for user: %s', self._username)
-            if self.credentials_saved:
-                await self.save_credentials_to_file(self._token_file_path)
-        else:
-            logger.debug('Re-authentication failed for user: %s', self._username)
-            return False
+        logger.debug('Re-authentication successful for user: %s', self._username)
+        if had_saved_credentials:
+            await self.save_credentials_to_file(self._token_file_path)
         return success
 
     async def load_credentials_from_file(
@@ -182,8 +184,6 @@ class VeSyncAuth:
                 if location.exists():
                     file_path_object = location
                     break
-        elif isinstance(file_path, str):
-            file_path_object = Path(file_path)
         else:
             file_path_object = Path(file_path)
         if not file_path_object or not file_path_object.exists():
@@ -191,16 +191,14 @@ class VeSyncAuth:
             return False
         self._token_file_path = file_path_object
         try:
-            data = await asyncio.to_thread(
-                Path(file_path_object).read_text, encoding='utf-8'
-            )
+            data = await asyncio.to_thread(file_path_object.read_text, encoding='utf-8')
             data = orjson.loads(data)
             self._token = data['token']
             self._account_id = data['account_id']
             self._country_code = data['country_code'].upper()
             self._current_region = data['current_region'].upper()
-            logger.debug('Credentials loaded from file: %s', file_path)
-        except orjson.JSONDecodeError as exc:
+            logger.debug('Credentials loaded from file: %s', file_path_object)
+        except (orjson.JSONDecodeError, KeyError) as exc:
             logger.warning('Failed to load credentials from file: %s', exc)
             return False
         if self._token is None or self._account_id is None:
@@ -212,12 +210,12 @@ class VeSyncAuth:
 
     def output_credentials_dict(self) -> dict[str, str] | None:
         """Output current credentials as a dictionary."""
-        if not self.is_authenticated:
+        if self._token is None or self._account_id is None:
             logger.debug('No credentials to output, not authenticated')
             return None
         return {
-            'token': self._token or '',
-            'account_id': self._account_id or '',
+            'token': self._token,
+            'account_id': self._account_id,
             'country_code': self._country_code,
             'current_region': self._current_region,
         }
