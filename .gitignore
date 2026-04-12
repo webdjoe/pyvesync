@@ -43,3 +43,4 @@ docstest/*
 .claude/settings.local.json
 .mcp.json
 .vesync_auth
+**/CLAUDE.md

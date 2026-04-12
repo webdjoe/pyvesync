@@ -14,7 +14,6 @@ The structure of the framework is as follows:
 4. `utils.py` - Contains the general default values for all devices in the `Defaults` class and the `TestBase` class that contains the fixture that instantiates the VS object and patches the `call_api()` method.
 5. `conftest.py` - Contains the `pytest_generate_tests` function that is used to parametrize the tests based on all device types listed in the respective modules.
 
-
 ## Running the tests
 
 There are two pytest command line arguments built into the tests to specify when to write the api data to YAML files or when to overwrite the existing API calls in the YAML files.
@@ -59,11 +58,11 @@ The response side of the API is tested through the use of responses that have be
 
 The call_json files contain all of the response data for each device type. The following call_json files are included in the test directory:
 
-   - `call_json.py` - general API responses, including `login()` and `get_devices()`. The device list from the `get_devices()` can be used to create the device list response for all devices.
-   - `call_json_outlets.py` - API responses for the outlets
-   - `call_json_switches.py` - API responses for the switches
-   - `call_json_fans.py` - API responses for the fans
-   - `call_json_bulbs.py` - API responses for the bulbs
+- `call_json.py` - general API responses, including `login()` and `get_devices()`. The device list from the `get_devices()` can be used to create the device list response for all devices.
+- `call_json_outlets.py` - API responses for the outlets
+- `call_json_switches.py` - API responses for the switches
+- `call_json_fans.py` - API responses for the fans
+- `call_json_bulbs.py` - API responses for the bulbs
 
 #### call_json.py
 
@@ -78,13 +77,13 @@ The `DETAILS_RESPONSES` dictionary contains the device type as the key and refer
 The responses for device methods are also defined in the `call_json_DEVICE` module. The METHOD_RESPONSES dictionary uses a defaultdict imported from `utils.py` with a simple `{"code": 0, "message": ""}` as the default value. The `METHOD_RESPONSES` dictionary is created with keys of device type and values as the defaultdict object. From here the method responses can be added to the defaultdict object for specific scenarios.
 
 ```python
-from utils import FunctionResponses 
+from utils import FunctionResponses
 from copy import deepcopy
 
 device_types = ['dev1', 'dev2']
 
 # defaultdict with default value - ({"code": 0, "msg": None}, 200)
-method_response = FunctionResponses 
+method_response = FunctionResponses
 
 # Use deepcopy to build the device response dictionary used to test the get_details() method
 device_responses = {dev_type: deepcopy(method_response) for dev_type in device_types}
@@ -154,6 +153,7 @@ METHOD_RESPONSES['XYD0001'].update(XYD0001_RESP)
 API requests recorded from the mocked `call_api()` method. The `api` directory contains folders for each module and files for each device_type. The structure of the YAML files is:
 
 **File** `tests/api/switches/esl100.yaml`
+
 ```yaml
 turn_off:
   headers:
@@ -175,7 +175,7 @@ turn_off:
   url: /outdoorsocket15a/v1/device/devicestatus
 ```
 
-### **`utils.py`** - utility functions and default value factory for tests.
+### **`utils.py`** - utility functions and default value factory for tests
 
 The `utils.py`  file contains several helper functions and classes:
 
