@@ -9,16 +9,13 @@ Tests cover:
 - Error handling (bad responses, missing fields, cross-region)
 """
 
-import asyncio
 import logging
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
 
 import orjson
 import pytest
 
 from pyvesync import VeSync
-from pyvesync.auth import VeSyncAuth
 from pyvesync.utils.errors import (
     VeSyncAPIResponseError,
     VeSyncLoginError,
