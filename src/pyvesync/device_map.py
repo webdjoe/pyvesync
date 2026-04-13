@@ -1150,7 +1150,7 @@ air_fryer_modules: list[AirFryerMap] = [
     AirFryerMap(
         class_name='VeSyncDualAirFryer',
         module=vesynckitchen,
-        dev_types=['CAF-TF101S-AEU'],
+        dev_types=['CAF-TF101S-AEU', 'CAF-TF101S'],
         setup_entry='CAF-TF101S',
         device_alias='Dual Air Fryer',
         model_display='CAF-TF101S Series',

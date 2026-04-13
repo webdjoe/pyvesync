@@ -618,6 +618,7 @@ class VeSyncDualAirFryer(BypassV2Mixin, VeSyncFryer):
         """
         resp = await self.call_bypassv2_api(
             payload_method='getAirfryerMultiStatus',
+            payload_update={'subDeviceNo': 0, 'subDeviceType': ''},
         )
         resp_model = process_bypassv2_result(
             self,

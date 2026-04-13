@@ -16,6 +16,8 @@ update:
       data: {}
       method: getAirfryerMultiStatus
       source: APP
+      subDeviceNo: 0
+      subDeviceType: ''
     phoneBrand: pyvesync
     phoneOS: Android
     timeZone: America/New_York
