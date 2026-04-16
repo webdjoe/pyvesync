@@ -3,7 +3,7 @@
 Data models are used to strongly type and verify API request and response structure. All
 API calls require a data model to be passed in as a parameter. Each module in the `pyvesync.models` module is for a specific product type or API call.
 
-The dataclasses inherit from mashumaro's `DataClassORJSONMixin` which allows for easy serialization and deserialization of the data models, as well as providing a discrimintor for subclasses.
+The dataclasses inherit from mashumaro's `DataClassORJSONMixin` which allows for easy serialization and deserialization of the data models, as well as providing a discriminator for subclasses.
 
 The `bypassv2_models` module is a generic mixin for the bypassv2 API calls.
 

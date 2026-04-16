@@ -4,7 +4,7 @@ This document outlines the steps to capture network packets for adding support f
 
 The process outlined below is time consuming and can be difficult. An alternative method is to temporarily share the device. If you would prefer this method, please indicate in an issue or contact the maintainer directly. Sharing a device is done by going to the device settings and selecting "Share Device". Please create a post to notify the maintainers to receive the correct email address to share the device with.
 
-Please do not post a device request without being will to either capture packets or share the device.
+Please do not post a device request without being willing to either capture packets or share the device.
 
 ## Prerequisites
 

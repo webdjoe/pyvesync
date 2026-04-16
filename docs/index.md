@@ -17,6 +17,7 @@ The following product types are supported:
 5. `humidifier` - Humidifiers (not air purifiers)
 6. `bulb` - Light bulbs (not dimmers or switches)
 7. `airfryer` - Air fryers
+8. `thermostat` - Thermostats
 
 See [Supported Devices](supported_devices.md) for a complete list of supported devices and models.
 
@@ -82,25 +83,25 @@ async def main():
         redact=True  # Optional - Redact sensitive information from logs
         ) as manager:
 
-    # VeSync object is now instantiated
-    await manager.login()
-    # Check if logged in
-    assert manager.enabled
-    # Debug and Redact are optional arguments
-    manager.redact = True
+        # VeSync object is now instantiated
+        await manager.login()
+        # Check if logged in
+        assert manager.enabled
+        # Debug and Redact are optional arguments
+        manager.redact = True
 
-    # Get devices
-    await manager.get_devices()
-    # Device objects are now instantiated, but do not have state
-    await manager.update() # Pulls in state and updates all devices
+        # Get devices
+        await manager.get_devices()
+        # Device objects are now instantiated, but do not have state
+        await manager.update() # Pulls in state and updates all devices
 
-    # Or iterate through devices and update individually
-    for device in manager.outlets:
-        await device.update()
+        # Or iterate through devices and update individually
+        for device in manager.devices.outlets:
+            await device.update()
 
-    # Or update a product type of devices:
-    for outlet in manager.devices.outlets:
-        await outlet.update()
+        # Or update a product type of devices:
+        for outlet in manager.devices.outlets:
+            await outlet.update()
 
 if __name__ == "__main__":
     asyncio.run(main())
@@ -204,7 +205,7 @@ manager.devices.bulbs = [VeSyncBulbInstances]
 manager.devices.purifiers = [VeSyncPurifierInstances]
 manager.devices.humidifiers = [VeSyncHumidifierInstances]
 manager.devices.air_fryers = [VeSyncAirFryerInstances]
-managers.devices.thermostats = [VeSyncThermostatInstances]
+manager.devices.thermostats = [VeSyncThermostatInstances]
 ```
 
 ### Debugging and Getting Help
@@ -289,7 +290,7 @@ Devices and their attributes and methods can be accessed via the device lists in
 One device is simple to access, an outlet for example:
 
 ```python
-for devices in manager.outlets:
+for outlet in manager.devices.outlets:
     print(outlet)
     print(outlet.device_name)
     print(outlet.device_type)
@@ -371,28 +372,28 @@ Exceptions are no longer caught by the library and must be handled by the user. 
 
 Errors that occur at the aiohttp level are raised automatically and propagated to the user. That means exceptions raised by aiohttp that inherit from `aiohttp.ClientError` are propagated.
 
-When the connection to the VeSync API succeeds but returns an error code that prevents the library from functioning a custom exception inherited from `pyvesync.logs.VeSyncError` is raised.
+When the connection to the VeSync API succeeds but returns an error code that prevents the library from functioning a custom exception inherited from [`VeSyncError`][pyvesync.utils.errors.VeSyncError] is raised.
 
 Custom Exceptions raised by all API calls:
 
-- `pyvesync.logs.VeSyncServerError` - The API connected and returned a code indicated there is a server-side error.
-- `pyvesync.logs.VeSyncRateLimitError` - The API's rate limit has been exceeded.
-- `pyvesync.logs.VeSyncAPIStatusCodeError` - The API returned a non-200 status code.
-- `pyvesync.logs.VeSyncAPIResponseError` - The response from the API was not in an expected format.
+- [`VeSyncServerError`][pyvesync.utils.errors.VeSyncServerError] - The API connected and returned a code indicated there is a server-side error.
+- [`VeSyncRateLimitError`][pyvesync.utils.errors.VeSyncRateLimitError] - The API's rate limit has been exceeded.
+- [`VeSyncAPIStatusCodeError`][pyvesync.utils.errors.VeSyncAPIStatusCodeError] - The API returned a non-200 status code.
+- [`VeSyncAPIResponseError`][pyvesync.utils.errors.VeSyncAPIResponseError] - The response from the API was not in an expected format.
 
 Login API Exceptions
 
-- `pyvesync.logs.VeSyncLoginError` - The username or password is incorrect.
+- [`VeSyncLoginError`][pyvesync.utils.errors.VeSyncLoginError] - The username or password is incorrect.
 
-See [errors](https://webdjoe.github.io/pyvesync/latest/development/utils/errors) documentation for a complete list of error codes and exceptions.
+See [errors](./development/utils/errors.md) documentation for a complete list of error codes and exceptions.
 
-The [raise_api_errors()](https://webdjoe.github.io/pyvesync/latest/development/utils/errors/#pyvesync.utils.errors.raise_api_errors) function is called for every API call and checks for general response errors. It can raise the following exceptions:
+The [`raise_api_errors()`][pyvesync.utils.errors.raise_api_errors] function is called for every API call and checks for general response errors. It can raise the following exceptions:
 
-- `VeSyncServerError` - The API connected and returned a code indicated there is a server-side error.
-- `VeSyncRateLimitError` - The API's rate limit has been exceeded.
-- `VeSyncAPIStatusCodeError` - The API returned a non-200 status code.
-- `VeSyncTokenError` - The API returned a token error and requires `login()` to be called again.
-- `VeSyncLoginError` - The user name or password is incorrect.
+- [`VeSyncServerError`][pyvesync.utils.errors.VeSyncServerError] - The API connected and returned a code indicated there is a server-side error.
+- [`VeSyncRateLimitError`][pyvesync.utils.errors.VeSyncRateLimitError] - The API's rate limit has been exceeded.
+- [`VeSyncAPIStatusCodeError`][pyvesync.utils.errors.VeSyncAPIStatusCodeError] - The API returned a non-200 status code.
+- [`VeSyncTokenError`][pyvesync.utils.errors.VeSyncTokenError] - The API returned a token error and requires `login()` to be called again.
+- [`VeSyncLoginError`][pyvesync.utils.errors.VeSyncLoginError] - The user name or password is incorrect.
 
 ## Development
 

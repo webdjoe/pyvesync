@@ -10,7 +10,7 @@ The VeSync API supports a variety of devices. The following is a list of devices
 2. Outlets
       - [Etekcity 7A Round Outlet][pyvesync.devices.vesyncoutlet.VeSyncOutlet7A]
       - [Etekcity 10A Round Outlet EU][pyvesync.devices.vesyncoutlet.VeSyncOutlet10A]
-      - [Etekcity 10A Rount Outlet USA][pyvesync.devices.vesyncoutlet.VeSyncESW10USA]
+      - [Etekcity 10A Round Outlet USA][pyvesync.devices.vesyncoutlet.VeSyncESW10USA]
       - [Etekcity 15A Rectangle Outlet][pyvesync.devices.vesyncoutlet.VeSyncOutlet15A]
       - [Etekcity 15A Outdoor Dual Outlet][pyvesync.devices.vesyncoutlet.VeSyncOutdoorPlug]
       - [BSDOG / Greensun Smart Outlet Series][pyvesync.devices.vesyncoutlet.VeSyncBSDOGPlug] - WHOPLUG / GREENSUN
@@ -43,7 +43,7 @@ The VeSync API supports a variety of devices. The following is a list of devices
       - [CS137][pyvesync.devices.vesynckitchen.VeSyncAirFryer158] - 3.7qt Air Fryer
       - [CS158][pyvesync.devices.vesynckitchen.VeSyncAirFryer158] - 5.8qt Air Fryer
 8. Thermostats
-      - [Aura][pyvesync.devices.vesyncthermostat] Thermostat **Needs testing**
+      - [Aura][pyvesync.devices.vesyncthermostat] Thermostat
 
 ## Device Features
 
@@ -79,6 +79,7 @@ Switches have minimal features, the dimmer switch is the only switch that has ad
 | Core300s | ✔ |  | | | |
 | Core200s | ✔ |  | | | |
 | LV-PUR131S | ✔ |  | | | |
+| Sprout Air Purifier | ✔ |  | | | |
 
 ### Humidifiers
 
@@ -90,11 +91,24 @@ Switches have minimal features, the dimmer switch is the only switch that has ad
 | LV600S |             | ✔ |
 | OasisMist |             | ✔ |
 | Superior 6000S |            | ✔ |
+| Sprout Humidifier |             | |
 
 ### Fans
 
-Tower Fan - Fan Rotate
+| Device Name | Oscillation | Multi-Axis Oscillation |
+| ------ | ----- | ----- |
+| 42" Tower Fan | ✔ | |
+| Pedestal Fan | ✔ | ✔ |
 
 ### Air Fryers
 
-Air Fryer - All supported features of CS137 and CS158
+| Device Name | Device Type | Temperature Control | Timer |
+| ------ | ----- | ----- | ----- |
+| Cosori 3.7qt Air Fryer | CS137 | ✔ | ✔ |
+| Cosori 5.8qt Air Fryer | CS158 | ✔ | ✔ |
+
+### Thermostats
+
+| Device Name | Device Type | Heat | Cool | Auto | Smart Auto | Emergency Heat |
+| ------ | ----- | ----- | ----- | ----- | ----- | ----- |
+| Aura Thermostat | LTM-A401S-WUS | ✔ | ✔ | ✔ | ✔ | ✔ |
