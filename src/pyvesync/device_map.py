@@ -1150,9 +1150,7 @@ air_fryer_modules: list[AirFryerMap] = [
     AirFryerMap(
         # Cosori Dual Blaze (single-chamber model with dual heating elements).
         # Uses the same bypassV2 protocol as TurboBlaze (startCook / endCook /
-        # getAirfryerStatus). The Dual Blaze has no preheat function. The
-        # VeSync app exposes 11 cooking presets; only the default `AirFry`
-        # is wired up here -- full preset support is a follow-up.
+        # getAirfryerStatus). The Dual Blaze has no preheat function.
         class_name='VeSyncTurboBlazeFryer',
         module=vesynckitchen,
         dev_types=['CAF-P583S-KUS', 'CAF-P583S-KEU'],
@@ -1162,8 +1160,20 @@ air_fryer_modules: list[AirFryerMap] = [
         model_name='Dual Blaze 6.8 Qt. Air Fryer',
         temperature_step_f=5,
         features=[AirFryerFeatures.RESUMABLE],
+        # 11 presets exposed by the VeSync app; recipe IDs/names defined in
+        # AirFryerPresets in const.py.
         cook_modes={
             AirFryerCookModes.AIRFRY: 'AirFry',
+            AirFryerCookModes.BROIL: 'Broil',
+            AirFryerCookModes.ROAST: 'Roast',
+            AirFryerCookModes.BAKE: 'Bake',
+            AirFryerCookModes.REHEAT: 'Reheat',
+            AirFryerCookModes.STEAK: 'Steak',
+            AirFryerCookModes.SEAFOOD: 'Seafood',
+            AirFryerCookModes.VEGGIES: 'Veggies',
+            AirFryerCookModes.FRENCH_FRIES: 'FrenchFries',
+            AirFryerCookModes.FROZEN: 'Frozen',
+            AirFryerCookModes.CHICKEN: 'Chicken',
         },
         default_cook_mode=AirFryerCookModes.AIRFRY,
         default_preset=AirFryerPresets.air_fry,
