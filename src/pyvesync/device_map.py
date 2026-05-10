@@ -1148,6 +1148,43 @@ air_fryer_modules: list[AirFryerMap] = [
         ),
     ),
     AirFryerMap(
+        # Cosori Dual Blaze (single-chamber model with dual heating elements).
+        # Uses the same bypassV2 protocol as TurboBlaze (startCook / endCook /
+        # getAirfryerStatus). The Dual Blaze has no preheat function. The
+        # VeSync app exposes 11 cooking presets; only the default `AirFry`
+        # is wired up here -- full preset support is a follow-up.
+        class_name='VeSyncTurboBlazeFryer',
+        module=vesynckitchen,
+        dev_types=['CAF-P583S-KUS', 'CAF-P583S-KEU'],
+        setup_entry='CAF-P583S',
+        device_alias='Dual Blaze Air Fryer',
+        model_display='CAF-P583S Series',
+        model_name='Dual Blaze 6.8 Qt. Air Fryer',
+        temperature_step_f=5,
+        features=[AirFryerFeatures.RESUMABLE],
+        cook_modes={
+            AirFryerCookModes.AIRFRY: 'AirFry',
+        },
+        default_cook_mode=AirFryerCookModes.AIRFRY,
+        default_preset=AirFryerPresets.air_fry,
+        time_units=TimeUnits.SECONDS,
+        temperature_range_f=(175, 400),
+        temperature_range_c=(80, 205),
+        status_map=MappingProxyType(
+            {
+                'standby': AirFryerCookStatus.STANDBY,
+                'ready': AirFryerCookStatus.COOK_STOP,
+                'cooking': AirFryerCookStatus.COOKING,
+                'heating': AirFryerCookStatus.HEATING,
+                'preheating': AirFryerCookStatus.HEATING,
+                'cookStop': AirFryerCookStatus.COOK_STOP,
+                'pullOut': AirFryerCookStatus.PULL_OUT,
+                'cookEnd': AirFryerCookStatus.COOK_END,
+                'keeping': AirFryerCookStatus.COOKING,
+            }
+        ),
+    ),
+    AirFryerMap(
         class_name='VeSyncDualAirFryer',
         module=vesynckitchen,
         dev_types=['CAF-TF101S-AEU', 'CAF-TF101S'],
