@@ -448,7 +448,7 @@ class VeSyncTurboBlazeFryer(BypassV2Mixin, VeSyncFryer):
             cook_req['hasPreheat'] = int(True)
         cook_req['hasWarm'] = False
         cook_req['mode'] = recipe.cook_mode
-        cook_req['readyStart'] = True
+        cook_req['readyStart'] = False
         cook_req['recipeId'] = recipe.recipe_id
         cook_req['recipeName'] = recipe.recipe_name
         cook_req['recipeType'] = recipe.recipe_type
