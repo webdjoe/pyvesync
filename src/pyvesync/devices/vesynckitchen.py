@@ -462,7 +462,7 @@ class VeSyncTurboBlazeFryer(BypassV2Mixin, VeSyncFryer):
         return models.FryerTurboBlazeRequestData.from_dict(cook_req)
 
     async def get_details(self) -> None:
-        resp = await self.call_bypassv2_api(payload_method='getAirfyerStatus')
+        resp = await self.call_bypassv2_api(payload_method='getAirfryerStatus')
         resp_model = process_bypassv2_result(
             self,
             logger,
