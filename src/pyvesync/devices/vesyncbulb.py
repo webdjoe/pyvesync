@@ -299,16 +299,8 @@ class VeSyncBulbESL100(BypassV1Mixin, VeSyncBulb):
             self.state.connection_status = ConnectionStatus.OFFLINE
             return
         self.state.brightness = model.brightness
-        self.state.device_status = model.deviceStatus
-        self.state.connection_status = model.connectionStatus
-
-    @deprecated(
-        'toggle() is deprecated, use toggle_switch(toggle: bool | None = None) instead'
-    )
-    async def toggle(self, status: str) -> bool:
-        """Toggle switch of ESL100 bulb."""
-        status_bool = status != DeviceStatus.ON
-        return await self.toggle_switch(status_bool)
+        self.state.device_status = DeviceStatus(model.deviceStatus)
+        self.state.connection_status = ConnectionStatus(model.connectionStatus)
 
     async def toggle_switch(self, toggle: bool | None = None) -> bool:
         if toggle is None:
@@ -330,18 +322,6 @@ class VeSyncBulbESL100(BypassV1Mixin, VeSyncBulb):
 
         self.state.device_status = status
         return True
-
-    @deprecated('Use set_brightness() instead')
-    async def set_status(self, brightness: int) -> bool:
-        """Set brightness of dimmable bulb.
-
-        Args:
-            brightness (int): Brightness of bulb (0-100).
-
-        Returns:
-            bool: True if successful, False otherwise.
-        """
-        return await self.set_brightness(brightness=brightness)
 
     async def set_brightness(self, brightness: int) -> bool:
         if not self.supports_brightness:
