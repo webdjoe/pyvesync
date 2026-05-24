@@ -289,7 +289,10 @@ class VeSyncBulbESL100(BypassV1Mixin, VeSyncBulb):
         }
 
         r_dict = await self.call_bypassv1_api(
-            request_model = bulb_models.RequestESL100Detail, update_dict = method_dict, method = 'deviceDetail', endpoint = 'deviceDetail'
+            request_model=bulb_models.RequestESL100Detail,
+            update_dict=method_dict,
+            method='deviceDetail',
+            endpoint='deviceDetail',
         )
         model = process_bypassv1_result(
             self, logger, 'get_details', r_dict, bulb_models.ResponseESL100DetailResult
@@ -300,7 +303,7 @@ class VeSyncBulbESL100(BypassV1Mixin, VeSyncBulb):
             return
         self.state.brightness = model.brightness
         self.state.device_status = DeviceStatus(model.deviceStatus)
-        #self.state.connection_status = ConnectionStatus(model.connectionStatus)
+        # self.state.connection_status = ConnectionStatus(model.connectionStatus)
         self.state.device_status = DeviceStatus.ON
         self.state.connection_status = ConnectionStatus.ONLINE
 
