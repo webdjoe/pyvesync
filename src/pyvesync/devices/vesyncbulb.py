@@ -299,8 +299,8 @@ class VeSyncBulbESL100(BypassV1Mixin, VeSyncBulb):
             self.state.connection_status = ConnectionStatus.OFFLINE
             return
         self.state.brightness = model.brightness
-        self.state.device_status = model.deviceStatus
-        self.state.connection_status = model.connectionStatus
+        self.state.device_status = DeviceStatus(model.deviceStatus)
+        self.state.connection_status = ConnectionStatus(model.connectionStatus)
 
     @deprecated(
         'toggle() is deprecated, use toggle_switch(toggle: bool | None = None) instead'
