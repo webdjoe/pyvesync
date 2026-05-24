@@ -479,8 +479,24 @@ class DeviceState:
         self.__base_exclusions: list[str] = ['manager', 'device', 'state']
         self._exclude_serialization: list[str] = []
         self.device = device
-        self.device_status: str = details.deviceStatus or DeviceStatus.UNKNOWN
-        self.connection_status: str = details.connectionStatus or ConnectionStatus.UNKNOWN
+        # Normalize status fields to enum types to ensure consistent comparisons
+        if details.deviceStatus is None:
+            self.device_status: DeviceStatus = DeviceStatus.UNKNOWN
+        else:
+            try:
+                self.device_status: DeviceStatus = DeviceStatus(details.deviceStatus)
+            except Exception:
+                self.device_status = DeviceStatus.UNKNOWN
+
+        if details.connectionStatus is None:
+            self.connection_status: ConnectionStatus = ConnectionStatus.UNKNOWN
+        else:
+            try:
+                self.connection_status: ConnectionStatus = ConnectionStatus(
+                    details.connectionStatus
+                )
+            except Exception:
+                self.connection_status = ConnectionStatus.UNKNOWN
         self.features = feature_map.features
         self.last_update_ts: int | None = None
         self.active_time: int | None = None
