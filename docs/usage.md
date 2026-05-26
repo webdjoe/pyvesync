@@ -24,7 +24,7 @@ The git checkout line is used to switch to the appropriate branch. If you are us
 cd ~
 git clone https://github.com/webdjoe/pyvesync.git
 cd pyvesync
-git checkout dev-2.0
+git checkout dev
 ```
 
 Then create a new virtual environment and install the library.
@@ -57,7 +57,7 @@ python3 -m venv venv
 source venv/bin/activate
 
 # Install branch to be tested into new virtual environment:
-pip install git+https://github.com/webdjoe/pyvesync.git@dev-2.0
+pip install git+https://github.com/webdjoe/pyvesync.git@dev
 
 # Install a PR that has not been merged using the PR number:
 pip install git+https://github.com/webdjoe/pyvesync.git@refs/pull/{PR_NUMBER}/head
@@ -81,7 +81,7 @@ This method installs the library from source in a folder in the `%USERPROFILE%` 
 cd %USERPROFILE%
 git clone "https://github.com/webdjoe/pyvesync.git"
 cd pyvesync
-git checkout dev-2.0
+git checkout dev
 
 # Check python version is 3.11 or higher
 python --version # or python3 --version
@@ -109,7 +109,7 @@ python -m venv venv # Create a new venv
 .\venv\Scripts\activate.bat # Activate the venv on cmd.exe
 
 # Install branch to be tested into new virtual environment:
-pip install git+https://github.com/webdjoe/pyvesync.git@dev-2.0
+pip install git+https://github.com/webdjoe/pyvesync.git@dev
 # Install a PR that has not been merged using the PR number:
 pip install git+https://github.com/webdjoe/pyvesync.git@refs/pull/{PR_NUMBER}/head
 # Or if you are installing the latest release:

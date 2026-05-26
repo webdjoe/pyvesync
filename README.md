@@ -1,4 +1,4 @@
-# pyvesync [![build status](https://img.shields.io/pypi/v/pyvesync.svg)](https://pypi.python.org/pypi/pyvesync) [![Build Status](https://dev.azure.com/webdjoe/pyvesync/_apis/build/status/webdjoe.pyvesync?branchName=master)](https://dev.azure.com/webdjoe/pyvesync/_build/latest?definitionId=4&branchName=master) [![Open Source? Yes!](https://badgen.net/badge/Open%20Source%20%3F/Yes%21/blue?icon=github)](https://github.com/Naereen/badges/) [![PyPI license](https://img.shields.io/pypi/l/ansicolortags.svg)](https://pypi.python.org/pypi/ansicolortags/) <!-- omit in toc -->
+# pyvesync [![build status](https://img.shields.io/pypi/v/pyvesync.svg)](https://pypi.python.org/pypi/pyvesync) [![Open Source? Yes!](https://badgen.net/badge/Open%20Source%20%3F/Yes%21/blue?icon=github)](https://github.com/Naereen/badges/) [![PyPI license](https://img.shields.io/pypi/l/ansicolortags.svg)](https://pypi.python.org/pypi/ansicolortags/) <!-- omit in toc -->
 
 pyvesync is a library to manage VeSync compatible [smart home devices](#supported-devices)
 
@@ -35,7 +35,6 @@ Some of the changes are:
 - Implemented custom exceptions and error (code) handling for API responses.
 - `const` module to hold all library constants
 - Built the `DeviceMap` class to hold the mapping and features of devices.
-- COMING SOON: Use API to pull device modes and operating features.
 
 See [pyvesync V3](https://webdjoe.github.io/pyvesync/latest/pyvesync3/) for more information on the changes.
 
@@ -46,7 +45,7 @@ Library is now asynchronous, using aiohttp as a replacement for requests. The `p
 ```python
 import asyncio
 import aiohttp
-from pyvesync.vesync import VeSync
+from pyvesync import VeSync
 
 async def main():
     async with VeSync(
@@ -71,7 +70,7 @@ async def main():
         if not manager.enabled:
             print("Not logged in.")
             return
-        await manager.get_devices() # Instantiates supported devices in device list, automatically called by login, only needed if you would like updates
+        await manager.get_devices() # Instantiates supported devices in device list
         await manager.update() # Updates the state of all devices
 
         # manager.devices is a DeviceContainer object
@@ -92,8 +91,8 @@ async def main():
 
             # State of object held in `device.state` attribute
             print(outlet.state)
-            state_json = outlet.dumps() # Returns JSON string of device state
-            state_bytes = orjson.dumps(outlet.state) # Returns bytes of device state
+            state_json = outlet.to_json(state=True)  # Returns JSON string of device state
+            state_bytes = outlet.to_jsonb(state=True)  # Returns JSON bytes of device state
 
             # to view the response information of the last API call
             print(outlet.last_response)
@@ -105,7 +104,7 @@ async def main():
 session = aiohttp.ClientSession()
 
 async def main():
-    async with VeSync("user", "password", session=session):
+    async with VeSync("user", "password", session=session) as manager:
         await manager.login()
         await manager.update()
 
@@ -118,7 +117,7 @@ if __name__ == "__main__":
 If using `async with` is not ideal, the `__aenter__()` and `__aexit__()` methods need to be called manually:
 
 ```python
-manager = VeSync(user, password)
+manager = VeSync("user", "password")
 
 await manager.__aenter__()
 
@@ -127,7 +126,7 @@ await manager.__aenter__()
 await manager.__aexit__(None, None, None)
 ```
 
-pvesync will close the `ClientSession` that was created by the library on `__aexit__`. If a session is passed in as an argument, the library does not close it. If a session is passed in and not closed, aiohttp will generate an error on exit:
+pyvesync will close the `ClientSession` that was created by the library on `__aexit__`. If a session is passed in as an argument, the library does not close it. If a session is passed in and not closed, aiohttp will generate an error on exit:
 
 ```text
 2025-02-16 14:41:07 - ERROR - asyncio - Unclosed client session
@@ -142,9 +141,9 @@ The VeSync signature is:
 VeSync(
     username: str,
     password: str,
-    country_code: str = DEFAULT_COUNTRY_CODE,  # US
+    country_code: str = DEFAULT_REGION,  # "US"
     session: ClientSession | None = None,
-    time_zone: str = DEFAULT_TZ  # America/New_York,
+    time_zone: str = DEFAULT_TZ,  # "America/New_York"
     redact: bool = True,
     )
 ```
@@ -161,6 +160,7 @@ There is a new nomenclature for product types that defines the device class. The
 5. `humidifier` - Humidifiers (not air purifiers)
 6. `bulb` - Light bulbs (not dimmers or switches)
 7. `airfryer` - Air fryers
+8. `thermostat` - Thermostats
 
 See [Supported Devices](#supported-devices) for a complete list of supported devices and models.
 
@@ -170,22 +170,22 @@ Exceptions are no longer caught by the library and must be handled by the user. 
 
 Errors that occur at the aiohttp level are raised automatically and propagated to the user. That means exceptions raised by aiohttp that inherit from `aiohttp.ClientError` are propagated.
 
-When the connection to the VeSync API succeeds but returns an error code that prevents the library from functioning a custom exception inherited from `pyvesync.logs.VeSyncError` is raised.
+When the connection to the VeSync API succeeds but returns an error code that prevents the library from functioning a custom exception inherited from `pyvesync.utils.errors.VeSyncError` is raised.
 
 Custom Exceptions raised by all API calls:
 
-- `pyvesync.logs.VeSyncServerError` - The API connected and returned a code indicated there is a server-side error.
-- `pyvesync.logs.VeSyncRateLimitError` - The API's rate limit has been exceeded.
-- `pyvesync.logs.VeSyncAPIStatusCodeError` - The API returned a non-200 status code.
-- `pyvesync.logs.VeSyncAPIResponseError` - The response from the API was not in an expected format.
+- `pyvesync.utils.errors.VeSyncServerError` - The API connected and returned a code indicated there is a server-side error.
+- `pyvesync.utils.errors.VeSyncRateLimitError` - The API's rate limit has been exceeded.
+- `pyvesync.utils.errors.VeSyncAPIStatusCodeError` - The API returned a non-200 status code.
+- `pyvesync.utils.errors.VeSyncAPIResponseError` - The response from the API was not in an expected format.
 
 Login API Exceptions
 
-- `pyvesync.logs.VeSyncLoginError` - The username or password is incorrect.
+- `pyvesync.utils.errors.VeSyncLoginError` - The username or password is incorrect.
 
-See [errors](https://webdjoe.github.io/pyvesync/latest/development/utils/errors) documentation for a complete list of error codes and exceptions.
+See the [errors](https://webdjoe.github.io/pyvesync/latest/development/utils/errors/) documentation for a complete list of error codes and exceptions.
 
-The [raise_api_errors()](https://webdjoe.github.io/pyvesync/latest/development/utils/errors/#pyvesync.utils.errors.raise_api_errors) function is called for every API call and checks for general response errors. It can raise the following exceptions:
+The `raise_api_errors()` function is called for every API call and checks for general response errors. It can raise the following exceptions:
 
 - `VeSyncServerError` - The API connected and returned a code indicated there is a server-side error.
 - `VeSyncRateLimitError` - The API's rate limit has been exceeded.
@@ -209,12 +209,14 @@ pip install pyvesync
 
 ### Etekcity Outlets
 
-1. Voltson Smart WiFi Outlet- Round (7A model ESW01-USA)
+1. Voltson Smart WiFi Outlet - Round (7A model ESW01-USA)
 2. Voltson Smart WiFi Outlet - Round (10A model ESW01-EU)
-3. Voltson Smart Wifi Outlet - Round (10A model ESW03-USA)
-4. Voltson Smart Wifi Outlet - Round (10A model ESW10-USA)
+3. Voltson Smart WiFi Outlet - Round (10A model ESW03-USA)
+4. Voltson Smart WiFi Outlet - Round (10A model ESW10-USA)
 5. Voltson Smart WiFi Outlet - Rectangle (15A model ESW15-USA)
 6. Two Plug Outdoor Outlet (ESO15-TB) (Each plug is a separate `VeSyncOutlet` object, energy readings are for both plugs combined)
+7. BSDOG / Greensun Smart Outlet Series (BSDOG01, BSDOG02, WYSMTOD16A, WM-PLUG and more)
+8. WHOPLUG / Greensun Smart Outlet
 
 <!--SUPPORTED OUTLETS END-->
 
@@ -223,46 +225,54 @@ pip install pyvesync
 ### Wall Switches
 
 1. Etekcity Smart WiFi Light Switch (model ESWL01)
-2. Etekcity Wifi Dimmer Switch (ESD16)
+2. Etekcity WiFi 3-Way Switch (model ESWL03)
+3. Etekcity WiFi Dimmer Switch (model ESWD16)
 
 <!--SUPPORTED SWITCHES END-->
 
 ### Levoit Air Purifiers
 
 1. LV-PUR131S
-2. Core 200S
-3. Core 300S
-4. Core 400S
-5. Core 600S
-6. Vital 100S
-7. Vital 200S
+2. LV-RH131S
+3. Core 200S
+4. Core 300S
+5. Core 400S
+6. Core 600S
+7. Vital 100S / 200S
 8. Everest Air
+9. Sprout Air Purifier
 
-### Etekcity Bulbs
+### Etekcity / Valceno Bulbs
 
 1. Soft White Dimmable Smart Bulb (ESL100)
 2. Cool to Soft White Tunable Dimmable Bulb (ESL100CW)
-
-### Valceno Bulbs
-
-1. Valceno Multicolor Bulb (XYD0001)
+3. Multicolor Dimmable Bulb (ESL100MC)
+4. Valceno Multicolor Bulb (XYD0001)
 
 ### Levoit Humidifiers
 
-1. Dual 200S
-2. Classic 300S
-3. LV600S
-4. OasisMist 450S
-5. OasisMist 600S
+1. Classic 200S
+2. Dual 200S
+3. Classic 300S
+4. LV600S / LV603S
+5. OasisMist 450S / 600S
 6. OasisMist 1000S
+7. Superior 6000S
+8. Sprout Humidifier
 
-### Cosori Air Fryer
+### Levoit Fans
 
-1. Cosori 3.7 and 5.8 Quart Air Fryer
+1. 42 in. Tower Fan (LTF-F422S Series)
+2. Pedestal Fan (LPF-R432S Series)
 
-### Fans
+### Cosori Air Fryers
 
-1. 42 in. Tower Fan
+1. Cosori 3.7 Quart Air Fryer (CS137-AF)
+2. Cosori 5.8 Quart Air Fryer (CS158-AF)
+
+### Thermostats
+
+1. Aura Thermostat (LTM-A401S-WUS)
 
 <!--SUPPORTED DEVICES END-->
 
@@ -271,10 +281,6 @@ pip install pyvesync
 ```python
 import asyncio
 from pyvesync import VeSync
-from pyvesync.logs import VeSyncLoginError
-
-# VeSync is an asynchronous context manager
-# VeSync(username, password, redact=True, session=None)
 
 async def main():
     async with VeSync("user", "password") as manager:
@@ -284,14 +290,14 @@ async def main():
         # Acts as a set of device instances
         device_container = manager.devices
 
-        outlets = device_container.outlets # List of outlet instances
+        outlets = device_container.outlets  # List of outlet instances
         outlet = outlets[0]
         await outlet.update()
         await outlet.turn_off()
         outlet.display()
 
-        # Iterate of entire device list
-        for devices in device_container:
+        # Iterate over entire device list
+        for device in device_container:
             device.display()
 
 
@@ -299,15 +305,11 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-If you want to reuse your token and account_id between runs. The `VeSync.auth` object holds the credentials and helper methods to save and load credentials.  See the [Authentication Documentation](https://webdjoe.github.io/pyvesync/latest/authentication) for more details.
+If you want to reuse your token and account_id between runs. The `VeSync.auth` object holds the credentials and helper methods to save and load credentials. See the [Authentication Documentation](https://webdjoe.github.io/pyvesync/latest/authentication) for more details.
 
 ```python
 import asyncio
 from pyvesync import VeSync
-from pyvesync.logs import VeSyncLoginError
-
-# VeSync is an asynchronous context manager
-# VeSync(username, password, redact=True, session=None)
 
 async def main():
     async with VeSync("user", "password") as manager:
@@ -319,32 +321,37 @@ async def main():
         await manager.load_credentials_from_file("/path/to/token_file")
 
         # Or credentials can be passed directly
-        manager.set_credentials("your_token", "your_account_id")
+        manager.set_credentials(
+            token="your_token",
+            account_id="your_account_id",
+            country_code="US",
+            region="US",
+        )
 
-        # No login needed
+        # No login needed if token is valid
         # await manager.login()
 
         # To store credentials to a file after login
-        await manager.save_credentials() # Saves to default location ~/.vesync_token
-        # or pass a file path
         await manager.save_credentials("/path/to/token_file")
 
-        # Output Credentials as JSON String
-        await manager.output_credentials()
+        # Output credentials as JSON string
+        print(manager.output_credentials_json())
+        # Output credentials as dictionary
+        print(manager.output_credentials_dict())
 
         await manager.update()
 
         # Acts as a set of device instances
         device_container = manager.devices
 
-        outlets = device_container.outlets # List of outlet instances
+        outlets = device_container.outlets  # List of outlet instances
         outlet = outlets[0]
         await outlet.update()
         await outlet.turn_off()
         outlet.display()
 
-        # Iterate of entire device list
-        for devices in device_container:
+        # Iterate over entire device list
+        for device in device_container:
             device.display()
 
 
@@ -369,7 +376,7 @@ manager.devices.bulbs = [VeSyncBulbInstances]
 manager.devices.air_purifiers = [VeSyncPurifierInstances]
 manager.devices.humidifiers = [VeSyncHumidifierInstances]
 manager.devices.air_fryers = [VeSyncAirFryerInstances]
-managers.devices.thermostats = [VeSyncThermostatInstances]
+manager.devices.thermostats = [VeSyncThermostatInstances]
 
 # Get device by device name
 dev_name = "My Device"
@@ -398,8 +405,7 @@ This is an example of debug mode with redact enabled:
 ```python
 import logging
 import asyncio
-import aiohttp
-from pyvesync.vesync import VeSync
+from pyvesync import VeSync
 
 logger = logging.getLogger("pyvesync")
 logger.setLevel(logging.DEBUG)
@@ -412,7 +418,7 @@ async def main():
         await manager.login()
         await manager.update()
 
-        outlet = manager.outlets[0]
+        outlet = manager.devices.outlets[0]
         await outlet.update()
         await outlet.turn_off()
         outlet.display()
@@ -427,17 +433,16 @@ if __name__ == "__main__":
 To log to a file, use the `log_to_file()` method of the `VeSync` class. Pass the file path as an argument.
 
 ```python
-
 import asyncio
 from pyvesync import VeSync
 
 async def main():
     async with VeSync("user", "password") as manager:
-        manager.log_to_file("pyvesync.log", level=logging.DEBUG, stdout=True)  # stdout argument prints log to console as well
+        manager.log_to_file("pyvesync.log", stdout=True)  # stdout argument prints log to console as well
         await manager.login()
         await manager.update()
 
-        outlet = manager.outlets[0]
+        outlet = manager.devices.outlets[0]
         await outlet.update()
         await outlet.turn_off()
         outlet.display()
@@ -449,13 +454,13 @@ if __name__ == "__main__":
 
 ## Feature Requests
 
-Before filing an issue to request a new feature or device, please ensure that you will take the time to test the feature throuroughly. New features cannot be simply tested on Home Assistant. A separate integration must be created which is not part of this library. In order to test a new feature, clone the branch and install into a new virtual environment.
+Before filing an issue to request a new feature or device, please ensure that you will take the time to test the feature thoroughly. New features cannot be simply tested on Home Assistant. A separate integration must be created which is not part of this library. In order to test a new feature, clone the branch and install into a new virtual environment.
 
 ```bash
 mkdir python_test && cd python_test
 
 # Check Python version is 3.11 or higher
-python3 --version # or python --version or python3.8 --version
+python3 --version # or python --version
 # Create a new venv
 python3 -m venv pyvesync-venv
 # Activate the venv on linux
@@ -473,14 +478,11 @@ pip install git+https://github.com/webdjoe/pyvesync.git@refs/pull/PR_NUMBER/head
 
 Test functionality with a script, please adjust methods and logging statements to the device you are testing.
 
-See `[testing_scripts](./testing_scripts/README.md)` for a fully functioning test script for all devices.
+See [testing_scripts](./testing_scripts/README.md) for a fully functioning test script for all devices.
 
 ```python
 import asyncio
-import sys
 import logging
-import json
-from functool import chain
 from pyvesync import VeSync
 
 vs_logger = logging.getLogger("pyvesync")
@@ -492,65 +494,47 @@ logger.setLevel(logging.DEBUG)
 USERNAME = "YOUR USERNAME"
 PASSWORD = "YOUR PASSWORD"
 
-DEVICE_NAME = "Device" # Device to test
+DEVICE_NAME = "Device"  # Device to test
 
 async def test_device():
     # Instantiate VeSync class and login
-  async with VeSync(USERNAME, PASSWORD, redact=True) as manager:
-      await manager.login()
+    async with VeSync(USERNAME, PASSWORD, redact=True) as manager:
+        await manager.login()
 
-      # Pull and update devices
-      await manager.update()
+        # Pull and update devices
+        await manager.update()
 
-      for dev in manager.devices:
-          # Print all device info
-          logger.debug(dev.device_name + "\n")
-          logger.debug(dev.display())
+        for dev in manager.devices:
+            # Print all device info
+            logger.debug(dev.device_name)
+            dev.display()
 
-          # Find correct device
-          if dev.device_name.lower() != DEVICE_NAME.lower():
-              logger.debug("%s is not %s, continuing", self.device_name, DEVICE_NAME)
-              continue
+            # Find correct device
+            if dev.device_name.lower() != DEVICE_NAME.lower():
+                logger.debug("%s is not %s, continuing", dev.device_name, DEVICE_NAME)
+                continue
 
-          logger.debug('--------------%s-----------------' % dev.device_name)
-          logger.debug(dev.display())
-          logger.debug(dev.displayJSON())
-          # Test all device methods and functionality
-          # Test Properties
-          logger.debug("Fan is on - %s", dev.is_on)
-          logger.debug("Modes - %s", dev.modes)
-          logger.debug("Fan Level - %s", dev.fan_level)
-          logger.debug("Fan Air Quality - %s", dev.air_quality)
-          logger.debug("Screen Status - %s", dev.screen_status)
+            logger.debug('-------------- %s -----------------', dev.device_name)
+            dev.display()
 
-          logger.debug("Turning on")
-          await fan.turn_on()
-          logger.debug("Device is on %s", dev.is_on)
+            # Test device methods
+            logger.debug("Device is on: %s", dev.is_on)
 
-          logger.debug("Turning off")
-          await fan.turn_off()
-          logger.debug("Device is on %s", dev.is_on)
+            logger.debug("Turning on")
+            await dev.turn_on()
+            logger.debug("Device is on: %s", dev.is_on)
 
-          logger.debug("Sleep mode")
-          fan.sleep_mode()
-          logger.debug("Current mode - %s", dev.details['mode'])
+            logger.debug("Turning off")
+            await dev.turn_off()
+            logger.debug("Device is on: %s", dev.is_on)
 
-          fan.auto_mode()
-
-          logger.debug("Set Fan Speed - %s", dev.set_fan_speed)
-          logger.debug("Current Fan Level - %s", dev.fan_level)
-          logger.debug("Current mode - %s", dev.mode)
-
-          # Display all device info
-          logger.debug(dev.display(state=True))
-          logger.debug(dev.to_json(state=True, indent=True))
-          dev_dict = dev.to_dict(state=True)
+            # Display all device info as JSON
+            logger.debug(dev.to_json(state=True, indent=True))
+            dev_dict = dev.to_dict(state=True)
 
 if __name__ == "__main__":
     logger.debug("Testing device")
     asyncio.run(test_device())
-...
-
 ```
 
 ## Device Requests

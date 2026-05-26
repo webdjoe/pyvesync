@@ -13,8 +13,8 @@ Some of the changes are:
 - Standardized the API for all device to follow a common naming convention.
 - Custom exceptions and error (code) handling for API responses.
 - `last_response` attribute on device instances to hold information on the last API response.
-- [`DeviceContainer`][pyvesync.device_container] object holds all devices in a mutable set structure with additional convenience methods and properties for managing devices. This is located in the `VeSync.manager.devices` attribute.
-- Custom exceptions for better error handling - [`VeSyncError`][pyvesync.utils.errors.VeSyncError], `VeSyncAPIException`, `VeSyncLoginException`, `VeSyncRateLimitException`, `VeSyncNoDevicesException`
+- [`DeviceContainer`][pyvesync.device_container] object holds all devices in a mutable set structure with additional convenience methods and properties for managing devices. This is located in the `VeSync.devices` attribute.
+- Custom exceptions for better error handling - [`VeSyncError`][pyvesync.utils.errors.VeSyncError], [`VeSyncAPIResponseError`][pyvesync.utils.errors.VeSyncAPIResponseError], [`VeSyncLoginError`][pyvesync.utils.errors.VeSyncLoginError], [`VeSyncRateLimitError`][pyvesync.utils.errors.VeSyncRateLimitError]
 - Device state has been separated from the device object and is now managed by the device specific subclasses of [`DeviceState`][pyvesync.base_devices.vesyncbasedevice.DeviceState]. The state object is located in the `state` attribute of the device object.
 - [`const`][pyvesync.const] module to hold all library constants.
 - [`device_map`][pyvesync.device_map] module holds all device type mappings and configuration.
@@ -74,7 +74,7 @@ if __name__ == "__main__":
 If using `async with` is not ideal, the `__aenter__()` and `__aexit__()` methods need to be called manually:
 
 ```python
-manager = VeSync(user, password)
+manager = VeSync("user", "password")
 
 await manager.__aenter__()
 
@@ -83,7 +83,7 @@ await manager.__aenter__()
 await manager.__aexit__(None, None, None)
 ```
 
-pvesync will close the `ClientSession` that was created by the library on `__aexit__`. If a session is passed in as an argument, the library does not close it. If a session is passed in and not closed, aiohttp will generate an error on exit:
+pyvesync will close the `ClientSession` that was created by the library on `__aexit__`. If a session is passed in as an argument, the library does not close it. If a session is passed in and not closed, aiohttp will generate an error on exit:
 
 ```text
 2025-02-16 14:41:07 - ERROR - asyncio - Unclosed client session
@@ -98,12 +98,14 @@ The VeSync signature is:
 VeSync(
     username: str,
     password: str,
+    country_code: str = DEFAULT_REGION,  # "US"
     session: ClientSession | None = None,
-    time_zone: str = DEFAULT_TZ  # America/New_York
+    time_zone: str = DEFAULT_TZ,  # "America/New_York"
+    redact: bool = True,
     )
 ```
 
-The VeSync class no longer accepts a `debug`. To set debug set the level of the `pyvesync` logger using:
+The VeSync class no longer accepts `debug` as a constructor parameter. Instead, `debug` is available as a property on the instantiated object (`manager.debug = True`). Alternatively, set the level of the `pyvesync` logger using:
 
 ```python
 
@@ -124,6 +126,7 @@ There is a new nomenclature for product types that defines the device class. The
 5. `humidifier` - Humidifiers (not air purifiers)
 6. `bulb` - Light bulbs (not dimmers or switches)
 7. `airfryer` - Air fryers
+8. `thermostat` - Thermostats
 
 See [Supported Devices](./supported_devices.md) for a complete list of supported devices and models.
 
@@ -338,7 +341,7 @@ async def main():
         for device in manager.devices:
             print(device) # Prints all devices in the container
 
-        manager.update()  # Pull state into devices
+        await manager.update()  # Pull state into devices
 
         # also holds the product types as properties
 
@@ -362,7 +365,7 @@ The base module should hold all properties and methods that are common to all de
 
 ## Device Configuration with device_map module
 
-All features and configuration options for devices are held in the `pyveysnc.device_map` module. Older versions of pyvesync held the device configuration in each device module, all of these have moved to the `device_map` module. Each product type has a dataclass structure that is used to define all of the configuration options for each type. The `device_map.get_device_config(device_type: str)` method is used to lookup the configuration dataclass instance by the `deviceType` value in the device list response.
+All features and configuration options for devices are held in the `pyvesync.device_map` module. Older versions of pyvesync held the device configuration in each device module, all of these have moved to the `device_map` module. Each product type has a dataclass structure that is used to define all of the configuration options for each type. The `device_map.get_device_config(device_type: str)` method is used to lookup the configuration dataclass instance by the `deviceType` value in the device list response.
 
 ## Constants
 

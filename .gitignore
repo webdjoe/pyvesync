@@ -40,3 +40,7 @@ testing_scripts/yamltest.yaml
 testing_scripts/yamltest copy.yaml
 creds.json
 docstest/*
+.claude/settings.local.json
+.mcp.json
+.vesync_auth
+**/CLAUDE.md

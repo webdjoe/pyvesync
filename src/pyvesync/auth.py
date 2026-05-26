@@ -37,6 +37,20 @@ class VeSyncAuth:
 
     Handles login, token management, and persistent storage of authentication
     credentials for VeSync API access.
+
+    Args:
+        manager: VeSync manager instance for API calls
+        username: VeSync account username (email)
+        password: VeSync account password
+        country_code: Country code in ISO 3166 Alpha-2 format
+
+    Note:
+        Either username/password or token/account_id must be provided.
+        If token_file_path is provided, credentials will be saved/loaded
+        automatically. When loading credentials, the current working directory
+        and home directory are checked for the token file if no path is provided.
+        When saving credentials, if no path is provided, it will save to the current
+        working directory.
     """
 
     __slots__ = (
@@ -57,19 +71,7 @@ class VeSyncAuth:
         password: str,
         country_code: str = DEFAULT_REGION,
     ) -> None:
-        """Initialize VeSync Authentication Manager.
-
-        Args:
-            manager: VeSync manager instance for API calls
-            username: VeSync account username (email)
-            password: VeSync account password
-            country_code: Country code in ISO 3166 Alpha-2 format
-
-        Note:
-            Either username/password or token/account_id must be provided.
-            If token_file_path is provided, credentials will be saved/loaded
-            automatically.
-        """
+        """Initialize VeSync Authentication Manager."""
         self.manager = manager
         self._username = username
         self._password = password
@@ -84,6 +86,11 @@ class VeSyncAuth:
         if self._country_code in NON_EU_COUNTRY_CODES:
             return 'US'
         return 'EU'
+
+    @property
+    def credentials_saved(self) -> bool:
+        """Return whether credentials have been saved to file."""
+        return self._token_file_path is not None and self._token_file_path.exists()
 
     @property
     def token(self) -> str:
@@ -148,43 +155,50 @@ class VeSyncAuth:
 
         Returns:
             True if re-authentication successful, False otherwise
+
+        Raises:
+            VeSyncLoginError: If login fails due to invalid credentials
+            VeSyncAPIResponseError: If API response is invalid
+            VeSyncServerError: If server returns an error
         """
+        had_saved_credentials = self.credentials_saved
         self.clear_credentials()
-        return await self.login()
+        success = await self.login()
+        logger.debug('Re-authentication successful for user: %s', self._username)
+        if had_saved_credentials:
+            await self.save_credentials_to_file(self._token_file_path)
+        return success
 
     async def load_credentials_from_file(
         self, file_path: str | Path | None = None
     ) -> bool:
         """Load credentials from token file if path is set.
 
-        If no path is provided, it will try to load from the users home directory and
-        then the current working directory.
+        If no path is provided, it will try to load from the current working directory and
+        then the user's home directory.
         """
-        locations = [Path.home() / '.vesync_auth', Path.cwd() / '.vesync_auth']
+        locations = [Path.cwd() / '.vesync_auth', Path.home() / '.vesync_auth']
         file_path_object: Path | None = None
         if file_path is None:
             for location in locations:
                 if location.exists():
                     file_path_object = location
                     break
-        elif isinstance(file_path, str):
-            file_path_object = Path(file_path)
         else:
             file_path_object = Path(file_path)
         if not file_path_object or not file_path_object.exists():
             logger.debug('Credentials file not found: %s', file_path_object)
             return False
+        self._token_file_path = file_path_object
         try:
-            data = await asyncio.to_thread(
-                Path(file_path_object).read_text, encoding='utf-8'
-            )
+            data = await asyncio.to_thread(file_path_object.read_text, encoding='utf-8')
             data = orjson.loads(data)
             self._token = data['token']
             self._account_id = data['account_id']
             self._country_code = data['country_code'].upper()
             self._current_region = data['current_region'].upper()
-            logger.debug('Credentials loaded from file: %s', file_path)
-        except orjson.JSONDecodeError as exc:
+            logger.debug('Credentials loaded from file: %s', file_path_object)
+        except (orjson.JSONDecodeError, KeyError) as exc:
             logger.warning('Failed to load credentials from file: %s', exc)
             return False
         if self._token is None or self._account_id is None:
@@ -196,12 +210,12 @@ class VeSyncAuth:
 
     def output_credentials_dict(self) -> dict[str, str] | None:
         """Output current credentials as a dictionary."""
-        if not self.is_authenticated:
+        if self._token is None or self._account_id is None:
             logger.debug('No credentials to output, not authenticated')
             return None
         return {
-            'token': self._token or '',
-            'account_id': self._account_id or '',
+            'token': self._token,
+            'account_id': self._account_id,
             'country_code': self._country_code,
             'current_region': self._current_region,
         }
@@ -228,7 +242,7 @@ class VeSyncAuth:
             file_path_object = self._token_file_path
         else:
             logger.debug('No token file path set, saving to default location')
-            file_path_object = Path.home() / '.vesync_auth'
+            file_path_object = Path.cwd() / '.vesync_auth'
         if not self.is_authenticated:
             logger.debug('No credentials to save, not authenticated')
             return
@@ -236,6 +250,7 @@ class VeSyncAuth:
             'token': self._token,
             'account_id': self._account_id,
             'country_code': self._country_code,
+            'current_region': self.current_region,
         }
         try:
             data = orjson.dumps(credentials).decode('utf-8')

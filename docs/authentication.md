@@ -13,7 +13,7 @@ import asyncio
 from pyvesync import VeSync
 
 async def main():
-    with VeSync(username="example@mail.com", password="password") as manager:
+    async with VeSync(username="example@mail.com", password="password") as manager:
         # Login
         success = await manager.login()
         if not success:
@@ -36,7 +36,7 @@ import asyncio
 from pyvesync import VeSync
 
 async def main():
-    with VeSync(username="example@mail.com", password="password") as manager:
+    async with VeSync(username="example@mail.com", password="password") as manager:
         # Load credentials from a dictionary
         credentials = {
             "token": "your_token_here",
@@ -44,7 +44,7 @@ async def main():
             "country_code": "US",
             "region": "US"
         }
-        success = await manager.set_credentials(**credentials)
+        manager.set_credentials(**credentials)
 
         # Or load from a file
         await manager.load_credentials_from_file("path/to/credentials.json")
@@ -54,7 +54,7 @@ asyncio.run(main())
 
 ### Credential Storage
 
-Credentials can be saved to a file or output as a json string. If no file path is provided the credentials will be saved to the users home directory as `.vesync_auth`.
+Credentials can be saved to a file or output as a json string. If no file path is provided the credentials will be saved to the users home directory as `.vesync_token`.
 
 The credentials file is a json file that has the keys `token`, `account_id`, `country_code`, and `region`.
 
@@ -66,12 +66,12 @@ from pyvesync import VeSync
 async def main():
     token_file = Path.home() / ".vesync_token"
 
-    with VeSync(username="example@mail.com", password="password") as manager:
+    async with VeSync(username="example@mail.com", password="password") as manager:
         # Login and save credentials to file
-        success = await manager.login(token_file_path=token_file)
+        success = await manager.login()
         if success:
             # Save credentials to file
-            manager.save_credentials(token_file)
+            await manager.save_credentials(token_file)
 
             # Output credentials as json string
             print(manager.output_credentials_json())

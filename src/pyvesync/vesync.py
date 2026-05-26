@@ -19,6 +19,8 @@ from pyvesync.const import (
     MAX_API_REAUTH_RETRIES,
     REGION_API_MAP,
     STATUS_OK,
+    ConnectionStatus,
+    ProductTypes,
 )
 from pyvesync.device_container import DeviceContainer
 from pyvesync.models.vesync_models import (
@@ -587,7 +589,7 @@ class VeSync:  # pylint: disable=function-redefined
         device container. It will call the `get_firmware_update()` method on
         each device and log the results.
         """
-        if len(self._device_container) == 0:
+        if len(self.devices) == 0:
             logger.warning('No devices to check for firmware updates')
             return False
         body_fields = tuple(
@@ -596,7 +598,23 @@ class VeSync:  # pylint: disable=function-redefined
             if field.default_factory is MISSING and field.default is MISSING
         )
         body = Helpers.get_manager_attributes(self, body_fields)
-        body['cidList'] = [device.cid for device in self._device_container]
+
+        # Add cid list of devices that are online and not an air fryer
+        body['cidList'] = [
+            device.cid
+            for device in self.devices
+            if (
+                device.product_type != ProductTypes.AIR_FRYER
+                and device.state.connection_status == ConnectionStatus.ONLINE
+            )
+        ]
+
+        if len(body['cidList']) == 0:
+            logger.warning(
+                'No online devices (excluding air fryers) to check firmware for'
+            )
+            return False
+
         resp_dict, _ = await self.async_call_api(
             '/cloud/v2/deviceManaged/getFirmwareUpdateInfoList',
             'post',
