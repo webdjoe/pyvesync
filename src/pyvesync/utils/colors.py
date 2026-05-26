@@ -5,6 +5,7 @@ from __future__ import annotations
 import colorsys
 import logging
 from dataclasses import InitVar, dataclass
+from typing import ClassVar
 
 from pyvesync.utils.helpers import Validators
 
@@ -248,3 +249,144 @@ class Color:
             float(round(hsv_tuple[1] * hsv_factors[1], 2)),
             float(round(hsv_tuple[2] * hsv_factors[2], 0)),
         )
+
+
+class RGBNightlightColor:
+    """Color helpers for RGB nightlight devices.
+
+    Encapsulates the 8-color gradient used by the VeSync app for the RGB
+    nightlight color slider, along with the geometry needed to map an
+    arbitrary RGB color to a slider position and to apply or recover
+    brightness.
+    """
+
+    # 8-color gradient used by VeSync app for RGB nightlight color slider
+    GRADIENT: ClassVar[list[tuple[int, int, int]]] = [
+        (252, 50, 0),  # #fc3200 - Red (position 0)
+        (255, 171, 2),  # #ffab02 - Orange (position ~14.3)
+        (181, 255, 0),  # #b5ff00 - Yellow-Green (position ~28.6)
+        (2, 255, 120),  # #02ff78 - Green (position ~42.9)
+        (3, 200, 254),  # #03c8fe - Cyan (position ~57.1)
+        (0, 40, 255),  # #0028ff - Blue (position ~71.4)
+        (220, 0, 255),  # #dc00ff - Purple (position ~85.7)
+        (254, 0, 60),  # #fe003c - Pink/Red (position 100)
+    ]
+
+    @staticmethod
+    def color_distance(r1: int, g1: int, b1: int, r2: int, g2: int, b2: int) -> float:
+        """Calculate Euclidean distance between two RGB colors.
+
+        From decompiled app: yv/p.java method c()
+        """
+        return ((r1 - r2) ** 2 + (g1 - g2) ** 2 + (b1 - b2) ** 2) ** 0.5
+
+    @staticmethod
+    def interpolate_color(
+        color1: tuple[int, int, int],
+        color2: tuple[int, int, int],
+        fraction: float,
+    ) -> tuple[int, int, int]:
+        """Linearly interpolate between two colors."""
+        r = int(color1[0] + (color2[0] - color1[0]) * fraction)
+        g = int(color1[1] + (color2[1] - color1[1]) * fraction)
+        b = int(color1[2] + (color2[2] - color1[2]) * fraction)
+        return (r, g, b)
+
+    @staticmethod
+    def apply_brightness_to_rgb(
+        red: int, green: int, blue: int, brightness: int
+    ) -> tuple[int, int, int]:
+        """Apply brightness to RGB color using HSV color space.
+
+        The VeSync app applies brightness by converting to HSV, setting the V
+        (value) component to brightness/100, then converting back to RGB.
+
+        From decompiled app: yv/p.java method b()
+
+        Args:
+            red: Red value (0-255).
+            green: Green value (0-255).
+            blue: Blue value (0-255).
+            brightness: Brightness level (0-100).
+
+        Returns:
+            tuple: Brightness-adjusted (red, green, blue) values.
+        """
+        h, s, _ = colorsys.rgb_to_hsv(red / 255.0, green / 255.0, blue / 255.0)
+        v = brightness / 100.0
+        r, g, b = colorsys.hsv_to_rgb(h, s, v)
+        return (int(r * 255), int(g * 255), int(b * 255))
+
+    @staticmethod
+    def normalize_to_full_brightness(
+        red: int, green: int, blue: int
+    ) -> tuple[int, int, int]:
+        """Normalize brightness-adjusted RGB back to full brightness (100%).
+
+        Inverse of `apply_brightness_to_rgb`. Given RGB values that have been
+        dimmed, recover the original "full brightness" color by setting HSV
+        value to 1.0 while preserving hue and saturation.
+
+        Args:
+            red: Red value (0-255), brightness-adjusted.
+            green: Green value (0-255), brightness-adjusted.
+            blue: Blue value (0-255), brightness-adjusted.
+
+        Returns:
+            tuple: Normalized (red, green, blue) values at full brightness.
+        """
+        h, s, _ = colorsys.rgb_to_hsv(red / 255.0, green / 255.0, blue / 255.0)
+        v = 1.0
+        r, g, b = colorsys.hsv_to_rgb(h, s, v)
+        return (int(r * 255), int(g * 255), int(b * 255))
+
+    @classmethod
+    def rgb_to_color_slider_location(cls, red: int, green: int, blue: int) -> int:
+        """Convert RGB values to colorSliderLocation (0-100).
+
+        The VeSync app uses an 8-color gradient for the color slider. This
+        finds the closest position on that gradient by checking each segment
+        and finding where the input color best fits.
+
+        Note: Input RGB should be at full brightness for accurate results.
+        If the input has reduced brightness, first normalize it.
+
+        From decompiled app: yv/p.java (HumidifierColor.kt)
+
+        Args:
+            red: Red value (0-255).
+            green: Green value (0-255).
+            blue: Blue value (0-255).
+
+        Returns:
+            int: Color slider location (0-100).
+        """
+        gradient = cls.GRADIENT
+        num_colors = len(gradient)
+        segment_size = 100.0 / (num_colors - 1)  # ~14.29 for 8 colors
+
+        best_position = 0.0
+        best_distance = float('inf')
+
+        for i in range(num_colors - 1):
+            color1 = gradient[i]
+            color2 = gradient[i + 1]
+            start_pos = i * segment_size
+
+            for step in range(101):
+                fraction = step / 100.0
+                interp_color = cls.interpolate_color(color1, color2, fraction)
+                distance = cls.color_distance(
+                    red,
+                    green,
+                    blue,
+                    interp_color[0],
+                    interp_color[1],
+                    interp_color[2],
+                )
+
+                if distance < best_distance:
+                    best_distance = distance
+                    best_position = start_pos + (fraction * segment_size)
+
+        return round(best_position)

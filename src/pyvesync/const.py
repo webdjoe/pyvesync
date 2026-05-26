@@ -74,6 +74,10 @@ STATUS_OK = 200
 KELVIN_MIN = 2700
 KELVIN_MAX = 6500
 
+# RGB nightlight constants
+RGB_STALE_DATA_TIMEOUT = 180  # Seconds to ignore stale API data after setting values
+RGB_FULL_BRIGHTNESS = 100  # Full brightness percentage
+
 
 class ProductLines(StrEnum):
     """High level product line."""
