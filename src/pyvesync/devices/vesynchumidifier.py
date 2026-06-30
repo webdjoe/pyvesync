@@ -327,7 +327,7 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
         brightness = 100 if toggle else 0
         return await self.set_nightlight_brightness(brightness)
 
-    async def set_rgb_nightlight(
+    async def set_rgb_nightlight(  # noqa: C901, PLR0912
         self,
         power: bool | None = None,
         brightness: int | None = None,
@@ -339,7 +339,8 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
 
         Args:
             power: Turn nightlight on (True) or off (False).
-            brightness: Brightness level (40-100). Values below 40 will be clamped.
+            brightness: Brightness level (0-100); values below 40 are raised to
+                the device minimum of 40. Out-of-range values are rejected.
             red: Red color value (0-255).
             green: Green color value (0-255).
             blue: Blue color value (0-255).
@@ -351,39 +352,57 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
             logger.warning('RGB Nightlight is not supported for %s', self.device_name)
             return False
 
-        # API requires all fields, so use current state for any not provided
+        # API requires all fields, so use current state for any not provided.
         if power is not None:
             action = 'on' if power else 'off'
         else:
             action = self.state.rgb_nightlight_status or 'on'
+        turning_off = action == 'off'
 
+        # Coalesce with `is None` so a legitimately stored 0 channel survives.
         if brightness is None:
-            brightness = self.state.rgb_nightlight_brightness or 40
-
+            brightness = (
+                self.state.rgb_nightlight_brightness
+                if self.state.rgb_nightlight_brightness is not None
+                else 40
+            )
         if red is None:
-            red = self.state.rgb_nightlight_red or 255
+            red = (
+                self.state.rgb_nightlight_red
+                if self.state.rgb_nightlight_red is not None
+                else 255
+            )
         if green is None:
-            green = self.state.rgb_nightlight_green or 255
+            green = (
+                self.state.rgb_nightlight_green
+                if self.state.rgb_nightlight_green is not None
+                else 255
+            )
         if blue is None:
-            blue = self.state.rgb_nightlight_blue or 255
-
-        # Brightness range is 40-100 per VeSync app
-        brightness = max(40, min(100, brightness))
-
-        # Clamp RGB values to valid range
-        red = max(0, min(255, red))
-        green = max(0, min(255, green))
-        blue = max(0, min(255, blue))
-
+            blue = (
+                self.state.rgb_nightlight_blue
+                if self.state.rgb_nightlight_blue is not None
+                else 255
+            )
         color_mode = self.state.rgb_nightlight_color_mode or 'color'
 
-        # Calculate colorSliderLocation from the base RGB color (at full brightness)
+        # Validate and reject rather than silently clamping bad input.
+        if not Validators.validate_range(brightness, 0, 100):
+            logger.warning('Brightness must be between 0 and 100')
+            return False
+        if not Validators.validate_rgb(red, green, blue):
+            logger.warning('RGB values must be between 0 and 255')
+            return False
+
+        # Device minimum brightness is 40 per the VeSync app.
+        brightness = max(40, brightness)
+
+        # Calculate colorSliderLocation from the base RGB color (full brightness).
         color_slider_location = RGBNightlightColor.rgb_to_color_slider_location(
             red, green, blue
         )
 
-        # Apply brightness to RGB values - the VeSync app sends brightness-adjusted
-        # RGB values to the API, not raw colors with separate brightness.
+        # The VeSync app sends brightness-adjusted RGB, not raw color + brightness.
         # From decompiled app: yv/p.java method b() and RGBNightLightView.java
         if brightness != RGB_FULL_BRIGHTNESS:
             adj_red, adj_green, adj_blue = RGBNightlightColor.apply_brightness_to_rgb(
@@ -408,13 +427,18 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
         if r is None:
             return False
 
-        # Update state and record timestamp to ignore stale API responses
+        # Mark reachable like sibling setters, then update state and record the
+        # timestamp used to ignore stale API responses for a short window.
+        self.state.connection_status = ConnectionStatus.ONLINE
         self.state.rgb_nightlight_status = action
-        self.state.rgb_nightlight_brightness = brightness
-        self.state.rgb_nightlight_red = red
-        self.state.rgb_nightlight_green = green
-        self.state.rgb_nightlight_blue = blue
-        self.state.rgb_nightlight_color_mode = color_mode
+        # An off command must not overwrite the stored color/brightness so the
+        # previous setting is restored on the next power-on.
+        if not turning_off:
+            self.state.rgb_nightlight_brightness = brightness
+            self.state.rgb_nightlight_red = red
+            self.state.rgb_nightlight_green = green
+            self.state.rgb_nightlight_blue = blue
+            self.state.rgb_nightlight_color_mode = color_mode
         self.state.rgb_nightlight_set_time = time.time()
 
         return True
