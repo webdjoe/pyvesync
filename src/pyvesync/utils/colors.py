@@ -273,26 +273,6 @@ class RGBNightlightColor:
     ]
 
     @staticmethod
-    def color_distance(r1: int, g1: int, b1: int, r2: int, g2: int, b2: int) -> float:
-        """Calculate Euclidean distance between two RGB colors.
-
-        From decompiled app: yv/p.java method c()
-        """
-        return ((r1 - r2) ** 2 + (g1 - g2) ** 2 + (b1 - b2) ** 2) ** 0.5
-
-    @staticmethod
-    def interpolate_color(
-        color1: tuple[int, int, int],
-        color2: tuple[int, int, int],
-        fraction: float,
-    ) -> tuple[int, int, int]:
-        """Linearly interpolate between two colors."""
-        r = int(color1[0] + (color2[0] - color1[0]) * fraction)
-        g = int(color1[1] + (color2[1] - color1[1]) * fraction)
-        b = int(color1[2] + (color2[2] - color1[2]) * fraction)
-        return (r, g, b)
-
-    @staticmethod
     def apply_brightness_to_rgb(
         red: int, green: int, blue: int, brightness: int
     ) -> tuple[int, int, int]:
@@ -367,30 +347,31 @@ class RGBNightlightColor:
         """
         gradient = cls.GRADIENT
         num_colors = len(gradient)
-        segment_size = 100.0 / (num_colors - 1)  # ~14.29 for 8 colors
+        segment_size = 100.0 / (num_colors - 1)
 
         best_position = 0.0
-        best_distance = float('inf')
+        best_distance_sq = float('inf')
 
         for i in range(num_colors - 1):
-            color1 = gradient[i]
-            color2 = gradient[i + 1]
-            start_pos = i * segment_size
+            ax, ay, az = gradient[i]
+            bx, by, bz = gradient[i + 1]
+            dx, dy, dz = bx - ax, by - ay, bz - az
+            seg_len_sq = dx * dx + dy * dy + dz * dz
+            if seg_len_sq == 0:
+                fraction = 0.0
+            else:
+                fraction = (
+                    (red - ax) * dx + (green - ay) * dy + (blue - az) * dz
+                ) / seg_len_sq
+                fraction = max(0.0, min(1.0, fraction))
 
-            for step in range(101):
-                fraction = step / 100.0
-                interp_color = cls.interpolate_color(color1, color2, fraction)
-                distance = cls.color_distance(
-                    red,
-                    green,
-                    blue,
-                    interp_color[0],
-                    interp_color[1],
-                    interp_color[2],
-                )
+            cx = ax + dx * fraction
+            cy = ay + dy * fraction
+            cz = az + dz * fraction
+            distance_sq = (red - cx) ** 2 + (green - cy) ** 2 + (blue - cz) ** 2
 
-                if distance < best_distance:
-                    best_distance = distance
-                    best_position = start_pos + (fraction * segment_size)
+            if distance_sq < best_distance_sq:
+                best_distance_sq = distance_sq
+                best_position = i * segment_size + fraction * segment_size
 
         return round(best_position)
