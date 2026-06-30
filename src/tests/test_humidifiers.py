@@ -342,3 +342,32 @@ class TestHumidifiers(TestBase):
         result = self.run_in_loop(obj.set_rgb_nightlight, brightness=60, red=10, green=20, blue=30)
         assert result is True
         assert obj.state.connection_status == const.ConnectionStatus.ONLINE
+
+    def test_rgb_state_normalizes_dimmed_read(self):
+        """A dimmed API color is stored as a full-brightness base (max channel 255)."""
+        from pyvesync.models.humidifier_models import RGBNightLight
+
+        obj = self.get_device("humidifiers", self.RGB_DEVICE)
+        dimmed = RGBNightLight(
+            action="on", colorMode="color", brightness=40, red=102, green=20, blue=0
+        )
+        obj._set_rgb_nightlight_state(dimmed)
+        assert obj.state.rgb_nightlight_status == "on"
+        assert max(
+            obj.state.rgb_nightlight_red,
+            obj.state.rgb_nightlight_green,
+            obj.state.rgb_nightlight_blue,
+        ) == 255
+
+    def test_rgb_state_black_stays_black_on_read(self):
+        """A dimmed all-zero color must not be stored as white."""
+        from pyvesync.models.humidifier_models import RGBNightLight
+
+        obj = self.get_device("humidifiers", self.RGB_DEVICE)
+        black = RGBNightLight(
+            action="on", colorMode="color", brightness=40, red=0, green=0, blue=0
+        )
+        obj._set_rgb_nightlight_state(black)
+        assert obj.state.rgb_nightlight_red == 0
+        assert obj.state.rgb_nightlight_green == 0
+        assert obj.state.rgb_nightlight_blue == 0
