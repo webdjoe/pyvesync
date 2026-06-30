@@ -309,17 +309,18 @@ class TestHumidifiers(TestBase):
         assert result is False
 
     def test_set_rgb_off_preserves_color_state(self):
-        """Turning the light off must not overwrite stored brightness/color."""
+        """Turning off must not clobber a stored 0-channel color or brightness."""
         self.mock_api.return_value = self._rgb_success()
         obj = self.get_device("humidifiers", self.RGB_DEVICE)
-        obj.state.rgb_nightlight_red = 10
-        obj.state.rgb_nightlight_green = 20
-        obj.state.rgb_nightlight_blue = 30
+        obj.state.rgb_nightlight_red = 0  # buggy code would coalesce 0 -> 255
+        obj.state.rgb_nightlight_green = 255
+        obj.state.rgb_nightlight_blue = 0
         obj.state.rgb_nightlight_brightness = 80
         result = self.run_in_loop(obj.set_rgb_nightlight, power=False)
         assert result is True
         assert obj.state.rgb_nightlight_status == "off"
-        assert obj.state.rgb_nightlight_red == 10
+        assert obj.state.rgb_nightlight_red == 0  # preserved, not 255
+        assert obj.state.rgb_nightlight_blue == 0
         assert obj.state.rgb_nightlight_brightness == 80
 
     def test_set_rgb_on_sets_status(self):
@@ -334,7 +335,7 @@ class TestHumidifiers(TestBase):
         assert obj.state.rgb_nightlight_status == "on"
 
     def test_set_rgb_sets_connection_online(self):
-        """A successful set marks the device online like sibling setters."""
+        """A successful set marks the device online (via process_dev_response)."""
         self.mock_api.return_value = self._rgb_success()
         obj = self.get_device("humidifiers", self.RGB_DEVICE)
         obj.state.connection_status = const.ConnectionStatus.OFFLINE

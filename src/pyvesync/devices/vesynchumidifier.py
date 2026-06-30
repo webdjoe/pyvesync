@@ -427,9 +427,8 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
         if r is None:
             return False
 
-        # Mark reachable like sibling setters, then update state and record the
-        # timestamp used to ignore stale API responses for a short window.
-        self.state.connection_status = ConnectionStatus.ONLINE
+        # process_dev_response already set connection_status; update local state
+        # and record the timestamp used to ignore stale API responses briefly.
         self.state.rgb_nightlight_status = action
         # An off command must not overwrite the stored color/brightness so the
         # previous setting is restored on the next power-on.
