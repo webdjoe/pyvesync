@@ -312,10 +312,12 @@ class RGBNightlightColor:
         Returns:
             tuple: Brightness-adjusted (red, green, blue) values.
         """
+        if max(red, green, blue) == 0:
+            return (0, 0, 0)
         h, s, _ = colorsys.rgb_to_hsv(red / 255.0, green / 255.0, blue / 255.0)
         v = brightness / 100.0
         r, g, b = colorsys.hsv_to_rgb(h, s, v)
-        return (int(r * 255), int(g * 255), int(b * 255))
+        return (round(r * 255), round(g * 255), round(b * 255))
 
     @staticmethod
     def normalize_to_full_brightness(
@@ -335,10 +337,12 @@ class RGBNightlightColor:
         Returns:
             tuple: Normalized (red, green, blue) values at full brightness.
         """
+        if max(red, green, blue) == 0:
+            return (0, 0, 0)
         h, s, _ = colorsys.rgb_to_hsv(red / 255.0, green / 255.0, blue / 255.0)
         v = 1.0
         r, g, b = colorsys.hsv_to_rgb(h, s, v)
-        return (int(r * 255), int(g * 255), int(b * 255))
+        return (round(r * 255), round(g * 255), round(b * 255))
 
     @classmethod
     def rgb_to_color_slider_location(cls, red: int, green: int, blue: int) -> int:
