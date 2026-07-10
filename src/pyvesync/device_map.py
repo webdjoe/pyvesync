@@ -668,6 +668,7 @@ humidifier_modules = [
         class_name='VeSyncLV600S',
         dev_types=[
             'LUH-A603S-WUS',
+            'LUH-A603S-WUK',
         ],
         features=[HumidifierFeatures.WARM_MIST],
         mist_modes={
@@ -1010,7 +1011,8 @@ objects for purifier devices."""
 fan_modules: list[FanMap] = [
     FanMap(
         class_name='VeSyncTowerFan',
-        dev_types=['LTF-F422S-KEU', 'LTF-F422S-WUSR', 'LTF-F422S-WJP', 'LTF-F422S-WUS'],
+        dev_types=['LTF-F422S-KEU', 'LTF-F422S-WUSR', 'LTF-F422S-WJP', 'LTF-F422S-WUS',
+                   'LPF-F361S-WUS', 'LPF-F362S-WUSR', 'LPF-F461S-WUS'],
         modes={
             FanModes.NORMAL: 'normal',
             FanModes.TURBO: 'turbo',
@@ -1038,7 +1040,7 @@ fan_modules: list[FanMap] = [
     ),
     FanMap(
         class_name='VeSyncPedestalFan',
-        dev_types=['LPF-R432S-AEU', 'LPF-R432S-AUS'],
+        dev_types=['LPF-R432S-AEU', 'LPF-R432S-AUS', 'LPF-R382S-AEU', 'LPF-R382S-AUS'],
         modes={
             FanModes.NORMAL: 'normal',
             FanModes.TURBO: 'turbo',
@@ -1072,10 +1074,10 @@ air_fryer_modules: list[AirFryerMap] = [
     AirFryerMap(
         class_name='VeSyncAirFryer158',
         module=vesynckitchen,
-        dev_types=['CS137-AF/CS158-AF', 'CS158-AF', 'CS137-AF'],
+        dev_types=['CS137-AF/CS158-AF', 'CS158-AF', 'CS137-AF', 'CS358-AF'],
         device_alias='Air Fryer',
-        model_display='CS158/159/168/169-AF Series',
-        model_name='Smart/Pro/Pro Gen 2 5.8 Qt. Air Fryer',
+        model_display='CS158/159/168/169/358-AF Series',
+        model_name='Smart/Pro/Pro Gen 2 5.8/6.8 Qt. Air Fryer',
         setup_entry='CS137-AF/CS158-AF',
     )
 ]
