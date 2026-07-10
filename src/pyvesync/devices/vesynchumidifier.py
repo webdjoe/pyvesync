@@ -1116,6 +1116,22 @@ class VeSyncSproutHumid(BypassV2Mixin, VeSyncHumidifier):
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
+    async def toggle_nightlight(self, toggle: bool | None = None) -> bool:
+        """Toggle nightlight on/off for Sprout Humidifier.
+
+        Overrides base class to use setLightStatus API.
+        """
+        if toggle is None:
+            toggle = self.state.nightlight_status != DeviceStatus.ON
+        return await self._set_nightlight_state(toggle)
+
+    async def set_nightlight_brightness(self, brightness: int) -> bool:
+        """Set nightlight brightness for Sprout Humidifier.
+
+        Overrides base class to use setLightStatus API.
+        """
+        return await self._set_nightlight_state(True, brightness=brightness)
+
     async def toggle_automatic_stop(self, toggle: bool | None = None) -> bool:
         if toggle is None:
             toggle = self.state.automatic_stop_config is not True
