@@ -134,6 +134,8 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
             DeviceStatus.ON if result.display else DeviceStatus.OFF
         )
         self.state.child_lock = result.child_lock or False
+        if hasattr(result, 'plasma'):
+            self.state.plasma = result.plasma
         config = result.configuration
         if config is not None:
             self.state.display_set_status = (
@@ -283,6 +285,39 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
         self.state.child_lock = toggle
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
+
+    async def toggle_plasma(self, toggle: bool | None = None) -> bool:
+        """Toggle plasma/PlasmaPro mode on supported purifiers.
+
+        Set plasma to on or off.
+
+        Args:
+            toggle (bool): True to turn plasma on, False to turn off.
+                          If None, toggles current state.
+
+        Returns:
+            bool: True if plasma was set successfully, False otherwise.
+        """
+        if toggle is None:
+            toggle = not getattr(self.state, 'plasma', False)
+        data = {'plasma': toggle}
+
+        r_dict = await self.call_bypassv2_api('setPlasma', data)
+        r = Helpers.process_dev_response(_LOGGER, 'toggle_plasma', self, r_dict)
+        if r is None:
+            return False
+
+        self.state.plasma = toggle
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def turn_on_plasma(self) -> bool:
+        """Turn plasma/PlasmaPro mode on."""
+        return await self.toggle_plasma(True)
+
+    async def turn_off_plasma(self) -> bool:
+        """Turn plasma/PlasmaPro mode off."""
+        return await self.toggle_plasma(False)
 
     async def reset_filter(self) -> bool:
         """Reset filter to 100%.

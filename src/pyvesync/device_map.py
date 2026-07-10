@@ -593,6 +593,7 @@ humidifier_modules = [
         features=[
             HumidifierFeatures.NIGHTLIGHT,
             HumidifierFeatures.NIGHTLIGHT_BRIGHTNESS,
+            HumidifierFeatures.NIGHTLIGHT_RGB,
             HumidifierFeatures.AUTO_STOP,
         ],
         mist_modes={
@@ -609,7 +610,7 @@ humidifier_modules = [
     HumidifierMap(
         class_name='VeSyncHumid200S',
         dev_types=['Classic200S'],
-        features=[HumidifierFeatures.AUTO_STOP],
+        features=[HumidifierFeatures.AUTO_STOP, HumidifierFeatures.NIGHTLIGHT],
         mist_modes={
             HumidifierModes.AUTO: 'auto',
             HumidifierModes.MANUAL: 'manual',
@@ -833,7 +834,7 @@ purifier_modules: list[PurifierMap] = [
         class_name='VeSyncAirBypass',
         dev_types=['Core400S', 'LAP-C401S-WJP', 'LAP-C401S-WUSR', 'LAP-C401S-WAAA'],
         modes=[PurifierModes.SLEEP, PurifierModes.MANUAL, PurifierModes.AUTO],
-        features=[PurifierFeatures.AIR_QUALITY],
+        features=[PurifierFeatures.AIR_QUALITY, PurifierFeatures.PLASMA],
         fan_levels=list(range(1, 5)),
         device_alias='Core 400S',
         auto_preferences=[

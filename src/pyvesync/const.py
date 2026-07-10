@@ -506,6 +506,7 @@ class HumidifierFeatures(Features):
     WARM_MIST = 'warm_mist'
     AUTO_STOP = 'auto_stop'
     NIGHTLIGHT_BRIGHTNESS = 'nightlight_brightness'
+    NIGHTLIGHT_RGB = 'nightlight_rgb'
     DRYING_MODE = 'drying_mode'
 
 
@@ -518,6 +519,7 @@ class PurifierFeatures(Features):
         AIR_QUALITY: Air quality status.
         VENT_ANGLE: Vent angle status.
         LIGHT_DETECT: Light detection status.
+        PLASMA: Plasma/PlasmaPro mode status.
         PM25: PM2.5 level status.
         PM10: PM10 level status.
         PM1: PM1 level status.
@@ -531,6 +533,7 @@ class PurifierFeatures(Features):
     AIR_QUALITY = 'air_quality'
     VENT_ANGLE = 'fan_rotate'
     LIGHT_DETECT = 'light_detect'
+    PLASMA = 'plasma'
     PM25 = 'pm25'
     PM10 = 'pm10'
     PM1 = 'pm1'
