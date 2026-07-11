@@ -686,7 +686,11 @@ humidifier_modules = [
     HumidifierMap(
         class_name='VeSyncHumid200300S',
         dev_types=['LUH-O451S-WEU'],
-        features=[HumidifierFeatures.WARM_MIST, HumidifierFeatures.AUTO_STOP, HumidifierFeatures.NIGHTLIGHT],
+        features=[
+            HumidifierFeatures.WARM_MIST,
+            HumidifierFeatures.AUTO_STOP,
+            HumidifierFeatures.NIGHTLIGHT,
+        ],
         mist_modes={
             HumidifierModes.AUTO: 'auto',
             HumidifierModes.SLEEP: 'sleep',
@@ -702,7 +706,11 @@ humidifier_modules = [
     HumidifierMap(
         class_name='VeSyncHumid200300S',
         dev_types=['LUH-O451S-WUS', 'LUH-O451S-WUSR', 'LUH-O601S-WUS', 'LUH-O601S-KUS'],
-        features=[HumidifierFeatures.WARM_MIST, HumidifierFeatures.AUTO_STOP, HumidifierFeatures.NIGHTLIGHT],
+        features=[
+            HumidifierFeatures.WARM_MIST,
+            HumidifierFeatures.AUTO_STOP,
+            HumidifierFeatures.NIGHTLIGHT,
+        ],
         mist_modes={
             HumidifierModes.AUTO: 'auto',
             HumidifierModes.SLEEP: 'sleep',
@@ -1011,8 +1019,15 @@ objects for purifier devices."""
 fan_modules: list[FanMap] = [
     FanMap(
         class_name='VeSyncTowerFan',
-        dev_types=['LTF-F422S-KEU', 'LTF-F422S-WUSR', 'LTF-F422S-WJP', 'LTF-F422S-WUS',
-                   'LPF-F361S-WUS', 'LPF-F362S-WUSR', 'LPF-F461S-WUS'],
+        dev_types=[
+            'LTF-F422S-KEU',
+            'LTF-F422S-WUSR',
+            'LTF-F422S-WJP',
+            'LTF-F422S-WUS',
+            'LPF-F361S-WUS',
+            'LPF-F362S-WUSR',
+            'LPF-F461S-WUS',
+        ],
         modes={
             FanModes.NORMAL: 'normal',
             FanModes.TURBO: 'turbo',
