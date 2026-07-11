@@ -156,7 +156,7 @@ class DeviceContainer(_DeviceContainerBase):
         """
         device_features = get_device_config(device.deviceType)
         if device_features is None:
-            logger.debug('Device type %s not found in device map', device.deviceType)
+            logger.info('Device type %s not found in device map - please report this', device.deviceType)
             return None
         dev_class = device_features.class_name
         dev_module = device_features.module
