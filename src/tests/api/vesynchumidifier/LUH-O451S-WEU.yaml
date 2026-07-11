@@ -108,6 +108,40 @@ set_mist_level:
     userCountryCode: US
   method: post
   url: /cloud/v2/deviceManaged/bypassV2
+set_rgb_nightlight:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 5.6.60
+    cid: LUH-O451S-WEU-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: LUH-O451S-WEU-CID
+    method: bypassV2
+    payload:
+      data:
+        action: 'on'
+        blue: 0
+        brightness: 100
+        colorMode: color
+        colorSliderLocation: 0
+        green: 50
+        red: 252
+        speed: 0
+      method: setLightStatus
+      source: APP
+    phoneBrand: pyvesync
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+    userCountryCode: US
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
 turn_off:
   headers:
     Content-Type: application/json; charset=UTF-8

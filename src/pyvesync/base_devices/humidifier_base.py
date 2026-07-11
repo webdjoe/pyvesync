@@ -76,6 +76,13 @@ class HumidifierState(DeviceState):
         'nightlight_brightness',
         'nightlight_color_temp',
         'nightlight_status',
+        'rgb_nightlight_blue',
+        'rgb_nightlight_brightness',
+        'rgb_nightlight_color_mode',
+        'rgb_nightlight_green',
+        'rgb_nightlight_red',
+        'rgb_nightlight_set_time',
+        'rgb_nightlight_status',
         'temperature',
         'warm_mist_enabled',
         'warm_mist_level',
@@ -112,6 +119,13 @@ class HumidifierState(DeviceState):
         self.mode: str | None = None
         self.nightlight_brightness: int | None = None
         self.nightlight_status: str | None = None
+        self.rgb_nightlight_status: str | None = None
+        self.rgb_nightlight_brightness: int | None = None
+        self.rgb_nightlight_red: int | None = None
+        self.rgb_nightlight_green: int | None = None
+        self.rgb_nightlight_blue: int | None = None
+        self.rgb_nightlight_color_mode: str | None = None
+        self.rgb_nightlight_set_time: float | None = None
         self.nightlight_color_temp: int | None = None
         self.warm_mist_enabled: bool | None = None
         self.warm_mist_level: int | None = None
@@ -290,6 +304,15 @@ class VeSyncHumidifier(VeSyncBaseToggleDevice):
         return HumidifierFeatures.NIGHTLIGHT_BRIGHTNESS in self.features
 
     @property
+    def supports_rgb_nightlight(self) -> bool:
+        """Return True if the humidifier supports RGB nightlight.
+
+        Returns:
+            bool: True if RGB nightlight is supported, False otherwise.
+        """
+        return HumidifierFeatures.RGB_NIGHTLIGHT in self.features
+
+    @property
     def supports_drying_mode(self) -> bool:
         """Return True if the humidifier supports drying mode."""
         return HumidifierFeatures.DRYING_MODE in self.features
@@ -459,6 +482,33 @@ class VeSyncHumidifier(VeSyncBaseToggleDevice):
             logger.error('Nightlight is not supported for this device.')
             return False
         logger.error('Nightlight has not been configured.')
+        return False
+
+    async def set_rgb_nightlight(
+        self,
+        power: bool | None = None,
+        brightness: int | None = None,
+        red: int | None = None,
+        green: int | None = None,
+        blue: int | None = None,
+    ) -> bool:
+        """Set RGB nightlight state and color.
+
+        Args:
+            power: Turn nightlight on (True) or off (False).
+            brightness: Brightness level (0-100).
+            red: Red color value (0-255).
+            green: Green color value (0-255).
+            blue: Blue color value (0-255).
+
+        Returns:
+            bool: Success of request.
+        """
+        del power, brightness, red, green, blue
+        if not self.supports_rgb_nightlight:
+            logger.error('RGB Nightlight is not supported for this device.')
+            return False
+        logger.error('RGB Nightlight has not been configured.')
         return False
 
     async def set_warm_level(self, warm_level: int) -> bool:

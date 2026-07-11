@@ -74,6 +74,10 @@ STATUS_OK = 200
 KELVIN_MIN = 2700
 KELVIN_MAX = 6500
 
+# RGB nightlight constants
+RGB_STALE_DATA_TIMEOUT = 180  # Seconds to ignore stale API data after setting values
+RGB_FULL_BRIGHTNESS = 100  # Full brightness percentage
+
 
 class ProductLines(StrEnum):
     """High level product line."""
@@ -497,6 +501,7 @@ class HumidifierFeatures(Features):
         WARM_MIST: Warm mist status.
         AUTO_STOP: Auto stop when target humidity is reached.
             Different from auto, which adjusts fan level to maintain humidity.
+        RGB_NIGHTLIGHT: RGB nightlight with color control.
     """
 
     ONOFF = 'onoff'
@@ -507,6 +512,7 @@ class HumidifierFeatures(Features):
     AUTO_STOP = 'auto_stop'
     NIGHTLIGHT_BRIGHTNESS = 'nightlight_brightness'
     DRYING_MODE = 'drying_mode'
+    RGB_NIGHTLIGHT = 'rgb_nightlight'
 
 
 class PurifierFeatures(Features):

@@ -44,3 +44,4 @@ docstest/*
 .mcp.json
 .vesync_auth
 **/CLAUDE.md
+/docs/superpowers
