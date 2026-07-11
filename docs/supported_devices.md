@@ -83,15 +83,21 @@ Switches have minimal features, the dimmer switch is the only switch that has ad
 
 ### Humidifiers
 
-| Device Name | Night Light | Warm Mist |
-| ------ |-------------| ----- |
-| Classic 200S |             | |
-| Classic 300S | ✔           | ✔ |
-| Dual 200S |             | |
-| LV600S |             | ✔ |
-| OasisMist |             | ✔ |
-| Superior 6000S |            | ✔ |
-| Sprout Humidifier |             | |
+| Device Name | Night Light | RGB Night Light | Warm Mist |
+| ------ | ----- | ----- | ----- |
+| Classic 200S | | | |
+| Classic 300S | ✔ | | ✔ |
+| Dual 200S | | | |
+| LV600S | | | ✔ |
+| OasisMist 4.5L | | ✔ | ✔ |
+| Superior 6000S | | | ✔ |
+| Sprout Humidifier | | | |
+
+The OasisMist 4.5L (`LUH-O451S-WEU`) exposes an RGB nightlight through
+[`set_rgb_nightlight`][pyvesync.devices.vesynchumidifier.VeSyncHumid200300S.set_rgb_nightlight].
+Other models with the same hardware may work by adding the
+`HumidifierFeatures.RGB_NIGHTLIGHT` feature flag, but only the OasisMist 4.5L has
+been verified.
 
 ### Fans
 
