@@ -497,7 +497,7 @@ class VeSyncTurboBlazeFryer(BypassV2Mixin, VeSyncFryer):
         # current_temp without a unit-aware crutch.
         _current_temp = resp_model.currentTemp
         if _current_temp is not None and resp_model.tempUnit == 'f':
-            _current_temp = round(_current_temp * 9 / 5 + 32, 1)
+            _current_temp = round(_current_temp * 9 / 5 + 32)
 
         self.state_chamber_1.set_state(
             cook_status=self.status_map[resp_model.cookStatus],
