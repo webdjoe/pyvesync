@@ -538,8 +538,8 @@ class VeSyncTurboBlazeFryer(BypassV2Mixin, VeSyncFryer):
             cook_last_time=recipe.cook_time,
             cook_temp=recipe.target_temp,
             cook_mode=recipe.cook_mode,
-            preheat_set_time=recipe.preheat_time if recipe.preheat_time else None,
-            preheat_last_time=recipe.preheat_time if recipe.preheat_time else None,
+            preheat_set_time=recipe.preheat_time or None,
+            preheat_last_time=recipe.preheat_time or None,
         )
         return True
 

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from pyvesync.base_devices.vesyncbasedevice import DeviceState, VeSyncBaseDevice
@@ -179,7 +179,7 @@ class FryerState(DeviceState):
             value (AirFryerCookStatus | None): The cooking status to set.
         """
         if value in RUNNING_STATUSES:
-            self.last_timestamp = datetime.now(tz=timezone.utc)
+            self.last_timestamp = datetime.now(tz=UTC)
         self._cook_status = value
 
     @property
@@ -196,7 +196,7 @@ class FryerState(DeviceState):
             return max(
                 0,
                 self.preheat_last_time
-                - int((datetime.now(timezone.utc) - self.last_timestamp).total_seconds()),
+                - int((datetime.now(UTC) - self.last_timestamp).total_seconds()),
             )
         return None
 
@@ -215,7 +215,7 @@ class FryerState(DeviceState):
             return max(
                 0,
                 self.cook_last_time
-                - int((datetime.now(timezone.utc) - self.last_timestamp).total_seconds()),
+                - int((datetime.now(UTC) - self.last_timestamp).total_seconds()),
             )
         return None
 
@@ -267,7 +267,7 @@ class FryerState(DeviceState):
         if preheat_set_time is not None:
             self.preheat_set_time = self.device.convert_time_for_state(preheat_set_time)
         self.preheat_last_time = self.preheat_time_remaining
-        self.last_timestamp = datetime.now(timezone.utc)
+        self.last_timestamp = datetime.now(UTC)
 
     def set_cooking_state(
         self, *, recipe: str, cook_set_time: int, cook_temp: int, cook_mode: str
