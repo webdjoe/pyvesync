@@ -198,14 +198,16 @@ class FryerTurboBlazeRequestData(RequestBaseModel):
     """Request model for TurboBlaze air fryer cooking commands."""
 
     accountId: str
-    hasPreheat: int
     hasWarm: bool
+    mode: str
     readyStart: bool
     recipeId: int
     recipeName: str
     recipeType: int
     tempUnit: str
-    startAct: list[FryerTurboBlazeStartActItem]
+    startAct: FryerTurboBlazeStartActItem
+    hasPreheat: int = 0
+    hasLinkage: bool = False
 
 
 @dataclass

@@ -14,7 +14,7 @@ update:
     method: bypassV2
     payload:
       data: {}
-      method: getAirfyerStatus
+      method: getAirfryerStatus
       source: APP
     phoneBrand: pyvesync
     phoneOS: Android

@@ -448,7 +448,7 @@ class VeSyncTurboBlazeFryer(BypassV2Mixin, VeSyncFryer):
             cook_req['hasPreheat'] = int(True)
         cook_req['hasWarm'] = False
         cook_req['mode'] = recipe.cook_mode
-        cook_req['readyStart'] = True
+        cook_req['readyStart'] = False
         cook_req['recipeId'] = recipe.recipe_id
         cook_req['recipeName'] = recipe.recipe_name
         cook_req['recipeType'] = recipe.recipe_type
@@ -462,7 +462,7 @@ class VeSyncTurboBlazeFryer(BypassV2Mixin, VeSyncFryer):
         return models.FryerTurboBlazeRequestData.from_dict(cook_req)
 
     async def get_details(self) -> None:
-        resp = await self.call_bypassv2_api(payload_method='getAirfyerStatus')
+        resp = await self.call_bypassv2_api(payload_method='getAirfryerStatus')
         resp_model = process_bypassv2_result(
             self,
             logger,
@@ -489,6 +489,16 @@ class VeSyncTurboBlazeFryer(BypassV2Mixin, VeSyncFryer):
             self.state.set_standby()
             return
 
+        # currentTemp from the bypassV2 getAirfryerStatus response is the
+        # device's hardware sensor reading, which the firmware always
+        # reports in Celsius regardless of resp_model.tempUnit. The
+        # tempUnit field governs only the echoed cookTemp/preheatTemp
+        # values. Normalize so consumers can compare cook_temp and
+        # current_temp without a unit-aware crutch.
+        _current_temp = resp_model.currentTemp
+        if _current_temp is not None and resp_model.tempUnit == 'f':
+            _current_temp = round(_current_temp * 9 / 5 + 32)
+
         self.state_chamber_1.set_state(
             cook_status=self.status_map[resp_model.cookStatus],
             cook_time=cook_step.cookSetTime,
@@ -498,7 +508,7 @@ class VeSyncTurboBlazeFryer(BypassV2Mixin, VeSyncFryer):
             cook_mode=cook_step.mode,
             preheat_set_time=resp_model.preheatSetTime,
             preheat_last_time=resp_model.preheatLastTime,
-            current_temp=resp_model.currentTemp,
+            current_temp=_current_temp,
         )
 
     async def end(self, chamber: int = 1) -> bool:

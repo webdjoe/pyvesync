@@ -809,6 +809,98 @@ class AirFryerPresets:
         temp_unit='f',
         cook_time=10 * 60,
     )
+    # Cosori Dual Blaze (CAF-P583S) presets — recipe IDs and default
+    # temp/time values per the CAF-P583S-KUS user manual.
+    broil: AirFryerPresetRecipe = AirFryerPresetRecipe(
+        cook_mode='Broil',
+        recipe_name='Broil',
+        recipe_id=17,
+        recipe_type=3,
+        target_temp=450,
+        temp_unit='f',
+        cook_time=12 * 60,
+    )
+    roast: AirFryerPresetRecipe = AirFryerPresetRecipe(
+        cook_mode='Roast',
+        recipe_name='Roast',
+        recipe_id=13,
+        recipe_type=3,
+        target_temp=380,
+        temp_unit='f',
+        cook_time=30 * 60,
+    )
+    bake: AirFryerPresetRecipe = AirFryerPresetRecipe(
+        cook_mode='Bake',
+        recipe_name='Bake',
+        recipe_id=9,
+        recipe_type=3,
+        target_temp=340,
+        temp_unit='f',
+        cook_time=30 * 60,
+    )
+    reheat: AirFryerPresetRecipe = AirFryerPresetRecipe(
+        cook_mode='Reheat',
+        recipe_name='Reheat',
+        recipe_id=16,
+        recipe_type=3,
+        target_temp=280,
+        temp_unit='f',
+        cook_time=10 * 60,
+    )
+    steak: AirFryerPresetRecipe = AirFryerPresetRecipe(
+        cook_mode='Steak',
+        recipe_name='Steak',
+        recipe_id=1,
+        recipe_type=3,
+        target_temp=400,
+        temp_unit='f',
+        cook_time=9 * 60,
+    )
+    seafood: AirFryerPresetRecipe = AirFryerPresetRecipe(
+        cook_mode='Seafood',
+        recipe_name='Seafood',
+        recipe_id=3,
+        recipe_type=3,
+        target_temp=375,
+        temp_unit='f',
+        cook_time=6 * 60,
+    )
+    veggies: AirFryerPresetRecipe = AirFryerPresetRecipe(
+        cook_mode='Veggies',
+        recipe_name='Veggies',
+        recipe_id=15,
+        recipe_type=3,
+        target_temp=375,
+        temp_unit='f',
+        cook_time=10 * 60,
+    )
+    french_fries: AirFryerPresetRecipe = AirFryerPresetRecipe(
+        cook_mode='FrenchFries',
+        recipe_name='French Fries',
+        recipe_id=6,
+        recipe_type=3,
+        target_temp=400,
+        temp_unit='f',
+        cook_time=18 * 60,
+    )
+    frozen: AirFryerPresetRecipe = AirFryerPresetRecipe(
+        cook_mode='Frozen',
+        recipe_name='Frozen',
+        recipe_id=5,
+        recipe_type=3,
+        target_temp=400,
+        temp_unit='f',
+        cook_time=17 * 60,
+    )
+    chicken: AirFryerPresetRecipe = AirFryerPresetRecipe(
+        cook_mode='Chicken',
+        recipe_name='Chicken',
+        recipe_id=2,
+        recipe_type=3,
+        target_temp=380,
+        temp_unit='f',
+        cook_time=25 * 60,
+    )
 
 
 AIRFRYER_PRESET_MAP = {
@@ -858,6 +950,11 @@ class AirFryerCookModes(StrEnum):
     DRY = 'dry'
     GRILL = 'grill'
     PREHEAT = 'preheat'
+    STEAK = 'steak'
+    SEAFOOD = 'seafood'
+    VEGGIES = 'veggies'
+    FRENCH_FRIES = 'french_fries'
+    CHICKEN = 'chicken'
 
 
 class AirFryerFeatures(Features):
