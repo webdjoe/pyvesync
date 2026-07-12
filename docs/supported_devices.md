@@ -14,6 +14,7 @@ The VeSync API supports a variety of devices. The following is a list of devices
       - [Etekcity 15A Rectangle Outlet][pyvesync.devices.vesyncoutlet.VeSyncOutlet15A]
       - [Etekcity 15A Outdoor Dual Outlet][pyvesync.devices.vesyncoutlet.VeSyncOutdoorPlug]
       - [BSDOG / Greensun Smart Outlet Series][pyvesync.devices.vesyncoutlet.VeSyncBSDOGPlug] - WHOPLUG / GREENSUN
+      - [WYLDR Smart Plug][pyvesync.devices.vesyncoutlet.VeSyncBSDOGPlug] - WYLDR16A1081 (energy monitoring without energy history)
 3. Switches
       - [ESWL01][pyvesync.devices.vesyncswitch.VeSyncWallSwitch] - Etekcity Wall Switch
       - [ESWL03][pyvesync.devices.vesyncswitch.VeSyncWallSwitch] - Etekcity 3-Way Switch
@@ -59,14 +60,21 @@ Switches have minimal features, the dimmer switch is the only switch that has ad
 
 ### Outlets
 
-| Device Name | Power Stats | Nightlight |
-| :------: | :----: | :----: |
-| 7A Round Outlet | ✔ | |
-| 10A Round EU Outlet | ✔ | |
-| 10A Round US Outlet | | |
-| 15A Rectangle Outlet | ✔ | ✔ |
-| 15A Outdoor Dual Outlet | ✔ | |
-| Round Smart Series | | |
+| Device Name | Power Stats | Energy History | Nightlight |
+| :------: | :----: | :----: | :----: |
+| 7A Round Outlet | ✔ | ✔ | |
+| 10A Round EU Outlet | ✔ | ✔ | |
+| 10A Round US Outlet | | | |
+| 15A Rectangle Outlet | ✔ | ✔ | ✔ |
+| 15A Outdoor Dual Outlet | ✔ | ✔ | |
+| Smart Plug Series (WHOGPLUG / BSDOG01) | ✔ | ✔ | |
+| WYLDR Smart Plug (WYLDR16A1081) | ✔ | | |
+
+Power stats are realtime power, voltage and energy readings from the device.
+Energy history is the weekly, monthly and yearly energy usage retrieved with
+`get_weekly_energy()`, `get_monthly_energy()` and `get_yearly_energy()`. Devices
+without the energy history feature log a debug message and make no API call when
+these methods are used.
 
 ### Purifiers
 
@@ -83,15 +91,21 @@ Switches have minimal features, the dimmer switch is the only switch that has ad
 
 ### Humidifiers
 
-| Device Name | Night Light | Warm Mist |
-| ------ |-------------| ----- |
-| Classic 200S |             | |
-| Classic 300S | ✔           | ✔ |
-| Dual 200S |             | |
-| LV600S |             | ✔ |
-| OasisMist |             | ✔ |
-| Superior 6000S |            | ✔ |
-| Sprout Humidifier |             | |
+| Device Name | Night Light | RGB Night Light | Warm Mist |
+| ------ | ----- | ----- | ----- |
+| Classic 200S | | | |
+| Classic 300S | ✔ | | ✔ |
+| Dual 200S | | | |
+| LV600S | | | ✔ |
+| OasisMist 4.5L | | ✔ | ✔ |
+| Superior 6000S | | | ✔ |
+| Sprout Humidifier | | | |
+
+The OasisMist 4.5L (`LUH-O451S-WEU`) exposes an RGB nightlight through
+[`set_rgb_nightlight`][pyvesync.devices.vesynchumidifier.VeSyncHumid200300S.set_rgb_nightlight].
+Other models with the same hardware may work by adding the
+`HumidifierFeatures.RGB_NIGHTLIGHT` feature flag, but only the OasisMist 4.5L has
+been verified.
 
 ### Fans
 
