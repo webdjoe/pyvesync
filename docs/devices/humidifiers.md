@@ -18,7 +18,7 @@
         summary:
             functions: false
         group_by_category: true
-        toc_label: "HumidiferState"
+        toc_label: "HumidifierState"
         show_root_heading: true
         show_root_toc_entry: true
         show_category_heading: true
@@ -121,7 +121,7 @@
 
 ::: pyvesync.devices.vesynchumidifier.VeSyncLV600S
     options:
-        toc_label: "VeSync Sprout Humidifier"
+        toc_label: "VeSync LV600S Humidifier"
         filters:
             - "!^_.*"
         summary:
@@ -144,7 +144,7 @@
         summary:
             functions: false
         group_by_category: true
-        toc_label: "HumidiferState"
+        toc_label: "VeSyncHumidifier Base"
         show_root_heading: true
         show_root_toc_entry: true
         show_category_heading: true

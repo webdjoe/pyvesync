@@ -442,7 +442,7 @@ outlet_modules = [
     OutletMap(
         dev_types=['wifi-switch-1.3'],
         class_name='VeSyncOutlet7A',
-        features=[OutletFeatures.ENERGY_MONITOR],
+        features=[OutletFeatures.ENERGY_MONITOR, OutletFeatures.ENERGY_HISTORY],
         model_name='WiFi Outlet US/CA',
         device_alias='Round 7A WiFi Outlet',
         model_display='ESW01-USA Series',
@@ -460,7 +460,7 @@ outlet_modules = [
     OutletMap(
         dev_types=['ESW01-EU', 'ESW01-USA', 'ESW03-USA', 'ESW03-EU'],
         class_name='VeSyncOutlet10A',
-        features=[OutletFeatures.ENERGY_MONITOR],
+        features=[OutletFeatures.ENERGY_MONITOR, OutletFeatures.ENERGY_HISTORY],
         model_name='ESW03 10A WiFi Outlet',
         model_display='ESW01/03 USA/EU',
         device_alias='10A Round WiFi Outlet',
@@ -469,7 +469,11 @@ outlet_modules = [
     OutletMap(
         dev_types=['ESW15-USA'],
         class_name='VeSyncOutlet15A',
-        features=[OutletFeatures.ENERGY_MONITOR, OutletFeatures.NIGHTLIGHT],
+        features=[
+            OutletFeatures.ENERGY_MONITOR,
+            OutletFeatures.ENERGY_HISTORY,
+            OutletFeatures.NIGHTLIGHT,
+        ],
         nightlight_modes=[NightlightModes.ON, NightlightModes.OFF, NightlightModes.AUTO],
         model_name='15A WiFi Outlet US/CA',
         model_display='ESW15-USA Series',
@@ -479,7 +483,7 @@ outlet_modules = [
     OutletMap(
         dev_types=['ESO15-TB'],
         class_name='VeSyncOutdoorPlug',
-        features=[OutletFeatures.ENERGY_MONITOR],
+        features=[OutletFeatures.ENERGY_MONITOR, OutletFeatures.ENERGY_HISTORY],
         model_name='Outdoor Plug',
         model_display='ESO15-TB Series',
         device_alias='Outdoor Smart Plug',
@@ -490,7 +494,11 @@ outlet_modules = [
             'WHOGPLUG',
         ],
         class_name='VeSyncOutletWHOGPlug',
-        features=[OutletFeatures.ONOFF, OutletFeatures.ENERGY_MONITOR],
+        features=[
+            OutletFeatures.ONOFF,
+            OutletFeatures.ENERGY_MONITOR,
+            OutletFeatures.ENERGY_HISTORY,
+        ],
         model_name='Smart Plug',
         model_display='Smart Plug Series',
         setup_entry='WHOGPLUG',
@@ -509,11 +517,24 @@ outlet_modules = [
             'HWPLUG16',
         ],
         class_name='VeSyncBSDOGPlug',
-        features=[OutletFeatures.ONOFF, OutletFeatures.ENERGY_MONITOR],
+        features=[
+            OutletFeatures.ONOFF,
+            OutletFeatures.ENERGY_MONITOR,
+            OutletFeatures.ENERGY_HISTORY,
+        ],
         model_name='Smart Plug',
         model_display='Smart Plug Series',
         setup_entry='BSDOG01',
         device_alias='Smart Plug Series',
+    ),
+    OutletMap(
+        dev_types=['WYLDR16A1081'],
+        class_name='VeSyncBSDOGPlug',
+        features=[OutletFeatures.ONOFF, OutletFeatures.ENERGY_MONITOR],
+        model_name='Smart Plug',
+        model_display='WYLDR Smart Plug',
+        setup_entry='WYLDR16A1081',
+        device_alias='WYLDR Smart Plug',
     ),
 ]
 """List of ['OutletMap'][pyvesync.device_map.OutletMap] configuration
@@ -715,7 +736,11 @@ humidifier_modules = [
     HumidifierMap(
         class_name='VeSyncHumid200300S',
         dev_types=['LUH-O451S-WEU'],
-        features=[HumidifierFeatures.WARM_MIST, HumidifierFeatures.AUTO_STOP],
+        features=[
+            HumidifierFeatures.WARM_MIST,
+            HumidifierFeatures.AUTO_STOP,
+            HumidifierFeatures.RGB_NIGHTLIGHT,
+        ],
         mist_modes={
             HumidifierModes.AUTO: 'auto',
             HumidifierModes.SLEEP: 'sleep',

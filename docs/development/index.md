@@ -1,6 +1,6 @@
 # pyvesync Library Development
 
-This is a community driven library, so contributions are welcome! Due to the size of the library and variety of API calls and devices there are guidelines that need to be followed to ensure the continued development and maintanability.
+This is a community driven library, so contributions are welcome! Due to the size of the library and variety of API calls and devices there are guidelines that need to be followed to ensure the continued development and maintainability.
 
 There is a new nomenclature for product types that defines the device class. The
 `device.product_type` attribute defines the product type based on the VeSync API. The product type is used to determine the device class and module. The currently supported product types are:
@@ -12,12 +12,13 @@ There is a new nomenclature for product types that defines the device class. The
 5. `humidifier` - Humidifiers (not air purifiers)
 6. `bulb` - Light bulbs (not dimmers or switches)
 7. `airfryer` - Air fryers
+8. `thermostat` - Thermostats
 
 ## Architecture
 
 The `pyvesync.vesync.VeSync` class, also referred to as the `manager` is the central control for the entire library. This is the only class that should be directly instantiated.
 
-The `VeSync` instance contains the authentication information and holds the device objects. The `VeSync` class has the method `async_call_api` which should be used for all API calls. It is as you might has guessed asynchronous. The session can either be passed in when instantiating the manager or generated internally.
+The `VeSync` instance contains the authentication information and holds the device objects. The `VeSync` class has the method `async_call_api` which should be used for all API calls. It is as you might have guessed asynchronous. The session can either be passed in when instantiating the manager or generated internally.
 
 Devices have a base class in the `pyvesync.base_devices` module. Each device type has a separate module that contains the device class and the API calls that are specific to that device type. The device classes inherit from the `VeSyncBaseDevice` and `VeSyncToggleDevice` base classes and implement the API calls for that device type.
 
@@ -135,7 +136,7 @@ class ResponseCodeModel(ResponseBaseModel):
     code: int
     msg: str | None
 
-````
+```
 
 Models for each device should be kept in the `data_models` folder with the appropriate device name:
 
@@ -145,6 +146,9 @@ Models for each device should be kept in the `data_models` folder with the appro
 - `outlet_models`
 - `switch_models`
 - `fan_models`
+- `fryer_models`
+- `thermostat_models`
+- `bypass_models`
 
 There are multiple levels to some requests with nested dictionaries. These must be defined in different classes:
 
@@ -271,7 +275,7 @@ assert api_bool == True
 
 ## Device Map
 
-All features and configuration options for devices are held in the `pyveysnc.device_map` module. Older versions of pyvesync held the device configuration in each device module, all of these have moved to the `device_map` module. Each product type has a dataclass structure that is used to define all of the configuration options for each type. The `device_map.get_device_config(device_type: str)` method is used to lookup the configuration dataclass instance by the `deviceType` value in the device list response.
+All features and configuration options for devices are held in the `pyvesync.device_map` module. Older versions of pyvesync held the device configuration in each device module, all of these have moved to the `device_map` module. Each product type has a dataclass structure that is used to define all of the configuration options for each type. The `device_map.get_device_config(device_type: str)` method is used to lookup the configuration dataclass instance by the `deviceType` value in the device list response.
 
 There are also methods for each device to return the device configuration with the correct type. For example, `get_outlet_config()` returns the configuration for the outlet device. The configuration is a dataclass that contains all of the attributes for that device type. The configuration is used to define the attributes in the device state class.
 
@@ -293,18 +297,18 @@ Exceptions are no longer caught by the library and must be handled by the user. 
 
 Errors that occur at the aiohttp level are raised automatically and propagated to the user. That means exceptions raised by aiohttp that inherit from `aiohttp.ClientError` are propagated.
 
-When the connection to the VeSync API succeeds but returns an error code that prevents the library from functioning a custom exception inherited from `pyvesync.logs.VeSyncError` is raised.
+When the connection to the VeSync API succeeds but returns an error code that prevents the library from functioning a custom exception inherited from [`VeSyncError`][pyvesync.utils.errors.VeSyncError] is raised.
 
 Custom Exceptions raised by all API calls:
 
-- `pyvesync.logs.VeSyncServerError` - The API connected and returned a code indicated there is a server-side error.
-- `pyvesync.logs.VeSyncRateLimitError` - The API's rate limit has been exceeded.
-- `pyvesync.logs.VeSyncAPIStatusCodeError` - The API returned a non-200 status code.
-- `pyvesync.logs.VeSyncAPIResponseError` - The response from the API was not in an expected format.
+- [`VeSyncServerError`][pyvesync.utils.errors.VeSyncServerError] - The API connected and returned a code indicated there is a server-side error.
+- [`VeSyncRateLimitError`][pyvesync.utils.errors.VeSyncRateLimitError] - The API's rate limit has been exceeded.
+- [`VeSyncAPIStatusCodeError`][pyvesync.utils.errors.VeSyncAPIStatusCodeError] - The API returned a non-200 status code.
+- [`VeSyncAPIResponseError`][pyvesync.utils.errors.VeSyncAPIResponseError] - The response from the API was not in an expected format.
 
 Login API Exceptions
 
-- `pyvesync.logs.VeSyncLoginError` - The username or password is incorrect.
+- [`VeSyncLoginError`][pyvesync.utils.errors.VeSyncLoginError] - The username or password is incorrect.
 
 See [errors.py](./utils/errors.md) for a complete list of error codes and exceptions.
 
@@ -540,7 +544,7 @@ The response structure has a relatively similar structure for all calls with a n
 
 #### Bypass V2 Device Mixin
 
-The `pyvesync.utils.device_mixins.BypassV2Mixin` class contains boilerplate code for the devices that use the Bypass V1 api. The mixin contains the `call_bypassv1_mixin` method that builds the request and calls the api. The method accepts the following parameters:
+The `pyvesync.utils.device_mixins.BypassV2Mixin` class contains boilerplate code for the devices that use the Bypass V2 api. The mixin contains the `call_bypassv2_api` method that builds the request and calls the api. The method accepts the following parameters:
 
 ```python
     async def call_bypassv2_api(
