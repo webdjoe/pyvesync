@@ -125,6 +125,7 @@ class TestHumidifiers(TestBase):
             ["turn_on_nightlight"],
             ["turn_off_nightlight"],
             ["set_nightlight_brightness", {"brightness": 50}],
+        ],
         "LUH-O451S-WEU": [
             ["set_rgb_nightlight", {"power": True, "brightness": 100, "red": 252, "green": 50, "blue": 0}],
         ],
