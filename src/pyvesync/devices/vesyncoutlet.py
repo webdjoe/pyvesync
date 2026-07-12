@@ -900,6 +900,10 @@ class VeSyncOutletWHOGPlug(BypassV2Mixin, VeSyncOutlet):
 class VeSyncBSDOGPlug(VeSyncOutletWHOGPlug):
     """VeSync BSDOG01/WYZYOG smart plugs.
 
+    Also used by the WYLDR16A1081 smart plug, which shares the same API but
+    does not support energy history retrieval (its device map entry omits
+    the `OutletFeatures.ENERGY_HISTORY` feature).
+
     Args:
         details (ResponseDeviceDetailsModel): The device details.
         manager (VeSync): The VeSync manager.
