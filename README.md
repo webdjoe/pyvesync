@@ -217,6 +217,7 @@ pip install pyvesync
 6. Two Plug Outdoor Outlet (ESO15-TB) (Each plug is a separate `VeSyncOutlet` object, energy readings are for both plugs combined)
 7. BSDOG / Greensun Smart Outlet Series (BSDOG01, BSDOG02, WYSMTOD16A, WM-PLUG and more)
 8. WHOPLUG / Greensun Smart Outlet
+9. WYLDR Smart Plug (WYLDR16A1081) (Supports energy monitoring but not energy history)
 
 <!--SUPPORTED OUTLETS END-->
 
