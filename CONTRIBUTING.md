@@ -1,5 +1,30 @@
 # Contributing to the pyvesync Library
 
+## Contribution Rules
+
+Every contribution — from humans and AI coding assistants alike — must follow
+three rules. The full guide, including code style and the diagnostic information
+to include with a request, is at
+[docs/development/contributing.md](docs/development/contributing.md)
+(published at
+<https://webdjoe.github.io/pyvesync/latest/development/contributing>).
+
+1. **Follow the intended architecture.** Add devices through the three-tier
+   hierarchy (base class → concrete device + API mixin → device map), keep state
+   in the device's `DeviceState` subclass, models in `models/`, and constants in
+   `pyvesync.const`. API request/response shapes must come from a real packet
+   capture — never invented.
+2. **Verify on real hardware before merge.** New device support and any change
+   to device behavior must be tested on the physical device, and the pull
+   request must state the model and firmware version tested. Testing only through
+   Home Assistant does not count.
+3. **One change per pull request.** Each PR must be a single feature, fix, or
+   edit. Large or mixed PRs will be asked to be broken up before review.
+
+If you are using an AI assistant, point it at
+[`CLAUDE.md`](CLAUDE.md) / [`AGENTS.md`](AGENTS.md); you remain responsible for
+ensuring the result follows these rules.
+
 ## Setting up the Development Environment
 
 1. Git clone the repository
@@ -11,8 +36,8 @@ git clone https://github.com/webdjoe/pyvesync && cd pyvesync
 2. Create and activate a separate python virtual environment for pyvesync
 
 ```bash
-# Check Python version is 3.8 or higher
-python3 --version # or python --version or python3.8 --version
+# Check Python version is 3.11 or higher
+python3 --version # or python --version or python3.11 --version
 # Create a new venv
 python3 -m venv pyvesync-venv
 # Activate the venv

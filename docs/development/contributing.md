@@ -2,6 +2,105 @@
 
 Contributions are welcome! Please follow the guidelines below to ensure a quick and smooth review process.
 
+## Contribution Rules
+
+These three rules are the foundation of a mergeable contribution. They apply to
+everyone, and **especially** to changes generated with the help of an AI coding
+assistant. They are enforced through review and the pull request checklist, not
+CI, so please self-attest honestly.
+
+### 1. Follow the intended architecture
+
+pyvesync uses a deliberate three-tier device hierarchy. New work must fit into
+it rather than working around it:
+
+1. **Base classes** (`src/pyvesync/base_devices/`) — abstract base per device
+   type. Device state lives in the `DeviceState` subclass of the relevant base
+   (`OutletState`, `PurifierState`, etc.), and device methods/properties belong
+   on the device-type base class, not the concrete implementation class.
+2. **Concrete devices** (`src/pyvesync/devices/`) — a specific model implemented
+   by combining a base class with an API mixin (`BypassV1Mixin` or
+   `BypassV2Mixin`).
+3. **Device map** (`src/pyvesync/device_map.py`) — maps the API's device-type
+   string to the class, features, and config.
+
+Additional non-negotiables:
+
+- API request/response models go in `src/pyvesync/models/`.
+- Constants, modes, and default values go in `pyvesync.const` — no hardcoded
+  strings or magic numbers in device code.
+- **Never fabricate API request/response fields.** They must come from a real
+  packet capture (see [Capturing](./capturing.md)). If no capture exists for the
+  behavior, the work cannot be completed or merged.
+
+### 2. Verify on real hardware before merge
+
+**New device support and any change to device behavior must be tested on the
+physical device before it is merged.** This is a hard requirement.
+
+- The pull request must state the **model and firmware version** it was tested
+  against.
+- Testing only through Home Assistant (or another downstream integration) does
+  **not** satisfy this requirement — a device or standalone script exercising
+  the library directly is required.
+- If you do not own the device, provide a packet capture and/or share the device
+  with a maintainer (see [Capturing](./capturing.md)) so it can be verified
+  before merge.
+
+### 3. One change per pull request
+
+Each pull request must be a **single** feature, fix, or edit. Split large or
+mixed changes into separate PRs.
+
+- Do not bundle unrelated changes (e.g. a new device plus a refactor plus a docs
+  overhaul) into one PR.
+- Smaller, focused PRs are reviewable and verifiable; large speculative PRs that
+  touch many devices at once will be asked to be broken up before review.
+
+## Working with AI Coding Assistants
+
+AI assistants (Claude Code, Cursor, Copilot, etc.) are welcome tools, but the
+human opening the PR is responsible for the result. When driving an assistant
+against this repository:
+
+- Point it at this document and at `CLAUDE.md`, and require it to follow the
+  three Contribution Rules above.
+- Add new devices by mapping them in `device_map.py` and subclassing the correct
+  base class plus API mixin — not with ad-hoc, one-off code.
+- Do not let it invent API request/response shapes. If there is no packet
+  capture for a behavior, it cannot be implemented.
+- Do not submit device code that has not been run on the physical device.
+- Keep each PR to a single change. Do not batch a session's worth of speculative
+  edits into one large PR.
+- Provide the diagnostic information described below.
+
+## Diagnostic Information to Include
+
+Provide the following when requesting a device, proposing a feature, or reporting
+a bug. For full packet-capture instructions, see [Capturing](./capturing.md).
+
+**Requesting a new device:**
+
+- Device model number and `product_type`
+- Firmware version
+- Region / country code
+- Link to the product page
+- A packet capture, or a stated willingness to share the device with a maintainer
+
+**Adding a new feature:**
+
+- The target device model(s) the feature was tested on, with firmware version
+- The relevant captured API request and response for the new behavior
+- A redacted `DEBUG` log of the library exercising the feature
+
+**Reporting a bug / troubleshooting:**
+
+- pyvesync version and Python version
+- Device model and firmware version
+- A redacted `DEBUG` log (set the `pyvesync` logger to `DEBUG` with `redact=True`)
+- The `device.last_response` output for the failing call
+- A minimal reproduction script
+
 ## Getting Started
 
 ### Install the Development Environment

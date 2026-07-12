@@ -453,6 +453,16 @@ if __name__ == "__main__":
 
 ```
 
+## Contribution Expectations
+
+Contributions — from humans and AI coding assistants alike — must follow three rules. These keep the library correct and reviewable. See the [contributing guide](https://webdjoe.github.io/pyvesync/latest/development/contributing) for full detail.
+
+1. **Follow the intended architecture.** New devices are added through the three-tier hierarchy (base class → concrete device + API mixin → device map), with state in the device's `DeviceState` subclass, models in `models/`, and constants in `pyvesync.const`. API request/response shapes must come from a real packet capture — never invented.
+2. **Verify on real hardware before merge.** New device support and any change to device behavior must be tested on the physical device, and the pull request must state the model and firmware version tested. Testing only through Home Assistant does not count.
+3. **One change per pull request.** Each PR must be a single feature, fix, or edit. Large or mixed PRs that bundle unrelated changes will be asked to be broken up before review.
+
+> **Using an AI assistant?** Point it at [`CLAUDE.md`](CLAUDE.md) / [`AGENTS.md`](AGENTS.md) and the [contributing guide](https://webdjoe.github.io/pyvesync/latest/development/contributing). You are responsible for the result: it must follow the architecture, must not fabricate API fields, must not be submitted without real-device testing, and must be a single focused change.
+
 ## Feature Requests
 
 Before filing an issue to request a new feature or device, please ensure that you will take the time to test the feature thoroughly. New features cannot be simply tested on Home Assistant. A separate integration must be created which is not part of this library. In order to test a new feature, clone the branch and install into a new virtual environment.

@@ -1,0 +1,62 @@
+name: Bug Report
+description: Report a problem with an existing device or the library
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please include the diagnostic information below so the problem can be
+        reproduced. Enable `DEBUG` logging with `redact=True` and share the
+        redacted log — see the
+        [contributing guide](https://webdjoe.github.io/pyvesync/latest/development/contributing).
+  - type: textarea
+    id: description
+    attributes:
+      label: Description of the bug
+      description: What happened, and what did you expect to happen?
+    validations:
+      required: true
+  - type: input
+    id: pyvesync_version
+    attributes:
+      label: pyvesync version
+      placeholder: "e.g. 3.4.1"
+    validations:
+      required: true
+  - type: input
+    id: python_version
+    attributes:
+      label: Python version
+      placeholder: "e.g. 3.12"
+    validations:
+      required: true
+  - type: input
+    id: model
+    attributes:
+      label: Device model and firmware version
+      placeholder: "e.g. Core300S, firmware 2.0.35"
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reproduction script
+      description: The smallest script that reproduces the issue.
+      render: python
+    validations:
+      required: true
+  - type: textarea
+    id: debug_log
+    attributes:
+      label: Redacted DEBUG log
+      description: Set the `pyvesync` logger to `DEBUG` with `redact=True` and paste the output.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: last_response
+    attributes:
+      label: device.last_response output
+      description: The `last_response` (ResponseInfo) for the failing call, if applicable.
+      render: text
