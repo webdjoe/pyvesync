@@ -1087,6 +1087,32 @@ fan_modules: list[FanMap] = [
         model_display='LPF-R432S Pedestal Fan Series',
         model_name='Pedestal Fan',
     ),
+    FanMap(
+        class_name='VeSyncPedestalFan',
+        dev_types=['LPF-R382S-AEU'],
+        modes={
+            FanModes.NORMAL: 'normal',
+            FanModes.TURBO: 'turbo',
+            FanModes.ECO: 'eco',
+            FanModes.SLEEP: 'advancedSleep',
+        },
+        setup_entry='LPF-R382S',
+        features=[
+            FanFeatures.SET_OSCILLATION_RANGE,
+            FanFeatures.HORIZONTAL_OSCILLATION,
+        ],
+        fan_levels=list(range(1, 6)),
+        set_mode_method='setFanMode',
+        device_alias='Coolbreeze Pedestal Fan',
+        sleep_preferences=[
+            FanSleepPreference.DEFAULT,
+            FanSleepPreference.ADVANCED,
+            FanSleepPreference.TURBO,
+            FanSleepPreference.QUIET,
+        ],
+        model_display='LPF-R382S Coolbreeze Pedestal Fan Series',
+        model_name='Coolbreeze 382S',
+    ),
 ]
 """List of ['FanMap'][pyvesync.device_map.FanMap] configuration
 objects for fan devices."""
