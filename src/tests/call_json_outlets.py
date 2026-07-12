@@ -164,6 +164,7 @@ DETAILS_RESPONSES = {
     "ESO15-TB": build_bypass_v1_response(result_dict=OUTLET_DETAILS["ESO15-TB"]),
     "BSDOG01": build_bypass_v2_response(inner_result=OUTLET_DETAILS["BSDOG01"]),
     "WHOGPLUG": build_bypass_v2_response(inner_result=OUTLET_DETAILS["WHOGPLUG"]),
+    "WYLDR16A1081": build_bypass_v2_response(inner_result=OUTLET_DETAILS["BSDOG01"]),
 }
 
 
@@ -230,10 +231,11 @@ METHOD_RESPONSES = {
     "ESO15-TB": deepcopy(FunctionResponsesV1),
     "BSDOG01": deepcopy(FunctionResponsesV2),
     "WHOGPLUG": deepcopy(FunctionResponsesV2),
+    "WYLDR16A1081": deepcopy(FunctionResponsesV2),
 }
 
 for k in METHOD_RESPONSES:
-    if k in ["ESW10-USA"]:
+    if k in ["ESW10-USA", "WYLDR16A1081"]:
         METHOD_RESPONSES[k]["get_weekly_energy"] = None
         METHOD_RESPONSES[k]["get_monthly_energy"] = None
         METHOD_RESPONSES[k]["get_yearly_energy"] = None

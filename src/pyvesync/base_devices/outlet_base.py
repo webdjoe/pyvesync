@@ -271,12 +271,24 @@ class VeSyncOutlet(VeSyncBaseToggleDevice):
         """
         return OutletFeatures.ENERGY_MONITOR in self.features
 
+    @property
+    def supports_energy_history(self) -> bool:
+        """Return True if device supports energy history retrieval.
+
+        Returns:
+            bool: True if device supports energy history, False otherwise.
+        """
+        return OutletFeatures.ENERGY_HISTORY in self.features
+
     async def get_weekly_energy(self) -> None:
         """Build weekly energy history dictionary.
 
         The data is stored in the `device.state.weekly_history` attribute
         as a `ResponseEnergyResult` object.
         """
+        if not self.supports_energy_history:
+            logger.debug('Device does not support energy history.')
+            return
         await self._get_energy_history(EnergyIntervals.WEEK)
 
     async def get_monthly_energy(self) -> None:
@@ -285,6 +297,9 @@ class VeSyncOutlet(VeSyncBaseToggleDevice):
         The data is stored in the `device.state.monthly_history` attribute
         as a `ResponseEnergyResult` object.
         """
+        if not self.supports_energy_history:
+            logger.debug('Device does not support energy history.')
+            return
         await self._get_energy_history(EnergyIntervals.MONTH)
 
     async def get_yearly_energy(self) -> None:
@@ -293,6 +308,9 @@ class VeSyncOutlet(VeSyncBaseToggleDevice):
         The data is stored in the `device.state.yearly_history` attribute
         as a `ResponseEnergyResult` object.
         """
+        if not self.supports_energy_history:
+            logger.debug('Device does not support energy history.')
+            return
         await self._get_energy_history(EnergyIntervals.YEAR)
 
     async def update_energy(self) -> None:

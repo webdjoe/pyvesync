@@ -579,11 +579,13 @@ class OutletFeatures(Features):
     Attributes:
         ONOFF: Device on/off status.
         ENERGY_MONITOR: Energy monitor status.
+        ENERGY_HISTORY: Energy history retrieval support.
         NIGHTLIGHT: Nightlight status.
     """
 
     ONOFF = 'onoff'
     ENERGY_MONITOR = 'energy_monitor'
+    ENERGY_HISTORY = 'energy_history'
     NIGHTLIGHT = 'nightlight'
 
 
