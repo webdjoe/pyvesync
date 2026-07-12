@@ -1,0 +1,24 @@
+update:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 5.6.60
+    cid: CS158-AF-CID
+    configModule: WiFi_SKA_AirFryer158_US
+    debugMode: false
+    jsonCmd:
+      getStatus: status
+    method: bypass
+    phoneBrand: pyvesync
+    phoneOS: Android
+    pid: 2cl8hmafsthl65bd
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+    userCountryCode: US
+    uuid: CS158-AF-UUID
+  method: post
+  url: /cloud/v1/deviceManaged/bypass

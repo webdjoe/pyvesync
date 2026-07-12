@@ -1,5 +1,6 @@
 import copy
 from typing import Any
+import call_json_fryers
 import pyvesync.const as const
 from defaults import TestDefaults
 from pyvesync.device_map import DeviceMapTemplate
@@ -26,7 +27,8 @@ ALL_DEVICE_MAP_MODULES: list[DeviceMapTemplate] = [
     *call_json_outlets.outlet_modules,
     *call_json_switches.switch_modules,
     *call_json_humidifiers.humidifier_modules,
-    *call_json_purifiers.purifier_modules
+    *call_json_purifiers.purifier_modules,
+    *call_json_fryers.air_fryer_modules
 ]
 
 ALL_DEVICE_MAP_DICT: dict[str, DeviceMapTemplate] = {
@@ -384,6 +386,8 @@ class DeviceList:
         model_dict['deviceType'] = module.dev_types[0]
         if module.setup_entry == 'ESO15-TB':
             model_dict['subDeviceNo'] = 1
+        if 'CS137-AF/CS158-AF' in module.dev_types:
+            model_dict['configModule'] = 'WiFi_SKA_AirFryer158_US'
         return model_dict
 
     @classmethod

@@ -61,10 +61,15 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from itertools import chain
-from types import ModuleType
+from types import MappingProxyType, ModuleType
 from typing import Union
 
 from pyvesync.const import (
+    AirFryerCookModes,
+    AirFryerCookStatus,
+    AirFryerFeatures,
+    AirFryerPresetRecipe,
+    AirFryerPresets,
     BulbFeatures,
     ColorMode,
     EnergyIntervals,
@@ -81,11 +86,13 @@ from pyvesync.const import (
     PurifierFeatures,
     PurifierModes,
     SwitchFeatures,
+    TemperatureUnits,
     ThermostatEcoTypes,
     ThermostatFanModes,
     ThermostatHoldOptions,
     ThermostatRoutineTypes,
     ThermostatWorkModes,
+    TimeUnits,
 )
 from pyvesync.devices import (
     vesyncbulb,
@@ -135,8 +142,8 @@ class DeviceMapTemplate:
     setup_entry: str
     model_display: str
     model_name: str
-    device_alias: str | None = None
-    features: list[str] = field(default_factory=list)
+    features: list[str]
+    device_alias: str
 
 
 @dataclass(kw_only=True)
@@ -241,11 +248,11 @@ class FanMap(DeviceMapTemplate):
         set_mode_method (str): Method to set the mode for the device.
     """
 
+    modes: dict[str, str]
+    fan_levels: list[int]
     product_line: str = ProductLines.WIFI_AIR
     product_type: str = ProductTypes.FAN
     module: ModuleType = vesyncfan
-    fan_levels: list[int] = field(default_factory=list)
-    modes: dict[str, str] = field(default_factory=dict)
     sleep_preferences: list[str] = field(default_factory=list)
     set_mode_method: str = ''
 
@@ -271,9 +278,9 @@ class HumidifierMap(DeviceMapTemplate):
         warm_mist_levels (list[int | str]): List of warm mist levels for the device.
     """
 
+    mist_modes: dict[str, str]
+    mist_levels: list[int]
     product_line: str = ProductLines.WIFI_AIR
-    mist_modes: dict[str, str] = field(default_factory=dict)
-    mist_levels: list[int] = field(default_factory=list)
     product_type: str = ProductTypes.HUMIDIFIER
     module: ModuleType = vesynchumidifier
     target_minmax: tuple[int, int] = (30, 80)
@@ -302,11 +309,11 @@ class PurifierMap(DeviceMapTemplate):
         auto_preferences (list[str]): List of auto preferences for the device.
     """
 
+    fan_levels: list[int]
+    modes: list[str]
     product_line: str = ProductLines.WIFI_AIR
     product_type: str = ProductTypes.PURIFIER
     module: ModuleType = vesyncpurifier
-    fan_levels: list[int] = field(default_factory=list)
-    modes: list[str] = field(default_factory=list)
     nightlight_modes: list[str] = field(default_factory=list)
     auto_preferences: list[str] = field(default_factory=list)
 
@@ -328,13 +335,30 @@ class AirFryerMap(DeviceMapTemplate):
         features (list[str]): List of features for the device.
         product_type (str): Product type of the device.
         module (ModuleType): Module for the device.
+        temp_unit (TemperatureUnits): The temperature unit the device model
+            uses (map default; may be updated from the API on update()).
+        temperature_range_f (tuple[int, int]): Min/max temperature in Fahrenheit.
+        temperature_range_c (tuple[int, int]): Min/max temperature in Celsius.
+        temperature_step_f (int): Temperature step interval in Fahrenheit. The
+            Celsius step is derived from this via ``AIRFRYER_STEP_F_TO_C``.
     """
 
+    time_units: TimeUnits = TimeUnits.MINUTES
+    temp_unit: TemperatureUnits = TemperatureUnits.FAHRENHEIT
     temperature_range_f: tuple[int, int] = (200, 400)
     temperature_range_c: tuple[int, int] = (75, 200)
+    temperature_step_f: int = 10
     product_line: str = ProductLines.WIFI_KITCHEN
     product_type: str = ProductTypes.AIR_FRYER
     module: ModuleType = vesynckitchen
+    default_preset: AirFryerPresetRecipe = field(
+        default_factory=lambda: AirFryerPresets.custom
+    )
+    cook_modes: dict[str, str] = field(default_factory=dict)
+    default_cook_mode: str = AirFryerCookModes.AIRFRY
+    status_map: MappingProxyType[str, AirFryerCookStatus] = field(
+        default_factory=lambda: MappingProxyType({})
+    )
 
 
 @dataclass(kw_only=True)
@@ -373,6 +397,7 @@ thermostat_modules = [
     ThermostatMap(
         dev_types=['LTM-A401S-WUS'],
         class_name='VeSyncAuraThermostat',
+        features=[],
         fan_modes=[
             ThermostatFanModes.AUTO,
             ThermostatFanModes.CIRCULATE,
@@ -407,6 +432,7 @@ thermostat_modules = [
         ],
         setup_entry='LTM-A401S-WUS',
         model_display='LTM-A401S Series',
+        device_alias='Aura Thermostat',
         model_name='Aura Thermostat',
     )
 ]
@@ -418,6 +444,7 @@ outlet_modules = [
         class_name='VeSyncOutlet7A',
         features=[OutletFeatures.ENERGY_MONITOR, OutletFeatures.ENERGY_HISTORY],
         model_name='WiFi Outlet US/CA',
+        device_alias='Round 7A WiFi Outlet',
         model_display='ESW01-USA Series',
         setup_entry='wifi-switch-1.3',
     ),
@@ -427,6 +454,7 @@ outlet_modules = [
         features=[],
         model_name='10A WiFi Outlet USA',
         model_display='ESW10-USA Series',
+        device_alias='10A Round WiFi Outlet',
         setup_entry='ESW10-USA',
     ),
     OutletMap(
@@ -435,6 +463,7 @@ outlet_modules = [
         features=[OutletFeatures.ENERGY_MONITOR, OutletFeatures.ENERGY_HISTORY],
         model_name='ESW03 10A WiFi Outlet',
         model_display='ESW01/03 USA/EU',
+        device_alias='10A Round WiFi Outlet',
         setup_entry='ESW03',
     ),
     OutletMap(
@@ -448,6 +477,7 @@ outlet_modules = [
         nightlight_modes=[NightlightModes.ON, NightlightModes.OFF, NightlightModes.AUTO],
         model_name='15A WiFi Outlet US/CA',
         model_display='ESW15-USA Series',
+        device_alias='15A Rectangular WiFi Outlet',
         setup_entry='ESW15-USA',
     ),
     OutletMap(
@@ -456,6 +486,7 @@ outlet_modules = [
         features=[OutletFeatures.ENERGY_MONITOR, OutletFeatures.ENERGY_HISTORY],
         model_name='Outdoor Plug',
         model_display='ESO15-TB Series',
+        device_alias='Outdoor Smart Plug',
         setup_entry='ESO15-TB',
     ),
     OutletMap(
@@ -1100,8 +1131,184 @@ air_fryer_modules: list[AirFryerMap] = [
         device_alias='Air Fryer',
         model_display='CS158/159/168/169-AF Series',
         model_name='Smart/Pro/Pro Gen 2 5.8 Qt. Air Fryer',
-        setup_entry='CS137-AF/CS158-AF',
-    )
+        setup_entry='CS158-AF',
+        temp_unit=TemperatureUnits.FAHRENHEIT,
+        temperature_step_f=10,
+        features=[AirFryerFeatures.PREHEAT, AirFryerFeatures.RESUMABLE],
+        cook_modes={
+            AirFryerCookModes.AIRFRY: 'custom',
+        },
+        default_preset=AirFryerPresets.custom,
+        default_cook_mode=AirFryerCookModes.CUSTOM,
+        time_units=TimeUnits.MINUTES,
+        status_map=MappingProxyType(
+            {
+                'heating': AirFryerCookStatus.HEATING,
+                'cooking': AirFryerCookStatus.COOKING,
+                'cookStop': AirFryerCookStatus.COOK_STOP,
+                'heatStop': AirFryerCookStatus.PREHEAT_STOP,
+                'heatEnd': AirFryerCookStatus.PREHEAT_END,
+                'standby': AirFryerCookStatus.STANDBY,
+            }
+        ),
+    ),
+    AirFryerMap(
+        class_name='VeSyncTurboBlazeFryer',
+        module=vesynckitchen,
+        dev_types=['CAF-DC601S-WUSR', 'CAF-DC601S-WUS'],
+        setup_entry='CAF-DC601S',
+        device_alias='TurboBlaze Air Fryer',
+        model_display='CAF-DC601S Series',
+        model_name='TurboBlaze 6 Qt. Air Fryer',
+        temp_unit=TemperatureUnits.FAHRENHEIT,
+        temperature_step_f=5,
+        features=[AirFryerFeatures.PREHEAT, AirFryerFeatures.RESUMABLE],
+        cook_modes={
+            AirFryerCookModes.AIRFRY: 'AirFry',
+        },
+        default_cook_mode=AirFryerCookModes.AIRFRY,
+        default_preset=AirFryerPresets.air_fry,
+        time_units=TimeUnits.SECONDS,
+        temperature_range_f=(90, 450),
+        temperature_range_c=(30, 230),
+        status_map=MappingProxyType(
+            {
+                'ready': AirFryerCookStatus.COOK_STOP,
+                'cooking': AirFryerCookStatus.COOKING,
+                'heating': AirFryerCookStatus.HEATING,
+                'cookStop': AirFryerCookStatus.COOK_STOP,
+                'pullOut': AirFryerCookStatus.PULL_OUT,
+                'cookEnd': AirFryerCookStatus.COOK_END,
+            }
+        ),
+    ),
+    AirFryerMap(
+        # Cosori Dual Blaze US variant (single-chamber model with dual heating
+        # elements). Uses the same bypassV2 protocol as TurboBlaze (startCook /
+        # endCook / getAirfryerStatus). The Dual Blaze has no preheat function.
+        class_name='VeSyncTurboBlazeFryer',
+        module=vesynckitchen,
+        dev_types=['CAF-P583S-KUS'],
+        setup_entry='CAF-P583S',
+        device_alias='Dual Blaze Air Fryer',
+        model_display='CAF-P583S Series',
+        model_name='Dual Blaze 6.8 Qt. Air Fryer',
+        temp_unit=TemperatureUnits.FAHRENHEIT,
+        temperature_step_f=5,
+        features=[AirFryerFeatures.RESUMABLE],
+        # 11 presets exposed by the VeSync app; recipe IDs/names defined in
+        # AirFryerPresets in const.py.
+        cook_modes={
+            AirFryerCookModes.AIRFRY: 'AirFry',
+            AirFryerCookModes.BROIL: 'Broil',
+            AirFryerCookModes.ROAST: 'Roast',
+            AirFryerCookModes.BAKE: 'Bake',
+            AirFryerCookModes.REHEAT: 'Reheat',
+            AirFryerCookModes.STEAK: 'Steak',
+            AirFryerCookModes.SEAFOOD: 'Seafood',
+            AirFryerCookModes.VEGGIES: 'Veggies',
+            AirFryerCookModes.FRENCH_FRIES: 'FrenchFries',
+            AirFryerCookModes.FROZEN: 'Frozen',
+            AirFryerCookModes.CHICKEN: 'Chicken',
+        },
+        default_cook_mode=AirFryerCookModes.AIRFRY,
+        default_preset=AirFryerPresets.air_fry,
+        time_units=TimeUnits.SECONDS,
+        temperature_range_f=(175, 400),
+        temperature_range_c=(80, 205),
+        status_map=MappingProxyType(
+            {
+                'standby': AirFryerCookStatus.STANDBY,
+                'ready': AirFryerCookStatus.COOK_STOP,
+                'cooking': AirFryerCookStatus.COOKING,
+                'heating': AirFryerCookStatus.HEATING,
+                'preheating': AirFryerCookStatus.HEATING,
+                'cookStop': AirFryerCookStatus.COOK_STOP,
+                'pullOut': AirFryerCookStatus.PULL_OUT,
+                'cookEnd': AirFryerCookStatus.COOK_END,
+                'keeping': AirFryerCookStatus.COOKING,
+            }
+        ),
+    ),
+    AirFryerMap(
+        # Cosori Dual Blaze EU variant — Celsius. Same bypassV2 protocol as the
+        # US variant above; only the reported/declared temperature unit differs.
+        class_name='VeSyncTurboBlazeFryer',
+        module=vesynckitchen,
+        dev_types=['CAF-P583S-KEU'],
+        setup_entry='CAF-P583S-KEU',
+        device_alias='Dual Blaze Air Fryer',
+        model_display='CAF-P583S Series',
+        model_name='Dual Blaze 6.8 Qt. Air Fryer',
+        temp_unit=TemperatureUnits.CELSIUS,
+        temperature_step_f=5,
+        features=[AirFryerFeatures.RESUMABLE],
+        cook_modes={
+            AirFryerCookModes.AIRFRY: 'AirFry',
+            AirFryerCookModes.BROIL: 'Broil',
+            AirFryerCookModes.ROAST: 'Roast',
+            AirFryerCookModes.BAKE: 'Bake',
+            AirFryerCookModes.REHEAT: 'Reheat',
+            AirFryerCookModes.STEAK: 'Steak',
+            AirFryerCookModes.SEAFOOD: 'Seafood',
+            AirFryerCookModes.VEGGIES: 'Veggies',
+            AirFryerCookModes.FRENCH_FRIES: 'FrenchFries',
+            AirFryerCookModes.FROZEN: 'Frozen',
+            AirFryerCookModes.CHICKEN: 'Chicken',
+        },
+        default_cook_mode=AirFryerCookModes.AIRFRY,
+        default_preset=AirFryerPresets.air_fry,
+        time_units=TimeUnits.SECONDS,
+        temperature_range_f=(175, 400),
+        temperature_range_c=(80, 205),
+        status_map=MappingProxyType(
+            {
+                'standby': AirFryerCookStatus.STANDBY,
+                'ready': AirFryerCookStatus.COOK_STOP,
+                'cooking': AirFryerCookStatus.COOKING,
+                'heating': AirFryerCookStatus.HEATING,
+                'preheating': AirFryerCookStatus.HEATING,
+                'cookStop': AirFryerCookStatus.COOK_STOP,
+                'pullOut': AirFryerCookStatus.PULL_OUT,
+                'cookEnd': AirFryerCookStatus.COOK_END,
+                'keeping': AirFryerCookStatus.COOKING,
+            }
+        ),
+    ),
+    AirFryerMap(
+        class_name='VeSyncDualAirFryer',
+        module=vesynckitchen,
+        dev_types=['CAF-TF101S-AEU', 'CAF-TF101S', 'CAF-TF102S'],
+        setup_entry='CAF-TF101S',
+        device_alias='Dual Air Fryer',
+        model_display='CAF-TF101S Series',
+        model_name='Cosori Dual Air Fryer',
+        temp_unit=TemperatureUnits.CELSIUS,
+        temperature_step_f=5,
+        features=[AirFryerFeatures.DUAL_CHAMBER],
+        cook_modes={
+            AirFryerCookModes.AIRFRY: 'AirFry',
+            AirFryerCookModes.BAKE: 'Bake',
+            AirFryerCookModes.ROAST: 'Roast',
+            AirFryerCookModes.GRILL: 'Grill',
+            AirFryerCookModes.DRY: 'Dry',
+            AirFryerCookModes.REHEAT: 'Reheat',
+        },
+        default_cook_mode=AirFryerCookModes.AIRFRY,
+        default_preset=AirFryerPresets.air_fry,
+        time_units=TimeUnits.SECONDS,
+        temperature_range_f=(130, 450),
+        temperature_range_c=(55, 240),
+        status_map=MappingProxyType(
+            {
+                'standby': AirFryerCookStatus.STANDBY,
+                'ready': AirFryerCookStatus.COOK_STOP,
+                'cooking': AirFryerCookStatus.COOKING,
+                'cookStop': AirFryerCookStatus.COOK_STOP,
+                'pullOut': AirFryerCookStatus.PULL_OUT,
+            }
+        ),
+    ),
 ]
 """List of ['AirFryerMap'][pyvesync.device_map.AirFryerMap] configuration
 for air fryer devices."""
