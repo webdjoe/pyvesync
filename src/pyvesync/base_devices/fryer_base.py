@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 from pyvesync.base_devices.vesyncbasedevice import DeviceState, VeSyncBaseDevice
 from pyvesync.const import (
     AIRFRYER_PID_MAP,
+    AIRFRYER_STEP_F_TO_C,
     COOK_STATUSES,
     PREHEAT_STATUSES,
     RESUMABLE_STATUSES,
@@ -55,8 +56,11 @@ class FryerState(DeviceState):
         time_units (TimeUnits): The time units used by the device.
         cook_status (AirFryerCookStatus | None): The current cooking status.
         cook_mode (str | None): The current cooking mode.
-        current_temp (int | None): The current temperature of the fryer.
-        cook_set_temp (int | None): The set cooking temperature.
+        temp_unit (TemperatureUnits): Unit for all temperatures in this state
+            (read-through to the device's ``temp_unit``).
+        current_temp (int | None): The current temperature in ``temp_unit`` units.
+        cook_set_temp (int | None): The set cooking temperature in ``temp_unit``
+            units.
         cook_set_time (int | None): The set cooking time in seconds.
         cook_last_time (int | None): The remaining cooking time in seconds.
         last_timestamp (datetime | None): The timestamp of the last status update.
@@ -114,6 +118,15 @@ class FryerState(DeviceState):
         self.last_timestamp: datetime | None = None
         self.recipe: str | None = None
         self.ready_start: bool = False
+
+    @property
+    def temp_unit(self) -> TemperatureUnits:
+        """Return the unit for all temperatures in this state.
+
+        This is the device-level unit; all state temperatures
+        (``current_temp``, ``cook_set_temp``) are expressed in this unit.
+        """
+        return self.device.temp_unit
 
     @property
     def is_in_preheat_mode(self) -> bool:
@@ -300,14 +313,13 @@ class FryerState(DeviceState):
         self.cook_mode = cook_mode
         self.recipe = recipe
 
-    def set_state(  # noqa: PLR0912, PLR0913, C901
+    def set_state(  # noqa: PLR0913, C901
         self,
         *,
         cook_status: AirFryerCookStatus,
         cook_time: int | None = None,
         cook_last_time: int | None = None,
         cook_temp: int | None = None,
-        temp_unit: str | None = None,
         cook_mode: str | None = None,
         preheat_set_time: int | None = None,
         preheat_last_time: int | None = None,
@@ -329,12 +341,13 @@ class FryerState(DeviceState):
             cook_status (AirFryerCookStatus): The cooking status.
             cook_time (int | None): The cooking time in device units.
             cook_last_time (int | None): The remaining cooking time in device units.
-            cook_temp (int | None): The cooking temperature.
-            temp_unit (str | None): The temperature units (F or C).
+            cook_temp (int | None): The cooking temperature in the device's
+                ``temp_unit``.
             cook_mode (str | None): The cooking mode.
             preheat_set_time (int | None): The preheating time in device units.
             preheat_last_time (int | None): The remaining preheat time in device units.
-            current_temp (int | None): The current temperature.
+            current_temp (int | None): The current temperature in the device's
+                ``temp_unit``.
             recipe (str | None): The recipe name or cooking mode.
         """
         # Stop/standby states delegate to helpers and return early
@@ -383,8 +396,6 @@ class FryerState(DeviceState):
             self.cook_mode = cook_mode
         if current_temp is not None:
             self.current_temp = current_temp
-        if temp_unit is not None:
-            self.device.temp_unit = TemperatureUnits.from_string(temp_unit)
         if recipe is not None:
             self.recipe = recipe
 
@@ -429,7 +440,11 @@ class VeSyncFryer(VeSyncBaseDevice):
         state_chamber_1 (FryerState): The state object for chamber 1.
         state_chamber_2 (FryerState): The state object for chamber 2 (if dual chamber).
         sync_chambers (bool): Whether the chambers are synced for cooking.
-        temperature_interval (int): The available temperature step interval.
+        temp_unit (TemperatureUnits): The device's current temperature unit
+            (seeded from the device map, updated from the API on update()).
+        temperature_step_f (int): The temperature step interval in Fahrenheit.
+        temperature_step_c (int): The temperature step interval in Celsius,
+            derived from the Fahrenheit step via ``AIRFRYER_STEP_F_TO_C``.
         time_units (TimeUnits): The time units used by the device (seconds or minutes).
     """
 
@@ -445,7 +460,7 @@ class VeSyncFryer(VeSyncBaseDevice):
         'state_chamber_2',
         'status_map',
         'sync_chambers',
-        'temperature_interval',
+        'temperature_step_f',
         'time_units',
     )
 
@@ -467,14 +482,13 @@ class VeSyncFryer(VeSyncBaseDevice):
         self.max_temp_f: int = feature_map.temperature_range_f[1]
         self.min_temp_c: int = feature_map.temperature_range_c[0]
         self.max_temp_c: int = feature_map.temperature_range_c[1]
-        self.temperature_interval: int = feature_map.temperature_step_f
+        self.temperature_step_f: int = feature_map.temperature_step_f
         self.time_units: TimeUnits = feature_map.time_units
         self.status_map = feature_map.status_map
 
-        # attempt to set temp unit from country code before first update
-        self._temp_unit: TemperatureUnits = TemperatureUnits.CELSIUS
-        if self.manager.country_code == 'US':
-            self._temp_unit = TemperatureUnits.FAHRENHEIT
+        # Device map declares the model's unit; get_details() updates it
+        # from the API response if the device reports a different unit.
+        self._temp_unit: TemperatureUnits = feature_map.temp_unit
 
         # Set state to primary chamber (chamber 1) for base class compatibility
         self.state = self.state_chamber_1
@@ -485,19 +499,59 @@ class VeSyncFryer(VeSyncBaseDevice):
         return self._temp_unit
 
     @temp_unit.setter
-    def temp_unit(self, value: TemperatureUnits) -> None:
+    def temp_unit(self, value: TemperatureUnits | str) -> None:
         """Set the temperature unit.
 
         Args:
-            value (TemperatureUnits): The temperature unit (F or C).
+            value (TemperatureUnits | str): The temperature unit
+                ('f'/'c'/'fahrenheit'/'celsius' or a TemperatureUnits member).
         """
         self._temp_unit = TemperatureUnits.from_string(value)
+
+    @property
+    def temperature_step_c(self) -> int:
+        """Return the Celsius temperature step derived from the Fahrenheit step.
+
+        The device map declares a single Fahrenheit step; the Celsius step is
+        looked up from ``AIRFRYER_STEP_F_TO_C``.
+        """
+        return AIRFRYER_STEP_F_TO_C[self.temperature_step_f]
+
+    @property
+    def temperature_step(self) -> int:
+        """Return the temperature step in the device's current unit."""
+        if self.temp_unit == TemperatureUnits.FAHRENHEIT:
+            return self.temperature_step_f
+        return self.temperature_step_c
+
+    @property
+    def temperature_interval(self) -> int:
+        """Return the temperature step in the device's current unit.
+
+        Deprecated:
+            Use ``temperature_step`` instead.
+        """
+        return self.temperature_step
+
+    @property
+    def min_temp(self) -> int:
+        """Return the minimum temperature in the device's current unit."""
+        if self.temp_unit == TemperatureUnits.FAHRENHEIT:
+            return self.min_temp_f
+        return self.min_temp_c
+
+    @property
+    def max_temp(self) -> int:
+        """Return the maximum temperature in the device's current unit."""
+        if self.temp_unit == TemperatureUnits.FAHRENHEIT:
+            return self.max_temp_f
+        return self.max_temp_c
 
     def validate_temperature(self, temperature: int) -> bool:
         """Validate the temperature is within the allowed range.
 
         Args:
-            temperature (int): The temperature to validate.
+            temperature (int): The temperature in the device's ``temp_unit``.
 
         Returns:
             bool: True if the temperature is valid, False otherwise.
@@ -510,16 +564,38 @@ class VeSyncFryer(VeSyncBaseDevice):
         """Round the temperature to the nearest valid step.
 
         Args:
-            temperature (int): The temperature to round.
+            temperature (int): The temperature in the device's ``temp_unit``.
 
         Returns:
-            int: The rounded temperature.
+            int: The temperature rounded to the device's step for the
+            current unit.
         """
-        if self.temp_unit == TemperatureUnits.FAHRENHEIT:
-            step: float = self.temperature_interval
-            return int(round(temperature / step) * step)
-        step = self.temperature_interval * 5 / 9
-        return int(round(temperature / step) * step)
+        step = self.temperature_step
+        return round(temperature / step) * step
+
+    def prepare_temperature(self, temperature: int) -> int | None:
+        """Round a requested temperature to the device step, then validate.
+
+        Args:
+            temperature (int): Requested temperature in the device's
+                ``temp_unit``.
+
+        Returns:
+            int | None: The rounded temperature, or None if the rounded
+            value is outside the device's range for the current unit.
+        """
+        rounded = self.round_temperature(temperature)
+        if not self.validate_temperature(rounded):
+            logger.warning(
+                'Cook temperature %s%s is outside the range %s-%s for %s',
+                temperature,
+                self.temp_unit.code.upper(),
+                self.min_temp,
+                self.max_temp,
+                self.device_name,
+            )
+            return None
+        return rounded
 
     def convert_time_for_api(self, time_in_seconds: int) -> int:
         """Convert time in seconds to the device's time units.
@@ -598,7 +674,7 @@ class VeSyncFryer(VeSyncBaseDevice):
 
         Args:
             cook_time (int): The cooking time in seconds.
-            cook_temp (int): The cooking temperature.
+            cook_temp (int): The cooking temperature in the device's ``temp_unit``.
             preheat_time (int | None): The preheating time in seconds, if any.
             chamber (int): The chamber number to set cooking for. Default is 1.
 

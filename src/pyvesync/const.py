@@ -751,6 +751,13 @@ AIRFRYER_PID_MAP = {
 """PID's for VeSync Air Fryers based on ConfigModule."""
 
 
+AIRFRYER_STEP_F_TO_C: MappingProxyType[int, int] = MappingProxyType({5: 2, 10: 5})
+"""Maps an air fryer's Fahrenheit temperature step to its Celsius equivalent.
+
+The device map declares a single temperature step in Fahrenheit; the Celsius
+step is derived from this mapping when the device operates in Celsius."""
+
+
 CUSTOM_RECIPE_ID = 1
 CUSTOM_RECIPE_TYPE = 3
 CUSTOM_RECIPE_NAME = 'Manual Cook'

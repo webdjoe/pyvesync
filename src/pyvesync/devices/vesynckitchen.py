@@ -207,10 +207,7 @@ class VeSyncAirFryer158(VeSyncFryer):
             cook_base['recipeType'] = recipe.recipe_type
 
         cook_base['accountId'] = self.manager.account_id
-        if self.temp_unit is not None:
-            cook_base['tempUnit'] = self.temp_unit.label
-        else:
-            cook_base['tempUnit'] = 'fahrenheit'
+        cook_base['tempUnit'] = self.temp_unit.label
         cook_base['readyStart'] = True
         return cook_base
 
@@ -277,12 +274,13 @@ class VeSyncAirFryer158(VeSyncFryer):
             )
             self.state.set_standby()
             return None
+        if return_status.tempUnit is not None:
+            self.temp_unit = return_status.tempUnit
         return self.state.set_state(
             cook_status=self.status_map[return_status.cookStatus],
             cook_time=return_status.cookSetTime,
             cook_last_time=return_status.cookLastTime,
             cook_temp=return_status.cookSetTemp,
-            temp_unit=return_status.tempUnit,
             cook_mode=return_status.mode,
             preheat_set_time=return_status.preheatSetTime,
             preheat_last_time=return_status.preheatLastTime,
@@ -398,10 +396,10 @@ class VeSyncAirFryer158(VeSyncFryer):
         cook_mode: str | None = None,
         chamber: int = 1,
     ) -> bool:
-        if self.validate_temperature(cook_temp) is False:
-            logger.warning('Invalid cook temperature for %s', self.device_name)
+        prepared_temp = self.prepare_temperature(cook_temp)
+        if prepared_temp is None:
             return False
-        cook_temp = self.round_temperature(cook_temp)
+        cook_temp = prepared_temp
         cook_time = self.convert_time_for_api(cook_time)
         preset_recipe = replace(self.default_preset)
         preset_recipe.cook_time = cook_time
@@ -489,14 +487,17 @@ class VeSyncTurboBlazeFryer(BypassV2Mixin, VeSyncFryer):
             self.state.set_standby()
             return
 
+        if resp_model.tempUnit:
+            self.temp_unit = resp_model.tempUnit
+
         # currentTemp from the bypassV2 getAirfryerStatus response is the
         # device's hardware sensor reading, which the firmware always
-        # reports in Celsius regardless of resp_model.tempUnit. The
+        # reports in Celsius regardless of the reported tempUnit. The
         # tempUnit field governs only the echoed cookTemp/preheatTemp
         # values. Normalize so consumers can compare cook_temp and
         # current_temp without a unit-aware crutch.
         _current_temp = resp_model.currentTemp
-        if _current_temp is not None and resp_model.tempUnit == 'f':
+        if _current_temp is not None and self.temp_unit == TemperatureUnits.FAHRENHEIT:
             _current_temp = round(_current_temp * 9 / 5 + 32)
 
         self.state_chamber_1.set_state(
@@ -504,7 +505,6 @@ class VeSyncTurboBlazeFryer(BypassV2Mixin, VeSyncFryer):
             cook_time=cook_step.cookSetTime,
             cook_last_time=cook_step.cookLastTime,
             cook_temp=cook_step.cookTemp,
-            temp_unit=resp_model.tempUnit,
             cook_mode=cook_step.mode,
             preheat_set_time=resp_model.preheatSetTime,
             preheat_last_time=resp_model.preheatLastTime,
@@ -552,9 +552,12 @@ class VeSyncTurboBlazeFryer(BypassV2Mixin, VeSyncFryer):
         chamber: int = 1,
     ) -> bool:
         del chamber  # chamber not used for this air fryer
+        prepared_temp = self.prepare_temperature(cook_temp)
+        if prepared_temp is None:
+            return False
         recipe = replace(self.default_preset)
         recipe.cook_time = self.convert_time_for_api(cook_time)
-        recipe.target_temp = self.round_temperature(cook_temp)
+        recipe.target_temp = prepared_temp
         if preheat_time is not None:
             recipe.preheat_time = self.convert_time_for_api(preheat_time)
         return await self.set_mode_from_recipe(recipe)
@@ -643,7 +646,7 @@ class VeSyncDualAirFryer(BypassV2Mixin, VeSyncFryer):
             self.state_chamber_2.set_standby()
             return
 
-        self.temp_unit = TemperatureUnits.from_string(resp_model.tempUnit)
+        self.temp_unit = resp_model.tempUnit
 
         # Update sync state from API response
         self.sync_chambers = resp_model.syncType == self._SYNC_TYPE_SYNCED
@@ -677,7 +680,6 @@ class VeSyncDualAirFryer(BypassV2Mixin, VeSyncFryer):
                 cook_time=status_item.cookSetTime,
                 cook_last_time=status_item.currentRemainingTime,
                 cook_temp=status_item.cookTemp,
-                temp_unit=resp_model.tempUnit,
                 cook_mode=status_item.mode,
                 recipe=status_item.recipeName or None,
             )
@@ -824,7 +826,7 @@ class VeSyncDualAirFryer(BypassV2Mixin, VeSyncFryer):
 
         Args:
             cook_time: Cooking time in seconds.
-            cook_temp: Cooking temperature.
+            cook_temp: Cooking temperature in the device's ``temp_unit``.
             preheat_time: Not used for this device.
             cook_mode: Cooking mode string (e.g. 'AirFry').
             chamber: Chamber number (1=left, 2=right, 3=whole).
@@ -833,12 +835,12 @@ class VeSyncDualAirFryer(BypassV2Mixin, VeSyncFryer):
             True if the command was successful.
         """
         del preheat_time  # not supported by this device
-        if not self.validate_temperature(cook_temp):
-            logger.warning('Invalid cook temperature for %s', self.device_name)
+        prepared_temp = self.prepare_temperature(cook_temp)
+        if prepared_temp is None:
             return False
-        cook_temp = self.round_temperature(cook_temp)
+        cook_temp = prepared_temp
         recipe = replace(self.default_preset)
-        recipe.cook_time = cook_time
+        recipe.cook_time = self.convert_time_for_api(cook_time)
         recipe.target_temp = cook_temp
         if cook_mode is not None:
             recipe.cook_mode = cook_mode

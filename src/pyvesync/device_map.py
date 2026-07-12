@@ -86,6 +86,7 @@ from pyvesync.const import (
     PurifierFeatures,
     PurifierModes,
     SwitchFeatures,
+    TemperatureUnits,
     ThermostatEcoTypes,
     ThermostatFanModes,
     ThermostatHoldOptions,
@@ -334,9 +335,16 @@ class AirFryerMap(DeviceMapTemplate):
         features (list[str]): List of features for the device.
         product_type (str): Product type of the device.
         module (ModuleType): Module for the device.
+        temp_unit (TemperatureUnits): The temperature unit the device model
+            uses (map default; may be updated from the API on update()).
+        temperature_range_f (tuple[int, int]): Min/max temperature in Fahrenheit.
+        temperature_range_c (tuple[int, int]): Min/max temperature in Celsius.
+        temperature_step_f (int): Temperature step interval in Fahrenheit. The
+            Celsius step is derived from this via ``AIRFRYER_STEP_F_TO_C``.
     """
 
     time_units: TimeUnits = TimeUnits.MINUTES
+    temp_unit: TemperatureUnits = TemperatureUnits.FAHRENHEIT
     temperature_range_f: tuple[int, int] = (200, 400)
     temperature_range_c: tuple[int, int] = (75, 200)
     temperature_step_f: int = 10
@@ -1099,6 +1107,7 @@ air_fryer_modules: list[AirFryerMap] = [
         model_display='CS158/159/168/169-AF Series',
         model_name='Smart/Pro/Pro Gen 2 5.8 Qt. Air Fryer',
         setup_entry='CS158-AF',
+        temp_unit=TemperatureUnits.FAHRENHEIT,
         temperature_step_f=10,
         features=[AirFryerFeatures.PREHEAT, AirFryerFeatures.RESUMABLE],
         cook_modes={
@@ -1126,6 +1135,7 @@ air_fryer_modules: list[AirFryerMap] = [
         device_alias='TurboBlaze Air Fryer',
         model_display='CAF-DC601S Series',
         model_name='TurboBlaze 6 Qt. Air Fryer',
+        temp_unit=TemperatureUnits.FAHRENHEIT,
         temperature_step_f=5,
         features=[AirFryerFeatures.PREHEAT, AirFryerFeatures.RESUMABLE],
         cook_modes={
@@ -1148,16 +1158,17 @@ air_fryer_modules: list[AirFryerMap] = [
         ),
     ),
     AirFryerMap(
-        # Cosori Dual Blaze (single-chamber model with dual heating elements).
-        # Uses the same bypassV2 protocol as TurboBlaze (startCook / endCook /
-        # getAirfryerStatus). The Dual Blaze has no preheat function.
+        # Cosori Dual Blaze US variant (single-chamber model with dual heating
+        # elements). Uses the same bypassV2 protocol as TurboBlaze (startCook /
+        # endCook / getAirfryerStatus). The Dual Blaze has no preheat function.
         class_name='VeSyncTurboBlazeFryer',
         module=vesynckitchen,
-        dev_types=['CAF-P583S-KUS', 'CAF-P583S-KEU'],
+        dev_types=['CAF-P583S-KUS'],
         setup_entry='CAF-P583S',
         device_alias='Dual Blaze Air Fryer',
         model_display='CAF-P583S Series',
         model_name='Dual Blaze 6.8 Qt. Air Fryer',
+        temp_unit=TemperatureUnits.FAHRENHEIT,
         temperature_step_f=5,
         features=[AirFryerFeatures.RESUMABLE],
         # 11 presets exposed by the VeSync app; recipe IDs/names defined in
@@ -1195,13 +1206,59 @@ air_fryer_modules: list[AirFryerMap] = [
         ),
     ),
     AirFryerMap(
+        # Cosori Dual Blaze EU variant — Celsius. Same bypassV2 protocol as the
+        # US variant above; only the reported/declared temperature unit differs.
+        class_name='VeSyncTurboBlazeFryer',
+        module=vesynckitchen,
+        dev_types=['CAF-P583S-KEU'],
+        setup_entry='CAF-P583S-KEU',
+        device_alias='Dual Blaze Air Fryer',
+        model_display='CAF-P583S Series',
+        model_name='Dual Blaze 6.8 Qt. Air Fryer',
+        temp_unit=TemperatureUnits.CELSIUS,
+        temperature_step_f=5,
+        features=[AirFryerFeatures.RESUMABLE],
+        cook_modes={
+            AirFryerCookModes.AIRFRY: 'AirFry',
+            AirFryerCookModes.BROIL: 'Broil',
+            AirFryerCookModes.ROAST: 'Roast',
+            AirFryerCookModes.BAKE: 'Bake',
+            AirFryerCookModes.REHEAT: 'Reheat',
+            AirFryerCookModes.STEAK: 'Steak',
+            AirFryerCookModes.SEAFOOD: 'Seafood',
+            AirFryerCookModes.VEGGIES: 'Veggies',
+            AirFryerCookModes.FRENCH_FRIES: 'FrenchFries',
+            AirFryerCookModes.FROZEN: 'Frozen',
+            AirFryerCookModes.CHICKEN: 'Chicken',
+        },
+        default_cook_mode=AirFryerCookModes.AIRFRY,
+        default_preset=AirFryerPresets.air_fry,
+        time_units=TimeUnits.SECONDS,
+        temperature_range_f=(175, 400),
+        temperature_range_c=(80, 205),
+        status_map=MappingProxyType(
+            {
+                'standby': AirFryerCookStatus.STANDBY,
+                'ready': AirFryerCookStatus.COOK_STOP,
+                'cooking': AirFryerCookStatus.COOKING,
+                'heating': AirFryerCookStatus.HEATING,
+                'preheating': AirFryerCookStatus.HEATING,
+                'cookStop': AirFryerCookStatus.COOK_STOP,
+                'pullOut': AirFryerCookStatus.PULL_OUT,
+                'cookEnd': AirFryerCookStatus.COOK_END,
+                'keeping': AirFryerCookStatus.COOKING,
+            }
+        ),
+    ),
+    AirFryerMap(
         class_name='VeSyncDualAirFryer',
         module=vesynckitchen,
-        dev_types=['CAF-TF101S-AEU', 'CAF-TF101S'],
+        dev_types=['CAF-TF101S-AEU', 'CAF-TF101S', 'CAF-TF102S'],
         setup_entry='CAF-TF101S',
         device_alias='Dual Air Fryer',
         model_display='CAF-TF101S Series',
         model_name='Cosori Dual Air Fryer',
+        temp_unit=TemperatureUnits.CELSIUS,
         temperature_step_f=5,
         features=[AirFryerFeatures.DUAL_CHAMBER],
         cook_modes={
