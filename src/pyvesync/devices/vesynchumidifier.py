@@ -1260,8 +1260,9 @@ class VeSyncSproutHumid(BypassV2Mixin, VeSyncHumidifier):
         if self.state.nightlight_color_temp is None:
             self.state.nightlight_color_temp = 3500  # Default color temp if not set
 
+        sent_brightness = brightness or self.state.nightlight_brightness or 100
         payload_data = {
-            'brightness': brightness or self.state.nightlight_brightness,
+            'brightness': sent_brightness,
             'colorTemperature': color_temp or self.state.nightlight_color_temp,
             'nightLightSwitch': int(toggle),
         }
@@ -1270,10 +1271,39 @@ class VeSyncSproutHumid(BypassV2Mixin, VeSyncHumidifier):
         if r is None:
             return False
 
-        self.state.nightlight_brightness = brightness
+        self.state.nightlight_brightness = sent_brightness
         self.state.nightlight_status = DeviceStatus.from_bool(toggle)
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
+
+    async def set_nightlight_brightness(self, brightness: int) -> bool:
+        if not self.supports_nightlight_brightness:
+            logger.warning(
+                '%s is a %s does not have a nightlight or it is not supported.',
+                self.device_name,
+                self.device_type,
+            )
+            return False
+
+        if not Validators.validate_zero_to_hundred(brightness):
+            logger.warning('Brightness value must be set between 0 and 100')
+            return False
+
+        toggle = brightness > 0
+        return await self._set_nightlight_state(toggle, brightness=brightness)
+
+    async def toggle_nightlight(self, toggle: bool | None = None) -> bool:
+        if not self.supports_nightlight:
+            logger.warning(
+                '%s is a %s does not have a nightlight or it is not supported.',
+                self.device_name,
+                self.device_type,
+            )
+            return False
+
+        if toggle is None:
+            toggle = self.state.nightlight_status != DeviceStatus.ON
+        return await self._set_nightlight_state(toggle)
 
     async def toggle_automatic_stop(self, toggle: bool | None = None) -> bool:
         if toggle is None:
