@@ -456,7 +456,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         """Return the maximum fan speed level for this device.
 
         The Levoit Vital Pet Pro (LAP-P501S*) has only 3 fan speeds
-        (1–3) compared to the standard Vital 200S which has 4 (1–4).
+        (1-3) compared to the standard Vital 200S which has 4 (1-4).
         """
         if 'P501S' in self.device_type:
             return 3
