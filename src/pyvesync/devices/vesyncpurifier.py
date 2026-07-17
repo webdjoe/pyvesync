@@ -451,6 +451,17 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         """Initialize the VeSync Base API V2 Air Purifier Class."""
         super().__init__(details, manager, feature_map)
 
+    @property
+    def fan_max_level(self) -> int:
+        """Return the maximum fan speed level for this device.
+
+        The Levoit Vital Pet Pro (LAP-P501S*) has only 3 fan speeds
+        (1–3) compared to the standard Vital 200S which has 4 (1–4).
+        """
+        if 'P501S' in self.device_type:
+            return 3
+        return 4
+
     def _set_state(self, details: InnerPurifierBaseResult) -> None:
         """Set Purifier state from details response."""
         if not isinstance(details, PurifierVitalDetailsResult):
@@ -675,19 +686,21 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         return True
 
     async def set_fan_speed(self, speed: None | int = None) -> bool:
+        max_level = self.fan_max_level
+        allowed_levels = list(range(1, max_level + 1))
         if speed is not None:
-            if speed not in self.fan_levels:
+            if speed not in allowed_levels:
                 _LOGGER.warning(
                     '%s is invalid speed - valid speeds are %s',
                     speed,
-                    str(self.fan_levels),
+                    str(allowed_levels),
                 )
                 return False
             new_speed = speed
         elif self.state.fan_level is None:
-            new_speed = self.fan_levels[0]
+            new_speed = allowed_levels[0]
         else:
-            new_speed = Helpers.bump_level(self.state.fan_level, self.fan_levels)
+            new_speed = Helpers.bump_level(self.state.fan_level, allowed_levels)
 
         payload_data = {'levelIdx': 0, 'manualSpeedLevel': new_speed, 'levelType': 'wind'}
         r_dict = await self.call_bypassv2_api('setLevel', payload_data)
