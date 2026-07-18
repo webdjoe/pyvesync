@@ -498,7 +498,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         self.state.fan_rotate_angle = details.fanRotateAngle
         if details.filterOpenState is not None:
             self.state.filter_open_state = bool(details.filterOpenState)
-        if details.timerRemain > 0:
+        if details.timerRemain is not None and details.timerRemain > 0:
             self.state.timer = Timer(details.timerRemain, 'off')
 
     @property
