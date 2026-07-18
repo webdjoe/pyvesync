@@ -40,7 +40,10 @@ from pyvesync.utils.errors import (
     VeSyncTokenError,
     raise_api_errors,
 )
-from pyvesync.utils.helpers import Helpers
+from pyvesync.utils.helpers import (
+    Helpers,
+    generate_pack_file_signature,
+)
 from pyvesync.utils.logs import LibraryLogger
 
 if TYPE_CHECKING:
@@ -482,6 +485,14 @@ class VeSync:  # pylint: disable=function-redefined
             req_dict = json_object
         else:
             req_dict = None
+        # Inject _packFileSignature and _signOsInfo headers when a traceId is present
+        if isinstance(req_dict, dict):
+            trace_id = req_dict.get('traceId')
+            if trace_id is None and 'payload' in req_dict:
+                trace_id = req_dict['payload'].get('traceId')
+            if headers is not None and trace_id is not None:
+                headers['_packFileSignature'] = generate_pack_file_signature(trace_id)
+                headers['_signOsInfo'] = 'Android'
         try:
             async with self.session.request(
                 method,
