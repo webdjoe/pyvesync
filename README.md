@@ -218,6 +218,7 @@ pip install pyvesync
 7. BSDOG / Greensun Smart Outlet Series (BSDOG01, BSDOG02, WYSMTOD16A, WM-PLUG and more)
 8. WHOPLUG / Greensun Smart Outlet
 9. WYLDR Smart Plug (WYLDR16A1081) (Supports energy monitoring but not energy history)
+10. Sagewe 15A Smart Plug with Energy Monitoring (F3s202-USVC)
 
 <!--SUPPORTED OUTLETS END-->
 
