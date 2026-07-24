@@ -972,7 +972,9 @@ purifier_modules: list[PurifierMap] = [
         modes=[
             PurifierModes.SLEEP,
             PurifierModes.MANUAL,
+            PurifierModes.ODOR_SHIELD_QUIET,
             PurifierModes.ODOR_SHIELD_BALANCED,
+            PurifierModes.ODOR_SHIELD_PERFORMANCE,
         ],
         features=[PurifierFeatures.AIR_QUALITY],
         fan_levels=list(range(1, 4)),
