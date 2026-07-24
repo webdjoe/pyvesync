@@ -968,6 +968,21 @@ purifier_modules: list[PurifierMap] = [
     ),
     PurifierMap(
         class_name='VeSyncAirBaseV2',
+        dev_types=['LAP-P201S-WUS'],
+        modes=[
+            PurifierModes.SLEEP,
+            PurifierModes.MANUAL,
+            PurifierModes.ODOR_SHIELD_BALANCED,
+        ],
+        features=[PurifierFeatures.AIR_QUALITY],
+        fan_levels=list(range(1, 4)),
+        device_alias='Vital Pet',
+        model_display='LAP-P201S Series',
+        model_name='Vital Pet',
+        setup_entry='LAP-P201S',
+    ),
+    PurifierMap(
+        class_name='VeSyncAirBaseV2',
         dev_types=[
             'LAP-EL551S-AUS',
             'LAP-EL551S-AEUR',
