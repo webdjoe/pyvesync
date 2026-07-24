@@ -50,18 +50,45 @@ class PurifierVitalDetailsResult(InnerPurifierBaseResult):
     screenState: int
     childLockSwitch: int
     screenSwitch: int
-    lightDetectionSwitch: int
-    environmentLightState: int
     scheduleCount: int
     timerRemain: int
-    efficientModeTimeRemain: int
     errorCode: int
+    lightDetectionSwitch: int | None = None
+    environmentLightState: int | None = None
+    efficientModeTimeRemain: int | None = None
     autoPreference: V2AutoPreferences | None = None
     fanRotateAngle: int | None = None
     filterOpenState: int | None = None
     PM1: int | None = None
     PM10: int | None = None
     AQPercent: int | None = None
+    VOC: int | None = None
+    odorLevel: int | None = None
+    buzzerSwitch: int | None = None
+    filterRemainDay: int | None = None
+    resetFilterDate: int | None = None
+    cumulativeCleanAir: int | None = None
+    totalCleanAir: int | None = None
+    errorCodes: list[int] | None = None
+    screenPreference: VitalScreenPreference | None = None
+    childLockPreference: VitalChildLockPreference | None = None
+
+
+@dataclass
+class VitalScreenPreference:
+    """Vital Pet screen preference sub-model."""
+
+    screenOnType: int
+    screenStartTime: int
+    screenEndTime: int
+
+
+@dataclass
+class VitalChildLockPreference:
+    """Vital Pet child lock preference sub-model."""
+
+    childLockAutoSwitch: int
+    childLockAutoSwitchTime: int
 
 
 @dataclass
