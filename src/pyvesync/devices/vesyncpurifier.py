@@ -300,9 +300,7 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
         return await self.set_mode(mode)
 
     async def set_mode(self, mode: str) -> bool:
-        mode_match = next(
-            (m for m in self.modes if m.lower() == mode.lower()), None
-        )
+        mode_match = next((m for m in self.modes if m.lower() == mode.lower()), None)
         if mode_match is None:
             _LOGGER.warning('Invalid purifier mode used - %s', mode)
             return False
@@ -711,9 +709,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         return True
 
     async def set_mode(self, mode: str) -> bool:
-        mode_match = next(
-            (m for m in self.modes if m.lower() == mode.lower()), None
-        )
+        mode_match = next((m for m in self.modes if m.lower() == mode.lower()), None)
         if mode_match is None:
             _LOGGER.warning('Invalid purifier mode used - %s', mode)
             return False
