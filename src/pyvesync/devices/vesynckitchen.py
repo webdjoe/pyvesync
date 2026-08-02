@@ -754,6 +754,58 @@ class VeSyncAirFryerDC111(BypassV2Mixin, VeSyncFryer):
             and (response.get('result') or {}).get('code') == 0
         )
 
+    async def prepare_both_chambers(
+        self,
+        chamber_1: dict[str, int | str],
+        chamber_2: dict[str, int | str],
+        sync_type: int,
+    ) -> bool:
+        """Prepare both cooking chambers.
+
+        sync_type 1 synchronizes finishing times.
+        sync_type 2 applies matching settings to both chambers.
+        """
+        if sync_type not in (1, 2):
+            msg = 'sync_type must be 1 or 2'
+            raise ValueError(msg)
+
+        def cook_config(
+            chamber: int,
+            config: dict[str, int | str],
+        ) -> dict[str, int | str]:
+            return {
+                'chamber': chamber,
+                'cookSetTime': int(config['minutes']) * 60,
+                'cookTemp': int(config['temperature']),
+                'mode': str(config.get('mode', 'AirFry')),
+                'recipeId': 14,
+                'recipeName': 'Air Fry',
+                'recipeType': 3,
+                'shakeTime': 0,
+            }
+
+        data = {
+            'accountId': self.manager.account_id,
+            'cookConfigs': [
+                cook_config(1, chamber_1),
+                cook_config(2, chamber_2),
+            ],
+            'readyStart': True,
+            'syncType': sync_type,
+            'tempUnit': 'c',
+            'workChamber': 4,
+        }
+
+        response = await self.call_bypassv2_api(
+            'startMultiCook',
+            data=data,
+        )
+        return bool(
+            response
+            and response.get('code') == 0
+            and (response.get('result') or {}).get('code') == 0
+        )
+
     async def stop_chamber(self, chamber: int) -> bool:
         """End the prepared or running program for one chamber."""
         if chamber not in (1, 2):
