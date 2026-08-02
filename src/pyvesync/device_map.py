@@ -1094,6 +1094,17 @@ objects for fan devices."""
 
 air_fryer_modules: list[AirFryerMap] = [
     AirFryerMap(
+        class_name='VeSyncAirFryerDC111',
+        module=vesynckitchen,
+        dev_types=['CAF-DC111S-AEU'],
+        device_alias='Turbo Tower Pro Air Fryer',
+        model_display='CAF-DC111S-AEU',
+        model_name='Turbo Tower Pro Smart Air Fryer',
+        setup_entry='CAF-DC111S-AEU',
+        temperature_range_c=(40, 230),
+        temperature_range_f=(100, 450),
+    ),
+    AirFryerMap(
         class_name='VeSyncAirFryer158',
         module=vesynckitchen,
         dev_types=['CS137-AF/CS158-AF', 'CS158-AF', 'CS137-AF'],
