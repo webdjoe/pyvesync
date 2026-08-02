@@ -35,7 +35,6 @@ class FryerBaseReturnStatus(ResponseBaseModel):
     cookStatus: str
 
 
-
 @dataclass
 class AirFryerChamberStatus(ResponseBaseModel):
     """Status of one CAF-DC111S-AEU cooking chamber."""
