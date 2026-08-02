@@ -49,6 +49,8 @@ T = TypeVar('T')
 
 logger = logging.getLogger(__name__)
 
+AIR_FRYER_NO_ACTIVE_PROGRAM = 11923000
+
 
 # Status refresh interval in seconds
 # API calls outside of interval are automatically refreshed
@@ -666,9 +668,9 @@ class VeSyncAirFryerDC111(BypassV2Mixin, VeSyncFryer):
 
     def __init__(
         self,
-        details,
-        manager,
-        feature_map,
+        details: ResponseDeviceDetailsModel,
+        manager: VeSync,
+        feature_map: AirFryerMap,
     ) -> None:
         """Initialize CAF-DC111S-AEU."""
         super().__init__(details, manager, feature_map)
@@ -768,8 +770,8 @@ class VeSyncAirFryerDC111(BypassV2Mixin, VeSyncFryer):
         inner = response.get('result') or {}
         code = inner.get('code')
 
-        # 11923000 oznacza, że komora nie ma programu do zatrzymania.
-        if code == 11923000:
+        # The chamber has no prepared or running program to stop.
+        if code == AIR_FRYER_NO_ACTIVE_PROGRAM:
             return False
 
         return code == 0
