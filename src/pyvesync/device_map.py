@@ -1112,7 +1112,7 @@ air_fryer_modules: list[AirFryerMap] = [
         model_display='CS158/159/168/169-AF Series',
         model_name='Smart/Pro/Pro Gen 2 5.8 Qt. Air Fryer',
         setup_entry='CS137-AF/CS158-AF',
-    )
+    ),
 ]
 """List of ['AirFryerMap'][pyvesync.device_map.AirFryerMap] configuration
 for air fryer devices."""
