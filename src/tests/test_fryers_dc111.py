@@ -166,3 +166,86 @@ async def test_stop_empty_chamber_returns_false(fryer) -> None:
         result = await fryer.stop_chamber(1)
 
     assert result is False
+
+
+@pytest.mark.asyncio
+async def test_prepare_both_chambers_sync_finish(
+    fryer: VeSyncAirFryerDC111,
+) -> None:
+    """Prepare both chambers with synchronized finishing times."""
+    mocked = AsyncMock(return_value=bypass_response()[0])
+
+    with patch.object(
+        VeSyncAirFryerDC111,
+        "call_bypassv2_api",
+        new=mocked,
+    ):
+        result = await fryer.prepare_both_chambers(
+            chamber_1={
+                "temperature": 180,
+                "minutes": 10,
+                "mode": "AirFry",
+            },
+            chamber_2={
+                "temperature": 195,
+                "minutes": 15,
+                "mode": "AirFry",
+            },
+            sync_type=1,
+        )
+
+    assert result is True
+
+    method = mocked.await_args.args[0]
+    data = mocked.await_args.kwargs["data"]
+
+    assert method == "startMultiCook"
+    assert data["syncType"] == 1
+    assert data["workChamber"] == 4
+    assert len(data["cookConfigs"]) == 2
+
+    chamber_1 = data["cookConfigs"][0]
+    chamber_2 = data["cookConfigs"][1]
+
+    assert chamber_1["chamber"] == 1
+    assert chamber_1["cookSetTime"] == 600
+    assert chamber_1["cookTemp"] == 180
+
+    assert chamber_2["chamber"] == 2
+    assert chamber_2["cookSetTime"] == 900
+    assert chamber_2["cookTemp"] == 195
+
+
+@pytest.mark.asyncio
+async def test_prepare_both_chambers_match(
+    fryer: VeSyncAirFryerDC111,
+) -> None:
+    """Prepare both chambers with matching settings."""
+    mocked = AsyncMock(return_value=bypass_response()[0])
+    matching = {
+        "temperature": 195,
+        "minutes": 10,
+        "mode": "AirFry",
+    }
+
+    with patch.object(
+        VeSyncAirFryerDC111,
+        "call_bypassv2_api",
+        new=mocked,
+    ):
+        result = await fryer.prepare_both_chambers(
+            chamber_1=matching,
+            chamber_2=matching,
+            sync_type=2,
+        )
+
+    assert result is True
+
+    data = mocked.await_args.kwargs["data"]
+
+    assert data["syncType"] == 2
+    assert data["workChamber"] == 4
+    assert data["cookConfigs"][0]["cookTemp"] == 195
+    assert data["cookConfigs"][1]["cookTemp"] == 195
+    assert data["cookConfigs"][0]["cookSetTime"] == 600
+    assert data["cookConfigs"][1]["cookSetTime"] == 600
