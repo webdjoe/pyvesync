@@ -35,6 +35,7 @@ from typing_extensions import deprecated
 
 from pyvesync.base_devices import FryerState, VeSyncFryer
 from pyvesync.const import AIRFRYER_PID_MAP, ConnectionStatus, DeviceStatus
+from pyvesync.utils.device_mixins import BypassV2Mixin
 from pyvesync.utils.errors import VeSyncError
 from pyvesync.utils.helpers import Helpers
 from pyvesync.utils.logs import LibraryLogger
@@ -651,3 +652,124 @@ class VeSyncAirFryer158(VeSyncFryer):
         self.state.status_request(json_cmd)
         await self.update()
         return True
+
+
+class VeSyncAirFryerDC111(BypassV2Mixin, VeSyncFryer):
+    """Cosori Turbo Tower Pro dual-chamber air fryer."""
+
+    __slots__ = (
+        'chambers',
+        'sync_type',
+        'temp_unit',
+        'work_chamber',
+    )
+
+    def __init__(
+        self,
+        details,
+        manager,
+        feature_map,
+    ) -> None:
+        """Initialize CAF-DC111S-AEU."""
+        super().__init__(details, manager, feature_map)
+
+        self.chambers: dict[int, dict] = {}
+        self.temp_unit: str | None = None
+        self.sync_type: int | None = None
+        self.work_chamber: int | None = None
+
+    async def get_details(self) -> None:
+        """Read status of both chambers."""
+        response = await self.call_bypassv2_api(
+            'getAirfryerMultiStatus',
+            data={},
+        )
+
+        if not response or response.get('code') != 0:
+            return
+
+        outer = response.get('result') or {}
+        if outer.get('code') not in (None, 0):
+            return
+
+        result = outer.get('result') or {}
+
+        self.temp_unit = result.get('tempUnit')
+        self.sync_type = result.get('syncType')
+        self.work_chamber = result.get('workChamber')
+
+        self.chambers = {
+            int(item['chamber']): item
+            for item in result.get('statusList', [])
+            if item.get('chamber') is not None
+        }
+
+    async def prepare_program(
+        self,
+        chamber: int,
+        temperature: int,
+        minutes: int,
+        mode: str = 'AirFry',
+    ) -> bool:
+        """Prepare a cooking program.
+
+        The appliance still requires physical confirmation with the Start button.
+        """
+        if chamber not in (1, 2):
+            raise ValueError('chamber must be 1 or 2')
+
+        if minutes <= 0:
+            raise ValueError('minutes must be greater than zero')
+
+        data = {
+            'accountId': self.manager.account_id,
+            'cookConfigs': [
+                {
+                    'chamber': chamber,
+                    'cookSetTime': minutes * 60,
+                    'cookTemp': temperature,
+                    'mode': mode,
+                    'recipeId': 14,
+                    'recipeName': 'Air Fry',
+                    'recipeType': 3,
+                    'shakeTime': 0,
+                }
+            ],
+            'readyStart': True,
+            'syncType': 0,
+            'tempUnit': 'c',
+            'workChamber': chamber,
+        }
+
+        response = await self.call_bypassv2_api(
+            'startMultiCook',
+            data=data,
+        )
+
+        return bool(
+            response
+            and response.get('code') == 0
+            and (response.get('result') or {}).get('code') == 0
+        )
+
+    async def stop_chamber(self, chamber: int) -> bool:
+        """End the prepared or running program for one chamber."""
+        if chamber not in (1, 2):
+            raise ValueError('chamber must be 1 or 2')
+
+        response = await self.call_bypassv2_api(
+            'endCook',
+            data={'chamber': chamber},
+        )
+
+        if not response or response.get('code') != 0:
+            return False
+
+        inner = response.get('result') or {}
+        code = inner.get('code')
+
+        # 11923000 oznacza, że komora nie ma programu do zatrzymania.
+        if code == 11923000:
+            return False
+
+        return code == 0
