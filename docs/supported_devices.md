@@ -43,6 +43,7 @@ The VeSync API supports a variety of devices. The following is a list of devices
 7. Air Fryers
       - [CS137][pyvesync.devices.vesynckitchen.VeSyncAirFryer158] - 3.7qt Air Fryer
       - [CS158][pyvesync.devices.vesynckitchen.VeSyncAirFryer158] - 5.8qt Air Fryer
+      - [CAF-LI401S][pyvesync.devices.vesynckitchen.VeSyncAirFryer401] - 4.0qt Air Fryer
 8. Thermostats
       - [Aura][pyvesync.devices.vesyncthermostat] Thermostat
 
@@ -119,6 +120,7 @@ been verified.
 | Device Name | Device Type | Temperature Control | Timer |
 | ------ | ----- | ----- | ----- |
 | Cosori 3.7qt Air Fryer | CS137 | ✔ | ✔ |
+| Cosori 4.0qt Air Fryer | CAF-LI401S | ✔ | ✔ |
 | Cosori 5.8qt Air Fryer | CS158 | ✔ | ✔ |
 
 ### Thermostats

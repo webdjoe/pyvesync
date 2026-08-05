@@ -29,12 +29,15 @@ from __future__ import annotations
 
 import logging
 import time
+from math import ceil
 from typing import TYPE_CHECKING, TypeVar
 
 from typing_extensions import deprecated
 
 from pyvesync.base_devices import FryerState, VeSyncFryer
 from pyvesync.const import AIRFRYER_PID_MAP, ConnectionStatus, DeviceStatus
+from pyvesync.models.fryer_models import FryerV2Details
+from pyvesync.utils.device_mixins import BypassV2Mixin, process_bypassv2_result
 from pyvesync.utils.errors import VeSyncError
 from pyvesync.utils.helpers import Helpers
 from pyvesync.utils.logs import LibraryLogger
@@ -59,6 +62,8 @@ RECIPE_ID = 1
 RECIPE_TYPE = 3
 CUSTOM_RECIPE = 'Manual Cook'
 COOK_MODE = 'custom'
+LI401_CUSTOM_MODE = 'Custom'
+LI401_CUSTOM_RECIPE_ID = 11
 
 
 class AirFryer158138State(FryerState):
@@ -102,7 +107,7 @@ class AirFryer158138State(FryerState):
 
     def __init__(
         self,
-        device: VeSyncAirFryer158,
+        device: VeSyncFryer,
         details: ResponseDeviceDetailsModel,
         feature_map: AirFryerMap,
     ) -> None:
@@ -326,6 +331,259 @@ class AirFryer158138State(FryerState):
         #  If Cooking, clear preheat status
         if self.cook_status in ['cooking', 'cookStop', 'cookEnd']:
             self.clear_preheat()
+
+
+class AirFryer401State(AirFryer158138State):
+    """State for the CAF-LI401S air fryer.
+
+    The V2 API reports time values in seconds. They are converted to rounded-up
+    minutes so this state remains compatible with the existing fryer interface.
+    """
+
+    __slots__ = ('cook_mode', 'recipe')
+
+    def __init__(
+        self,
+        device: VeSyncFryer,
+        details: ResponseDeviceDetailsModel,
+        feature_map: AirFryerMap,
+    ) -> None:
+        """Initialize CAF-LI401S state."""
+        super().__init__(device, details, feature_map)
+        self.cook_mode: str | None = None
+        self.recipe: str | None = None
+
+    @staticmethod
+    def _seconds_to_minutes(value: int | None) -> int | None:
+        """Convert API seconds to whole minutes without hiding remaining time."""
+        if value is None:
+            return None
+        return ceil(value / 60)
+
+    def status_response_v2(self, status: FryerV2Details) -> None:
+        """Update state from a bypass V2 air-fryer status response."""
+        self.temp_unit = status.tempUnit
+        if status.cookStatus == 'standby' or not status.stepArray:
+            self.set_standby()
+            self.current_temp = status.currentTemp
+            return
+
+        if status.stepIndex < 0 or status.stepIndex >= len(status.stepArray):
+            logger.warning(
+                'Invalid cooking step index %s for %s',
+                status.stepIndex,
+                self.device.device_name,
+            )
+            self.set_standby()
+            return
+
+        step = status.stepArray[status.stepIndex]
+        self.cook_mode = step.mode
+        self.recipe = step.recipeName
+        return_status = {
+            'cookStatus': status.cookStatus,
+            'curentTemp': status.currentTemp,
+            'cookSetTemp': step.cookTemp,
+            'cookSetTime': self._seconds_to_minutes(step.cookSetTime),
+            'cookLastTime': self._seconds_to_minutes(step.cookLastTime),
+            'tempUnit': status.tempUnit,
+            'preheatSetTime': self._seconds_to_minutes(status.preheatSetTime),
+            'preheatLastTime': self._seconds_to_minutes(status.preheatLastTime),
+        }
+        self.status_response(return_status)
+
+    def set_standby(self) -> None:
+        """Clear CAF-LI401S cooking state."""
+        super().set_standby()
+        self.cook_mode = None
+        self.recipe = None
+
+
+class VeSyncAirFryer401(BypassV2Mixin, VeSyncFryer):
+    """Cosori Lite 4.0-Quart Smart Air Fryer (CAF-LI401S)."""
+
+    __slots__ = ()
+
+    def __init__(
+        self,
+        details: ResponseDeviceDetailsModel,
+        manager: VeSync,
+        feature_map: AirFryerMap,
+    ) -> None:
+        """Initialize the CAF-LI401S air fryer."""
+        super().__init__(details, manager, feature_map)
+        self.state: AirFryer401State = AirFryer401State(self, details, feature_map)
+
+    async def get_details(self) -> None:
+        """Get current cooking status and details."""
+        response = await self.call_bypassv2_api('getAirfryerStatus')
+        status = process_bypassv2_result(
+            self,
+            logger,
+            'get_details',
+            response,
+            FryerV2Details,
+        )
+        if status is None:
+            self.state.device_status = DeviceStatus.OFF
+            return
+
+        self.state.status_response_v2(status)
+        self.state.connection_status = ConnectionStatus.ONLINE
+        self.state.device_status = (
+            DeviceStatus.RUNNING if self.state.is_running else DeviceStatus.OFF
+        )
+
+    @property
+    def temp_unit(self) -> str | None:
+        """Return the configured temperature unit."""
+        return self.state.temp_unit
+
+    def _validate_cook_settings(self, set_temp: int, set_time: int) -> bool:
+        """Validate a cooking temperature and time in minutes."""
+        if not self._validate_cook_time(set_time):
+            return False
+        if self.temp_unit == 'fahrenheit':
+            minimum, maximum = self.state.min_temp_f, self.state.max_temp_f
+        elif self.temp_unit == 'celsius':
+            minimum, maximum = self.state.min_temp_c, self.state.max_temp_c
+        else:
+            logger.warning('Temperature unit is unavailable for %s', self.device_name)
+            return False
+        if set_temp < minimum or set_temp > maximum:
+            logger.warning(
+                'Cook temperature must be between %s and %s %s',
+                minimum,
+                maximum,
+                self.temp_unit,
+            )
+            return False
+        return True
+
+    @staticmethod
+    def _validate_cook_time(set_time: int) -> bool:
+        """Validate a cooking time in minutes."""
+        if set_time < 1 or set_time > 60:
+            logger.warning('Cook time must be between 1 and 60 minutes')
+            return False
+        return True
+
+    def _control_succeeded(self, method: str, response: dict | None) -> bool:
+        """Validate both the cloud and device-level response codes."""
+        inner_result = response.get('result') if isinstance(response, dict) else None
+        if isinstance(inner_result, dict) and inner_result.get('code') != 0:
+            logger.warning(
+                '%s failed for %s with device code %s',
+                method,
+                self.device_name,
+                inner_result.get('code'),
+            )
+            return False
+        processed = Helpers.process_dev_response(logger, method, self, response)
+        if processed is None:
+            return False
+        result = processed.get('result')
+        if not isinstance(result, dict) or result.get('code') != 0:
+            logger.warning(
+                '%s failed for %s with device code %s',
+                method,
+                self.device_name,
+                result.get('code') if isinstance(result, dict) else None,
+            )
+            return False
+        return True
+
+    async def cook(self, set_temp: int, set_time: int) -> bool:
+        """Stage a manual program with custom temperature and time.
+
+        The CAF-LI401S requires its physical start button to begin heating. This
+        method configures the program remotely and leaves the fryer in ``ready``.
+
+        Args:
+            set_temp: Cooking temperature in the fryer's configured unit.
+            set_time: Cooking time in minutes (1-60).
+        """
+        if self.state.cook_status is None or self.temp_unit is None:
+            await self.update()
+        if not self._validate_cook_settings(set_temp, set_time):
+            return False
+
+        if self.state.cook_status in ['ready', 'cookStop', 'pullOut', 'cookEnd']:
+            if not await self.end():
+                return False
+        elif self.state.cook_status != 'standby':
+            logger.warning(
+                'Cannot configure %s while status is %s',
+                self.device_name,
+                self.state.cook_status,
+            )
+            return False
+
+        data = {
+            'accountId': self.manager.account_id,
+            'cookTempDECP': 0,
+            'hasPreheat': 0,
+            'hasWarm': False,
+            'imageUrl': '',
+            'mode': LI401_CUSTOM_MODE,
+            'readyStart': True,
+            'recipeId': LI401_CUSTOM_RECIPE_ID,
+            'recipeName': LI401_CUSTOM_MODE,
+            'recipeType': 3,
+            'startAct': {
+                'appointingTime': 0,
+                'cookSetTime': set_time * 60,
+                'cookTemp': set_temp,
+                'cookTempDECP': 0,
+                'imageUrl': '',
+                'level': 0,
+                'preheatTemp': 0,
+                'shakeTime': 0,
+                'targetTemp': 0,
+            },
+            'tempUnit': 'f' if self.temp_unit == 'fahrenheit' else 'c',
+        }
+        response = await self.call_bypassv2_api('startCook', data)
+        if not self._control_succeeded('cook', response):
+            return False
+        await self.update()
+        return True
+
+    async def set_cook_time(self, set_time: int) -> bool:
+        """Set the remaining cooking time in minutes.
+
+        This control is only accepted while the CAF-LI401S is actively cooking.
+
+        Args:
+            set_time: New remaining cooking time in minutes (1-60).
+        """
+        if not self._validate_cook_time(set_time):
+            return False
+        if self.state.cook_status != 'cooking':
+            await self.update()
+        if self.state.cook_status != 'cooking':
+            logger.warning(
+                'Cannot set cooking time for %s while status is %s',
+                self.device_name,
+                self.state.cook_status,
+            )
+            return False
+
+        data = {'cookSetTime': set_time * 60, 'hasLinkage': False}
+        response = await self.call_bypassv2_api('setTimeOrTemp', data)
+        if not self._control_succeeded('set_cook_time', response):
+            return False
+        await self.update()
+        return True
+
+    async def end(self) -> bool:
+        """End or clear the current cooking program."""
+        response = await self.call_bypassv2_api('endCook')
+        if not self._control_succeeded('end', response):
+            return False
+        self.state.set_standby()
+        await self.update()
+        return True
 
 
 class VeSyncAirFryer158(VeSyncFryer):
