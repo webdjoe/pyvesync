@@ -20,7 +20,6 @@ from pyvesync.const import (
     REGION_API_MAP,
     STATUS_OK,
     ConnectionStatus,
-    ProductTypes,
 )
 from pyvesync.device_container import DeviceContainer
 from pyvesync.models.vesync_models import (
@@ -599,20 +598,15 @@ class VeSync:  # pylint: disable=function-redefined
         )
         body = Helpers.get_manager_attributes(self, body_fields)
 
-        # Add cid list of devices that are online and not an air fryer
+        # Add cid list of online devices
         body['cidList'] = [
             device.cid
             for device in self.devices
-            if (
-                device.product_type != ProductTypes.AIR_FRYER
-                and device.state.connection_status == ConnectionStatus.ONLINE
-            )
+            if device.state.connection_status == ConnectionStatus.ONLINE
         ]
 
         if len(body['cidList']) == 0:
-            logger.warning(
-                'No online devices (excluding air fryers) to check firmware for'
-            )
+            logger.warning('No online devices to check firmware for')
             return False
 
         resp_dict, _ = await self.async_call_api(
