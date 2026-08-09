@@ -1590,3 +1590,266 @@ class VeSyncLV600S(BypassV2Mixin, VeSyncHumidifier):
             remaining=duration,
         )
         return True
+
+
+class NeoClassic650s(BypassV2Mixin, VeSyncHumidifier):
+    """NeoClassic 650s Humidifier.
+
+    Args:
+        details (ResponseDeviceDetailsModel): The device details.
+        manager (VeSync): The manager object for API calls.
+        feature_map (HumidifierMap): The feature map for the device.
+
+    Attributes:
+        state (HumidifierState): The state of the humidifier.
+        last_response (ResponseInfo): Last response from API call.
+        manager (VeSync): Manager object for API calls.
+        device_name (str): Name of device.
+        device_image (str): URL for device image.
+        cid (str): Device ID.
+        connection_type (str): Connection type of device.
+        device_type (str): Type of device.
+        type (str): Type of device.
+        uuid (str): UUID of device, not always present.
+        config_module (str): Configuration module of device.
+        mac_id (str): MAC ID of device.
+        current_firm_version (str): Current firmware version of device.
+        device_region (str): Region of device. (US, EU, etc.)
+        pid (str): Product ID of device, pulled by some devices on update.
+        sub_device_no (int): Sub-device number of device.
+        product_type (str): Product type of device.
+        features (dict): Features of device.
+        mist_levels (list): List of mist levels.
+        mist_modes (list): List of mist modes.
+        target_minmax (tuple): Tuple of target min and max values.
+        warm_mist_levels (list): List of warm mist levels.
+    """
+
+    __slots__ = ()
+
+    def __init__(
+        self,
+        details: ResponseDeviceDetailsModel,
+        manager: VeSync,
+        feature_map: HumidifierMap,
+    ) -> None:
+        """Initialize NeoClassic 650s Humidifier class."""
+        super().__init__(details, manager, feature_map)
+
+    def _set_state(self, resp_model: models.NeoClassic650sResult) -> None:
+        """Set state from NeoClassic 650s API result model."""
+        # ** errorCode
+        # ** errorCodes
+        # ** lampSwitch
+        # ** scheduleCount
+        # ** timerRemain
+        # ** totalWorkTime
+        # ** powerSwitch
+        self.state.device_status = DeviceStatus.from_int(resp_model.powerSwitch)
+        self.state.connection_status = ConnectionStatus.ONLINE
+        # ** workMode
+        self.state.mode = self._reverse_mist_modes.get(resp_model.workMode)
+        if self.state.mode is None:
+            logger.warning('Unknown mist mode received: %s', resp_model.workMode)
+
+        # ** targetHumidity
+        self.state.auto_target_humidity = resp_model.targetHumidity
+        # ** humidity
+        self.state.humidity = resp_model.humidity
+        # ** mistLevel
+        self.state.mist_level = resp_model.mistLevel
+        # ** virtualLevel
+        self.state.mist_virtual_level = resp_model.virtualLevel
+        # ** waterLacksState
+        self.state.water_lacks = bool(resp_model.waterLacksState)
+        # ** waterTankLifted
+        self.state.water_tank_lifted = bool(resp_model.waterTankLifted)
+
+        # ** autoStopState
+        # ** autoStopSwitch
+        self.state.automatic_stop_config = bool(resp_model.autoStopSwitch)
+        self.state.auto_stop_target_reached = bool(resp_model.autoStopState)
+
+        # ** screenSwitch
+        self.state.display_set_status = DeviceStatus.from_int(resp_model.screenSwitch)
+        # ** screenState
+        self.state.display_status = DeviceStatus.from_int(resp_model.screenState)
+
+        # ** autoPreference
+        self.state.auto_preference = resp_model.autoPreference
+
+        # ** nightLight
+        if resp_model.nightLight is not None:
+            self.state.nightlight_brightness = resp_model.nightLight.brightness
+            self.state.nightlight_status = DeviceStatus.from_int(
+                resp_model.nightLight.nightLightSwitch
+            )
+            self.state.nightlight_color_temp = resp_model.nightLight.colorTemperature
+        # ** temperature
+        self.state.temperature = (
+            resp_model.temperature / 10
+        )  # Fahrenheit but without decimals
+
+    async def get_details(self) -> None:
+        r_dict = await self.call_bypassv2_api('getHumidifierStatus')
+        r_model = process_bypassv2_result(
+            self, logger, 'get_details', r_dict, models.NeoClassic650sResult
+        )
+        if r_model is None:
+            return
+
+        self._set_state(r_model)
+
+    async def toggle_switch(self, toggle: bool | None = None) -> bool:
+        if toggle is None:
+            toggle = self.state.device_status != DeviceStatus.ON
+
+        payload_data = {'powerSwitch': int(toggle), 'switchIdx': 0}
+        r_dict = await self.call_bypassv2_api('setSwitch', payload_data)
+        r = Helpers.process_dev_response(logger, 'toggle_switch', self, r_dict)
+        if r is None:
+            return False
+
+        self.state.device_status = DeviceStatus.from_bool(toggle)
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def toggle_automatic_stop(self, toggle: bool | None = None) -> bool:
+        if toggle is None:
+            toggle = self.state.automatic_stop_config is not True
+
+        payload_data = {'autoStopSwitch': int(toggle)}
+        r_dict = await self.call_bypassv2_api('setAutoStopSwitch', payload_data)
+        r = Helpers.process_dev_response(logger, 'toggle_automatic_stop', self, r_dict)
+        if r is None:
+            return False
+
+        self.state.automatic_stop_config = toggle
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def toggle_display(self, toggle: bool | None = None) -> bool:
+        if toggle is None:
+            toggle = self.state.display_set_status != DeviceStatus.ON
+
+        payload_data = {'screenSwitch': int(toggle)}
+        r_dict = await self.call_bypassv2_api('setDisplay', payload_data)
+        r = Helpers.process_dev_response(logger, 'set_display', self, r_dict)
+        if r is None:
+            return False
+
+        self.state.display_set_status = DeviceStatus.from_bool(toggle)
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def set_humidity(self, humidity: int) -> bool:
+        if not Validators.validate_range(humidity, *self.target_minmax):
+            logger.warning(
+                'Invalid humidity, must be between %s and %s', *self.target_minmax
+            )
+            return False
+
+        payload_data = {'targetHumidity': humidity}
+        r_dict = await self.call_bypassv2_api('setTargetHumidity', payload_data)
+        r = Helpers.process_dev_response(logger, 'set_humidity', self, r_dict)
+        if r is None:
+            return False
+
+        self.state.auto_target_humidity = humidity
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def set_mode(self, mode: str) -> bool:
+        if mode not in self.mist_modes:
+            logger.warning('Invalid humidity mode used - %s', mode)
+            logger.info(
+                'Proper modes for this device are - %s',
+                orjson.dumps(
+                    self.mist_modes,
+                    option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS,
+                ),
+            )
+            return False
+
+        payload_data = {'workMode': self.mist_modes[mode]}
+        r_dict = await self.call_bypassv2_api('setHumidityMode', payload_data)
+
+        r = Helpers.process_dev_response(logger, 'set_humidity_mode', self, r_dict)
+        if r is None:
+            return False
+
+        self.state.mode = mode
+        self.state.device_status = DeviceStatus.ON
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def set_mist_level(self, level: int) -> bool:
+        if level not in self.mist_levels:
+            logger.warning(
+                'Humidifier mist level, must be between %s and %s', *self.mist_levels
+                )
+            return False
+
+        payload_data = {'levelIdx': 0, 'virtualLevel': level, 'levelType': 'mist'}
+        r_dict = await self.call_bypassv2_api('setVirtualLevel', payload_data)
+        r = Helpers.process_dev_response(logger, 'set_mist_level', self, r_dict)
+        if r is None:
+            return False
+
+        self.state.mist_level = level
+        self.state.mist_virtual_level = level
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def toggle_nightlight(self, toggle: bool | None = None) -> bool:
+        if not self.supports_nightlight:
+            logger.warning(
+                '%s is a %s does not have a nightlight or it is not supported.',
+                self.device_name,
+                self.device_type,
+            )
+            return False
+
+        if toggle is None:
+            toggle = self.state.nightlight_status != DeviceStatus.ON
+
+        payload_data = {'nightLightSwitch': int(toggle)}
+        r_dict = await self.call_bypassv2_api('setNightLightStatus', payload_data)
+        r = Helpers.process_dev_response(logger, 'toggle_nightlight', self, r_dict)
+        if r is None:
+            return False
+
+        self.state.nightlight_status = DeviceStatus.from_bool(toggle)
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def set_nightlight_brightness(self, brightness: int) -> bool:
+        if not self.supports_nightlight:
+            logger.warning(
+                '%s is a %s does not have a nightlight or it is not supported.',
+                self.device_name,
+                self.device_type,
+            )
+            return False
+
+        if not Validators.validate_zero_to_hundred(brightness):
+            logger.warning('Brightness value must be set between 0 and 100')
+            return False
+
+        payload_data = {
+            'brightness': brightness,
+            'nightLightSwitch': 1 if brightness > 0 else 0,
+        }
+        r_dict = await self.call_bypassv2_api('setLightStatus', payload_data)
+        r = Helpers.process_dev_response(
+            logger, 'set_night_light_brightness', self, r_dict
+        )
+        if r is None:
+            return False
+
+        self.state.nightlight_brightness = brightness
+        self.state.nightlight_status = (
+            DeviceStatus.ON if brightness > 0 else DeviceStatus.OFF
+        )
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
