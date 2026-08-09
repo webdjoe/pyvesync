@@ -1787,7 +1787,7 @@ class NeoClassic650s(BypassV2Mixin, VeSyncHumidifier):
         if level not in self.mist_levels:
             logger.warning(
                 'Humidifier mist level, must be between %s and %s', *self.mist_levels
-                )
+            )
             return False
 
         payload_data = {'levelIdx': 0, 'virtualLevel': level, 'levelType': 'mist'}
