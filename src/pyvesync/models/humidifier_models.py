@@ -326,3 +326,47 @@ class LV600SResult(InnerHumidifierBaseResult):
     totalWorkTime: int = 0
     warmPower: bool = False
     warmLevel: int = 0
+
+
+# Models for the VeSync NeoClassic 650s Humidifier
+
+
+@dataclass
+class NeoClassic650sResult(InnerHumidifierBaseResult):
+    """NeoClassic 650s Humidifier Result Model.
+
+    Inherits from InnerHumidifierBaseResult.
+    """
+
+    autoPreference: int
+    autoStopState: int
+    autoStopSwitch: int
+    errorCode: int
+    errorCodes: list
+    humidity: int
+    lampSwitch: int
+    mistLevel: int
+    powerSwitch: int
+    scheduleCount: int
+    screenState: int
+    screenSwitch: int
+    targetHumidity: int
+    temperature: int
+    timerRemain: int
+    totalWorkTime: int
+    virtualLevel: int
+    waterLacksState: int
+    waterTankLifted: int
+    workMode: str
+    nightLight: NeoClassic650sNightlight | None = None
+
+
+@dataclass
+class NeoClassic650sNightlight(ResponseBaseModel):
+    """NeoClassic 650s Humidifier Night Light Model."""
+
+    nightLightSwitch: int
+    brightness: int
+    colorTemperature: int
+    nightLightLevel: int
+    brightnessLevel2: int

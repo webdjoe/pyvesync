@@ -502,6 +502,7 @@ class HumidifierFeatures(Features):
         AUTO_STOP: Auto stop when target humidity is reached.
             Different from auto, which adjusts fan level to maintain humidity.
         RGB_NIGHTLIGHT: RGB nightlight with color control.
+        NIGHTLIGHT_COLOR_TEMP: Color Temperature of the Nightlight
     """
 
     ONOFF = 'onoff'
@@ -513,6 +514,7 @@ class HumidifierFeatures(Features):
     NIGHTLIGHT_BRIGHTNESS = 'nightlight_brightness'
     DRYING_MODE = 'drying_mode'
     RGB_NIGHTLIGHT = 'rgb_nightlight'
+    NIGHTLIGHT_COLOR_TEMP = 'night_light_color_temperature'
 
 
 class PurifierFeatures(Features):
@@ -652,7 +654,6 @@ class HumidifierModes(Features):
         TURBO: Turbo mode.
         PET: Pet mode.
         UNKNOWN: Unknown mode.
-        AUTOPRO: AutoPro mode.
     """
 
     AUTO = 'auto'
@@ -925,3 +926,23 @@ DRYING_MODES: dict[str, int] = {
     DryingModes.RUNNING: 1,
     DryingModes.PAUSE: 2,
 }
+
+
+class HumidifierAutoPreference(IntEnum):
+    """Preference Levels for Humidifier Auto Mode.
+
+    Attributes:
+        SMART: Smart preference level.
+        TURBO: Turbo preference level.
+        MODERATE: Moderate preference level.
+        GENTLE: Gentle preference level.
+    """
+
+    SMART = 3
+    TURBO = 5
+    MODERATE = 6
+    GENTLE = 7
+
+    def __str__(self) -> str:
+        """Return string representation of the enum."""
+        return self.name.capitalize()

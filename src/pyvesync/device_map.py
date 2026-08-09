@@ -71,6 +71,7 @@ from pyvesync.const import (
     FanFeatures,
     FanModes,
     FanSleepPreference,
+    HumidifierAutoPreference,
     HumidifierFeatures,
     HumidifierModes,
     NightlightModes,
@@ -278,6 +279,7 @@ class HumidifierMap(DeviceMapTemplate):
     module: ModuleType = vesynchumidifier
     target_minmax: tuple[int, int] = (30, 80)
     warm_mist_levels: list[int] = field(default_factory=list)
+    auto_preferences: list[HumidifierAutoPreference] = field(default_factory=list)
 
 
 @dataclass(kw_only=True)
@@ -808,6 +810,34 @@ humidifier_modules = [
         model_display='LEH-B381S Series',
         model_name='Sprout Humidifier',
         setup_entry='LEH-B381S',
+    ),
+    HumidifierMap(
+        class_name='NeoClassic650s',
+        dev_types=['LUH-N651S-WUS'],
+        features=[
+            HumidifierFeatures.ONOFF,
+            HumidifierFeatures.AUTO_STOP,
+            HumidifierFeatures.NIGHTLIGHT,
+            HumidifierFeatures.NIGHTLIGHT_BRIGHTNESS,
+            HumidifierFeatures.NIGHTLIGHT_COLOR_TEMP,
+        ],
+        mist_modes={
+            HumidifierModes.AUTO: 'autoPro',
+            HumidifierModes.SLEEP: 'sleep',
+            HumidifierModes.MANUAL: 'manual',
+        },
+        mist_levels=list(range(1, 6)),
+        auto_preferences=[
+            HumidifierAutoPreference.SMART,
+            HumidifierAutoPreference.TURBO,
+            HumidifierAutoPreference.MODERATE,
+            HumidifierAutoPreference.GENTLE,
+        ],
+        device_alias='NeoClassic 650s',
+        model_display='LUH-N651S Series',
+        model_name='NeoClassic 650s',
+        setup_entry='LUH-N651S-WUS',
+        target_minmax=(20, 90),
     ),
 ]
 """List of ['HumidifierMap'][pyvesync.device_map.HumidifierMap] configuration

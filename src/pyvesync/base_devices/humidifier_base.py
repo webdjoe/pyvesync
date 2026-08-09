@@ -304,6 +304,11 @@ class VeSyncHumidifier(VeSyncBaseToggleDevice):
         return HumidifierFeatures.NIGHTLIGHT_BRIGHTNESS in self.features
 
     @property
+    def supports_nightlight_color_temp(self) -> bool:
+        """Return True if the humidifier supports nightlight brightness."""
+        return HumidifierFeatures.NIGHTLIGHT_COLOR_TEMP in self.features
+
+    @property
     def supports_rgb_nightlight(self) -> bool:
         """Return True if the humidifier supports RGB nightlight.
 
