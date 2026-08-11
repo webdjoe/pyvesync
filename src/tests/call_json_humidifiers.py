@@ -331,6 +331,35 @@ HUMIDIFIER_DETAILS: dict[str, Any] = {
         "lastDryingCompletedTime": 1764685402,
         "afterDryLastHumidityTime": 1764651910,
     },
+    "LUH-N451S-WEU": {  # NeoClassic 450S
+        "powerSwitch": int(HumidifierDefaults.device_status),
+        "humidity": HumidifierDefaults.humidity,
+        "targetHumidity": HumidifierDefaults.target_humidity,
+        "virtualLevel": HumidifierDefaults.virtual_mist_level,
+        "mistLevel": HumidifierDefaults.mist_level,
+        "workMode": HumidifierDefaults.humidifier_mode.value,
+        "waterLacksState": int(HumidifierDefaults.water_lacks),
+        "waterTankLifted": int(HumidifierDefaults.water_tank_lifted),
+        "autoStopSwitch": int(HumidifierDefaults.auto_stop),
+        "autoStopState": int(HumidifierDefaults.auto_stop_reached),
+        "screenSwitch": int(HumidifierDefaults.display_config),
+        "screenState": int(HumidifierDefaults.display),
+        "autoPreference": 4,
+        "temperature": HumidifierDefaults.temperature,
+        "lampSwitch": 0,
+        "nightLight": {
+            "nightLightSwitch": int(HumidifierDefaults.nightlight_status),
+            "brightness": HumidifierDefaults.nightlight_brightness,
+            "colorTemperature": HumidifierDefaults.nightlight_color_temperature,
+            "nightLightLevel": 1,
+            "brightnessLevel2": 100,
+        },
+        "scheduleCount": 0,
+        "timerRemain": 0,
+        "errorCode": 0,
+        "totalWorkTime": 113340,
+        "errorCodes": [],
+    },
     "LUH-A603S-WUS": {  # LV600S with warm mist
         "powerSwitch": int(DeviceStatus.ON),
         "humidity": HumidifierDefaults.humidity,
@@ -370,6 +399,7 @@ DETAILS_RESPONSES = {
     "LUH-M101S-WUS": build_bypass_v2_response(inner_result=HUMIDIFIER_DETAILS["LUH-M101-WUS"]),
     "LEH-S601S": build_bypass_v2_response(inner_result=HUMIDIFIER_DETAILS["LEH-S601S"]),
     "LEH-B381S": build_bypass_v2_response(inner_result=HUMIDIFIER_DETAILS["LEH-B381S"]),
+    "LUH-N451S-WEU": build_bypass_v2_response(inner_result=HUMIDIFIER_DETAILS["LUH-N451S-WEU"]),
 }
 
 
@@ -395,6 +425,7 @@ METHOD_RESPONSES = {
     "LUH-M101S-WUS": deepcopy(FunctionResponsesV2),
     "LEH-S601S": deepcopy(FunctionResponsesV2),
     "LEH-B381S": deepcopy(FunctionResponsesV2),
+    "LUH-N451S-WEU": deepcopy(FunctionResponsesV2),
 }
 
 
