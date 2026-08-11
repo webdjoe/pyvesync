@@ -809,6 +809,25 @@ humidifier_modules = [
         model_name='Sprout Humidifier',
         setup_entry='LEH-B381S',
     ),
+    HumidifierMap(
+        class_name='VeSyncSproutHumid',
+        dev_types=['LUH-N451S-WEU'],
+        features=[
+            HumidifierFeatures.NIGHTLIGHT,
+            HumidifierFeatures.NIGHTLIGHT_BRIGHTNESS,
+            HumidifierFeatures.AUTO_STOP,
+        ],
+        mist_modes={
+            HumidifierModes.AUTO: 'autoPro',
+            HumidifierModes.SLEEP: 'sleep',
+            HumidifierModes.MANUAL: 'manual',
+        },
+        mist_levels=list(range(1, 3)),
+        device_alias='NeoClassic 450S',
+        model_display='LUH-N451S Series',
+        model_name='NeoClassic 450S',
+        setup_entry='LUH-N451S-WEU',
+    ),
 ]
 """List of ['HumidifierMap'][pyvesync.device_map.HumidifierMap] configuration
 objects for humidifier devices."""

@@ -229,7 +229,6 @@ class Levoit1000SNightLight(ResponseBaseModel):
 @dataclass
 class SproutHumidifierResult(InnerHumidifierBaseResult):
     """Sprout Humidifier Result Model."""
-
     powerSwitch: int
     humidity: int
     targetHumidity: int
@@ -242,20 +241,20 @@ class SproutHumidifierResult(InnerHumidifierBaseResult):
     autoStopState: int
     screenSwitch: int
     screenState: int
-    autoModePreference: int
     autoPreference: int
-    waterShortageDryingSwitch: int
-    childLockSwitch: int
-    filterLifePercent: int
-    hepaFilterLifePercent: int
     temperature: int
     lampSwitch: int
-    lampType: int
-    dumpedState: int
-    roomSize: int
-    supportLampAct: int
-    lastDryingCompletedTime: int
-    afterDryLastHumidityTime: int
+    autoModePreference: int = 0
+    waterShortageDryingSwitch: int = 0
+    childLockSwitch: int = 0
+    filterLifePercent: int = 0
+    hepaFilterLifePercent: int = 0
+    lampType: int = 0
+    dumpedState: int = 0
+    roomSize: int = 0
+    supportLampAct: int = 0
+    lastDryingCompletedTime: int = 0
+    afterDryLastHumidityTime: int = 0
     sensorContent: SproutSensorcontent | None = None
     breathingLamp: SproutBreathinglamp | None = None
     guardingInfo: SproutGuardinginfo | None = None
