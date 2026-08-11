@@ -229,6 +229,7 @@ class Levoit1000SNightLight(ResponseBaseModel):
 @dataclass
 class SproutHumidifierResult(InnerHumidifierBaseResult):
     """Sprout Humidifier Result Model."""
+
     powerSwitch: int
     humidity: int
     targetHumidity: int
