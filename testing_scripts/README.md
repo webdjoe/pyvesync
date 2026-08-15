@@ -30,7 +30,7 @@ Optionally create a virtual environment:
 4. Run the testing script:
 
    ```bash
-   python testing_scripts/vs_console_script.py --email <your_email> --password <your_password> [optional arguments]
+   python testing_scripts/vs_test_script.py --email <your_email> --password <your_password> [optional arguments]
     ```
 
 ### Just run the script
@@ -58,10 +58,10 @@ Optionally create a virtual environment:
    pip install git+https://github.com/webdjoe/pyvesync.git@refs/pull/<PR_NUMBER>/head
    ```
 
-4. Download the `vs_console_script.py` file from the `testing_scripts` directory of the repository and place it in your current directory using a browser or `wget`/`curl` command:
+4. Download the `vs_test_script.py` file from the `testing_scripts` directory of the repository and place it in your current directory using a browser or `wget`/`curl` command:
 
    ```bash
-   wget https://raw.githubusercontent.com/webdjoe/pyvesync/dev/testing_scripts/vs_console_script.py
+   wget https://raw.githubusercontent.com/webdjoe/pyvesync/dev/testing_scripts/vs_test_script.py
    ```
 
 5. Run the testing script:
@@ -72,20 +72,21 @@ Optionally create a virtual environment:
 
 ### Running in VS Code or other IDE's
 
-The script can be run directly in an IDE like Visual Studio Code. Open the `vs_console_script.py` file and edit the `USERNAME` and `PASSWORD` variables at the top of the file with your VeSync account credentials, along with any other . Then run the script using the IDE's debug command.
+The script can be run directly in an IDE like Visual Studio Code. Open the `vs_test_script.py` file and edit the `USERNAME` and `PASSWORD` variables at the top of the file with your VeSync account credentials, along with any of the other configuration variables listed below. Then run the script using the IDE's debug command.
 
 ## Configuration
 
 **WARNING**: The script will try to return the device to original state after testing, but it is not guaranteed to restore all states.
 
-You can configure the script by modifying the following variables in the `vs_console_script.py` file:
+You can configure the script by modifying the following variables in the `vs_test_script.py` file:
 
 - `USERNAME`: Your VeSync account email.
 - `PASSWORD`: Your VeSync account password.
+- `REGION`: Country of the VeSync account in ISO 3166 Alpha-2 format.
 - `TEST_DEVICES`: Set to `True` to test device functionality.
 - `TEST_TIMERS`: Set to `True` to test timer functionality.
 - `OUTPUT_FILE`: Path to the output file for logging.
-- `TEST_DEV_TYPE`: Specific device type to test (Options are  "bulbs", "switches", "outlets", "humidifiers", "air_purifiers", "fans").
+- `TEST_DEV_TYPE`: Specific device type to test (Options are "bulbs", "switches", "outlets", "humidifiers", "air_purifiers", "fans").
 
 CONFIGURING VIA COMMAND LINE:
 
@@ -95,10 +96,11 @@ You can also configure the script via command line arguments:
 python vs_test_script.py \  # or testing_scripts/vs_test_script.py if using repository method
    --email <your_email> \
    --password <your_password> \
-   --test-devices \  # Include device methods in the test
-   --test-timers \  # Include timer methods in the test
+   --country-code <country_code> \  # ISO 3166 Alpha-2 format, defaults to US
+   --test_devices \  # Include device methods in the test
+   --test_timers \  # Include timer methods in the test
    --output-file <output_file> \
-   --test-dev-type <device_type> # Options: "bulbs", "switches", "outlets", "humidifiers", "air_purifiers", "fans"
+   --test_dev_type <device_type> # Options: "bulbs", "switches", "outlets", "humidifiers", "air_purifiers", "fans"
 ```
 
 ## Logging

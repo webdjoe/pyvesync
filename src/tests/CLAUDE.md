@@ -61,7 +61,7 @@ Sensitive values (tokens, account IDs, UUIDs) are normalized to defaults by `api
 ### Test infrastructure
 
 | File | Purpose |
-|------|---------|
+| ---- | ------- |
 | `conftest.py` | `pytest_generate_tests()` for parametrization, `--write_api`/`--overwrite` CLI options, interactive confirmation prompt |
 | `base_test_cases.py` | `TestBase` (patches `async_call_api`) and `TestApiFunc` (patches `ClientSession`). Both provide `self.manager`, `self.mock_api`, `self.caplog`, `run_in_loop()` |
 | `utils.py` | `YAMLWriter` (read/write YAML fixtures), `parse_args()` (extract mock call args), `assert_test()` (compare or write YAML), `api_scrub()` (normalize sensitive data), `deep_diff()`/`dicts_equal()` (readable diff output) |
@@ -71,7 +71,7 @@ Sensitive values (tokens, account IDs, UUIDs) are normalized to defaults by `api
 ### Response data (`call_json_*`)
 
 | File | Purpose |
-|------|---------|
+| ---- | ------- |
 | `call_json.py` | Aggregates all device modules into `ALL_DEVICE_MAP_DICT`. Contains `DeviceList` (builds `get_devices()` responses), `LoginRequests`/`LoginResponses`, `DeviceDetails`, default headers |
 | `call_json_outlets.py` | `OUTLETS` list (from `device_map.outlet_modules`), `DETAILS_RESPONSES` dict, `METHOD_RESPONSES` defaultdict |
 | `call_json_bulbs.py` | Same pattern for bulbs |
@@ -79,6 +79,7 @@ Sensitive values (tokens, account IDs, UUIDs) are normalized to defaults by `api
 | `call_json_switches.py` | Same pattern for switches |
 | `call_json_purifiers.py` | Same pattern for purifiers |
 | `call_json_humidifiers.py` | Same pattern for humidifiers |
+| `call_json_thermostat.py` | Same pattern for thermostats |
 
 Each `call_json_*` module follows the same structure:
 
@@ -89,7 +90,7 @@ Each `call_json_*` module follows the same structure:
 ### Test files
 
 | File | Tests |
-|------|-------|
+| ---- | ----- |
 | `test_outlets.py` | Outlet device methods via `TestBase` |
 | `test_bulbs.py` | Bulb device methods via `TestBase` |
 | `test_fans.py` | Fan device methods via `TestBase` |
@@ -97,6 +98,8 @@ Each `call_json_*` module follows the same structure:
 | `test_purifiers.py` | Purifier device methods via `TestBase` |
 | `test_humidifiers.py` | Humidifier device methods via `TestBase` |
 | `test_all_devices.py` | Verifies all devices have DETAILS_RESPONSES entries; tests `get_devices()` |
+| `test_auth.py` | `VeSyncAuth` tests (credentials, token-file persistence, login flow, re-auth, error handling) via `TestBase` |
+| `test_colors.py` | Plain unit tests for `utils/colors.py` (`RGBNightlightColor`), no API fixtures |
 | `test_x_vesync_login.py` | Login flow tests using both `TestBase` and `TestApiFunc` |
 | `test_x_vesync_api_responses.py` | Tests `async_call_api` error handling (rate limits, server errors, status codes) via `TestApiFunc` with `AiohttpMockSession` |
 | `xtest_x_*.py` | Legacy tests (prefixed with `x` to skip collection), kept for reference |
@@ -113,7 +116,7 @@ Each `call_json_*` module follows the same structure:
 
 ### TestBase flow (device tests)
 
-```
+```text
 mock_api patches VeSync.async_call_api
     -> set mock_api.return_value = (response_dict, 200)
     -> get_device() instantiates device from DeviceList.device_list_item()
@@ -124,7 +127,7 @@ mock_api patches VeSync.async_call_api
 
 ### TestApiFunc flow (login/error tests)
 
-```
+```text
 mock patches aiohttp.ClientSession
     -> mock.return_value.request.return_value = AiohttpMockSession(...)
     -> call manager method (makes real async_call_api call)

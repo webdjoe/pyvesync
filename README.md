@@ -60,9 +60,6 @@ async def main():
         # Redact mode is enabled by default, set to False to disable
         manager.redact = False
 
-        # To print request & response content for all API calls enable verbose mode
-        manager.verbose = True
-
         # To print logs to file
         manager.log_to_file("pyvesync.log")
 
@@ -76,11 +73,11 @@ async def main():
         # manager.devices is a DeviceContainer object
         # manager.devices.outlets is a list of VeSyncOutlet objects
         # manager.devices.switches is a list of VeSyncSwitch objects
-        # manager.devices.fans is a list of VeSyncFan objects
+        # manager.devices.fans is a list of VeSyncFanBase objects
         # manager.devices.bulbs is a list of VeSyncBulb objects
-        # manager.devices.humidifiers is a list of VeSyncHumid objects
-        # manager.devices.air_purifiers is a list of VeSyncAir objects
-        # manager.devices.air_fryers is a list of VeSyncAirFryer objects
+        # manager.devices.humidifiers is a list of VeSyncHumidifier objects
+        # manager.devices.air_purifiers is a list of VeSyncPurifier objects
+        # manager.devices.air_fryers is a list of VeSyncFryer objects
         # manager.devices.thermostats is a list of VeSyncThermostat objects
 
         for outlet in manager.devices.outlets:
@@ -159,7 +156,7 @@ There is a new nomenclature for product types that defines the device class. The
 4. `purifier` - Air purifiers (not humidifiers)
 5. `humidifier` - Humidifiers (not air purifiers)
 6. `bulb` - Light bulbs (not dimmers or switches)
-7. `airfryer` - Air fryers
+7. `air fryer` - Air fryers
 8. `thermostat` - Thermostats
 
 See [Supported Devices](#supported-devices) for a complete list of supported devices and models.
@@ -397,25 +394,31 @@ See the [device documentation](https://webdjoe.github.io/pyvesync/latest/devices
 
 ## Debug mode and redact
 
-To set debug, use the `logger` object in the `VeSync` class. Setting the logger level to `DEBUG` will print debug information to the console. The `log_to_file()` method can be used to log to a file.
+There are three independent knobs that control logging output:
 
-The `redact` argument removes any tokens and account identifiers from the output to allow for easier sharing. The `redact` argument has no impact if `debug` is not `True`.
+- **Debug logging** - set the `pyvesync` logger level to `DEBUG`. The read-only `manager.debug` property reflects whether debug logging is currently active.
+- **`redact`** - the `redact` argument (default `True`) replaces tokens, account IDs, and other sensitive values (`token`, `password`, `email`, `accountId`, `authKey`, `uuid`, `cid`, `authorizeCode`) with `##_REDACTED_##` so logs can be shared safely. It only has an effect while debug logging is enabled.
+- **`LibraryLogger.verbose`** - set this class attribute to `True` to additionally print the full request & response body of every API call.
 
-This is an example of debug mode with redact enabled:
+### Debug to the console
+
+Setting the `pyvesync` logger to `DEBUG` sends debug output to wherever your logging is configured (the console by default). `redact` stays on so tokens are not exposed:
 
 ```python
 import logging
 import asyncio
 from pyvesync import VeSync
+from pyvesync.utils.logs import LibraryLogger
 
 logger = logging.getLogger("pyvesync")
 logger.setLevel(logging.DEBUG)
+logging.basicConfig()  # Send log records to the console
 
 
 async def main():
     async with VeSync("user", "password") as manager:
-        manager.debug = True
         manager.redact = True  # True by default
+        LibraryLogger.verbose = True  # Optional - print full request/response content
         await manager.login()
         await manager.update()
 
@@ -429,17 +432,26 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-### Logging to File
+### Debug to a file (recommended for sharing with issues)
 
-To log to a file, use the `log_to_file()` method of the `VeSync` class. Pass the file path as an argument.
+The `log_to_file()` method is the simplest way to capture a full debug log. It sets the `pyvesync` logger to `DEBUG` **and** attaches a file handler in one call, so you do not need to configure logging yourself. Pass `stdout=True` to also print to the console. Keep `redact=True` (the default) so the log is safe to attach to a GitHub issue:
 
 ```python
 import asyncio
 from pyvesync import VeSync
+from pyvesync.utils.logs import LibraryLogger
+
 
 async def main():
-    async with VeSync("user", "password") as manager:
-        manager.log_to_file("pyvesync.log", stdout=True)  # stdout argument prints log to console as well
+    # redact=True is the default - sensitive values are scrubbed from the log
+    async with VeSync("user", "password", redact=True) as manager:
+        # Enables DEBUG logging and writes it to pyvesync.log
+        # stdout=True also prints the log to the console
+        manager.log_to_file("pyvesync.log", stdout=True)
+
+        # Optional - include the full request & response body of every API call
+        LibraryLogger.verbose = True
+
         await manager.login()
         await manager.update()
 
@@ -448,9 +460,9 @@ async def main():
         await outlet.turn_off()
         outlet.display()
 
+
 if __name__ == "__main__":
     asyncio.run(main())
-
 ```
 
 ## Contribution Expectations

@@ -5,7 +5,7 @@ interacting with VeSync devices. It can be run from the command line or
 in VS code. It supports testing devices, timers, and logging to a file.
 
 Usage:
-    python testing_scripts/vs_console_script.py \
+    python testing_scripts/vs_test_script.py \
             --email <your_email> \
             --password <your_password> \
             [--test_devices] \
@@ -37,7 +37,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
 from pyvesync import VeSync
-from pyvesync.const import PurifierModes
+from pyvesync.const import FanModes, PurifierModes
 
 if TYPE_CHECKING:
     from pyvesync.base_devices import VeSyncBaseToggleDevice
@@ -154,11 +154,14 @@ async def vesync_test(  # noqa: PLR0913
         if vs.devices.switches and (test_devices is True or test_dev_type == 'switches'):
             await switches(vs, update=False)
 
+        # Run tests for fans
+        if vs.devices.fans and (test_devices is True or test_dev_type == 'fans'):
+            await fans(vs, update=False)
+
         # Test timers if requested
         if test_timers is True:
             await device_timers(vs.devices, update=False)
 
-    await vs.__aexit__(None, None, None)  # Clean up VeSync instance
     logger.info('Finished testing VeSync devices, results logged to %s', output_path)
 
 
@@ -297,9 +300,12 @@ async def humidifiers(manager: VeSync, update: bool = False) -> None:
 
         if initial_on is True:
             logger.info('Returning to initial state')
-            await dev.set_mist_level(initial_state['mist_level'])
-            await dev.set_mode(initial_state['mode'])
-            await dev.set_humidity(initial_state['target_humidity'])
+            if initial_state['mist_level'] is not None:
+                await dev.set_mist_level(initial_state['mist_level'])
+            if initial_state['mode'] is not None:
+                await dev.set_mode(initial_state['mode'])
+            if initial_state['target_humidity'] is not None:
+                await dev.set_humidity(initial_state['target_humidity'])
         else:
             await dev.turn_off()
         await _random_await()
@@ -319,6 +325,8 @@ async def bulbs(manager: VeSync, update: bool = False) -> None:  # noqa: C901
             continue
 
         initial_state = dev.state.to_dict()
+        # rgb/hsv are excluded from state serialization, capture separately
+        initial_rgb = dev.state.rgb
         logger.info(dev.state.to_json(indent=True))
 
         # Print the current state of the device
@@ -344,17 +352,17 @@ async def bulbs(manager: VeSync, update: bool = False) -> None:  # noqa: C901
         if initial_on is False:
             await dev.turn_off()
             await _random_await()
-            return
+            continue
 
         if initial_state['color_temp'] is not None:
             await dev.set_color_temp(initial_state['color_temp'])
         if initial_state['brightness'] is not None:
             await dev.set_brightness(initial_state['brightness'])
-        if initial_state['rgb'] is not None:
+        if initial_rgb is not None:
             await dev.set_rgb(
-                initial_state['rgb'][0],
-                initial_state['rgb'][1],
-                initial_state['rgb'][2],
+                initial_rgb.red,
+                initial_rgb.green,
+                initial_rgb.blue,
             )
 
         await _random_await()
@@ -375,6 +383,7 @@ async def switches(manager: VeSync, update: bool = False) -> None:  # noqa: C901
 
         logger.debug(dev.state.to_json(indent=True))
         initial_state = dev.state.to_dict()
+        initial_backlight_color = dev.state.backlight_color
 
         if dev.supports_dimmable:
             logger.debug('Setting brightness to 100%')
@@ -419,16 +428,82 @@ async def switches(manager: VeSync, update: bool = False) -> None:  # noqa: C901
             if initial_state['backlight_status'] == 'off':
                 await dev.turn_off_rgb_backlight()
                 await _random_await()
-            else:
+            elif initial_backlight_color is not None:
                 await dev.set_backlight_color(
-                    initial_state['backlight_color'][0],
-                    initial_state['backlight_color'][1],
-                    initial_state['backlight_color'][2],
+                    int(initial_backlight_color.rgb.red),
+                    int(initial_backlight_color.rgb.green),
+                    int(initial_backlight_color.rgb.blue),
                 )
             await _random_await()
 
         if initial_state['brightness'] is not None:
             await dev.set_brightness(initial_state['brightness'])
+            await _random_await()
+
+
+async def fans(manager: VeSync, update: bool = False) -> None:  # noqa: C901, PLR0915
+    """Test tower and pedestal fans in the VeSync device manager."""
+    logger.info('%s Testing fans %s', _SEP, _SEP)
+    dev_types = set()
+    for dev in manager.devices.fans:
+        if dev.device_type in dev_types:
+            continue
+        dev_types.add(dev.device_type)
+
+        initial_on = await common_tests(dev, update)
+        if initial_on is None:
+            continue
+
+        logger.info(dev.state.to_json(indent=True))
+        initial_state = dev.state.to_dict()
+
+        if FanModes.AUTO in dev.modes:
+            logger.info('Setting auto mode')
+            await dev.set_auto_mode()
+            logger.info('mode: %s', dev.state.mode)
+            await _random_await()
+        if FanModes.SLEEP in dev.modes:
+            logger.info('Setting advanced sleep mode')
+            await dev.set_advanced_sleep_mode()
+            logger.info('mode: %s', dev.state.mode)
+            await _random_await()
+        if FanModes.NORMAL in dev.modes:
+            logger.info('Setting normal mode')
+            await dev.set_normal_mode()
+            logger.info('mode: %s', dev.state.mode)
+            await _random_await()
+
+        logger.info('Setting fan speed to 1')
+        await dev.set_fan_speed(1)
+        logger.info('fan_level: %s', dev.state.fan_level)
+        await _random_await()
+
+        if dev.supports_oscillation:
+            logger.info('Turning on oscillation')
+            await dev.turn_on_oscillation()
+            logger.info(
+                'oscillation_set_status: %s', dev.state.oscillation_set_status
+            )
+            await _random_await()
+            logger.info('Turning off oscillation')
+            await dev.turn_off_oscillation()
+            logger.info(
+                'oscillation_set_status: %s', dev.state.oscillation_set_status
+            )
+            await _random_await()
+
+        if initial_on is False:
+            logger.info('Turning off device')
+            await dev.turn_off()
+            await _random_await()
+            continue
+
+        logger.info('Returning to initial state')
+        if initial_state['fan_level'] is not None:
+            await dev.set_fan_speed(initial_state['fan_level'])
+            await _random_await()
+        if initial_state['mode'] is not None:
+            await dev.set_mode(initial_state['mode'])
             await _random_await()
 
 
@@ -448,7 +523,7 @@ async def air_purifiers(manager: VeSync, update: bool = False) -> None:  # noqa:
         logger.info(dev.state.to_json(indent=True))
         initial_state = dev.state.to_dict()
 
-        if initial_state['display_set_state'] is True:
+        if initial_state['display_set_status'] == 'on':
             logger.info('Turning off display')
             await dev.turn_off_display()
             logger.info('display_set_state: %s', dev.state.display_set_status)
@@ -511,8 +586,8 @@ async def air_purifiers(manager: VeSync, update: bool = False) -> None:  # noqa:
             logger.info('Turning off device')
             await dev.turn_off()
             await _random_await()
-            return
-        if initial_state['mode'] is not PurifierModes.MANUAL:
+            continue
+        if initial_state['mode'] != PurifierModes.MANUAL:
             await dev.set_mode(initial_state['mode'])
             await _random_await()
 

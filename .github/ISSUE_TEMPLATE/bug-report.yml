@@ -7,7 +7,7 @@ body:
     attributes:
       value: |
         Please include the diagnostic information below so the problem can be
-        reproduced. Enable `DEBUG` logging with `redact=True` and share the
+        reproduced. Enable `DEBUG` logging with `redact=True` (enabled by default) and share the
         redacted log — see the
         [contributing guide](https://webdjoe.github.io/pyvesync/latest/development/contributing).
   - type: textarea
@@ -31,11 +31,12 @@ body:
       placeholder: "e.g. 3.12"
     validations:
       required: true
-  - type: input
-    id: model
+  - type: textarea
+    id: device_details
     attributes:
-      label: Device model and firmware version
-      placeholder: "e.g. Core300S, firmware 2.0.35"
+      label: Device details
+      description: Output of `device.to_json(state=True, indent=True)`
+      render: json
     validations:
       required: true
   - type: textarea
@@ -57,6 +58,6 @@ body:
   - type: textarea
     id: last_response
     attributes:
-      label: device.last_response output
-      description: The `last_response` (ResponseInfo) for the failing call, if applicable.
-      render: text
+      label: Last response
+      description: The `device.last_response.to_json(indent=True)` output for the failing call, if applicable.
+      render: json

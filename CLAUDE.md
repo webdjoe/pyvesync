@@ -34,9 +34,9 @@ pytest src/tests/test_outlets.py
 tox
 
 # Individual tox environments
-tox -e testenv    # pytest
-tox -e pylint     # pylint
-tox -e lint       # flake8 + pydocstrings
+tox -e 3.11       # pytest (also 3.12, 3.13)
+tox -e lint       # pylint
+tox -e flake8     # flake8 + flake8-docstrings
 tox -e mypy       # type checking
 tox -e ruff       # ruff linting
 
@@ -69,6 +69,7 @@ pytest --write_api --overwrite  # overwrite existing fixtures
 ### Key modules
 
 - `vesync.py` - Main `VeSync` manager class (async context manager, login, device management)
+- `auth.py` - `VeSyncAuth` (login flow, token management, optional token-file persistence)
 - `models/` - mashumaro dataclasses for API request/response serialization
 - `utils/device_mixins.py` - `BypassV1Mixin` and `BypassV2Mixin` for API communication patterns
 - `utils/errors.py` - Custom exceptions (`VeSyncError`, `VeSyncTokenError`, etc.)
@@ -85,7 +86,7 @@ pytest --write_api --overwrite  # overwrite existing fixtures
 
 Tests use pytest with parametrized fixtures. Two base test classes in `src/tests/base_test_cases.py`:
 
-- `TestBase` - Mocks `call_api()`, uses YAML API fixtures from `src/tests/api/`
+- `TestBase` - Mocks `async_call_api()`, uses YAML API fixtures from `src/tests/api/`
 - `TestApiFunc` - Mocks `ClientSession` directly
 
 Test classes define `device`, `base_methods`, and `device_methods` class attributes that drive parametrized test generation via `conftest.py`.
