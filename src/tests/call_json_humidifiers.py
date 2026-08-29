@@ -352,6 +352,7 @@ HUMIDIFIER_DETAILS: dict[str, Any] = {
         "warmLevel": HumidifierDefaults.warm_mist_level,
     },
 }
+HUMIDIFIER_DETAILS["LUH-O451S-WUSR"] = deepcopy(HUMIDIFIER_DETAILS["LUH-O451S-WUS"])
 """This dictionary contains the details response for each humidifier.
 
 It stores the innermost result that is passed to the DETAILS_RESPONSE variable where
@@ -365,6 +366,7 @@ DETAILS_RESPONSES = {
     "LUH-A602S-WUS": build_bypass_v2_response(inner_result=HUMIDIFIER_DETAILS["LUH-A602S-WUS"]),
     "LUH-A603S-WUS": build_bypass_v2_response(inner_result=HUMIDIFIER_DETAILS["LUH-A603S-WUS"]),
     "LUH-O451S-WUS": build_bypass_v2_response(inner_result=HUMIDIFIER_DETAILS["LUH-O451S-WUS"]),
+    "LUH-O451S-WUSR": build_bypass_v2_response(inner_result=HUMIDIFIER_DETAILS["LUH-O451S-WUSR"]),
     "LUH-O451S-WEU": build_bypass_v2_response(inner_result=HUMIDIFIER_DETAILS["LUH-O451S-WEU"]),
     "LUH-M101S-WEUR": build_bypass_v2_response(inner_result=HUMIDIFIER_DETAILS["LUH-M101S-WEUR"]),
     "LUH-M101S-WUS": build_bypass_v2_response(inner_result=HUMIDIFIER_DETAILS["LUH-M101-WUS"]),
@@ -390,6 +392,7 @@ METHOD_RESPONSES = {
     "LUH-A602S-WUS": deepcopy(FunctionResponsesV2),
     "LUH-A603S-WUS": deepcopy(FunctionResponsesV2),
     "LUH-O451S-WUS": deepcopy(FunctionResponsesV2),
+    "LUH-O451S-WUSR": deepcopy(FunctionResponsesV2),
     "LUH-O451S-WEU": deepcopy(FunctionResponsesV2),
     "LUH-M101S-WEUR": deepcopy(FunctionResponsesV2),
     "LUH-M101S-WUS": deepcopy(FunctionResponsesV2),

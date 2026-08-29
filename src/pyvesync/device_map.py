@@ -724,7 +724,29 @@ humidifier_modules = [
     ),
     HumidifierMap(
         class_name='VeSyncHumid200300S',
-        dev_types=['LUH-O451S-WUS', 'LUH-O451S-WUSR', 'LUH-O601S-WUS', 'LUH-O601S-KUS'],
+        # configModule WFON_AHM_LUH-A451S-WUS_US only accepts a target humidity
+        # range of 40-80 (the cloud API rejects 30 with "target humidity is out
+        # of range") and does not support the HUMIDITY mode (rejected with
+        # "Mode value invaild!"), unlike the WUSR/601S variants below -- see
+        # https://github.com/webdjoe/pyvesync/issues/295 and #296.
+        dev_types=['LUH-O451S-WUS'],
+        features=[HumidifierFeatures.WARM_MIST, HumidifierFeatures.AUTO_STOP],
+        mist_modes={
+            HumidifierModes.AUTO: 'auto',
+            HumidifierModes.SLEEP: 'sleep',
+            HumidifierModes.MANUAL: 'manual',
+        },
+        mist_levels=list(range(1, 10)),
+        warm_mist_levels=list(range(4)),
+        device_alias='OasisMist 450S',
+        model_display='OasisMist 4.5L Series',
+        model_name='OasisMist 4.5L',
+        setup_entry='LUH-O451S-WUS',
+        target_minmax=(40, 80),
+    ),
+    HumidifierMap(
+        class_name='VeSyncHumid200300S',
+        dev_types=['LUH-O451S-WUSR', 'LUH-O601S-WUS', 'LUH-O601S-KUS'],
         features=[HumidifierFeatures.WARM_MIST, HumidifierFeatures.AUTO_STOP],
         mist_modes={
             HumidifierModes.AUTO: 'auto',
@@ -737,7 +759,7 @@ humidifier_modules = [
         device_alias='OasisMist 450S',
         model_display='OasisMist 4.5L Series',
         model_name='OasisMist 4.5L',
-        setup_entry='LUH-O451S-WUS',
+        setup_entry='LUH-O451S-WUSR',
     ),
     HumidifierMap(
         class_name='VeSyncHumid1000S',
