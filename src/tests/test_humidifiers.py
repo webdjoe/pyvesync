@@ -33,7 +33,7 @@ import pyvesync.const as const
 from pyvesync.base_devices.humidifier_base import VeSyncHumidifier
 from base_test_cases import TestBase
 from utils import assert_test, parse_args
-from defaults import TestDefaults
+from defaults import TestDefaults, build_bypass_v2_response
 import call_json_humidifiers
 
 
@@ -121,6 +121,14 @@ class TestHumidifiers(TestBase):
         "LUH-A602S-WUS": [["set_warm_level", {"warm_level": 3}]],
         "LUH-A603S-WUS": [["set_warm_level", {"warm_level": 3}]],
         "LEH-S601S": [["turn_off_drying_mode"]],
+        "LEH-B381S": [
+            ["turn_on_nightlight"],
+            ["turn_off_nightlight"],
+            ["set_nightlight_brightness", {"brightness": 50}],
+        ],
+        "LUH-O451S-WEU": [
+            ["set_rgb_nightlight", {"power": True, "brightness": 100, "red": 252, "green": 50, "blue": 0}],
+        ],
     }
 
     def test_details(self, setup_entry, method):
@@ -282,3 +290,126 @@ class TestHumidifiers(TestBase):
         assert assert_test(
             method_call, all_kwargs, setup_entry, self.write_api, self.overwrite
         )
+
+    RGB_DEVICE = "LUH-O451S-WEU"
+
+    def _rgb_success(self):
+        """Return a successful BypassV2 envelope for set calls."""
+        return (build_bypass_v2_response(inner_result={}), 200)
+
+    def test_set_rgb_preserves_zero_channel(self):
+        """A stored 0 channel must not be replaced by 255 on a partial update."""
+        self.mock_api.return_value = self._rgb_success()
+        obj = self.get_device("humidifiers", self.RGB_DEVICE)
+        obj.state.rgb_nightlight_red = 0
+        obj.state.rgb_nightlight_green = 255
+        obj.state.rgb_nightlight_blue = 0
+        result = self.run_in_loop(obj.set_rgb_nightlight, brightness=50)
+        assert result is True
+        assert obj.state.rgb_nightlight_red == 0
+        assert obj.state.rgb_nightlight_blue == 0
+
+    def test_set_rgb_rejects_out_of_range_rgb(self):
+        """Out-of-range RGB is rejected, not silently clamped."""
+        self.mock_api.return_value = self._rgb_success()
+        obj = self.get_device("humidifiers", self.RGB_DEVICE)
+        result = self.run_in_loop(obj.set_rgb_nightlight, red=999, green=0, blue=0)
+        assert result is False
+
+    def test_set_rgb_off_preserves_color_state(self):
+        """Turning off must not clobber a stored 0-channel color or brightness."""
+        self.mock_api.return_value = self._rgb_success()
+        obj = self.get_device("humidifiers", self.RGB_DEVICE)
+        obj.state.rgb_nightlight_red = 0  # buggy code would coalesce 0 -> 255
+        obj.state.rgb_nightlight_green = 255
+        obj.state.rgb_nightlight_blue = 0
+        obj.state.rgb_nightlight_brightness = 80
+        result = self.run_in_loop(obj.set_rgb_nightlight, power=False)
+        assert result is True
+        assert obj.state.rgb_nightlight_status == "off"
+        assert obj.state.rgb_nightlight_red == 0  # preserved, not 255
+        assert obj.state.rgb_nightlight_blue == 0
+        assert obj.state.rgb_nightlight_brightness == 80
+
+    def test_set_rgb_on_sets_status(self):
+        """power=True records the nightlight status as 'on'."""
+        self.mock_api.return_value = self._rgb_success()
+        obj = self.get_device("humidifiers", self.RGB_DEVICE)
+        obj.state.rgb_nightlight_status = "off"
+        result = self.run_in_loop(
+            obj.set_rgb_nightlight, power=True, brightness=60, red=10, green=20, blue=30
+        )
+        assert result is True
+        assert obj.state.rgb_nightlight_status == "on"
+
+    def test_set_rgb_sets_connection_online(self):
+        """A successful set marks the device online (via process_dev_response)."""
+        self.mock_api.return_value = self._rgb_success()
+        obj = self.get_device("humidifiers", self.RGB_DEVICE)
+        obj.state.connection_status = const.ConnectionStatus.OFFLINE
+        result = self.run_in_loop(obj.set_rgb_nightlight, brightness=60, red=10, green=20, blue=30)
+        assert result is True
+        assert obj.state.connection_status == const.ConnectionStatus.ONLINE
+
+    def test_rgb_state_normalizes_dimmed_read(self):
+        """A dimmed API color is stored as a full-brightness base (max channel 255)."""
+        from pyvesync.models.humidifier_models import RGBNightLight
+
+        obj = self.get_device("humidifiers", self.RGB_DEVICE)
+        dimmed = RGBNightLight(
+            action="on", colorMode="color", brightness=40, red=102, green=20, blue=0
+        )
+        obj._set_rgb_nightlight_state(dimmed)
+        assert obj.state.rgb_nightlight_status == "on"
+        assert max(
+            obj.state.rgb_nightlight_red,
+            obj.state.rgb_nightlight_green,
+            obj.state.rgb_nightlight_blue,
+        ) == 255
+
+    def test_rgb_state_black_stays_black_on_read(self):
+        """A dimmed all-zero color must not be stored as white."""
+        from pyvesync.models.humidifier_models import RGBNightLight
+
+        obj = self.get_device("humidifiers", self.RGB_DEVICE)
+        black = RGBNightLight(
+            action="on", colorMode="color", brightness=40, red=0, green=0, blue=0
+        )
+        obj._set_rgb_nightlight_state(black)
+        assert obj.state.rgb_nightlight_red == 0
+        assert obj.state.rgb_nightlight_green == 0
+        assert obj.state.rgb_nightlight_blue == 0
+
+    def test_oasismist_450s_wus_rejects_humidity_below_40(self):
+        """configModule WFON_AHM_LUH-A451S-WUS_US rejects a target humidity of
+        30 with "target humidity is out of range" (pyvesync#296) even though
+        the client-side range historically allowed it. The correct range for
+        this specific variant is 40-80, not the library-wide default 30-80.
+        """
+        obj = self.get_device("humidifiers", "LUH-O451S-WUS")
+        assert obj.target_minmax == (40, 80)
+        result = self.run_in_loop(obj.set_humidity, 30)
+        assert result is False
+
+    def test_oasismist_450s_wusr_still_allows_humidity_30(self):
+        """The WUSR variant (different configModule) is not affected by the
+        WUS-only restriction from #296 and keeps the library-wide 30-80
+        range."""
+        self.mock_api.return_value = (build_bypass_v2_response(inner_result={}), 200)
+        obj = self.get_device("humidifiers", "LUH-O451S-WUSR")
+        assert obj.target_minmax == (30, 80)
+        result = self.run_in_loop(obj.set_humidity, 30)
+        assert result is True
+
+    def test_oasismist_450s_wus_has_no_humidity_mode(self):
+        """configModule WFON_AHM_LUH-A451S-WUS_US rejects the HUMIDITY mist
+        mode with "Mode value invaild!" (pyvesync#295) -- it must not be
+        offered for this variant."""
+        obj = self.get_device("humidifiers", "LUH-O451S-WUS")
+        assert const.HumidifierModes.HUMIDITY not in obj.mist_modes
+
+    def test_oasismist_450s_wusr_still_has_humidity_mode(self):
+        """The WUSR variant is unaffected by the WUS-only mode restriction
+        from #295 and keeps the HUMIDITY mist mode."""
+        obj = self.get_device("humidifiers", "LUH-O451S-WUSR")
+        assert const.HumidifierModes.HUMIDITY in obj.mist_modes

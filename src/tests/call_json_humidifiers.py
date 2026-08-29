@@ -70,6 +70,13 @@ class HumidifierDefaults:
     nightlight_status = DeviceStatus.OFF
     nightlight_brightness = 0
     nightlight_color_temperature = 4000
+    # RGB Nightlight Defaults
+    rgb_nightlight_status = "on"
+    rgb_nightlight_color_mode = "color"
+    rgb_nightlight_brightness = 100
+    rgb_nightlight_red = 252
+    rgb_nightlight_green = 50
+    rgb_nightlight_blue = 0
     # Drying Defaults
     drying_level = 1
     drying_state = DryingModes.DONE
@@ -190,6 +197,16 @@ HUMIDIFIER_DETAILS: dict[str, Any] = {
         "warm_enabled": HumidifierDefaults.warm_mist_enabled,
         "warm_level": HumidifierDefaults.warm_mist_level,
         "automatic_stop_reach_target": HumidifierDefaults.auto_stop_reached,
+        "rgbNightLight": {
+            "action": HumidifierDefaults.rgb_nightlight_status,
+            "colorMode": HumidifierDefaults.rgb_nightlight_color_mode,
+            "brightness": HumidifierDefaults.rgb_nightlight_brightness,
+            "red": HumidifierDefaults.rgb_nightlight_red,
+            "green": HumidifierDefaults.rgb_nightlight_green,
+            "blue": HumidifierDefaults.rgb_nightlight_blue,
+            "speed": 0,
+            "colorSliderLocation": 0,
+        },
         "configuration": {
             "auto_target_humidity": HumidifierDefaults.target_humidity,
             "display": HumidifierDefaults.display_config,
@@ -335,6 +352,7 @@ HUMIDIFIER_DETAILS: dict[str, Any] = {
         "warmLevel": HumidifierDefaults.warm_mist_level,
     },
 }
+HUMIDIFIER_DETAILS["LUH-O451S-WUSR"] = deepcopy(HUMIDIFIER_DETAILS["LUH-O451S-WUS"])
 """This dictionary contains the details response for each humidifier.
 
 It stores the innermost result that is passed to the DETAILS_RESPONSE variable where
@@ -348,6 +366,7 @@ DETAILS_RESPONSES = {
     "LUH-A602S-WUS": build_bypass_v2_response(inner_result=HUMIDIFIER_DETAILS["LUH-A602S-WUS"]),
     "LUH-A603S-WUS": build_bypass_v2_response(inner_result=HUMIDIFIER_DETAILS["LUH-A603S-WUS"]),
     "LUH-O451S-WUS": build_bypass_v2_response(inner_result=HUMIDIFIER_DETAILS["LUH-O451S-WUS"]),
+    "LUH-O451S-WUSR": build_bypass_v2_response(inner_result=HUMIDIFIER_DETAILS["LUH-O451S-WUSR"]),
     "LUH-O451S-WEU": build_bypass_v2_response(inner_result=HUMIDIFIER_DETAILS["LUH-O451S-WEU"]),
     "LUH-M101S-WEUR": build_bypass_v2_response(inner_result=HUMIDIFIER_DETAILS["LUH-M101S-WEUR"]),
     "LUH-M101S-WUS": build_bypass_v2_response(inner_result=HUMIDIFIER_DETAILS["LUH-M101-WUS"]),
@@ -373,6 +392,7 @@ METHOD_RESPONSES = {
     "LUH-A602S-WUS": deepcopy(FunctionResponsesV2),
     "LUH-A603S-WUS": deepcopy(FunctionResponsesV2),
     "LUH-O451S-WUS": deepcopy(FunctionResponsesV2),
+    "LUH-O451S-WUSR": deepcopy(FunctionResponsesV2),
     "LUH-O451S-WEU": deepcopy(FunctionResponsesV2),
     "LUH-M101S-WEUR": deepcopy(FunctionResponsesV2),
     "LUH-M101S-WUS": deepcopy(FunctionResponsesV2),

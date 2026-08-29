@@ -416,7 +416,7 @@ outlet_modules = [
     OutletMap(
         dev_types=['wifi-switch-1.3'],
         class_name='VeSyncOutlet7A',
-        features=[OutletFeatures.ENERGY_MONITOR],
+        features=[OutletFeatures.ENERGY_MONITOR, OutletFeatures.ENERGY_HISTORY],
         model_name='WiFi Outlet US/CA',
         model_display='ESW01-USA Series',
         setup_entry='wifi-switch-1.3',
@@ -432,7 +432,7 @@ outlet_modules = [
     OutletMap(
         dev_types=['ESW01-EU', 'ESW01-USA', 'ESW03-USA', 'ESW03-EU'],
         class_name='VeSyncOutlet10A',
-        features=[OutletFeatures.ENERGY_MONITOR],
+        features=[OutletFeatures.ENERGY_MONITOR, OutletFeatures.ENERGY_HISTORY],
         model_name='ESW03 10A WiFi Outlet',
         model_display='ESW01/03 USA/EU',
         setup_entry='ESW03',
@@ -440,7 +440,11 @@ outlet_modules = [
     OutletMap(
         dev_types=['ESW15-USA'],
         class_name='VeSyncOutlet15A',
-        features=[OutletFeatures.ENERGY_MONITOR, OutletFeatures.NIGHTLIGHT],
+        features=[
+            OutletFeatures.ENERGY_MONITOR,
+            OutletFeatures.ENERGY_HISTORY,
+            OutletFeatures.NIGHTLIGHT,
+        ],
         nightlight_modes=[NightlightModes.ON, NightlightModes.OFF, NightlightModes.AUTO],
         model_name='15A WiFi Outlet US/CA',
         model_display='ESW15-USA Series',
@@ -449,7 +453,7 @@ outlet_modules = [
     OutletMap(
         dev_types=['ESO15-TB'],
         class_name='VeSyncOutdoorPlug',
-        features=[OutletFeatures.ENERGY_MONITOR],
+        features=[OutletFeatures.ENERGY_MONITOR, OutletFeatures.ENERGY_HISTORY],
         model_name='Outdoor Plug',
         model_display='ESO15-TB Series',
         setup_entry='ESO15-TB',
@@ -459,7 +463,11 @@ outlet_modules = [
             'WHOGPLUG',
         ],
         class_name='VeSyncOutletWHOGPlug',
-        features=[OutletFeatures.ONOFF, OutletFeatures.ENERGY_MONITOR],
+        features=[
+            OutletFeatures.ONOFF,
+            OutletFeatures.ENERGY_MONITOR,
+            OutletFeatures.ENERGY_HISTORY,
+        ],
         model_name='Smart Plug',
         model_display='Smart Plug Series',
         setup_entry='WHOGPLUG',
@@ -478,11 +486,24 @@ outlet_modules = [
             'HWPLUG16',
         ],
         class_name='VeSyncBSDOGPlug',
-        features=[OutletFeatures.ONOFF, OutletFeatures.ENERGY_MONITOR],
+        features=[
+            OutletFeatures.ONOFF,
+            OutletFeatures.ENERGY_MONITOR,
+            OutletFeatures.ENERGY_HISTORY,
+        ],
         model_name='Smart Plug',
         model_display='Smart Plug Series',
         setup_entry='BSDOG01',
         device_alias='Smart Plug Series',
+    ),
+    OutletMap(
+        dev_types=['WYLDR16A1081'],
+        class_name='VeSyncBSDOGPlug',
+        features=[OutletFeatures.ONOFF, OutletFeatures.ENERGY_MONITOR],
+        model_name='Smart Plug',
+        model_display='WYLDR Smart Plug',
+        setup_entry='WYLDR16A1081',
+        device_alias='WYLDR Smart Plug',
     ),
 ]
 """List of ['OutletMap'][pyvesync.device_map.OutletMap] configuration
@@ -684,7 +705,11 @@ humidifier_modules = [
     HumidifierMap(
         class_name='VeSyncHumid200300S',
         dev_types=['LUH-O451S-WEU'],
-        features=[HumidifierFeatures.WARM_MIST, HumidifierFeatures.AUTO_STOP],
+        features=[
+            HumidifierFeatures.WARM_MIST,
+            HumidifierFeatures.AUTO_STOP,
+            HumidifierFeatures.RGB_NIGHTLIGHT,
+        ],
         mist_modes={
             HumidifierModes.AUTO: 'auto',
             HumidifierModes.SLEEP: 'sleep',
@@ -699,7 +724,29 @@ humidifier_modules = [
     ),
     HumidifierMap(
         class_name='VeSyncHumid200300S',
-        dev_types=['LUH-O451S-WUS', 'LUH-O451S-WUSR', 'LUH-O601S-WUS', 'LUH-O601S-KUS'],
+        # configModule WFON_AHM_LUH-A451S-WUS_US only accepts a target humidity
+        # range of 40-80 (the cloud API rejects 30 with "target humidity is out
+        # of range") and does not support the HUMIDITY mode (rejected with
+        # "Mode value invaild!"), unlike the WUSR/601S variants below -- see
+        # https://github.com/webdjoe/pyvesync/issues/295 and #296.
+        dev_types=['LUH-O451S-WUS'],
+        features=[HumidifierFeatures.WARM_MIST, HumidifierFeatures.AUTO_STOP],
+        mist_modes={
+            HumidifierModes.AUTO: 'auto',
+            HumidifierModes.SLEEP: 'sleep',
+            HumidifierModes.MANUAL: 'manual',
+        },
+        mist_levels=list(range(1, 10)),
+        warm_mist_levels=list(range(4)),
+        device_alias='OasisMist 450S',
+        model_display='OasisMist 4.5L Series',
+        model_name='OasisMist 4.5L',
+        setup_entry='LUH-O451S-WUS',
+        target_minmax=(40, 80),
+    ),
+    HumidifierMap(
+        class_name='VeSyncHumid200300S',
+        dev_types=['LUH-O451S-WUSR', 'LUH-O601S-WUS', 'LUH-O601S-KUS'],
         features=[HumidifierFeatures.WARM_MIST, HumidifierFeatures.AUTO_STOP],
         mist_modes={
             HumidifierModes.AUTO: 'auto',
@@ -712,7 +759,7 @@ humidifier_modules = [
         device_alias='OasisMist 450S',
         model_display='OasisMist 4.5L Series',
         model_name='OasisMist 4.5L',
-        setup_entry='LUH-O451S-WUS',
+        setup_entry='LUH-O451S-WUSR',
     ),
     HumidifierMap(
         class_name='VeSyncHumid1000S',

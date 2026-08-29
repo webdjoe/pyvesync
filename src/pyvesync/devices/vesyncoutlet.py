@@ -819,6 +819,9 @@ class VeSyncOutletWHOGPlug(BypassV2Mixin, VeSyncOutlet):
 
     async def _get_energy_history(self, history_interval: str | EnergyIntervals) -> None:
         """Get energy history for BSDGO1 outlet."""
+        if not self.supports_energy_history:
+            logger.debug('Device does not support energy history.')
+            return
         if history_interval not in self._energy_intervals:
             logger.error('Invalid energy history interval - %s', history_interval)
             return
@@ -850,6 +853,9 @@ class VeSyncOutletWHOGPlug(BypassV2Mixin, VeSyncOutlet):
 
     async def get_yearly_energy(self) -> None:
         """Get yearly energy for WHOG outlet."""
+        if not self.supports_energy_history:
+            logger.debug('Device does not support energy history.')
+            return
         r_dict = await self._bypass_v1_api_helper(
             RequestWHOGYearlyEnergy, method='getELECConsumePerMonthLastYear'
         )
@@ -893,6 +899,10 @@ class VeSyncOutletWHOGPlug(BypassV2Mixin, VeSyncOutlet):
 
 class VeSyncBSDOGPlug(VeSyncOutletWHOGPlug):
     """VeSync BSDOG01/WYZYOG smart plugs.
+
+    Also used by the WYLDR16A1081 smart plug, which shares the same API but
+    does not support energy history retrieval (its device map entry omits
+    the `OutletFeatures.ENERGY_HISTORY` feature).
 
     Args:
         details (ResponseDeviceDetailsModel): The device details.

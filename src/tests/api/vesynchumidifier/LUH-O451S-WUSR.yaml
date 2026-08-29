@@ -6,15 +6,15 @@ set_auto_mode:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    cid: LEH-B381S-CID
+    cid: LUH-O451S-WUSR-CID
     configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceId: LEH-B381S-CID
+    deviceId: LUH-O451S-WUSR-CID
     method: bypassV2
     payload:
       data:
-        workMode: autoPro
+        mode: auto
       method: setHumidityMode
       source: APP
     phoneBrand: pyvesync
@@ -33,15 +33,15 @@ set_humidity:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    cid: LEH-B381S-CID
+    cid: LUH-O451S-WUSR-CID
     configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceId: LEH-B381S-CID
+    deviceId: LUH-O451S-WUSR-CID
     method: bypassV2
     payload:
       data:
-        targetHumidity: 50
+        target_humidity: 50
       method: setTargetHumidity
       source: APP
     phoneBrand: pyvesync
@@ -60,15 +60,15 @@ set_manual_mode:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    cid: LEH-B381S-CID
+    cid: LUH-O451S-WUSR-CID
     configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceId: LEH-B381S-CID
+    deviceId: LUH-O451S-WUSR-CID
     method: bypassV2
     payload:
       data:
-        workMode: manual
+        mode: manual
       method: setHumidityMode
       source: APP
     phoneBrand: pyvesync
@@ -87,47 +87,18 @@ set_mist_level:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    cid: LEH-B381S-CID
+    cid: LUH-O451S-WUSR-CID
     configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceId: LEH-B381S-CID
+    deviceId: LUH-O451S-WUSR-CID
     method: bypassV2
     payload:
       data:
-        levelIdx: 0
-        levelType: mist
-        virtualLevel: 2
+        id: 0
+        level: 2
+        type: mist
       method: setVirtualLevel
-      source: APP
-    phoneBrand: pyvesync
-    phoneOS: Android
-    timeZone: America/New_York
-    token: sample_tk
-    traceId: TRACE_ID
-    userCountryCode: US
-  method: post
-  url: /cloud/v2/deviceManaged/bypassV2
-set_nightlight_brightness:
-  headers:
-    Content-Type: application/json; charset=UTF-8
-    User-Agent: okhttp/3.12.1
-  json_object:
-    acceptLanguage: en
-    accountID: sample_id
-    appVersion: 5.6.60
-    cid: LEH-B381S-CID
-    configModel: ConfigModule
-    configModule: ConfigModule
-    debugMode: false
-    deviceId: LEH-B381S-CID
-    method: bypassV2
-    payload:
-      data:
-        brightness: 50
-        colorTemperature: 3500
-        nightLightSwitch: 1
-      method: setLightStatus
       source: APP
     phoneBrand: pyvesync
     phoneOS: Android
@@ -145,16 +116,16 @@ turn_off:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    cid: LEH-B381S-CID
+    cid: LUH-O451S-WUSR-CID
     configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceId: LEH-B381S-CID
+    deviceId: LUH-O451S-WUSR-CID
     method: bypassV2
     payload:
       data:
-        powerSwitch: 0
-        switchIdx: 0
+        enabled: false
+        id: 0
       method: setSwitch
       source: APP
     phoneBrand: pyvesync
@@ -173,16 +144,16 @@ turn_off_automatic_stop:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    cid: LEH-B381S-CID
+    cid: LUH-O451S-WUSR-CID
     configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceId: LEH-B381S-CID
+    deviceId: LUH-O451S-WUSR-CID
     method: bypassV2
     payload:
       data:
-        autoStopSwitch: 0
-      method: setAutoStopSwitch
+        enabled: false
+      method: setAutomaticStop
       source: APP
     phoneBrand: pyvesync
     phoneOS: Android
@@ -200,45 +171,16 @@ turn_off_display:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    cid: LEH-B381S-CID
+    cid: LUH-O451S-WUSR-CID
     configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceId: LEH-B381S-CID
+    deviceId: LUH-O451S-WUSR-CID
     method: bypassV2
     payload:
       data:
-        screenSwitch: 0
+        state: false
       method: setDisplay
-      source: APP
-    phoneBrand: pyvesync
-    phoneOS: Android
-    timeZone: America/New_York
-    token: sample_tk
-    traceId: TRACE_ID
-    userCountryCode: US
-  method: post
-  url: /cloud/v2/deviceManaged/bypassV2
-turn_off_nightlight:
-  headers:
-    Content-Type: application/json; charset=UTF-8
-    User-Agent: okhttp/3.12.1
-  json_object:
-    acceptLanguage: en
-    accountID: sample_id
-    appVersion: 5.6.60
-    cid: LEH-B381S-CID
-    configModel: ConfigModule
-    configModule: ConfigModule
-    debugMode: false
-    deviceId: LEH-B381S-CID
-    method: bypassV2
-    payload:
-      data:
-        brightness: 100
-        colorTemperature: 3500
-        nightLightSwitch: 0
-      method: setLightStatus
       source: APP
     phoneBrand: pyvesync
     phoneOS: Android
@@ -256,16 +198,16 @@ turn_on:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    cid: LEH-B381S-CID
+    cid: LUH-O451S-WUSR-CID
     configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceId: LEH-B381S-CID
+    deviceId: LUH-O451S-WUSR-CID
     method: bypassV2
     payload:
       data:
-        powerSwitch: 1
-        switchIdx: 0
+        enabled: true
+        id: 0
       method: setSwitch
       source: APP
     phoneBrand: pyvesync
@@ -284,16 +226,16 @@ turn_on_automatic_stop:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    cid: LEH-B381S-CID
+    cid: LUH-O451S-WUSR-CID
     configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceId: LEH-B381S-CID
+    deviceId: LUH-O451S-WUSR-CID
     method: bypassV2
     payload:
       data:
-        autoStopSwitch: 1
-      method: setAutoStopSwitch
+        enabled: true
+      method: setAutomaticStop
       source: APP
     phoneBrand: pyvesync
     phoneOS: Android
@@ -311,45 +253,16 @@ turn_on_display:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    cid: LEH-B381S-CID
+    cid: LUH-O451S-WUSR-CID
     configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceId: LEH-B381S-CID
+    deviceId: LUH-O451S-WUSR-CID
     method: bypassV2
     payload:
       data:
-        screenSwitch: 1
+        state: true
       method: setDisplay
-      source: APP
-    phoneBrand: pyvesync
-    phoneOS: Android
-    timeZone: America/New_York
-    token: sample_tk
-    traceId: TRACE_ID
-    userCountryCode: US
-  method: post
-  url: /cloud/v2/deviceManaged/bypassV2
-turn_on_nightlight:
-  headers:
-    Content-Type: application/json; charset=UTF-8
-    User-Agent: okhttp/3.12.1
-  json_object:
-    acceptLanguage: en
-    accountID: sample_id
-    appVersion: 5.6.60
-    cid: LEH-B381S-CID
-    configModel: ConfigModule
-    configModule: ConfigModule
-    debugMode: false
-    deviceId: LEH-B381S-CID
-    method: bypassV2
-    payload:
-      data:
-        brightness: 100
-        colorTemperature: 3500
-        nightLightSwitch: 1
-      method: setLightStatus
       source: APP
     phoneBrand: pyvesync
     phoneOS: Android
@@ -367,11 +280,11 @@ update:
     acceptLanguage: en
     accountID: sample_id
     appVersion: 5.6.60
-    cid: LEH-B381S-CID
+    cid: LUH-O451S-WUSR-CID
     configModel: ConfigModule
     configModule: ConfigModule
     debugMode: false
-    deviceId: LEH-B381S-CID
+    deviceId: LUH-O451S-WUSR-CID
     method: bypassV2
     payload:
       data: {}

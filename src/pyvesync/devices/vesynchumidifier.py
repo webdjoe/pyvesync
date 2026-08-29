@@ -3,19 +3,27 @@
 from __future__ import annotations
 
 import logging
+import time
 from typing import TYPE_CHECKING
 
 import orjson
 from typing_extensions import deprecated
 
 from pyvesync.base_devices.humidifier_base import BreathingLampState, VeSyncHumidifier
-from pyvesync.const import ConnectionStatus, DeviceStatus, DryingModes
+from pyvesync.const import (
+    RGB_FULL_BRIGHTNESS,
+    RGB_STALE_DATA_TIMEOUT,
+    ConnectionStatus,
+    DeviceStatus,
+    DryingModes,
+)
 from pyvesync.models import humidifier_models as models
 from pyvesync.models.bypass_models import (
     ResultV2GetTimer,
     ResultV2GetTimerV2,
     ResultV2SetTimer,
 )
+from pyvesync.utils.colors import RGBNightlightColor
 from pyvesync.utils.device_mixins import BypassV2Mixin, process_bypassv2_result
 from pyvesync.utils.helpers import Helpers, Timer, Validators
 
@@ -97,11 +105,47 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
         if self.supports_warm_mist and resp_model.warm_level is not None:
             self.state.warm_mist_level = resp_model.warm_level
             self.state.warm_mist_enabled = resp_model.warm_enabled
+        if self.supports_rgb_nightlight and resp_model.rgbNightLight is not None:
+            self._set_rgb_nightlight_state(resp_model.rgbNightLight)
+
         config = resp_model.configuration
         if config is not None:
             self.state.auto_target_humidity = config.auto_target_humidity
             self.state.automatic_stop_config = config.automatic_stop
             self.state.display_set_status = DeviceStatus.from_bool(config.display)
+
+    def _set_rgb_nightlight_state(self, rgb: models.RGBNightLight) -> None:
+        # Skip updating RGB nightlight state if we recently set it. The
+        # VeSync API returns stale data for several minutes after setting
+        # values, so we ignore updates briefly after a set command.
+        if (
+            self.state.rgb_nightlight_set_time is not None
+            and (time.time() - self.state.rgb_nightlight_set_time)
+            < RGB_STALE_DATA_TIMEOUT
+        ):
+            return
+
+        self.state.rgb_nightlight_status = rgb.action
+        self.state.rgb_nightlight_brightness = rgb.brightness
+        self.state.rgb_nightlight_color_mode = rgb.colorMode
+        # The API uses brightness-adjusted RGB values. Store the base color
+        # at full brightness so that changing only brightness doesn't drift.
+        brightness_adjusted = (
+            rgb.brightness is not None and 0 < rgb.brightness < RGB_FULL_BRIGHTNESS
+        )
+        if brightness_adjusted:
+            base_r, base_g, base_b = RGBNightlightColor.normalize_to_full_brightness(
+                rgb.red, rgb.green, rgb.blue
+            )
+            self.state.rgb_nightlight_red = base_r
+            self.state.rgb_nightlight_green = base_g
+            self.state.rgb_nightlight_blue = base_b
+        else:
+            self.state.rgb_nightlight_red = rgb.red
+            self.state.rgb_nightlight_green = rgb.green
+            self.state.rgb_nightlight_blue = rgb.blue
+        # Clear the set time since we've now received valid data from API
+        self.state.rgb_nightlight_set_time = None
 
     async def get_details(self) -> None:
         r_dict = await self.call_bypassv2_api('getHumidifierStatus')
@@ -282,6 +326,121 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
             toggle = self.state.nightlight_status != DeviceStatus.ON
         brightness = 100 if toggle else 0
         return await self.set_nightlight_brightness(brightness)
+
+    async def set_rgb_nightlight(  # noqa: C901, PLR0912
+        self,
+        power: bool | None = None,
+        brightness: int | None = None,
+        red: int | None = None,
+        green: int | None = None,
+        blue: int | None = None,
+    ) -> bool:
+        """Set RGB nightlight state and color.
+
+        Args:
+            power: Turn nightlight on (True) or off (False).
+            brightness: Brightness level (0-100); values below 40 are raised to
+                the device minimum of 40. Out-of-range values are rejected.
+            red: Red color value (0-255).
+            green: Green color value (0-255).
+            blue: Blue color value (0-255).
+
+        Returns:
+            bool: Success of request.
+        """
+        if not self.supports_rgb_nightlight:
+            logger.warning('RGB Nightlight is not supported for %s', self.device_name)
+            return False
+
+        # API requires all fields, so use current state for any not provided.
+        if power is not None:
+            action = 'on' if power else 'off'
+        else:
+            action = self.state.rgb_nightlight_status or 'on'
+        turning_off = action == 'off'
+
+        # Coalesce with `is None` so a legitimately stored 0 channel survives.
+        if brightness is None:
+            brightness = (
+                self.state.rgb_nightlight_brightness
+                if self.state.rgb_nightlight_brightness is not None
+                else 40
+            )
+        if red is None:
+            red = (
+                self.state.rgb_nightlight_red
+                if self.state.rgb_nightlight_red is not None
+                else 255
+            )
+        if green is None:
+            green = (
+                self.state.rgb_nightlight_green
+                if self.state.rgb_nightlight_green is not None
+                else 255
+            )
+        if blue is None:
+            blue = (
+                self.state.rgb_nightlight_blue
+                if self.state.rgb_nightlight_blue is not None
+                else 255
+            )
+        color_mode = self.state.rgb_nightlight_color_mode or 'color'
+
+        # Validate and reject rather than silently clamping bad input.
+        if not Validators.validate_range(brightness, 0, 100):
+            logger.warning('Brightness must be between 0 and 100')
+            return False
+        if not Validators.validate_rgb(red, green, blue):
+            logger.warning('RGB values must be between 0 and 255')
+            return False
+
+        # Device minimum brightness is 40 per the VeSync app.
+        brightness = max(40, brightness)
+
+        # Calculate colorSliderLocation from the base RGB color (full brightness).
+        color_slider_location = RGBNightlightColor.rgb_to_color_slider_location(
+            red, green, blue
+        )
+
+        # The VeSync app sends brightness-adjusted RGB, not raw color + brightness.
+        # From decompiled app: yv/p.java method b() and RGBNightLightView.java
+        if brightness != RGB_FULL_BRIGHTNESS:
+            adj_red, adj_green, adj_blue = RGBNightlightColor.apply_brightness_to_rgb(
+                red, green, blue, brightness
+            )
+        else:
+            adj_red, adj_green, adj_blue = red, green, blue
+
+        payload_data: dict[str, int | str] = {
+            'action': action,
+            'brightness': brightness,
+            'red': adj_red,
+            'green': adj_green,
+            'blue': adj_blue,
+            'colorMode': color_mode,
+            'speed': 0,
+            'colorSliderLocation': color_slider_location,
+        }
+
+        r_dict = await self.call_bypassv2_api('setLightStatus', payload_data)
+        r = Helpers.process_dev_response(logger, 'set_rgb_nightlight', self, r_dict)
+        if r is None:
+            return False
+
+        # process_dev_response already set connection_status; update local state
+        # and record the timestamp used to ignore stale API responses briefly.
+        self.state.rgb_nightlight_status = action
+        # An off command must not overwrite the stored color/brightness so the
+        # previous setting is restored on the next power-on.
+        if not turning_off:
+            self.state.rgb_nightlight_brightness = brightness
+            self.state.rgb_nightlight_red = red
+            self.state.rgb_nightlight_green = green
+            self.state.rgb_nightlight_blue = blue
+            self.state.rgb_nightlight_color_mode = color_mode
+        self.state.rgb_nightlight_set_time = time.time()
+
+        return True
 
     async def set_mode(self, mode: str) -> bool:
         if mode not in self.mist_modes:
@@ -1101,8 +1260,9 @@ class VeSyncSproutHumid(BypassV2Mixin, VeSyncHumidifier):
         if self.state.nightlight_color_temp is None:
             self.state.nightlight_color_temp = 3500  # Default color temp if not set
 
+        sent_brightness = brightness or self.state.nightlight_brightness or 100
         payload_data = {
-            'brightness': brightness or self.state.nightlight_brightness,
+            'brightness': sent_brightness,
             'colorTemperature': color_temp or self.state.nightlight_color_temp,
             'nightLightSwitch': int(toggle),
         }
@@ -1111,10 +1271,39 @@ class VeSyncSproutHumid(BypassV2Mixin, VeSyncHumidifier):
         if r is None:
             return False
 
-        self.state.nightlight_brightness = brightness
+        self.state.nightlight_brightness = sent_brightness
         self.state.nightlight_status = DeviceStatus.from_bool(toggle)
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
+
+    async def set_nightlight_brightness(self, brightness: int) -> bool:
+        if not self.supports_nightlight_brightness:
+            logger.warning(
+                '%s is a %s does not have a nightlight or it is not supported.',
+                self.device_name,
+                self.device_type,
+            )
+            return False
+
+        if not Validators.validate_zero_to_hundred(brightness):
+            logger.warning('Brightness value must be set between 0 and 100')
+            return False
+
+        toggle = brightness > 0
+        return await self._set_nightlight_state(toggle, brightness=brightness)
+
+    async def toggle_nightlight(self, toggle: bool | None = None) -> bool:
+        if not self.supports_nightlight:
+            logger.warning(
+                '%s is a %s does not have a nightlight or it is not supported.',
+                self.device_name,
+                self.device_type,
+            )
+            return False
+
+        if toggle is None:
+            toggle = self.state.nightlight_status != DeviceStatus.ON
+        return await self._set_nightlight_state(toggle)
 
     async def toggle_automatic_stop(self, toggle: bool | None = None) -> bool:
         if toggle is None:
