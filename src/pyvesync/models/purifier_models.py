@@ -41,21 +41,21 @@ class PurifierVitalDetailsResult(InnerPurifierBaseResult):
     """Vital 100S/200S and Everest Purifier Result Model."""
 
     powerSwitch: int
-    filterLifePercent: int
     workMode: str
     manualSpeedLevel: int
     fanSpeedLevel: int
     AQLevel: int
     PM25: int
-    screenState: int
-    childLockSwitch: int
-    screenSwitch: int
-    lightDetectionSwitch: int
-    environmentLightState: int
-    scheduleCount: int
-    timerRemain: int
-    efficientModeTimeRemain: int
-    errorCode: int
+    filterLifePercent: int = 100
+    screenState: int = 0
+    childLockSwitch: int = 0
+    screenSwitch: int = 0
+    lightDetectionSwitch: int = 0
+    environmentLightState: int = 0
+    scheduleCount: int = 0
+    timerRemain: int = 0
+    efficientModeTimeRemain: int = 0
+    errorCode: int = 0
     autoPreference: V2AutoPreferences | None = None
     fanRotateAngle: int | None = None
     filterOpenState: int | None = None
@@ -69,7 +69,7 @@ class V2AutoPreferences:
     """Vital 100S/200S Auto Preferences."""
 
     autoPreferenceType: str
-    roomSize: int
+    roomSize: int | None = None
 
 
 @dataclass
