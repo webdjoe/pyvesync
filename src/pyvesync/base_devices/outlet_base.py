@@ -113,7 +113,7 @@ class OutletState(DeviceState):
         self.protectionStatus: str | None = None
         self.currentUpperThreshold: float | None = None
 
-    def annual_history_to_json(self) -> None | str:
+    def annual_history_to_json(self) -> str | None:
         """Dump annual history."""
         if not self.device.supports_energy:
             logger.info('Device does not support energy monitoring.')
@@ -123,7 +123,7 @@ class OutletState(DeviceState):
             return None
         return self.yearly_history.to_json()
 
-    def monthly_history_to_json(self) -> None | str:
+    def monthly_history_to_json(self) -> str | None:
         """Dump monthly history."""
         if not self.device.supports_energy:
             logger.info('Device does not support energy monitoring.')
@@ -133,7 +133,7 @@ class OutletState(DeviceState):
             return None
         return self.monthly_history.to_json()
 
-    def weekly_history_to_json(self) -> None | str:
+    def weekly_history_to_json(self) -> str | None:
         """Dump weekly history."""
         if not self.device.supports_energy:
             logger.info('Device does not support energy monitoring.')

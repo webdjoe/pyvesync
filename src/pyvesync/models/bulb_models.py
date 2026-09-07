@@ -22,8 +22,8 @@ from pyvesync.models.bypass_models import BypassV2InnerResult, RequestBypassV1
 class JSONCMD(DataClassORJSONMixin):
     """Tunable Bulb JSON CMD dict."""
 
-    light: None | JSONCMDLight = None
-    getLightStatus: None | str = None
+    light: JSONCMDLight | None = None
+    getLightStatus: str | None = None
 
     class Config(BaseConfig):
         """Configure the JSONCMD model."""
