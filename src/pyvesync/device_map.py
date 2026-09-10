@@ -1026,7 +1026,7 @@ purifier_modules: list[PurifierMap] = [
         model_name='Sprout Air',
         setup_entry='LAP-B851S-WUS',
     ),
-        PurifierMap(
+    PurifierMap(
         class_name='VeSyncAirBaseV2',
         dev_types=['LAP-C341S-WEU'],
         modes=[
