@@ -260,6 +260,7 @@ pip install pyvesync
 6. OasisMist 1000S
 7. Superior 6000S
 8. Sprout Humidifier
+9. NeoClassic 450S
 
 ### Levoit Fans
 
