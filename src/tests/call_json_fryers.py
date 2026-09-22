@@ -80,6 +80,20 @@ DC601_RECIPE = AirFryerPresetRecipe(
     preheat_time=AirFryerDefaults.preheat_time_s,
 )
 
+# The CAF-LI401S names the preset 'Fries' rather than 'FrenchFries' and reports
+# recipe ID 1 for every program. Temperature and time use the shared test
+# defaults: the per-preset values on a real unit are user-editable in the app,
+# so they are not device characteristics worth pinning here.
+LI401S_RECIPE = AirFryerPresetRecipe(
+    recipe_name="",
+    cook_mode="Fries",
+    recipe_id=1,
+    recipe_type=3,
+    target_temp=AirFryerDefaults.cook_temp_f,
+    temp_unit=AirFryerDefaults.temp_unit,
+    cook_time=AirFryerDefaults.cook_time_s,
+)
+
 TF101S_RECIPE = AirFryerPresetRecipe(
     recipe_name="Air Fry",
     cook_mode="AirFry",
@@ -132,6 +146,35 @@ AIR_FRYER_COOKING_DETAILS: dict[str, dict] = {
         "totalTimeRemaining": 1176,
         "currentTemp": 89,
         "shakeStatus": 0,
+    },
+    "CAF-LI401S": {
+        "stepArray": [
+            {
+                "cookSetTime": AirFryerDefaults.cook_time_s,  # Seconds
+                "cookTemp": AirFryerDefaults.cook_temp_f,
+                "mode": LI401S_RECIPE.cook_mode,
+                "cookLastTime": AirFryerDefaults.cook_last_time_s,  # Seconds
+                "shakeTime": 0,
+                "cookEndTime": 0,
+                "recipeName": LI401S_RECIPE.recipe_name,
+                "recipeId": LI401S_RECIPE.recipe_id,
+                "recipeType": LI401S_RECIPE.recipe_type,
+            }
+        ],
+        "cookMode": "normal",
+        "tempUnit": AirFryerDefaults.temp_unit.label,
+        "stepIndex": 0,
+        "cookStatus": AirFryerDefaults.cook_status.value,
+        "preheatSetTime": 0,
+        "preheatLastTime": 0,
+        "preheatEndTime": 0,
+        "preheatTemp": 0,
+        "startTime": 1767318116,
+        "totalTimeRemaining": AirFryerDefaults.cook_last_time_s,
+        "currentTemp": 134,
+        "shakeStatus": 0,
+        "hasPro": False,
+        "linkageStatus": 0,
     },
     "CAF-TF101S": {
         "statusList": [
@@ -189,6 +232,23 @@ AIR_FRYER_STANDBY_DETAILS: dict[str, dict] = {
         "currentTemp": 43,
         "shakeStatus": 0,
     },
+    "CAF-LI401S": {
+        "stepArray": [],
+        "cookMode": "normal",
+        "tempUnit": AirFryerDefaults.temp_unit.label,
+        "stepIndex": 0,
+        "cookStatus": "standby",
+        "preheatSetTime": 0,
+        "preheatLastTime": 0,
+        "preheatEndTime": 0,
+        "preheatTemp": 0,
+        "startTime": 0,
+        "totalTimeRemaining": 0,
+        "currentTemp": 0,
+        "shakeStatus": 0,
+        "hasPro": False,
+        "linkageStatus": 0,
+    },
     "CAF-TF101S": {
         "statusList": [
             {"cookStatus": "standby", "chamber": 1},
@@ -205,6 +265,7 @@ METHOD_RESPONSES = {
     'CS158-AF': deepcopy(FunctionResponsesV1),
     'CAF-DC601S': deepcopy(FunctionResponsesV2),
     'CAF-TF101S': deepcopy(FunctionResponsesV2),
+    'CAF-LI401S': deepcopy(FunctionResponsesV2),
 }
 
 
@@ -218,6 +279,9 @@ DETAILS_RESPONSES_COOKING = {
     "CAF-TF101S": build_bypass_v2_response(
         inner_result=deepcopy(AIR_FRYER_COOKING_DETAILS["CAF-TF101S"]),
     ),
+    "CAF-LI401S": build_bypass_v2_response(
+        inner_result=deepcopy(AIR_FRYER_COOKING_DETAILS["CAF-LI401S"]),
+    ),
 }
 
 
@@ -230,5 +294,8 @@ DETAILS_RESPONSES_STANDBY = {
     ),
     "CAF-TF101S": build_bypass_v2_response(
         inner_result=deepcopy(AIR_FRYER_STANDBY_DETAILS["CAF-TF101S"]),
+    ),
+    "CAF-LI401S": build_bypass_v2_response(
+        inner_result=deepcopy(AIR_FRYER_STANDBY_DETAILS["CAF-LI401S"]),
     ),
 }
