@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from pyvesync.models.base_models import ResponseBaseModel
 from pyvesync.models.bypass_models import BypassV2InnerResult
@@ -37,28 +37,31 @@ class FryerBaseReturnStatus(ResponseBaseModel):
 
 @dataclass
 class AirFryerChamberStatus(ResponseBaseModel):
-    """Status of one CAF-DC111S-AEU cooking chamber."""
+    """Status of one Turbo Tower Pro (CAF-DC111S) cooking chamber.
 
-    cookStatus: str
-    startTime: int
-    recipeType: int
-    recipeId: int
-    recipeName: str
-    upc: str
-    holdTime: int
-    cookSetTime: int
-    cookTemp: int
-    mode: str
-    currentRemainingTime: int
-    totalTimeRemaining: int
+    Times are in seconds.
+    """
+
     chamber: int
+    cookStatus: str = 'standby'
+    startTime: int = 0
+    recipeType: int | None = None
+    recipeId: int | None = None
+    recipeName: str = ''
+    upc: str = ''
+    holdTime: int = 0
+    cookSetTime: int = 0
+    cookTemp: int = 0
+    mode: str = ''
+    currentRemainingTime: int = 0
+    totalTimeRemaining: int = 0
 
 
 @dataclass
 class AirFryerMultiStatusResult(BypassV2InnerResult):
     """Result returned by getAirfryerMultiStatus."""
 
-    statusList: list[AirFryerChamberStatus]
-    tempUnit: str
-    syncType: int
-    workChamber: int
+    statusList: list[AirFryerChamberStatus] = field(default_factory=list)
+    tempUnit: str = 'c'
+    syncType: int = 0
+    workChamber: int = 0

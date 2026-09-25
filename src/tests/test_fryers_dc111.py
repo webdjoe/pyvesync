@@ -1,6 +1,7 @@
 """Tests for CAF-DC111S-AEU air fryer support."""
 
 import asyncio
+import copy
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -64,12 +65,15 @@ def test_get_details_reads_both_chambers(fryer) -> None:
     ):
         asyncio.run(fryer.get_details())
 
-    assert fryer.temp_unit == 'c'
-    assert fryer.sync_type == 0
-    assert fryer.work_chamber == 0
-    assert set(fryer.chambers) == {1, 2}
-    assert fryer.chambers[1]['cookStatus'] == 'standby'
-    assert fryer.chambers[2]['cookStatus'] == 'standby'
+    assert fryer.temp_unit == 'celsius'
+    assert fryer.state.sync_type == 0
+    assert fryer.state.work_chamber == 0
+    assert set(fryer.state.chambers) == {1, 2}
+    assert fryer.state.chambers[1].cook_status == 'standby'
+    assert fryer.state.chambers[2].cook_status == 'standby'
+    assert fryer.state.cook_status == 'standby'
+    assert fryer.state.cook_set_temp is None
+    assert fryer.state.cook_set_time is None
 
 
 def test_get_details_ready_program(fryer) -> None:
@@ -83,13 +87,90 @@ def test_get_details_ready_program(fryer) -> None:
     ):
         asyncio.run(fryer.get_details())
 
-    chamber = fryer.chambers[1]
+    chamber = fryer.state.chambers[1]
 
-    assert fryer.work_chamber == 1
-    assert chamber['cookStatus'] == 'ready'
-    assert chamber['cookTemp'] == 180
-    assert chamber['cookSetTime'] == 300
-    assert chamber['currentRemainingTime'] == 300
+    assert fryer.state.work_chamber == 1
+    assert chamber.cook_status == 'ready'
+    assert chamber.mode == 'AirFry'
+    assert chamber.cook_set_temp == 180
+    assert chamber.cook_set_time == 5
+    assert chamber.remaining_time == 5
+
+    # Top-level attributes report the active chamber, as read by Home Assistant.
+    assert fryer.state.active_chamber is chamber
+    assert fryer.state.cook_status == 'ready'
+    assert fryer.state.cook_set_temp == 180
+    assert fryer.state.cook_set_time == 5
+    assert fryer.state.current_temp is None
+    assert fryer.state.preheat_set_time is None
+
+
+def test_active_chamber_is_second_when_first_idle(fryer) -> None:
+    """A program only in chamber 2 is reported at the top level."""
+    status = copy.deepcopy(STATUS_READY)
+    status['statusList'][0], status['statusList'][1] = (
+        {**status['statusList'][1], 'chamber': 1},
+        {**status['statusList'][0], 'chamber': 2},
+    )
+    mocked = AsyncMock(return_value=bypass_response(status)[0])
+
+    with patch.object(VeSyncAirFryerDC111, 'call_bypassv2_api', new=mocked):
+        asyncio.run(fryer.get_details())
+
+    assert fryer.state.active_chamber.chamber == 2
+    assert fryer.state.cook_status == 'ready'
+
+
+def test_state_serializes(fryer) -> None:
+    """Device and state can be dumped to dict and JSON."""
+    mocked = AsyncMock(return_value=bypass_response(STATUS_READY)[0])
+
+    with patch.object(VeSyncAirFryerDC111, 'call_bypassv2_api', new=mocked):
+        asyncio.run(fryer.get_details())
+
+    state = fryer.to_dict()
+    assert state['cook_status'] == 'ready'
+    assert state['temp_unit'] == 'celsius'
+    assert 'chambers' in state
+    assert '"cook_set_temp":180' in fryer.state.to_json()
+
+
+def test_fahrenheit_unit(fryer) -> None:
+    """Fahrenheit status switches validation range and request unit."""
+    status = {**STATUS_STANDBY, 'tempUnit': 'f'}
+    mocked = AsyncMock(return_value=bypass_response(status)[0])
+
+    with patch.object(VeSyncAirFryerDC111, 'call_bypassv2_api', new=mocked):
+        asyncio.run(fryer.get_details())
+        assert fryer.temp_unit == 'fahrenheit'
+
+        mocked.return_value = bypass_response()[0]
+        assert asyncio.run(fryer.prepare_program(1, 400, 10)) is True
+
+    assert mocked.await_args.kwargs['data']['tempUnit'] == 'f'
+    assert mocked.await_args.kwargs['data']['cookConfigs'][0]['cookTemp'] == 400
+
+
+@pytest.mark.parametrize(
+    ('kwargs', 'error'),
+    [
+        ({'chamber': 3, 'temperature': 180, 'minutes': 5}, 'chamber'),
+        ({'chamber': 1, 'temperature': 180, 'minutes': 0}, 'minutes'),
+        ({'chamber': 1, 'temperature': 400, 'minutes': 5}, 'temperature'),
+        ({'chamber': 1, 'temperature': 180, 'minutes': 5, 'mode': 'Roast'}, 'mode'),
+    ],
+)
+def test_prepare_program_rejects_invalid(fryer, kwargs, error) -> None:
+    """Invalid arguments raise before any API call."""
+    mocked = AsyncMock()
+
+    with (
+        patch.object(VeSyncAirFryerDC111, 'call_bypassv2_api', new=mocked),
+        pytest.raises(ValueError, match=error),
+    ):
+        asyncio.run(fryer.prepare_program(**kwargs))
+
+    mocked.assert_not_awaited()
 
 
 def test_prepare_program(fryer) -> None:
