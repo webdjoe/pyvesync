@@ -1,5 +1,6 @@
 """Tests for CAF-DC111S-AEU air fryer support."""
 
+import asyncio
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -52,19 +53,16 @@ def test_dc111_device_map() -> None:
     assert config.setup_entry == 'CAF-DC111S-AEU'
 
 
-@pytest.mark.asyncio
-async def test_get_details_reads_both_chambers(fryer) -> None:
+def test_get_details_reads_both_chambers(fryer) -> None:
     """Status response populates both cooking chambers."""
-    mocked = AsyncMock(
-        return_value=bypass_response(STATUS_STANDBY)[0]
-    )
+    mocked = AsyncMock(return_value=bypass_response(STATUS_STANDBY)[0])
 
     with patch.object(
         VeSyncAirFryerDC111,
         'call_bypassv2_api',
         new=mocked,
     ):
-        await fryer.get_details()
+        asyncio.run(fryer.get_details())
 
     assert fryer.temp_unit == 'c'
     assert fryer.sync_type == 0
@@ -74,19 +72,16 @@ async def test_get_details_reads_both_chambers(fryer) -> None:
     assert fryer.chambers[2]['cookStatus'] == 'standby'
 
 
-@pytest.mark.asyncio
-async def test_get_details_ready_program(fryer) -> None:
+def test_get_details_ready_program(fryer) -> None:
     """Prepared program is represented as ready."""
-    mocked = AsyncMock(
-        return_value=bypass_response(STATUS_READY)[0]
-    )
+    mocked = AsyncMock(return_value=bypass_response(STATUS_READY)[0])
 
     with patch.object(
         VeSyncAirFryerDC111,
         'call_bypassv2_api',
         new=mocked,
     ):
-        await fryer.get_details()
+        asyncio.run(fryer.get_details())
 
     chamber = fryer.chambers[1]
 
@@ -97,8 +92,7 @@ async def test_get_details_ready_program(fryer) -> None:
     assert chamber['currentRemainingTime'] == 300
 
 
-@pytest.mark.asyncio
-async def test_prepare_program(fryer) -> None:
+def test_prepare_program(fryer) -> None:
     """Prepare sends startMultiCook with correct chamber data."""
     mocked = AsyncMock(return_value=bypass_response()[0])
 
@@ -107,10 +101,12 @@ async def test_prepare_program(fryer) -> None:
         'call_bypassv2_api',
         new=mocked,
     ):
-        result = await fryer.prepare_program(
-            chamber=1,
-            temperature=180,
-            minutes=5,
+        result = asyncio.run(
+            fryer.prepare_program(
+                chamber=1,
+                temperature=180,
+                minutes=5,
+            )
         )
 
     assert result is True
@@ -130,8 +126,7 @@ async def test_prepare_program(fryer) -> None:
     assert config['mode'] == 'AirFry'
 
 
-@pytest.mark.asyncio
-async def test_stop_chamber(fryer) -> None:
+def test_stop_chamber(fryer) -> None:
     """End prepared or running program."""
     mocked = AsyncMock(return_value=bypass_response()[0])
 
@@ -140,7 +135,7 @@ async def test_stop_chamber(fryer) -> None:
         'call_bypassv2_api',
         new=mocked,
     ):
-        result = await fryer.stop_chamber(1)
+        result = asyncio.run(fryer.stop_chamber(1))
 
     assert result is True
     mocked.assert_awaited_once_with(
@@ -149,8 +144,7 @@ async def test_stop_chamber(fryer) -> None:
     )
 
 
-@pytest.mark.asyncio
-async def test_stop_empty_chamber_returns_false(fryer) -> None:
+def test_stop_empty_chamber_returns_false(fryer) -> None:
     """Error 11923000 means there was no program to stop."""
     response = bypass_response()[0]
     response['result']['code'] = 11923000
@@ -163,13 +157,12 @@ async def test_stop_empty_chamber_returns_false(fryer) -> None:
         'call_bypassv2_api',
         new=mocked,
     ):
-        result = await fryer.stop_chamber(1)
+        result = asyncio.run(fryer.stop_chamber(1))
 
     assert result is False
 
 
-@pytest.mark.asyncio
-async def test_prepare_both_chambers_sync_finish(
+def test_prepare_both_chambers_sync_finish(
     fryer: VeSyncAirFryerDC111,
 ) -> None:
     """Prepare both chambers with synchronized finishing times."""
@@ -177,75 +170,78 @@ async def test_prepare_both_chambers_sync_finish(
 
     with patch.object(
         VeSyncAirFryerDC111,
-        "call_bypassv2_api",
+        'call_bypassv2_api',
         new=mocked,
     ):
-        result = await fryer.prepare_both_chambers(
-            chamber_1={
-                "temperature": 180,
-                "minutes": 10,
-                "mode": "AirFry",
-            },
-            chamber_2={
-                "temperature": 195,
-                "minutes": 15,
-                "mode": "AirFry",
-            },
-            sync_type=1,
+        result = asyncio.run(
+            fryer.prepare_both_chambers(
+                chamber_1={
+                    'temperature': 180,
+                    'minutes': 10,
+                    'mode': 'AirFry',
+                },
+                chamber_2={
+                    'temperature': 195,
+                    'minutes': 15,
+                    'mode': 'AirFry',
+                },
+                sync_type=1,
+            )
         )
 
     assert result is True
 
     method = mocked.await_args.args[0]
-    data = mocked.await_args.kwargs["data"]
+    data = mocked.await_args.kwargs['data']
 
-    assert method == "startMultiCook"
-    assert data["syncType"] == 1
-    assert data["workChamber"] == 4
-    assert len(data["cookConfigs"]) == 2
+    assert method == 'startMultiCook'
+    assert data['syncType'] == 1
+    assert data['workChamber'] == 4
+    assert len(data['cookConfigs']) == 2
 
-    chamber_1 = data["cookConfigs"][0]
-    chamber_2 = data["cookConfigs"][1]
+    chamber_1 = data['cookConfigs'][0]
+    chamber_2 = data['cookConfigs'][1]
 
-    assert chamber_1["chamber"] == 1
-    assert chamber_1["cookSetTime"] == 600
-    assert chamber_1["cookTemp"] == 180
+    assert chamber_1['chamber'] == 1
+    assert chamber_1['cookSetTime'] == 600
+    assert chamber_1['cookTemp'] == 180
 
-    assert chamber_2["chamber"] == 2
-    assert chamber_2["cookSetTime"] == 900
-    assert chamber_2["cookTemp"] == 195
+    assert chamber_2['chamber'] == 2
+    assert chamber_2['cookSetTime'] == 900
+    assert chamber_2['cookTemp'] == 195
 
 
-@pytest.mark.asyncio
-async def test_prepare_both_chambers_match(
+def test_prepare_both_chambers_match(
     fryer: VeSyncAirFryerDC111,
 ) -> None:
     """Prepare both chambers with matching settings."""
     mocked = AsyncMock(return_value=bypass_response()[0])
     matching = {
-        "temperature": 195,
-        "minutes": 10,
-        "mode": "AirFry",
+        'temperature': 195,
+        'minutes': 10,
+        'mode': 'AirFry',
     }
 
     with patch.object(
         VeSyncAirFryerDC111,
-        "call_bypassv2_api",
+        'call_bypassv2_api',
         new=mocked,
     ):
-        result = await fryer.prepare_both_chambers(
-            chamber_1=matching,
-            chamber_2=matching,
-            sync_type=2,
+        result = asyncio.run(
+            fryer.prepare_both_chambers(
+                chamber_1=matching,
+                chamber_2=matching,
+                sync_type=2,
+            )
         )
 
     assert result is True
 
-    data = mocked.await_args.kwargs["data"]
+    data = mocked.await_args.kwargs['data']
 
-    assert data["syncType"] == 2
-    assert data["workChamber"] == 4
-    assert data["cookConfigs"][0]["cookTemp"] == 195
-    assert data["cookConfigs"][1]["cookTemp"] == 195
-    assert data["cookConfigs"][0]["cookSetTime"] == 600
-    assert data["cookConfigs"][1]["cookSetTime"] == 600
+    assert data['syncType'] == 2
+    assert data['workChamber'] == 4
+    assert data['cookConfigs'][0]['cookTemp'] == 195
+    assert data['cookConfigs'][1]['cookTemp'] == 195
+    assert data['cookConfigs'][0]['cookSetTime'] == 600
+    assert data['cookConfigs'][1]['cookSetTime'] == 600
