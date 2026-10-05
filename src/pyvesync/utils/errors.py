@@ -841,7 +841,7 @@ class VeSyncRateLimitError(VeSyncError):
 class VeSyncAPIResponseError(VeSyncError):
     """Exception raised for malformed VeSync API responses."""
 
-    def __init__(self, msg: None | str = None) -> None:
+    def __init__(self, msg: str | None = None) -> None:
         """Initialize the exception with a message."""
         if msg is None:
             msg = 'Unexpected VeSync API response.'
