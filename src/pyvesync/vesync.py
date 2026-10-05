@@ -439,7 +439,7 @@ class VeSync:  # pylint: disable=function-redefined
         self,
         api: str,
         method: str,
-        json_object: dict | None | DataClassORJSONMixin = None,
+        json_object: dict | DataClassORJSONMixin | None = None,
         headers: dict | None = None,
         device: VeSyncBaseDevice | None = None,
     ) -> tuple[dict | None, int]:
