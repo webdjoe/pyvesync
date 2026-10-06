@@ -646,7 +646,7 @@ class Timer:
     remaining: InitVar[int | None] = None
     _status: str = field(default='active', init=False, repr=False)
     _remain: int = field(default=0, init=False, repr=False)
-    _update_time: int = int(time.time())
+    _update_time: int = field(default_factory=lambda: int(time.time()))
 
     def __post_init__(self, remaining: int | None) -> None:
         """Set remaining time if provided."""
