@@ -543,6 +543,12 @@ if __name__ == "__main__":
 
 If you would like to request a new device to be added to the library, please open an issue on GitHub. Be sure to include the device model number and a link to the product page. If you are able to provide packet captures or are willing to share the device temporarily, please indicate that in the issue. See the [Packet Capturing for New Device Support](https://webdjoe.github.io/pyvesync/latest/development/capturing) document for more details.
 
+For humidifiers that use the `bypassV2` API, the [dump_humidifier_status.py](./testing_scripts/dump_humidifier_status.py) script can often provide enough information without a packet capture. It logs the raw device list entry and the `getHumidifierStatus` response for any device type, even one not yet in the device map, and writes a redacted JSON file that can be attached to the issue:
+
+```bash
+python testing_scripts/dump_humidifier_status.py --email <email> --password <password> --filter <model, e.g. S451S>
+```
+
 ## Contributing
 
 All [contributions](https://webdjoe.github.io/pyvesync/latest/development/contributing) are welcome.
