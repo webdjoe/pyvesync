@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import time
 from dataclasses import MISSING, fields
 from pathlib import Path
 from typing import TYPE_CHECKING, Self
@@ -48,6 +49,9 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+DEVICE_PROPS_REUSE_SECONDS = 10
+"""Seconds a successful `VeSync.get_device_props` result is reused."""
+
 
 class VeSync:  # pylint: disable=function-redefined
     """VeSync Manager Class."""
@@ -59,6 +63,8 @@ class VeSync:  # pylint: disable=function-redefined
         '_close_session',
         '_debug',
         '_device_container',
+        '_device_props',
+        '_device_props_task',
         '_redact',
         '_verbose',
         'enabled',
@@ -145,6 +151,8 @@ class VeSync:  # pylint: disable=function-redefined
         self.enabled = False
         self.in_process = False
         self._device_container: DeviceContainer = DeviceContainer()
+        self._device_props: tuple[float, dict[str, dict]] | None = None
+        self._device_props_task: asyncio.Task[dict[str, dict] | None] | None = None
 
         # Initialize authentication manager
         self._auth = VeSyncAuth(
@@ -304,6 +312,70 @@ class VeSync:  # pylint: disable=function-redefined
             logger.debug('Added %s devices', str(new_device_count - current_device_count))
         return True
 
+    async def _call_device_list_api(self) -> dict | None:
+        """Request the device list and return the raw response dictionary."""
+        request_model = RequestDeviceListModel(
+            token=self.auth.token, accountID=self.auth.account_id, timeZone=self.time_zone
+        )
+        response_dict, _ = await self.async_call_api(
+            '/cloud/v1/deviceManaged/devices',
+            'post',
+            headers=Helpers.req_header_bypass(),
+            json_object=request_model.to_dict(),
+        )
+        return response_dict
+
+    async def get_device_props(self) -> dict[str, dict]:
+        """Return the raw `deviceProp` of each device in the device list.
+
+        Some devices report current values in the `deviceProp` field of the
+        device list. The parsed device list cannot be used for this, because
+        `ResponseDeviceDetailsModel` removes `deviceProp` while flattening it
+        (see `_flatten_device_prop`). This method reads it from the raw
+        response instead, and does not change the device container.
+
+        Calls share one device list request: callers that arrive while a
+        request is running await that request, and a successful result is
+        reused for `DEVICE_PROPS_REUSE_SECONDS`. Devices updated in the same
+        poll therefore cost one device list request in total. A failed
+        request is not reused, so the next call sends a new request.
+
+        Returns:
+            dict[str, dict]: `deviceProp` keyed by device cid. Empty if the
+                request failed or no device reports `deviceProp`.
+        """
+        if self._device_props is not None:
+            fetched_at, props = self._device_props
+            if time.monotonic() - fetched_at < DEVICE_PROPS_REUSE_SECONDS:
+                return props
+        task = self._device_props_task
+        if task is None or task.done():
+            task = asyncio.create_task(self._fetch_device_props())
+            self._device_props_task = task
+        try:
+            # Shield the shared request from the cancellation of one caller.
+            result = await asyncio.shield(task)
+        finally:
+            if task.done() and self._device_props_task is task:
+                self._device_props_task = None
+        return {} if result is None else result
+
+    async def _fetch_device_props(self) -> dict[str, dict] | None:
+        """Request `deviceProp` per cid; store and return it, or None on failure."""
+        response_dict = await self._call_device_list_api()
+        if not isinstance(response_dict, dict) or response_dict.get('code') != 0:
+            logger.debug('Unable to get device properties from the device list')
+            return None
+        device_list = (response_dict.get('result') or {}).get('list') or []
+        props = {
+            device['cid']: device['deviceProp']
+            for device in device_list
+            if device.get('cid') is not None
+            and isinstance(device.get('deviceProp'), dict)
+        }
+        self._device_props = (time.monotonic(), props)
+        return props
+
     async def get_devices(self) -> bool:
         """Return tuple listing outlets, switches, and fans of devices.
 
@@ -322,16 +394,8 @@ class VeSync:  # pylint: disable=function-redefined
             logger.info("Not logged in to VeSync, can't get devices")
             return False
 
-        request_model = RequestDeviceListModel(
-            token=self.auth.token, accountID=self.auth.account_id, timeZone=self.time_zone
-        )
         logger.debug('Requesting device list from VeSync')
-        response_dict, _ = await self.async_call_api(
-            '/cloud/v1/deviceManaged/devices',
-            'post',
-            headers=Helpers.req_header_bypass(),
-            json_object=request_model.to_dict(),
-        )
+        response_dict = await self._call_device_list_api()
 
         if response_dict is None:
             raise VeSyncAPIResponseError(

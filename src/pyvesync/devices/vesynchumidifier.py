@@ -24,7 +24,12 @@ from pyvesync.models.bypass_models import (
     ResultV2SetTimer,
 )
 from pyvesync.utils.colors import RGBNightlightColor
-from pyvesync.utils.device_mixins import BypassV2Mixin, process_bypassv2_result
+from pyvesync.utils.device_mixins import (
+    BypassV2Mixin,
+    countdown_timer_from_result,
+    countdown_timer_payload,
+    process_bypassv2_result,
+)
 from pyvesync.utils.helpers import Helpers, Timer, Validators
 
 if TYPE_CHECKING:
@@ -1531,19 +1536,11 @@ class VeSyncLV600S(BypassV2Mixin, VeSyncHumidifier):
         )
         if result_model is None:
             return None
-        if not result_model.timers:
+        timer = countdown_timer_from_result(result_model)
+        if timer is None:
             logger.debug('No timers found')
             return None
-        timer = result_model.timers[0]
-        action = DeviceStatus.OFF
-        if timer.startAct:
-            action = DeviceStatus.ON if timer.startAct[0].act == 1 else DeviceStatus.OFF
-        self.state.timer = Timer(
-            timer_duration=timer.total,
-            action=action,
-            id=timer.id,
-            remaining=timer.remain,
-        )
+        self.state.timer = timer
         return self.state.timer
 
     async def clear_timer(self) -> bool:
@@ -1570,12 +1567,7 @@ class VeSyncLV600S(BypassV2Mixin, VeSyncHumidifier):
                 if self.state.device_status == DeviceStatus.ON
                 else DeviceStatus.ON
             )
-        act_val = 1 if action == DeviceStatus.ON else 0
-
-        payload_data = {
-            'startAct': [{'type': 'powerSwitch', 'num': 0, 'act': act_val}],
-            'total': duration,
-        }
+        payload_data = countdown_timer_payload(duration, action)
         r_dict = await self.call_bypassv2_api('addTimerV2', payload_data)
         result_model = process_bypassv2_result(
             self, logger, 'set_timer', r_dict, ResultV2SetTimer

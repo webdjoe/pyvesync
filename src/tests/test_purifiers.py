@@ -27,12 +27,17 @@ See Also
 """
 
 import logging
+from unittest.mock import patch
+
 import pytest
 
 import pyvesync.const as const
 from pyvesync.base_devices.purifier_base import VeSyncPurifier
+from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
+from pyvesync.vesync import DEVICE_PROPS_REUSE_SECONDS
 from base_test_cases import TestBase
-from defaults import build_bypass_v2_response
+from call_json import ALL_DEVICE_MAP_DICT, DeviceList
+from defaults import TestDefaults, build_bypass_v2_response
 from utils import assert_test, parse_args
 import call_json_purifiers
 
@@ -108,6 +113,7 @@ class TestAirPurifiers(TestBase):
         "LAP-V102S": [["set_auto_mode"], ['set_sleep_mode'], ['set_pet_mode'], ["turn_on_display"], ["turn_off_display"]],
         "LAP-V201S": [["set_auto_mode"], ['set_sleep_mode'], ['set_pet_mode'], ["turn_on_display"], ["turn_off_display"]],
         "EL551S": [["set_auto_mode"], ["set_sleep_mode"], ["set_turbo_mode"], ["turn_on_display"], ["turn_off_display"]],
+        "LAP-C511S": [["set_auto_mode"], ["set_sleep_mode"], ["turn_on_display"], ["turn_off_display"]],
         "LAP-B851S-WUS": [["set_auto_mode"], ['set_sleep_mode'], ["turn_on_display"], ["turn_off_display"]],
 
     }
@@ -262,6 +268,364 @@ class TestAirPurifiers(TestBase):
         assert assert_test(
             method_call, all_kwargs, setup_entry, self.write_api, self.overwrite
         )
+
+
+class TestElevaPurifier(TestBase):
+    """Test the Eleva purifier."""
+
+    setup_entry = "LAP-C511S"
+
+    def _device_list_response(self, device_prop):
+        device = {"cid": TestDefaults.cid(self.setup_entry), "deviceProp": device_prop}
+        return {"code": 0, "msg": "request success", "result": {"list": [device]}}
+
+    def test_details_overlays_device_prop(self):
+        """Values from deviceProp replace the stale snapshot values."""
+        device_prop = {
+            "powerSwitch": 1,
+            "workMode": "sleep",
+            "fanSpeedLevel": 1,
+            "manualSpeedLevel": 2,
+            "AQLevel": 3,
+            "PM1": 41,
+            "PM25": 42,
+            "PM10": 43,
+            "AQI": 144,
+            "VOC": 145,
+            "NO2": 6,
+        }
+        self.mock_api.side_effect = [
+            (self._device_list_response(device_prop), 200),
+            (call_json_purifiers.DETAILS_RESPONSES[self.setup_entry], 200),
+        ]
+        purifier = self.get_device("air_purifiers", self.setup_entry)
+        self.run_in_loop(purifier.get_details)
+
+        state = purifier.state
+        assert state.mode == "sleep"
+        assert state.fan_level == 1
+        assert state.fan_set_level == 2
+        assert state.air_quality_level == 3
+        assert (state.pm1, state.pm25, state.pm10) == (41, 42, 43)
+        assert (state.aqi, state.voc, state.no2) == (144, 145, 6)
+        # Snapshot-only fields still come from getPurifierStatus.
+        assert state.carbon_filter_life == 97
+        assert state.pre_filter_life == 90
+
+    def test_concurrent_updates_share_device_list(self):
+        """Eleva devices updated together send one device list request."""
+        first = self.get_device("air_purifiers", self.setup_entry)
+        config = DeviceList.device_list_item(ALL_DEVICE_MAP_DICT[self.setup_entry])
+        config["cid"] = "eleva-second-cid"
+        self.manager.devices.add_device_from_model(
+            ResponseDeviceDetailsModel.from_dict(config), self.manager
+        )
+        second = next(d for d in self.manager.devices if d.cid == "eleva-second-cid")
+        device_list = {
+            "code": 0,
+            "msg": "request success",
+            "result": {
+                "list": [
+                    {"cid": first.cid, "deviceProp": {"PM25": 11}},
+                    {"cid": second.cid, "deviceProp": {"PM25": 22}},
+                ]
+            },
+        }
+
+        def api(endpoint, *args, **kwargs):
+            if endpoint == "/cloud/v1/deviceManaged/devices":
+                return (device_list, 200)
+            return (call_json_purifiers.DETAILS_RESPONSES[self.setup_entry], 200)
+
+        self.mock_api.side_effect = api
+        self.run_in_loop(self.manager.update_all_devices)
+
+        endpoints = [call.args[0] for call in self.mock_api.call_args_list]
+        assert endpoints.count("/cloud/v1/deviceManaged/devices") == 1
+        assert len(endpoints) == 3
+        assert (first.state.pm25, second.state.pm25) == (11, 22)
+
+    def test_device_props_reused_within_window(self):
+        """A device list result is reused briefly, then requested again."""
+        response = self._device_list_response({"PM25": 5})
+        self.mock_api.side_effect = [(response, 200), (response, 200)]
+        with patch("pyvesync.vesync.time.monotonic") as monotonic:
+            monotonic.return_value = 1000.0
+            assert self.run_in_loop(self.manager.get_device_props)
+            monotonic.return_value = 1000.0 + DEVICE_PROPS_REUSE_SECONDS - 1
+            assert self.run_in_loop(self.manager.get_device_props)
+            assert self.mock_api.call_count == 1
+            monotonic.return_value = 1000.0 + DEVICE_PROPS_REUSE_SECONDS
+            assert self.run_in_loop(self.manager.get_device_props)
+            assert self.mock_api.call_count == 2
+
+    def test_failed_device_props_not_reused(self):
+        """A failed device list request is retried on the next call."""
+        self.mock_api.side_effect = [
+            ({"code": -1, "msg": "error"}, 200),
+            (self._device_list_response({"PM25": 5}), 200),
+        ]
+        assert self.run_in_loop(self.manager.get_device_props) == {}
+        props = self.run_in_loop(self.manager.get_device_props)
+        assert props == {TestDefaults.cid(self.setup_entry): {"PM25": 5}}
+        assert self.mock_api.call_count == 2
+
+    def test_device_props_error_not_stuck(self):
+        """An exception does not leave a pending request behind."""
+        self.mock_api.side_effect = [
+            RuntimeError("boom"),
+            (self._device_list_response({"PM25": 5}), 200),
+        ]
+        with pytest.raises(RuntimeError):
+            self.run_in_loop(self.manager.get_device_props)
+        assert self.run_in_loop(self.manager.get_device_props)
+        assert self.mock_api.call_count == 2
+
+    def test_details_without_device_prop(self):
+        """The snapshot is used unchanged when the device list call fails."""
+        self.mock_api.side_effect = [
+            ({"code": -1, "msg": "error"}, 200),
+            (call_json_purifiers.DETAILS_RESPONSES[self.setup_entry], 200),
+        ]
+        purifier = self.get_device("air_purifiers", self.setup_entry)
+        self.run_in_loop(purifier.get_details)
+
+        details = call_json_purifiers.PURIFIER_DETAILS[self.setup_entry]
+        assert purifier.state.pm25 == details["PM25"]
+        assert purifier.state.aqi == details["AQI"]
+        assert purifier.state.no2 == details["NO2"]
+
+    def _set_success(self):
+        return (build_bypass_v2_response(), 200)
+
+    def _details(self, **override):
+        return (
+            build_bypass_v2_response(
+                inner_result=call_json_purifiers.PURIFIER_DETAILS[self.setup_entry],
+                inner_result_override=override,
+            ),
+            200,
+        )
+
+    def test_command_value_held_over_stale_snapshot(self):
+        """A commanded value is kept while the snapshot still reports the old one."""
+        purifier = self.get_device("air_purifiers", self.setup_entry)
+        self.mock_api.side_effect = [self._set_success()]
+        assert self.run_in_loop(purifier.toggle_child_lock, True)
+
+        # Snapshot still reports child lock off.
+        self.mock_api.side_effect = [(None, 200), self._details(childLockSwitch=0)]
+        self.run_in_loop(purifier.get_details)
+        assert purifier.state.child_lock is True
+
+        # Snapshot catches up: hold is released.
+        self.mock_api.side_effect = [(None, 200), self._details(childLockSwitch=1)]
+        self.run_in_loop(purifier.get_details)
+        assert purifier.state.child_lock is True
+        assert "child_lock" not in purifier._pending_state
+
+    def test_held_value_expires(self):
+        """After the hold period the snapshot value is used again."""
+        purifier = self.get_device("air_purifiers", self.setup_entry)
+        self.mock_api.side_effect = [self._set_success()]
+        assert self.run_in_loop(purifier.toggle_child_lock, True)
+        value, set_at = purifier._pending_state["child_lock"]
+        purifier._pending_state["child_lock"] = (
+            value,
+            set_at - purifier.PENDING_HOLD_SECONDS - 1,
+        )
+
+        self.mock_api.side_effect = [(None, 200), self._details(childLockSwitch=0)]
+        self.run_in_loop(purifier.get_details)
+        assert purifier.state.child_lock is False
+        assert purifier._pending_state == {}
+
+    def _timer_list(self, timers):
+        return (build_bypass_v2_response(inner_result={"timers": timers}), 200)
+
+    def test_set_timer_uses_countdown_format(self):
+        """set_timer sends the countdown payload the device stores."""
+        purifier = self.get_device("air_purifiers", self.setup_entry)
+        self.mock_api.side_effect = [
+            (build_bypass_v2_response(inner_result={"id": 1}), 200)
+        ]
+        assert self.run_in_loop(purifier.set_timer, 7200)
+
+        payload = self.mock_api.call_args.args[2].payload
+        assert payload.method == "addTimerV2"
+        assert payload.data == {
+            "startAct": [{"type": "powerSwitch", "num": 0, "act": 0}],
+            "total": 7200,
+        }
+        assert purifier.state.timer.id == 1
+        assert purifier.state.timer.action == const.DeviceStatus.OFF
+
+    def test_get_and_clear_timer(self):
+        """get_timer parses getTimerV2 and clear_timer deletes by its ID."""
+        purifier = self.get_device("air_purifiers", self.setup_entry)
+        timer = {
+            "id": 3,
+            "remain": 7175,
+            "total": 7200,
+            "startAct": [{"type": "powerSwitch", "act": 0, "num": 0}],
+        }
+        self.mock_api.side_effect = [self._timer_list([timer])]
+        result = self.run_in_loop(purifier.get_timer)
+        assert result is not None
+        assert (result.id, result.timer_duration) == (3, 7200)
+
+        self.mock_api.side_effect = [self._timer_list([timer]), self._set_success()]
+        assert self.run_in_loop(purifier.clear_timer)
+        payload = self.mock_api.call_args.args[2].payload
+        assert payload.method == "delTimerV2"
+        assert payload.data == {"id": 3}
+        assert purifier.state.timer is None
+
+    def test_clear_timer_without_timer(self):
+        """clear_timer succeeds without a request when the device has no timer."""
+        purifier = self.get_device("air_purifiers", self.setup_entry)
+        self.mock_api.side_effect = [self._timer_list([])]
+        assert self.run_in_loop(purifier.clear_timer) is True
+        assert self.mock_api.call_count == 1
+        assert purifier.state.timer is None
+        assert purifier._pending_state["timer"][0] is None
+
+        # A failed getTimerV2 request is still an error.
+        self.mock_api.reset_mock()
+        self.mock_api.side_effect = [(None, 200)]
+        assert self.run_in_loop(purifier.clear_timer) is False
+        assert self.mock_api.call_count == 1
+
+    def test_auto_preference_read_only(self):
+        """Auto preference is reported but cannot be set."""
+        purifier = self.get_device("air_purifiers", self.setup_entry)
+        assert purifier.auto_preferences == []
+        self.mock_api.side_effect = [(None, 200), self._details()]
+        self.run_in_loop(purifier.get_details)
+        assert purifier.state.auto_preference_type == "default"
+        self.mock_api.reset_mock()
+        assert self.run_in_loop(purifier.set_auto_preference, "quiet") is False
+        self.mock_api.assert_not_called()
+
+    def test_eleva_settings_from_snapshot(self):
+        """Personalized settings are read from the status snapshot."""
+        purifier = self.get_device("air_purifiers", self.setup_entry)
+        self.mock_api.side_effect = [(None, 200), self._details()]
+        self.run_in_loop(purifier.get_details)
+
+        state = purifier.state
+        assert state.auto_profile == const.PurifierAutoProfiles.ADVANCED_CARE
+        assert state.dynamic_manual is True
+        assert state.dynamic_sleep is True
+        assert state.adaptive_start is False
+        assert state.indicator_ring == const.PurifierIndicatorRingLevels.BRIGHT
+        assert state.quiet_period_switch == const.DeviceStatus.OFF
+        assert state.quiet_period_mode == const.PurifierQuietPeriodModes.LIGHT_CONTROL
+        assert (state.quiet_period_start, state.quiet_period_end) == (79200, 21600)
+
+    def test_auto_profile_from_device_prop(self):
+        """The auto profile in deviceProp replaces the snapshot value."""
+        purifier = self.get_device("air_purifiers", self.setup_entry)
+        self.mock_api.side_effect = [
+            (self._device_list_response({"healthProtectMode": 2}), 200),
+            self._details(group=3),
+        ]
+        self.run_in_loop(purifier.get_details)
+        assert purifier.state.auto_profile == const.PurifierAutoProfiles.FOCUSED_CARE
+
+    def test_set_quiet_period(self):
+        """set_quiet_period sends all four values and holds them."""
+        purifier = self.get_device("air_purifiers", self.setup_entry)
+        self.mock_api.side_effect = [(None, 200), self._details(), self._set_success()]
+        self.run_in_loop(purifier.get_details)
+        assert self.run_in_loop(
+            purifier.set_quiet_period, True, "schedule", 79200, 22500
+        )
+
+        payload = self.mock_api.call_args.args[2].payload
+        assert payload.method == "setQuietPeriod"
+        assert payload.data == {
+            "quietPeriodSwitch": 1,
+            "modeIdx": 1,
+            "startTime": 79200,
+            "endTime": 22500,
+        }
+
+        # The stale snapshot still reports the old values.
+        self.mock_api.side_effect = [(None, 200), self._details()]
+        self.run_in_loop(purifier.get_details)
+        assert purifier.state.quiet_period_switch == const.DeviceStatus.ON
+        assert purifier.state.quiet_period_mode == const.PurifierQuietPeriodModes.SCHEDULE
+        assert purifier.state.quiet_period_end == 22500
+
+    def test_set_quiet_period_keeps_current_values(self):
+        """Values not passed keep their current setting."""
+        purifier = self.get_device("air_purifiers", self.setup_entry)
+        self.mock_api.side_effect = [(None, 200), self._details(), self._set_success()]
+        self.run_in_loop(purifier.get_details)
+        assert self.run_in_loop(purifier.set_quiet_period, True)
+        payload = self.mock_api.call_args.args[2].payload
+        assert payload.data == {
+            "quietPeriodSwitch": 1,
+            "modeIdx": 0,
+            "startTime": 79200,
+            "endTime": 21600,
+        }
+
+    def test_set_quiet_period_invalid_time(self):
+        """Times outside a day are rejected without a request."""
+        purifier = self.get_device("air_purifiers", self.setup_entry)
+        self.mock_api.side_effect = [(None, 200), self._details()]
+        self.run_in_loop(purifier.get_details)
+        self.mock_api.reset_mock()
+        assert self.run_in_loop(purifier.set_quiet_period, True, None, 90000) is False
+        self.mock_api.assert_not_called()
+
+    def test_set_indicator_ring(self):
+        """set_indicator_ring sends setAqiLight with the ring mode."""
+        purifier = self.get_device("air_purifiers", self.setup_entry)
+        self.mock_api.side_effect = [self._set_success()]
+        assert self.run_in_loop(purifier.set_indicator_ring, "dim")
+        payload = self.mock_api.call_args.args[2].payload
+        assert payload.method == "setAqiLight"
+        assert payload.data == {"mode": 2}
+        assert purifier.state.indicator_ring == const.PurifierIndicatorRingLevels.DIM
+
+        self.mock_api.reset_mock()
+        assert self.run_in_loop(purifier.set_indicator_ring, "medium") is False
+        self.mock_api.assert_not_called()
+
+    def test_timer_state_from_snapshot(self):
+        """timerRemain sets a timer, and 0 clears it."""
+        purifier = self.get_device("air_purifiers", self.setup_entry)
+        self.mock_api.side_effect = [(None, 200), self._details(timerRemain=600)]
+        self.run_in_loop(purifier.get_details)
+        assert purifier.state.timer is not None
+        assert 0 < purifier.state.timer.time_remaining <= 600
+
+        self.mock_api.side_effect = [(None, 200), self._details(timerRemain=0)]
+        self.run_in_loop(purifier.get_details)
+        assert purifier.state.timer is None
+
+    def test_timer_set_held_over_stale_snapshot(self):
+        """A timer set from the library survives a stale snapshot."""
+        purifier = self.get_device("air_purifiers", self.setup_entry)
+        self.mock_api.side_effect = [
+            (build_bypass_v2_response(inner_result={"id": 1}), 200)
+        ]
+        assert self.run_in_loop(purifier.set_timer, 7200)
+        timer = purifier.state.timer
+
+        # Snapshot has not caught up yet.
+        self.mock_api.side_effect = [(None, 200), self._details(timerRemain=0)]
+        self.run_in_loop(purifier.get_details)
+        assert purifier.state.timer is timer
+
+        # Snapshot reports the timer: the local countdown is kept.
+        self.mock_api.side_effect = [(None, 200), self._details(timerRemain=7000)]
+        self.run_in_loop(purifier.get_details)
+        assert purifier.state.timer is timer
+        assert "timer" not in purifier._pending_state
 
 
 class TestLightDetectionToggle(TestBase):
