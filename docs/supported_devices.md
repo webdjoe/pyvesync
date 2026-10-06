@@ -32,6 +32,7 @@ The VeSync API supports a variety of devices. The following is a list of devices
       - [LV-RH131S][pyvesync.devices.vesyncpurifier.VeSyncAirRH131]
       - [Sprout Air Purifier][pyvesync.devices.vesyncpurifier.VeSyncAirSprout]
       - [Vital Pet Pro][pyvesync.devices.vesyncpurifier.VeSyncAirVitalPetPro] - LAP-P501S
+      - [Eleva 500X][pyvesync.devices.vesyncpurifier.VeSyncAirEleva] - LAP-C511S
 5. Humidifiers
       - [Classic 200S][pyvesync.devices.vesynchumidifier.VeSyncHumid200S] - 2L Smart Humidifier
       - [Classic 300S][pyvesync.devices.vesynchumidifier.VeSyncHumid200300S] - 3L Smart Humidifier
@@ -107,6 +108,7 @@ is used.
 | LV-PUR131S | ✔ |  | | | | |
 | LV-RH131S | ✔ |  | | | | |
 | Sprout Air Purifier | ✔ |  | | | | ✔ |
+| Eleva 500X | ✔ | ✔ | ✔ | | ✔ | |
 
 ### Humidifiers
 

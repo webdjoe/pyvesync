@@ -7,6 +7,7 @@
 - [VeSyncAirBaseV2 Purifiers][pyvesync.devices.vesyncpurifier.VeSyncAirBaseV2] - Newer models
 - [VeSyncAirSprout Purifiers][pyvesync.devices.vesyncpurifier.VeSyncAirSprout] - Sprout models
 - [VeSyncAirVitalPetPro Purifiers][pyvesync.devices.vesyncpurifier.VeSyncAirVitalPetPro] - Vital Pet Pro
+- [VeSyncAirEleva Purifiers][pyvesync.devices.vesyncpurifier.VeSyncAirEleva] - Eleva models
 - [VeSyncAir131 Purifiers][pyvesync.devices.vesyncpurifier.VeSyncAir131] - PUR-LV131S Purifiers
 - [VeSyncAirRH131 Purifiers][pyvesync.devices.vesyncpurifier.VeSyncAirRH131] - LV-RH131S Purifiers
 - [VeSyncPurifier Base Device][pyvesync.base_devices.purifier_base.VeSyncPurifier] - Abstract base class
@@ -138,6 +139,24 @@ purifier off.
             functions: false
         group_by_category: true
         toc_label: "VeSyncAirVitalPetPro Purifiers"
+        show_root_heading: true
+        show_root_toc_entry: true
+        show_category_heading: true
+        show_source: true
+        show_if_no_docstring: true
+        inherited_members: true
+        docstring_options:
+            ignore_init_summary: true
+        merge_init_into_class: false
+
+::: pyvesync.devices.vesyncpurifier.VeSyncAirEleva
+    options:
+        filters:
+            - "!^_.*"
+        summary:
+            functions: false
+        group_by_category: true
+        toc_label: "VeSyncAirEleva Purifiers"
         show_root_heading: true
         show_root_toc_entry: true
         show_category_heading: true
