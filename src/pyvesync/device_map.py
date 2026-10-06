@@ -790,6 +790,22 @@ humidifier_modules = [
         setup_entry='LEH-S601S',
     ),
     HumidifierMap(
+        class_name='VeSyncSuperior6000S',
+        dev_types=['LEH-S451S-WUS', 'LEH-S451S-WUSR', 'LEH-S451S-WEU', 'LEH-S451S-WEUR'],
+        features=[HumidifierFeatures.DRYING_MODE, HumidifierFeatures.AUTO_STOP],
+        mist_modes={
+            HumidifierModes.AUTO: 'autoPro',
+            HumidifierModes.SLEEP: 'sleep',
+            HumidifierModes.MANUAL: 'manual',
+        },
+        # virtualLevel 1-34 (maxFanLevel); mistLevel 1-3 is the coarse fan band
+        mist_levels=list(range(1, 35)),
+        device_alias='Superior Studio 450S',
+        model_display='LEH-S451S Series',
+        model_name='Superior Studio Smart 450S',
+        setup_entry='LEH-S451S',
+    ),
+    HumidifierMap(
         class_name='VeSyncSproutHumid',
         dev_types=['LEH-B381S-WUS', 'LEH-B381S-WEU'],
         features=[

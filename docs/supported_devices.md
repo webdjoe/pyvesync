@@ -36,6 +36,7 @@ The VeSync API supports a variety of devices. The following is a list of devices
       - [OasisMist 4.5L Humidifier][pyvesync.devices.vesynchumidifier.VeSyncHumid200300S]
       - [OasisMist 1000S Humidifier][pyvesync.devices.vesynchumidifier.VeSyncHumid1000S]
       - [Superior 6000S][pyvesync.devices.vesynchumidifier.VeSyncSuperior6000S] - 6L Smart Humidifier
+      - [Superior Studio Smart 450S][pyvesync.devices.vesynchumidifier.VeSyncSuperior6000S] - 4.5L Evaporative Humidifier
       - [Sprout Humidifier][pyvesync.devices.vesynchumidifier.VeSyncSproutHumid]
 6. Fans
       - [42" Tower Fan][pyvesync.devices.vesyncfan.VeSyncTowerFan]
@@ -99,6 +100,7 @@ these methods are used.
 | LV600S | | | ✔ |
 | OasisMist 4.5L | | ✔ | ✔ |
 | Superior 6000S | | | ✔ |
+| Superior Studio 450S | | | ✔ |
 | Sprout Humidifier | | | |
 
 The OasisMist 4.5L (`LUH-O451S-WEU`) exposes an RGB nightlight through
