@@ -32,6 +32,7 @@ import pytest
 import pyvesync.const as const
 from pyvesync.base_devices.purifier_base import VeSyncPurifier
 from base_test_cases import TestBase
+from defaults import build_bypass_v2_response
 from utils import assert_test, parse_args
 import call_json_purifiers
 
@@ -261,3 +262,28 @@ class TestAirPurifiers(TestBase):
         assert assert_test(
             method_call, all_kwargs, setup_entry, self.write_api, self.overwrite
         )
+
+
+class TestLightDetectionToggle(TestBase):
+    """Test toggling light detection on V2 purifiers."""
+
+    setup_entry = "LAP-V201S"
+
+    def test_light_detection_off_in_dark_room(self):
+        """Turning light detection off is sent when the room is dark."""
+        details = build_bypass_v2_response(
+            inner_result=call_json_purifiers.PURIFIER_DETAILS[self.setup_entry],
+            inner_result_override={"lightDetectionSwitch": 1, "environmentLightState": 0},
+        )
+        purifier = self.get_device("air_purifiers", self.setup_entry)
+        self.mock_api.side_effect = [
+            (details, 200),
+            (build_bypass_v2_response(), 200),
+        ]
+        self.run_in_loop(purifier.get_details)
+        assert self.run_in_loop(purifier.toggle_light_detection, False)
+
+        payload = self.mock_api.call_args.args[2].payload
+        assert payload.method == "setLightDetection"
+        assert payload.data == {"lightDetectionSwitch": 0}
+        assert purifier.state.light_detection_switch == const.DeviceStatus.OFF
