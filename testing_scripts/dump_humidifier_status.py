@@ -2,7 +2,7 @@
 
 Usage:
     python testing_scripts/dump_humidifier_status.py --email EMAIL --password PASSWORD \
-        [--filter S451S] [--output vesync_dump.json]
+        [--filter S451S] [--output vesync_dump.json] [--watch SECONDS]
 
 Logs in, prints every device returned by the VeSync device list API (device type,
 config module, firmware, etc.) and, for each device whose deviceType matches
@@ -10,6 +10,11 @@ config module, firmware, etc.) and, for each device whose deviceType matches
 result can be shared in a GitHub issue or used to build a response model. This works
 even when the device is not in pyvesync's device map. Account identifiers are redacted
 from the output file.
+
+With ``--watch SECONDS`` the status calls repeat at that interval and only the fields
+that changed since the previous poll are printed, which helps catch transient states
+(tank lifted, running dry, drying cycle). Each poll costs one API call per matching
+device, so keep the interval modest to stay within the VeSync daily quota.
 """
 
 from __future__ import annotations
@@ -20,6 +25,8 @@ import json
 import logging
 import re
 import sys
+from collections.abc import Awaitable, Callable
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -58,7 +65,16 @@ def redact(obj: Any) -> Any:  # noqa: ANN401
     return obj
 
 
-async def main(email: str, password: str, dev_filter: str, output: str) -> None:
+def _diff(old: dict[str, Any], new: dict[str, Any]) -> dict[str, Any]:
+    """Return the keys whose values differ between two status results."""
+    return {
+        k: new.get(k) for k in sorted(set(old) | set(new)) if old.get(k) != new.get(k)
+    }
+
+
+async def main(
+    email: str, password: str, dev_filter: str, output: str, watch: int
+) -> None:
     """Run the dump."""
     async with VeSync(email, password) as manager:
         if not await manager.login():
@@ -93,15 +109,10 @@ async def main(email: str, password: str, dev_filter: str, output: str) -> None:
         dump: dict[str, Any] = {'device_list': redact(devices), 'status': {}}
 
         pattern = re.compile(dev_filter, re.IGNORECASE)
-        for dev in devices:
-            if not pattern.search(dev.get('deviceType', '')):
-                continue
-            logger.info(
-                'Device %s (%s) %s pyvesync device map',
-                dev.get('deviceName'),
-                dev.get('deviceType'),
-                'IS in' if dev.get('cid') in known else 'is NOT in',
-            )
+        targets = [d for d in devices if pattern.search(d.get('deviceType', ''))]
+
+        async def fetch_status(dev: dict[str, Any]) -> dict[str, Any] | None:
+            """Call getHumidifierStatus for a raw device list entry."""
             body = Helpers.get_defaultvalues_attributes(REQUEST_KEYS).copy()
             body.update(Helpers.get_manager_attributes(manager, REQUEST_KEYS))
             body.update(
@@ -118,18 +129,27 @@ async def main(email: str, password: str, dev_filter: str, output: str) -> None:
                     },
                 }
             )
-            r, status = await manager.async_call_api(
+            r, _ = await manager.async_call_api(
                 BYPASS_V2_BASE + 'bypassV2',
                 'post',
                 headers=Helpers.req_header_bypass(),
                 json_object=body,
             )
+            return r
+
+        def status_key(dev: dict[str, Any]) -> str:
+            return f'{dev.get("deviceName")} ({dev.get("deviceType")})'
+
+        for dev in targets:
             logger.info(
-                'getHumidifierStatus HTTP %s:\n%s', status, json.dumps(r, indent=2)
+                'Device %s (%s) %s pyvesync device map',
+                dev.get('deviceName'),
+                dev.get('deviceType'),
+                'IS in' if dev.get('cid') in known else 'is NOT in',
             )
-            # Key by name as well as type so several units of one model do not overwrite
-            key = f"{dev.get('deviceName')} ({dev.get('deviceType')})"
-            dump['status'][key] = redact(r)
+            r = await fetch_status(dev)
+            logger.info('getHumidifierStatus:\n%s', json.dumps(r, indent=2))
+            dump['status'][status_key(dev)] = redact(r)
 
         for hum in manager.devices.humidifiers:
             if pattern.search(hum.device_type):
@@ -139,10 +159,50 @@ async def main(email: str, password: str, dev_filter: str, output: str) -> None:
                     hum.state.to_json(indent=True),
                 )
 
+        if watch > 0:
+            await watch_loop(manager, targets, fetch_status, status_key, dump, watch)
+
     Path(output).write_text(  # noqa: ASYNC240 - one-off write after API calls finish
         json.dumps(dump, indent=2), encoding='utf-8'
     )
     logger.info('Wrote redacted dump to %s', output)
+
+
+async def watch_loop(
+    manager: VeSync,
+    targets: list[dict[str, Any]],
+    fetch_status: Callable[[dict[str, Any]], Awaitable[dict[str, Any] | None]],
+    status_key: Callable[[dict[str, Any]], str],
+    dump: dict[str, Any],
+    watch: int,
+) -> None:
+    """Poll matching devices and record only the fields that change."""
+    del manager
+    logger.info('Watching %d device(s) every %ds; Ctrl+C to stop', len(targets), watch)
+    last: dict[str, dict[str, Any]] = {}
+    for dev in targets:
+        full = dump['status'].get(status_key(dev)) or {}
+        last[dev['cid']] = (full.get('result') or {}).get('result') or {}
+    dump['watch'] = []
+    try:
+        while True:
+            await asyncio.sleep(watch)
+            for dev in targets:
+                r = await fetch_status(dev)
+                inner = ((r or {}).get('result') or {}).get('result') or {}
+                changed = _diff(last[dev['cid']], inner)
+                if changed:
+                    logger.info('%s changed: %s', dev.get('deviceName'), changed)
+                    dump['watch'].append(
+                        {
+                            'time': datetime.now(UTC).isoformat(),
+                            'device': dev.get('deviceName'),
+                            'changed': changed,
+                        }
+                    )
+                    last[dev['cid']] = inner
+    except (KeyboardInterrupt, asyncio.CancelledError):
+        logger.info('Watch stopped')
 
 
 if __name__ == '__main__':
@@ -153,5 +213,11 @@ if __name__ == '__main__':
         '--filter', default='S451S', help='regex on deviceType (default S451S)'
     )
     p.add_argument('--output', default='vesync_dump.json')
+    p.add_argument(
+        '--watch',
+        type=int,
+        default=0,
+        help='poll matching devices every N seconds and log changed fields',
+    )
     a = p.parse_args()
-    asyncio.run(main(a.email, a.password, a.filter, a.output))
+    asyncio.run(main(a.email, a.password, a.filter, a.output, a.watch))
