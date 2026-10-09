@@ -6,6 +6,16 @@ The process outlined below is time consuming and can be difficult. An alternativ
 
 Please do not post a device request without being willing to either capture packets or share the device.
 
+## Quick alternative for humidifiers
+
+Most recent humidifiers use the `bypassV2` API with a `getHumidifierStatus` method. For these devices the `testing_scripts/dump_humidifier_status.py` script can often provide enough information to add basic support without a packet capture. It logs in, prints the raw device list entry (including the exact `deviceType` and `configModule`), calls `getHumidifierStatus` directly for any device type matching `--filter`, and writes a redacted JSON dump:
+
+```bash
+python testing_scripts/dump_humidifier_status.py --email <email> --password <password> --filter S451S
+```
+
+Attach the resulting `vesync_dump.json` to the issue. A packet capture is still needed to confirm the request payloads for set methods (mode names, level ranges) if they differ from the device's existing class.
+
 ## Prerequisites
 
 1. **Mumu Emulator**: Download and install the Mumu Android emulator from [Mumu Player](https://www.mumuplayer.com/). This emulator allows you to run Android apps on your computer. Other emulators may work, but Mumu is known to be compatible with Arm64 apk's and allows `adb root` access.

@@ -173,13 +173,15 @@ class Superior6000SResult(InnerHumidifierBaseResult):
     autoStopState: int
     screenSwitch: int
     screenState: int
-    scheduleCount: int
-    timerRemain: int
-    errorCode: int
-    autoPreference: int
-    childLockSwitch: int
-    filterLifePercent: int
-    temperature: int
+    scheduleCount: int = 0
+    timerRemain: int = 0
+    errorCode: int = 0
+    autoPreference: int = 0
+    childLockSwitch: int = 0
+    filterLifePercent: int = 0
+    temperature: int = 0
+    runningError: int = 0
+    exceptionType: int = 0
     dryingMode: DryingModeModel | None = None
 
 

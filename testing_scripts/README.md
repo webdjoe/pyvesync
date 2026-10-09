@@ -104,3 +104,16 @@ python vs_test_script.py \  # or testing_scripts/vs_test_script.py if using repo
 ## Logging
 
 The script logs output to both the console and a file specified by the `OUTPUT_FILE` variable.
+
+## Dumping status for an unsupported humidifier
+
+`dump_humidifier_status.py` helps gather the information needed to add a new humidifier. It works even when the device is not in pyvesync's device map:
+
+1. Logs in and prints every device in the account's raw device list (name, `deviceType`, `configModule`, firmware).
+2. For each device whose `deviceType` matches `--filter` (a regex, default `S451S`), sends a raw `bypassV2` `getHumidifierStatus` call and prints the full JSON result, noting whether pyvesync recognised the device.
+3. Prints the pyvesync-parsed state for matching devices that are supported.
+4. Writes a redacted copy (`cid`, `uuid`, `macID`, account IDs and tokens removed) to `--output` (default `vesync_dump.json`) for attaching to a GitHub issue.
+
+```bash
+python testing_scripts/dump_humidifier_status.py --email <your_email> --password <your_password> --filter S451S --output vesync_dump.json
+```
