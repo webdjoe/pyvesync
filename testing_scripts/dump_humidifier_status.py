@@ -160,11 +160,21 @@ async def main(
                 )
 
         if watch > 0:
-            await watch_loop(manager, targets, fetch_status, status_key, dump, watch)
+            try:
+                await watch_loop(manager, targets, fetch_status, status_key, dump, watch)
+            finally:
+                # Ctrl+C cancels the task; make sure what we have is written out.
+                _write_dump(dump, output)
+            return
 
-    Path(output).write_text(  # noqa: ASYNC240 - one-off write after API calls finish
-        json.dumps(dump, indent=2), encoding='utf-8'
-    )
+    _write_dump(dump, output)
+
+
+def _write_dump(dump: dict[str, Any], output: str) -> None:
+    """Write the dump atomically so an interrupted run never leaves an empty file."""
+    tmp = Path(output).with_suffix('.tmp')
+    tmp.write_text(json.dumps(dump, indent=2), encoding='utf-8')
+    tmp.replace(output)
     logger.info('Wrote redacted dump to %s', output)
 
 
@@ -220,4 +230,7 @@ if __name__ == '__main__':
         help='poll matching devices every N seconds and log changed fields',
     )
     a = p.parse_args()
-    asyncio.run(main(a.email, a.password, a.filter, a.output, a.watch))
+    try:
+        asyncio.run(main(a.email, a.password, a.filter, a.output, a.watch))
+    except KeyboardInterrupt:
+        logger.info('Interrupted')
