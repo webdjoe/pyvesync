@@ -284,8 +284,26 @@ class DeviceContainer(_DeviceContainerBase):
         """
         device_list = device_list_result.result.list
         for device in device_list:
-            if self.device_exists(device.cid, device.subDeviceNo) not in self._data:
+            existing = self.get_by_cid(device.cid, device.subDeviceNo)
+            if existing is None:
                 self.add_device_from_model(device, manager)
+            else:
+                existing.update_from_device_list(device)
+
+    def get_by_cid(
+        self, cid: str, sub_device_no: int | None = None
+    ) -> VeSyncBaseDevice | None:
+        """Return the device with the given cid and sub_device_no, if present.
+
+        Args:
+            cid (str): The cid of the device.
+            sub_device_no (int | None): The sub-device number, None for most devices.
+
+        Returns:
+            VeSyncBaseDevice | None: The matching device or None.
+        """
+        target = hash(cid + str(sub_device_no))
+        return next((dev for dev in self._data if hash(dev) == target), None)
 
     @property
     def outlets(self) -> list[VeSyncOutlet]:

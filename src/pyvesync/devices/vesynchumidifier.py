@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import orjson
 from typing_extensions import deprecated
@@ -28,6 +28,8 @@ from pyvesync.utils.device_mixins import BypassV2Mixin, process_bypassv2_result
 from pyvesync.utils.helpers import Helpers, Timer, Validators
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from pyvesync import VeSync
     from pyvesync.device_map import HumidifierMap
     from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
@@ -616,6 +618,41 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
     ) -> None:
         """Initialize Superior 6000S Humidifier class."""
         super().__init__(details, manager, feature_map)
+
+    uses_device_list_state = True
+
+    def update_from_device_list(self, details: ResponseDeviceDetailsModel) -> None:
+        """Refresh state from the device list `deviceProp` summary.
+
+        The Superior Studio 450S updates its device list entry in near real time
+        (power, work mode, humidity, water shortage, drying cycle) while the
+        `getHumidifierStatus` response can lag by minutes, so prefer these values.
+        Fields absent from the summary are left as set by `get_details()`.
+        """
+        prop = details.deviceProp
+        if not prop:
+            return
+        # deviceProp key -> (state attribute, converter)
+        mapping: dict[str, tuple[str, Callable[[Any], Any]]] = {
+            'powerSwitch': ('device_status', DeviceStatus.from_int),
+            'connectionStatus': ('connection_status', ConnectionStatus),
+            'workMode': ('mode', self._reverse_mist_modes.get),
+            'humidity': ('humidity', int),
+            'targetHumidity': ('auto_target_humidity', int),
+            'virtualLevel': ('mist_virtual_level', int),
+            'mistLevel': ('mist_level', int),
+            'waterLacksState': ('water_lacks', bool),
+            'screenSwitch': ('display_set_status', DeviceStatus.from_int),
+            'childLockSwitch': ('child_lock', bool),
+            'filterLifePercent': ('filter_life', int),
+            'dryingState': ('drying_mode_status', DryingModes.from_int),
+            'autoDryingSwitch': ('drying_mode_auto_switch', DeviceStatus.from_int),
+            'dryingLevel': ('drying_mode_level', int),
+            'dryingRemain': ('drying_mode_time_remain', int),
+        }
+        for key, (attr, convert) in mapping.items():
+            if (value := prop.get(key)) is not None:
+                setattr(self.state, attr, convert(value))
 
     def _set_state(self, resp_model: models.Superior6000SResult) -> None:
         """Set state from Superior 6000S API result model."""
