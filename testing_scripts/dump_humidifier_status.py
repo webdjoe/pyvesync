@@ -169,7 +169,9 @@ async def main(
 
         if watch > 0:
             try:
-                await watch_loop(manager, targets, fetch_status, status_key, dump, watch)
+                await watch_loop(
+                    manager, targets, fetch_status, status_key, dump, watch, output
+                )
             finally:
                 # Ctrl+C cancels the task; make sure what we have is written out.
                 _write_dump(dump, output)
@@ -178,21 +180,23 @@ async def main(
     _write_dump(dump, output)
 
 
-def _write_dump(dump: dict[str, Any], output: str) -> None:
+def _write_dump(dump: dict[str, Any], output: str, *, quiet: bool = False) -> None:
     """Write the dump atomically so an interrupted run never leaves an empty file."""
     tmp = Path(output).with_suffix('.tmp')
     tmp.write_text(json.dumps(dump, indent=2), encoding='utf-8')
     tmp.replace(output)
-    logger.info('Wrote redacted dump to %s', output)
+    if not quiet:
+        logger.info('Wrote redacted dump to %s', output)
 
 
-async def watch_loop(
+async def watch_loop(  # noqa: PLR0913, PLR0917
     manager: VeSync,
     targets: list[dict[str, Any]],
     fetch_status: Callable[[dict[str, Any]], Awaitable[dict[str, Any] | None]],
     status_key: Callable[[dict[str, Any]], str],
     dump: dict[str, Any],
     watch: int,
+    output: str | None = None,
 ) -> None:
     """Poll matching devices and record only the fields that change."""
     del manager
@@ -219,6 +223,11 @@ async def watch_loop(
                         }
                     )
                     last[dev['cid']] = inner
+            dump['watch_polls'] = dump.get('watch_polls', 0) + 1
+            if output:
+                # Save after every cycle: Ctrl+C under some shells kills the process
+                # before any cleanup runs, so the file must already be current.
+                _write_dump(dump, output, quiet=True)
     except (KeyboardInterrupt, asyncio.CancelledError):
         logger.info('Watch stopped')
 
