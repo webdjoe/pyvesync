@@ -127,7 +127,9 @@ async def main(email: str, password: str, dev_filter: str, output: str) -> None:
             logger.info(
                 'getHumidifierStatus HTTP %s:\n%s', status, json.dumps(r, indent=2)
             )
-            dump['status'][dev.get('deviceType')] = redact(r)
+            # Key by name as well as type so several units of one model do not overwrite
+            key = f"{dev.get('deviceName')} ({dev.get('deviceType')})"
+            dump['status'][key] = redact(r)
 
         for hum in manager.devices.humidifiers:
             if pattern.search(hum.device_type):
