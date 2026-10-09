@@ -797,6 +797,7 @@ humidifier_modules = [
             HumidifierModes.AUTO: 'autoPro',
             HumidifierModes.SLEEP: 'sleep',
             HumidifierModes.MANUAL: 'manual',
+            HumidifierModes.FAN: 'fan',
         },
         # virtualLevel 1-34 (maxFanLevel); mistLevel 1-3 is the coarse fan band
         mist_levels=list(range(1, 35)),

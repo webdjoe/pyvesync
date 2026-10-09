@@ -380,3 +380,14 @@ class TestHumidifiers(TestBase):
         assert obj.state.rgb_nightlight_red == 0
         assert obj.state.rgb_nightlight_green == 0
         assert obj.state.rgb_nightlight_blue == 0
+
+    def test_superior_studio_fan_mode(self):
+        """Superior Studio 450S fan-only work mode maps to HumidifierModes.FAN."""
+        from copy import deepcopy
+        from pyvesync.models.humidifier_models import Superior6000SResult
+
+        obj = self.get_device("humidifiers", "LEH-S451S")
+        details = deepcopy(call_json_humidifiers.HUMIDIFIER_DETAILS["LEH-S451S"])
+        details["workMode"] = "fan"
+        obj._set_state(Superior6000SResult.from_dict(details))
+        assert obj.state.mode == const.HumidifierModes.FAN

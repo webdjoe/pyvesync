@@ -180,6 +180,8 @@ class Superior6000SResult(InnerHumidifierBaseResult):
     childLockSwitch: int = 0
     filterLifePercent: int = 0
     temperature: int = 0
+    runningError: int = 0
+    exceptionType: int = 0
     dryingMode: DryingModeModel | None = None
 
 
