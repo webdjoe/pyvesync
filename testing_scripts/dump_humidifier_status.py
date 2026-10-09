@@ -2,7 +2,7 @@
 
 Usage:
     python testing_scripts/dump_humidifier_status.py --email EMAIL --password PASSWORD \
-        [--filter S451S] [--output vesync_dump.json] [--watch SECONDS]
+        [--filter S451S] [--name Josh] [--output vesync_dump.json] [--watch SECONDS]
 
 Logs in, prints every device returned by the VeSync device list API (device type,
 config module, firmware, etc.) and, for each device whose deviceType matches
@@ -73,7 +73,12 @@ def _diff(old: dict[str, Any], new: dict[str, Any]) -> dict[str, Any]:
 
 
 async def main(
-    email: str, password: str, dev_filter: str, output: str, watch: int
+    email: str,
+    password: str,
+    dev_filter: str,
+    output: str,
+    watch: int,
+    name_filter: str | None = None,
 ) -> None:
     """Run the dump."""
     async with VeSync(email, password) as manager:
@@ -110,6 +115,9 @@ async def main(
 
         pattern = re.compile(dev_filter, re.IGNORECASE)
         targets = [d for d in devices if pattern.search(d.get('deviceType', ''))]
+        if name_filter:
+            name_re = re.compile(name_filter, re.IGNORECASE)
+            targets = [d for d in targets if name_re.search(d.get('deviceName', ''))]
 
         async def fetch_status(dev: dict[str, Any]) -> dict[str, Any] | None:
             """Call getHumidifierStatus for a raw device list entry."""
@@ -222,6 +230,7 @@ if __name__ == '__main__':
     p.add_argument(
         '--filter', default='S451S', help='regex on deviceType (default S451S)'
     )
+    p.add_argument('--name', default=None, help='optional regex on deviceName')
     p.add_argument('--output', default='vesync_dump.json')
     p.add_argument(
         '--watch',
@@ -231,6 +240,6 @@ if __name__ == '__main__':
     )
     a = p.parse_args()
     try:
-        asyncio.run(main(a.email, a.password, a.filter, a.output, a.watch))
+        asyncio.run(main(a.email, a.password, a.filter, a.output, a.watch, a.name))
     except KeyboardInterrupt:
         logger.info('Interrupted')
