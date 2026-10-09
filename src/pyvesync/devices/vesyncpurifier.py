@@ -526,14 +526,14 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
 
     async def toggle_light_detection(self, toggle: bool | None = None) -> bool:
         """Enable/Disable Light Detection Feature."""
-        if bool(self.state.light_detection_status) == toggle:
+        if bool(self.state.light_detection_switch) == toggle:
             _LOGGER.debug(
-                'Light detection is already %s', self.state.light_detection_status
+                'Light detection is already %s', self.state.light_detection_switch
             )
             return True
 
         if toggle is None:
-            toggle = not bool(self.state.light_detection_status)
+            toggle = not bool(self.state.light_detection_switch)
         payload_data = {'lightDetectionSwitch': int(toggle)}
         r_dict = await self.call_bypassv2_api('setLightDetection', payload_data)
         r = Helpers.process_dev_response(_LOGGER, 'set_light_detection', self, r_dict)
@@ -584,7 +584,17 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         return True
 
     async def toggle_display(self, mode: bool) -> bool:
-        if bool(self.state.light_detection_status):
+        """Set the display on or off.
+
+        The display setting is independent of light detection: with light
+        detection enabled the device only darkens a display that is set to on
+        while the room is dark, and the VeSync app allows both to be changed
+        at any time.
+        """
+        # Vital 100S reported to reject this with 11017000 in #351; the 200S accepts it
+        if self.device_type.startswith('LAP-V102S') and bool(
+            self.state.light_detection_switch
+        ):
             _LOGGER.error('Cannot set display when light detection is enabled')
             return False
 
