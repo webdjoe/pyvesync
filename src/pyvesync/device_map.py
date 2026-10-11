@@ -1208,10 +1208,23 @@ air_fryer_modules: list[AirFryerMap] = [
         # pulling the basket, but no cloud pause/resume method is known, so
         # RESUMABLE is not claimed.
         features=[AirFryerFeatures.PREHEAT],
-        # Only the manual program was read back from the unit. The preset
-        # buttons' mode strings have not been captured.
+        # Mode strings read back from the unit: 'Custom' from a manual program
+        # started from the cloud, the rest by starting each preset button on
+        # the unit. The unit reports nothing for a preset until it is started.
+        # Only the mode strings are recorded; each preset's temperature, time
+        # and shake reminder can be changed by the owner.
         cook_modes={
             AirFryerCookModes.CUSTOM: 'Custom',
+            AirFryerCookModes.STEAK: 'Steak',
+            AirFryerCookModes.CHICKEN: 'Chicken',
+            AirFryerCookModes.SEAFOOD: 'Seafood',
+            AirFryerCookModes.SHRIMP: 'Shrimp',
+            AirFryerCookModes.BACON: 'Bacon',
+            AirFryerCookModes.FROZEN: 'Frozen',
+            AirFryerCookModes.FRENCH_FRIES: 'French fries',
+            AirFryerCookModes.VEGGIES: 'Vegetables',
+            AirFryerCookModes.TOAST: 'Toast',
+            AirFryerCookModes.BAKE: 'Bake',
         },
         default_cook_mode=AirFryerCookModes.CUSTOM,
         default_preset=AirFryerPresets.custom,
@@ -1220,9 +1233,10 @@ air_fryer_modules: list[AirFryerMap] = [
         # pulled in to the 5 C step grid so both ends are settable.
         temperature_range_f=(170, 400),
         temperature_range_c=(80, 200),
-        # All nine statuses were observed on the unit. 'ready' is a staged
+        # All ten statuses were observed on the unit. 'ready' is a staged
         # program waiting for the Start button; 'preheatStop' and 'cookStop'
-        # are what the unit reports after its Start/Pause button is pressed.
+        # are what the unit reports after its Start/Pause button is pressed;
+        # 'keeping' is Keep Warm, which reports an empty mode string.
         status_map=MappingProxyType(
             {
                 'standby': AirFryerCookStatus.STANDBY,
@@ -1234,6 +1248,7 @@ air_fryer_modules: list[AirFryerMap] = [
                 'cookStop': AirFryerCookStatus.COOK_STOP,
                 'cookEnd': AirFryerCookStatus.COOK_END,
                 'pullOut': AirFryerCookStatus.PULL_OUT,
+                'keeping': AirFryerCookStatus.COOKING,
             }
         ),
     ),

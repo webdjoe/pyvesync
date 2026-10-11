@@ -5,6 +5,8 @@ confirmed on a physical CS358-AF: once preheat has finished the unit keeps the
 queued cook step and waits, and `preheatCook` starts that step.
 """
 
+from copy import deepcopy
+
 import call_json_fryers
 from base_test_cases import TestBase
 from defaults import build_bypass_v2_response
@@ -88,3 +90,30 @@ class TestCS358TemperatureRange(TestBase):
             fryer.temp_unit = unit
             assert fryer.prepare_temperature(fryer.min_temp) == fryer.min_temp
             assert fryer.prepare_temperature(fryer.max_temp) == fryer.max_temp
+
+
+class TestCS358Statuses(TestBase):
+    """Every status the physical unit reported maps to a library status."""
+
+    def test_reported_statuses_are_mapped(self):
+        fryer = self.get_device('air_fryers', 'CS358-AF')
+        expected = {
+            'ready': AirFryerCookStatus.COOK_STOP,
+            'heating': AirFryerCookStatus.HEATING,
+            'preheatStop': AirFryerCookStatus.PREHEAT_STOP,
+            'preheatEnd': AirFryerCookStatus.PREHEAT_END,
+            'cooking': AirFryerCookStatus.COOKING,
+            'cookStop': AirFryerCookStatus.COOK_STOP,
+            'cookEnd': AirFryerCookStatus.COOK_END,
+            'pullOut': AirFryerCookStatus.PULL_OUT,
+            'keeping': AirFryerCookStatus.COOKING,
+        }
+        for reported, status in expected.items():
+            details = deepcopy(call_json_fryers.CS358_PREHEAT_END_DETAILS)
+            details['cookStatus'] = reported
+            self.mock_api.return_value = (
+                build_bypass_v2_response(inner_result=details),
+                200,
+            )
+            self.run_in_loop(fryer.update)
+            assert fryer.state.cook_status == status, reported
