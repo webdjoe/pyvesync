@@ -1183,6 +1183,59 @@ air_fryer_modules: list[AirFryerMap] = [
         ),
     ),
     AirFryerMap(
+        # Cosori Pro II 5.8 Qt (CS358-AF), US single-basket model. Uses the
+        # same bypassV2 protocol as TurboBlaze (startCook / endCook /
+        # getAirfryerStatus), plus preheatCook to continue from a finished
+        # preheat into the queued cook step.
+        #
+        # Everything in this entry was read from a physical US unit
+        # (configModule WiFiBTOnboarding_AirFryer_CS358-AF_US). Unlike some
+        # sibling models, readyStart=False starts the program from the cloud
+        # with no press of the unit's Start button. The unit chooses its own
+        # preheat duration from the target temperature (3-5 minutes) and keeps
+        # the cook step in stepArray throughout preheat.
+        class_name='VeSyncTurboBlazeFryer',
+        module=vesynckitchen,
+        dev_types=['CS358-AF'],
+        setup_entry='CS358-AF',
+        device_alias='Pro II Air Fryer',
+        model_display='CS358-AF Series',
+        model_name='Pro II 5.8 Qt. Smart Air Fryer',
+        temp_unit=TemperatureUnits.FAHRENHEIT,
+        temperature_step_f=10,
+        # The unit can be paused from its own Start/Pause button or by
+        # pulling the basket, but no cloud pause/resume method is known, so
+        # RESUMABLE is not claimed.
+        features=[AirFryerFeatures.PREHEAT],
+        # Only the manual program was read back from the unit. The preset
+        # buttons' mode strings have not been captured.
+        cook_modes={
+            AirFryerCookModes.CUSTOM: 'Custom',
+        },
+        default_cook_mode=AirFryerCookModes.CUSTOM,
+        default_preset=AirFryerPresets.custom,
+        time_units=TimeUnits.SECONDS,
+        # From the user manual: 170-400 F / 77-204 C.
+        temperature_range_f=(170, 400),
+        temperature_range_c=(77, 204),
+        # All nine statuses were observed on the unit. 'ready' is a staged
+        # program waiting for the Start button; 'preheatStop' and 'cookStop'
+        # are what the unit reports after its Start/Pause button is pressed.
+        status_map=MappingProxyType(
+            {
+                'standby': AirFryerCookStatus.STANDBY,
+                'ready': AirFryerCookStatus.COOK_STOP,
+                'heating': AirFryerCookStatus.HEATING,
+                'preheatStop': AirFryerCookStatus.PREHEAT_STOP,
+                'preheatEnd': AirFryerCookStatus.PREHEAT_END,
+                'cooking': AirFryerCookStatus.COOKING,
+                'cookStop': AirFryerCookStatus.COOK_STOP,
+                'cookEnd': AirFryerCookStatus.COOK_END,
+                'pullOut': AirFryerCookStatus.PULL_OUT,
+            }
+        ),
+    ),
+    AirFryerMap(
         # Cosori Dual Blaze US variant (single-chamber model with dual heating
         # elements). Uses the same bypassV2 protocol as TurboBlaze (startCook /
         # endCook / getAirfryerStatus). The Dual Blaze has no preheat function.

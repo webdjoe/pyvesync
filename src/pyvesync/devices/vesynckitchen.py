@@ -26,6 +26,7 @@ from pyvesync.base_devices import VeSyncFryer
 from pyvesync.const import (
     AIRFRYER_PID_MAP,
     AirFryerCookStatus,
+    AirFryerFeatures,
     AirFryerPresetRecipe,
     ConnectionStatus,
     TemperatureUnits,
@@ -519,6 +520,21 @@ class VeSyncTurboBlazeFryer(BypassV2Mixin, VeSyncFryer):
         if r is None:
             return False
         self.state.set_standby()
+        return True
+
+    async def cook_from_preheat(self, chamber: int = 1) -> bool:
+        del chamber  # chamber not used for this air fryer
+        if AirFryerFeatures.PREHEAT not in self.features:
+            logger.info('Preheat feature not supported on this fryer.')
+            return False
+        if self.state.cook_status != AirFryerCookStatus.PREHEAT_END:
+            logger.debug('Cannot start cook from preheat for %s', self.device_name)
+            return False
+        resp = await self.call_bypassv2_api(payload_method='preheatCook')
+        r = Helpers.process_dev_response(logger, 'cook_from_preheat', self, resp)
+        if r is None:
+            return False
+        self.state.set_state(cook_status=AirFryerCookStatus.COOKING)
         return True
 
     async def set_mode_from_recipe(self, recipe: AirFryerPresetRecipe) -> bool:
