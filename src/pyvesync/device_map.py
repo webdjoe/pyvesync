@@ -1192,8 +1192,9 @@ air_fryer_modules: list[AirFryerMap] = [
         # (configModule WiFiBTOnboarding_AirFryer_CS358-AF_US). Unlike some
         # sibling models, readyStart=False starts the program from the cloud
         # with no press of the unit's Start button. The unit chooses its own
-        # preheat duration from the target temperature (3-5 minutes) and keeps
-        # the cook step in stepArray throughout preheat.
+        # preheat duration from the target temperature (3 minutes at 170 F and
+        # 4 minutes at 350 F were observed) and keeps the cook step in
+        # stepArray throughout preheat.
         class_name='VeSyncTurboBlazeFryer',
         module=vesynckitchen,
         dev_types=['CS358-AF'],
@@ -1215,9 +1216,10 @@ air_fryer_modules: list[AirFryerMap] = [
         default_cook_mode=AirFryerCookModes.CUSTOM,
         default_preset=AirFryerPresets.custom,
         time_units=TimeUnits.SECONDS,
-        # From the user manual: 170-400 F / 77-204 C.
+        # The user manual gives 170-400 F / 77-204 C. The Celsius bounds are
+        # pulled in to the 5 C step grid so both ends are settable.
         temperature_range_f=(170, 400),
-        temperature_range_c=(77, 204),
+        temperature_range_c=(80, 200),
         # All nine statuses were observed on the unit. 'ready' is a staged
         # program waiting for the Start button; 'preheatStop' and 'cookStop'
         # are what the unit reports after its Start/Pause button is pressed.

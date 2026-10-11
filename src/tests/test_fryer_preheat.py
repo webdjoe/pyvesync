@@ -10,7 +10,7 @@ from base_test_cases import TestBase
 from defaults import build_bypass_v2_response
 from utils import parse_args
 
-from pyvesync.const import AirFryerCookStatus, AirFryerFeatures
+from pyvesync.const import AirFryerCookStatus, AirFryerFeatures, TemperatureUnits
 
 BYPASS_V2_URL = '/cloud/v2/deviceManaged/bypassV2'
 
@@ -63,6 +63,8 @@ class TestFryerCookFromPreheat(TestBase):
         """The Dual Blaze shares the class but has no preheat function."""
         fryer = self.get_device('air_fryers', 'CAF-P583S')
         assert AirFryerFeatures.PREHEAT not in fryer.features
+        # Force the status so only the feature check can stop the call.
+        fryer.state.cook_status = AirFryerCookStatus.PREHEAT_END
         self.mock_api.reset_mock()
 
         assert self.run_in_loop(fryer.cook_from_preheat) is False
@@ -75,3 +77,14 @@ class TestFryerCookFromPreheat(TestBase):
 
         assert self.run_in_loop(fryer.cook_from_preheat) is False
         assert fryer.state.cook_status == AirFryerCookStatus.PREHEAT_END
+
+
+class TestCS358TemperatureRange(TestBase):
+    """The declared range must be settable at both ends in both units."""
+
+    def test_range_ends_are_settable(self):
+        fryer = self.get_device('air_fryers', 'CS358-AF')
+        for unit in (TemperatureUnits.FAHRENHEIT, TemperatureUnits.CELSIUS):
+            fryer.temp_unit = unit
+            assert fryer.prepare_temperature(fryer.min_temp) == fryer.min_temp
+            assert fryer.prepare_temperature(fryer.max_temp) == fryer.max_temp
