@@ -228,7 +228,7 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
         self.state.auto_room_size = room_size
         return True
 
-    async def set_fan_speed(self, speed: None | int = None) -> bool:
+    async def set_fan_speed(self, speed: int | None = None) -> bool:
         speeds: list = self.fan_levels
         current_speed = self.state.fan_level
 
@@ -674,7 +674,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
-    async def set_fan_speed(self, speed: None | int = None) -> bool:
+    async def set_fan_speed(self, speed: int | None = None) -> bool:
         if speed is not None:
             if speed not in self.fan_levels:
                 _LOGGER.warning(
