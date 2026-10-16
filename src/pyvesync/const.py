@@ -455,6 +455,44 @@ class PurifierAutoPreference(StrEnum):
     UNKNOWN = 'unknown'
 
 
+class PurifierAutoProfiles(StrEnum):
+    """Auto mode profiles of the Eleva 500X (API `healthProtectMode`).
+
+    Attributes:
+        DAILY_COMFORT: Daily Comfort profile (1).
+        FOCUSED_CARE: Focused Care profile (2).
+        ADVANCED_CARE: Advanced Care profile (3).
+    """
+
+    DAILY_COMFORT = 'daily_comfort'
+    FOCUSED_CARE = 'focused_care'
+    ADVANCED_CARE = 'advanced_care'
+
+
+class PurifierQuietPeriodModes(StrEnum):
+    """Quiet Period modes of the Eleva 500X (API `quietPeriod.modeIdx`).
+
+    Attributes:
+        LIGHT_CONTROL: Quiet Period starts when dim ambient light is detected (0).
+        SCHEDULE: Quiet Period follows the start and end times (1).
+    """
+
+    LIGHT_CONTROL = 'light_control'
+    SCHEDULE = 'schedule'
+
+
+class PurifierIndicatorRingLevels(StrEnum):
+    """Air quality indicator ring brightness of the Eleva 500X.
+
+    Attributes:
+        BRIGHT: Bright ring (1).
+        DIM: Dim ring (2).
+    """
+
+    BRIGHT = 'bright'
+    DIM = 'dim'
+
+
 # Fan Constants
 
 

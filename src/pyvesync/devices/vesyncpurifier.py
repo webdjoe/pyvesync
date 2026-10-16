@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
+import time
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from typing_extensions import deprecated
 
@@ -13,10 +14,14 @@ from pyvesync.const import (
     DeviceStatus,
     NightlightModes,
     PurifierAutoPreference,
+    PurifierAutoProfiles,
+    PurifierIndicatorRingLevels,
     PurifierModes,
+    PurifierQuietPeriodModes,
 )
 from pyvesync.models.bypass_models import (
     ResultV2GetTimer,
+    ResultV2GetTimerV2,
     ResultV2SetTimer,
 )
 from pyvesync.models.purifier_models import (
@@ -36,6 +41,8 @@ from pyvesync.models.purifier_models import (
 from pyvesync.utils.device_mixins import (
     BypassV1Mixin,
     BypassV2Mixin,
+    countdown_timer_from_result,
+    countdown_timer_payload,
     process_bypassv2_result,
 )
 from pyvesync.utils.helpers import Helpers, Timer
@@ -47,6 +54,8 @@ if TYPE_CHECKING:
 
 
 _LOGGER = logging.getLogger(__name__)
+
+SECONDS_PER_DAY = 86400
 
 
 class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
@@ -484,6 +493,13 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         self.state.pm1 = details.PM1
         self.state.pm10 = details.PM10
         self.state.aq_percent = details.AQPercent
+        self.state.aqi = details.AQI
+        self.state.voc = details.VOC
+        self.state.no2 = details.NO2
+        self.state.carbon_filter_life = details.carbonFilterLifePercent
+        self.state.pre_filter_life = details.preFilterLifePercent
+        self.state.filter_remain_days = details.filterRemainDay
+        self.state.total_clean_air = details.totalCleanAir
         self.state.fan_rotate_angle = details.fanRotateAngle
         if details.filterOpenState is not None:
             self.state.filter_open_state = bool(details.filterOpenState)
@@ -526,14 +542,14 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
 
     async def toggle_light_detection(self, toggle: bool | None = None) -> bool:
         """Enable/Disable Light Detection Feature."""
-        if bool(self.state.light_detection_status) == toggle:
+        if bool(self.state.light_detection_switch) == toggle:
             _LOGGER.debug(
-                'Light detection is already %s', self.state.light_detection_status
+                'Light detection is already %s', self.state.light_detection_switch
             )
             return True
 
         if toggle is None:
-            toggle = not bool(self.state.light_detection_status)
+            toggle = not bool(self.state.light_detection_switch)
         payload_data = {'lightDetectionSwitch': int(toggle)}
         r_dict = await self.call_bypassv2_api('setLightDetection', payload_data)
         r = Helpers.process_dev_response(_LOGGER, 'set_light_detection', self, r_dict)
@@ -722,6 +738,344 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         self.state.mode = mode
         self.state.connection_status = ConnectionStatus.ONLINE
         self.state.device_status = DeviceStatus.ON
+        return True
+
+
+class VeSyncAirEleva(VeSyncAirBaseV2):  # pylint: disable=too-many-ancestors
+    """Levoit Eleva Air Purifier Class.
+
+    The `getPurifierStatus` response of the Eleva 500X is a cloud snapshot that
+    can lag the device by several minutes, while the `deviceProp` field of the
+    device list is current. `get_details` overlays `deviceProp` on the snapshot
+    for power, mode, fan level, auto profile and air quality values.
+
+    Settings that are only in the snapshot (child lock, display, light
+    detection, Quiet Period, indicator ring and timer) are held at their new
+    value after a successful command, until the snapshot reports it or
+    `PENDING_HOLD_SECONDS` pass.
+
+    Timers use the countdown format of `addTimerV2` (`startAct` and `total`).
+
+    Note:
+        The Eleva 500X rejects the `setAutoPreference` request used by other V2
+        purifiers, so the auto preference is read-only (the map lists no
+        `auto_preferences`).
+
+    Args:
+        details (ResponseDeviceDetailsModel): Device details from device list.
+        manager (VeSync): Instantiated VeSync object.
+        feature_map (PurifierMap): Device map template.
+    """
+
+    __slots__ = ('_pending_state',)
+
+    PENDING_HOLD_SECONDS = 300
+    AUTO_PROFILES: ClassVar[dict[int, str]] = {
+        1: PurifierAutoProfiles.DAILY_COMFORT,
+        2: PurifierAutoProfiles.FOCUSED_CARE,
+        3: PurifierAutoProfiles.ADVANCED_CARE,
+    }
+    QUIET_PERIOD_MODES: ClassVar[dict[int, str]] = {
+        0: PurifierQuietPeriodModes.LIGHT_CONTROL,
+        1: PurifierQuietPeriodModes.SCHEDULE,
+    }
+    INDICATOR_RING_LEVELS: ClassVar[dict[int, str]] = {
+        1: PurifierIndicatorRingLevels.BRIGHT,
+        2: PurifierIndicatorRingLevels.DIM,
+    }
+    QUIET_PERIOD_MODE_IDS: ClassVar[dict[str, int]] = {
+        v: k for k, v in QUIET_PERIOD_MODES.items()
+    }
+    INDICATOR_RING_MODES: ClassVar[dict[str, int]] = {
+        v: k for k, v in INDICATOR_RING_LEVELS.items()
+    }
+
+    def __init__(
+        self,
+        details: ResponseDeviceDetailsModel,
+        manager: VeSync,
+        feature_map: PurifierMap,
+    ) -> None:
+        """Initialize the VeSync Eleva Air Purifier Class."""
+        super().__init__(details, manager, feature_map)
+        self._pending_state: dict[str, tuple[Any, float]] = {}
+
+    def _hold_state(self, attr: str) -> None:
+        """Hold the current value of a state attribute set by a command."""
+        self._pending_state[attr] = (getattr(self.state, attr), time.monotonic())
+
+    @staticmethod
+    def _pending_matches(attr: str, held: object, current: object) -> bool:
+        """Return True when the snapshot reports the held value.
+
+        Timers match on presence only, because the remaining time keeps changing.
+        """
+        if attr == 'timer':
+            return (held is None) == (current is None)
+        return held == current
+
+    def _apply_pending_state(self) -> None:
+        """Keep held values until the snapshot reports them or the hold expires."""
+        now = time.monotonic()
+        for attr, (value, set_at) in list(self._pending_state.items()):
+            if self._pending_matches(attr, value, getattr(self.state, attr)) or (
+                now - set_at > self.PENDING_HOLD_SECONDS
+            ):
+                del self._pending_state[attr]
+            else:
+                setattr(self.state, attr, value)
+
+    def _set_state(self, details: InnerPurifierBaseResult) -> None:
+        """Set state from the snapshot, including the Eleva settings."""
+        running_timer = self.state.timer
+        super()._set_state(details)
+        if not isinstance(details, PurifierVitalDetailsResult):
+            return
+        if details.timerRemain <= 0:
+            self.state.timer = None
+        elif running_timer is not None and running_timer.running:
+            # The local countdown is more accurate than the snapshot.
+            self.state.timer = running_timer
+        if details.group is not None:
+            self.state.auto_profile = self.AUTO_PROFILES.get(details.group)
+        if details.manualGuardSwitch is not None:
+            self.state.dynamic_manual = bool(details.manualGuardSwitch)
+        if details.sleepGuardSwitch is not None:
+            self.state.dynamic_sleep = bool(details.sleepGuardSwitch)
+        if details.standbyGuardSwitch is not None:
+            self.state.adaptive_start = bool(details.standbyGuardSwitch)
+        if details.aqiLightMode is not None:
+            self.state.indicator_ring = self.INDICATOR_RING_LEVELS.get(
+                details.aqiLightMode
+            )
+        quiet = details.quietPeriod
+        if quiet is not None:
+            self.state.quiet_period_switch = DeviceStatus.from_int(
+                quiet.quietPeriodSwitch
+            )
+            self.state.quiet_period_mode = self.QUIET_PERIOD_MODES.get(quiet.modeIdx)
+            self.state.quiet_period_start = quiet.startTime
+            self.state.quiet_period_end = quiet.endTime
+
+    def _set_device_prop_state(self, prop: dict) -> None:
+        """Overlay current values from `deviceProp` on the device state."""
+        if prop.get('powerSwitch') is not None:
+            self.state.device_status = DeviceStatus.from_int(prop['powerSwitch'])
+        if prop.get('workMode') is not None:
+            self.state.mode = prop['workMode']
+        if prop.get('fanSpeedLevel') is not None:
+            fan_level = prop['fanSpeedLevel']
+            self.state.fan_level = 0 if fan_level == 255 else fan_level  # noqa: PLR2004
+        if prop.get('manualSpeedLevel') is not None:
+            self.state.fan_set_level = prop['manualSpeedLevel']
+        if prop.get('AQLevel') is not None:
+            self.state.air_quality_level = prop['AQLevel']
+        if prop.get('healthProtectMode') is not None:
+            self.state.auto_profile = self.AUTO_PROFILES.get(prop['healthProtectMode'])
+        for key, attr in (
+            ('PM1', 'pm1'),
+            ('PM25', 'pm25'),
+            ('PM10', 'pm10'),
+            ('AQI', 'aqi'),
+            ('VOC', 'voc'),
+            ('NO2', 'no2'),
+        ):
+            if prop.get(key) is not None:
+                setattr(self.state, attr, prop[key])
+
+    async def get_details(self) -> None:
+        """Get the status snapshot, then overlay current `deviceProp` values.
+
+        `deviceProp` is read from the device list (`VeSync.get_device_props`)
+        before `getPurifierStatus`. Devices updated together share one device
+        list request, so a poll costs one device list request in total plus
+        one status request per Eleva device. If the device list request
+        fails, the snapshot is used unchanged.
+        """
+        prop = (await self.manager.get_device_props()).get(self.cid)
+        await super().get_details()
+        if self.state.connection_status != ConnectionStatus.ONLINE:
+            return
+        if prop is not None:
+            self._set_device_prop_state(prop)
+        self._apply_pending_state()
+
+    async def toggle_child_lock(self, toggle: bool | None = None) -> bool:
+        """Set child lock and hold the new value until the snapshot reports it."""
+        if not await super().toggle_child_lock(toggle):
+            return False
+        self._hold_state('child_lock')
+        return True
+
+    async def toggle_display(self, mode: bool) -> bool:
+        """Set display and hold the new value until the snapshot reports it."""
+        if not await super().toggle_display(mode):
+            return False
+        self._hold_state('display_set_status')
+        return True
+
+    async def toggle_light_detection(self, toggle: bool | None = None) -> bool:
+        """Set light detection and hold the new value until the snapshot reports it."""
+        if not await super().toggle_light_detection(toggle):
+            return False
+        self._hold_state('light_detection_switch')
+        return True
+
+    async def set_quiet_period(
+        self,
+        enabled: bool | None = None,
+        mode: str | None = None,
+        start: int | None = None,
+        end: int | None = None,
+    ) -> bool:
+        """Set the Quiet Period.
+
+        Values left as None keep their current setting.
+
+        Args:
+            enabled (bool | None): Turn the Quiet Period on or off.
+            mode (str | None): 'light_control' or 'schedule'
+                (see `PurifierQuietPeriodModes`).
+            start (int | None): Start time in seconds after midnight.
+            end (int | None): End time in seconds after midnight.
+
+        Returns:
+            bool: True if successful, False if not.
+        """
+        if enabled is None:
+            enabled = bool(self.state.quiet_period_switch)
+        mode = mode or self.state.quiet_period_mode
+        start = self.state.quiet_period_start if start is None else start
+        end = self.state.quiet_period_end if end is None else end
+        if mode not in self.QUIET_PERIOD_MODE_IDS or start is None or end is None:
+            _LOGGER.warning(
+                'Quiet Period mode and times are unknown, run update() or pass them'
+            )
+            return False
+        mode_idx = self.QUIET_PERIOD_MODE_IDS[mode]
+        if not (0 <= start < SECONDS_PER_DAY and 0 <= end < SECONDS_PER_DAY):
+            _LOGGER.warning('Quiet Period times must be seconds after midnight')
+            return False
+        payload_data = {
+            'quietPeriodSwitch': int(enabled),
+            'modeIdx': mode_idx,
+            'startTime': start,
+            'endTime': end,
+        }
+        r_dict = await self.call_bypassv2_api('setQuietPeriod', payload_data)
+        r = Helpers.process_dev_response(_LOGGER, 'set_quiet_period', self, r_dict)
+        if r is None:
+            return False
+        self.state.quiet_period_switch = DeviceStatus.from_bool(enabled)
+        self.state.quiet_period_mode = self.QUIET_PERIOD_MODES[mode_idx]
+        self.state.quiet_period_start = start
+        self.state.quiet_period_end = end
+        for attr in (
+            'quiet_period_switch',
+            'quiet_period_mode',
+            'quiet_period_start',
+            'quiet_period_end',
+        ):
+            self._hold_state(attr)
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def set_indicator_ring(self, level: str) -> bool:
+        """Set the air quality indicator ring to 'bright' or 'dim'.
+
+        Args:
+            level (str): Ring level, see `PurifierIndicatorRingLevels`.
+
+        Returns:
+            bool: True if successful, False if not.
+        """
+        mode = self.INDICATOR_RING_MODES.get(level)
+        if mode is None:
+            _LOGGER.warning('Invalid indicator ring level - %s', level)
+            return False
+        r_dict = await self.call_bypassv2_api('setAqiLight', {'mode': mode})
+        r = Helpers.process_dev_response(_LOGGER, 'set_indicator_ring', self, r_dict)
+        if r is None:
+            return False
+        self.state.indicator_ring = self.INDICATOR_RING_LEVELS[mode]
+        self._hold_state('indicator_ring')
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def _get_timer_result(self) -> ResultV2GetTimerV2 | None:
+        """Return the `getTimerV2` result, or None if the request failed."""
+        r_dict = await self.call_bypassv2_api('getTimerV2', {})
+        return process_bypassv2_result(
+            self, _LOGGER, 'get_timer', r_dict, ResultV2GetTimerV2
+        )
+
+    async def get_timer(self) -> Timer | None:
+        """Get the active countdown timer from `getTimerV2`."""
+        result_model = await self._get_timer_result()
+        if result_model is None:
+            return None
+        self.state.timer = countdown_timer_from_result(result_model)
+        if self.state.timer is None:
+            _LOGGER.debug('No timer found for %s', self.device_name)
+        return self.state.timer
+
+    async def set_timer(self, duration: int, action: str | None = None) -> bool:
+        """Set a countdown timer that turns the purifier on or off.
+
+        Args:
+            duration (int): Timer length in seconds.
+            action (str | None): 'off' (default) or 'on' when the timer ends.
+
+        Returns:
+            bool: True if successful, False if not.
+        """
+        if action is None:
+            action = DeviceStatus.OFF
+        if action not in [DeviceStatus.ON, DeviceStatus.OFF]:
+            _LOGGER.warning('Invalid action for timer - %s', action)
+            return False
+        payload_data = countdown_timer_payload(duration, action)
+        r_dict = await self.call_bypassv2_api('addTimerV2', payload_data)
+        result_model = process_bypassv2_result(
+            self, _LOGGER, 'set_timer', r_dict, ResultV2SetTimer
+        )
+        if result_model is None:
+            return False
+        self.state.timer = Timer(
+            timer_duration=duration,
+            action=action,
+            id=result_model.id,
+            remaining=duration,
+        )
+        self._hold_state('timer')
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def clear_timer(self) -> bool:
+        """Clear the active countdown timer.
+
+        The timer ID is read from `getTimerV2` first, because the status
+        snapshot only reports the remaining time. If the device has no timer,
+        nothing is sent and the call succeeds.
+
+        Returns:
+            bool: True if the timer was cleared or no timer was set, False if
+                the `getTimerV2` or `delTimerV2` request failed.
+        """
+        result_model = await self._get_timer_result()
+        if result_model is None:
+            return False
+        timer = countdown_timer_from_result(result_model)
+        if timer is None:
+            _LOGGER.debug('No timer to clear for %s', self.device_name)
+        else:
+            r_dict = await self.call_bypassv2_api('delTimerV2', {'id': timer.id})
+            r = Helpers.process_dev_response(_LOGGER, 'clear_timer', self, r_dict)
+            if r is None:
+                return False
+        self.state.timer = None
+        self._hold_state('timer')
+        self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
 

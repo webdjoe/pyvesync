@@ -60,6 +60,23 @@ class PurifierState(DeviceState):
         humidity (int): Humidity value of the purifier.
         voc (int): VOC value of the purifier.
         co2 (int): CO2 value of the purifier.
+        aqi (int): Air quality index reported by the purifier.
+        no2 (int): NO2 value of the purifier.
+        carbon_filter_life (int): Carbon filter life percentage of the purifier.
+        pre_filter_life (int): Pre-filter life percentage of the purifier.
+        filter_remain_days (int): Estimated days remaining for the main filter.
+        total_clean_air (int): Total volume of air cleaned, as reported by the API.
+        auto_profile (str): Auto mode profile (Eleva), see `PurifierAutoProfiles`.
+        dynamic_manual (bool): Dynamic Manual setting (Eleva).
+        dynamic_sleep (bool): Dynamic Sleep setting (Eleva).
+        adaptive_start (bool): Adaptive Start setting (Eleva).
+        indicator_ring (str): Air quality indicator ring level (Eleva),
+            see `PurifierIndicatorRingLevels`.
+        quiet_period_switch (str): Quiet Period on/off (Eleva).
+        quiet_period_mode (str): Quiet Period mode (Eleva),
+            see `PurifierQuietPeriodModes`.
+        quiet_period_start (int): Quiet Period start, seconds after midnight (Eleva).
+        quiet_period_end (int): Quiet Period end, seconds after midnight (Eleva).
         nightlight_brightness (int): Nightlight brightness level of the purifier.
 
     Note:
@@ -68,29 +85,44 @@ class PurifierState(DeviceState):
 
     __slots__ = (
         '_air_quality_level',
+        'adaptive_start',
         'aq_percent',
+        'aqi',
         'auto_preference_type',
+        'auto_profile',
         'auto_room_size',
+        'carbon_filter_life',
         'child_lock',
         'co2',
         'display_forever',
         'display_set_status',
         'display_status',
+        'dynamic_manual',
+        'dynamic_sleep',
         'fan_level',
         'fan_rotate_angle',
         'fan_set_level',
         'filter_life',
         'filter_open_state',
+        'filter_remain_days',
         'humidity',
+        'indicator_ring',
         'light_detection_status',
         'light_detection_switch',
         'mode',
         'nightlight_brightness',
         'nightlight_status',
+        'no2',
         'pm1',
         'pm10',
         'pm25',
+        'pre_filter_life',
+        'quiet_period_end',
+        'quiet_period_mode',
+        'quiet_period_start',
+        'quiet_period_switch',
         'temperature',
+        'total_clean_air',
         'voc',
     )
 
@@ -123,6 +155,21 @@ class PurifierState(DeviceState):
         self.aq_percent: int | None = None
         self.voc: int | None = None
         self.co2: int | None = None
+        self.aqi: int | None = None
+        self.no2: int | None = None
+        self.carbon_filter_life: int | None = None
+        self.pre_filter_life: int | None = None
+        self.filter_remain_days: int | None = None
+        self.total_clean_air: int | None = None
+        self.auto_profile: str | None = None
+        self.dynamic_manual: bool | None = None
+        self.dynamic_sleep: bool | None = None
+        self.adaptive_start: bool | None = None
+        self.indicator_ring: str | None = None
+        self.quiet_period_switch: str | None = None
+        self.quiet_period_mode: str | None = None
+        self.quiet_period_start: int | None = None
+        self.quiet_period_end: int | None = None
         self.light_detection_switch: str | None = None
         self.light_detection_status: str | None = None
         self.nightlight_brightness: int | None = None
