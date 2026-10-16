@@ -182,7 +182,8 @@ def _flatten_device_prop(d: dict[str, Any]) -> dict[str, Any]:
             d['connectionStatus'] = device_prop['connectionStatus']
         if device_prop.get('wifiMac') is not None:
             d['macID'] = device_prop['wifiMac']
-    d.pop('deviceProp', None)
+    else:
+        d.pop('deviceProp', None)
     return d
 
 
@@ -218,6 +219,13 @@ class ResponseDeviceDetailsModel(ResponseBaseModel):
     deviceStatus: str = 'off'
     connectionStatus: str = 'offline'
     productType: str | None = None
+    deviceProp: dict[str, Any] | None = None
+    """Raw per-device status summary from the device list, if the API provides one.
+
+    For some devices (e.g. the Levoit Superior Studio 450S) this is updated in near
+    real time while the bypassV2 status call lags, so device classes can opt in to
+    refreshing their state from it via `VeSyncBaseDevice.update_from_device_list`.
+    """
 
     @classmethod
     def __pre_deserialize__(cls, d: dict[Any, Any]) -> dict[Any, Any]:

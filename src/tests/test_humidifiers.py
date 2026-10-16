@@ -121,6 +121,7 @@ class TestHumidifiers(TestBase):
         "LUH-A602S-WUS": [["set_warm_level", {"warm_level": 3}]],
         "LUH-A603S-WUS": [["set_warm_level", {"warm_level": 3}]],
         "LEH-S601S": [["turn_off_drying_mode"]],
+        "LEH-S451S": [["turn_off_drying_mode"]],
         "LEH-B381S": [
             ["turn_on_nightlight"],
             ["turn_off_nightlight"],
@@ -379,3 +380,84 @@ class TestHumidifiers(TestBase):
         assert obj.state.rgb_nightlight_red == 0
         assert obj.state.rgb_nightlight_green == 0
         assert obj.state.rgb_nightlight_blue == 0
+
+    def test_superior_studio_fan_mode(self):
+        """Superior Studio 450S fan-only work mode maps to HumidifierModes.FAN."""
+        from copy import deepcopy
+        from pyvesync.models.humidifier_models import Superior6000SResult
+
+        obj = self.get_device("humidifiers", "LEH-S451S")
+        details = deepcopy(call_json_humidifiers.HUMIDIFIER_DETAILS["LEH-S451S"])
+        details["workMode"] = "fan"
+        obj._set_state(Superior6000SResult.from_dict(details))
+        assert obj.state.mode == const.HumidifierModes.FAN
+
+    def test_superior_studio_device_list_state(self):
+        """Superior Studio 450S refreshes live state from the device list deviceProp."""
+        from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
+
+        obj = self.get_device("humidifiers", "LEH-S451S")
+        assert obj.uses_device_list_state is True
+        entry = ResponseDeviceDetailsModel.from_dict(
+            {
+                "deviceRegion": "US",
+                "isOwner": True,
+                "deviceName": obj.device_name,
+                "cid": obj.cid,
+                "connectionType": "WiFi+BTOnboarding+BTNotify",
+                "deviceType": "LEH-S451S-WUS",
+                "type": "wifi-air",
+                "configModule": "VS_WFON_AHM_LEH-E601S-WUS_US",
+                "deviceProp": {
+                    "powerSwitch": 1,
+                    "connectionStatus": "online",
+                    "workMode": "fan",
+                    "humidity": 41,
+                    "targetHumidity": 50,
+                    "virtualLevel": 25,
+                    "mistLevel": 2,
+                    "waterLacksState": 1,
+                    "screenSwitch": 1,
+                    "childLockSwitch": 0,
+                    "filterLifePercent": 100,
+                    "dryingState": 1,
+                    "autoDryingSwitch": 1,
+                    "dryingLevel": 2,
+                    "dryingRemain": 3600,
+                    "wifiMac": "aa:bb:cc:dd:ee:ff",
+                },
+            }
+        )
+        assert entry.deviceProp is not None
+        assert entry.deviceStatus == "on"
+        obj.update_from_device_list(entry)
+        assert obj.state.device_status == const.DeviceStatus.ON
+        assert obj.state.connection_status == const.ConnectionStatus.ONLINE
+        assert obj.state.mode == const.HumidifierModes.FAN
+        assert obj.state.humidity == 41
+        assert obj.state.water_lacks is True
+        assert obj.state.mist_virtual_level == 25
+        assert obj.state.drying_mode_status == const.DryingModes.RUNNING
+        assert obj.state.drying_mode_time_remain == 3600
+
+    def test_device_list_entry_without_prop_is_ignored(self):
+        """Devices without a deviceProp summary leave state untouched."""
+        from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
+
+        obj = self.get_device("humidifiers", "LEH-S451S")
+        before = obj.state.to_dict()
+        entry = ResponseDeviceDetailsModel.from_dict(
+            {
+                "deviceRegion": "US",
+                "isOwner": True,
+                "deviceName": obj.device_name,
+                "cid": obj.cid,
+                "connectionType": "WiFi",
+                "deviceType": "LEH-S451S-WUS",
+                "type": "wifi-air",
+                "configModule": "VS_WFON_AHM_LEH-E601S-WUS_US",
+            }
+        )
+        assert entry.deviceProp is None
+        obj.update_from_device_list(entry)
+        assert obj.state.to_dict() == before

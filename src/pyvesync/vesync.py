@@ -391,7 +391,12 @@ class VeSync:  # pylint: disable=function-redefined
         await self.update_all_devices()
 
     async def update_all_devices(self) -> None:
-        """Run `get_details()` for each device and update state."""
+        """Run `get_details()` for each device and update state.
+
+        If any device reports `uses_device_list_state`, the device list is fetched
+        once afterwards so those devices can refresh from their `deviceProp` entry,
+        which for some models is far more current than the detail API response.
+        """
         logger.debug('Start updating the device details one by one')
         if len(self._device_container) == 0:
             logger.error('No devices to update')
@@ -404,6 +409,10 @@ class VeSync:  # pylint: disable=function-redefined
             exc = task.exception()
             if exc is not None and isinstance(exc, VeSyncError):
                 logger.error('Error updating device: %s', exc)
+
+        if any(dev.uses_device_list_state for dev in self._device_container):
+            logger.debug('Refreshing device list for live device state')
+            await self.get_devices()
 
     async def __aenter__(self) -> Self:
         """Asynchronous context manager enter."""

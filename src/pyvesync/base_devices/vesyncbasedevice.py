@@ -243,9 +243,28 @@ class VeSyncBaseDevice(ABC, Generic[VS_STATE_T]):
         be called to update the device state.
         """
 
+    uses_device_list_state: bool = False
+    """Whether this device's live state is carried in the device list response.
+
+    When True, `VeSync.update_all_devices()` re-fetches the device list after the
+    per-device detail calls and passes each entry to `update_from_device_list()`.
+    """
+
     async def update(self) -> None:
         """Update device details."""
         await self.get_details()
+
+    def update_from_device_list(self, details: ResponseDeviceDetailsModel) -> None:
+        """Update state from this device's entry in the device list response.
+
+        Called whenever the device list is fetched and this device already exists.
+        The default does nothing; devices whose `deviceProp` summary is more current
+        than their detail API override this and set `uses_device_list_state`.
+
+        Args:
+            details (ResponseDeviceDetailsModel): This device's device list entry.
+        """
+        del details
 
     def display(self, state: bool = True) -> None:
         """Print formatted static device info to stdout.
