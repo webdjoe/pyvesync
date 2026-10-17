@@ -270,6 +270,7 @@ pip install pyvesync
 
 1. Cosori 3.7 Quart Air Fryer (CS137-AF)
 2. Cosori 5.8 Quart Air Fryer (CS158-AF)
+3. Cosori Turbo Tower Pro Smart Air Fryer (CAF-DC111S-AEU)
 
 ### Thermostats
 
