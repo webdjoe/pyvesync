@@ -683,6 +683,7 @@ class FryerChamberState:
         mode (str): Cooking mode, e.g. `AirFry`.
         recipe_id (int | None): Recipe ID of the program.
         recipe_name (str): Recipe name of the program.
+        recipe_type (int | None): Recipe category reported by the device.
         cook_set_temp (int | None): Set temperature in the device unit.
         cook_set_time (int | None): Set cooking time in minutes.
         remaining_time (int): Minutes remaining in the current program.
@@ -698,6 +699,7 @@ class FryerChamberState:
     cook_set_time: int | None = None
     remaining_time: int = 0
     total_time_remaining: int = 0
+    recipe_type: int | None = None
 
     @property
     def is_active(self) -> bool:
@@ -806,6 +808,7 @@ class AirFryerDC111State(FryerState):
                 mode=status.mode,
                 recipe_id=status.recipeId,
                 recipe_name=status.recipeName,
+                recipe_type=status.recipeType,
                 cook_set_temp=status.cookTemp if active else None,
                 cook_set_time=_minutes(status.cookSetTime) if active else None,
                 remaining_time=_minutes(status.currentRemainingTime),
