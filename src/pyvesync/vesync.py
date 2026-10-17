@@ -324,7 +324,9 @@ class VeSync:  # pylint: disable=function-redefined
                 return False
 
             request_model = RequestDeviceListModel(
-                token=self.auth.token, accountID=self.auth.account_id, timeZone=self.time_zone
+                token=self.auth.token,
+                accountID=self.auth.account_id,
+                timeZone=self.time_zone,
             )
             logger.debug('Requesting device list from VeSync')
             response_dict, _ = await self.async_call_api(
