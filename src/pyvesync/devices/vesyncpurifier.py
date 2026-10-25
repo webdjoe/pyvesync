@@ -465,6 +465,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         else:
             self.state.fan_level = details.fanSpeedLevel
         self.state.fan_set_level = details.manualSpeedLevel
+        self.state.diy_speed_level = details.diySpeedLevel
         self.state.child_lock = bool(details.childLockSwitch)
         self.state.air_quality_level = details.AQLevel
         self.state.pm25 = details.PM25
@@ -722,6 +723,45 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         self.state.mode = mode
         self.state.connection_status = ConnectionStatus.ONLINE
         self.state.device_status = DeviceStatus.ON
+        return True
+
+    async def set_diy_level(self, level: int) -> bool:
+        """Set DIY fan speed level (Vital series).
+
+        DIY mode is manual mode with a 10-step fan speed. The device is
+        switched to DIY mode first when it is in another mode.
+
+        Args:
+            level (int): DIY speed level, one of `self.diy_levels` (1-10).
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        if PurifierModes.DIY not in self.modes:
+            _LOGGER.error('DIY mode not supported for this device.')
+            return False
+        if level not in self.diy_levels:
+            _LOGGER.warning(
+                '%s is invalid DIY level - valid levels are %s',
+                level,
+                str(self.diy_levels),
+            )
+            return False
+        if self.state.mode != PurifierModes.DIY and not await self.set_mode(
+            PurifierModes.DIY
+        ):
+            return False
+
+        payload_data = {'levelIdx': 0, 'diySpeedLevel': level, 'levelType': 'wind'}
+        r_dict = await self.call_bypassv2_api('setLevel', payload_data)
+        r = Helpers.process_dev_response(_LOGGER, 'set_diy_level', self, r_dict)
+        if r is None:
+            return False
+
+        self.state.diy_speed_level = level
+        self.state.mode = PurifierModes.DIY
+        self.state.device_status = DeviceStatus.ON
+        self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
 

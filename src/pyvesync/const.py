@@ -630,6 +630,7 @@ class PurifierModes(Features):
         SLEEP: Sleep mode.
         TURBO: Turbo mode.
         PET: Pet mode.
+        DIY: DIY mode (Vital series, 10-step fan speed).
         UNKNOWN: Unknown mode.
     """
 
@@ -638,6 +639,7 @@ class PurifierModes(Features):
     SLEEP = 'sleep'
     TURBO = 'turbo'
     PET = 'pet'
+    DIY = 'diy'
     UNKNOWN = 'unknown'
 
 

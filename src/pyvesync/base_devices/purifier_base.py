@@ -39,6 +39,7 @@ class PurifierState(DeviceState):
         mode (str): Current mode of the purifier.
         fan_level (int): Current fan level of the purifier.
         fan_set_level (int): Set fan level of the purifier.
+        diy_speed_level (int | None): DIY speed level (Vital series, 1-10).
         filter_life (int): Filter life percentage of the purifier.
         auto_preference_type (str): Auto preference type of the purifier.
         auto_room_size (int): Auto room size of the purifier.
@@ -76,6 +77,7 @@ class PurifierState(DeviceState):
         'display_forever',
         'display_set_status',
         'display_status',
+        'diy_speed_level',
         'fan_level',
         'fan_rotate_angle',
         'fan_set_level',
@@ -105,6 +107,7 @@ class PurifierState(DeviceState):
         self.mode: str = PurifierModes.UNKNOWN
         self.fan_level: int | None = None
         self.fan_set_level: int | None = None
+        self.diy_speed_level: int | None = None
         self.filter_life: int | None = None
         self.auto_preference_type: str | None = None
         self.auto_room_size: int | None = None
@@ -235,11 +238,18 @@ class VeSyncPurifier(VeSyncBaseToggleDevice):
         features (dict): Features of device.
         modes (list[str]): List of modes supported by the device.
         fan_levels (list[int]): List of fan levels supported by the device.
+        diy_levels (list[int]): List of DIY speed levels supported by the device.
         nightlight_modes (list[str]): List of nightlight modes supported by the device.
         auto_preferences (list[str]): List of auto preferences supported by the device.
     """
 
-    __slots__ = ('auto_preferences', 'fan_levels', 'modes', 'nightlight_modes')
+    __slots__ = (
+        'auto_preferences',
+        'diy_levels',
+        'fan_levels',
+        'modes',
+        'nightlight_modes',
+    )
 
     def __init__(
         self,
@@ -253,6 +263,7 @@ class VeSyncPurifier(VeSyncBaseToggleDevice):
         self.state: PurifierState = PurifierState(self, details, feature_map)
         self.modes: list[str] = feature_map.modes
         self.fan_levels: list[int] = feature_map.fan_levels
+        self.diy_levels: list[int] = feature_map.diy_levels
         self.nightlight_modes: list[str] = feature_map.nightlight_modes
         self.auto_preferences: list[str] = feature_map.auto_preferences
 
@@ -394,6 +405,34 @@ class VeSyncPurifier(VeSyncBaseToggleDevice):
         if PurifierModes.PET in self.modes:
             return await self.set_mode(PurifierModes.PET)
         logger.error('Pet mode not supported for this device.')
+        return False
+
+    async def set_diy_mode(self) -> bool:
+        """Set Purifier to DIY Mode.
+
+        DIY mode is manual mode with a finer, 10-step fan speed. It is
+        available on the Vital series. Use `set_diy_level()` to change the
+        speed while in DIY mode.
+        """
+        if PurifierModes.DIY in self.modes:
+            return await self.set_mode(PurifierModes.DIY)
+        logger.error('DIY mode not supported for this device.')
+        return False
+
+    async def set_diy_level(self, level: int) -> bool:
+        """Set Purifier DIY fan speed level.
+
+        Only devices with DIY mode support this. The allowed levels are
+        found in the `device.diy_levels` attribute.
+
+        Args:
+            level (int): DIY speed level to set.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        del level
+        logger.error('DIY speed level not supported for this device.')
         return False
 
     async def set_auto_preference(self, preference: str, room_size: int = 800) -> bool:

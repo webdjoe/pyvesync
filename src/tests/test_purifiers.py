@@ -104,8 +104,8 @@ class TestAirPurifiers(TestBase):
         "Core600S": [["set_auto_mode"], ['set_sleep_mode'], ["turn_on_display"], ["turn_off_display"]],
         "LV-PUR131S": [["set_auto_mode"], ['set_sleep_mode'], ["turn_on_display"], ["turn_off_display"]],
         "LV-RH131S": [["set_auto_mode"], ['set_sleep_mode'], ["turn_on_display"], ["turn_off_display"]],
-        "LAP-V102S": [["set_auto_mode"], ['set_sleep_mode'], ['set_pet_mode'], ["turn_on_display"], ["turn_off_display"]],
-        "LAP-V201S": [["set_auto_mode"], ['set_sleep_mode'], ['set_pet_mode'], ["turn_on_display"], ["turn_off_display"]],
+        "LAP-V102S": [["set_auto_mode"], ['set_sleep_mode'], ['set_pet_mode'], ["turn_on_display"], ["turn_off_display"], ["set_diy_mode"], ["set_diy_level", {"level": 6}]],
+        "LAP-V201S": [["set_auto_mode"], ['set_sleep_mode'], ['set_pet_mode'], ["turn_on_display"], ["turn_off_display"], ["set_diy_mode"], ["set_diy_level", {"level": 6}]],
         "EL551S": [["set_auto_mode"], ["set_sleep_mode"], ["set_turbo_mode"], ["turn_on_display"], ["turn_off_display"]],
         "LAP-B851S-WUS": [["set_auto_mode"], ['set_sleep_mode'], ["turn_on_display"], ["turn_off_display"]],
 
@@ -148,6 +148,11 @@ class TestAirPurifiers(TestBase):
         assert fan_obj.state.device_status == const.DeviceStatus.ON
         assert fan_obj.state.mode == call_json_purifiers.PurifierDefaults.purifier_mode
         assert fan_obj.state.fan_level == call_json_purifiers.PurifierDefaults.fan_level
+        if setup_entry in ("LAP-V102S", "LAP-V201S"):
+            assert (
+                fan_obj.state.diy_speed_level
+                == call_json_purifiers.PurifierDefaults.diy_speed_level
+            )
 
         # Parse mock_api args tuple from arg, kwargs to kwargs
         all_kwargs = parse_args(self.mock_api)
@@ -224,6 +229,10 @@ class TestAirPurifiers(TestBase):
             fan_obj.state.mode = const.PurifierModes.MANUAL
         elif method_name == "set_manual_mode":
             fan_obj.state.mode = const.PurifierModes.AUTO
+        elif method_name == "set_diy_mode":
+            fan_obj.state.mode = const.PurifierModes.MANUAL
+        elif method_name == "set_diy_level":
+            fan_obj.state.mode = const.PurifierModes.DIY
         elif method_name in ["turn_on_display"]:
             fan_obj.state.display_set_status = const.DeviceStatus.OFF
         elif method_name in ["turn_off_display"]:
