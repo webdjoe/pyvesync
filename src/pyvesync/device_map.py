@@ -297,6 +297,7 @@ class PurifierMap(DeviceMapTemplate):
         device_alias (str | None): Alias for the device, if any.
         features (list[str]): List of features for the device.
         fan_levels (list[int]): List of fan levels for the device.
+        diy_levels (list[int]): List of DIY speed levels for the device (Vital series).
         modes (list[str]): List of modes for the device.
         nightlight_modes (list[str]): List of nightlight modes for the device.
         auto_preferences (list[str]): List of auto preferences for the device.
@@ -306,6 +307,7 @@ class PurifierMap(DeviceMapTemplate):
     product_type: str = ProductTypes.PURIFIER
     module: ModuleType = vesyncpurifier
     fan_levels: list[int] = field(default_factory=list)
+    diy_levels: list[int] = field(default_factory=list)
     modes: list[str] = field(default_factory=list)
     nightlight_modes: list[str] = field(default_factory=list)
     auto_preferences: list[str] = field(default_factory=list)
@@ -924,9 +926,11 @@ purifier_modules: list[PurifierMap] = [
             PurifierModes.MANUAL,
             PurifierModes.AUTO,
             PurifierModes.PET,
+            PurifierModes.DIY,
         ],
         features=[PurifierFeatures.AIR_QUALITY],
         fan_levels=list(range(1, 5)),
+        diy_levels=list(range(1, 11)),
         device_alias='Vital 100S',
         auto_preferences=[
             PurifierAutoPreference.DEFAULT,
@@ -953,9 +957,11 @@ purifier_modules: list[PurifierMap] = [
             PurifierModes.MANUAL,
             PurifierModes.AUTO,
             PurifierModes.PET,
+            PurifierModes.DIY,
         ],
         features=[PurifierFeatures.AIR_QUALITY, PurifierFeatures.LIGHT_DETECT],
         fan_levels=list(range(1, 5)),
+        diy_levels=list(range(1, 11)),
         device_alias='Vital 200S',
         auto_preferences=[
             PurifierAutoPreference.DEFAULT,
