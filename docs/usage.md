@@ -189,6 +189,10 @@ async def main():
 
         await outlet.set_timer(10, DeviceStatus.OFF) # Set a timer to turn off the outlet in 10 seconds
 
+        # List the schedules set up in the VeSync app (10A round outlets for now)
+        for schedule in await outlet.get_schedules() or []:
+            print(schedule.startTime, schedule.startState, schedule.endTime, schedule.endState, schedule.status)
+
 if __name__ == "__main__":
     asyncio.run(main())
 ```
