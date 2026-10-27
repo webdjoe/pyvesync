@@ -32,6 +32,7 @@ import pyvesync.const as const
 from pyvesync.base_devices.outlet_base import VeSyncOutlet
 from base_test_cases import TestBase
 from utils import assert_test, parse_args
+from defaults import build_bypass_v1_response
 import call_json
 import call_json_outlets
 
@@ -303,3 +304,40 @@ class TestOutlets(TestBase):
             self.mock_api.return_value = (None, 400)
         else:
             self.mock_api.return_value = call_json.DETAILS_BADCODE, 200
+
+    @pytest.mark.parametrize('setup_entry', ['ESW03'])
+    def test_get_schedules(self, setup_entry):
+        """Test getting the app schedules of 10A outlets."""
+        outlet_obj = self.get_device("outlets", setup_entry)
+        assert isinstance(outlet_obj, VeSyncOutlet)
+
+        self.mock_api.return_value = (
+            call_json_outlets.METHOD_RESPONSES[setup_entry]['get_schedules'], 200
+        )
+        schedules = self.run_in_loop(outlet_obj.get_schedules)
+        all_kwargs = parse_args(self.mock_api)
+        assert assert_test(
+            outlet_obj.get_schedules,
+            all_kwargs,
+            setup_entry,
+            self.write_api,
+            self.overwrite,
+        )
+        assert schedules is not None
+        assert len(schedules) == 1
+        assert schedules[0].scheduleID == '1234567'
+        assert schedules[0].startTime == '05:30'
+        assert schedules[0].startState == 'on'
+        assert schedules[0].endState == 'off'
+        assert schedules[0].status == '1'
+
+        # The API returns `"schedules": null` if there are none
+        self.mock_api.reset_mock()
+        self.mock_api.return_value = (
+            build_bypass_v1_response(result_dict={'schedules': None}), 200
+        )
+        assert self.run_in_loop(outlet_obj.get_schedules) == []
+
+        self.mock_api.reset_mock()
+        self.mock_api.return_value = call_json.DETAILS_BADCODE, 200
+        assert self.run_in_loop(outlet_obj.get_schedules) is None

@@ -293,6 +293,38 @@ class RequestV1SetTimer(RequestBypassV1):
     switchNo: int | None = None
 
 
+@dataclass
+class ScheduleItemV1(ResponseBaseModel):
+    """Data model for a Bypass V1 schedule as set up in the VeSync app.
+
+    Attributes:
+        scheduleID (str): ID of the schedule.
+        startTime (str | None): Local start time in `timeZone`, "HH:MM".
+        endTime (str | None): Local end time in `timeZone`, "HH:MM".
+        startState (str | None): Device state set at start time ("on" or "off").
+        endState (str | None): Device state set at end time ("on" or "off").
+        status (str | None): "1" if the schedule is enabled, "0" if it is disabled.
+        repeat (str | None): Repeat setting as returned by the API.
+        timeZone (str | None): IANA time zone of the schedule times.
+    """
+
+    scheduleID: str
+    startTime: str | None = None
+    endTime: str | None = None
+    startState: str | None = None
+    endState: str | None = None
+    status: str | None = None
+    repeat: str | None = None
+    timeZone: str | None = None
+
+
+@dataclass
+class ResultV1GetSchedules(BypassV1Result):
+    """Get schedules result for v1 API, `schedules` is None if there are none."""
+
+    schedules: list[ScheduleItemV1] | None = None
+
+
 class TimerModels:
     """Class holding all common timer models.
 
