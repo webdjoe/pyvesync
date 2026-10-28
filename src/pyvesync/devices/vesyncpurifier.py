@@ -539,9 +539,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         self.state.mode = details.workMode
         self.state.filter_life = details.filterLifePercent
         self.state.fan_level = (
-            0
-            if details.fanSpeedLevel == FAN_SPEED_OFF
-            else details.fanSpeedLevel
+            0 if details.fanSpeedLevel == FAN_SPEED_OFF else details.fanSpeedLevel
         )
         self.state.fan_set_level = details.manualSpeedLevel
         self.state.child_lock = bool(details.childLockSwitch)
