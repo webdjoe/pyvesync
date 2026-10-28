@@ -382,6 +382,8 @@ class DeviceList:
         model_dict['uuid'] = TestDefaults.uuid(module.setup_entry)
         model_dict['macID'] = TestDefaults.macid(module.setup_entry)
         model_dict['deviceType'] = module.dev_types[0]
+        if module.setup_entry == 'LAP-C341S-WEU':
+            model_dict['configModule'] = 'VS_WFON_APR_LAP-C341S-WEU_EU'
         if module.setup_entry == 'ESO15-TB':
             model_dict['subDeviceNo'] = 1
         return model_dict
