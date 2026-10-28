@@ -108,6 +108,7 @@ class TestAirPurifiers(TestBase):
         "LAP-V201S": [["set_auto_mode"], ['set_sleep_mode'], ['set_pet_mode'], ["turn_on_display"], ["turn_off_display"]],
         "EL551S": [["set_auto_mode"], ["set_sleep_mode"], ["set_turbo_mode"], ["turn_on_display"], ["turn_off_display"]],
         "LAP-B851S-WUS": [["set_auto_mode"], ['set_sleep_mode'], ["turn_on_display"], ["turn_off_display"]],
+        "LAP-C341S-WEU": [["set_auto_mode"]],
 
     }
 
@@ -148,14 +149,115 @@ class TestAirPurifiers(TestBase):
         assert fan_obj.state.device_status == const.DeviceStatus.ON
         assert fan_obj.state.mode == call_json_purifiers.PurifierDefaults.purifier_mode
         assert fan_obj.state.fan_level == call_json_purifiers.PurifierDefaults.fan_level
-
         # Parse mock_api args tuple from arg, kwargs to kwargs
         all_kwargs = parse_args(self.mock_api)
 
-        # Assert request matches recorded request or write new records
         assert assert_test(
             method_call, all_kwargs, setup_entry, self.write_api, self.overwrite
         )
+
+    def test_eleva_300x_details(self):
+        """Test Eleva 300X-specific optional status fields."""
+        setup_entry = 'LAP-C341S-WEU'
+        self.mock_api.return_value = (
+            call_json_purifiers.DETAILS_RESPONSES[setup_entry],
+            200,
+        )
+        purifier = self.get_device('air_purifiers', setup_entry)
+        self.run_in_loop(purifier.get_details)
+
+        assert purifier.config_module == 'VS_WFON_APR_LAP-C341S-WEU_EU'
+        assert purifier.state.pm1 == call_json_purifiers.PurifierDefaults.pm1
+        assert purifier.state.pm25 == (
+            call_json_purifiers.PurifierDefaults.air_quality_value_pm25
+        )
+        assert purifier.state.pm10 == call_json_purifiers.PurifierDefaults.pm10
+        assert purifier.state.filter_life == (
+            call_json_purifiers.PurifierDefaults.filter_life
+        )
+        assert purifier.state.aqi == (
+            call_json_purifiers.PurifierDefaults.aq_percent
+        )
+        assert purifier.state.aq_percent is None
+        assert purifier.state.carbon_filter_life == 72
+        assert purifier.state.pre_filter_life == 64
+        assert purifier.state.filter_remain_day == 90
+        assert purifier.state.auto_preference_type == 'default'
+        assert purifier.state.auto_room_size is None
+        request_body = parse_args(self.mock_api)['json_object']
+        assert request_body['payload']['method'] == 'getPurifierStatus'
+        assert request_body['configModule'] == 'VS_WFON_APR_LAP-C341S-WEU_EU'
+
+    def test_eleva_300x_max_fan_level_means_off(self):
+        """A reported fan level of 255 represents a stopped fan."""
+        setup_entry = 'LAP-C341S-WEU'
+        details = {
+            **call_json_purifiers.PURIFIER_DETAILS[setup_entry],
+            'fanSpeedLevel': 255,
+        }
+        self.mock_api.return_value = (
+            call_json_purifiers.build_bypass_v2_response(inner_result=details),
+            200,
+        )
+        purifier = self.get_device('air_purifiers', setup_entry)
+        self.run_in_loop(purifier.get_details)
+
+        assert purifier.state.fan_level == 0
+        assert purifier.state.device_status == const.DeviceStatus.ON
+        assert purifier.state.pm1 == call_json_purifiers.PurifierDefaults.pm1
+        assert purifier.state.pm25 == (
+            call_json_purifiers.PurifierDefaults.air_quality_value_pm25
+        )
+        assert purifier.state.pm10 == call_json_purifiers.PurifierDefaults.pm10
+        assert purifier.state.filter_life == (
+            call_json_purifiers.PurifierDefaults.filter_life
+        )
+        assert purifier.state.aqi == call_json_purifiers.PurifierDefaults.aq_percent
+
+    @pytest.mark.parametrize(
+        'method',
+        [
+            ('turn_on',),
+            ('turn_off',),
+            ('set_sleep_mode',),
+            ('set_manual_mode',),
+            ('set_auto_mode',),
+            ('set_fan_speed', {'speed': 3}),
+        ],
+        ids=['power_on', 'power_off', 'sleep', 'manual', 'auto', 'fan_speed'],
+    )
+    def test_eleva_300x_control_requests(self, method):
+        """Verify generated control requests without claiming device support."""
+        method_name, *arguments = method
+        method_kwargs = arguments[0] if arguments else {}
+        response = call_json_purifiers.METHOD_RESPONSES[
+            'LAP-C341S-WEU'
+        ][method_name]
+        if callable(response):
+            response = response(method_kwargs)
+        self.mock_api.return_value = (response, 200)
+        purifier = self.get_device('air_purifiers', 'LAP-C341S-WEU')
+        purifier.state.fan_level = 1
+        purifier.state.fan_set_level = 1
+        purifier.state.mode = const.PurifierModes.MANUAL
+        purifier.state.device_status = const.DeviceStatus.ON
+        if method_name == 'turn_on':
+            purifier.state.device_status = const.DeviceStatus.OFF
+        elif method_name == 'set_manual_mode':
+            purifier.state.mode = const.PurifierModes.AUTO
+
+        result = self.run_in_loop(getattr(purifier, method_name), **method_kwargs)
+        assert result is True
+
+        request_body = parse_args(self.mock_api)['json_object']
+        assert request_body['configModule'] == 'VS_WFON_APR_LAP-C341S-WEU_EU'
+        assert request_body['payload']['method'] == call_json_purifiers.CONTROL_METHODS[
+            method_name
+        ]
+        for key, value in call_json_purifiers.CONTROL_PAYLOADS[method_name](
+            method_kwargs
+        ).items():
+            assert request_body['payload']['data'][key] == value
 
     def test_methods(self, setup_entry, method):
         """Test device methods API request and response.

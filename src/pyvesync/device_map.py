@@ -816,6 +816,22 @@ objects for humidifier devices."""
 
 purifier_modules: list[PurifierMap] = [
     PurifierMap(
+        class_name='VeSyncAirBaseV2',
+        dev_types=['LAP-C341S-WEU'],
+        modes=[PurifierModes.SLEEP, PurifierModes.MANUAL, PurifierModes.AUTO],
+        features=[
+            PurifierFeatures.AIR_QUALITY,
+            PurifierFeatures.PM1,
+            PurifierFeatures.PM25,
+            PurifierFeatures.PM10,
+        ],
+        fan_levels=list(range(1, 4)),
+        device_alias='Eleva 300X',
+        model_display='LAP-C341S Series',
+        model_name='Eleva 300X',
+        setup_entry='LAP-C341S-WEU',
+    ),
+    PurifierMap(
         class_name='VeSyncAirBypass',
         dev_types=['Core200S', 'LAP-C201S-AUSR', 'LAP-C202S-WUSR'],
         modes=[PurifierModes.SLEEP, PurifierModes.MANUAL],

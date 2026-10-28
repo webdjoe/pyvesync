@@ -23,6 +23,7 @@ from pyvesync.models.purifier_models import (
     InnerPurifierBaseResult,
     Purifier131Result,
     PurifierCoreDetailsResult,
+    PurifierEleva300XResult,
     PurifierRH131Result,
     PurifierSproutResult,
     PurifierV2EventTiming,
@@ -47,6 +48,7 @@ if TYPE_CHECKING:
 
 
 _LOGGER = logging.getLogger(__name__)
+FAN_SPEED_OFF = 255
 
 
 class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
@@ -453,6 +455,12 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
 
     def _set_state(self, details: InnerPurifierBaseResult) -> None:
         """Set Purifier state from details response."""
+        if self.device_type == 'LAP-C341S-WEU':
+            if not isinstance(details, PurifierEleva300XResult):
+                _LOGGER.warning('Invalid Eleva 300X details model passed to _set_state')
+                return
+            self._set_eleva_state(details)
+            return
         if not isinstance(details, PurifierVitalDetailsResult):
             _LOGGER.warning('Invalid details model passed to _set_state')
             return
@@ -511,13 +519,49 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
     async def get_details(self) -> None:
         """Build API V2 Purifier details dictionary."""
         r_dict = await self.call_bypassv2_api('getPurifierStatus')
+        response_model = (
+            PurifierEleva300XResult
+            if self.device_type == 'LAP-C341S-WEU'
+            else PurifierVitalDetailsResult
+        )
         r_model = process_bypassv2_result(
-            self, _LOGGER, 'get_details', r_dict, PurifierVitalDetailsResult
+            self, _LOGGER, 'get_details', r_dict, response_model
         )
         if r_model is None:
             return
 
         self._set_state(r_model)
+
+    def _set_eleva_state(self, details: PurifierEleva300XResult) -> None:
+        """Set Eleva 300X status fields using the shared purifier state."""
+        self.state.connection_status = ConnectionStatus.ONLINE
+        self.state.device_status = DeviceStatus.from_int(details.powerSwitch)
+        self.state.mode = details.workMode
+        self.state.filter_life = details.filterLifePercent
+        self.state.fan_level = (
+            0 if details.fanSpeedLevel == FAN_SPEED_OFF else details.fanSpeedLevel
+        )
+        self.state.fan_set_level = details.manualSpeedLevel
+        self.state.child_lock = bool(details.childLockSwitch)
+        self.state.air_quality_level = details.AQLevel
+        self.state.pm25 = details.PM25
+        self.state.pm1 = details.PM1
+        self.state.pm10 = details.PM10
+        self.state.aqi = details.AQI
+        self.state.light_detection_switch = DeviceStatus.from_int(
+            details.lightDetectionSwitch
+        )
+        self.state.light_detection_status = DeviceStatus.from_int(
+            details.environmentLightState
+        )
+        self.state.display_set_status = DeviceStatus.from_int(details.screenSwitch)
+        self.state.display_status = DeviceStatus.from_int(details.screenState)
+        self.state.carbon_filter_life = details.carbonFilterLifePercent
+        self.state.pre_filter_life = details.preFilterLifePercent
+        self.state.filter_remain_day = details.filterRemainDay
+        if details.autoPreference is not None:
+            self.state.auto_preference_type = details.autoPreference.autoPreferenceType
+            self.state.auto_room_size = details.autoPreference.roomSize
 
     @deprecated('Use toggle_light_detection(toggle) instead.')
     async def set_light_detection(self, toggle: bool) -> bool:
