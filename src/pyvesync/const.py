@@ -766,9 +766,15 @@ The device map declares a single temperature step in Fahrenheit; the Celsius
 step is derived from this mapping when the device operates in Celsius."""
 
 
+BYPASSV2_SUB_DEVICE_PAYLOAD: MappingProxyType[str, int | str] = MappingProxyType(
+    {'subDeviceNo': 0, 'subDeviceType': ''}
+)
+"""Payload keys CAF-TF101S and CAF-P583S send on every bypassV2 request."""
+
+
 CUSTOM_RECIPE_ID = 1
 CUSTOM_RECIPE_TYPE = 3
-CUSTOM_RECIPE_NAME = 'Manual Cook'
+CUSTOM_RECIPE_NAME = 'Manual Cooking'
 CUSTOM_COOK_MODE = 'custom'
 
 
@@ -807,8 +813,8 @@ class AirFryerPresets:
     """
 
     custom: AirFryerPresetRecipe = AirFryerPresetRecipe(
-        cook_mode='Custom',
-        recipe_name='Manual Cook',
+        cook_mode=CUSTOM_COOK_MODE,
+        recipe_name=CUSTOM_RECIPE_NAME,
         recipe_id=1,
         recipe_type=3,
         target_temp=350,
@@ -817,15 +823,16 @@ class AirFryerPresets:
     )
     air_fry: AirFryerPresetRecipe = AirFryerPresetRecipe(
         cook_mode='AirFry',
-        recipe_name='AirFry',
+        recipe_name='Air Fry',
         recipe_id=14,
         recipe_type=3,
         target_temp=400,
         temp_unit='f',
         cook_time=10 * 60,
     )
-    # Cosori Dual Blaze (CAF-P583S) presets — recipe IDs and default
-    # temp/time values per the CAF-P583S-KUS user manual.
+    # The Broil default (450 F) matches the CAF-DC601S preset menu and is
+    # above the CAF-P583S maximum of 400 F; set_mode_from_recipe rejects it
+    # on devices whose range it exceeds.
     broil: AirFryerPresetRecipe = AirFryerPresetRecipe(
         cook_mode='Broil',
         recipe_name='Broil',
@@ -853,91 +860,6 @@ class AirFryerPresets:
         temp_unit='f',
         cook_time=30 * 60,
     )
-    reheat: AirFryerPresetRecipe = AirFryerPresetRecipe(
-        cook_mode='Reheat',
-        recipe_name='Reheat',
-        recipe_id=16,
-        recipe_type=3,
-        target_temp=280,
-        temp_unit='f',
-        cook_time=10 * 60,
-    )
-    steak: AirFryerPresetRecipe = AirFryerPresetRecipe(
-        cook_mode='Steak',
-        recipe_name='Steak',
-        recipe_id=1,
-        recipe_type=3,
-        target_temp=400,
-        temp_unit='f',
-        cook_time=9 * 60,
-    )
-    seafood: AirFryerPresetRecipe = AirFryerPresetRecipe(
-        cook_mode='Seafood',
-        recipe_name='Seafood',
-        recipe_id=3,
-        recipe_type=3,
-        target_temp=375,
-        temp_unit='f',
-        cook_time=6 * 60,
-    )
-    veggies: AirFryerPresetRecipe = AirFryerPresetRecipe(
-        cook_mode='Veggies',
-        recipe_name='Veggies',
-        recipe_id=15,
-        recipe_type=3,
-        target_temp=375,
-        temp_unit='f',
-        cook_time=10 * 60,
-    )
-    french_fries: AirFryerPresetRecipe = AirFryerPresetRecipe(
-        cook_mode='FrenchFries',
-        recipe_name='French Fries',
-        recipe_id=6,
-        recipe_type=3,
-        target_temp=400,
-        temp_unit='f',
-        cook_time=18 * 60,
-    )
-    frozen: AirFryerPresetRecipe = AirFryerPresetRecipe(
-        cook_mode='Frozen',
-        recipe_name='Frozen',
-        recipe_id=5,
-        recipe_type=3,
-        target_temp=400,
-        temp_unit='f',
-        cook_time=17 * 60,
-    )
-    chicken: AirFryerPresetRecipe = AirFryerPresetRecipe(
-        cook_mode='Chicken',
-        recipe_name='Chicken',
-        recipe_id=2,
-        recipe_type=3,
-        target_temp=380,
-        temp_unit='f',
-        cook_time=25 * 60,
-    )
-
-
-AIRFRYER_PRESET_MAP = {
-    'custom': AirFryerPresetRecipe(
-        cook_mode='Custom',
-        recipe_name='Manual Cook',
-        recipe_id=1,
-        recipe_type=3,
-        target_temp=350,
-        temp_unit='f',
-        cook_time=20,
-    ),
-    'airfry': AirFryerPresetRecipe(
-        cook_mode='AirFry',
-        recipe_name='AirFry',
-        recipe_id=4,
-        recipe_type=3,
-        target_temp=400,
-        temp_unit='f',
-        cook_time=25,
-    ),
-}
 
 
 class AirFryerCookModes(StrEnum):
@@ -965,11 +887,6 @@ class AirFryerCookModes(StrEnum):
     DRY = 'dry'
     GRILL = 'grill'
     PREHEAT = 'preheat'
-    STEAK = 'steak'
-    SEAFOOD = 'seafood'
-    VEGGIES = 'veggies'
-    FRENCH_FRIES = 'french_fries'
-    CHICKEN = 'chicken'
 
 
 class AirFryerFeatures(Features):
@@ -999,6 +916,7 @@ class AirFryerCookStatus(StrEnum):
         PAUSED: Device is paused.
         COMPLETED: Cooking is completed.
         UNKNOWN: Cooking status is unknown.
+        READY: Cook programmed, waiting for the start button.
     """
 
     COOKING = 'cooking'
@@ -1011,6 +929,7 @@ class AirFryerCookStatus(StrEnum):
     STANDBY = 'standby'
     PREHEAT_END = 'preheatEnd'
     PREHEAT_STOP = 'preheatStop'
+    READY = 'ready'
 
 
 PREHEAT_STATUSES = [
@@ -1023,6 +942,7 @@ COOK_STATUSES = [
     AirFryerCookStatus.COOKING,
     AirFryerCookStatus.COOK_STOP,
     AirFryerCookStatus.COOK_END,
+    AirFryerCookStatus.READY,
 ]
 
 RESUMABLE_STATUSES = [

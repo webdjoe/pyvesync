@@ -17,12 +17,12 @@ from pyvesync.device_map import air_fryer_modules
 
 
 def test_map_declares_temp_unit_and_step():
-    """Every AirFryerMap entry declares a unit and a single (Fahrenheit) step."""
+    """Every AirFryerMap entry declares a unit and a Fahrenheit step."""
     for entry in air_fryer_modules:
         assert isinstance(entry.temp_unit, TemperatureUnits)
         assert entry.temperature_step_f > 0
-        # Celsius step is derived, not declared on the map.
-        assert not hasattr(entry, 'temperature_step_c')
+        # Celsius step is derived unless the map overrides it.
+        assert entry.temperature_step_c is None or entry.temperature_step_c > 0
         assert entry.temperature_step_f in AIRFRYER_STEP_F_TO_C
 
 

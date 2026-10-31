@@ -170,6 +170,36 @@ AIR_FRYER_COOKING_DETAILS: dict[str, dict] = {
         "syncType": 0,
         "workChamber": 1,
     },
+    # CAF-P583S-KUS get-status/cooking capture (2025-05-21)
+    "CAF-P583S": {
+        "stepArray": [
+            {
+                "cookSetTime": AirFryerDefaults.cook_time_s,  # Seconds
+                "cookTemp": AirFryerDefaults.cook_temp_f,
+                "mode": "Broil",
+                "cookLastTime": AirFryerDefaults.cook_last_time_s,  # Seconds
+                "shakeTime": 0,
+                "cookEndTime": 0,
+                "recipeName": "Broil",
+                "recipeId": 17,
+                "recipeType": 3,
+            }
+        ],
+        "stepIndex": 0,
+        "cookMode": "normal",
+        "cookStatus": AirFryerDefaults.cook_status.value,
+        "tempUnit": AirFryerDefaults.temp_unit.code,
+        "preheatSetTime": 0,
+        "preheatLastTime": 0,
+        "preheatEndTime": 0,
+        "preheatTemp": 0,
+        "startTime": 1747847911,
+        "totalTimeRemaining": AirFryerDefaults.cook_last_time_s,
+        "currentTemp": 24,
+        "appointLastTime": 0,
+        "shakeStatus": 0,
+        "linkageStatus": 0,
+    },
 }
 
 AIR_FRYER_STANDBY_DETAILS: dict[str, dict] = {
@@ -198,6 +228,24 @@ AIR_FRYER_STANDBY_DETAILS: dict[str, dict] = {
         "syncType": 0,
         "workChamber": 0,
     },
+    # CAF-P583S-KUS get-status/standby capture (2025-05-21)
+    "CAF-P583S": {
+        "stepArray": [],
+        "stepIndex": 0,
+        "cookMode": "normal",
+        "cookStatus": "standby",
+        "tempUnit": AirFryerDefaults.temp_unit.code,
+        "preheatSetTime": 0,
+        "preheatLastTime": 0,
+        "preheatEndTime": 0,
+        "preheatTemp": 0,
+        "startTime": 0,
+        "totalTimeRemaining": 0,
+        "currentTemp": 24,
+        "appointLastTime": 0,
+        "shakeStatus": 0,
+        "linkageStatus": 0,
+    },
 }
 
 
@@ -205,6 +253,7 @@ METHOD_RESPONSES = {
     'CS158-AF': deepcopy(FunctionResponsesV1),
     'CAF-DC601S': deepcopy(FunctionResponsesV2),
     'CAF-TF101S': deepcopy(FunctionResponsesV2),
+    'CAF-P583S': deepcopy(FunctionResponsesV2),
 }
 
 
@@ -218,6 +267,9 @@ DETAILS_RESPONSES_COOKING = {
     "CAF-TF101S": build_bypass_v2_response(
         inner_result=deepcopy(AIR_FRYER_COOKING_DETAILS["CAF-TF101S"]),
     ),
+    "CAF-P583S": build_bypass_v2_response(
+        inner_result=deepcopy(AIR_FRYER_COOKING_DETAILS["CAF-P583S"]),
+    ),
 }
 
 
@@ -230,5 +282,8 @@ DETAILS_RESPONSES_STANDBY = {
     ),
     "CAF-TF101S": build_bypass_v2_response(
         inner_result=deepcopy(AIR_FRYER_STANDBY_DETAILS["CAF-TF101S"]),
+    ),
+    "CAF-P583S": build_bypass_v2_response(
+        inner_result=deepcopy(AIR_FRYER_STANDBY_DETAILS["CAF-P583S"]),
     ),
 }

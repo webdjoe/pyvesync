@@ -340,7 +340,10 @@ class AirFryerMap(DeviceMapTemplate):
         temperature_range_f (tuple[int, int]): Min/max temperature in Fahrenheit.
         temperature_range_c (tuple[int, int]): Min/max temperature in Celsius.
         temperature_step_f (int): Temperature step interval in Fahrenheit. The
-            Celsius step is derived from this via ``AIRFRYER_STEP_F_TO_C``.
+            Celsius step is derived from this via ``AIRFRYER_STEP_F_TO_C``
+            unless ``temperature_step_c`` is set.
+        temperature_step_c (int | None): Temperature step interval in Celsius,
+            for models whose Celsius step is not the derived value.
     """
 
     time_units: TimeUnits = TimeUnits.MINUTES
@@ -348,6 +351,7 @@ class AirFryerMap(DeviceMapTemplate):
     temperature_range_f: tuple[int, int] = (200, 400)
     temperature_range_c: tuple[int, int] = (75, 200)
     temperature_step_f: int = 10
+    temperature_step_c: int | None = None
     product_line: str = ProductLines.WIFI_KITCHEN
     product_type: str = ProductTypes.AIR_FRYER
     module: ModuleType = vesynckitchen
@@ -1162,7 +1166,7 @@ air_fryer_modules: list[AirFryerMap] = [
         model_name='TurboBlaze 6 Qt. Air Fryer',
         temp_unit=TemperatureUnits.FAHRENHEIT,
         temperature_step_f=5,
-        features=[AirFryerFeatures.PREHEAT, AirFryerFeatures.RESUMABLE],
+        features=[AirFryerFeatures.PREHEAT],
         cook_modes={
             AirFryerCookModes.AIRFRY: 'AirFry',
         },
@@ -1173,7 +1177,7 @@ air_fryer_modules: list[AirFryerMap] = [
         temperature_range_c=(30, 230),
         status_map=MappingProxyType(
             {
-                'ready': AirFryerCookStatus.COOK_STOP,
+                'ready': AirFryerCookStatus.READY,
                 'cooking': AirFryerCookStatus.COOKING,
                 'heating': AirFryerCookStatus.HEATING,
                 'cookStop': AirFryerCookStatus.COOK_STOP,
@@ -1186,7 +1190,7 @@ air_fryer_modules: list[AirFryerMap] = [
         # Cosori Dual Blaze US variant (single-chamber model with dual heating
         # elements). Uses the same bypassV2 protocol as TurboBlaze (startCook /
         # endCook / getAirfryerStatus). The Dual Blaze has no preheat function.
-        class_name='VeSyncTurboBlazeFryer',
+        class_name='VeSyncDualBlazeFryer',
         module=vesynckitchen,
         dev_types=['CAF-P583S-KUS'],
         setup_entry='CAF-P583S',
@@ -1195,21 +1199,14 @@ air_fryer_modules: list[AirFryerMap] = [
         model_name='Dual Blaze 6.8 Qt. Air Fryer',
         temp_unit=TemperatureUnits.FAHRENHEIT,
         temperature_step_f=5,
-        features=[AirFryerFeatures.RESUMABLE],
-        # 11 presets exposed by the VeSync app; recipe IDs/names defined in
-        # AirFryerPresets in const.py.
+        features=[],
+        # Only presets with a captured startCook recipe ID (AirFry 14, Broil 17,
+        # Roast 13, Bake 9); the app's other presets need captures first.
         cook_modes={
             AirFryerCookModes.AIRFRY: 'AirFry',
             AirFryerCookModes.BROIL: 'Broil',
             AirFryerCookModes.ROAST: 'Roast',
             AirFryerCookModes.BAKE: 'Bake',
-            AirFryerCookModes.REHEAT: 'Reheat',
-            AirFryerCookModes.STEAK: 'Steak',
-            AirFryerCookModes.SEAFOOD: 'Seafood',
-            AirFryerCookModes.VEGGIES: 'Veggies',
-            AirFryerCookModes.FRENCH_FRIES: 'FrenchFries',
-            AirFryerCookModes.FROZEN: 'Frozen',
-            AirFryerCookModes.CHICKEN: 'Chicken',
         },
         default_cook_mode=AirFryerCookModes.AIRFRY,
         default_preset=AirFryerPresets.air_fry,
@@ -1219,7 +1216,7 @@ air_fryer_modules: list[AirFryerMap] = [
         status_map=MappingProxyType(
             {
                 'standby': AirFryerCookStatus.STANDBY,
-                'ready': AirFryerCookStatus.COOK_STOP,
+                'ready': AirFryerCookStatus.READY,
                 'cooking': AirFryerCookStatus.COOKING,
                 'heating': AirFryerCookStatus.HEATING,
                 'preheating': AirFryerCookStatus.HEATING,
@@ -1233,7 +1230,7 @@ air_fryer_modules: list[AirFryerMap] = [
     AirFryerMap(
         # Cosori Dual Blaze EU variant — Celsius. Same bypassV2 protocol as the
         # US variant above; only the reported/declared temperature unit differs.
-        class_name='VeSyncTurboBlazeFryer',
+        class_name='VeSyncDualBlazeFryer',
         module=vesynckitchen,
         dev_types=['CAF-P583S-KEU'],
         setup_entry='CAF-P583S-KEU',
@@ -1242,19 +1239,12 @@ air_fryer_modules: list[AirFryerMap] = [
         model_name='Dual Blaze 6.8 Qt. Air Fryer',
         temp_unit=TemperatureUnits.CELSIUS,
         temperature_step_f=5,
-        features=[AirFryerFeatures.RESUMABLE],
+        features=[],
         cook_modes={
             AirFryerCookModes.AIRFRY: 'AirFry',
             AirFryerCookModes.BROIL: 'Broil',
             AirFryerCookModes.ROAST: 'Roast',
             AirFryerCookModes.BAKE: 'Bake',
-            AirFryerCookModes.REHEAT: 'Reheat',
-            AirFryerCookModes.STEAK: 'Steak',
-            AirFryerCookModes.SEAFOOD: 'Seafood',
-            AirFryerCookModes.VEGGIES: 'Veggies',
-            AirFryerCookModes.FRENCH_FRIES: 'FrenchFries',
-            AirFryerCookModes.FROZEN: 'Frozen',
-            AirFryerCookModes.CHICKEN: 'Chicken',
         },
         default_cook_mode=AirFryerCookModes.AIRFRY,
         default_preset=AirFryerPresets.air_fry,
@@ -1264,7 +1254,7 @@ air_fryer_modules: list[AirFryerMap] = [
         status_map=MappingProxyType(
             {
                 'standby': AirFryerCookStatus.STANDBY,
-                'ready': AirFryerCookStatus.COOK_STOP,
+                'ready': AirFryerCookStatus.READY,
                 'cooking': AirFryerCookStatus.COOKING,
                 'heating': AirFryerCookStatus.HEATING,
                 'preheating': AirFryerCookStatus.HEATING,
@@ -1285,6 +1275,8 @@ air_fryer_modules: list[AirFryerMap] = [
         model_name='Cosori Dual Air Fryer',
         temp_unit=TemperatureUnits.CELSIUS,
         temperature_step_f=5,
+        # Preset menu temps (55/160/165/190/200/240 C) are on a 5 C step.
+        temperature_step_c=5,
         features=[AirFryerFeatures.DUAL_CHAMBER],
         cook_modes={
             AirFryerCookModes.AIRFRY: 'AirFry',
@@ -1302,7 +1294,7 @@ air_fryer_modules: list[AirFryerMap] = [
         status_map=MappingProxyType(
             {
                 'standby': AirFryerCookStatus.STANDBY,
-                'ready': AirFryerCookStatus.COOK_STOP,
+                'ready': AirFryerCookStatus.READY,
                 'cooking': AirFryerCookStatus.COOKING,
                 'cookStop': AirFryerCookStatus.COOK_STOP,
                 'pullOut': AirFryerCookStatus.PULL_OUT,

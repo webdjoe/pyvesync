@@ -76,6 +76,16 @@ class Fryer158CookingReturnStatus(ResponseBaseModel):
     preheatSetTime: int | None = None
     targetTemp: int | None = None
     customRecipe: str | None = None
+    # The API misspells currentTemp as curentTemp; accept both spellings
+    # in case the API is fixed.
+    curentTemp: int | None = None
+
+    @property
+    def current_temp(self) -> int | None:
+        """Return the current temperature from either API key."""
+        if self.currentTemp is not None:
+            return self.currentTemp
+        return self.curentTemp
 
 
 @dataclass
@@ -208,6 +218,23 @@ class FryerTurboBlazeRequestData(RequestBaseModel):
     startAct: FryerTurboBlazeStartActItem
     hasPreheat: int = 0
     hasLinkage: bool = False
+
+
+@dataclass
+class FryerDualBlazeRequestData(RequestBaseModel):
+    """Request model for Dual Blaze (CAF-P583S) startCook commands."""
+
+    accountID: str
+    hasLinkage: bool
+    hasWarm: bool
+    mode: str
+    readyStart: bool
+    recipeId: int
+    recipeName: str
+    recipeType: int
+    tempUnit: str
+    startAct: FryerTurboBlazeStartActItem
+    hasPreheat: int = 0
 
 
 @dataclass

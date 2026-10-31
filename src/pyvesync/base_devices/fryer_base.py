@@ -130,18 +130,20 @@ class FryerState(DeviceState):
 
     @property
     def is_in_preheat_mode(self) -> bool:
-        """Return True if the fryer has preheat feature."""
+        """Return True if the fryer is in preheat mode.
+
+        A pulled-out basket counts as preheat only while preheat time remains.
+        """
         return self.cook_status in PREHEAT_STATUSES or (
             self.cook_status == AirFryerCookStatus.PULL_OUT
-            and self.preheat_set_time is not None
+            and bool(self.preheat_last_time)
         )
 
     @property
     def is_in_cook_mode(self) -> bool:
         """Return True if the fryer is in cook mode."""
         return self.cook_status in COOK_STATUSES or (
-            self.cook_status == AirFryerCookStatus.PULL_OUT
-            and self.preheat_last_time is None
+            self.cook_status == AirFryerCookStatus.PULL_OUT and not self.preheat_last_time
         )
 
     @property
@@ -208,6 +210,7 @@ class FryerState(DeviceState):
         if self.cook_status in [
             AirFryerCookStatus.PULL_OUT,
             AirFryerCookStatus.COOK_STOP,
+            AirFryerCookStatus.READY,
         ]:
             return self.cook_last_time
 
@@ -450,6 +453,7 @@ class VeSyncFryer(VeSyncBaseDevice):
 
     __slots__ = (
         '_temp_unit',
+        '_temperature_step_c',
         'cook_modes',
         'default_preset',
         'max_temp_c',
@@ -483,6 +487,7 @@ class VeSyncFryer(VeSyncBaseDevice):
         self.min_temp_c: int = feature_map.temperature_range_c[0]
         self.max_temp_c: int = feature_map.temperature_range_c[1]
         self.temperature_step_f: int = feature_map.temperature_step_f
+        self._temperature_step_c: int | None = feature_map.temperature_step_c
         self.time_units: TimeUnits = feature_map.time_units
         self.status_map = feature_map.status_map
 
@@ -510,11 +515,14 @@ class VeSyncFryer(VeSyncBaseDevice):
 
     @property
     def temperature_step_c(self) -> int:
-        """Return the Celsius temperature step derived from the Fahrenheit step.
+        """Return the Celsius temperature step.
 
-        The device map declares a single Fahrenheit step; the Celsius step is
-        looked up from ``AIRFRYER_STEP_F_TO_C``.
+        Uses the device map's ``temperature_step_c`` when set; otherwise the
+        Celsius step is looked up from the Fahrenheit step via
+        ``AIRFRYER_STEP_F_TO_C``.
         """
+        if self._temperature_step_c is not None:
+            return self._temperature_step_c
         return AIRFRYER_STEP_F_TO_C[self.temperature_step_f]
 
     @property
@@ -596,6 +604,26 @@ class VeSyncFryer(VeSyncBaseDevice):
             )
             return None
         return rounded
+
+    def prepare_recipe_temperature(self, recipe: AirFryerPresetRecipe) -> int | None:
+        """Convert a recipe's temperature to the device unit, round and validate.
+
+        Args:
+            recipe (AirFryerPresetRecipe): The recipe, whose ``target_temp`` is
+                in ``recipe.temp_unit``.
+
+        Returns:
+            int | None: The temperature in the device's ``temp_unit``, rounded
+            to the device step, or None if it is outside the device's range.
+        """
+        temperature: float = recipe.target_temp
+        recipe_unit = TemperatureUnits.from_string(recipe.temp_unit)
+        if recipe_unit != self.temp_unit:
+            if self.temp_unit == TemperatureUnits.CELSIUS:
+                temperature = TemperatureUnits.to_celsius(temperature, recipe_unit)
+            else:
+                temperature = TemperatureUnits.to_fahrenheit(temperature, recipe_unit)
+        return self.prepare_temperature(round(temperature))
 
     def convert_time_for_api(self, time_in_seconds: int) -> int:
         """Convert time in seconds to the device's time units.
