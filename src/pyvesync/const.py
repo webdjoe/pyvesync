@@ -630,12 +630,18 @@ class PurifierModes(Features):
         SLEEP: Sleep mode.
         TURBO: Turbo mode.
         PET: Pet mode.
+        ODOR_SHIELD_QUIET: Odor Shield (quiet) auto mode on Levoit Vital Pet.
+        ODOR_SHIELD_BALANCED: Odor Shield (balanced) auto mode on Levoit Vital Pet.
+        ODOR_SHIELD_PERFORMANCE: Odor Shield (performance) auto mode on Levoit Vital Pet.
         UNKNOWN: Unknown mode.
     """
 
     AUTO = 'auto'
     MANUAL = 'manual'
     SLEEP = 'sleep'
+    ODOR_SHIELD_QUIET = 'odorShieldQuiet'
+    ODOR_SHIELD_BALANCED = 'odorShieldBalanced'
+    ODOR_SHIELD_PERFORMANCE = 'odorShieldPerformance'
     TURBO = 'turbo'
     PET = 'pet'
     UNKNOWN = 'unknown'
