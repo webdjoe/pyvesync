@@ -42,9 +42,9 @@ class VeSyncAuraThermostat(BypassV2Mixin, VeSyncThermostat):
 
     def _process_details(self, details: ResultThermostatDetails) -> None:
         """Internal method to process thermostat details."""
-        if ResultThermostatDetails.supportMode is not None:
+        if details.supportMode is not None:
             self.supported_work_modes = [
-                ThermostatWorkModes(mode) for mode in ResultThermostatDetails.supportMode
+                ThermostatWorkModes(mode) for mode in details.supportMode
             ]
         self.state.work_mode = ThermostatConst.WorkMode(details.workMode)
         self.state.work_status = ThermostatConst.WorkStatus(details.workStatus)
