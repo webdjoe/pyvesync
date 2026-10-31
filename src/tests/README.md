@@ -59,7 +59,7 @@ To run a tests for development on existing devices or if you are not ready to wr
 pytest
 
 # or through tox
-tox -e testenv # you can also use the environments lint (pylint), flake8, mypy, ruff
+tox -e 3.12 # pytest on Python 3.12 (also 3.11, 3.13). Linters: -e lint (pylint), flake8, mypy, ruff
 ```
 
 If developing a new device and it is completed and thoroughly tested, pass the `--write_api` to pytest. Be sure to include the `--` before the argument in the tox command.
@@ -67,7 +67,7 @@ If developing a new device and it is completed and thoroughly tested, pass the `
 ```bash
 pytest --write_api
 
-tox -e testenv -- --write_api
+tox -e 3.12 -- --write_api
 ```
 
 If fixing an existing device where the API call was incorrect or the api has changed, pass `--write_api` and `--overwrite` to pytest. Both arguments need to be provided to overwrite existing API data already in the YAML files.
@@ -75,7 +75,7 @@ If fixing an existing device where the API call was incorrect or the api has cha
 ```bash
 pytest --write_api --overwrite
 
-tox -e testenv -- --write_api --overwrite
+tox -e 3.12 -- --write_api --overwrite
 ```
 
 ### Write confirmation prompt
@@ -98,10 +98,10 @@ The response side of the API is tested through the use of responses that have be
 
 ### Test IDs
 
-Every generated test is given a readable ID of the form `{device}.{setup_entry}.{method}`, for example `outlets.ESW15-USA.turn_on` or `bulbs.ESL100CW.update`. This makes it easy to run a single case:
+Every generated test is given an ID of the form `{device}.{setup_entry}.{method}`. The method is the list entry from the class attributes, so `test_methods` IDs look like `outlets.ESW15-USA.['turn_on']`, and `test_details` IDs end in `.update`, for example `bulbs.ESL100CW.update`. Because of the brackets and quotes, select tests with `-k` expressions on the parts instead of typing a full ID:
 
 ```bash
-pytest -k "outlets.ESW15-USA.turn_on"
+pytest -k "ESW15-USA and turn_on"
 ```
 
 ## File Structure
@@ -129,12 +129,12 @@ Each device module has its own `call_json` file that follows a consistent struct
 
 - **`<TYPE>` list** (e.g. `OUTLETS`, `BULBS`) - the list of setup entries, derived from `device_map.<type>_modules`. `test_all_devices.py` asserts this length matches `DETAILS_RESPONSES`.
 - **`<Type>Defaults` class** (e.g. `OutletDefaults`) - default state values (statuses, voltage, brightness, etc.) shared across that device type's responses.
-- **`DETAILS_RESPONSES` dict** - maps each setup entry to its `get_details()` response as a `(response, status)` tuple. By convention the response bodies are held on a `{DeviceType}Details` class, but the class name and attribute names do not matter - `DETAILS_RESPONSES` is the lookup that the tests actually use.
+- **`DETAILS_RESPONSES` dict** - maps each setup entry to its `get_details()` response dict (or a callable that returns it). The tests add the `200` status code themselves. By convention the response bodies are held on a `{DeviceType}Details` class, but the class name and attribute names do not matter - `DETAILS_RESPONSES` is the lookup that the tests actually use.
 - **`METHOD_RESPONSES` dict** - maps each setup entry to a `defaultdict` of per-method responses (see below).
 
 Adding a new device usually only requires adding its setup entry's `get_details()` response to `DETAILS_RESPONSES`, since the setup-entry list is derived automatically from the device map.
 
-The responses for device methods are also defined in the `call_json_DEVICE` module. The `METHOD_RESPONSES` dictionary uses a defaultdict imported from `defaults.py` with a simple `{"code": 0, "msg": None}` as the default value (`FunctionResponsesV1` and `FunctionResponsesV2` wrap that in the Bypass V1/V2 response envelopes). The `METHOD_RESPONSES` dictionary is created with keys of device setup entry and values as the defaultdict object. From here the method responses can be added to the defaultdict object for specific scenarios.
+The responses for device methods are also defined in the `call_json_DEVICE` module. The `METHOD_RESPONSES` dictionary uses a defaultdict imported from `defaults.py` with a simple `{"code": 0, "msg": None}` as the default value for the plain `FunctionResponses`. `FunctionResponsesV1` and `FunctionResponsesV2` wrap that in the Bypass V1/V2 response envelopes, and most device modules use those. The `METHOD_RESPONSES` dictionary is created with keys of device setup entry and values as the defaultdict object. From here the method responses can be added to the defaultdict object for specific scenarios.
 
 ```python
 from defaults import FunctionResponses
@@ -157,7 +157,7 @@ device_responses['dev2'].default_factory = lambda: {'new_code': 0, 'msg': 'succe
 
 The test sets the mocked `async_call_api()` return value as a tuple of the response and status code, e.g. `mock_api.return_value = (response_dict, 200)`.
 
-The method responses can also be a function that accept one argument that contains the kwargs used in the method call. This allows for more complex responses based on the method call.
+The method responses can also be a function that receives the kwargs used in the method call. This allows for more complex responses based on the method call. How the kwargs are passed differs between test modules: `test_bulbs.py` passes them as one positional dict, while `test_outlets.py` unpacks them as `**kwargs`. Check the module's `test_methods` before writing a callable response.
 
 The test will know whether it is a straight value or function and call it accordingly.
 
@@ -212,22 +212,29 @@ API requests recorded from the mocked `async_call_api()` method. The `api` direc
 ```yaml
 turn_off:
   headers:
-    accept-language: en
-    accountId: sample_id
-    appVersion: 2.8.6
-    content-type: application/json
-    tk: sample_tk
-    tz: America/New_York
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
   json_object:
     acceptLanguage: en
     accountID: sample_id
+    appVersion: 5.6.60
+    cid: ESO15-TB-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: ESO15-TB-CID
+    method: deviceStatus
+    phoneBrand: pyvesync
+    phoneOS: Android
     status: 'off'
-    switchNo: 3
+    switchNo: '1'
     timeZone: America/New_York
     token: sample_tk
+    traceId: TRACE_ID
+    userCountryCode: US
     uuid: ESO15-TB-UUID
-  method: put
-  url: /outdoorsocket15a/v1/device/devicestatus
+  method: post
+  url: /cloud/v1/deviceManaged/deviceStatus
 ```
 
 ### **`defaults.py`** - default value factory for tests
@@ -302,7 +309,7 @@ The methods are then parametrized based on those values. For most device additio
 
 1. **Add the device to `pyvesync`** first - once its map entry is in `device_map.<type>_modules`, its setup entry is automatically included in the test module's `<TYPE>` list.
 2. **Add a `get_details()` response** for the setup entry to `DETAILS_RESPONSES` in the matching `call_json_<type>.py`. `test_all_devices.py` fails until every device has one.
-3. **Add non-default method responses** to `METHOD_RESPONSES[setup_entry]` only if the device needs something other than the default `{"code": 0, "msg": None}` envelope.
+3. **Add non-default method responses** to `METHOD_RESPONSES[setup_entry]` only if the device needs something other than the default `FunctionResponses*` response.
 4. **Add device-specific methods** to the test class's `device_methods` dict if the device supports methods beyond the shared `base_methods`. Devices that only use existing base/device methods are covered automatically by parametrization.
 5. **Record the fixtures** with `pytest --write_api` (or `--write_api --overwrite` when an existing device's API changed), then commit the new/updated YAML files under `src/tests/api/`.
 6. **Run `pytest`** with no flags to confirm the recorded requests match.

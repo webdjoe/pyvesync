@@ -4,7 +4,7 @@ pyvesync is a library to manage VeSync compatible [smart home devices](#supporte
 
 <a href="https://webdjoe.github.io/pyvesync/latest"><img src="./docs/assets/docs.svg"></a>
 
-**Check out the new [pyvesync documentation](https://webdjoe.github.io/pyvesync/) for usage and full API details.**
+**Check out the new [pyvesync documentation](https://webdjoe.github.io/pyvesync/latest/) for usage and full API details.**
 
 ## Supported Product Types
 
@@ -19,7 +19,7 @@ pyvesync is a library to manage VeSync compatible [smart home devices](#supporte
 
 See the [supported devices](https://webdjoe.github.io/pyvesync/latest/supported_devices/) page for a complete list of supported devices and device types.
 
-## What's new in pyvesync 3.0
+## pyvesync v3 Features
 
 **BREAKING CHANGES** - The release of pyvesync 3.0 comes with many improvements and new features, but as a result there are many breaking changes. The structure has been completely refactored, so please read through the README and thoroughly test before deploying.
 
@@ -213,7 +213,7 @@ pip install pyvesync
 5. Voltson Smart WiFi Outlet - Rectangle (15A model ESW15-USA)
 6. Two Plug Outdoor Outlet (ESO15-TB) (Each plug is a separate `VeSyncOutlet` object, energy readings are for both plugs combined)
 7. BSDOG / Greensun Smart Outlet Series (BSDOG01, BSDOG02, WYSMTOD16A, WM-PLUG and more)
-8. WHOPLUG / Greensun Smart Outlet
+8. WHOGPLUG / Greensun Smart Plug
 9. WYLDR Smart Plug (WYLDR16A1081) (Supports energy monitoring but not energy history)
 
 <!--SUPPORTED OUTLETS END-->
@@ -313,7 +313,8 @@ async def main():
     async with VeSync("user", "password") as manager:
 
         # If credentials are stored in a file, it can be loaded
-        # the default location is ~/.vesync_token
+        # with no path, .vesync_auth is read from the current directory,
+        # then from the home directory
         await manager.load_credentials_from_file()
         # or the file path can be passed
         await manager.load_credentials_from_file("/path/to/token_file")
@@ -434,7 +435,7 @@ if __name__ == "__main__":
 
 ### Debug to a file (recommended for sharing with issues)
 
-The `log_to_file()` method is the simplest way to capture a full debug log. It sets the `pyvesync` logger to `DEBUG` **and** attaches a file handler in one call, so you do not need to configure logging yourself. Pass `stdout=True` to also print to the console. Keep `redact=True` (the default) so the log is safe to attach to a GitHub issue:
+The `log_to_file()` method is the simplest way to capture a full debug log. It sets the `pyvesync` logger to `DEBUG` **and** attaches a file handler in one call, so you do not need to configure logging yourself. It also prints to the console by default; pass `stdout=False` to log only to the file. Keep `redact=True` (the default) so the log is safe to attach to a GitHub issue:
 
 ```python
 import asyncio
@@ -446,7 +447,7 @@ async def main():
     # redact=True is the default - sensitive values are scrubbed from the log
     async with VeSync("user", "password", redact=True) as manager:
         # Enables DEBUG logging and writes it to pyvesync.log
-        # stdout=True also prints the log to the console
+        # stdout=True (the default) also prints the log to the console
         manager.log_to_file("pyvesync.log", stdout=True)
 
         # Optional - include the full request & response body of every API call
@@ -467,13 +468,13 @@ if __name__ == "__main__":
 
 ## Contribution Expectations
 
-Contributions — from humans and AI coding assistants alike — must follow three rules. These keep the library correct and reviewable. See the [contributing guide](https://webdjoe.github.io/pyvesync/latest/development/contributing) for full detail.
+Contributions — from humans and AI coding assistants alike — must follow three rules. These keep the library correct and maintainable. See the [contributing guide](https://webdjoe.github.io/pyvesync/latest/development/contributing) for full detail.
 
 1. **Follow the intended architecture.** New devices are added through the three-tier hierarchy (base class → concrete device + API mixin → device map), with state in the device's `DeviceState` subclass, models in `models/`, and constants in `pyvesync.const`. API request/response shapes must come from a real packet capture — never invented.
 2. **Verify on real hardware before merge.** New device support and any change to device behavior must be tested on the physical device, and the pull request must state the model and firmware version tested. Testing only through Home Assistant does not count.
 3. **One change per pull request.** Each PR must be a single feature, fix, or edit. Large or mixed PRs that bundle unrelated changes will be asked to be broken up before review.
 
-> **Using an AI assistant?** Point it at [`CLAUDE.md`](CLAUDE.md) / [`AGENTS.md`](AGENTS.md) and the [contributing guide](https://webdjoe.github.io/pyvesync/latest/development/contributing). You are responsible for the result: it must follow the architecture, must not fabricate API fields, must not be submitted without real-device testing, and must be a single focused change.
+> **Using an AI assistant?** Agent instructions live in [`AGENTS.md`](AGENTS.md), which Codex and most tools read directly; [`CLAUDE.md`](CLAUDE.md) imports it for Claude Code. Point your assistant at it and the [contributing guide](https://webdjoe.github.io/pyvesync/latest/development/contributing). You are responsible for the result: it must follow the architecture, must not fabricate API fields, must not be submitted without real-device testing, and must be a single focused change.
 
 ## Feature Requests
 

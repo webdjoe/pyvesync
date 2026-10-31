@@ -25,7 +25,7 @@ device behavior without real-hardware testing will be asked to change before rev
 - [ ] This PR is a **single** feature, fix, or edit (not a bundle of unrelated changes).
 - [ ] The change follows the intended architecture (base class → device + API mixin → device map; state in `DeviceState`; models in `models/`; constants in `pyvesync.const`).
 - [ ] No API request/response fields were invented — all come from a real packet capture.
-- [ ] `ruff check`, `mypy`, and `pytest` pass locally.
+- [ ] `ruff check`, `pylint`, `mypy`, and `pytest` pass locally.
 - [ ] Tests added/updated and API fixtures written (`pytest --write_api`) where relevant.
 - [ ] Documentation updated if behavior or public API changed.
 
