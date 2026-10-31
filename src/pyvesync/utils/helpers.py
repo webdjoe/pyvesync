@@ -124,6 +124,27 @@ class Converters:
         return celsius * 9.0 / 5.0 + 32
 
 
+VESYNC_CERT_SHA1 = '2CA4647FA8C5C9475B13FBD47984E525F38AD3B8'
+
+
+def generate_pack_file_signature(trace_id: str) -> str:
+    """Generate the _packFileSignature header value for VeSync API requests.
+
+    The VeSync backend validates this signature using the standard AOSP test key
+    certificate SHA-1 hash rather than Etekcity's production certificate. This
+    allows us to compute the signature cleanly in Python.
+
+    Args:
+        trace_id: The traceId value from the request body.
+
+    Returns:
+        The formatted signature string, e.g. ``v0001-<sha256 hex>``.
+    """
+    raw = str(trace_id) + VESYNC_CERT_SHA1
+    h = hashlib.sha256(raw.encode('utf-8')).hexdigest()[:64].lower()
+    return f'v0001-{h}'
+
+
 class Helpers:
     """VeSync Helper Functions."""
 
