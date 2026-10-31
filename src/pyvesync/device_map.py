@@ -1183,6 +1183,72 @@ air_fryer_modules: list[AirFryerMap] = [
         ),
     ),
     AirFryerMap(
+        # Cosori Lite 3.8L (CAF-LI401S), EU single-basket model. Uses the same
+        # bypassV2 protocol as TurboBlaze (startCook / endCook /
+        # getAirfryerStatus) and is Celsius-only. Cooking must be started from
+        # the unit's physical control; the cloud API only stages, adjusts and
+        # ends a program.
+        #
+        # Mode strings below were read from a physical unit by staging each
+        # preset button and reading stepArray. Every program reports recipe
+        # ID 1.
+        #
+        # Note this unit reports the fries preset as 'Fries' where the Dual
+        # Blaze entries use 'FrenchFries'. Whether that split is per model or
+        # regional is unresolved: the device read here is an EU unit, and the
+        # EU Dual Blaze entry appears derived from the US one rather than
+        # independently confirmed. A US CAF-LI401S would settle it.
+        class_name='VeSyncTurboBlazeFryer',
+        module=vesynckitchen,
+        dev_types=['CAF-LI401S'],
+        setup_entry='CAF-LI401S',
+        device_alias='Lite Air Fryer',
+        model_display='CAF-LI401S Series',
+        model_name='Lite 3.8L Smart Air Fryer',
+        temp_unit=TemperatureUnits.CELSIUS,
+        # The unit has a preheat program, but it reports preheat with an empty
+        # stepArray (cookStatus 'heating', preheatSetTime/preheatTemp set).
+        # VeSyncTurboBlazeFryer.get_details() treats an empty stepArray as
+        # standby, so preheat is not surfaced yet and PREHEAT is not claimed
+        # here. See the PR discussion.
+        features=[AirFryerFeatures.RESUMABLE],
+        # The seven programs the unit exposes. Only the mode strings are
+        # recorded: the temperature, time and shake time attached to each
+        # preset are user-editable in the VeSync app, so the values read back
+        # from any one device are that owner's settings, not device defaults.
+        cook_modes={
+            AirFryerCookModes.CUSTOM: 'Custom',
+            AirFryerCookModes.CHICKEN: 'Chicken',
+            AirFryerCookModes.FRENCH_FRIES: 'Fries',
+            AirFryerCookModes.BACON: 'Bacon',
+            AirFryerCookModes.STEAK: 'Steak',
+            AirFryerCookModes.VEGGIES: 'Veggies',
+            AirFryerCookModes.WARM: 'Warm',
+        },
+        default_cook_mode=AirFryerCookModes.CUSTOM,
+        default_preset=AirFryerPresets.custom,
+        time_units=TimeUnits.SECONDS,
+        # Sensible rounded bounds rather than exact conversions of each other.
+        # temp_unit below is only the pre-poll default: the unit reported by
+        # the device appears to follow account region, so a US unit of this
+        # model may well report 'f'.
+        temperature_range_c=(75, 230),
+        temperature_range_f=(170, 450),
+        # 'standby', 'cooking' and 'heating' are confirmed from the device.
+        # The remainder are carried over from the other bypassV2 fryers and are
+        # not yet observed on this model.
+        status_map=MappingProxyType(
+            {
+                'standby': AirFryerCookStatus.STANDBY,
+                'cooking': AirFryerCookStatus.COOKING,
+                'heating': AirFryerCookStatus.HEATING,
+                'cookStop': AirFryerCookStatus.COOK_STOP,
+                'cookEnd': AirFryerCookStatus.COOK_END,
+                'pullOut': AirFryerCookStatus.PULL_OUT,
+            }
+        ),
+    ),
+    AirFryerMap(
         # Cosori Dual Blaze US variant (single-chamber model with dual heating
         # elements). Uses the same bypassV2 protocol as TurboBlaze (startCook /
         # endCook / getAirfryerStatus). The Dual Blaze has no preheat function.

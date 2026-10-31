@@ -970,6 +970,7 @@ class AirFryerCookModes(StrEnum):
     VEGGIES = 'veggies'
     FRENCH_FRIES = 'french_fries'
     CHICKEN = 'chicken'
+    BACON = 'bacon'
 
 
 class AirFryerFeatures(Features):

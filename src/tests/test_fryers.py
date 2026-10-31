@@ -61,6 +61,13 @@ DETAILS_PARAMS_STANDBY = [
         call_json_fryers.DETAILS_RESPONSES_STANDBY["CAF-TF101S"],
         id="CAF-TF101S.update.standby",
     ),
+    pytest.param(
+        const.AirFryerCookStatus.STANDBY,
+        "CAF-LI401S",
+        "update",
+        call_json_fryers.DETAILS_RESPONSES_STANDBY["CAF-LI401S"],
+        id="CAF-LI401S.update.standby",
+    ),
 ]
 
 DETAILS_PARAMS_COOKING = [
@@ -84,6 +91,13 @@ DETAILS_PARAMS_COOKING = [
         "update",
         call_json_fryers.DETAILS_RESPONSES_COOKING["CAF-TF101S"],
         id="CAF-TF101S.update.cooking",
+    ),
+    pytest.param(
+        const.AirFryerCookStatus.COOKING,
+        "CAF-LI401S",
+        "update",
+        call_json_fryers.DETAILS_RESPONSES_COOKING["CAF-LI401S"],
+        id="CAF-LI401S.update.cooking",
     ),
 ]
 
@@ -143,6 +157,7 @@ class TestFryers(TestBase):
         "CS158-AF": [],
         "CAF-DC601S": [],
         "CAF-TF101S": [],
+        "CAF-LI401S": [],
     }
 
     @pytest.mark.parametrize(
