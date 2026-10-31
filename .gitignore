@@ -45,3 +45,4 @@ docstest/*
 .vesync_auth
 /docs/superpowers
 /docs/development/reviews
+/tasks.md
