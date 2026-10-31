@@ -261,3 +261,69 @@ class TestAirPurifiers(TestBase):
         assert assert_test(
             method_call, all_kwargs, setup_entry, self.write_api, self.overwrite
         )
+
+
+class TestAirBaseV2Guards(TestBase):
+    """Early-return guards in VeSyncAirBaseV2 toggle methods."""
+
+    @pytest.mark.parametrize("room_dark", [True, False])
+    @pytest.mark.parametrize("enable", [True, False])
+    def test_light_detection_follows_switch_not_room(self, enable, room_dark):
+        """The guard must compare against the feature switch, not the room reading."""
+        self.mock_api.return_value = ({"code": 0, "msg": "success"}, 200)
+        purifier = self.get_device("air_purifiers", "LAP-V201S")
+        purifier.state.light_detection_switch = const.DeviceStatus.from_bool(not enable)
+        purifier.state.light_detection_status = const.DeviceStatus.from_bool(room_dark)
+
+        assert self.run_in_loop(purifier.toggle_light_detection, enable)
+        assert self.mock_api.call_count == 1
+        assert parse_args(self.mock_api)["json_object"]["payload"]["data"] == {
+            "lightDetectionSwitch": int(enable)
+        }
+        assert purifier.state.light_detection_switch == const.DeviceStatus.from_bool(enable)
+
+    def test_light_detection_already_set_skips_api(self):
+        purifier = self.get_device("air_purifiers", "LAP-V201S")
+        purifier.state.light_detection_switch = const.DeviceStatus.ON
+        purifier.state.light_detection_status = const.DeviceStatus.OFF
+
+        assert self.run_in_loop(purifier.toggle_light_detection, True)
+        self.mock_api.assert_not_called()
+
+    @pytest.mark.parametrize("enabled", [True, False])
+    def test_light_detection_toggle_flips_switch_not_room(self, enabled):
+        """With no argument, the toggle flips the feature switch, not the room reading."""
+        self.mock_api.return_value = ({"code": 0, "msg": "success"}, 200)
+        purifier = self.get_device("air_purifiers", "LAP-V201S")
+        purifier.state.light_detection_switch = const.DeviceStatus.from_bool(enabled)
+        purifier.state.light_detection_status = const.DeviceStatus.from_bool(not enabled)
+
+        assert self.run_in_loop(purifier.toggle_light_detection)
+        assert parse_args(self.mock_api)["json_object"]["payload"]["data"] == {
+            "lightDetectionSwitch": int(not enabled)
+        }
+
+    @pytest.mark.parametrize("mode", [True, False])
+    def test_display_allowed_with_light_detection_on(self, mode):
+        self.mock_api.return_value = ({"code": 0, "msg": "success"}, 200)
+        purifier = self.get_device("air_purifiers", "LAP-V201S")
+        purifier.state.light_detection_switch = const.DeviceStatus.ON
+        purifier.state.light_detection_status = const.DeviceStatus.ON
+        purifier.state.display_set_status = const.DeviceStatus.from_bool(not mode)
+
+        assert self.run_in_loop(purifier.toggle_display, mode)
+        assert parse_args(self.mock_api)["json_object"]["payload"]["data"] == {
+            "screenSwitch": int(mode)
+        }
+        assert purifier.state.display_set_status == const.DeviceStatus.from_bool(mode)
+
+    @pytest.mark.parametrize("light_detection", [True, False])
+    def test_vital_100s_display_guard_follows_switch(self, light_detection):
+        self.mock_api.return_value = ({"code": 0, "msg": "success"}, 200)
+        purifier = self.get_device("air_purifiers", "LAP-V102S")
+        purifier.state.light_detection_switch = const.DeviceStatus.from_bool(light_detection)
+        purifier.state.light_detection_status = const.DeviceStatus.from_bool(not light_detection)
+        purifier.state.display_set_status = const.DeviceStatus.ON
+
+        assert self.run_in_loop(purifier.toggle_display, False) is not light_detection
+        assert self.mock_api.called is not light_detection
