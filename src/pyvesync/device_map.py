@@ -1026,6 +1026,26 @@ purifier_modules: list[PurifierMap] = [
         model_name='Sprout Air',
         setup_entry='LAP-B851S-WUS',
     ),
+    PurifierMap(
+        class_name='VeSyncAirBaseV2',
+        dev_types=['LAP-C341S-WEU'],
+        modes=[
+            PurifierModes.SLEEP,
+            PurifierModes.MANUAL,
+            PurifierModes.AUTO,
+        ],
+        features=[PurifierFeatures.AIR_QUALITY],
+        fan_levels=list(range(1, 5)),
+        device_alias='Eleva 300X',
+        auto_preferences=[
+            PurifierAutoPreference.DEFAULT,
+            PurifierAutoPreference.EFFICIENT,
+            PurifierAutoPreference.QUIET,
+        ],
+        model_display='LAP-C341S Series',
+        model_name='Eleva 300X',
+        setup_entry='LAP-C341S-WEU',
+    ),
 ]
 """List of ['PurifierMap'][pyvesync.device_map.PurifierMap] configuration
 objects for purifier devices."""
