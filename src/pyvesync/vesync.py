@@ -64,6 +64,7 @@ class VeSync:  # pylint: disable=function-redefined
         'enabled',
         'in_process',
         'language',
+        'measure_unit',
         'session',
         'time_zone',
     )
@@ -144,6 +145,7 @@ class VeSync:  # pylint: disable=function-redefined
         self.language: str = 'en'
         self.enabled = False
         self.in_process = False
+        self.measure_unit: str | None = None
         self._device_container: DeviceContainer = DeviceContainer()
 
         # Initialize authentication manager
@@ -241,8 +243,7 @@ class VeSync:  # pylint: disable=function-redefined
             filename (str | Path | None): The name of the file to save credentials to.
                 If None, no action is taken.
         """
-        if filename is not None:
-            await self.auth.save_credentials_to_file(filename)
+        await self.auth.save_credentials_to_file(filename)
 
     async def load_credentials_from_file(
         self, filename: str | Path | None = None

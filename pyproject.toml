@@ -36,7 +36,7 @@ dev = [
     "pyyaml",
     "pylint",
     "mypy",
-    "ruff",
+    "ruff==0.15.21",
     "pre-commit",
     "tox",
     "requests",
@@ -45,7 +45,7 @@ dev = [
 docs = [
     "mkdocstrings-python",
     "mkdocs",
-    "ruff",
+    "ruff==0.15.21",
     "Pygments",
     "mkdocs-material",
     "mkdocstrings",
