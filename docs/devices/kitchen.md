@@ -1,6 +1,8 @@
 # VeSync Air Fryers
 
-Currently the only supported air fryer is the  Cosori 3.7 and 5.8 Quart Air Fryer. This device is a smart air fryer that can be monitored and controlled via this library.
+The supported air fryers are the Cosori 3.7 and 5.8 Quart Air Fryer and the Cosori Turbo Tower Pro Smart dual-chamber Air Fryer. These devices can be monitored and controlled via this library.
+
+Programs prepared on the Turbo Tower Pro through the API must still be started with the Start button on the appliance.
 
 ::: pyvesync.devices.vesynckitchen
     options:
@@ -15,6 +17,27 @@ Currently the only supported air fryer is the  Cosori 3.7 and 5.8 Quart Air Frye
             - "!^_.*"
 
 ::: pyvesync.devices.vesynckitchen.VeSyncAirFryer158
+    options:
+        show_root_heading: true
+        members_order: source
+        filters:
+            - "!^_.*"
+
+::: pyvesync.devices.vesynckitchen.AirFryerDC111State
+    options:
+        show_root_heading: true
+        members_order: source
+        filters:
+            - "!^_.*"
+
+::: pyvesync.devices.vesynckitchen.FryerChamberState
+    options:
+        show_root_heading: true
+        members_order: source
+        filters:
+            - "!^_.*"
+
+::: pyvesync.devices.vesynckitchen.VeSyncAirFryerDC111
     options:
         show_root_heading: true
         members_order: source
