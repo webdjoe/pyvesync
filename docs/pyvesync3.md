@@ -48,8 +48,8 @@ async def main():
 
             # State of object held in `device.state` attribute
             print(outlet.state)
-            state_json = outlet.dumps() # Returns JSON string of device state
-            state_bytes = orjson.dumps(outlet.state) # Returns bytes of device state
+            state_json = outlet.state.to_json() # Returns JSON string of device state
+            state_bytes = outlet.state.to_jsonb() # Returns bytes of device state
 
             # to view the response information of the last API call
             print(outlet.last_response)
@@ -61,7 +61,7 @@ async def main():
 session = aiohttp.ClientSession()
 
 async def main():
-    async with VeSync("user", "password", session=session):
+    async with VeSync("user", "password", session=session) as manager:
         await manager.login()
         await manager.update()
 
@@ -105,7 +105,7 @@ VeSync(
     )
 ```
 
-The VeSync class no longer accepts `debug` as a constructor parameter. Instead, `debug` is available as a property on the instantiated object (`manager.debug = True`). Alternatively, set the level of the `pyvesync` logger using:
+The VeSync class no longer accepts `debug` as a constructor parameter. Instead, set the level of the `pyvesync` logger. `manager.debug` is a read-only property that reports whether debug logging is active:
 
 ```python
 
@@ -125,7 +125,7 @@ There is a new nomenclature for product types that defines the device class. The
 4. `purifier` - Air purifiers (not humidifiers)
 5. `humidifier` - Humidifiers (not air purifiers)
 6. `bulb` - Light bulbs (not dimmers or switches)
-7. `airfryer` - Air fryers
+7. `air fryer` - Air fryers
 8. `thermostat` - Thermostats
 
 See [Supported Devices](./supported_devices.md) for a complete list of supported devices and models.
@@ -219,7 +219,7 @@ class ResponseCodeModel(ResponseBaseModel):
 
 ```
 
-Models for each device should be kept in the `data_models` folder with the appropriate device name:
+Models for each device should be kept in the `pyvesync/models` folder with the appropriate device name:
 
 - [`bypass_models`][pyvesync.models.bypass_models] - See [`Development`](./development/index.md) for more information on bypass devices.
 - [`bulb_models`][pyvesync.models.bulb_models]
@@ -258,7 +258,7 @@ class ResponseESL100CWDetailResult(ResponseBaseModel):
 This model parses the following json response:
 
 ```python
-from pyvesync.data_models.bulb_models import ResponseESL100CWDeviceDetail
+from pyvesync.models.bulb_models import ResponseESL100CWDeviceDetail
 import orjson
 
 api_response = {
@@ -290,35 +290,37 @@ print(light_model.colorTempe)  # prints: 0
 
 ### Making API Calls
 
-The helper function `pyvesync.utils.helpers.Helpers.get_class_attributes` is used to fill the values of the API calls by looking up class attributes, such as `token` in the `VeSync` instance and `cid` in the device instance. It accepts a list of keys and pulls the values of each key as they are found in the passed object:
+The helper function `pyvesync.utils.helpers.Helpers.get_class_attributes` is used to fill the values of the API calls by looking up class attributes, such as `token` in the `VeSync` instance and `cid` in the device instance. It accepts a tuple of keys and pulls the values of each key as they are found in the passed object:
 
 ```python
-keys = ['token', 'accountId', 'cid', 'timeZone', 'countryCode']
-manager_dict = get_class_attributes(manager, keys)
+from pyvesync.utils.helpers import Helpers
+
+keys = ('token', 'accountId', 'cid', 'timeZone', 'countryCode')
+manager_dict = Helpers.get_class_attributes(manager, keys)
 # request_dict = {"token": "AUTH_TOKEN", "accountId": "ACCOUNT_ID"}
-device_dict = get_class_attributes(device, keys)
+device_dict = Helpers.get_class_attributes(device, keys)
 # device_dict = {"cid": "DEVICE CID"}
 ```
 
 It can also handle class methods for items such as traceId which need to be calculated each API call:
 
 ```python
-keys = ['traceId']
-default_dict = get_class_attributes(DefaultValues, keys)
+keys = ('traceId',)
+default_dict = Helpers.get_class_attributes(DefaultValues, keys)
 # {"traceId": "TIMESTAMP"}
 
 # It can also handle underscores and different capitalization schemes
 # It will always return the format of the key being passed in:
-keys = ["trace_id", "AccountID"]
-request_dict = get_class_attributes(DefaultValues, keys)
+keys = ("trace_id", "AccountID")
+request_dict = Helpers.get_class_attributes(DefaultValues, keys)
 # {"trace_id": "TIMESTAMP"}
-manager_dict = get_class_attributes(manager, keys)
+manager_dict = Helpers.get_class_attributes(manager, keys)
 # {"AccountID": "ACCOUNT ID"}
 ```
 
 ## Device Container
 
-Devices are held in the [DeviceContainer][pyvesync.device_container.DeviceContainer] class in the `manager.devices` attribute. The `DeviceContainer` class is a singleton class, so only one instance can exist. The class inherits from `MutableSet` so it contains unique objects, with the ability to add and remove devices using the `add`, `remove` and `clear` methods. However, these methods only accept device objects. To simplify removing devices, there is the `remove_by_cid(cid: str)` method.
+Devices are held in the [DeviceContainer][pyvesync.device_container.DeviceContainer] class in the `manager.devices` attribute. Each `VeSync` manager creates and owns its own `DeviceContainer` instance. The class inherits from `MutableSet` so it contains unique objects, with the ability to add and remove devices using the `add`, `remove` and `clear` methods. However, these methods only accept device objects. To simplify removing devices, there is the `remove_by_cid(cid: str)` method.
 
 To get devices by device name, use the `get_by_name(name: str)` method. There are two convenience methods `add_new_devices` and `remove_stale_devices` that accept the device list response model.
 
@@ -331,7 +333,7 @@ import asyncio
 from pyvesync import VeSync
 
 async def main():
-    async with VeSync(user, password) as manager:
+    async with VeSync("user", "password") as manager:
         assert len(manager.devices) == 0 # No devices yet
         await manager.login()
 

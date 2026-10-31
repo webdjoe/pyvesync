@@ -18,7 +18,7 @@ sudo apt install python3-venv python3-pip git
 
 These are the directions for installing the library from source in a folder in the `$HOME` directory. Change the first line `cd ~` to the directory you want to install the library in if `$HOME` is not suitable.
 
-The git checkout line is used to switch to the appropriate branch. If you are using `master`, then you can skip this line. The `dev-2.0` branch is the latest development branch and may contain breaking changes.
+The git checkout line is used to switch to the appropriate branch. If you want the latest release, use `master` and skip this line. The `dev` branch is the latest development branch and may contain breaking changes.
 
 ```bash
 cd ~
@@ -122,14 +122,17 @@ The `pyvesync.VeSync` object is the main entrypoint of the library. It is an asy
 
 ```python
 import asyncio
+import logging
 from pyvesync import VeSync
 
 async def main():
+    # To enable debugging, set the pyvesync logger to DEBUG
+    # (manager.debug is read-only and reports whether this is active)
+    logging.getLogger("pyvesync").setLevel(logging.DEBUG)
+    logging.basicConfig()  # Send log records to the console
+
     # Create a new VeSync object
     async with VeSync(username="EMAIL", password="PASSWORD") as manager:
-
-        # To enable debugging
-        manager.debug = True
 
         # Login to the VeSync account
         await manager.login()
@@ -144,14 +147,14 @@ async def main():
         await manager.update()
 
         # OR Iterate through devices and update individually
-        for device in manager.outlets:
+        for device in manager.devices.outlets:
             await device.update()
 
 if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-Devices are held in the `manager.devices` attribute, which is the instance of [`DeviceContainer`][pyvesync.device_container.DeviceContainer] that acts as a mutable set. The entire device list can be iterated over or there are properties for each product type that return a list of those device instances. For example, to get all the outlets, use `manager.devices.outlets` or `manager.devices.purifiers`.
+Devices are held in the `manager.devices` attribute, which is the instance of [`DeviceContainer`][pyvesync.device_container.DeviceContainer] that acts as a mutable set. The entire device list can be iterated over or there are properties for each product type that return a list of those device instances. For example, to get all the outlets, use `manager.devices.outlets` or `manager.devices.air_purifiers`.
 
 ```python
 import asyncio
@@ -178,14 +181,14 @@ async def main():
         await device.turn_on() # Turn on the device
         await device.turn_off() # Turn off the device
 
-        # Toggle the device state
-        await device.toggle() # Toggle the device state
+        # Toggle the device state - with no argument the current state is flipped
+        await device.toggle_switch() # Toggle the device state
     for outlet in manager.devices.outlets:
         print(outlet)
         await outlet.update() # Update the outlet state this is not required if `manager.update()` has already been called.
         await outlet.turn_on() # Turn on the outlet
         await outlet.turn_off() # Turn off the outlet
-        await outlet.toggle() # Toggle the outlet state
+        await outlet.toggle_switch() # Toggle the outlet state
 
         await outlet.set_timer(10, DeviceStatus.OFF) # Set a timer to turn off the outlet in 10 seconds
 
@@ -195,31 +198,30 @@ if __name__ == "__main__":
 
 For more information on the device methods and properties, see the [device pages](./devices/index.md).
 
-All devices have the ability to serialize the attributes and state with the `to_json()` and `to_jsonb()` methods. The `to_json()` method returns a JSON string, while the `to_jsonb()` method returns a JSON object. The `to_jsonb()` method is useful for storing the device state in a database or sending it to an API.
+All devices have the ability to serialize the attributes and state with the `to_json()` and `to_jsonb()` methods. The `to_json()` method returns a JSON string, while the `to_jsonb()` method returns the same JSON as `bytes`. The `to_jsonb()` method is useful for storing the device state in a database or sending it to an API.
 
 ```python
 async def main():
     # I've excluded the login and get_devices methods for simplicity.
     for outlet in manager.devices.outlets:
         print(outlet.to_json(state=True, indent=True)) # Print the JSON string of the outlet state
-        print(outlet.to_jsonb(state=True)) # Print the JSON object of the outlet and state
+        print(outlet.to_jsonb(state=True)) # Print the JSON bytes of the outlet and state
         # Setting `state=False` will only show the static device attributes
 
-        # State objects also have these methods
-        print(outlet.state.to_json(state=True, indent=True)) # Print the JSON string of the outlet state
-        print(outlet.state.to_jsonb(state=True)) # Print the JSON object of the outlet state
+        # State objects also have these methods, without the `state` argument
+        print(outlet.state.to_json(indent=True)) # Print the JSON string of the outlet state
+        print(outlet.state.to_jsonb()) # Print the JSON bytes of the outlet state
 
 if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-The `to_dict()` and `as_tuple()` methods are also available for each device and state object. The `to_dict()` method returns a dictionary of the device attributes, while the `as_tuple()` method returns a tuple of the device attributes.
-
-They have the same signature as the `to_json()` and `to_jsonb()` methods.
+The `to_dict()` method is available on both devices and state objects and returns a dictionary of the attributes. The device version takes a `state` argument like `to_json()`. The `as_tuple()` method is only available on state objects and returns a tuple of `(name, value)` pairs.
 
 ```python
 device_dict = outlet.to_dict(state=True) # Returns a dictionary of the outlet attributes
-device_tuple = outlet.as_tuple(state=True) # Returns a tuple of the outlet attributes
+state_dict = outlet.state.to_dict() # Returns a dictionary of the state attributes
+state_tuple = outlet.state.as_tuple() # Returns a tuple of the state attributes
 ```
 
 ## Device Specific Scripts

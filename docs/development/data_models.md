@@ -5,7 +5,7 @@ API calls require a data model to be passed in as a parameter. Each module in th
 
 The dataclasses inherit from mashumaro's `DataClassORJSONMixin` which allows for easy serialization and deserialization of the data models, as well as providing a discriminator for subclasses.
 
-The `bypassv2_models` module is a generic mixin for the bypassv2 API calls.
+The `bypass_models` module contains the generic request and response models for both the Bypass V1 and Bypass V2 API calls.
 
 - [Data Models](#data-models)
   - [Data Models Module](#data-models-module)
