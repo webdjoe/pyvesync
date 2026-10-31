@@ -275,7 +275,7 @@ Unit Tests** workflow runs:
 
 1. **Ruff**: `ruff check --output-format=github src/pyvesync`
 2. **Pylint**: `pylint src/pyvesync`
-3. **Pytest**: the full test suite on Python 3.11, 3.12, and 3.13
+3. **Pytest**: the full test suite on Python 3.11, 3.12, 3.13, and 3.14
 4. **MkDocs build**: only on PRs to `master` (Python 3.12)
 
 The workflow fails if any of these steps fail. Separately:
