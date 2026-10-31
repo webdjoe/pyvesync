@@ -1101,7 +1101,18 @@ air_fryer_modules: list[AirFryerMap] = [
         model_display='CS158/159/168/169-AF Series',
         model_name='Smart/Pro/Pro Gen 2 5.8 Qt. Air Fryer',
         setup_entry='CS137-AF/CS158-AF',
-    )
+    ),
+    AirFryerMap(
+        class_name='VeSyncAirFryer401',
+        module=vesynckitchen,
+        dev_types=['CAF-LI401S'],
+        device_alias='Lite Smart Air Fryer',
+        model_display='CAF-LI401S Series',
+        model_name='Lite 4.0-Quart Smart Air Fryer',
+        setup_entry='CAF-LI401S',
+        temperature_range_f=(170, 450),
+        temperature_range_c=(75, 230),
+    ),
 ]
 """List of ['AirFryerMap'][pyvesync.device_map.AirFryerMap] configuration
 for air fryer devices."""
