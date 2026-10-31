@@ -461,6 +461,7 @@ outlet_modules = [
     OutletMap(
         dev_types=[
             'WHOGPLUG',
+            'F3s202-USVC',
         ],
         class_name='VeSyncOutletWHOGPlug',
         features=[
