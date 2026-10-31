@@ -28,13 +28,17 @@ VeSyncAirFryer158.refresh_interval = -1
 from __future__ import annotations
 
 import logging
+import math
 import time
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, TypeVar
 
 from typing_extensions import deprecated
 
 from pyvesync.base_devices import FryerState, VeSyncFryer
 from pyvesync.const import AIRFRYER_PID_MAP, ConnectionStatus, DeviceStatus
+from pyvesync.models.fryer_models import AirFryerMultiStatusResult
+from pyvesync.utils.device_mixins import BypassV2Mixin, process_bypassv2_result
 from pyvesync.utils.errors import VeSyncError
 from pyvesync.utils.helpers import Helpers
 from pyvesync.utils.logs import LibraryLogger
@@ -47,6 +51,22 @@ if TYPE_CHECKING:
 T = TypeVar('T')
 
 logger = logging.getLogger(__name__)
+
+AIR_FRYER_NO_ACTIVE_PROGRAM = 11923000
+"""Inner result code returned by `endCook` when a chamber has nothing to stop."""
+
+DC111_RECIPES: dict[str, tuple[int, str]] = {
+    'AirFry': (14, 'Air Fry'),
+}
+"""Turbo Tower Pro cooking modes as {mode: (recipeId, recipeName)}.
+
+Only modes confirmed on a real device are listed. To add one, start it from the
+fryer's panel and read `mode`, `recipe_id` and `recipe_name` from `state.chambers`.
+"""
+DC111_RECIPE_TYPE = 3
+DC111_BOTH_CHAMBERS = 4
+DC111_SYNC_FINISH = 1
+DC111_SYNC_MATCH = 2
 
 
 # Status refresh interval in seconds
@@ -651,3 +671,333 @@ class VeSyncAirFryer158(VeSyncFryer):
         self.state.status_request(json_cmd)
         await self.update()
         return True
+
+
+@dataclass
+class FryerChamberState:
+    """State of one Turbo Tower Pro cooking chamber.
+
+    Attributes:
+        chamber (int): Chamber number, 1 or 2.
+        cook_status (str): Raw status from the API, e.g. `standby` or `ready`.
+        mode (str): Cooking mode, e.g. `AirFry`.
+        recipe_id (int | None): Recipe ID of the program.
+        recipe_name (str): Recipe name of the program.
+        cook_set_temp (int | None): Set temperature in the device unit.
+        cook_set_time (int | None): Set cooking time in minutes.
+        remaining_time (int): Minutes remaining in the current program.
+        total_time_remaining (int): Minutes remaining including synced waits.
+    """
+
+    chamber: int
+    cook_status: str = 'standby'
+    mode: str = ''
+    recipe_id: int | None = None
+    recipe_name: str = ''
+    cook_set_temp: int | None = None
+    cook_set_time: int | None = None
+    remaining_time: int = 0
+    total_time_remaining: int = 0
+
+    @property
+    def is_active(self) -> bool:
+        """Return True if the chamber has a prepared or running program."""
+        return self.cook_status != 'standby'
+
+
+def _minutes(seconds: int) -> int:
+    """Convert seconds to whole minutes, rounding up."""
+    return math.ceil(seconds / 60)
+
+
+class AirFryerDC111State(FryerState):
+    """State of the Turbo Tower Pro dual-chamber air fryer.
+
+    Per-chamber state is in `chambers`. The `cook_status`, `cook_set_temp`,
+    `cook_set_time` and `remaining_time` properties report the active chamber,
+    matching the attributes of the single-chamber air fryers.
+
+    Attributes:
+        chambers (dict[int, FryerChamberState]): State of chambers 1 and 2.
+        sync_type (int): 0 single chamber, 1 synced finish, 2 matching settings.
+        work_chamber (int): Chamber in use, 0 none, 1 or 2, 4 both.
+        temp_unit (str): `celsius` or `fahrenheit`.
+    """
+
+    __slots__ = ('_temp_unit', 'chambers', 'sync_type', 'work_chamber')
+
+    def __init__(
+        self,
+        device: VeSyncAirFryerDC111,
+        details: ResponseDeviceDetailsModel,
+        feature_map: AirFryerMap,
+    ) -> None:
+        """Initialize the Turbo Tower Pro state."""
+        super().__init__(device, details, feature_map)
+        self.chambers: dict[int, FryerChamberState] = {
+            1: FryerChamberState(chamber=1),
+            2: FryerChamberState(chamber=2),
+        }
+        self.sync_type: int = 0
+        self.work_chamber: int = 0
+        self._temp_unit: str = 'celsius'
+
+    @property
+    def temp_unit(self) -> str:
+        """Return temperature unit, `celsius` or `fahrenheit`."""
+        return self._temp_unit
+
+    @temp_unit.setter
+    def temp_unit(self, temp_unit: str) -> None:
+        """Set temperature unit from the API value."""
+        if temp_unit.lower().startswith('f'):
+            self._temp_unit = 'fahrenheit'
+        else:
+            self._temp_unit = 'celsius'
+
+    @property
+    def active_chamber(self) -> FryerChamberState:
+        """Return the first chamber with a program, else chamber 1."""
+        for chamber in self.chambers.values():
+            if chamber.is_active:
+                return chamber
+        return self.chambers[1]
+
+    @property
+    def cook_status(self) -> str:
+        """Return cook status of the active chamber."""
+        return self.active_chamber.cook_status
+
+    @property
+    def cook_set_temp(self) -> int | None:
+        """Return set temperature of the active chamber."""
+        return self.active_chamber.cook_set_temp
+
+    @property
+    def cook_set_time(self) -> int | None:
+        """Return set cooking time in minutes of the active chamber."""
+        return self.active_chamber.cook_set_time
+
+    @property
+    def remaining_time(self) -> int:
+        """Return minutes remaining in the active chamber."""
+        return self.active_chamber.remaining_time
+
+    @property
+    def current_temp(self) -> int | None:
+        """Return current temperature, not reported by this model."""
+        return None
+
+    @property
+    def preheat_set_time(self) -> int | None:
+        """Return preheat time, not supported by this model."""
+        return None
+
+    def status_response(self, result: AirFryerMultiStatusResult) -> None:
+        """Set state from a getAirfryerMultiStatus result."""
+        self.temp_unit = result.tempUnit
+        self.sync_type = result.syncType
+        self.work_chamber = result.workChamber
+        for status in result.statusList:
+            active = status.cookStatus != 'standby'
+            self.chambers[status.chamber] = FryerChamberState(
+                chamber=status.chamber,
+                cook_status=status.cookStatus,
+                mode=status.mode,
+                recipe_id=status.recipeId,
+                recipe_name=status.recipeName,
+                cook_set_temp=status.cookTemp if active else None,
+                cook_set_time=_minutes(status.cookSetTime) if active else None,
+                remaining_time=_minutes(status.currentRemainingTime),
+                total_time_remaining=_minutes(status.totalTimeRemaining),
+            )
+
+
+class VeSyncAirFryerDC111(BypassV2Mixin, VeSyncFryer):
+    """Cosori Turbo Tower Pro dual-chamber air fryer (CAF-DC111S).
+
+    Programs prepared through the API must still be started with the Start
+    button on the appliance.
+
+    Attributes:
+        state (AirFryerDC111State): Air fryer state.
+        cook_modes (list[str]): Supported cooking modes.
+        temperature_range (tuple[int, int]): Allowed temperatures in `temp_unit`.
+    """
+
+    __slots__ = ('_temperature_range_c', '_temperature_range_f')
+
+    def __init__(
+        self,
+        details: ResponseDeviceDetailsModel,
+        manager: VeSync,
+        feature_map: AirFryerMap,
+    ) -> None:
+        """Initialize the Turbo Tower Pro."""
+        super().__init__(details, manager, feature_map)
+        self.state: AirFryerDC111State = AirFryerDC111State(self, details, feature_map)
+        self._temperature_range_c = feature_map.temperature_range_c
+        self._temperature_range_f = feature_map.temperature_range_f
+
+    @property
+    def temp_unit(self) -> str:
+        """Return temperature unit, `celsius` or `fahrenheit`."""
+        return self.state.temp_unit
+
+    @property
+    def cook_modes(self) -> list[str]:
+        """Return supported cooking modes."""
+        return list(DC111_RECIPES)
+
+    @property
+    def temperature_range(self) -> tuple[int, int]:
+        """Return allowed (min, max) temperature in the device unit."""
+        if self.state.temp_unit == 'fahrenheit':
+            return self._temperature_range_f
+        return self._temperature_range_c
+
+    async def get_details(self) -> None:
+        """Read status of both chambers."""
+        r_dict = await self.call_bypassv2_api('getAirfryerMultiStatus', data={})
+        result = process_bypassv2_result(
+            self, logger, 'get_details', r_dict, AirFryerMultiStatusResult
+        )
+        if result is None:
+            return
+        self.state.status_response(result)
+        self.state.connection_status = ConnectionStatus.ONLINE
+        self.state.update_ts()
+
+    def _cook_config(
+        self,
+        chamber: int,
+        temperature: int,
+        minutes: int,
+        mode: str,
+    ) -> dict[str, int | str]:
+        """Build and validate the cook config for one chamber."""
+        if chamber not in (1, 2):
+            msg = 'chamber must be 1 or 2'
+            raise ValueError(msg)
+        if minutes <= 0:
+            msg = 'minutes must be greater than zero'
+            raise ValueError(msg)
+        min_temp, max_temp = self.temperature_range
+        if not min_temp <= temperature <= max_temp:
+            msg = (
+                f'temperature must be between {min_temp} and {max_temp} '
+                f'{self.state.temp_unit}'
+            )
+            raise ValueError(msg)
+        if mode not in DC111_RECIPES:
+            msg = f'mode must be one of {self.cook_modes}'
+            raise ValueError(msg)
+        recipe_id, recipe_name = DC111_RECIPES[mode]
+        return {
+            'chamber': chamber,
+            'cookSetTime': minutes * 60,
+            'cookTemp': temperature,
+            'mode': mode,
+            'recipeId': recipe_id,
+            'recipeName': recipe_name,
+            'recipeType': DC111_RECIPE_TYPE,
+            'shakeTime': 0,
+        }
+
+    async def _start_multi_cook(
+        self,
+        cook_configs: list[dict[str, int | str]],
+        sync_type: int,
+        work_chamber: int,
+    ) -> bool:
+        """Send startMultiCook with the given chamber configs."""
+        data = {
+            'accountId': self.manager.account_id,
+            'cookConfigs': cook_configs,
+            'readyStart': True,
+            'syncType': sync_type,
+            'tempUnit': 'f' if self.state.temp_unit == 'fahrenheit' else 'c',
+            'workChamber': work_chamber,
+        }
+        r_dict = await self.call_bypassv2_api('startMultiCook', data=data)
+        return bool(
+            r_dict
+            and r_dict.get('code') == 0
+            and (r_dict.get('result') or {}).get('code') == 0
+        )
+
+    async def prepare_program(
+        self,
+        chamber: int,
+        temperature: int,
+        minutes: int,
+        mode: str = 'AirFry',
+    ) -> bool:
+        """Prepare a cooking program on one chamber.
+
+        The appliance still requires physical confirmation with the Start button.
+
+        Args:
+            chamber (int): Chamber number, 1 or 2.
+            temperature (int): Temperature in the device unit (`temp_unit`).
+            minutes (int): Cooking time in minutes.
+            mode (str): Cooking mode, one of `cook_modes`.
+
+        Raises:
+            ValueError: If an argument is out of range.
+        """
+        config = self._cook_config(chamber, temperature, minutes, mode)
+        return await self._start_multi_cook([config], 0, chamber)
+
+    async def prepare_both_chambers(
+        self,
+        chamber_1: dict[str, int | str],
+        chamber_2: dict[str, int | str],
+        sync_type: int,
+    ) -> bool:
+        """Prepare both cooking chambers.
+
+        Each chamber dict takes `temperature`, `minutes` and optionally `mode`.
+        The appliance still requires physical confirmation with the Start button.
+
+        Args:
+            chamber_1 (dict): Program for chamber 1.
+            chamber_2 (dict): Program for chamber 2.
+            sync_type (int): 1 synchronizes finishing times,
+                2 applies matching settings to both chambers.
+
+        Raises:
+            ValueError: If an argument is out of range.
+        """
+        if sync_type not in (DC111_SYNC_FINISH, DC111_SYNC_MATCH):
+            msg = 'sync_type must be 1 or 2'
+            raise ValueError(msg)
+        configs = [
+            self._cook_config(
+                number,
+                int(config['temperature']),
+                int(config['minutes']),
+                str(config.get('mode', 'AirFry')),
+            )
+            for number, config in ((1, chamber_1), (2, chamber_2))
+        ]
+        return await self._start_multi_cook(configs, sync_type, DC111_BOTH_CHAMBERS)
+
+    async def stop_chamber(self, chamber: int) -> bool:
+        """End the prepared or running program for one chamber.
+
+        Returns False if the chamber had no program to stop.
+        """
+        if chamber not in (1, 2):
+            msg = 'chamber must be 1 or 2'
+            raise ValueError(msg)
+
+        r_dict = await self.call_bypassv2_api('endCook', data={'chamber': chamber})
+        if not r_dict or r_dict.get('code') != 0:
+            return False
+
+        code = (r_dict.get('result') or {}).get('code')
+        if code == AIR_FRYER_NO_ACTIVE_PROGRAM:
+            logger.debug('Chamber %s of %s has no program', chamber, self.device_name)
+            return False
+        return code == 0
