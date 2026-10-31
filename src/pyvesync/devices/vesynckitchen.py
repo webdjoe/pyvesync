@@ -500,14 +500,21 @@ class VeSyncTurboBlazeFryer(BypassV2Mixin, VeSyncFryer):
         if _current_temp is not None and self.temp_unit == TemperatureUnits.FAHRENHEIT:
             _current_temp = round(_current_temp * 9 / 5 + 32)
 
+        # The API reports preheatSetTime as 0 when the program has no preheat.
+        # Pass None in that case so the state does not read as a preheat.
+        _preheat_set_time = resp_model.preheatSetTime or None
+        _preheat_last_time = (
+            resp_model.preheatLastTime if _preheat_set_time is not None else None
+        )
+
         self.state_chamber_1.set_state(
             cook_status=self.status_map[resp_model.cookStatus],
             cook_time=cook_step.cookSetTime,
             cook_last_time=cook_step.cookLastTime,
             cook_temp=cook_step.cookTemp,
             cook_mode=cook_step.mode,
-            preheat_set_time=resp_model.preheatSetTime,
-            preheat_last_time=resp_model.preheatLastTime,
+            preheat_set_time=_preheat_set_time,
+            preheat_last_time=_preheat_last_time,
             current_temp=_current_temp,
         )
 
@@ -533,7 +540,10 @@ class VeSyncTurboBlazeFryer(BypassV2Mixin, VeSyncFryer):
             self.state.set_standby()
             return False
         self.state.set_state(
-            cook_status=AirFryerCookStatus.COOKING,
+            # A program with preheat starts in the preheat phase.
+            cook_status=AirFryerCookStatus.HEATING
+            if recipe.preheat_time
+            else AirFryerCookStatus.COOKING,
             cook_time=recipe.cook_time,
             cook_last_time=recipe.cook_time,
             cook_temp=recipe.target_temp,
