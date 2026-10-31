@@ -7,7 +7,7 @@
 See each device class for available attributes and methods:
 
 - [SwitchState Class](#pyvesync.base_devices.switch_base.SwitchState)
-- [Etekcity Dimmer Switch EWD16](#pyvesync.devices.vesyncswitch.VeSyncDimmerSwitch)
+- [Etekcity Dimmer Switch ESWD16](#pyvesync.devices.vesyncswitch.VeSyncDimmerSwitch)
 - [Etekcity Wall Switch ESWL01 & ESWL03](#pyvesync.devices.vesyncswitch.VeSyncWallSwitch)
 - [VeSyncSwitch Abstract Base Class](#pyvesync.base_devices.switch_base.VeSyncSwitch)
 

@@ -4,7 +4,7 @@ pyvesync is a library to manage VeSync compatible [smart home devices](#supporte
 
 <a href="https://webdjoe.github.io/pyvesync/latest"><img src="./docs/assets/docs.svg"></a>
 
-**Check out the new [pyvesync documentation](https://webdjoe.github.io/pyvesync/) for usage and full API details.**
+**Check out the new [pyvesync documentation](https://webdjoe.github.io/pyvesync/latest/) for usage and full API details.**
 
 ## Supported Product Types
 
@@ -19,7 +19,7 @@ pyvesync is a library to manage VeSync compatible [smart home devices](#supporte
 
 See the [supported devices](https://webdjoe.github.io/pyvesync/latest/supported_devices/) page for a complete list of supported devices and device types.
 
-## What's new in pyvesync 3.0
+## pyvesync v3 Features
 
 **BREAKING CHANGES** - The release of pyvesync 3.0 comes with many improvements and new features, but as a result there are many breaking changes. The structure has been completely refactored, so please read through the README and thoroughly test before deploying.
 
@@ -60,9 +60,6 @@ async def main():
         # Redact mode is enabled by default, set to False to disable
         manager.redact = False
 
-        # To print request & response content for all API calls enable verbose mode
-        manager.verbose = True
-
         # To print logs to file
         manager.log_to_file("pyvesync.log")
 
@@ -76,11 +73,11 @@ async def main():
         # manager.devices is a DeviceContainer object
         # manager.devices.outlets is a list of VeSyncOutlet objects
         # manager.devices.switches is a list of VeSyncSwitch objects
-        # manager.devices.fans is a list of VeSyncFan objects
+        # manager.devices.fans is a list of VeSyncFanBase objects
         # manager.devices.bulbs is a list of VeSyncBulb objects
-        # manager.devices.humidifiers is a list of VeSyncHumid objects
-        # manager.devices.air_purifiers is a list of VeSyncAir objects
-        # manager.devices.air_fryers is a list of VeSyncAirFryer objects
+        # manager.devices.humidifiers is a list of VeSyncHumidifier objects
+        # manager.devices.air_purifiers is a list of VeSyncPurifier objects
+        # manager.devices.air_fryers is a list of VeSyncFryer objects
         # manager.devices.thermostats is a list of VeSyncThermostat objects
 
         for outlet in manager.devices.outlets:
@@ -159,7 +156,7 @@ There is a new nomenclature for product types that defines the device class. The
 4. `purifier` - Air purifiers (not humidifiers)
 5. `humidifier` - Humidifiers (not air purifiers)
 6. `bulb` - Light bulbs (not dimmers or switches)
-7. `airfryer` - Air fryers
+7. `air fryer` - Air fryers
 8. `thermostat` - Thermostats
 
 See [Supported Devices](#supported-devices) for a complete list of supported devices and models.
@@ -216,7 +213,7 @@ pip install pyvesync
 5. Voltson Smart WiFi Outlet - Rectangle (15A model ESW15-USA)
 6. Two Plug Outdoor Outlet (ESO15-TB) (Each plug is a separate `VeSyncOutlet` object, energy readings are for both plugs combined)
 7. BSDOG / Greensun Smart Outlet Series (BSDOG01, BSDOG02, WYSMTOD16A, WM-PLUG and more)
-8. WHOPLUG / Greensun Smart Outlet
+8. WHOGPLUG / Greensun Smart Plug
 9. WYLDR Smart Plug (WYLDR16A1081) (Supports energy monitoring but not energy history)
 
 <!--SUPPORTED OUTLETS END-->
@@ -316,7 +313,8 @@ async def main():
     async with VeSync("user", "password") as manager:
 
         # If credentials are stored in a file, it can be loaded
-        # the default location is ~/.vesync_token
+        # with no path, .vesync_auth is read from the current directory,
+        # then from the home directory
         await manager.load_credentials_from_file()
         # or the file path can be passed
         await manager.load_credentials_from_file("/path/to/token_file")
@@ -397,25 +395,31 @@ See the [device documentation](https://webdjoe.github.io/pyvesync/latest/devices
 
 ## Debug mode and redact
 
-To set debug, use the `logger` object in the `VeSync` class. Setting the logger level to `DEBUG` will print debug information to the console. The `log_to_file()` method can be used to log to a file.
+There are three independent knobs that control logging output:
 
-The `redact` argument removes any tokens and account identifiers from the output to allow for easier sharing. The `redact` argument has no impact if `debug` is not `True`.
+- **Debug logging** - set the `pyvesync` logger level to `DEBUG`. The read-only `manager.debug` property reflects whether debug logging is currently active.
+- **`redact`** - the `redact` argument (default `True`) replaces tokens, account IDs, and other sensitive values (`token`, `password`, `email`, `accountId`, `authKey`, `uuid`, `cid`, `authorizeCode`) with `##_REDACTED_##` so logs can be shared safely. It only has an effect while debug logging is enabled.
+- **`LibraryLogger.verbose`** - set this class attribute to `True` to additionally print the full request & response body of every API call.
 
-This is an example of debug mode with redact enabled:
+### Debug to the console
+
+Setting the `pyvesync` logger to `DEBUG` sends debug output to wherever your logging is configured (the console by default). `redact` stays on so tokens are not exposed:
 
 ```python
 import logging
 import asyncio
 from pyvesync import VeSync
+from pyvesync.utils.logs import LibraryLogger
 
 logger = logging.getLogger("pyvesync")
 logger.setLevel(logging.DEBUG)
+logging.basicConfig()  # Send log records to the console
 
 
 async def main():
     async with VeSync("user", "password") as manager:
-        manager.debug = True
         manager.redact = True  # True by default
+        LibraryLogger.verbose = True  # Optional - print full request/response content
         await manager.login()
         await manager.update()
 
@@ -429,17 +433,26 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-### Logging to File
+### Debug to a file (recommended for sharing with issues)
 
-To log to a file, use the `log_to_file()` method of the `VeSync` class. Pass the file path as an argument.
+The `log_to_file()` method is the simplest way to capture a full debug log. It sets the `pyvesync` logger to `DEBUG` **and** attaches a file handler in one call, so you do not need to configure logging yourself. It also prints to the console by default; pass `stdout=False` to log only to the file. Keep `redact=True` (the default) so the log is safe to attach to a GitHub issue:
 
 ```python
 import asyncio
 from pyvesync import VeSync
+from pyvesync.utils.logs import LibraryLogger
+
 
 async def main():
-    async with VeSync("user", "password") as manager:
-        manager.log_to_file("pyvesync.log", stdout=True)  # stdout argument prints log to console as well
+    # redact=True is the default - sensitive values are scrubbed from the log
+    async with VeSync("user", "password", redact=True) as manager:
+        # Enables DEBUG logging and writes it to pyvesync.log
+        # stdout=True (the default) also prints the log to the console
+        manager.log_to_file("pyvesync.log", stdout=True)
+
+        # Optional - include the full request & response body of every API call
+        LibraryLogger.verbose = True
+
         await manager.login()
         await manager.update()
 
@@ -448,10 +461,20 @@ async def main():
         await outlet.turn_off()
         outlet.display()
 
+
 if __name__ == "__main__":
     asyncio.run(main())
-
 ```
+
+## Contribution Expectations
+
+Contributions — from humans and AI coding assistants alike — must follow three rules. These keep the library correct and maintainable. See the [contributing guide](https://webdjoe.github.io/pyvesync/latest/development/contributing) for full detail.
+
+1. **Follow the intended architecture.** New devices are added through the three-tier hierarchy (base class → concrete device + API mixin → device map), with state in the device's `DeviceState` subclass, models in `models/`, and constants in `pyvesync.const`. API request/response shapes must come from a real packet capture — never invented.
+2. **Verify on real hardware before merge.** New device support and any change to device behavior must be tested on the physical device, and the pull request must state the model and firmware version tested. Testing only through Home Assistant does not count.
+3. **One change per pull request.** Each PR must be a single feature, fix, or edit. Large or mixed PRs that bundle unrelated changes will be asked to be broken up before review.
+
+> **Using an AI assistant?** Agent instructions live in [`AGENTS.md`](AGENTS.md), which Codex and most tools read directly; [`CLAUDE.md`](CLAUDE.md) imports it for Claude Code. Point your assistant at it and the [contributing guide](https://webdjoe.github.io/pyvesync/latest/development/contributing). You are responsible for the result: it must follow the architecture, must not fabricate API fields, must not be submitted without real-device testing, and must be a single focused change.
 
 ## Feature Requests
 

@@ -252,10 +252,12 @@ class VeSync:  # pylint: disable=function-redefined
 
         Args:
             filename (str | Path | None): The name of the file to load credentials from.
-                If None, no action is taken.
+                If None, `.vesync_auth` is searched for in the current working
+                directory and then the user's home directory.
 
         Returns:
-            bool: True if credentials were loaded successfully, False otherwise.
+            bool: True if credentials were loaded successfully, False if the file was
+                not found, could not be parsed or the credentials were incomplete.
         """
         return await self.auth.load_credentials_from_file(filename)
 

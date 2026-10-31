@@ -121,6 +121,11 @@ class TestHumidifiers(TestBase):
         "LUH-A602S-WUS": [["set_warm_level", {"warm_level": 3}]],
         "LUH-A603S-WUS": [["set_warm_level", {"warm_level": 3}]],
         "LEH-S601S": [["turn_off_drying_mode"]],
+        "LEH-B381S": [
+            ["turn_on_nightlight"],
+            ["turn_off_nightlight"],
+            ["set_nightlight_brightness", {"brightness": 50}],
+        ],
         "LUH-O451S-WEU": [
             ["set_rgb_nightlight", {"power": True, "brightness": 100, "red": 252, "green": 50, "blue": 0}],
         ],

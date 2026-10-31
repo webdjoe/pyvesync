@@ -9,11 +9,12 @@ The VeSync API supports a variety of devices. The following is a list of devices
       - [Valceno Multicolor Smart Bulb][pyvesync.devices.vesyncbulb.VeSyncBulbValcenoA19MC]
 2. Outlets
       - [Etekcity 7A Round Outlet][pyvesync.devices.vesyncoutlet.VeSyncOutlet7A]
-      - [Etekcity 10A Round Outlet EU][pyvesync.devices.vesyncoutlet.VeSyncOutlet10A]
-      - [Etekcity 10A Round Outlet USA][pyvesync.devices.vesyncoutlet.VeSyncESW10USA]
+      - [Etekcity 10A Round Outlet (ESW01 / ESW03, USA / EU)][pyvesync.devices.vesyncoutlet.VeSyncOutlet10A]
+      - [Etekcity 10A Round Outlet (ESW10, USA / EU)][pyvesync.devices.vesyncoutlet.VeSyncESW10USA]
       - [Etekcity 15A Rectangle Outlet][pyvesync.devices.vesyncoutlet.VeSyncOutlet15A]
       - [Etekcity 15A Outdoor Dual Outlet][pyvesync.devices.vesyncoutlet.VeSyncOutdoorPlug]
-      - [BSDOG / Greensun Smart Outlet Series][pyvesync.devices.vesyncoutlet.VeSyncBSDOGPlug] - WHOPLUG / GREENSUN
+      - [BSDOG / Greensun Smart Outlet Series][pyvesync.devices.vesyncoutlet.VeSyncBSDOGPlug] - BSDOG01 / BSDOG02
+      - [WHOGPLUG / Greensun Smart Plug][pyvesync.devices.vesyncoutlet.VeSyncOutletWHOGPlug]
       - [WYLDR Smart Plug][pyvesync.devices.vesyncoutlet.VeSyncBSDOGPlug] - WYLDR16A1081 (energy monitoring without energy history)
 3. Switches
       - [ESWL01][pyvesync.devices.vesyncswitch.VeSyncWallSwitch] - Etekcity Wall Switch
@@ -27,12 +28,14 @@ The VeSync API supports a variety of devices. The following is a list of devices
       - [Core300s][pyvesync.devices.vesyncpurifier.VeSyncAirBypass]
       - [Core200S][pyvesync.devices.vesyncpurifier.VeSyncAirBypass]
       - [LV-PUR131S][pyvesync.devices.vesyncpurifier.VeSyncAir131]
+      - [LV-RH131S][pyvesync.devices.vesyncpurifier.VeSyncAirRH131]
       - [Sprout Air Purifier][pyvesync.devices.vesyncpurifier.VeSyncAirSprout]
 5. Humidifiers
       - [Classic 200S][pyvesync.devices.vesynchumidifier.VeSyncHumid200S] - 2L Smart Humidifier
       - [Classic 300S][pyvesync.devices.vesynchumidifier.VeSyncHumid200300S] - 3L Smart Humidifier
       - [Dual 200S][pyvesync.devices.vesynchumidifier.VeSyncHumid200300S]
-      - [LV600S][pyvesync.devices.vesynchumidifier.VeSyncHumid200300S] - 6L Smart Humidifier
+      - [LV600S (LUH-A602S)][pyvesync.devices.vesynchumidifier.VeSyncHumid200300S] - 6L Smart Humidifier
+      - [LV600S (LUH-A603S)][pyvesync.devices.vesynchumidifier.VeSyncLV600S] - 6L Smart Humidifier
       - [OasisMist 4.5L Humidifier][pyvesync.devices.vesynchumidifier.VeSyncHumid200300S]
       - [OasisMist 1000S Humidifier][pyvesync.devices.vesynchumidifier.VeSyncHumid1000S]
       - [Superior 6000S][pyvesync.devices.vesynchumidifier.VeSyncSuperior6000S] - 6L Smart Humidifier
@@ -44,7 +47,7 @@ The VeSync API supports a variety of devices. The following is a list of devices
       - [CS137][pyvesync.devices.vesynckitchen.VeSyncAirFryer158] - 3.7qt Air Fryer
       - [CS158][pyvesync.devices.vesynckitchen.VeSyncAirFryer158] - 5.8qt Air Fryer
 8. Thermostats
-      - [Aura][pyvesync.devices.vesyncthermostat] Thermostat
+      - [Aura][pyvesync.devices.vesyncthermostat.VeSyncAuraThermostat] Thermostat
 
 ## Device Features
 
@@ -63,8 +66,8 @@ Switches have minimal features, the dimmer switch is the only switch that has ad
 | Device Name | Power Stats | Energy History | Nightlight |
 | :------: | :----: | :----: | :----: |
 | 7A Round Outlet | ✔ | ✔ | |
-| 10A Round EU Outlet | ✔ | ✔ | |
-| 10A Round US Outlet | | | |
+| 10A Round Outlet (ESW01 / ESW03, USA / EU) | ✔ | ✔ | |
+| 10A Round Outlet (ESW10, USA / EU) | | | |
 | 15A Rectangle Outlet | ✔ | ✔ | ✔ |
 | 15A Outdoor Dual Outlet | ✔ | ✔ | |
 | Smart Plug Series (WHOGPLUG / BSDOG01) | ✔ | ✔ | |
@@ -78,28 +81,31 @@ these methods are used.
 
 ### Purifiers
 
-| Device Name | PM2.5 | PM1.0 | PM10 | Vent Angle | Light Detection |
-| ------ | ----- | ----- | ----- | ----- | ----- |
-| Everest Air | ✔ | ✔ | ✔ | ✔ | ✔ |
-| Vital 200S/100S  | ✔ |  | | | ✔ |
-| Core600s | ✔ |  | | | |
-| Core400s | ✔ |  | | | |
-| Core300s | ✔ |  | | | |
-| Core200s | ✔ |  | | | |
-| LV-PUR131S | ✔ |  | | | |
-| Sprout Air Purifier | ✔ |  | | | |
+| Device Name | PM2.5 | PM1.0 | PM10 | Vent Angle | Light Detection | Night Light |
+| ------ | ----- | ----- | ----- | ----- | ----- | ----- |
+| Everest Air | ✔ | ✔ | ✔ | ✔ | ✔ | |
+| Vital 200S | ✔ |  | | | ✔ | |
+| Vital 100S | ✔ |  | | | | |
+| Core600s | ✔ |  | | | | |
+| Core400s | ✔ |  | | | | |
+| Core300s | ✔ |  | | | | |
+| Core200s |  |  | | | | ✔ |
+| LV-PUR131S | ✔ |  | | | | |
+| LV-RH131S | ✔ |  | | | | |
+| Sprout Air Purifier | ✔ |  | | | | ✔ |
 
 ### Humidifiers
 
 | Device Name | Night Light | RGB Night Light | Warm Mist |
 | ------ | ----- | ----- | ----- |
 | Classic 200S | | | |
-| Classic 300S | ✔ | | ✔ |
+| Classic 300S | ✔ | | |
 | Dual 200S | | | |
 | LV600S | | | ✔ |
 | OasisMist 4.5L | | ✔ | ✔ |
+| OasisMist 1000S (LUH-M101S-WEUR only) | ✔ | | |
 | Superior 6000S | | | ✔ |
-| Sprout Humidifier | | | |
+| Sprout Humidifier | ✔ | | |
 
 The OasisMist 4.5L (`LUH-O451S-WEU`) exposes an RGB nightlight through
 [`set_rgb_nightlight`][pyvesync.devices.vesynchumidifier.VeSyncHumid200300S.set_rgb_nightlight].

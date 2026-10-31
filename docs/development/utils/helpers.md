@@ -8,7 +8,7 @@ The `pyvesync.utils.helpers` module contains utility functions and classes that 
     handler: python
     options:
       members:
-        - update
+        - update_ts
       show_root_heading: true
       show_source: true
 
