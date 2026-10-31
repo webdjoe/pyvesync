@@ -80,6 +80,19 @@ DC601_RECIPE = AirFryerPresetRecipe(
     preheat_time=AirFryerDefaults.preheat_time_s,
 )
 
+# Values the CS358-AF reports for a manual program started from the cloud with
+# AirFryerPresets.custom. Captured from a physical US unit.
+CS358_RECIPE = AirFryerPresetRecipe(
+    recipe_name="Manual Cook",
+    cook_mode="Custom",
+    recipe_id=1,
+    recipe_type=3,
+    target_temp=AirFryerDefaults.cook_temp_f,
+    temp_unit=AirFryerDefaults.temp_unit,
+    cook_time=AirFryerDefaults.cook_time_s,
+    preheat_time=AirFryerDefaults.preheat_time_s,
+)
+
 TF101S_RECIPE = AirFryerPresetRecipe(
     recipe_name="Air Fry",
     cook_mode="AirFry",
@@ -131,6 +144,35 @@ AIR_FRYER_COOKING_DETAILS: dict[str, dict] = {
         "startTime": 1767318116,
         "totalTimeRemaining": 1176,
         "currentTemp": 89,
+        "shakeStatus": 0,
+    },
+    "CS358-AF": {
+        "stepArray": [
+            {
+                "cookSetTime": AirFryerDefaults.cook_time_s,  # Seconds
+                "cookTemp": AirFryerDefaults.cook_temp_f,
+                "mode": CS358_RECIPE.cook_mode,
+                "cookLastTime": AirFryerDefaults.cook_last_time_s,  # Seconds
+                "shakeTime": 0,
+                "cookEndTime": 0,
+                "recipeName": CS358_RECIPE.recipe_name,
+                "recipeId": CS358_RECIPE.recipe_id,
+                "recipeType": CS358_RECIPE.recipe_type,
+            }
+        ],
+        "cookMode": "programs",
+        "tempUnit": AirFryerDefaults.temp_unit.label,
+        "stepIndex": 0,
+        "cookStatus": AirFryerDefaults.cook_status.value,
+        "preheatSetTime": 0,
+        "preheatLastTime": 0,
+        "preheatEndTime": 0,
+        "preheatTemp": 0,
+        "startTime": 1791695863,
+        "totalTimeRemaining": AirFryerDefaults.cook_last_time_s,
+        # The physical unit reported 0 here in every state, including cooking.
+        "currentTemp": 0,
+        "appointLastTime": 0,
         "shakeStatus": 0,
     },
     "CAF-TF101S": {
@@ -189,6 +231,22 @@ AIR_FRYER_STANDBY_DETAILS: dict[str, dict] = {
         "currentTemp": 43,
         "shakeStatus": 0,
     },
+    "CS358-AF": {
+        "stepArray": [],
+        "cookMode": "normal",
+        "tempUnit": AirFryerDefaults.temp_unit.label,
+        "stepIndex": 0,
+        "cookStatus": "standby",
+        "preheatSetTime": 0,
+        "preheatLastTime": 0,
+        "preheatEndTime": 0,
+        "preheatTemp": 0,
+        "startTime": 0,
+        "totalTimeRemaining": 0,
+        "currentTemp": 0,
+        "appointLastTime": 0,
+        "shakeStatus": 0,
+    },
     "CAF-TF101S": {
         "statusList": [
             {"cookStatus": "standby", "chamber": 1},
@@ -205,6 +263,7 @@ METHOD_RESPONSES = {
     'CS158-AF': deepcopy(FunctionResponsesV1),
     'CAF-DC601S': deepcopy(FunctionResponsesV2),
     'CAF-TF101S': deepcopy(FunctionResponsesV2),
+    'CS358-AF': deepcopy(FunctionResponsesV2),
 }
 
 
@@ -217,6 +276,9 @@ DETAILS_RESPONSES_COOKING = {
     ),
     "CAF-TF101S": build_bypass_v2_response(
         inner_result=deepcopy(AIR_FRYER_COOKING_DETAILS["CAF-TF101S"]),
+    ),
+    "CS358-AF": build_bypass_v2_response(
+        inner_result=deepcopy(AIR_FRYER_COOKING_DETAILS["CS358-AF"]),
     ),
 }
 
@@ -231,4 +293,25 @@ DETAILS_RESPONSES_STANDBY = {
     "CAF-TF101S": build_bypass_v2_response(
         inner_result=deepcopy(AIR_FRYER_STANDBY_DETAILS["CAF-TF101S"]),
     ),
+    "CS358-AF": build_bypass_v2_response(
+        inner_result=deepcopy(AIR_FRYER_STANDBY_DETAILS["CS358-AF"]),
+    ),
 }
+
+
+# CS358-AF once preheat has finished: the cook step is still queued in
+# stepArray and the unit waits for preheatCook (or its Start button).
+CS358_PREHEAT_END_DETAILS = deepcopy(AIR_FRYER_COOKING_DETAILS["CS358-AF"])
+CS358_PREHEAT_END_DETAILS.update(
+    {
+        "cookStatus": "preheatEnd",
+        "preheatSetTime": 240,
+        "preheatLastTime": 0,
+        "preheatTemp": AirFryerDefaults.cook_temp_f,
+        "totalTimeRemaining": AirFryerDefaults.cook_time_s,
+    }
+)
+CS358_PREHEAT_END_DETAILS["stepArray"][0]["cookLastTime"] = AirFryerDefaults.cook_time_s
+CS358_PREHEAT_END_RESPONSE = build_bypass_v2_response(
+    inner_result=deepcopy(CS358_PREHEAT_END_DETAILS),
+)
