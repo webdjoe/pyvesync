@@ -484,6 +484,7 @@ outlet_modules = [
             'HWPLUG16A',
             'FY-PLUG',
             'HWPLUG16',
+            'WYLDR16A1081',
         ],
         class_name='VeSyncBSDOGPlug',
         features=[
