@@ -923,7 +923,7 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
             return False
 
         payload_data = {'levelIdx': 0, 'virtualLevel': level, 'levelType': 'mist'}
-        r_dict = await self.call_bypassv2_api('virtualLevel', payload_data)
+        r_dict = await self.call_bypassv2_api('setVirtualLevel', payload_data)
         r = Helpers.process_dev_response(logger, 'set_mist_level', self, r_dict)
         if r is None:
             return False
