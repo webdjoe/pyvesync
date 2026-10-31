@@ -278,10 +278,10 @@ class InternalDeviceListExtension(ResponseBaseModel):
     the extension field in the device list response.
     """
 
-    airQuality: None | int
-    airQualityLevel: None | int
-    mode: None | str
-    fanSpeedLevel: None | str
+    airQuality: int | None
+    airQualityLevel: int | None
+    mode: str | None
+    fanSpeedLevel: str | None
 
 
 @dataclass
