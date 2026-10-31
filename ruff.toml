@@ -49,6 +49,8 @@ ignore = [
   "D102",  # Missing docstring in public method - HANDLED BY flake8-docstrings
   "EXE002", # Use of exec - IGNORE
   "DTZ005",  # Use of datetime.now() without tz - IGNORE
+  "CPY001",  # Missing copyright notice at top of file - IGNORE
+  "RUF036",  # None not at end of type union - TODO: fix in the next PR, then remove
   # "Q000", # Quotes
   # "ERA001", # Commented out code
 
