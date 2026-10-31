@@ -76,7 +76,7 @@ pre-commit run --all-files             # stage changes first
 
 # tox environments (see tox.ini)
 tox                  # everything
-tox -e 3.11          # pytest (also 3.12, 3.13)
+tox -e 3.11          # pytest (also 3.12, 3.13, 3.14)
 tox -e lint          # pylint
 tox -e flake8        # flake8 + flake8-docstrings
 tox -e mypy          # mypy
@@ -244,7 +244,7 @@ pre-commit hooks apply to `src/pyvesync` only; `src/tests` is excluded.
 - Do not bump `version` in `pyproject.toml` in feature or fix PRs; that happens
   in the release PR to `master`.
 - CI (`.github/workflows/RunTest.yaml`) runs ruff check, pylint and pytest on
-  Python 3.11–3.13; mkdocs build runs only on PRs to `master`. mypy is not in
+  Python 3.11–3.14; mkdocs build runs only on PRs to `master`. mypy is not in
   CI. It runs through pre-commit and pre-commit.ci, so run it locally.
 
 ### Never commit

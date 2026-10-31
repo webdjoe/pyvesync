@@ -59,7 +59,7 @@ To run a tests for development on existing devices or if you are not ready to wr
 pytest
 
 # or through tox
-tox -e 3.12 # pytest on Python 3.12 (also 3.11, 3.13). Linters: -e lint (pylint), flake8, mypy, ruff
+tox -e 3.12 # pytest on Python 3.12 (also 3.11, 3.13, 3.14). Linters: -e lint (pylint), flake8, mypy, ruff
 ```
 
 If developing a new device and it is completed and thoroughly tested, pass the `--write_api` to pytest. Be sure to include the `--` before the argument in the tox command.
