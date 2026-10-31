@@ -444,6 +444,8 @@ class VeSync:  # pylint: disable=function-redefined
         json_object: dict | None | DataClassORJSONMixin = None,
         headers: dict | None = None,
         device: VeSyncBaseDevice | None = None,
+        *,
+        _reauth_retry: bool = False,
     ) -> tuple[dict | None, int]:
         """Make API calls by passing endpoint, header and body.
 
@@ -507,7 +509,13 @@ class VeSync:  # pylint: disable=function-redefined
                     request_body=req_dict,
                 )
                 resp_dict, status_code = await self._api_response_wrapper(
-                    resp_bytes, resp_status, api, req_dict, device=device
+                    resp_bytes,
+                    resp_status,
+                    api,
+                    req_dict,
+                    device=device,
+                    headers=headers,
+                    reauth_retry=_reauth_retry,
                 )
 
         except ClientResponseError as e:
@@ -515,15 +523,40 @@ class VeSync:  # pylint: disable=function-redefined
             raise
         return resp_dict, status_code
 
-    async def _api_response_wrapper(
+    def _with_current_credentials(self, request_part: dict | None) -> dict | None:
+        """Return a copy of a request body or headers with current credentials.
+
+        Requests carry the token and account ID that were current when they
+        were built, so they must be refreshed before a retry after re-login.
+        """
+        if request_part is None:
+            return None
+        refreshed = dict(request_part)
+        for key in ('token', 'tk'):
+            if key in refreshed:
+                refreshed[key] = self.auth.token
+        for key in ('accountID', 'accountId'):
+            if key in refreshed:
+                refreshed[key] = self.auth.account_id
+        return refreshed
+
+    async def _api_response_wrapper(  # noqa: PLR0913
         self,
         response_bytes: bytes | None,
         status_code: int,
         endpoint: str,
         request_body: dict | None,
         device: VeSyncBaseDevice | None = None,
+        *,
+        headers: dict | None = None,
+        reauth_retry: bool = False,
     ) -> tuple[dict | None, int]:
-        """Internal wrapper used by async_call_api."""
+        """Internal wrapper used by async_call_api.
+
+        A rejected token triggers one re-login and one retry of the request
+        with the new credentials. If the retry is rejected as well,
+        VeSyncTokenError is raised instead of logging in again.
+        """
         resp_dict = LibraryLogger.try_json_loads(response_bytes)
         if not isinstance(resp_dict, dict):
             return None, status_code
@@ -531,9 +564,14 @@ class VeSync:  # pylint: disable=function-redefined
         error_info = Helpers.parse_error_code(resp_dict)
         if error_info.error_type == ErrorTypes.TOKEN_ERROR:
             self.enabled = False
-            if await self._reauthenticate():
+            if not reauth_retry and await self._reauthenticate():
                 return await self.async_call_api(
-                    endpoint, 'post', request_body, device=device
+                    endpoint,
+                    'post',
+                    self._with_current_credentials(request_body),
+                    headers=self._with_current_credentials(headers),
+                    device=device,
+                    _reauth_retry=True,
                 )
             raise VeSyncTokenError(error_info.message)
         raise_api_errors(error_info)
