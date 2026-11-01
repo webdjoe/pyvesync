@@ -118,7 +118,7 @@ class VeSyncAirFryer158(VeSyncFryer):
         """Init the VeSync Air Fryer 158 class."""
         super().__init__(details, manager, feature_map)
         self.features: list[str] = feature_map.features
-        self.ready_start = True
+        self.ready_start = False
         if self.config_module not in AIRFRYER_PID_MAP:
             msg = (
                 'Report this error as an issue - '
@@ -211,7 +211,8 @@ class VeSyncAirFryer158(VeSyncFryer):
 
         cook_base['accountId'] = self.manager.account_id
         cook_base['tempUnit'] = self.temp_unit.label
-        cook_base['readyStart'] = True
+        # readyStart False starts the cook at once; True waits for the start button.
+        cook_base['readyStart'] = False
         return cook_base
 
     def _build_cook_request(
@@ -467,6 +468,7 @@ class VeSyncTurboBlazeFryer(BypassV2Mixin, VeSyncFryer):
             cook_req['hasPreheat'] = int(True)
         cook_req['hasWarm'] = False
         cook_req['mode'] = recipe.cook_mode
+        # readyStart False starts the cook at once; True waits for the start button.
         cook_req['readyStart'] = False
         cook_req['recipeId'] = recipe.recipe_id
         cook_req['recipeName'] = recipe.recipe_name
@@ -580,7 +582,10 @@ class VeSyncTurboBlazeFryer(BypassV2Mixin, VeSyncFryer):
             else None
         )
         self.state.set_state(
-            cook_status=AirFryerCookStatus.COOKING,
+            # A program with preheat runs the preheat phase first.
+            cook_status=AirFryerCookStatus.HEATING
+            if preheat_time
+            else AirFryerCookStatus.COOKING,
             cook_time=cook_time,
             cook_last_time=cook_time,
             cook_temp=recipe.target_temp,
@@ -850,7 +855,9 @@ class VeSyncDualAirFryer(BypassV2Mixin, VeSyncFryer):
             {
                 'accountId': self.manager.account_id,
                 'cookConfigs': [c.to_dict() for c in cook_configs],
-                'readyStart': True,
+                # readyStart False starts the cook at once; True waits for the
+                # start button.
+                'readyStart': False,
                 'syncType': sync_type,
                 'tempUnit': self.temp_unit.code,
                 'workChamber': work_chamber,
@@ -874,9 +881,9 @@ class VeSyncDualAirFryer(BypassV2Mixin, VeSyncFryer):
         )
         cook_time = self.convert_time_for_api(recipe.cook_time)
         for ch_state in chambers:
-            # readyStart is True, so the device waits for the start button.
+            # readyStart is False, so the cook starts without the start button.
             ch_state.set_state(
-                cook_status=AirFryerCookStatus.READY,
+                cook_status=AirFryerCookStatus.COOKING,
                 cook_time=cook_time,
                 cook_last_time=cook_time,
                 cook_temp=recipe.target_temp,

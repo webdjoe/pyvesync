@@ -174,7 +174,8 @@ class TestFryerCaptures(TestBase):
                 'cookStatus': 'cooking',
                 'customRecipe': 'Manual Cooking',
                 'mode': 'custom',
-                'readyStart': True,
+                # Air Fryer.chls.har entry 205: readyStart false reports cooking at once.
+                'readyStart': False,
                 'recipeId': 1,
                 'recipeType': 3,
                 'tempUnit': 'fahrenheit',
@@ -205,7 +206,10 @@ class TestFryerCaptures(TestBase):
         preheat = self._sent_body()['jsonCmd']['preheat']
         assert preheat['cookSetTime'] == 10
         assert preheat['preheatSetTime'] == 5
+        # Air Fryer.chls.har entry 316: readyStart false reports heating at once.
+        assert preheat['readyStart'] is False
         assert fryer.state.preheat_set_time == 300
+        assert fryer.state.cook_status == AirFryerCookStatus.HEATING
 
     def test_158_sub_minute_truncates(self):
         fryer = self.get_device('air_fryers', 'CS158-AF')
@@ -243,13 +247,14 @@ class TestFryerCaptures(TestBase):
         assert fryer.state.can_resume is False
         assert fryer.state.cook_time_remaining == 1200
 
-    def test_tf101s_start_sets_ready(self):
+    def test_tf101s_start_sets_cooking(self):
+        # No TF101S capture with readyStart false; cooking is inferred from CS158.
         fryer = self.get_device('air_fryers', 'CAF-TF101S')
         self.mock_api.return_value = (build_bypass_v2_response(), 200)
         assert self.run_in_loop(
             fryer.set_mode, cook_time=1200, cook_temp=200, chamber=3
         )
-        assert fryer.state_chamber_1.cook_status == AirFryerCookStatus.READY
+        assert fryer.state_chamber_1.cook_status == AirFryerCookStatus.COOKING
 
     def test_tf101s_whole_chamber_clears_chamber_2(self):
         fryer = self.get_device('air_fryers', 'CAF-TF101S')
@@ -336,6 +341,7 @@ class TestFryerCaptures(TestBase):
         assert payload['subDeviceType'] == ''
         assert payload['data']['workChamber'] == 3
         assert payload['data']['syncType'] == 0
+        assert payload['data']['readyStart'] is False
 
     def test_p583_start_payload(self):
         # P583-KUS cook/request.json 2025-05-21: accountID, hasLinkage, sub-device.
@@ -378,6 +384,37 @@ class TestFryerCaptures(TestBase):
         data = self._sent_body()['payload']['data']
         assert data['hasPreheat'] == 1
         assert data['startAct']['preheatTemp'] == 400
+
+    def test_dc601s_preheat_start_sets_heating(self):
+        # DC601S capture 2026-01-01 20:39:06 reports heating while a preheat runs.
+        fryer = self.get_device('air_fryers', 'CAF-DC601S')
+        self.mock_api.return_value = (build_bypass_v2_response(), 200)
+        assert self.run_in_loop(
+            fryer.set_mode, cook_time=720, cook_temp=425, preheat_time=240
+        )
+        assert fryer.state.cook_status == AirFryerCookStatus.HEATING
+        assert fryer.state.is_in_preheat_mode is True
+        assert fryer.state.preheat_set_time == 240
+
+    def test_dc601s_start_without_preheat_sets_cooking(self):
+        fryer = self.get_device('air_fryers', 'CAF-DC601S')
+        self.mock_api.return_value = (build_bypass_v2_response(), 200)
+        assert self.run_in_loop(fryer.set_mode, cook_time=1200, cook_temp=330)
+        assert fryer.state.cook_status == AirFryerCookStatus.COOKING
+        assert fryer.state.is_in_preheat_mode is False
+        assert fryer.state.preheat_set_time is None
+
+    def test_dc601s_heating_status_is_preheat_mode(self):
+        # DC601S capture 2026-01-01 20:39:06: Roast 425 F with a 240 s preheat.
+        fryer = self.get_device('air_fryers', 'CAF-DC601S')
+        self.mock_api.return_value = (
+            _dc601s_status('heating', preheat=(240, 237, 425)),
+            200,
+        )
+        self.run_in_loop(fryer.update)
+        assert fryer.state.cook_status == AirFryerCookStatus.HEATING
+        assert fryer.state.is_in_preheat_mode is True
+        assert fryer.state.preheat_time_remaining == 237
 
     def test_p583_end_payload(self):
         # P583-KUS end-cook/request.json 2025-05-21.
