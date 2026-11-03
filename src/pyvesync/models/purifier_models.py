@@ -62,6 +62,7 @@ class PurifierVitalDetailsResult(InnerPurifierBaseResult):
     PM1: int | None = None
     PM10: int | None = None
     AQPercent: int | None = None
+    diySpeedLevel: int | None = None
 
 
 @dataclass

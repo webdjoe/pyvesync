@@ -25,6 +25,62 @@ set_auto_mode:
     userCountryCode: US
   method: post
   url: /cloud/v2/deviceManaged/bypassV2
+set_diy_level:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 5.6.60
+    cid: LAP-V201S-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: LAP-V201S-CID
+    method: bypassV2
+    payload:
+      data:
+        diySpeedLevel: 6
+        levelIdx: 0
+        levelType: wind
+      method: setLevel
+      source: APP
+    phoneBrand: pyvesync
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+    userCountryCode: US
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
+set_diy_mode:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 5.6.60
+    cid: LAP-V201S-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: LAP-V201S-CID
+    method: bypassV2
+    payload:
+      data:
+        workMode: diy
+      method: setPurifierMode
+      source: APP
+    phoneBrand: pyvesync
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+    userCountryCode: US
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
 set_fan_speed:
   headers:
     Content-Type: application/json; charset=UTF-8

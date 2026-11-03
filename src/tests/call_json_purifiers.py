@@ -58,6 +58,7 @@ class PurifierDefaults:
     air_quality_enum = AirQualityLevel.GOOD
     fan_level = 1
     fan_set_level = 2
+    diy_speed_level = 6
     filter_life = 80
     humidity = 50
     night_light = DeviceStatus.ON
@@ -185,6 +186,7 @@ PURIFIER_DETAILS: dict[str, dict[str, Any]] = {
         "workMode": PurifierDefaults.purifier_mode,
         "manualSpeedLevel": PurifierDefaults.fan_set_level,
         "fanSpeedLevel": PurifierDefaults.fan_level,
+        "diySpeedLevel": PurifierDefaults.diy_speed_level,
         "AQLevel": int(PurifierDefaults.air_quality_enum),
         "PM25": PurifierDefaults.air_quality_value_pm25,
         "screenState": int(PurifierDefaults.display),
@@ -204,6 +206,7 @@ PURIFIER_DETAILS: dict[str, dict[str, Any]] = {
         "workMode": PurifierDefaults.purifier_mode,
         "manualSpeedLevel": PurifierDefaults.fan_set_level,
         "fanSpeedLevel": PurifierDefaults.fan_level,
+        "diySpeedLevel": PurifierDefaults.diy_speed_level,
         "AQLevel": PurifierDefaults.air_quality_enum.value,
         "PM25": PurifierDefaults.air_quality_value_pm25,
         "screenState": PurifierDefaults.display,
