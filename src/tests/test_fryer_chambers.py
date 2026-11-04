@@ -100,8 +100,16 @@ class TestChamberInterface(TestBase):
         fryer = self.get_device('air_fryers', 'CAF-TF101S')
         assert fryer.get_chamber_state(Ch.CHAMBER_2) is fryer.state_chamber_2
         assert fryer.get_chamber_state(Ch.WHOLE) is fryer.state_chamber_1
-        with pytest.raises(ValueError):
-            fryer.get_chamber_state(Ch.BOTH)
+
+    @pytest.mark.parametrize(
+        ('setup_entry', 'chamber'),
+        [('CAF-TF101S', Ch.BOTH), ('CAF-TF101S', 5), ('CS158-AF', Ch.CHAMBER_2)],
+    )
+    def test_get_chamber_state_returns_none_without_raising(self, setup_entry, chamber):
+        fryer = self.get_device('air_fryers', setup_entry)
+        self.caplog.set_level(logging.DEBUG)
+        assert fryer.get_chamber_state(chamber) is None
+        assert 'chamber' in self.caplog.text.lower()
 
     @pytest.mark.parametrize('setup_entry', ['CS158-AF', 'CAF-DC601S', 'CAF-P583S'])
     @pytest.mark.parametrize('chamber', [Ch.CHAMBER_2, Ch.WHOLE, Ch.BOTH, 5])

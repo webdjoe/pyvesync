@@ -183,7 +183,7 @@ class FryerTurboBlazeDetailResult(BypassV2InnerResult):
 
     stepArray: list[FryerTurboBlazeStepItem]
     cookMode: str
-    tempUnit: str
+    tempUnit: str | None
     stepIndex: int
     cookStatus: str
     preheatSetTime: int
@@ -282,7 +282,7 @@ class FryerDualMultiStatusResult(BypassV2InnerResult):
     """Result model for dual air fryer getAirfryerMultiStatus response."""
 
     statusList: list[FryerDualChamberStatusItem]
-    tempUnit: str
+    tempUnit: str | None = None
     syncType: int = 0
     workChamber: int = 0
 

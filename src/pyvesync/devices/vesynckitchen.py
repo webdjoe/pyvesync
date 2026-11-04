@@ -7,15 +7,16 @@
   ``startMultiCook``, two chambers).
 
 A successful command sets the chamber state locally from the request; it does
-not call ``update()``. Call ``update()`` to read what the device reports. The
-CS137/CS158 ``end()``, ``stop()``, ``resume()`` and ``cook_from_preheat()``
-choose their command from the last known state.
+not call ``update()``. Call ``update()`` to read what the device reports. A
+failed or unreadable poll logs and leaves the state unchanged. The CS137/CS158
+``end()``, ``stop()``, ``resume()`` and ``cook_from_preheat()`` choose the cook
+or preheat command from the last known state, which every successful command
+keeps in the phase it sent.
 """
 
 from __future__ import annotations
 
 import logging
-from dataclasses import replace
 from typing import TYPE_CHECKING
 
 from typing_extensions import deprecated
@@ -24,9 +25,9 @@ from pyvesync.base_devices import VeSyncFryer
 from pyvesync.const import (
     AIRFRYER_PID_MAP,
     BYPASSV2_SUB_DEVICE_PAYLOAD,
+    AirFryer158Command,
     AirFryerChamber,
     AirFryerCookStatus,
-    AirFryerFeatures,
     AirFryerPresetRecipe,
     AirFryerSyncType,
     ConnectionStatus,
@@ -57,10 +58,14 @@ class VeSyncAirFryer158(VeSyncFryer):
     """Cosori CS137/CS158 air fryer (Bypass V1 API).
 
     The API counts time in whole minutes, so times are truncated to the minute
-    when sent (under 60 seconds is sent as 0). This is the only fryer class
-    that implements ``stop()``, ``resume()`` and ``cook_from_preheat()``. They
-    and ``end()`` choose the cook or preheat command from the last known
-    state, so call ``update()`` first if the fryer may have changed state.
+    when sent, and a cook time under 60 seconds is rejected. This is the only
+    fryer class that implements ``stop()``, ``resume()`` and
+    ``cook_from_preheat()``. They and ``end()`` choose the cook or preheat
+    command from the last known state. ``stop()`` and ``resume()`` are sent in
+    any state (the cook command when not preheating), and every successful
+    command sets the state to the phase it sent, so the next command matches.
+    A device whose config module is not in ``AIRFRYER_PID_MAP`` raises
+    ``VeSyncError``, and the device container skips it with a warning.
 
     Args:
         details (ResponseDeviceDetailsModel): Device details.
@@ -232,7 +237,7 @@ class VeSyncAirFryer158(VeSyncFryer):
         cook_mode = self._build_base_request(cook_time, recipe)
         cook_mode['appointmentTs'] = 0
         cook_mode['cookSetTemp'] = cook_temp
-        cook_mode['cookStatus'] = self.status_map[AirFryerCookStatus.COOKING]
+        cook_mode['cookStatus'] = AirFryer158Command.COOKING
         return cook_mode
 
     def _build_preheat_request(
@@ -249,7 +254,7 @@ class VeSyncAirFryer158(VeSyncFryer):
         preheat_mode = self._build_base_request(cook_time, recipe)
         preheat_mode['targetTemp'] = cook_temp
         preheat_mode['preheatSetTime'] = preheat_time
-        preheat_mode['preheatStatus'] = self.status_map[AirFryerCookStatus.HEATING]
+        preheat_mode['preheatStatus'] = AirFryer158Command.HEATING
         return preheat_mode
 
     async def get_details(self) -> None:
@@ -262,7 +267,11 @@ class VeSyncAirFryer158(VeSyncFryer):
                 'Invalid response for get_details for %s: %s', self.device_name, resp
             )
             self.state.connection_status = ConnectionStatus.OFFLINE
-            self.state.set_standby()
+            return None
+        if not isinstance(resp['result'], dict):
+            logger.debug(
+                'No result in get_details response for %s: %s', self.device_name, resp
+            )
             return None
 
         resp_model = process_bypassv1_result(
@@ -277,17 +286,15 @@ class VeSyncAirFryer158(VeSyncFryer):
             logger.debug(
                 'No returnStatus in get_details response for %s', self.device_name
             )
-            self.state.set_standby()
             return None
 
         return_status = resp_model.returnStatus
         if return_status.cookStatus not in self.status_map:
             logger.warning(
-                'Unknown cook status %s for %s',
+                'Unknown cook status %s for %s, keeping the last state',
                 return_status.cookStatus,
                 self.device_name,
             )
-            self.state.set_standby()
             return None
         if return_status.tempUnit is not None:
             self.temp_unit = return_status.tempUnit
@@ -312,44 +319,53 @@ class VeSyncAirFryer158(VeSyncFryer):
         if self._validate_chamber(chamber) is None:
             return False
         if self.state.is_in_cook_mode is True:
-            cmd = {'cookMode': {'cookStatus': 'end'}}
+            preheat = False
         elif self.state.is_in_preheat_mode is True:
-            cmd = {'preheat': {'preheatStatus': 'end'}}
+            preheat = True
         else:
             logger.debug(
                 'Cannot end %s as it is not cooking or preheating', self.device_name
             )
             return False
-        json_cmd = {'jsonCmd': cmd}
-        resp = await self.call_158_api(models.Fryer158RequestModel, update_dict=json_cmd)
-        r = Helpers.process_dev_response(logger, 'end', self, resp)
-        if r is None:
+        if not await self._send_phase_command('end', AirFryer158Command.END, preheat):
             return False
         self.state.set_standby()
         return True
+
+    async def _send_phase_command(
+        self, method_name: str, command: AirFryer158Command, preheat: bool
+    ) -> bool:
+        """Send a ``preheatStatus`` or ``cookStatus`` change command.
+
+        Args:
+            method_name (str): Calling method, for the logs.
+            command (AirFryer158Command): The status value to send.
+            preheat (bool): True for the ``preheat`` command, False for
+                ``cookMode``.
+
+        Returns:
+            bool: True if the device accepted the command.
+        """
+        if preheat:
+            cmd = {'preheat': {'preheatStatus': command}}
+        else:
+            cmd = {'cookMode': {'cookStatus': command}}
+        resp = await self.call_158_api(
+            models.Fryer158RequestModel, update_dict={'jsonCmd': cmd}
+        )
+        return Helpers.process_dev_response(logger, method_name, self, resp) is not None
 
     async def stop(
         self, chamber: AirFryerChamber | int = AirFryerChamber.CHAMBER_1
     ) -> bool:
         if self._validate_chamber(chamber) is None:
             return False
-        if self.state.is_in_preheat_mode is True:
-            cmd = {'preheat': {'preheatStatus': 'stop'}}
-        elif self.state.is_in_cook_mode is True:
-            cmd = {'cookMode': {'cookStatus': 'stop'}}
-        else:
-            logger.debug(
-                'Cannot stop %s as it is not cooking or preheating', self.device_name
-            )
+        preheat = self.state.is_in_preheat_mode
+        if not await self._send_phase_command('stop', AirFryer158Command.STOP, preheat):
             return False
-        json_cmd = {'jsonCmd': cmd}
-        resp = await self.call_158_api(models.Fryer158RequestModel, update_dict=json_cmd)
-        r = Helpers.process_dev_response(logger, 'stop', self, resp)
-        if r is None:
-            return False
-        if self.state.is_in_preheat_mode is True:
+        if preheat:
             self.state.set_preheat_stop_state()
-        elif self.state.is_in_cook_mode is True:
+        else:
             self.state.set_cook_stop_state()
         return True
 
@@ -358,25 +374,14 @@ class VeSyncAirFryer158(VeSyncFryer):
     ) -> bool:
         if self._validate_chamber(chamber) is None:
             return False
-        if self.state.is_in_preheat_mode is True:
-            cmd = {'preheat': {'preheatStatus': 'heating'}}
-        elif self.state.is_in_cook_mode is True:
-            cmd = {'cookMode': {'cookStatus': 'cooking'}}
-        else:
-            logger.debug(
-                'Cannot resume %s as it is not cooking or preheating', self.device_name
-            )
+        preheat = self.state.is_in_preheat_mode
+        command = AirFryer158Command.HEATING if preheat else AirFryer158Command.COOKING
+        if not await self._send_phase_command('resume', command, preheat):
             return False
-        json_cmd = {'jsonCmd': cmd}
-        resp = await self.call_158_api(models.Fryer158RequestModel, update_dict=json_cmd)
-        r = Helpers.process_dev_response(logger, 'resume', self, resp)
-        if r is None:
-            return False
-
-        if self.state.is_in_preheat_mode is True:
+        if preheat:
             self.state.set_preheat_resume_state()
-        elif self.state.is_in_cook_mode is True:
-            self.state.cook_status = AirFryerCookStatus.COOKING
+        else:
+            self.state.set_cook_resume_state()
         return True
 
     async def set_mode_from_recipe(
@@ -387,10 +392,10 @@ class VeSyncAirFryer158(VeSyncFryer):
     ) -> bool:
         if self._validate_chamber(chamber) is None:
             return False
-        target_temp = self.prepare_recipe_temperature(recipe)
-        if target_temp is None:
+        prepared = self._prepare_recipe(recipe)
+        if prepared is None:
             return False
-        recipe = replace(recipe, target_temp=target_temp, temp_unit=self.temp_unit.code)
+        recipe = prepared
         cook_time = self.convert_time_for_api(recipe.cook_time)
         preheat_time = (
             self.convert_time_for_api(recipe.preheat_time)
@@ -460,7 +465,7 @@ class VeSyncAirFryer158(VeSyncFryer):
             'cookMode': {
                 'mode': self.state.cook_mode,
                 'accountId': self.manager.account_id,
-                'cookStatus': AirFryerCookStatus.COOKING.value,
+                'cookStatus': AirFryer158Command.COOKING,
                 'tempUnit': self.temp_unit.label,
             }
         }
@@ -481,7 +486,8 @@ class VeSyncTurboBlazeFryer(BypassV2Mixin, VeSyncFryer):
     dropped with a debug log. ``stop()``, ``resume()`` and
     ``cook_from_preheat()`` are not implemented and return False. The reported
     ``currentTemp`` is in Celsius and is converted to ``temp_unit``. A local
-    ``set_mode()`` does not set ``state.recipe``.
+    ``set_mode()`` does not set ``state.recipe``. A failed poll, an unknown
+    ``cookStatus`` or an out-of-range ``stepIndex`` leaves the state unchanged.
     """
 
     __slots__ = ()
@@ -533,7 +539,6 @@ class VeSyncTurboBlazeFryer(BypassV2Mixin, VeSyncFryer):
         )
 
         if resp_model is None:
-            self.state.set_standby()
             return
 
         # Standby responses report the unit too (P583S-KUS capture).
@@ -547,25 +552,24 @@ class VeSyncTurboBlazeFryer(BypassV2Mixin, VeSyncFryer):
             self.state.set_standby()
             return
 
-        if resp_model.stepIndex >= len(resp_model.stepArray):
+        if resp_model.cookStatus not in self.status_map:
             logger.warning(
-                'stepIndex %s out of range for %s steps on %s',
+                'Unknown cook status %s for %s, keeping the last state',
+                resp_model.cookStatus,
+                self.device_name,
+            )
+            return
+
+        if not 0 <= resp_model.stepIndex < len(resp_model.stepArray):
+            logger.warning(
+                'stepIndex %s out of range for %s steps on %s, keeping the last state',
                 resp_model.stepIndex,
                 len(resp_model.stepArray),
                 self.device_name,
             )
-            self.state.set_standby()
             return
 
         cook_step = resp_model.stepArray[resp_model.stepIndex]
-        if resp_model.cookStatus not in self.status_map:
-            logger.warning(
-                'Unknown cook status %s for %s',
-                resp_model.cookStatus,
-                self.device_name,
-            )
-            self.state.set_standby()
-            return
 
         # currentTemp from the bypassV2 getAirfryerStatus response is the
         # device's hardware sensor reading, which the firmware always
@@ -575,7 +579,9 @@ class VeSyncTurboBlazeFryer(BypassV2Mixin, VeSyncFryer):
         # current_temp without a unit-aware crutch.
         _current_temp = resp_model.currentTemp
         if _current_temp is not None and self.temp_unit == TemperatureUnits.FAHRENHEIT:
-            _current_temp = round(_current_temp * 9 / 5 + 32)
+            _current_temp = round(
+                TemperatureUnits.to_fahrenheit(_current_temp, TemperatureUnits.CELSIUS)
+            )
 
         self.state_chamber_1.set_state(
             cook_status=self.status_map[resp_model.cookStatus],
@@ -615,13 +621,10 @@ class VeSyncTurboBlazeFryer(BypassV2Mixin, VeSyncFryer):
     ) -> bool:
         if self._validate_chamber(chamber) is None:
             return False
-        target_temp = self.prepare_recipe_temperature(recipe)
-        if target_temp is None:
+        prepared = self._prepare_recipe(recipe)
+        if prepared is None:
             return False
-        recipe = replace(recipe, target_temp=target_temp, temp_unit=self.temp_unit.code)
-        if recipe.preheat_time and AirFryerFeatures.PREHEAT not in self.features:
-            logger.debug('Preheat not supported for %s, ignoring', self.device_name)
-            recipe = replace(recipe, preheat_time=None)
+        recipe = prepared
         payload_method = 'startCook'
         data = self._build_cook_request(recipe)
         resp = await self.call_bypassv2_api(
@@ -728,8 +731,15 @@ class VeSyncDualAirFryer(BypassV2Mixin, VeSyncFryer):
             ``BOTH`` and False for any other chamber, and ``end(BOTH)`` sets
             it False.
         work_chamber (AirFryerChamber | None): Read-only. Chamber the device
-            reports as active (``workChamber``); None when idle. Set only by
-            ``update()``; a local command leaves it at the last reported value.
+            reports as active (``workChamber``); None when idle. Set by
+            ``update()``. A successful ``WHOLE`` start sets ``WHOLE``, any other
+            start clears a ``WHOLE`` value, and ending ``WHOLE`` or ``BOTH``
+            clears it. ``end(CHAMBER_1)`` while it is ``WHOLE`` ends the whole
+            basket.
+
+    A failed poll leaves both chamber states unchanged, apart from the
+    connection status and update time, which both chambers take from the
+    response. A chamber with an unknown ``cookStatus`` keeps its state.
     """
 
     __slots__ = ()
@@ -767,15 +777,14 @@ class VeSyncDualAirFryer(BypassV2Mixin, VeSyncFryer):
             models.FryerDualMultiStatusResult,
         )
 
+        # process_bypassv2_result only updates self.state (chamber 1).
+        self.state_chamber_2.last_update_ts = self.state_chamber_1.last_update_ts
+        self.state_chamber_2.connection_status = self.state_chamber_1.connection_status
         if resp_model is None:
-            self.state_chamber_1.set_standby()
-            self.state_chamber_2.set_standby()
-            self._set_reported_work_chamber(None)
             return
 
-        # process_bypassv2_result only stamps self.state (chamber 1).
-        self.state_chamber_2.update_ts()
-        self.temp_unit = resp_model.tempUnit
+        if resp_model.tempUnit is not None:
+            self.temp_unit = resp_model.tempUnit
 
         # Update sync state and active chamber from API response
         self._set_reported_sync(resp_model.syncType == AirFryerSyncType.SYNC)
@@ -794,41 +803,9 @@ class VeSyncDualAirFryer(BypassV2Mixin, VeSyncFryer):
         updated_chambers: set[AirFryerChamber] = set()
 
         for status_item in resp_model.statusList:
-            try:
-                ch = AirFryerChamber(status_item.chamber)
-                chamber_state = self.get_chamber_state(ch)
-            except ValueError:
-                logger.warning(
-                    'Unknown chamber %s in status for %s',
-                    status_item.chamber,
-                    self.device_name,
-                )
-                continue
-            updated_chambers.add(ch)
-
-            if (
-                status_item.cookStatus not in self.status_map
-                or status_item.cookStatus == AirFryerCookStatus.STANDBY.value
-            ):
-                if status_item.cookStatus not in self.status_map:
-                    logger.warning(
-                        'Unknown cook status %s for %s chamber %d',
-                        status_item.cookStatus,
-                        self.device_name,
-                        status_item.chamber,
-                    )
-                chamber_state.set_standby()
-                continue
-
-            chamber_state.set_state(
-                cook_status=self.status_map[status_item.cookStatus],
-                cook_time=status_item.cookSetTime,
-                cook_last_time=status_item.currentRemainingTime,
-                cook_temp=status_item.cookTemp,
-                cook_mode=status_item.mode,
-                recipe=status_item.recipeName or None,
-                total_last_time=status_item.totalTimeRemaining,
-            )
+            ch = self._apply_chamber_status(status_item)
+            if ch is not None:
+                updated_chambers.add(ch)
 
         # Set any chambers not in the response to standby. Whole-chamber
         # status is reported as a single chamber 3 item, so chamber 2 idles.
@@ -840,6 +817,51 @@ class VeSyncDualAirFryer(BypassV2Mixin, VeSyncFryer):
         if AirFryerChamber.CHAMBER_2 not in updated_chambers:
             self.state_chamber_2.set_standby()
 
+    def _apply_chamber_status(
+        self, status_item: models.FryerDualChamberStatusItem
+    ) -> AirFryerChamber | None:
+        """Update one chamber's state from a ``statusList`` item.
+
+        A chamber with an unknown ``cookStatus`` keeps its last state but still
+        counts as reported.
+
+        Args:
+            status_item (models.FryerDualChamberStatusItem): The status item.
+
+        Returns:
+            AirFryerChamber | None: The reported chamber, or None (after a
+            warning) if the chamber number is unknown.
+        """
+        chamber_state = self.get_chamber_state(status_item.chamber)
+        if chamber_state is None:
+            logger.warning(
+                'Unknown chamber %s in status for %s',
+                status_item.chamber,
+                self.device_name,
+            )
+            return None
+        ch = AirFryerChamber(status_item.chamber)
+        if status_item.cookStatus not in self.status_map:
+            logger.warning(
+                'Unknown cook status %s for %s chamber %d, keeping its last state',
+                status_item.cookStatus,
+                self.device_name,
+                status_item.chamber,
+            )
+        elif status_item.cookStatus == AirFryerCookStatus.STANDBY.value:
+            chamber_state.set_standby()
+        else:
+            chamber_state.set_state(
+                cook_status=self.status_map[status_item.cookStatus],
+                cook_time=status_item.cookSetTime,
+                cook_last_time=status_item.currentRemainingTime,
+                cook_temp=status_item.cookTemp,
+                cook_mode=status_item.mode,
+                recipe=status_item.recipeName or None,
+                total_last_time=status_item.totalTimeRemaining,
+            )
+        return ch
+
     async def end(
         self, chamber: AirFryerChamber | int = AirFryerChamber.CHAMBER_1
     ) -> bool:
@@ -847,8 +869,10 @@ class VeSyncDualAirFryer(BypassV2Mixin, VeSyncFryer):
 
         Args:
             chamber (AirFryerChamber | int): Chamber to end. ``BOTH`` ends
-                both chambers. During a Sync cook (``sync_chambers``), one
-                chamber sends an end for that chamber only.
+                both chambers. ``CHAMBER_1`` during a whole-basket cook
+                (``work_chamber`` ``WHOLE``) ends the whole basket. During a
+                Sync cook (``sync_chambers``), one chamber sends an end for
+                that chamber only.
 
         Returns:
             bool: True on success, and the ended chamber state(s) are set to
@@ -857,6 +881,14 @@ class VeSyncDualAirFryer(BypassV2Mixin, VeSyncFryer):
         member = self._validate_chamber(chamber)
         if member is None:
             return False
+        if (
+            member == AirFryerChamber.CHAMBER_1
+            and self.work_chamber == AirFryerChamber.WHOLE
+        ):
+            logger.debug(
+                '%s is cooking in the whole basket; ending WHOLE', self.device_name
+            )
+            member = AirFryerChamber.WHOLE
         if self.sync_chambers and member in (
             AirFryerChamber.CHAMBER_1,
             AirFryerChamber.CHAMBER_2,
@@ -881,7 +913,9 @@ class VeSyncDualAirFryer(BypassV2Mixin, VeSyncFryer):
             self.state_chamber_2.set_standby()
             self._set_reported_sync(False)
         else:
-            self.get_chamber_state(member).set_standby()
+            self._chamber_state(member).set_standby()
+        if member in (AirFryerChamber.WHOLE, AirFryerChamber.BOTH):
+            self._set_reported_work_chamber(None)
         return True
 
     def _build_cook_configs(
@@ -938,10 +972,10 @@ class VeSyncDualAirFryer(BypassV2Mixin, VeSyncFryer):
         member = self._validate_chamber(chamber)
         if member is None:
             return False
-        target_temp = self.prepare_recipe_temperature(recipe)
-        if target_temp is None:
+        prepared = self._prepare_recipe(recipe)
+        if prepared is None:
             return False
-        recipe = replace(recipe, target_temp=target_temp, temp_unit=self.temp_unit.code)
+        recipe = prepared
         cook_configs = self._build_cook_configs(recipe, member)
 
         start_data = models.FryerDualStartCookData.from_dict(
@@ -971,9 +1005,13 @@ class VeSyncDualAirFryer(BypassV2Mixin, VeSyncFryer):
         chambers = (
             [self.state_chamber_1, self.state_chamber_2]
             if both
-            else [self.get_chamber_state(member)]
+            else [self._chamber_state(member)]
         )
         self._set_reported_sync(both)
+        if member == AirFryerChamber.WHOLE:
+            self._set_reported_work_chamber(AirFryerChamber.WHOLE)
+        elif self.work_chamber == AirFryerChamber.WHOLE:
+            self._set_reported_work_chamber(None)
         cook_time = self.convert_time_for_api(recipe.cook_time)
         for ch_state in chambers:
             # readyStart is False, so the cook starts without the start button.
