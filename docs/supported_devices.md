@@ -46,6 +46,9 @@ The VeSync API supports a variety of devices. The following is a list of devices
 7. Air Fryers
       - [CS137][pyvesync.devices.vesynckitchen.VeSyncAirFryer158] - 3.7qt Air Fryer
       - [CS158][pyvesync.devices.vesynckitchen.VeSyncAirFryer158] - 5.8qt Air Fryer
+      - [CAF-DC601S][pyvesync.devices.vesynckitchen.VeSyncTurboBlazeFryer] - TurboBlaze 6qt Air Fryer
+      - [CAF-P583S][pyvesync.devices.vesynckitchen.VeSyncDualBlazeFryer] - Dual Blaze 6.8qt Air Fryer
+      - [CAF-TF101S][pyvesync.devices.vesynckitchen.VeSyncDualAirFryer] - Dual Air Fryer
 8. Thermostats
       - [Aura][pyvesync.devices.vesyncthermostat.VeSyncAuraThermostat] Thermostat
 
@@ -122,10 +125,18 @@ been verified.
 
 ### Air Fryers
 
-| Device Name | Device Type | Temperature Control | Timer |
-| ------ | ----- | ----- | ----- |
-| Cosori 3.7qt Air Fryer | CS137 | ✔ | ✔ |
-| Cosori 5.8qt Air Fryer | CS158 | ✔ | ✔ |
+| Device Name | Device Type | Temperature Control | Timer | Cook Modes | Preheat | Pause/Resume | Dual Chamber |
+| ------ | ----- | ----- | ----- | ----- | ----- | ----- | ----- |
+| Cosori 3.7qt Air Fryer | CS137 | ✔ | ✔ | ✔ | ✔ | ✔ | |
+| Cosori 5.8qt Air Fryer | CS158 | ✔ | ✔ | ✔ | ✔ | ✔ | |
+| Cosori TurboBlaze 6qt Air Fryer | CAF-DC601S | ✔ | ✔ | ✔ | ✔ | | |
+| Cosori Dual Blaze 6.8qt Air Fryer | CAF-P583S | ✔ | ✔ | ✔ | | | |
+| Cosori Dual Air Fryer | CAF-TF101S | ✔ | ✔ | ✔ | | | ✔ |
+
+The CAF-TF102S is mapped from the VeSync app and is pending hardware
+verification. The CAF-P583S KEU has no packet capture and is assumed to match
+the KUS. See [Air Fryers](devices/kitchen.md) for each model's cook modes and
+chambers, and how to read its temperature limits.
 
 ### Thermostats
 
