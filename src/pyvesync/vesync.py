@@ -405,8 +405,12 @@ class VeSync:  # pylint: disable=function-redefined
         done, _ = await asyncio.wait(update_tasks, return_when=asyncio.ALL_COMPLETED)
         for task in done:
             exc = task.exception()
-            if exc is not None and isinstance(exc, VeSyncError):
+            if exc is None:
+                continue
+            if isinstance(exc, VeSyncError):
                 logger.error('Error updating device: %s', exc)
+            else:
+                logger.error('Unexpected error updating device: %s', exc, exc_info=exc)
 
     async def __aenter__(self) -> Self:
         """Asynchronous context manager enter."""

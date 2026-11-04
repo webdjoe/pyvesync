@@ -43,6 +43,7 @@ The structure of the framework is as follows:
 | `test_<type>.py` | Parametrized device tests (`test_outlets`, `test_bulbs`, `test_fans`, `test_switches`, `test_purifiers`, `test_humidifiers`). |
 | `test_all_devices.py` | Asserts every device in each module has a `DETAILS_RESPONSES` entry, and tests `get_devices()` instantiates the expected device counts. |
 | `test_auth.py` | `VeSyncAuth` tests - credentials, token-file persistence, login flow, re-auth and error handling. |
+| `test_manager_resilience.py` | Failure handling: a device whose class raises `VeSyncError` is skipped during discovery, and `update_all_devices()` logs unexpected errors with their traceback. |
 | `test_colors.py` | Plain unit tests for `utils/colors.py` (`RGBNightlightColor`); no API fixtures. |
 | `test_x_vesync_login.py` | Current login-flow tests using `TestBase` and `TestApiFunc`. |
 | `test_x_vesync_api_responses.py` | Current `async_call_api()` error-handling tests via `TestApiFunc`. |

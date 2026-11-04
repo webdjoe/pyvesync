@@ -81,6 +81,7 @@ fields to make a code path run.
 | `test_outlets.py`, `test_switches.py`, `test_bulbs.py`, `test_fans.py`, `test_purifiers.py`, `test_humidifiers.py` | Device requests via `TestBase`, parametrized per setup entry |
 | `test_all_devices.py` | Every device has a `DETAILS_RESPONSES` entry (`test_device_tests`); `get_devices()` request |
 | `test_auth.py` | `VeSyncAuth`: init/region, credentials, token-file persistence, login and re-auth flows |
+| `test_manager_resilience.py` | Device discovery skips a device whose class raises `VeSyncError`; `update_all_devices()` logs unexpected errors |
 | `test_colors.py` | Plain unit tests for `utils/colors.py`, no fixtures |
 | `test_x_vesync_login.py` | Login flow (`TestBase` and `TestApiFunc`). Current, not legacy |
 | `test_x_vesync_api_responses.py` | `async_call_api()` error handling: rate limits, server errors, status codes (`TestApiFunc`). Current, not legacy |
