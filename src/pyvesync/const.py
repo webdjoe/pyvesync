@@ -340,29 +340,65 @@ class TemperatureUnits(StrEnum):
 
     @property
     def label(self) -> str:
-        """Return the label for the temperature unit."""
+        """Return the label for the temperature unit, 'celsius' or 'fahrenheit'.
+
+        The CS137/CS158 air fryer sends this as ``tempUnit``.
+        """
         return self.name.lower()
 
     @classmethod
     def from_string(cls, value: str) -> TemperatureUnits:
-        """Convert string value to corresponding TemperatureUnit."""
-        if value.lower() == 'c' or value.lower() == 'celsius':
+        """Convert string value to corresponding TemperatureUnit.
+
+        Matches on the first letter, case-insensitive and ignoring surrounding
+        whitespace, so the API's spellings ('c', 'celsius', 'f', 'fahrenheit')
+        and misspellings of either unit are accepted.
+
+        Args:
+            value (str): The unit string, or a ``TemperatureUnits`` member.
+
+        Returns:
+            TemperatureUnits: The matching unit.
+
+        Raises:
+            ValueError: If the value does not start with 'c' or 'f'.
+        """
+        first = value.strip().lower()[:1]
+        if first == 'c':
             return cls.CELSIUS
-        if value.lower() == 'f' or value.lower() == 'fahrenheit':
+        if first == 'f':
             return cls.FAHRENHEIT
         exc_msg = f'Invalid temperature unit: {value} value'
         raise ValueError(exc_msg)
 
     @classmethod
     def to_celsius(cls, value: float, unit: TemperatureUnits) -> float:
-        """Convert temperature to Celsius."""
+        """Convert temperature to Celsius.
+
+        Args:
+            value (float): The temperature in ``unit``.
+            unit (TemperatureUnits): The unit of ``value``.
+
+        Returns:
+            float: The temperature in Celsius; ``value`` unchanged if ``unit``
+            is already Celsius.
+        """
         if unit == cls.FAHRENHEIT:
             return (value - 32) * 5.0 / 9.0
         return value
 
     @classmethod
     def to_fahrenheit(cls, value: float, unit: TemperatureUnits) -> float:
-        """Convert temperature to Fahrenheit."""
+        """Convert temperature to Fahrenheit.
+
+        Args:
+            value (float): The temperature in ``unit``.
+            unit (TemperatureUnits): The unit of ``value``.
+
+        Returns:
+            float: The temperature in Fahrenheit; ``value`` unchanged if
+            ``unit`` is already Fahrenheit.
+        """
         if unit == cls.CELSIUS:
             return (value * 9.0 / 5.0) + 32
         return value
@@ -759,40 +795,48 @@ AIRFRYER_PID_MAP = {
 """PID's for VeSync Air Fryers based on ConfigModule."""
 
 
-AIRFRYER_STEP_F_TO_C: MappingProxyType[int, int] = MappingProxyType({5: 2, 10: 5})
-"""Maps an air fryer's Fahrenheit temperature step to its Celsius equivalent.
-
-The device map declares a single temperature step in Fahrenheit; the Celsius
-step is derived from this mapping when the device operates in Celsius."""
-
-
 BYPASSV2_SUB_DEVICE_PAYLOAD: MappingProxyType[str, int | str] = MappingProxyType(
     {'subDeviceNo': 0, 'subDeviceType': ''}
 )
-"""Payload keys CAF-TF101S and CAF-P583S send on every bypassV2 request."""
+"""Payload keys the VeSync app sends on every kitchen bypassV2 request.
 
+Source: ``ApiManagerKt.deviceGlobalParamProvider`` in the APK.
+"""
+
+
+AIRFRYER_PRESET_RECIPE_TYPE = 3
+"""recipeType of every APK preset (KitchenPresetModel.recipeType)."""
 
 CUSTOM_RECIPE_ID = 1
-CUSTOM_RECIPE_TYPE = 3
+"""Recipe ID of the CS137/CS158 Manual Cooking preset."""
+CUSTOM_RECIPE_TYPE = AIRFRYER_PRESET_RECIPE_TYPE
+"""Recipe type of the CS137/CS158 Manual Cooking preset."""
 CUSTOM_RECIPE_NAME = 'Manual Cooking'
+"""Recipe name of the CS137/CS158 Manual Cooking preset."""
 CUSTOM_COOK_MODE = 'custom'
+"""API mode string of the CS137/CS158 Manual Cooking preset."""
 
 
 @dataclass
 class AirFryerPresetRecipe:
-    """Preset recipe for VeSync Air Fryers.
+    """Recipe for ``VeSyncFryer.set_mode_from_recipe()``.
 
-    Set preheat_time to enable preheat mode.
+    Get a fryer's presets with ``get_mode_recipe()`` and change them with
+    ``dataclasses.replace``. The recipe ID, name, type and mode are sent as
+    given.
 
     Attributes:
         recipe_id (int): Recipe ID.
         recipe_type (int): Recipe type.
         recipe_name (str): Recipe name.
-        cook_mode (str): Cooking mode.
-        target_temp (int): Target temperature.
-        temp_unit (str): Temperature unit ('f' or 'c').
+        cook_mode (str): The API mode string (for example ``'AirFry'``), not
+            an ``AirFryerCookModes`` key. It is sent unchanged.
+        target_temp (int): Target temperature in ``temp_unit``.
+        temp_unit (str): Temperature unit ('f' or 'c', or any string
+            ``TemperatureUnits.from_string()`` accepts).
         cook_time (int): Cooking time in seconds.
-        preheat_time (int | None): Preheating time in seconds, if any.
+        preheat_time (int | None): Preheating time in seconds, if any. Adds a
+            preheat phase only on fryers with the ``PREHEAT`` feature.
     """
 
     recipe_name: str
@@ -805,18 +849,108 @@ class AirFryerPresetRecipe:
     preheat_time: int | None = None
 
 
-class AirFryerPresets:
-    """Preset recipes for VeSync Air Fryers.
+@dataclass(frozen=True)
+class AirFryerTempLimits:
+    """Temperature limits of one cook mode in one unit (APK tempRangeC/F).
 
     Attributes:
-        custom (AirFryerPresetRecipe): Custom preset recipe.
+        min_temp (int): Lowest temperature the mode accepts.
+        max_temp (int): Highest temperature the mode accepts.
+        step (int): Temperature step of the mode.
+    """
+
+    min_temp: int
+    max_temp: int
+    step: int
+
+
+@dataclass(frozen=True)
+class AirFryerModeConfig:
+    """One APK preset: its request values, default time and temperatures.
+
+    Attributes:
+        api_mode (str): Mode string sent to and reported by the API.
+        recipe_id (int): Preset recipe ID sent with the mode.
+        recipe_name (str): Preset label sent as the recipe name.
+        cook_time (int): Default cook time in seconds.
+        temp_c (AirFryerTempLimits): Celsius limits.
+        temp_f (AirFryerTempLimits): Fahrenheit limits.
+        default_temp_c (int): Default temperature in Celsius.
+        default_temp_f (int): Default temperature in Fahrenheit.
+        recipe_type (int): Preset recipe type, 3 for every APK preset.
+    """
+
+    api_mode: str
+    recipe_id: int
+    recipe_name: str
+    cook_time: int
+    temp_c: AirFryerTempLimits
+    temp_f: AirFryerTempLimits
+    default_temp_c: int
+    default_temp_f: int
+    recipe_type: int = AIRFRYER_PRESET_RECIPE_TYPE
+
+    def limits(self, temp_unit: TemperatureUnits) -> AirFryerTempLimits:
+        """Return the limits in the given unit.
+
+        Args:
+            temp_unit (TemperatureUnits): The unit to return.
+
+        Returns:
+            AirFryerTempLimits: The Fahrenheit or Celsius limits.
+        """
+        if temp_unit == TemperatureUnits.FAHRENHEIT:
+            return self.temp_f
+        return self.temp_c
+
+    def to_recipe(self, temp_unit: TemperatureUnits) -> AirFryerPresetRecipe:
+        """Return the preset as a recipe at its default time and temperature.
+
+        Args:
+            temp_unit (TemperatureUnits): The unit of the recipe's
+                temperature.
+
+        Returns:
+            AirFryerPresetRecipe: The recipe, with no preheat.
+        """
+        target_temp = (
+            self.default_temp_f
+            if temp_unit == TemperatureUnits.FAHRENHEIT
+            else self.default_temp_c
+        )
+        return AirFryerPresetRecipe(
+            cook_mode=self.api_mode,
+            recipe_name=self.recipe_name,
+            recipe_id=self.recipe_id,
+            recipe_type=self.recipe_type,
+            target_temp=target_temp,
+            temp_unit=temp_unit.code,
+            cook_time=self.cook_time,
+            preheat_time=None,
+        )
+
+
+class AirFryerPresets:
+    """Library preset recipes, used as each fryer's ``default_preset``.
+
+    Their times and temperatures are library defaults, not a fryer's app
+    defaults; use ``VeSyncFryer.get_mode_recipe()`` for those.
+
+    Attributes:
+        custom (AirFryerPresetRecipe): CS137/CS158 Manual Cooking, the
+            ``default_preset`` of the CS137/CS158.
+        air_fry (AirFryerPresetRecipe): Air Fry, the ``default_preset`` of the
+            bypassV2 fryers.
+        broil (AirFryerPresetRecipe): Broil (bypassV2 mode string).
+        roast (AirFryerPresetRecipe): Roast (bypassV2 mode string).
+        bake (AirFryerPresetRecipe): Bake (bypassV2 mode string).
     """
 
     custom: AirFryerPresetRecipe = AirFryerPresetRecipe(
         cook_mode=CUSTOM_COOK_MODE,
         recipe_name=CUSTOM_RECIPE_NAME,
-        recipe_id=1,
-        recipe_type=3,
+        recipe_id=CUSTOM_RECIPE_ID,
+        recipe_type=CUSTOM_RECIPE_TYPE,
         target_temp=350,
         temp_unit='f',
         cook_time=10 * 60,
@@ -825,19 +959,19 @@ class AirFryerPresets:
         cook_mode='AirFry',
         recipe_name='Air Fry',
         recipe_id=14,
-        recipe_type=3,
+        recipe_type=AIRFRYER_PRESET_RECIPE_TYPE,
         target_temp=400,
         temp_unit='f',
         cook_time=10 * 60,
     )
-    # The Broil default (450 F) matches the CAF-DC601S preset menu and is
-    # above the CAF-P583S maximum of 400 F; set_mode_from_recipe rejects it
-    # on devices whose range it exceeds.
+    # The Broil temperature (450 F) matches the CAF-DC601S Broil preset (its
+    # time does not) and is above the CAF-P583S maximum of 400 F;
+    # set_mode_from_recipe rejects it on devices whose range it exceeds.
     broil: AirFryerPresetRecipe = AirFryerPresetRecipe(
         cook_mode='Broil',
         recipe_name='Broil',
         recipe_id=17,
-        recipe_type=3,
+        recipe_type=AIRFRYER_PRESET_RECIPE_TYPE,
         target_temp=450,
         temp_unit='f',
         cook_time=12 * 60,
@@ -846,7 +980,7 @@ class AirFryerPresets:
         cook_mode='Roast',
         recipe_name='Roast',
         recipe_id=13,
-        recipe_type=3,
+        recipe_type=AIRFRYER_PRESET_RECIPE_TYPE,
         target_temp=380,
         temp_unit='f',
         cook_time=30 * 60,
@@ -855,7 +989,7 @@ class AirFryerPresets:
         cook_mode='Bake',
         recipe_name='Bake',
         recipe_id=9,
-        recipe_type=3,
+        recipe_type=AIRFRYER_PRESET_RECIPE_TYPE,
         target_temp=340,
         temp_unit='f',
         cook_time=30 * 60,
@@ -865,13 +999,33 @@ class AirFryerPresets:
 class AirFryerCookModes(StrEnum):
     """Cooking modes for VeSync Air Fryers.
 
+    One member covers the same food on different fryers; the API mode string
+    and label of each fryer are in its device map ``cook_modes``.
+
     Attributes:
-        CUSTOM: Custom cooking mode.
-        FRY: Fry cooking mode.
+        CUSTOM: Custom (manual) cooking mode.
         ROAST: Roast cooking mode.
         BAKE: Bake cooking mode.
         REHEAT: Reheat cooking mode.
         DEHYDRATE: Dehydrate cooking mode.
+        FROZEN: Frozen food cooking mode.
+        PROOF: Proof cooking mode.
+        BROIL: Broil cooking mode.
+        WARM: Warm cooking mode.
+        AIRFRY: Air fry cooking mode.
+        DRY: Dry cooking mode.
+        GRILL: Grill cooking mode.
+        PREHEAT: Preheat mode.
+        STEAK: Steak preset.
+        CHICKEN: Chicken (poultry) preset.
+        SEAFOOD: Seafood (fish) preset.
+        BACON: Bacon preset.
+        VEGETABLES: Vegetables preset.
+        ROOT_VEGETABLES: Root vegetables preset.
+        DESSERTS: Desserts preset.
+        SHRIMP: Shrimp preset.
+        BREAD: Bread preset.
+        FRENCH_FRIES: French fries preset.
     """
 
     CUSTOM = 'custom'
@@ -887,36 +1041,59 @@ class AirFryerCookModes(StrEnum):
     DRY = 'dry'
     GRILL = 'grill'
     PREHEAT = 'preheat'
+    STEAK = 'steak'
+    CHICKEN = 'chicken'
+    SEAFOOD = 'seafood'
+    BACON = 'bacon'
+    VEGETABLES = 'vegetables'
+    ROOT_VEGETABLES = 'root_vegetables'
+    DESSERTS = 'desserts'
+    SHRIMP = 'shrimp'
+    BREAD = 'bread'
+    FRENCH_FRIES = 'french_fries'
 
 
 class AirFryerFeatures(Features):
     """VeSync Air Fryer features.
 
     Attributes:
-        ONOFF: Device on/off status.
-        TEMP: Temperature status.
-        TIME: Time status.
-        COOK_MODE: Cooking mode status.
-        PRESET_RECIPE: Preset recipe status.
-        CUSTOM_RECIPE: Custom recipe status.
-        PAUSE: Pause status.
+        DUAL_BLAZE: Not used by the library.
+        PREHEAT: The fryer accepts a preheat phase (``preheat_time``).
+        DUAL_CHAMBER: Two chambers; adds ``CHAMBER_2`` and ``BOTH`` to
+            ``supported_chambers``.
+        RESUMABLE: Declared on the CS137/CS158; not checked by the library.
+        WHOLE_CHAMBER: Single merged basket with the divider removed
+            (workChamber 3); adds ``WHOLE`` to ``supported_chambers``.
     """
 
     DUAL_BLAZE = 'dual_blaze'
     PREHEAT = 'preheat'
     DUAL_CHAMBER = 'dual_chamber'
     RESUMABLE = 'resumable'
+    WHOLE_CHAMBER = 'whole_chamber'
 
 
 class AirFryerCookStatus(StrEnum):
     """Cooking status for VeSync Air Fryers.
 
+    Each fryer's device map ``status_map`` maps its API status strings to
+    these members; not every fryer reports every status.
+
     Attributes:
-        COOKING: Device is cooking.
-        PAUSED: Device is paused.
-        COMPLETED: Cooking is completed.
-        UNKNOWN: Cooking status is unknown.
+        COOKING: Cooking. The CAF-P583S also reports keep-warm as cooking.
+        COOK_STOP: Cook paused.
+        COOK_END: Cook finished.
+        PULL_OUT: Basket pulled out.
+        COMPLETED: Not reported by any mapped fryer.
+        HEATING: Preheating.
+        UNKNOWN: Not reported by any mapped fryer.
+        STANDBY: Idle.
+        PREHEAT_END: Preheat finished, waiting for ``cook_from_preheat()``
+            (CS137/CS158).
+        PREHEAT_STOP: Preheat paused.
         READY: Cook programmed, waiting for the start button.
+        APPOINTING: Delayed start scheduled; waiting to start (CS158
+            ``appointing``).
     """
 
     COOKING = 'cooking'
@@ -930,6 +1107,42 @@ class AirFryerCookStatus(StrEnum):
     PREHEAT_END = 'preheatEnd'
     PREHEAT_STOP = 'preheatStop'
     READY = 'ready'
+    APPOINTING = 'appointing'
+
+
+class AirFryerSyncType(IntEnum):
+    """Dual fryer ``syncType`` values (APK ``SyncType``).
+
+    Attributes:
+        OFF: Chambers run independently (APK ``SYNC_OFF``).
+        MATCH: App label "Match" (APK ``SYNC_COOK``).
+        SYNC: App label "Sync": both chambers finish together (APK
+            ``SYNC_FINISH``).
+    """
+
+    OFF = 0
+    MATCH = 1
+    SYNC = 2
+
+
+class AirFryerChamber(IntEnum):
+    """Air fryer chamber (basket) selection.
+
+    Values match the API ``workChamber`` / ``chamber`` fields (APK
+    ``WorkChamberType``).
+
+    Attributes:
+        CHAMBER_1: Left chamber on the TF101S/TF102S; the only basket on
+            single-chamber fryers.
+        CHAMBER_2: Right chamber on the TF101S/TF102S.
+        WHOLE: Divider removed, one large basket (TwinFry models only).
+        BOTH: Both chambers cooking in sync (``workChamber`` 4).
+    """
+
+    CHAMBER_1 = 1
+    CHAMBER_2 = 2
+    WHOLE = 3
+    BOTH = 4
 
 
 PREHEAT_STATUSES = [
@@ -937,6 +1150,10 @@ PREHEAT_STATUSES = [
     AirFryerCookStatus.PREHEAT_STOP,
     AirFryerCookStatus.HEATING,
 ]
+"""Statuses counted as preheat mode (``FryerState.is_in_preheat_mode``).
+
+``PULL_OUT`` also counts while preheat time remains.
+"""
 
 COOK_STATUSES = [
     AirFryerCookStatus.COOKING,
@@ -944,16 +1161,22 @@ COOK_STATUSES = [
     AirFryerCookStatus.COOK_END,
     AirFryerCookStatus.READY,
 ]
+"""Statuses counted as cook mode (``FryerState.is_in_cook_mode``).
+
+``PULL_OUT`` also counts when no preheat time remains.
+"""
 
 RESUMABLE_STATUSES = [
     AirFryerCookStatus.COOK_STOP,
     AirFryerCookStatus.PREHEAT_STOP,
 ]
+"""Paused statuses (``FryerState.can_resume``)."""
 
 RUNNING_STATUSES = [
     AirFryerCookStatus.COOKING,
     AirFryerCookStatus.HEATING,
 ]
+"""Statuses whose remaining times count down; setting one stamps ``last_timestamp``."""
 
 
 # Thermostat Constants

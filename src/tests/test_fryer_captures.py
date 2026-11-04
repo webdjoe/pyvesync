@@ -5,15 +5,24 @@ Each test uses request/response shapes from the air fryer packet captures
 library sends the captured request and parses the captured response.
 """
 
+from copy import deepcopy
 from dataclasses import replace
+from datetime import UTC, datetime, timedelta
 
+import call_json_fryers
+import pytest
 from base_test_cases import TestBase
 from defaults import build_bypass_v1_response, build_bypass_v2_response
 from utils import parse_args
 
-from pyvesync import const
 from pyvesync.base_devices.fryer_base import VeSyncFryer
-from pyvesync.const import AirFryerCookStatus, AirFryerFeatures, AirFryerPresets
+from pyvesync.const import (
+    AirFryerCookModes,
+    AirFryerCookStatus,
+    AirFryerFeatures,
+    AirFryerPresets,
+    TemperatureUnits,
+)
 from pyvesync.device_map import air_fryer_modules
 
 
@@ -70,6 +79,7 @@ def _dc601s_status(
     *,
     cook_last_time: int = 1200,
     preheat: tuple[int, int, int] = (0, 0, 0),
+    step_index: int = 0,
 ) -> dict:
     """Build a DC601S getAirfryerStatus response (Bake 330 F, 1200 s capture)."""
     preheat_set, preheat_last, preheat_temp = preheat
@@ -90,23 +100,24 @@ def _dc601s_status(
             ],
             'cookMode': 'normal',
             'tempUnit': 'f',
-            'stepIndex': 0,
+            'stepIndex': step_index,
             'cookStatus': cook_status,
             'preheatSetTime': preheat_set,
             'preheatLastTime': preheat_last,
             'preheatEndTime': 0,
             'preheatTemp': preheat_temp,
             'startTime': 1767318116,
-            'totalTimeRemaining': cook_last_time,
+            'totalTimeRemaining': preheat_last + cook_last_time,
             'currentTemp': 112,
             'shakeStatus': 0,
         }
     )
 
 
-def _tf101s_chamber(chamber: int, cook_status: str) -> dict:
+def _tf101s_chamber(chamber: int, cook_status: str, total: int | None = None) -> dict:
     """Build one TF101S statusList item (AirFry 200 C, 1200 s capture)."""
     active = cook_status != 'standby'
+    remaining = 1140 if active else 0
     return {
         'cookStatus': cook_status,
         'startTime': 1768667721 if active else 0,
@@ -118,8 +129,8 @@ def _tf101s_chamber(chamber: int, cook_status: str) -> dict:
         'cookSetTime': 1200 if active else 0,
         'cookTemp': 200 if active else 0,
         'mode': 'AirFry',
-        'currentRemainingTime': 1140 if active else 0,
-        'totalTimeRemaining': 1140 if active else 0,
+        'currentRemainingTime': remaining,
+        'totalTimeRemaining': remaining if total is None else total,
         'chamber': chamber,
     }
 
@@ -134,6 +145,39 @@ def _tf101s_status(status_list: list[dict], work_chamber: int) -> dict:
             'workChamber': work_chamber,
         }
     )
+
+
+# CS158 getStatus returnStatus captures (accountId removed).
+CS158_PREHEAT_STOP = {  # 2025 Captures/GetHome.har, 2022-07-23 19:27:28
+    'curentTemp': 108, 'mode': 'custom', 'preheatLastTime': 5, 'preheatSetTime': 5,
+    'cookStatus': 'preheatStop', 'targetTemp': 400, 'tempUnit': 'fahrenheit',
+    'customRecipe': 'Manual',
+}
+CS158_PREHEAT_END = {  # same file, 2022-07-23 19:31:11
+    'curentTemp': 401, 'mode': 'custom', 'preheatLastTime': 0, 'preheatSetTime': 5,
+    'cookStatus': 'preheatEnd', 'targetTemp': 400, 'tempUnit': 'fahrenheit',
+    'customRecipe': 'Manual', 'recipeId': 1, 'recipeType': 3,
+}
+CS158_PULLOUT_PREHEAT = {  # Air Fryer.chls.har, 2022-11-16 20:32:46
+    'curentTemp': 253, 'mode': 'custom', 'preheatLastTime': 3, 'preheatSetTime': 4,
+    'cookStatus': 'pullOut', 'targetTemp': 350, 'tempUnit': 'fahrenheit',
+    'customRecipe': 'Manual',
+}
+CS158_PULLOUT_COOK = {  # same file, 2022-11-16 20:35:09
+    'curentTemp': 361, 'cookSetTemp': 350, 'mode': 'custom', 'cookSetTime': 15,
+    'cookLastTime': 15, 'cookStatus': 'pullOut', 'tempUnit': 'fahrenheit',
+    'customRecipe': 'Manual',
+}
+CS158_PULLOUT_BARE = {'cookStatus': 'pullOut'}  # Air Fryer - Tablet.chls.har, 2025-03-22
+CS158_APPOINTING = {  # Air Fryer.chls.har, 2022-11-16 20:37:28
+    'cookSetTemp': 350, 'mode': 'custom', 'cookSetTime': 15, 'cookStatus': 'appointing',
+    'tempUnit': 'fahrenheit', 'appointLastTime': 60, 'customRecipe': 'Manual',
+}
+
+
+def _158_return_status(return_status: dict) -> dict:
+    """Wrap a captured CS158 returnStatus in a bypassV1 response."""
+    return build_bypass_v1_response(result_dict={'returnStatus': deepcopy(return_status)})
 
 
 class TestFryerCaptures(TestBase):
@@ -187,6 +231,292 @@ class TestFryerCaptures(TestBase):
         fryer = self.get_device('air_fryers', 'CAF-TF101S')
         assert fryer.temperature_step == 5
         assert fryer.round_temperature(163) == 165
+
+    def test_tf101s_grill_allows_240c(self):
+        fryer = self.get_device('air_fryers', 'CAF-TF101S')
+        self.mock_api.return_value = (build_bypass_v2_response(), 200)
+        assert self.run_in_loop(fryer.set_mode, cook_time=600, cook_temp=240, cook_mode='Grill')
+        assert self._sent_body()['payload']['data']['cookConfigs'][0]['cookTemp'] == 240
+
+    def test_tf101s_airfry_rejects_240c(self):
+        fryer = self.get_device('air_fryers', 'CAF-TF101S')
+        self.mock_api.reset_mock()
+        assert self.run_in_loop(fryer.set_mode, cook_time=600, cook_temp=240, cook_mode='AirFry') is False
+        assert self.mock_api.call_count == 0
+
+    def test_p583_bake_recipe_below_mode_min_rejected(self):
+        # P583S Bake is 250-400 F; AirFry allows 175.
+        fryer = self.get_device('air_fryers', 'CAF-P583S')
+        self.mock_api.reset_mock()
+        recipe = replace(AirFryerPresets.bake, target_temp=200)
+        assert self.run_in_loop(fryer.set_mode_from_recipe, recipe) is False
+        assert self.mock_api.call_count == 0
+
+    def test_158_steak_mode_matches_capture(self):
+        # CS158 cookMode captures: mode steak, recipeId 2, customRecipe "Steak".
+        fryer = self.get_device('air_fryers', 'CS158-AF')
+        self.mock_api.return_value = (build_bypass_v1_response(result_dict={}), 200)
+        assert self.run_in_loop(
+            fryer.set_mode, cook_time=360, cook_temp=400, cook_mode='steak'
+        )
+        cook = self._sent_body()['jsonCmd']['cookMode']
+        assert (cook['mode'], cook['recipeId'], cook['customRecipe'], cook['recipeType']) == (
+            'steak', 2, 'Steak', 3,
+        )
+
+    def test_158_chicken_key_sends_poultry(self):
+        # CS158 cookMode captures: mode poultry, recipeId 3, customRecipe "Chicken".
+        fryer = self.get_device('air_fryers', 'CS158-AF')
+        self.mock_api.return_value = (build_bypass_v1_response(result_dict={}), 200)
+        assert self.run_in_loop(
+            fryer.set_mode, cook_time=1500, cook_temp=380, cook_mode=AirFryerCookModes.CHICKEN
+        )
+        cook = self._sent_body()['jsonCmd']['cookMode']
+        assert (cook['mode'], cook['recipeId'], cook['customRecipe']) == ('poultry', 3, 'Chicken')
+
+    def test_dc601s_bake_mode_matches_capture(self):
+        # DC601S Bake capture: mode Bake, recipeId 9, recipeName "Bake", 330 F.
+        fryer = self.get_device('air_fryers', 'CAF-DC601S')
+        self.mock_api.return_value = (build_bypass_v2_response(), 200)
+        assert self.run_in_loop(
+            fryer.set_mode, cook_time=1200, cook_temp=330, cook_mode='Bake'
+        )
+        data = self._sent_body()['payload']['data']
+        assert (data['mode'], data['recipeId'], data['recipeName'], data['recipeType']) == (
+            'Bake', 9, 'Bake', 3,
+        )
+        assert data['startAct']['cookTemp'] == 330
+
+    def test_p583_broil_mode_matches_capture(self):
+        # P583S-KUS Broil capture: mode Broil, recipeId 17, recipeName "Broil".
+        fryer = self.get_device('air_fryers', 'CAF-P583S')
+        self.mock_api.return_value = (build_bypass_v2_response(), 200)
+        assert self.run_in_loop(
+            fryer.set_mode, cook_time=600, cook_temp=400, cook_mode=AirFryerCookModes.BROIL
+        )
+        data = self._sent_body()['payload']['data']
+        assert (data['mode'], data['recipeId'], data['recipeName']) == ('Broil', 17, 'Broil')
+
+    def test_tf101s_grill_sends_grill_recipe(self):
+        # Structure: TF101S startMultiCook capture; values: APK i61.C67928f0.
+        fryer = self.get_device('air_fryers', 'CAF-TF101S')
+        self.mock_api.return_value = (build_bypass_v2_response(), 200)
+        assert self.run_in_loop(fryer.set_mode, cook_time=600, cook_temp=240, cook_mode='Grill')
+        config = self._sent_body()['payload']['data']['cookConfigs'][0]
+        assert (config['mode'], config['recipeId'], config['recipeName']) == ('Grill', 20, 'Grill')
+
+    def test_unknown_cook_mode_sends_nothing(self):
+        fryer = self.get_device('air_fryers', 'CAF-TF101S')
+        self.mock_api.reset_mock()
+        assert self.run_in_loop(fryer.set_mode, cook_time=600, cook_temp=200, cook_mode='Proof') is False
+        assert self.mock_api.call_count == 0
+
+    def test_default_mode_request_unchanged(self):
+        # Passing the default mode sends exactly what no cook_mode sends.
+        fryer = self.get_device('air_fryers', 'CS158-AF')
+        self.mock_api.return_value = (build_bypass_v1_response(result_dict={}), 200)
+        self.run_in_loop(fryer.set_mode, cook_time=900, cook_temp=350)
+        plain = self._sent_body()
+        self.run_in_loop(fryer.set_mode, cook_time=900, cook_temp=350, cook_mode='custom')
+        assert self._sent_body() == plain
+
+    def test_cook_stop_poll_keeps_temp_and_mode(self):
+        # DC601S captures report cookStop with the step's cookTemp and mode.
+        fryer = self.get_device('air_fryers', 'CAF-DC601S')
+        self.mock_api.return_value = (_dc601s_status('cookStop', cook_last_time=900), 200)
+        self.run_in_loop(fryer.update)
+        assert fryer.state.cook_status == AirFryerCookStatus.COOK_STOP
+        assert fryer.state.cook_set_temp == 330
+        assert fryer.state.cook_mode == 'Bake'
+        assert fryer.state.cook_time_remaining == 900
+
+    @pytest.mark.parametrize(
+        ('status', 'expected'),
+        [
+            (CS158_PREHEAT_STOP, AirFryerCookStatus.PREHEAT_STOP),
+            (CS158_PREHEAT_END, AirFryerCookStatus.PREHEAT_END),
+            (CS158_PULLOUT_PREHEAT, AirFryerCookStatus.PULL_OUT),
+            (CS158_PULLOUT_COOK, AirFryerCookStatus.PULL_OUT),
+            (CS158_PULLOUT_BARE, AirFryerCookStatus.PULL_OUT),
+        ],
+    )
+    def test_158_captured_status_is_mapped(self, status, expected):
+        fryer = self.get_device('air_fryers', 'CS158-AF')
+        self.mock_api.return_value = (_158_return_status(status), 200)
+        self.run_in_loop(fryer.update)
+        assert fryer.state.cook_status == expected
+        assert 'Unknown cook status' not in self.caplog.text
+
+    def test_158_poll_after_preheat_end_allows_cook(self):
+        fryer = self.get_device('air_fryers', 'CS158-AF')
+        self.mock_api.return_value = (_158_return_status(CS158_PREHEAT_END), 200)
+        self.run_in_loop(fryer.update)
+        assert fryer.state.cook_set_temp == 400
+        self.mock_api.return_value = (build_bypass_v1_response(result_dict={}), 200)
+        assert self.run_in_loop(fryer.cook_from_preheat) is True
+        assert fryer.state.cook_status == AirFryerCookStatus.COOKING
+
+    def test_158_poll_after_preheat_stop_allows_resume(self):
+        fryer = self.get_device('air_fryers', 'CS158-AF')
+        self.mock_api.return_value = (_158_return_status(CS158_PREHEAT_STOP), 200)
+        self.run_in_loop(fryer.update)
+        assert fryer.state.can_resume is True
+        assert fryer.state.preheat_time_remaining == 300
+        assert fryer.state.cook_set_temp == 400
+        self.mock_api.return_value = (build_bypass_v1_response(result_dict={}), 200)
+        assert self.run_in_loop(fryer.resume) is True
+        assert self._sent_body()['jsonCmd']['preheat'] == {'preheatStatus': 'heating'}
+
+    def test_158_pullout_during_preheat_is_preheat_mode(self):
+        fryer = self.get_device('air_fryers', 'CS158-AF')
+        self.mock_api.return_value = (_158_return_status(CS158_PULLOUT_PREHEAT), 200)
+        self.run_in_loop(fryer.update)
+        assert fryer.state.is_in_preheat_mode is True
+        assert fryer.state.preheat_time_remaining == 180
+        assert fryer.state.cook_set_temp == 350
+
+    def test_158_pullout_during_cook_is_cook_mode(self):
+        fryer = self.get_device('air_fryers', 'CS158-AF')
+        self.mock_api.return_value = (_158_return_status(CS158_PULLOUT_COOK), 200)
+        self.run_in_loop(fryer.update)
+        assert fryer.state.is_in_cook_mode is True
+        assert fryer.state.cook_time_remaining == 900
+
+    def test_158_bare_pullout_keeps_previous_cook_values(self):
+        # The 2025 tablet capture reports only cookStatus. set_state keeps the
+        # values it is not given, and clears preheat outside preheat statuses.
+        fryer = self.get_device('air_fryers', 'CS158-AF')
+        self.mock_api.return_value = (_158_return_status(CS158_PULLOUT_COOK), 200)
+        self.run_in_loop(fryer.update)
+        self.mock_api.return_value = (_158_return_status(CS158_PULLOUT_BARE), 200)
+        self.run_in_loop(fryer.update)
+        assert fryer.state.cook_status == AirFryerCookStatus.PULL_OUT
+        assert fryer.state.cook_time_remaining == 900
+        assert fryer.state.cook_set_temp == 350
+
+    def test_158_appointing_shows_scheduled_cook(self):
+        fryer = self.get_device('air_fryers', 'CS158-AF')
+        self.mock_api.return_value = (_158_return_status(CS158_APPOINTING), 200)
+        self.run_in_loop(fryer.update)
+        assert fryer.state.cook_status == AirFryerCookStatus.APPOINTING
+        assert fryer.state.cook_set_temp == 350
+        assert fryer.state.cook_set_time == 900
+        assert fryer.state.is_running is False
+        assert fryer.state.can_resume is False
+        assert 'Unknown cook status' not in self.caplog.text
+
+    def test_total_time_ready_with_preheat_uses_reported_total(self):
+        # DC601S capture 2026-01-01 20:38:51: ready (readyStart true), preheat 240/240,
+        # step 720/720, totalTimeRemaining 960. Same relationship with the Bake step here.
+        fryer = self.get_device('air_fryers', 'CAF-DC601S')
+        self.mock_api.return_value = (_dc601s_status('ready', preheat=(240, 240, 330)), 200)
+        self.run_in_loop(fryer.update)
+        assert fryer.state.cook_time_remaining == 1200
+        assert fryer.state.total_time_remaining == 240 + 1200
+
+    def test_total_time_while_heating_counts_down(self):
+        fryer = self.get_device('air_fryers', 'CAF-DC601S')
+        self.mock_api.return_value = (_dc601s_status('heating', preheat=(240, 230, 425)), 200)
+        self.run_in_loop(fryer.update)
+        fryer.state.last_timestamp -= timedelta(seconds=10)
+        assert abs(fryer.state.total_time_remaining - (230 + 1200 - 10)) <= 1
+
+    def test_total_time_frozen_in_pullout(self):
+        # DC601S capture 2026-01-01 20:43:47: pullOut, total 1152 on two polls 15 s apart.
+        fryer = self.get_device('air_fryers', 'CAF-DC601S')
+        self.mock_api.return_value = (_dc601s_status('pullOut', cook_last_time=1152), 200)
+        self.run_in_loop(fryer.update)
+        fryer.state.last_timestamp = datetime.now(UTC) - timedelta(seconds=60)
+        assert fryer.state.total_time_remaining == 1152
+
+    def test_total_time_from_cook_stop_poll(self):
+        # DC601S capture 2026-01-01 20:44:32: cookStop, total 1143.
+        fryer = self.get_device('air_fryers', 'CAF-DC601S')
+        self.mock_api.return_value = (_dc601s_status('cookStop', cook_last_time=1143), 200)
+        self.run_in_loop(fryer.update)
+        assert fryer.state.total_time_remaining == 1143
+
+    def test_local_start_drops_stale_reported_total(self):
+        fryer = self.get_device('air_fryers', 'CAF-DC601S')
+        self.mock_api.return_value = (_dc601s_status('cooking', cook_last_time=1186), 200)
+        self.run_in_loop(fryer.update)
+        self.mock_api.return_value = (build_bypass_v2_response(), 200)
+        assert self.run_in_loop(fryer.set_mode, cook_time=600, cook_temp=400) is True
+        assert fryer.state.total_last_time is None
+        assert abs(fryer.state.total_time_remaining - 600) <= 1
+
+    def test_dual_total_per_chamber(self):
+        fryer = self.get_device('air_fryers', 'CAF-TF101S')
+        status = _tf101s_status(
+            [_tf101s_chamber(1, 'cooking'), _tf101s_chamber(2, 'cookStop', total=900)],
+            work_chamber=4,
+        )
+        self.mock_api.return_value = (status, 200)
+        self.run_in_loop(fryer.update)
+        assert abs(fryer.state_chamber_1.total_time_remaining - 1140) <= 1
+        assert fryer.state_chamber_2.total_time_remaining == 900
+
+    def test_total_time_158_cooking_is_computed(self):
+        fryer = self.get_device('air_fryers', 'CS158-AF')
+        self.mock_api.return_value = (_158_return_status(CS158_PULLOUT_COOK), 200)
+        self.run_in_loop(fryer.update)
+        assert fryer.state.total_last_time is None
+        assert fryer.state.total_time_remaining == 900
+
+    def test_total_time_158_none_while_preheat_paused(self):
+        fryer = self.get_device('air_fryers', 'CS158-AF')
+        self.mock_api.return_value = (_158_return_status(CS158_PREHEAT_STOP), 200)
+        self.run_in_loop(fryer.update)
+        assert fryer.state.total_time_remaining is None
+
+    def test_total_time_none_in_standby(self):
+        fryer = self.get_device('air_fryers', 'CAF-DC601S')
+        assert fryer.state.total_time_remaining is None
+
+    def test_dc601s_out_of_range_step_index(self):
+        fryer = self.get_device('air_fryers', 'CAF-DC601S')
+        self.mock_api.return_value = (_dc601s_status('cooking', step_index=3), 200)
+        self.run_in_loop(fryer.update)  # must not raise IndexError
+        assert fryer.state.cook_status == AirFryerCookStatus.STANDBY
+
+    def test_dc601s_failed_start_keeps_state(self):
+        fryer = self.get_device('air_fryers', 'CAF-DC601S')
+        self.mock_api.return_value = (_dc601s_status('cooking'), 200)
+        self.run_in_loop(fryer.update)
+        self.mock_api.return_value = (build_bypass_v2_response(inner_code=11000000), 200)
+        assert self.run_in_loop(fryer.set_mode, cook_time=600, cook_temp=400) is False
+        assert fryer.state.cook_status == AirFryerCookStatus.COOKING
+
+    def test_p583_standby_updates_unit(self):
+        # P583S-KUS standby capture 2025-05-21 carries tempUnit with an empty stepArray.
+        fryer = self.get_device('air_fryers', 'CAF-P583S')
+        standby = deepcopy(call_json_fryers.AIR_FRYER_STANDBY_DETAILS['CAF-P583S'])
+        standby['tempUnit'] = 'c'
+        self.mock_api.return_value = (build_bypass_v2_response(inner_result=standby), 200)
+        self.run_in_loop(fryer.update)
+        assert fryer.temp_unit == TemperatureUnits.CELSIUS
+        assert fryer.state.cook_status == AirFryerCookStatus.STANDBY
+
+    def test_dc601s_poll_reports_recipe_name(self):
+        # DC601S Bake capture: stepArray[0].recipeName 'Bake'.
+        fryer = self.get_device('air_fryers', 'CAF-DC601S')
+        self.mock_api.return_value = (_dc601s_status('cooking'), 200)
+        self.run_in_loop(fryer.update)
+        assert fryer.state.recipe == 'Bake'
+
+    def test_p583_cook_end_reports_recipe_name(self):
+        fryer = self.get_device('air_fryers', 'CAF-P583S')
+        self.mock_api.return_value = (build_bypass_v2_response(inner_result=deepcopy(P583_COOK_END_RESULT)), 200)
+        self.run_in_loop(fryer.update)
+        assert fryer.state.recipe == 'Broil'
+
+    def test_turboblaze_empty_recipe_name_is_not_stored(self):
+        fryer = self.get_device('air_fryers', 'CAF-P583S')
+        result = deepcopy(P583_COOK_END_RESULT)
+        result['stepArray'][0]['recipeName'] = ''
+        self.mock_api.return_value = (build_bypass_v2_response(inner_result=result), 200)
+        self.run_in_loop(fryer.update)
+        assert fryer.state.recipe is None
 
     def _sent_body(self) -> dict:
         return parse_args(self.mock_api)['json_object']
@@ -455,26 +785,6 @@ def test_air_fry_recipe_name():
     # DC601S startCook capture: recipeId 14, recipeName "Air Fry".
     assert AirFryerPresets.air_fry.recipe_name == 'Air Fry'
     assert AirFryerPresets.air_fry.recipe_id == 14
-
-
-def test_p583_cook_modes_captured_only():
-    for setup_entry in ('CAF-P583S', 'CAF-P583S-KEU'):
-        entry = next(m for m in air_fryer_modules if m.setup_entry == setup_entry)
-        assert set(entry.cook_modes.values()) == {'AirFry', 'Broil', 'Roast', 'Bake'}
-
-
-def test_no_uncaptured_presets():
-    assert not hasattr(const, 'AIRFRYER_PRESET_MAP')
-    for name in (
-        'reheat',
-        'steak',
-        'seafood',
-        'veggies',
-        'french_fries',
-        'frozen',
-        'chicken',
-    ):
-        assert not hasattr(AirFryerPresets, name)
 
 
 def test_resumable_flag_has_implementation():
