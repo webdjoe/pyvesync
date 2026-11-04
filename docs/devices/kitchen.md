@@ -50,10 +50,17 @@ asyncio.run(main())
 
 Every control method returns `True` when the device accepted the command and
 `False` otherwise. A rejected argument (unsupported chamber, cook mode,
-temperature or unit) returns `False` before any request is sent, with a log
-message saying why. The exception is a recipe passed to
-`set_mode_from_recipe()` with an invalid `temp_unit`, which raises
-`ValueError`.
+temperature, time or unit) returns `False` before any request is sent, with a
+log message saying why. The control methods and `update()` log problems
+rather than raising them.
+
+A failed or unreadable `update()` (no response, an error code, an unknown
+cook status, an out-of-range step) logs a message and leaves the chamber
+state as it was, so a command afterwards still sees the last known phase.
+On the CAF-TF101S/TF102S both chambers take the connection status and update
+time from the response, and a chamber with an unknown status keeps its state.
+A reported temperature unit pyvesync does not recognise is logged and the
+current unit kept.
 
 ## Cooking
 
@@ -62,9 +69,10 @@ await fryer.set_mode(cook_time, cook_temp, *, temp_unit=None,
                      preheat_time=None, cook_mode=None, chamber=CHAMBER_1)
 ```
 
-- `cook_time` and `preheat_time` are in **seconds**. The CS137/CS158 API
-  counts in whole minutes, so pyvesync rounds the time down to the minute
-  (90 s is sent as 1 minute, and anything under 60 s as 0).
+- `cook_time` and `preheat_time` are in **seconds**, as whole numbers (a
+  fraction is dropped). `cook_time` must be at least 1 second. The CS137/CS158
+  API counts in whole minutes, so pyvesync rounds the time down to the minute
+  (90 s is sent as 1 minute) and rejects a `cook_time` under 60 s.
 - `cook_temp` is in the fryer's `temp_unit`, or in `temp_unit` if you pass
   one (see [Temperature units](#temperature-units)).
 - With no `cook_mode`, the fryer's default preset is used: Manual Cooking on
@@ -73,10 +81,11 @@ await fryer.set_mode(cook_time, cook_temp, *, temp_unit=None,
   [Cook modes](#cook-modes) for the other modes.
 - The temperature is rounded to the mode's step and checked against the
   mode's range (see [Temperature limits](#temperature-limits)).
-- `preheat_time` starts a preheat phase on fryers with preheat. On the
-  CS137/CS158 it is also rounded down to whole minutes, so under 60 s gives no
-  preheat. The CAF-P583S has no preheat and drops it (with a debug log); the
-  CAF-TF101S has none and ignores it.
+- `preheat_time` starts a preheat phase on fryers with preheat. There it must
+  be 0 (no preheat) or at least one API time unit: 1 second, or 60 seconds on
+  the CS137/CS158, which also rounds it down to whole minutes. A negative or
+  shorter time returns `False` without a request. The CAF-P583S and
+  CAF-TF101S have no preheat and drop it (with a debug log).
 - pyvesync sends `readyStart` false. The CS137/CS158 capture shows the cook
   then starts at once, without the start button; the other models are assumed
   to behave the same.
@@ -107,15 +116,18 @@ if recipe is not None:
 `recipe_type`, `target_temp`, `temp_unit` (`'f'` or `'c'`), `cook_time` and
 `preheat_time` (both in seconds; `preheat_time` is optional). The recipe's
 temperature is converted to the fryer's unit if needed, rounded and checked
-against the limits of the recipe's `cook_mode` (the default mode's limits if
-the fryer has no such mode). The recipe's mode, ID, name and type are sent as
-given, even for a mode the fryer does not list, so start from
+against the limits of the recipe's `cook_mode`. The times are checked as for
+`set_mode()`. The recipe's `cook_mode` must be one of the fryer's modes (see
+[Cook modes](#cook-modes)); otherwise the method returns `False` without a
+request. Its mode, ID, name and type are sent as given, so start from
 `get_mode_recipe()` rather than inventing them. `cook_mode` is the API mode
-string (`'AirFry'`, `'poultry'`), not an `AirFryerCookModes` key. A recipe
-`temp_unit` that does not start with `c` or `f` raises `ValueError`.
+string (`'AirFry'`, `'poultry'`) or an `AirFryerCookModes` key; the API mode
+string is what is sent. A recipe `temp_unit` that does not start with `c` or
+`f` returns `False` without a request.
 
 `fryer.default_preset` is the recipe `set_mode()` copies when no `cook_mode`
-is given. Its own time and temperature are pyvesync defaults and can differ
+is given. Each fryer has its own copy, so changing it affects only that
+fryer. Its own time and temperature are pyvesync defaults and can differ
 from `get_mode_recipe()` for the same mode; use `get_mode_recipe()` for the
 app's defaults.
 
@@ -130,11 +142,22 @@ app's defaults.
 
 On the CS137/CS158, `end()`, `stop()` and `resume()` use the last known
 status (from `update()` or the last successful command) to choose between the
-cook and preheat commands. They return `False` without a request when the
-fryer is in neither a cook nor a preheat phase (standby, or `APPOINTING`, so a
-scheduled cook cannot be cancelled). Paused, basket-out and preheat-finished
-count as in a phase. They don't check whether the fryer is already paused or
-running. Call `update()` first if the fryer may have changed state on its own.
+cook and preheat commands. Paused, basket-out and preheat-finished count as in
+a phase.
+
+- `stop()` and `resume()` are always sent: the preheat command during a
+  preheat phase, otherwise the cook command (also in standby). They don't
+  check whether the fryer is already paused or running.
+- `end()` returns `False` without a request when the fryer is in neither a
+  cook nor a preheat phase (standby, or `APPOINTING`, so a scheduled cook
+  cannot be cancelled).
+- Every successful command sets the state to the phase it sent (`stop()`
+  gives `COOK_STOP` or `PREHEAT_STOP`, `resume()` gives `COOKING` or
+  `HEATING`), so the next command picks the matching one without an
+  `update()`. The remaining time carries over, so `resume()` while running
+  does not restart the countdown.
+
+Call `update()` first if the fryer may have changed state on its own.
 
 The CAF-TF101S has no pause command. Its status map has `cookStop` and
 `pullOut`; per the app's behaviour, pulling a basket out pauses that chamber
@@ -208,13 +231,15 @@ await fryer.set_mode_from_recipe(recipe, chamber=AirFryerChamber.BOTH)
 await fryer.end(AirFryerChamber.BOTH)
 
 await fryer.update()
-remaining = fryer.get_chamber_state(AirFryerChamber.CHAMBER_2).cook_time_remaining
+chamber_state = fryer.get_chamber_state(AirFryerChamber.CHAMBER_2)
+if chamber_state is not None:
+    remaining = chamber_state.cook_time_remaining
 ```
 
 A chamber the fryer does not support makes the method return `False` without
-sending a request. `get_chamber_state()` raises `ValueError` for `BOTH`
-(it names two states; read `state_chamber_1` and `state_chamber_2` instead)
-and for a chamber the fryer does not support.
+sending a request. `get_chamber_state()` returns `None` (with a debug log)
+for `BOTH`, which names two states (read `state_chamber_1` and
+`state_chamber_2` instead), and for a chamber the fryer does not support.
 
 `sync_chambers` and `work_chamber` are read-only. `update()` sets both from
 the device; `sync_chambers` is also set by a successful start or `end(BOTH)`.
@@ -226,13 +251,16 @@ single-chamber fryers they are always `False` and `None`.
   successful `set_mode()` or `set_mode_from_recipe()` also sets it (True for
   `BOTH`, False otherwise), and `end(BOTH)` clears it.
 - `work_chamber` is the chamber the device reports as active. It is `None`
-  when the fryer is idle, and always `None` on single-chamber fryers. It
-  changes only on `update()`; a local command leaves it at the last reported
-  value.
+  when the fryer is idle, and always `None` on single-chamber fryers. Besides
+  `update()`, a successful `WHOLE` start sets it to `WHOLE`, any other start
+  clears a `WHOLE` value, and a successful `end(WHOLE)` or `end(BOTH)` clears
+  it.
 
 To cook both chambers, pass `chamber=AirFryerChamber.BOTH`. During a Sync
 cook, `end()` with one chamber sends an end for that chamber only; use
-`end(AirFryerChamber.BOTH)` to end both.
+`end(AirFryerChamber.BOTH)` to end both. During a whole-basket cook
+(`work_chamber` is `WHOLE`), `end()` with the default `CHAMBER_1` ends the
+whole basket.
 
 ## Cook modes
 

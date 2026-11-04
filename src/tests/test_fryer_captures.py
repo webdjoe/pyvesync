@@ -477,7 +477,9 @@ class TestFryerCaptures(TestBase):
         fryer = self.get_device('air_fryers', 'CAF-DC601S')
         self.mock_api.return_value = (_dc601s_status('cooking', step_index=3), 200)
         self.run_in_loop(fryer.update)  # must not raise IndexError
-        assert fryer.state.cook_status == AirFryerCookStatus.STANDBY
+        # An unreadable poll keeps the last state (None on a fresh device).
+        assert fryer.state.cook_status is None
+        assert 'stepIndex 3 out of range' in self.caplog.text
 
     def test_dc601s_failed_start_keeps_state(self):
         fryer = self.get_device('air_fryers', 'CAF-DC601S')

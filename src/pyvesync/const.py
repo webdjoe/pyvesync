@@ -361,9 +361,9 @@ class TemperatureUnits(StrEnum):
             TemperatureUnits: The matching unit.
 
         Raises:
-            ValueError: If the value does not start with 'c' or 'f'.
+            ValueError: If the value is not a string starting with 'c' or 'f'.
         """
-        first = value.strip().lower()[:1]
+        first = value.strip().lower()[:1] if isinstance(value, str) else ''
         if first == 'c':
             return cls.CELSIUS
         if first == 'f':
@@ -822,21 +822,25 @@ class AirFryerPresetRecipe:
     """Recipe for ``VeSyncFryer.set_mode_from_recipe()``.
 
     Get a fryer's presets with ``get_mode_recipe()`` and change them with
-    ``dataclasses.replace``. The recipe ID, name, type and mode are sent as
-    given.
+    ``dataclasses.replace``. The recipe ID, name and type are sent as given.
+    The cook mode must be one of the fryer's modes and the times must be
+    valid, otherwise ``set_mode_from_recipe()`` returns False without a
+    request.
 
     Attributes:
         recipe_id (int): Recipe ID.
         recipe_type (int): Recipe type.
         recipe_name (str): Recipe name.
-        cook_mode (str): The API mode string (for example ``'AirFry'``), not
-            an ``AirFryerCookModes`` key. It is sent unchanged.
+        cook_mode (str): The API mode string (for example ``'AirFry'``) or an
+            ``AirFryerCookModes`` key. The mode's API string is sent.
         target_temp (int): Target temperature in ``temp_unit``.
         temp_unit (str): Temperature unit ('f' or 'c', or any string
             ``TemperatureUnits.from_string()`` accepts).
-        cook_time (int): Cooking time in seconds.
+        cook_time (int): Cooking time in seconds, at least 1 (60 on the
+            CS137/CS158).
         preheat_time (int | None): Preheating time in seconds, if any. Adds a
-            preheat phase only on fryers with the ``PREHEAT`` feature.
+            preheat phase only on fryers with the ``PREHEAT`` feature, where
+            it must be 0 or at least one API time unit.
     """
 
     recipe_name: str
@@ -1108,6 +1112,24 @@ class AirFryerCookStatus(StrEnum):
     PREHEAT_STOP = 'preheatStop'
     READY = 'ready'
     APPOINTING = 'appointing'
+
+
+class AirFryer158Command(StrEnum):
+    """CS137/CS158 ``cookStatus`` / ``preheatStatus`` command values.
+
+    Sent in the ``cookMode`` and ``preheat`` commands (CS158 captures).
+
+    Attributes:
+        COOKING: Start or resume the cook (``cookStatus``).
+        HEATING: Start or resume the preheat (``preheatStatus``).
+        STOP: Pause the cook or preheat.
+        END: End the cook or preheat.
+    """
+
+    COOKING = 'cooking'
+    HEATING = 'heating'
+    STOP = 'stop'
+    END = 'end'
 
 
 class AirFryerSyncType(IntEnum):

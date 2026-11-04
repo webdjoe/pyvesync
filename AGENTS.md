@@ -215,9 +215,10 @@ details in [src/tests/AGENTS.md](src/tests/AGENTS.md).
 - Air fryers are registered in `call_json.ALL_DEVICE_MAP_MODULES` but don't
   use the generic `test_details` / `test_methods`. `test_fryers.py` records
   `update()` requests in `api/vesynckitchen/`; the control methods are tested
-  in `test_fryer_captures.py`, `test_fryer_units.py` and
-  `test_fryer_chambers.py`, which assert on request bodies, parsed state and
-  the device map directly and write no YAML. See the air fryer section of `src/tests/AGENTS.md`.
+  in `test_fryer_captures.py`, `test_fryer_units.py`,
+  `test_fryer_chambers.py` and `test_fryer_resilience.py`, which assert on
+  request bodies, parsed state and the device map directly and write no YAML.
+  See the air fryer section of `src/tests/AGENTS.md`.
 - Coverage gap: thermostats have no test module or YAML fixtures, and aren't
   registered in `call_json.ALL_DEVICE_MAP_MODULES`.
 

@@ -84,6 +84,7 @@ fields to make a code path run.
 | `test_fryer_captures.py` | Air fryer requests and status parsing pinned to packet-capture values; asserts on request bodies, no YAML |
 | `test_fryer_units.py` | Air fryer device map against the APK preset table, temperature units, limits and rounding, preheat helpers |
 | `test_fryer_chambers.py` | Air fryer `AirFryerChamber` interface: supported chambers, `BOTH` / Sync, `work_chamber`, `sync_chambers` |
+| `test_fryer_resilience.py` | Air fryer failure handling: unknown PID skipped, bad units, failed polls keep state, time validation, CS137/CS158 stop/resume phases, dual `end()` for the whole basket, per-device `default_preset` |
 | `test_all_devices.py` | Each device type's `DETAILS_RESPONSES` has one entry per setup entry (count check, `test_device_tests`); `get_devices()` request. Air fryers and thermostats aren't counted |
 | `test_auth.py` | `VeSyncAuth`: init/region, credentials, token-file persistence, login and re-auth flows |
 | `test_manager_resilience.py` | Device discovery skips a device whose class raises `VeSyncError`; `update_all_devices()` logs unexpected errors |
@@ -209,7 +210,8 @@ the generic pattern:
   `test_methods`, so `base_methods` / `device_methods` are unused and no
   control-method requests are recorded.
 - Control methods are tested in `test_fryer_captures.py`,
-  `test_fryer_chambers.py` and `test_fryer_units.py`. They are mostly
+  `test_fryer_chambers.py`, `test_fryer_units.py` and
+  `test_fryer_resilience.py`. They are mostly
   `TestBase` tests that set `self.mock_api.return_value`, call the method and
   check the request body (`parse_args(self.mock_api)['json_object']`) or the
   parsed state, plus a few plain functions. Where a capture exists, values
