@@ -1670,6 +1670,128 @@ _DC111S_COOK_MODES: dict[str, AirFryerModeConfig] = {
 }
 
 
+# CS358-AF presets: APK i61.j (CS358Config), the same Celsius list as the
+# CS158 (77-204, written 75-205 step 5) and 170-400 F in 10 F steps. Mode
+# strings, recipe IDs and names match the startCook requests in the
+# CS358-AF capture (app 6.0.10). The APK's 160 C French fries default is
+# kept as the APK has it; the app shows 193 C.
+_CS358_TEMP_C = AirFryerTempLimits(min_temp=75, max_temp=205, step=5)
+_CS358_TEMP_F = AirFryerTempLimits(min_temp=170, max_temp=400, step=10)
+
+_CS358_COOK_MODES: dict[str, AirFryerModeConfig] = {
+    AirFryerCookModes.CUSTOM: AirFryerModeConfig(
+        api_mode='Custom',
+        recipe_id=11,
+        recipe_name='Manual',
+        cook_time=900,
+        temp_c=_CS358_TEMP_C,
+        temp_f=_CS358_TEMP_F,
+        default_temp_c=177,
+        default_temp_f=350,
+    ),
+    AirFryerCookModes.CHICKEN: AirFryerModeConfig(
+        api_mode='Chicken',
+        recipe_id=2,
+        recipe_name='Chicken',
+        cook_time=1380,
+        temp_c=_CS358_TEMP_C,
+        temp_f=_CS358_TEMP_F,
+        default_temp_c=193,
+        default_temp_f=380,
+    ),
+    AirFryerCookModes.FROZEN: AirFryerModeConfig(
+        api_mode='Frozen',
+        recipe_id=5,
+        recipe_name='Frozen',
+        cook_time=480,
+        temp_c=_CS358_TEMP_C,
+        temp_f=_CS358_TEMP_F,
+        default_temp_c=193,
+        default_temp_f=380,
+    ),
+    AirFryerCookModes.FRENCH_FRIES: AirFryerModeConfig(
+        api_mode='French fries',
+        recipe_id=6,
+        recipe_name='French Fries',
+        cook_time=1500,
+        temp_c=_CS358_TEMP_C,
+        temp_f=_CS358_TEMP_F,
+        default_temp_c=160,
+        default_temp_f=380,
+    ),
+    AirFryerCookModes.STEAK: AirFryerModeConfig(
+        api_mode='Steak',
+        recipe_id=1,
+        recipe_name='Steak',
+        cook_time=360,
+        temp_c=_CS358_TEMP_C,
+        temp_f=_CS358_TEMP_F,
+        default_temp_c=204,
+        default_temp_f=400,
+    ),
+    AirFryerCookModes.BACON: AirFryerModeConfig(
+        api_mode='Bacon',
+        recipe_id=4,
+        recipe_name='Bacon',
+        cook_time=480,
+        temp_c=_CS358_TEMP_C,
+        temp_f=_CS358_TEMP_F,
+        default_temp_c=160,
+        default_temp_f=320,
+    ),
+    AirFryerCookModes.SEAFOOD: AirFryerModeConfig(
+        api_mode='Seafood',
+        recipe_id=3,
+        recipe_name='Seafood',
+        cook_time=480,
+        temp_c=_CS358_TEMP_C,
+        temp_f=_CS358_TEMP_F,
+        default_temp_c=177,
+        default_temp_f=350,
+    ),
+    AirFryerCookModes.VEGETABLES: AirFryerModeConfig(
+        api_mode='Vegetables',
+        recipe_id=7,
+        recipe_name='Vegetables',
+        cook_time=480,
+        temp_c=_CS358_TEMP_C,
+        temp_f=_CS358_TEMP_F,
+        default_temp_c=160,
+        default_temp_f=320,
+    ),
+    AirFryerCookModes.SHRIMP: AirFryerModeConfig(
+        api_mode='Shrimp',
+        recipe_id=8,
+        recipe_name='Shrimp',
+        cook_time=360,
+        temp_c=_CS358_TEMP_C,
+        temp_f=_CS358_TEMP_F,
+        default_temp_c=188,
+        default_temp_f=370,
+    ),
+    AirFryerCookModes.BAKE: AirFryerModeConfig(
+        api_mode='Bake',
+        recipe_id=9,
+        recipe_name='Bake',
+        cook_time=2100,
+        temp_c=_CS358_TEMP_C,
+        temp_f=_CS358_TEMP_F,
+        default_temp_c=149,
+        default_temp_f=300,
+    ),
+    AirFryerCookModes.TOAST: AirFryerModeConfig(
+        api_mode='Toast',
+        recipe_id=10,
+        recipe_name='Toast',
+        cook_time=480,
+        temp_c=_CS358_TEMP_C,
+        temp_f=_CS358_TEMP_F,
+        default_temp_c=160,
+        default_temp_f=320,
+    ),
+}
+
+
 air_fryer_modules: list[AirFryerMap] = [
     AirFryerMap(
         class_name='VeSyncAirFryer158',
@@ -1720,6 +1842,53 @@ air_fryer_modules: list[AirFryerMap] = [
                 'cookStop': AirFryerCookStatus.COOK_STOP,
                 'pullOut': AirFryerCookStatus.PULL_OUT,
                 'cookEnd': AirFryerCookStatus.COOK_END,
+            }
+        ),
+    ),
+    AirFryerMap(
+        # Cosori Pro II 5.8 Qt (CS358-AF), US single-basket model. Uses the
+        # TurboBlaze bypassV2 protocol (startCook / endCook /
+        # getAirfryerStatus), plus preheatCook to start the queued cook step
+        # once preheat has finished.
+        #
+        # Statuses and behaviour were read from a physical US unit
+        # (configModule WiFiBTOnboarding_AirFryer_CS358-AF_US); presets from
+        # the APK and the CS358-AF capture (see _CS358_COOK_MODES). The unit
+        # chooses its own preheat duration from the target temperature
+        # (3 minutes at 170 F and 4 minutes at 350 F were observed) and keeps
+        # the cook step in stepArray throughout preheat.
+        class_name='VeSyncTurboBlazeFryer',
+        module=vesynckitchen,
+        dev_types=['CS358-AF'],
+        setup_entry='CS358-AF',
+        device_alias='Pro II Air Fryer',
+        model_display='CS358-AF Series',
+        model_name='Pro II 5.8 Qt. Smart Air Fryer',
+        temp_unit=TemperatureUnits.FAHRENHEIT,
+        # The unit can be paused from its own Start/Pause button or by
+        # pulling the basket, but no cloud pause/resume method is known, so
+        # RESUMABLE is not claimed.
+        features=[AirFryerFeatures.PREHEAT, AirFryerFeatures.PREHEAT_COOK],
+        cook_modes=_CS358_COOK_MODES,
+        default_cook_mode=AirFryerCookModes.CUSTOM,
+        default_preset=AirFryerPresets.manual_cook,
+        time_units=TimeUnits.SECONDS,
+        # All ten statuses were observed on the unit. 'ready' is a staged
+        # program waiting for the Start button; 'preheatStop' and 'cookStop'
+        # are what the unit reports after its Start/Pause button is pressed;
+        # 'keeping' is Keep Warm, which reports an empty mode string.
+        status_map=MappingProxyType(
+            {
+                'standby': AirFryerCookStatus.STANDBY,
+                'ready': AirFryerCookStatus.READY,
+                'heating': AirFryerCookStatus.HEATING,
+                'preheatStop': AirFryerCookStatus.PREHEAT_STOP,
+                'preheatEnd': AirFryerCookStatus.PREHEAT_END,
+                'cooking': AirFryerCookStatus.COOKING,
+                'cookStop': AirFryerCookStatus.COOK_STOP,
+                'cookEnd': AirFryerCookStatus.COOK_END,
+                'pullOut': AirFryerCookStatus.PULL_OUT,
+                'keeping': AirFryerCookStatus.COOKING,
             }
         ),
     ),

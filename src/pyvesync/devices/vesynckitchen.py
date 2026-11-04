@@ -481,12 +481,14 @@ class VeSyncAirFryer158(VeSyncFryer):
 
 
 class VeSyncTurboBlazeFryer(BypassV2Mixin, VeSyncFryer):
-    """Cosori TurboBlaze air fryer (CAF-DC601S, bypassV2 ``startCook``).
+    """Cosori TurboBlaze air fryer (CAF-DC601S, CS358-AF, bypassV2 ``startCook``).
 
     Single chamber; times are in seconds. A preheat is sent only when the
     device map has the ``PREHEAT`` feature, otherwise ``preheat_time`` is
-    dropped with a debug log. ``stop()``, ``resume()`` and
-    ``cook_from_preheat()`` are not implemented and return False. The reported
+    dropped with a debug log. ``cook_from_preheat()`` sends ``preheatCook``
+    when the device map has the ``PREHEAT_COOK`` feature (CS358-AF) and
+    returns False otherwise. ``stop()`` and ``resume()`` are not implemented
+    and return False. The reported
     ``currentTemp`` is in Celsius and is converted to ``temp_unit``. A local
     ``set_mode()`` does not set ``state.recipe``. A failed poll, an unknown
     ``cookStatus`` or an out-of-range ``stepIndex`` leaves the state unchanged.
@@ -613,6 +615,27 @@ class VeSyncTurboBlazeFryer(BypassV2Mixin, VeSyncFryer):
         if r is None:
             return False
         self.state.set_standby()
+        return True
+
+    async def cook_from_preheat(
+        self, chamber: AirFryerChamber | int = AirFryerChamber.CHAMBER_1
+    ) -> bool:
+        if self._validate_chamber(chamber) is None:
+            return False
+        if AirFryerFeatures.PREHEAT_COOK not in self.features:
+            logger.debug('Cook from preheat not supported for %s', self.device_name)
+            return False
+        if self.state.cook_status != AirFryerCookStatus.PREHEAT_END:
+            logger.debug('Cannot start cook from preheat for %s', self.device_name)
+            return False
+        resp = await self.call_bypassv2_api(
+            payload_method='preheatCook',
+            payload_update=self._payload_update(),
+        )
+        r = Helpers.process_dev_response(logger, 'cook_from_preheat', self, resp)
+        if r is None:
+            return False
+        self.state.set_state(cook_status=AirFryerCookStatus.COOKING)
         return True
 
     async def set_mode_from_recipe(

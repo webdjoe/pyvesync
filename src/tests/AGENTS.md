@@ -205,8 +205,8 @@ the generic pattern:
   `METHOD_RESPONSES`. There is no `DETAILS_RESPONSES`.
 - `test_fryers.py` parametrizes `test_details_fryers` explicitly from its
   `DETAILS_PARAMS_STANDBY` / `DETAILS_PARAMS_COOKING` lists (CS158-AF,
-  CAF-DC601S, CAF-P583S, CAF-TF101S), checks the parsed state, and records the
-  `update()` request in `api/vesynckitchen/<setup_entry>.yaml`. It has no
+  CAF-DC601S, CAF-P583S, CAF-TF101S, CS358-AF), checks the parsed state, and
+  records the `update()` request in `api/vesynckitchen/<setup_entry>.yaml`. It has no
   `test_methods`, so `base_methods` / `device_methods` are unused and no
   control-method requests are recorded.
 - Control methods are tested in `test_fryer_captures.py`,

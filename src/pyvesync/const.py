@@ -996,6 +996,8 @@ class AirFryerPresets:
         broil (AirFryerPresetRecipe): Broil (bypassV2 mode string).
         roast (AirFryerPresetRecipe): Roast (bypassV2 mode string).
         bake (AirFryerPresetRecipe): Bake (bypassV2 mode string).
+        manual_cook (AirFryerPresetRecipe): CS358-AF Manual (mode
+            ``Custom``, recipe 11), the ``default_preset`` of the CS358-AF.
     """
 
     custom: AirFryerPresetRecipe = AirFryerPresetRecipe(
@@ -1003,6 +1005,15 @@ class AirFryerPresets:
         recipe_name=CUSTOM_RECIPE_NAME,
         recipe_id=CUSTOM_RECIPE_ID,
         recipe_type=CUSTOM_RECIPE_TYPE,
+        target_temp=350,
+        temp_unit='f',
+        cook_time=10 * 60,
+    )
+    manual_cook: AirFryerPresetRecipe = AirFryerPresetRecipe(
+        cook_mode='Custom',
+        recipe_name='Manual',
+        recipe_id=11,
+        recipe_type=AIRFRYER_PRESET_RECIPE_TYPE,
         target_temp=350,
         temp_unit='f',
         cook_time=10 * 60,
@@ -1078,6 +1089,7 @@ class AirFryerCookModes(StrEnum):
         SHRIMP: Shrimp preset.
         BREAD: Bread preset.
         FRENCH_FRIES: French fries preset.
+        TOAST: Toast preset.
     """
 
     CUSTOM = 'custom'
@@ -1103,6 +1115,7 @@ class AirFryerCookModes(StrEnum):
     SHRIMP = 'shrimp'
     BREAD = 'bread'
     FRENCH_FRIES = 'french_fries'
+    TOAST = 'toast'
 
 
 class AirFryerFeatures(Features):
@@ -1111,6 +1124,9 @@ class AirFryerFeatures(Features):
     Attributes:
         DUAL_BLAZE: Not used by the library.
         PREHEAT: The fryer accepts a preheat phase (``preheat_time``).
+        PREHEAT_COOK: The fryer accepts bypassV2 ``preheatCook``, which starts
+            the queued cook step once preheat has finished
+            (``cook_from_preheat()``).
         DUAL_CHAMBER: Two chambers; adds ``CHAMBER_2`` and ``BOTH`` to
             ``supported_chambers``.
         RESUMABLE: ``stop()`` / ``resume()`` pause and resume a cook. Declared
@@ -1126,6 +1142,7 @@ class AirFryerFeatures(Features):
 
     DUAL_BLAZE = 'dual_blaze'
     PREHEAT = 'preheat'
+    PREHEAT_COOK = 'preheat_cook'
     DUAL_CHAMBER = 'dual_chamber'
     RESUMABLE = 'resumable'
     WHOLE_CHAMBER = 'whole_chamber'
