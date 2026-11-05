@@ -170,6 +170,44 @@ AIR_FRYER_COOKING_DETAILS: dict[str, dict] = {
         "syncType": 0,
         "workChamber": 1,
     },
+    # CAF-DC111S-AEU getAirfryerMultiStatus, upper chamber cooking (PR #536 HAR)
+    "CAF-DC111S-AEU": {
+        "statusList": [
+            {
+                "cookStatus": "cooking",
+                "startTime": 1793529590,
+                "recipeType": 3,
+                "recipeId": 14,
+                "recipeName": "",
+                "upc": "",
+                "holdTime": 0,
+                "cookSetTime": 600,
+                "cookTemp": 195,
+                "mode": "AirFry",
+                "currentRemainingTime": 600,
+                "totalTimeRemaining": 600,
+                "chamber": 1,
+            },
+            {
+                "cookStatus": "standby",
+                "startTime": 0,
+                "recipeType": 3,
+                "recipeId": 14,
+                "recipeName": "",
+                "upc": "",
+                "holdTime": 0,
+                "cookSetTime": 0,
+                "cookTemp": 0,
+                "mode": "AirFry",
+                "currentRemainingTime": 0,
+                "totalTimeRemaining": 0,
+                "chamber": 2,
+            },
+        ],
+        "tempUnit": "c",
+        "syncType": 0,
+        "workChamber": 1,
+    },
     # CAF-P583S-KUS get-status/cooking capture (2025-05-21)
     "CAF-P583S": {
         "stepArray": [
@@ -202,6 +240,13 @@ AIR_FRYER_COOKING_DETAILS: dict[str, dict] = {
     },
 }
 
+# Expected chamber 1 (cook_set_temp, cook_set_time, cook_last_time) after
+# update() with AIR_FRYER_COOKING_DETAILS, for captures that do not use the
+# AirFryerDefaults values.
+COOKING_EXPECTED: dict[str, tuple[int, int, int]] = {
+    "CAF-DC111S-AEU": (195, 600, 600),
+}
+
 AIR_FRYER_STANDBY_DETAILS: dict[str, dict] = {
     "CS158-AF": {"returnStatus": {"cookStatus": "standby"}},
     "CAF-DC601S": {
@@ -225,6 +270,44 @@ AIR_FRYER_STANDBY_DETAILS: dict[str, dict] = {
             {"cookStatus": "standby", "chamber": 2},
         ],
         "tempUnit": AirFryerDefaults.temp_unit.label,
+        "syncType": 0,
+        "workChamber": 0,
+    },
+    # CAF-DC111S-AEU getAirfryerMultiStatus, both chambers idle (PR #536 HAR)
+    "CAF-DC111S-AEU": {
+        "statusList": [
+            {
+                "cookStatus": "standby",
+                "startTime": 0,
+                "recipeType": 3,
+                "recipeId": 14,
+                "recipeName": "",
+                "upc": "",
+                "holdTime": 0,
+                "cookSetTime": 600,
+                "cookTemp": 195,
+                "mode": "AirFry",
+                "currentRemainingTime": 600,
+                "totalTimeRemaining": 600,
+                "chamber": 1,
+            },
+            {
+                "cookStatus": "standby",
+                "startTime": 0,
+                "recipeType": 3,
+                "recipeId": 14,
+                "recipeName": "",
+                "upc": "",
+                "holdTime": 0,
+                "cookSetTime": 0,
+                "cookTemp": 0,
+                "mode": "AirFry",
+                "currentRemainingTime": 0,
+                "totalTimeRemaining": 0,
+                "chamber": 2,
+            },
+        ],
+        "tempUnit": "c",
         "syncType": 0,
         "workChamber": 0,
     },
@@ -253,6 +336,7 @@ METHOD_RESPONSES = {
     'CS158-AF': deepcopy(FunctionResponsesV1),
     'CAF-DC601S': deepcopy(FunctionResponsesV2),
     'CAF-TF101S': deepcopy(FunctionResponsesV2),
+    'CAF-DC111S-AEU': deepcopy(FunctionResponsesV2),
     'CAF-P583S': deepcopy(FunctionResponsesV2),
 }
 
@@ -266,6 +350,9 @@ DETAILS_RESPONSES_COOKING = {
     ),
     "CAF-TF101S": build_bypass_v2_response(
         inner_result=deepcopy(AIR_FRYER_COOKING_DETAILS["CAF-TF101S"]),
+    ),
+    "CAF-DC111S-AEU": build_bypass_v2_response(
+        inner_result=deepcopy(AIR_FRYER_COOKING_DETAILS["CAF-DC111S-AEU"]),
     ),
     "CAF-P583S": build_bypass_v2_response(
         inner_result=deepcopy(AIR_FRYER_COOKING_DETAILS["CAF-P583S"]),
@@ -282,6 +369,9 @@ DETAILS_RESPONSES_STANDBY = {
     ),
     "CAF-TF101S": build_bypass_v2_response(
         inner_result=deepcopy(AIR_FRYER_STANDBY_DETAILS["CAF-TF101S"]),
+    ),
+    "CAF-DC111S-AEU": build_bypass_v2_response(
+        inner_result=deepcopy(AIR_FRYER_STANDBY_DETAILS["CAF-DC111S-AEU"]),
     ),
     "CAF-P583S": build_bypass_v2_response(
         inner_result=deepcopy(AIR_FRYER_STANDBY_DETAILS["CAF-P583S"]),

@@ -1,9 +1,12 @@
 """Air fryer chamber interface tests (AirFryerChamber, supported chambers)."""
 
 import logging
+from copy import deepcopy
+from datetime import timedelta
 
 import pytest
 from base_test_cases import TestBase
+from call_json_fryers import AIR_FRYER_COOKING_DETAILS
 from defaults import build_bypass_v2_response
 from utils import parse_args
 
@@ -44,6 +47,40 @@ def _tf101s_status(status_list: list[dict], work_chamber: int, sync_type: int = 
     )
 
 
+# CAF-DC111S-AEU Sync cook (author's HAR, PR #536): chamber 2 waits in
+# ``hold`` so both chambers finish together.
+DC111S_SYNC_HOLD = {
+    'statusList': [
+        {'cookStatus': 'cooking', 'startTime': 1793607528, 'recipeType': 3, 'recipeId': 14,
+         'recipeName': '', 'upc': '', 'holdTime': 0, 'cookSetTime': 600, 'cookTemp': 195,
+         'mode': 'AirFry', 'currentRemainingTime': 596, 'totalTimeRemaining': 596, 'chamber': 1},
+        {'cookStatus': 'hold', 'startTime': 1793607528, 'recipeType': 3, 'recipeId': 14,
+         'recipeName': '', 'upc': '', 'holdTime': 300, 'cookSetTime': 300, 'cookTemp': 195,
+         'mode': 'AirFry', 'currentRemainingTime': 296, 'totalTimeRemaining': 596, 'chamber': 2},
+    ],
+    'tempUnit': 'c',
+    'syncType': 2,
+    'workChamber': 4,
+}
+
+
+# The same Sync cook with chamber 1 paused: chamber 2's wait stops at 279 on
+# every poll until chamber 1 cooks again (author's HAR, PR #536).
+DC111S_SYNC_HOLD_PAUSED = {
+    'statusList': [
+        {'cookStatus': 'cookStop', 'startTime': 1793607528, 'recipeType': 3, 'recipeId': 14,
+         'recipeName': '', 'upc': '', 'holdTime': 0, 'cookSetTime': 600, 'cookTemp': 195,
+         'mode': 'AirFry', 'currentRemainingTime': 579, 'totalTimeRemaining': 579, 'chamber': 1},
+        {'cookStatus': 'hold', 'startTime': 1793607528, 'recipeType': 3, 'recipeId': 14,
+         'recipeName': '', 'upc': '', 'holdTime': 300, 'cookSetTime': 300, 'cookTemp': 195,
+         'mode': 'AirFry', 'currentRemainingTime': 279, 'totalTimeRemaining': 579, 'chamber': 2},
+    ],
+    'tempUnit': 'c',
+    'syncType': 2,
+    'workChamber': 4,
+}
+
+
 def _entry(setup_entry):
     return next(m for m in air_fryer_modules if m.setup_entry == setup_entry)
 
@@ -82,6 +119,96 @@ class TestChamberInterface(TestBase):
         fryer = self.get_device('air_fryers', 'CAF-TF101S')
         fryer.features = [f for f in fryer.features if f != 'whole_chamber']
         assert fryer.supported_chambers == (Ch.CHAMBER_1, Ch.CHAMBER_2, Ch.BOTH)
+
+    def test_supported_chambers_dc111s(self):
+        fryer = self.get_device('air_fryers', 'CAF-DC111S-AEU')
+        assert fryer.supported_chambers == (Ch.CHAMBER_1, Ch.CHAMBER_2, Ch.BOTH)
+        assert fryer.is_dual_chamber is True
+
+    @pytest.mark.parametrize('chamber', [Ch.WHOLE, 3], ids=['enum', 'int'])
+    def test_dc111s_rejects_whole_without_request(self, chamber):
+        fryer = self.get_device('air_fryers', 'CAF-DC111S-AEU')
+        self.mock_api.reset_mock()
+        assert self.run_in_loop(fryer.set_mode, cook_time=600, cook_temp=195, chamber=chamber) is False
+        assert self.run_in_loop(fryer.end, chamber) is False
+        assert self.mock_api.call_count == 0
+
+    def test_dc111s_sync_hold_chamber(self):
+        fryer = self.get_device('air_fryers', 'CAF-DC111S-AEU')
+        self.mock_api.return_value = (build_bypass_v2_response(inner_result=DC111S_SYNC_HOLD), 200)
+        self.caplog.set_level(logging.WARNING)
+        self.run_in_loop(fryer.update)
+        held = fryer.state_chamber_2
+        assert held.cook_status == AirFryerCookStatus.HOLD
+        assert 'Unknown cook status' not in self.caplog.text
+        assert (held.cook_set_time, held.cook_last_time, held.total_last_time) == (300, 296, 596)
+        assert fryer.sync_chambers is True
+        assert fryer.work_chamber is Ch.BOTH
+        assert held.is_in_cook_mode is True
+        assert held.is_cooking is False
+        assert held.is_running is False
+        assert fryer.state_chamber_1.cook_status == AirFryerCookStatus.COOKING
+
+    def test_dc111s_hold_wait_counts_down(self):
+        # The hold wait counts down between polls (HAR: 300 -> 296 -> 279).
+        fryer = self.get_device('air_fryers', 'CAF-DC111S-AEU')
+        self.mock_api.return_value = (build_bypass_v2_response(inner_result=DC111S_SYNC_HOLD), 200)
+        self.run_in_loop(fryer.update)
+        held = fryer.state_chamber_2
+        assert held.last_timestamp is not None
+        held.last_timestamp -= timedelta(seconds=10)
+        assert held.cook_time_remaining is not None
+        assert held.cook_time_remaining <= 286
+        assert held.total_time_remaining is not None
+        assert held.total_time_remaining <= 586
+
+    def _poll(self, fryer, inner_result):
+        self.mock_api.return_value = (build_bypass_v2_response(inner_result=inner_result), 200)
+        self.run_in_loop(fryer.update)
+
+    def test_dc111s_hold_wait_pauses_with_other_chamber(self):
+        fryer = self.get_device('air_fryers', 'CAF-DC111S-AEU')
+        self._poll(fryer, DC111S_SYNC_HOLD_PAUSED)
+        held = fryer.state_chamber_2
+        assert held.cook_status == AirFryerCookStatus.HOLD
+        assert held.last_timestamp is None
+        assert held.cook_time_remaining == 279
+        assert held.total_time_remaining == 579
+        assert held.is_in_cook_mode is True
+        assert held.is_running is False
+
+    def test_dc111s_hold_wait_follows_other_chamber(self):
+        fryer = self.get_device('air_fryers', 'CAF-DC111S-AEU')
+        held = fryer.state_chamber_2
+        self._poll(fryer, DC111S_SYNC_HOLD)
+        assert held.last_timestamp is not None
+        self._poll(fryer, DC111S_SYNC_HOLD_PAUSED)
+        assert held.last_timestamp is None
+        assert held.cook_time_remaining == 279
+        self._poll(fryer, DC111S_SYNC_HOLD)
+        assert held.last_timestamp is not None
+
+    @pytest.mark.parametrize(
+        ('inner_code', 'name'),
+        [
+            (11914000, 'BYPASS_SYNC_FINISH_FAIL_1'),
+            (11915000, 'BYPASS_SYNC_FINISH_FAIL_2'),
+            (11926000, 'BYPASS_AVATAR_SYNC_FAIL'),
+        ],
+    )
+    def test_dc111s_refused_sync_cook_keeps_state(self, inner_code, name):
+        # APK DC111S ErrorInfo map (i61.C114379l.z0()): Sync refused codes.
+        fryer = self.get_device('air_fryers', 'CAF-DC111S-AEU')
+        self._poll(fryer, deepcopy(AIR_FRYER_COOKING_DETAILS['CAF-DC111S-AEU']))
+        self.mock_api.return_value = (build_bypass_v2_response(inner_code=inner_code), 200)
+        assert self.run_in_loop(fryer.set_mode, cook_time=600, cook_temp=195, chamber=Ch.BOTH) is False
+        assert fryer.last_response is not None
+        assert fryer.last_response.name == name
+        assert fryer.last_response.code == inner_code
+        assert fryer.state_chamber_1.cook_status == AirFryerCookStatus.COOKING
+        assert fryer.state_chamber_2.cook_status == AirFryerCookStatus.STANDBY
+        assert fryer.work_chamber is Ch.CHAMBER_1
+        assert fryer.sync_chambers is False
 
     def test_validate_chamber_accepts_int(self):
         fryer = self.get_device('air_fryers', 'CAF-TF101S')

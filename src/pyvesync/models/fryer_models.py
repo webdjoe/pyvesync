@@ -255,7 +255,7 @@ class FryerTurboBlazeStartActItem(RequestBaseModel):
     shakeTime: int = 0
 
 
-# Dual Air Fryer Models (CAF-TF101S, CAF-TF102S)
+# Dual Air Fryer Models (CAF-TF101S, CAF-TF102S, CAF-DC111S)
 
 
 @dataclass

@@ -344,8 +344,8 @@ class AirFryerMap(DeviceMapTemplate):
         temp_unit (TemperatureUnits): The temperature unit the device model
             uses (map default; may be updated from the API on update()).
         status_map (MappingProxyType[str, AirFryerCookStatus]): API status
-            string to ``AirFryerCookStatus``. A status not in it sets the
-            chamber to standby with a warning on update().
+            string to ``AirFryerCookStatus``. A status not in it logs a
+            warning on update() and keeps the chamber's last state.
         cook_modes (dict[str, AirFryerModeConfig]): The fryer's APK presets,
             keyed by ``AirFryerCookModes``. Each holds the mode's request
             values, default time and temperatures, and its Celsius and
@@ -1563,6 +1563,88 @@ _TF10X_STATUS_MAP: MappingProxyType[str, AirFryerCookStatus] = MappingProxyType(
     }
 )
 
+# APK i61.C114379l (DC111SEUConfig) presets. Shake is off for every mode.
+_DC111S_COOK_MODES: dict[str, AirFryerModeConfig] = {
+    AirFryerCookModes.AIRFRY: AirFryerModeConfig(
+        api_mode='AirFry',
+        recipe_id=14,
+        recipe_name='Air Fry',
+        cook_time=600,
+        temp_c=AirFryerTempLimits(min_temp=120, max_temp=230, step=5),
+        temp_f=AirFryerTempLimits(min_temp=250, max_temp=450, step=5),
+        default_temp_c=195,
+        default_temp_f=385,
+    ),
+    AirFryerCookModes.BAKE: AirFryerModeConfig(
+        api_mode='Bake',
+        recipe_id=9,
+        recipe_name='Bake',
+        cook_time=1200,
+        temp_c=AirFryerTempLimits(min_temp=125, max_temp=205, step=5),
+        temp_f=AirFryerTempLimits(min_temp=260, max_temp=400, step=5),
+        default_temp_c=165,
+        default_temp_f=330,
+    ),
+    AirFryerCookModes.ROAST: AirFryerModeConfig(
+        api_mode='Roast',
+        recipe_id=13,
+        recipe_name='Roast',
+        cook_time=720,
+        temp_c=AirFryerTempLimits(min_temp=175, max_temp=230, step=5),
+        temp_f=AirFryerTempLimits(min_temp=350, max_temp=450, step=5),
+        default_temp_c=220,
+        default_temp_f=425,
+    ),
+    AirFryerCookModes.GRILL: AirFryerModeConfig(
+        api_mode='Grill',
+        recipe_id=20,
+        recipe_name='Grill',
+        cook_time=600,
+        temp_c=AirFryerTempLimits(min_temp=160, max_temp=230, step=5),
+        temp_f=AirFryerTempLimits(min_temp=320, max_temp=450, step=5),
+        default_temp_c=230,
+        default_temp_f=450,
+    ),
+    AirFryerCookModes.REHEAT: AirFryerModeConfig(
+        api_mode='Reheat',
+        recipe_id=16,
+        recipe_name='Reheat',
+        cook_time=300,
+        temp_c=AirFryerTempLimits(min_temp=40, max_temp=205, step=5),
+        temp_f=AirFryerTempLimits(min_temp=105, max_temp=400, step=5),
+        default_temp_c=165,
+        default_temp_f=330,
+    ),
+    AirFryerCookModes.DRY: AirFryerModeConfig(
+        api_mode='Dry',
+        recipe_id=21,
+        recipe_name='Dry',
+        cook_time=21600,
+        temp_c=AirFryerTempLimits(min_temp=35, max_temp=95, step=5),
+        temp_f=AirFryerTempLimits(min_temp=100, max_temp=200, step=5),
+        default_temp_c=55,
+        default_temp_f=130,
+    ),
+    AirFryerCookModes.PROOF: AirFryerModeConfig(
+        api_mode='Proof',
+        recipe_id=27,
+        recipe_name='Proof',
+        cook_time=3600,
+        temp_c=AirFryerTempLimits(min_temp=30, max_temp=45, step=1),
+        temp_f=AirFryerTempLimits(min_temp=90, max_temp=115, step=1),
+        default_temp_c=30,
+        default_temp_f=90,
+    ),
+}
+
+# The DC111S also reports ``hold`` for the chamber that waits during a Sync cook.
+_DC111S_STATUS_MAP: MappingProxyType[str, AirFryerCookStatus] = MappingProxyType(
+    {
+        **_TF10X_STATUS_MAP,
+        'hold': AirFryerCookStatus.HOLD,
+    }
+)
+
 
 air_fryer_modules: list[AirFryerMap] = [
     AirFryerMap(
@@ -1718,6 +1800,24 @@ air_fryer_modules: list[AirFryerMap] = [
         default_preset=AirFryerPresets.air_fry,
         time_units=TimeUnits.SECONDS,
         status_map=_TF10X_STATUS_MAP,
+    ),
+    AirFryerMap(
+        # APK i61.C114379l (DC111SEUConfig): upper (1) and lower (2) chambers,
+        # no whole-basket mode. Same multi-chamber API as the TF101S.
+        class_name='VeSyncDualAirFryer',
+        module=vesynckitchen,
+        dev_types=['CAF-DC111S-AEU'],
+        setup_entry='CAF-DC111S-AEU',
+        device_alias='Turbo Tower Pro Air Fryer',
+        model_display='CAF-DC111S-AEU',
+        model_name='Turbo Tower Pro Smart Air Fryer',
+        temp_unit=TemperatureUnits.CELSIUS,
+        features=[AirFryerFeatures.DUAL_CHAMBER],
+        cook_modes=_DC111S_COOK_MODES,
+        default_cook_mode=AirFryerCookModes.AIRFRY,
+        default_preset=AirFryerPresets.air_fry,
+        time_units=TimeUnits.SECONDS,
+        status_map=_DC111S_STATUS_MAP,
     ),
 ]
 """List of ['AirFryerMap'][pyvesync.device_map.AirFryerMap] configuration

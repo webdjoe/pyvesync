@@ -270,6 +270,7 @@ pip install pyvesync
 3. Cosori TurboBlaze 6 Quart Air Fryer (CAF-DC601S)
 4. Cosori Dual Blaze 6.8 Quart Air Fryer (CAF-P583S)
 5. Cosori Dual Air Fryer (CAF-TF101S)
+6. Cosori Turbo Tower Pro Smart Air Fryer (CAF-DC111S-AEU)
 
 ### Thermostats
 

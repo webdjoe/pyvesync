@@ -20,6 +20,7 @@ from pyvesync.base_devices.fryer_base import FryerState
 from pyvesync.const import (
     AirFryerCookModes,
     AirFryerCookStatus,
+    AirFryerFeatures,
     AirFryerModeConfig,
     AirFryerTempLimits,
     TemperatureUnits,
@@ -79,6 +80,16 @@ APK_PRESETS = {
         'Reheat': (16, 'Reheat', 900, (40, 205, 5), (105, 400, 5), (165, 330)),
         'Dry': (21, 'Dry', 21600, (35, 95, 5), (95, 205, 5), (55, 130)),
     },
+    # APK i61.C114379l (DC111SEUConfig).
+    'CAF-DC111S-AEU': {
+        'AirFry': (14, 'Air Fry', 600, (120, 230, 5), (250, 450, 5), (195, 385)),
+        'Bake': (9, 'Bake', 1200, (125, 205, 5), (260, 400, 5), (165, 330)),
+        'Roast': (13, 'Roast', 720, (175, 230, 5), (350, 450, 5), (220, 425)),
+        'Grill': (20, 'Grill', 600, (160, 230, 5), (320, 450, 5), (230, 450)),
+        'Reheat': (16, 'Reheat', 300, (40, 205, 5), (105, 400, 5), (165, 330)),
+        'Dry': (21, 'Dry', 21600, (35, 95, 5), (100, 200, 5), (55, 130)),
+        'Proof': (27, 'Proof', 3600, (30, 45, 1), (90, 115, 1), (30, 90)),
+    },
 }
 APK_PRESETS['CAF-P583S-KEU'] = APK_PRESETS['CAF-P583S']
 # APK i61.C67932h0 (TF102SEUConfig): the TF101S presets without Dry.
@@ -137,6 +148,19 @@ def test_tf102s_has_own_entry_without_dry():
     assert AirFryerCookModes.DRY in by_type['CAF-TF101S'].cook_modes
     assert tf102.status_map == by_type['CAF-TF101S'].status_map
     assert tf102.features == by_type['CAF-TF101S'].features
+
+
+def test_dc111s_entry_is_dual_without_whole_and_maps_hold():
+    by_type = {t: e for e in air_fryer_modules for t in e.dev_types}
+    dc111 = by_type['CAF-DC111S-AEU']
+    assert dc111.setup_entry == 'CAF-DC111S-AEU'
+    assert dc111.class_name == 'VeSyncDualAirFryer'
+    assert dc111.features == [AirFryerFeatures.DUAL_CHAMBER]
+    assert dc111.temp_unit == TemperatureUnits.CELSIUS
+    assert dc111.status_map['hold'] == AirFryerCookStatus.HOLD
+    tf10x = by_type['CAF-TF101S'].status_map
+    assert {k: v for k, v in dc111.status_map.items() if k != 'hold'} == dict(tf10x)
+    assert 'hold' not in tf10x
 
 
 def test_limits_are_frozen():

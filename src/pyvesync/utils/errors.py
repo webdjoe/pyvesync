@@ -237,6 +237,24 @@ class ErrorCodes:
                 'All zone cooking error',
                 device_online=True,
             ),
+            '11914000': ResponseInfo(
+                'BYPASS_SYNC_FINISH_FAIL_1',
+                ErrorTypes.DEVICE_ERROR,
+                'Sync is unavailable, open the other basket',
+                device_online=True,
+            ),
+            '11915000': ResponseInfo(
+                'BYPASS_SYNC_FINISH_FAIL_2',
+                ErrorTypes.DEVICE_ERROR,
+                'Sync is unavailable, reduce the cooking time of the current basket',
+                device_online=True,
+            ),
+            '11926000': ResponseInfo(
+                'BYPASS_AVATAR_SYNC_FAIL',
+                ErrorTypes.DEVICE_ERROR,
+                'Sync is unavailable while cooking, cancel and restart cooking',
+                device_online=True,
+            ),
             '11916000': ResponseInfo(
                 'BYPASS_NTC_RIGHT_TOP_SHORT',
                 ErrorTypes.DEVICE_ERROR,

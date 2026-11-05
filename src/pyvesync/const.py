@@ -860,7 +860,8 @@ class AirFryerTempLimits:
     Attributes:
         min_temp (int): Lowest temperature the mode accepts.
         max_temp (int): Highest temperature the mode accepts.
-        step (int): Temperature step of the mode.
+        step (int): Temperature step of the mode. A requested temperature
+            is rounded to the nearest step, not rejected.
     """
 
     min_temp: int
@@ -876,7 +877,8 @@ class AirFryerModeConfig:
         api_mode (str): Mode string sent to and reported by the API.
         recipe_id (int): Preset recipe ID sent with the mode.
         recipe_name (str): Preset label sent as the recipe name.
-        cook_time (int): Default cook time in seconds.
+        cook_time (int): Default cook time in seconds. Not a limit: the
+            app's per-mode time ranges are not stored or checked.
         temp_c (AirFryerTempLimits): Celsius limits.
         temp_f (AirFryerTempLimits): Fahrenheit limits.
         default_temp_c (int): Default temperature in Celsius.
@@ -1098,6 +1100,10 @@ class AirFryerCookStatus(StrEnum):
         READY: Cook programmed, waiting for the start button.
         APPOINTING: Delayed start scheduled; waiting to start (CS158
             ``appointing``).
+        HOLD: Sync cook: this chamber waits so both chambers finish
+            together (CAF-DC111S ``hold``). The remaining cook time is the
+            wait, and the total time remaining includes the cook. Both count
+            down only while the other chamber cooks.
     """
 
     COOKING = 'cooking'
@@ -1112,6 +1118,7 @@ class AirFryerCookStatus(StrEnum):
     PREHEAT_STOP = 'preheatStop'
     READY = 'ready'
     APPOINTING = 'appointing'
+    HOLD = 'hold'
 
 
 class AirFryer158Command(StrEnum):
@@ -1154,9 +1161,9 @@ class AirFryerChamber(IntEnum):
     ``WorkChamberType``).
 
     Attributes:
-        CHAMBER_1: Left chamber on the TF101S/TF102S; the only basket on
-            single-chamber fryers.
-        CHAMBER_2: Right chamber on the TF101S/TF102S.
+        CHAMBER_1: Left chamber on the TF101S/TF102S, upper on the DC111S;
+            the only basket on single-chamber fryers.
+        CHAMBER_2: Right chamber on the TF101S/TF102S, lower on the DC111S.
         WHOLE: Divider removed, one large basket (TwinFry models only).
         BOTH: Both chambers cooking in sync (``workChamber`` 4).
     """
@@ -1182,6 +1189,7 @@ COOK_STATUSES = [
     AirFryerCookStatus.COOK_STOP,
     AirFryerCookStatus.COOK_END,
     AirFryerCookStatus.READY,
+    AirFryerCookStatus.HOLD,
 ]
 """Statuses counted as cook mode (``FryerState.is_in_cook_mode``).
 
@@ -1197,8 +1205,13 @@ RESUMABLE_STATUSES = [
 RUNNING_STATUSES = [
     AirFryerCookStatus.COOKING,
     AirFryerCookStatus.HEATING,
+    AirFryerCookStatus.HOLD,
 ]
-"""Statuses whose remaining times count down; setting one stamps ``last_timestamp``."""
+"""Statuses whose remaining times count down; setting one stamps ``last_timestamp``.
+
+A ``HOLD`` chamber's stamp is cleared by the dual fryer's ``update()`` while
+the other chamber is not cooking, which stops its countdown.
+"""
 
 
 # Thermostat Constants

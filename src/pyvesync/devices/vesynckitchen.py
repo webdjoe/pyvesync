@@ -3,7 +3,7 @@
 - ``VeSyncAirFryer158``: CS137/CS158 (Bypass V1 API, times in minutes).
 - ``VeSyncTurboBlazeFryer``: CAF-DC601S (bypassV2 ``startCook``).
 - ``VeSyncDualBlazeFryer``: CAF-P583S (bypassV2 ``startCook``).
-- ``VeSyncDualAirFryer``: CAF-TF101S / CAF-TF102S (bypassV2
+- ``VeSyncDualAirFryer``: CAF-TF101S / CAF-TF102S / CAF-DC111S (bypassV2
   ``startMultiCook``, two chambers).
 
 A successful command sets the chamber state locally from the request; it does
@@ -47,6 +47,7 @@ from pyvesync.utils.helpers import Helpers
 
 if TYPE_CHECKING:
     from pyvesync import VeSync
+    from pyvesync.base_devices.fryer_base import FryerState
     from pyvesync.device_map import AirFryerMap
     from pyvesync.models.base_models import RequestBaseModel
     from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
@@ -700,15 +701,21 @@ class VeSyncDualBlazeFryer(VeSyncTurboBlazeFryer):
 
 
 class VeSyncDualAirFryer(BypassV2Mixin, VeSyncFryer):
-    """Cosori Dual Air Fryer Class (CAF-TF101S, CAF-TF102S).
+    """Cosori Dual Air Fryer Class (CAF-TF101S, CAF-TF102S, CAF-DC111S).
 
     Chambers are selected with ``AirFryerChamber``:
 
-    - ``CHAMBER_1`` / ``CHAMBER_2``: one chamber (left or right).
+    - ``CHAMBER_1`` / ``CHAMBER_2``: one chamber (left/right on the
+      TF101S/TF102S, upper/lower on the DC111S).
     - ``WHOLE``: the merged basket with the divider removed (TwinFry models
       only, ``WHOLE_CHAMBER`` feature).
     - ``BOTH``: both chambers with identical settings, sent as the app's Sync
       mode (``workChamber`` 4, ``syncType`` 2: both chambers finish together).
+
+    During a Sync cook with different times, the DC111S reports the chamber
+    that waits to start as ``AirFryerCookStatus.HOLD``. Its wait counts down
+    only while the other chamber is cooking. A Sync cook with different
+    times can only be started from the app or the fryer.
 
     The device has no preheat, pause, or resume API: ``preheat_time`` and a
     recipe's ``preheat_time`` are ignored, and ``stop()`` / ``resume()``
@@ -816,6 +823,24 @@ class VeSyncDualAirFryer(BypassV2Mixin, VeSyncFryer):
             self.state_chamber_1.set_standby()
         if AirFryerChamber.CHAMBER_2 not in updated_chambers:
             self.state_chamber_2.set_standby()
+
+        self._pause_held_chamber(self.state_chamber_1, self.state_chamber_2)
+        self._pause_held_chamber(self.state_chamber_2, self.state_chamber_1)
+
+    @staticmethod
+    def _pause_held_chamber(held: FryerState, other: FryerState) -> None:
+        """Stop a held chamber's countdown while the other chamber is not cooking.
+
+        During a Sync cook the held chamber's wait is the other chamber's
+        remaining time minus its own cook time, so it only advances while the
+        other chamber cooks (DC111S captures: the wait stays put while the
+        other chamber is in ``cookStop``).
+        """
+        if (
+            held.cook_status == AirFryerCookStatus.HOLD
+            and other.cook_status != AirFryerCookStatus.COOKING
+        ):
+            held.last_timestamp = None
 
     def _apply_chamber_status(
         self, status_item: models.FryerDualChamberStatusItem
