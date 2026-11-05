@@ -70,6 +70,13 @@ class HumidifierDefaults:
     nightlight_status = DeviceStatus.OFF
     nightlight_brightness = 0
     nightlight_color_temperature = 4000
+    # RGB Nightlight Defaults
+    rgb_nightlight_status = "on"
+    rgb_nightlight_color_mode = "color"
+    rgb_nightlight_brightness = 100
+    rgb_nightlight_red = 252
+    rgb_nightlight_green = 50
+    rgb_nightlight_blue = 0
     # Drying Defaults
     drying_level = 1
     drying_state = DryingModes.DONE
@@ -190,6 +197,16 @@ HUMIDIFIER_DETAILS: dict[str, Any] = {
         "warm_enabled": HumidifierDefaults.warm_mist_enabled,
         "warm_level": HumidifierDefaults.warm_mist_level,
         "automatic_stop_reach_target": HumidifierDefaults.auto_stop_reached,
+        "rgbNightLight": {
+            "action": HumidifierDefaults.rgb_nightlight_status,
+            "colorMode": HumidifierDefaults.rgb_nightlight_color_mode,
+            "brightness": HumidifierDefaults.rgb_nightlight_brightness,
+            "red": HumidifierDefaults.rgb_nightlight_red,
+            "green": HumidifierDefaults.rgb_nightlight_green,
+            "blue": HumidifierDefaults.rgb_nightlight_blue,
+            "speed": 0,
+            "colorSliderLocation": 0,
+        },
         "configuration": {
             "auto_target_humidity": HumidifierDefaults.target_humidity,
             "display": HumidifierDefaults.display_config,

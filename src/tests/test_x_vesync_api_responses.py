@@ -76,7 +76,7 @@ class TestApiFunc:
         self.manager.auth._account_id = TestDefaults.account_id
         yield
         self.mock.stop()
-        self.loop.stop()
+        self.loop.close()
 
     async def run_coro(self, coro):
         """Run a coroutine in the event loop."""

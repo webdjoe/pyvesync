@@ -1,6 +1,6 @@
 # pyvesync Library
 
-[![build status](https://img.shields.io/pypi/v/pyvesync.svg)](https://pypi.python.org/pypi/pyvesync) [![Build Status](https://dev.azure.com/webdjoe/pyvesync/_apis/build/status/webdjoe.pyvesync?branchName=master)](https://dev.azure.com/webdjoe/pyvesync/_build/latest?definitionId=4&branchName=master) [![Open Source? Yes!](https://badgen.net/badge/Open%20Source%20%3F/Yes%21/blue?icon=github)](https://github.com/Naereen/badges/) [![PyPI license](https://img.shields.io/pypi/l/ansicolortags.svg)](https://pypi.python.org/pypi/ansicolortags/) <!-- omit in toc -->
+[![build status](https://img.shields.io/pypi/v/pyvesync.svg)](https://pypi.python.org/pypi/pyvesync) [![Open Source? Yes!](https://badgen.net/badge/Open%20Source%20%3F/Yes%21/blue?icon=github)](https://github.com/Naereen/badges/) [![PyPI license](https://img.shields.io/pypi/l/ansicolortags.svg)](https://pypi.python.org/pypi/ansicolortags/) <!-- omit in toc -->
 
 **This is a work in progress, PR's greatly appreciated 🙂.**
 
@@ -16,7 +16,7 @@ The following product types are supported:
 4. `purifier` - Air purifiers (not humidifiers)
 5. `humidifier` - Humidifiers (not air purifiers)
 6. `bulb` - Light bulbs (not dimmers or switches)
-7. `airfryer` - Air fryers
+7. `air fryer` - Air fryers
 8. `thermostat` - Thermostats
 
 See [Supported Devices](supported_devices.md) for a complete list of supported devices and models.
@@ -32,8 +32,8 @@ This will **DEFINITELY** cause breaking changes with existing code, but the new 
 Some of the major structural changes include:
 
 - Asynchronous API calls through aiohttp
-- [`DeviceContainer`][pyvesync.device_container.DeviceContainer] object holds all devices in a mutable set structure with additional convenience methods and properties for managing devices. This is located in the `VeSync.manager` attribute.
-- Custom exceptions for better error handling there are custom exceptions that inherit from [`VeSyncError`][pyvesync.utils.errors.VeSyncError], `VeSyncAPIError`, `VeSyncLoginError`, `VeSyncRateLimitError`.
+- [`DeviceContainer`][pyvesync.device_container.DeviceContainer] object holds all devices in a mutable set structure with additional convenience methods and properties for managing devices. This is located in the `VeSync.devices` attribute.
+- Custom exceptions for better error handling. The custom exceptions inherit from [`VeSyncError`][pyvesync.utils.errors.VeSyncError] and include `VeSyncAPIResponseError`, `VeSyncLoginError` and `VeSyncRateLimitError`.
 - Device state has been separated from the device object and is now managed by the device specific subclasses of [`DeviceState`][pyvesync.base_devices.vesyncbasedevice.DeviceState]. The state object is located in the `state` attribute of the device object.
 - Device Classes have been refactored to be more consistent and easier to manage. No more random property and method names for different types of the same device.
 - [`const`][pyvesync.const] module to hold all library constants.
@@ -87,7 +87,7 @@ async def main():
         await manager.login()
         # Check if logged in
         assert manager.enabled
-        # Debug and Redact are optional arguments
+        # Redaction can also be changed after instantiation
         manager.redact = True
 
         # Get devices
@@ -121,25 +121,24 @@ from pyvesync import VeSync
 async def main():
     async with VeSync("user", "password") as manager:
 
-        # If credentials are stored in a file, it can be loaded
-        # the default location is ~/.vesync_token
+        # If credentials are stored in a file, it can be loaded.
+        # With no argument, .vesync_auth is read from the current working
+        # directory, then from the home directory
         await manager.load_credentials_from_file()
         # or the file path can be passed
         await manager.load_credentials_from_file("/path/to/token_file")
 
         # Or credentials can be passed directly
-        manager.set_credentials("your_token", "your_account_id")
+        manager.set_credentials("your_token", "your_account_id", "US", "US")
 
         # No login needed
         # await manager.login()
 
-        # To store credentials to a file after login
-        await manager.save_credentials() # Saves to default location ~/.vesync_token
-        # or pass a file path
+        # To store credentials to a file after login, a file path is required
         await manager.save_credentials("/path/to/token_file")
 
-        # Output Credentials as JSON String
-        await manager.output_credentials()
+        # Output Credentials as a JSON string (synchronous)
+        print(manager.output_credentials_json())
 
         await manager.update()
 
@@ -153,7 +152,7 @@ async def main():
         outlet.display()
 
         # Iterate of entire device list
-        for devices in device_container:
+        for device in device_container:
             device.display()
 
 
@@ -173,7 +172,7 @@ Once logged in, the next call should be to the `update()` method which:
 
 ```python
 # Get/Update Devices from server - populate device lists
-manager.update()
+await manager.update()
 
 # Device instances are now located in the devices attribute:
 
@@ -185,27 +184,27 @@ for device in manager.devices:
 
 
 # Or iterate over specific device types:
-for outlet in manager.outlets:
+for outlet in manager.devices.outlets:
     print(outlet)
 ```
 
 Updating all devices without pulling a device list:
 
 ```python
-manager.update_all_devices()
+await manager.update_all_devices()
 ```
 
-The devices attribute is a [`DeviceContainer`][pyvesync.device_container.DeviceContainer] object that holds all devices in a mutable set-like structure. Each product type is a property in the `devices` attribute:
+The devices attribute is a [`DeviceContainer`][pyvesync.device_container.DeviceContainer] object that holds all devices in a mutable set-like structure. Each product type is a read-only property of the `devices` attribute that returns a list of device instances:
 
 ```python
-manager.devices.outlets = [VeSyncOutletInstances]
-manager.devices.switches = [VeSyncSwitchInstances]
-manager.devices.fans = [VeSyncFanInstances]
-manager.devices.bulbs = [VeSyncBulbInstances]
-manager.devices.purifiers = [VeSyncPurifierInstances]
-manager.devices.humidifiers = [VeSyncHumidifierInstances]
-manager.devices.air_fryers = [VeSyncAirFryerInstances]
-manager.devices.thermostats = [VeSyncThermostatInstances]
+manager.devices.outlets  # list of VeSyncOutlet instances
+manager.devices.switches  # list of VeSyncSwitch instances
+manager.devices.fans  # list of VeSyncFanBase instances
+manager.devices.bulbs  # list of VeSyncBulb instances
+manager.devices.air_purifiers  # list of VeSyncPurifier instances
+manager.devices.humidifiers  # list of VeSyncHumidifier instances
+manager.devices.air_fryers  # list of VeSyncFryer instances
+manager.devices.thermostats  # list of VeSyncThermostat instances
 ```
 
 ### Debugging and Getting Help
@@ -232,15 +231,22 @@ Since verbose debugging can output a lot of information, there is a helper funct
 
 ```python
 from pyvesync import VeSync
+from pyvesync.utils.logs import LibraryLogger
 
 async def main():
     async with VeSync(username="EMAIL", password="PASSWORD") as manager:
-        manager.debug = True  # Enable debug logging
-        manager.verbose = True  # Enable verbose logging
-        await manager.log_to_file("debug.log", stdout=True)  # Can be an absolute or path relative to the current working directory
+        # Sets the pyvesync logger to DEBUG and logs to the file.
+        # Can be an absolute path or relative to the current working directory
+        manager.log_to_file("debug.log", stdout=True)  # stdout=False to skip the console
+
+        # Optional - include the full request & response body of every API call
+        LibraryLogger.verbose = True
+
         await manager.login()
         await manager.get_devices()
 ```
+
+`manager.debug` is a read-only property that reports whether debug logging is currently active.
 
 ### Authentication
 
@@ -259,25 +265,25 @@ async def main():
 
         # Save credentials to file
         await manager.save_credentials("/path/to/token_file")
-        # Will save to user's home directory as .vesync_token if no path is provided
+        # A path is required - nothing is saved if it is None
 
         # Load credentials from file
         await manager.load_credentials_from_file("/path/to/token_file")
-        # Calling with no argument will load the .vesync_token file from user's home directory and then the current working directory.
+        # Calling with no argument will load the .vesync_auth file from the current working directory and then the user's home directory.
 
         # Or set credentials directly
         creds = {
             "token": "your_token",
             "account_id": "your_account_id",
-            "country_code": "US"  # Optional
-            "region": "US"  # Optional
+            "country_code": "US",
+            "region": "US",
         }
         manager.set_credentials(**creds)
 
         # Output credentials as JSON string
-        await manager.output_credentials_json()
+        manager.output_credentials_json()
         # or as a dictionary
-        await manager.output_credentials_dict()
+        manager.output_credentials_dict()
 
         # No login needed if token is valid
         # await manager.login()
@@ -304,7 +310,7 @@ The last response information is stored in the `last_response` attribute of the 
 # Get the last response information
 print(outlet.last_response)
 ResponseInfo(
-    error_name="SUCCESS",
+    name="SUCCESS",
     error_type=SUCCESS,  # StrEnum from ErrorTypes class
     message="Success",
     critical_error=False,
@@ -347,7 +353,7 @@ All devices have the `to_json()` and `to_jsonb()` methods which will serialize t
 
 ```python
 
-device = manager.outlets[0]
+device = manager.devices.outlets[0]
 print(device.to_json(state=True, indent=True))  # JSON string
 # Setting `state=False` will only serialize the attributes in the device class and not the state class
 
@@ -357,10 +363,10 @@ print(device.to_jsonb(state=True))  # Binary JSON string
 print(device.state.to_json(indent=True))  # JSON string
 ```
 
-Devices and state objects can also output to a dictionary using the `to_dict()` method or as a list of tuples with `as_tuple()`. This is useful for logging or debugging.
+Devices and state objects can also output to a dictionary using the `to_dict()` method. State objects can also output a tuple of `(name, value)` pairs with `as_tuple()`. This is useful for logging or debugging.
 
 ```python
-device = manager.outlets[0]
+device = manager.devices.outlets[0]
 dev_dict = device.to_dict(state=True)  # Dictionary of device and state attributes
 dev_dict["device_name"]  # Get the device name from the dictionary
 dev_dict["device_status"] # Returns device status as a StrEnum

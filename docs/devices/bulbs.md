@@ -10,7 +10,7 @@ See each device class for available attributes and methods:
 - [Etekcity Smart Bulb ESL100](#pyvesync.devices.vesyncbulb.VeSyncBulbESL100)
 - [Etekcity Smart Bulb ESL100CW](#pyvesync.devices.vesyncbulb.VeSyncBulbESL100CW)
 - [Etekcity Smart Bulb ESL100MC](#pyvesync.devices.vesyncbulb.VeSyncBulbESL100MC)
-- [Valceno Smart Bulb ESL100MC](#pyvesync.devices.vesyncbulb.VeSyncBulbValcenoA19MC)
+- [Valceno Smart Bulb XYD0001](#pyvesync.devices.vesyncbulb.VeSyncBulbValcenoA19MC)
 - [VeSyncBulb Abstract Base Class](#pyvesync.base_devices.bulb_base.VeSyncBulb)
 
 ::: pyvesync.base_devices.bulb_base.BulbState

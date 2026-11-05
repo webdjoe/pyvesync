@@ -278,6 +278,14 @@ class TestOutlets(TestBase):
         if not outlet_obj.supports_energy:
             pytest.skip(f"{setup_entry} does not support energy monitoring.")
 
+        if not outlet_obj.supports_energy_history:
+            self.run_in_loop(outlet_obj.update_energy)
+            assert self.mock_api.call_count == 0
+            assert outlet_obj.state.weekly_history is None
+            assert outlet_obj.state.monthly_history is None
+            assert outlet_obj.state.yearly_history is None
+            return
+
         self.mock_api.side_effect = [
             (dict(call_json_outlets.METHOD_RESPONSES[setup_entry]['get_weekly_energy']), 200),
             (dict(call_json_outlets.METHOD_RESPONSES[setup_entry]['get_monthly_energy']), 200),

@@ -62,6 +62,20 @@ class BypassV2InnerErrorResult(InnerHumidifierBaseResult):
 
 
 @dataclass
+class RGBNightLight(ResponseBaseModel):
+    """RGB Night Light Model for Humidifiers."""
+
+    action: str
+    colorMode: str
+    brightness: int
+    red: int
+    green: int
+    blue: int
+    speed: int = 0
+    colorSliderLocation: int = 0
+
+
+@dataclass
 class ClassicLVHumidResult(InnerHumidifierBaseResult):
     """Classic 200S Humidifier Result Model.
 
@@ -82,6 +96,7 @@ class ClassicLVHumidResult(InnerHumidifierBaseResult):
     warm_level: int | None = None
     night_light_brightness: int | None = None
     configuration: ClassicConfig | None = None
+    rgbNightLight: RGBNightLight | None = None
 
 
 @dataclass
