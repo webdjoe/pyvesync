@@ -69,6 +69,9 @@ CLIENT_TYPE = 'vesyncApp'
 
 STATUS_OK = 200
 
+UNKNOWN_ERROR_CODE = '-999999999'
+"""`ErrorCodes.errors` key of the `UNKNOWN` entry (the app's `CloudErrorCode.UNKNOWN`)."""
+
 
 # Generic Constants
 
