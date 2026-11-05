@@ -873,6 +873,37 @@ class AirFryerTempLimits:
 
 
 @dataclass(frozen=True)
+class AirFryerTimeLimits:
+    """Captured app time limits for one cook mode, in seconds.
+
+    Attributes:
+        min_seconds (int): Shortest supported duration.
+        max_seconds (int): Longest supported duration.
+        step_seconds (int): Allowed increment from the minimum duration.
+    """
+
+    min_seconds: int
+    max_seconds: int
+    step_seconds: int
+
+    def accepts(self, seconds: int) -> bool:
+        """Return whether a duration is a whole, supported number of seconds.
+
+        Args:
+            seconds (int): Requested duration; booleans are not durations.
+
+        Returns:
+            bool: Whether the value is within the range and on a valid step.
+        """
+        return (
+            isinstance(seconds, int)
+            and not isinstance(seconds, bool)
+            and self.min_seconds <= seconds <= self.max_seconds
+            and (seconds - self.min_seconds) % self.step_seconds == 0
+        )
+
+
+@dataclass(frozen=True)
 class AirFryerModeConfig:
     """One APK preset: its request values, default time and temperatures.
 
@@ -880,8 +911,9 @@ class AirFryerModeConfig:
         api_mode (str): Mode string sent to and reported by the API.
         recipe_id (int): Preset recipe ID sent with the mode.
         recipe_name (str): Preset label sent as the recipe name.
-        cook_time (int): Default cook time in seconds. Not a limit: the
-            app's per-mode time ranges are not stored or checked.
+        cook_time (int): Default cook time in seconds.
+        time_limits (AirFryerTimeLimits | None): Captured duration limits,
+            when available. None preserves the general time validation.
         temp_c (AirFryerTempLimits): Celsius limits.
         temp_f (AirFryerTempLimits): Fahrenheit limits.
         default_temp_c (int): Default temperature in Celsius.
@@ -898,6 +930,7 @@ class AirFryerModeConfig:
     default_temp_c: int
     default_temp_f: int
     recipe_type: int = AIRFRYER_PRESET_RECIPE_TYPE
+    time_limits: AirFryerTimeLimits | None = None
 
     def limits(self, temp_unit: TemperatureUnits) -> AirFryerTempLimits:
         """Return the limits in the given unit.
@@ -1073,6 +1106,8 @@ class AirFryerFeatures(Features):
         RESUMABLE: Declared on the CS137/CS158; not checked by the library.
         WHOLE_CHAMBER: Single merged basket with the divider removed
             (workChamber 3); adds ``WHOLE`` to ``supported_chambers``.
+        CHAMBER_MODES: Captured support for separate chamber recipes in
+            SYNC, or one recipe applied to both chambers in MATCH.
     """
 
     DUAL_BLAZE = 'dual_blaze'
@@ -1080,6 +1115,7 @@ class AirFryerFeatures(Features):
     DUAL_CHAMBER = 'dual_chamber'
     RESUMABLE = 'resumable'
     WHOLE_CHAMBER = 'whole_chamber'
+    CHAMBER_MODES = 'chamber_modes'
 
 
 class AirFryerCookStatus(StrEnum):
