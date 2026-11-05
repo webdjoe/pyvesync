@@ -16,20 +16,22 @@ The pyvesync library uses Python's standard `logging` module with the logger nam
 
 ## Enabling Debug Logging
 
-Debug logging can be enabled through the `VeSync` manager or directly via Python's logging module:
+Debug mode is controlled by the level of the `pyvesync` logger. Set it to `DEBUG` with Python's logging module, or call `manager.log_to_file()` (see below), which sets the level for you:
 
 ```python
 import logging
 from pyvesync import VeSync
 
-# Option 1: Set the pyvesync logger level directly
-vs_logger = logging.getLogger("pyvesync")
-vs_logger.setLevel(logging.DEBUG)
+# Set the pyvesync logger level to DEBUG
+logging.getLogger("pyvesync").setLevel(logging.DEBUG)
+logging.basicConfig()  # Send log records to the console
 
-# Option 2: Use the manager's debug property
 async with VeSync(username="EMAIL", password="PASSWORD") as manager:
-    manager.debug = True
+    await manager.login()
+    print(manager.debug)  # True - reflects the pyvesync logger level
 ```
+
+`manager.debug` is a read-only property. It reports whether debug logging is active and cannot be assigned to. The library caches the logger level and refreshes it before every API call, so changing the level takes effect on the next request.
 
 ## Logging to a File
 

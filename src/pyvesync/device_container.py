@@ -22,6 +22,7 @@ from typing import TYPE_CHECKING, TypeVar, cast
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
 from pyvesync.const import ProductTypes
 from pyvesync.device_map import get_device_config
+from pyvesync.utils.errors import VeSyncError
 
 if TYPE_CHECKING:
     from pyvesync import VeSync
@@ -148,7 +149,8 @@ class DeviceContainer(_DeviceContainerBase):
 
         Returns:
             VeSyncBaseDevice: The device instance created from the device list
-                response model.
+                response model, or None if the device type is not mapped or
+                the device class rejects the device (logged as a warning).
 
         Raises:
             VeSyncAPIResponseError: If the model is not an instance of
@@ -157,13 +159,20 @@ class DeviceContainer(_DeviceContainerBase):
         device_features = get_device_config(device.deviceType)
         if device_features is None:
             logger.debug('Device type %s not found in device map', device.deviceType)
+            logger.debug('Device info: \n %s', device.to_json(indent=True))
             return None
         dev_class = device_features.class_name
         dev_module = device_features.module
         device.productType = device_features.product_type
         # Import via string to avoid circular imports
         cls = getattr(dev_module, dev_class)
-        return cls(device, manager, device_features)
+        try:
+            return cls(device, manager, device_features)
+        except VeSyncError as err:
+            logger.warning(
+                'Skipping device %s (%s): %s', device.deviceName, device.deviceType, err
+            )
+            return None
 
     def add_device_from_model(
         self, device: ResponseDeviceDetailsModel, manager: VeSync

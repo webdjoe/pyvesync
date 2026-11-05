@@ -1,0 +1,70 @@
+name: Device Request
+description: Request support for a new VeSync device
+title: "[Device Request]: "
+labels: ["device request"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping expand pyvesync! Adding a device requires a real
+        packet capture or a shared device — the maintainers cannot add a device
+        they cannot see traffic for. Please read
+        [Capturing](https://webdjoe.github.io/pyvesync/latest/development/capturing)
+        and the [contributing guide](https://webdjoe.github.io/pyvesync/latest/development/contributing).
+  - type: input
+    id: model
+    attributes:
+      label: Device model number
+      placeholder: "e.g. LAP-C601S-WUS"
+    validations:
+      required: true
+  - type: input
+    id: product_type
+    attributes:
+      label: Product type
+      description: "outlet, switch, fan, purifier, humidifier, bulb, airfryer, or thermostat"
+    validations:
+      required: true
+  - type: input
+    id: firmware
+    attributes:
+      label: Firmware version
+      description: Found in the VeSync app under device settings.
+    validations:
+      required: true
+  - type: input
+    id: region
+    attributes:
+      label: Region / country code
+      placeholder: "e.g. US, EU"
+    validations:
+      required: true
+  - type: input
+    id: product_url
+    attributes:
+      label: Product page link
+    validations:
+      required: true
+  - type: dropdown
+    id: capture
+    attributes:
+      label: How will you help verify this device?
+      description: The maintainers cannot add a device without one of these.
+      options:
+        - I can provide a packet capture (see Capturing docs)
+        - I am willing to temporarily share the device with a maintainer
+        - Both
+    validations:
+      required: true
+  - type: checkboxes
+    id: acknowledgements
+    attributes:
+      label: Acknowledgements
+      options:
+        - label: I understand a packet capture or shared device is required, and that new device support must be verified on real hardware before it is released.
+          required: true
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      description: Anything else that would help (device capabilities, related models, etc.)
