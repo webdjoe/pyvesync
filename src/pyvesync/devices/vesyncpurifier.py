@@ -526,14 +526,14 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
 
     async def toggle_light_detection(self, toggle: bool | None = None) -> bool:
         """Enable/Disable Light Detection Feature."""
-        if bool(self.state.light_detection_status) == toggle:
+        if bool(self.state.light_detection_switch) == toggle:
             _LOGGER.debug(
-                'Light detection is already %s', self.state.light_detection_status
+                'Light detection is already %s', self.state.light_detection_switch
             )
             return True
 
         if toggle is None:
-            toggle = not bool(self.state.light_detection_status)
+            toggle = not bool(self.state.light_detection_switch)
         payload_data = {'lightDetectionSwitch': int(toggle)}
         r_dict = await self.call_bypassv2_api('setLightDetection', payload_data)
         r = Helpers.process_dev_response(_LOGGER, 'set_light_detection', self, r_dict)
