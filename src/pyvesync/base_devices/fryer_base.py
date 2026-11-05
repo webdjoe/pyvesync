@@ -19,6 +19,7 @@ from pyvesync.const import (
     AirFryerFeatures,
     AirFryerModeConfig,
     AirFryerPresetRecipe,
+    AirFryerSyncType,
     AirFryerTempLimits,
     TemperatureUnits,
     TimeUnits,
@@ -1074,6 +1075,19 @@ class VeSyncFryer(VeSyncBaseDevice[FryerState]):
             None when not given or not supported), or None (after a warning)
             if either is not valid.
         """
+        mode = self.get_cook_mode(recipe.cook_mode)
+        if (
+            mode is not None
+            and mode.time_limits is not None
+            and not mode.time_limits.accepts(recipe.cook_time)
+        ):
+            logger.warning(
+                'Cook time %s is outside the captured limits or steps for %s on %s',
+                recipe.cook_time,
+                recipe.cook_mode,
+                self.device_name,
+            )
+            return None
         minimum = self.convert_time_for_state(1)
         try:
             cook_time = int(recipe.cook_time)
@@ -1247,8 +1261,8 @@ class VeSyncFryer(VeSyncBaseDevice[FryerState]):
             cook_time (int): The cooking time in seconds, at least 1 (60 on
                 the CS137/CS158, whose API uses minutes and truncates to whole
                 minutes). A shorter time returns False without a request.
-                There is no upper limit: the app's per-mode time ranges are
-                not checked.
+                Captured per-mode duration limits and steps are checked when
+                the device map declares them.
             cook_temp (int): The cooking temperature, in ``temp_unit``.
             temp_unit (TemperatureUnits | str | None): The unit of
                 ``cook_temp``; defaults to the device's current ``temp_unit``.
@@ -1273,6 +1287,35 @@ class VeSyncFryer(VeSyncBaseDevice[FryerState]):
         """
         del cook_time, cook_temp, chamber, preheat_time, cook_mode, temp_unit
         logger.warning('set_mode method not implemented for base fryer class.')
+        return False
+
+    async def set_chamber_modes(
+        self,
+        chamber_1: AirFryerPresetRecipe,
+        chamber_2: AirFryerPresetRecipe | None = None,
+        *,
+        sync_type: AirFryerSyncType = AirFryerSyncType.SYNC,
+    ) -> bool:
+        """Start separate SYNC recipes, or apply one recipe to both with MATCH.
+
+        Only models declaring ``CHAMBER_MODES`` implement this method. Recipes
+        use seconds and carry their temperature unit. This starts cooking;
+        it does not merely store a preset.
+
+        Args:
+            chamber_1 (AirFryerPresetRecipe): First SYNC recipe, or the recipe
+                to apply to both baskets in MATCH.
+            chamber_2 (AirFryerPresetRecipe | None): Second SYNC recipe. Omit
+                for MATCH; a source recipe from either basket can be used.
+            sync_type (AirFryerSyncType): SYNC for separate recipes finishing
+                together, or MATCH for identical settings.
+
+        Returns:
+            bool: Whether the command succeeded. Unsupported or invalid
+            combinations return False without a request.
+        """
+        del chamber_1, chamber_2, sync_type
+        logger.debug('Separate chamber modes are not configured for %s', self.device_name)
         return False
 
     async def set_mode_from_recipe(

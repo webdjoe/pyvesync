@@ -75,6 +75,7 @@ from pyvesync.const import (
     AirFryerPresetRecipe,
     AirFryerPresets,
     AirFryerTempLimits,
+    AirFryerTimeLimits,
     BulbFeatures,
     ColorMode,
     EnergyIntervals,
@@ -1574,6 +1575,7 @@ _DC111S_COOK_MODES: dict[str, AirFryerModeConfig] = {
         temp_f=AirFryerTempLimits(min_temp=250, max_temp=450, step=5),
         default_temp_c=195,
         default_temp_f=385,
+        time_limits=AirFryerTimeLimits(60, 3600, 60),
     ),
     AirFryerCookModes.BAKE: AirFryerModeConfig(
         api_mode='Bake',
@@ -1584,6 +1586,7 @@ _DC111S_COOK_MODES: dict[str, AirFryerModeConfig] = {
         temp_f=AirFryerTempLimits(min_temp=260, max_temp=400, step=5),
         default_temp_c=165,
         default_temp_f=330,
+        time_limits=AirFryerTimeLimits(60, 3600, 60),
     ),
     AirFryerCookModes.ROAST: AirFryerModeConfig(
         api_mode='Roast',
@@ -1594,6 +1597,7 @@ _DC111S_COOK_MODES: dict[str, AirFryerModeConfig] = {
         temp_f=AirFryerTempLimits(min_temp=350, max_temp=450, step=5),
         default_temp_c=220,
         default_temp_f=425,
+        time_limits=AirFryerTimeLimits(60, 3600, 60),
     ),
     AirFryerCookModes.GRILL: AirFryerModeConfig(
         api_mode='Grill',
@@ -1604,6 +1608,7 @@ _DC111S_COOK_MODES: dict[str, AirFryerModeConfig] = {
         temp_f=AirFryerTempLimits(min_temp=320, max_temp=450, step=5),
         default_temp_c=230,
         default_temp_f=450,
+        time_limits=AirFryerTimeLimits(60, 3600, 60),
     ),
     AirFryerCookModes.REHEAT: AirFryerModeConfig(
         api_mode='Reheat',
@@ -1614,6 +1619,7 @@ _DC111S_COOK_MODES: dict[str, AirFryerModeConfig] = {
         temp_f=AirFryerTempLimits(min_temp=105, max_temp=400, step=5),
         default_temp_c=165,
         default_temp_f=330,
+        time_limits=AirFryerTimeLimits(60, 3600, 60),
     ),
     AirFryerCookModes.DRY: AirFryerModeConfig(
         api_mode='Dry',
@@ -1624,6 +1630,7 @@ _DC111S_COOK_MODES: dict[str, AirFryerModeConfig] = {
         temp_f=AirFryerTempLimits(min_temp=100, max_temp=200, step=5),
         default_temp_c=55,
         default_temp_f=130,
+        time_limits=AirFryerTimeLimits(1800, 86400, 1800),
     ),
     AirFryerCookModes.PROOF: AirFryerModeConfig(
         api_mode='Proof',
@@ -1634,6 +1641,7 @@ _DC111S_COOK_MODES: dict[str, AirFryerModeConfig] = {
         temp_f=AirFryerTempLimits(min_temp=90, max_temp=115, step=1),
         default_temp_c=30,
         default_temp_f=90,
+        time_limits=AirFryerTimeLimits(900, 43200, 900),
     ),
 }
 
@@ -1812,7 +1820,7 @@ air_fryer_modules: list[AirFryerMap] = [
         model_display='CAF-DC111S-AEU',
         model_name='Turbo Tower Pro Smart Air Fryer',
         temp_unit=TemperatureUnits.CELSIUS,
-        features=[AirFryerFeatures.DUAL_CHAMBER],
+        features=[AirFryerFeatures.DUAL_CHAMBER, AirFryerFeatures.CHAMBER_MODES],
         cook_modes=_DC111S_COOK_MODES,
         default_cook_mode=AirFryerCookModes.AIRFRY,
         default_preset=AirFryerPresets.air_fry,
