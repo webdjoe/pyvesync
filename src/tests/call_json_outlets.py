@@ -253,3 +253,36 @@ for k in METHOD_RESPONSES:
         METHOD_RESPONSES[k]["get_weekly_energy"] = ENERGY_HISTORY
         METHOD_RESPONSES[k]["get_monthly_energy"] = ENERGY_HISTORY
         METHOD_RESPONSES[k]["get_yearly_energy"] = ENERGY_HISTORY
+
+ESW03_SCHEDULE = {
+    "scheduleID": "1234567",
+    "scheduleId": "1234567",
+    "startTime": "05:30",
+    "endTime": "08:30",
+    "startExecTime": None,
+    "endExecTime": None,
+    "startState": "on",
+    "endState": "off",
+    "status": "1",
+    "timeZone": TestDefaults.time_zone,
+    "repeat": "7",
+    "deviceName": "ESW03",
+    "uuid": "ESW03-UUID",
+    "onceTomorrow": "1",
+    "nextDay": "0",
+    "content": None,
+    "event": None,
+    "tomorrow": "1",
+    "switchNo": 0,
+    "brightness": "null",
+    "likeId": None,
+    "mode": None,
+    "modeV2": None,
+    "screen": None,
+    "startExecOffsetMin": 0,
+    "endExecOffsetMin": 0,
+}
+
+METHOD_RESPONSES["ESW03"]["get_schedules"] = build_bypass_v1_response(
+    result_dict={"schedules": [ESW03_SCHEDULE]}
+)
