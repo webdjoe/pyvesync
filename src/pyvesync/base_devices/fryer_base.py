@@ -70,9 +70,10 @@ class FryerState(DeviceState):
         cook_last_time (int | None): The remaining cooking time in seconds at
             the last update or command. ``cook_time_remaining`` counts it down.
         last_timestamp (datetime | None): When the remaining times were last
-            refreshed. Set each time ``cook_status`` is set to cooking or
-            heating (each update while running), None after standby or a
-            stop. Used to count the remaining times down.
+            refreshed. Set each time ``cook_status`` is set to cooking,
+            heating or hold (each update while running), None after standby, a
+            stop, or a ``HOLD`` poll while the other chamber is not cooking.
+            Used to count the remaining times down.
         preheat_set_time (int | None): The set preheating time in seconds.
         preheat_last_time (int | None): The remaining preheating time in
             seconds at the last update or command. ``preheat_time_remaining``
@@ -100,7 +101,7 @@ class FryerState(DeviceState):
         Device classes call ``set_state()`` with the API response or the sent
         request, ``set_standby()`` to clear the state, and the stop and
         resume helpers for local pause and resume. Setting a running
-        ``cook_status`` (cooking or heating) updates ``last_timestamp``. A
+        ``cook_status`` (cooking, heating or hold) updates ``last_timestamp``. A
         failed or unreadable poll leaves the state unchanged.
     """
 
@@ -237,7 +238,12 @@ class FryerState(DeviceState):
 
     @property
     def cook_time_remaining(self) -> int | None:
-        """Return the remaining cook time in seconds."""
+        """Return the remaining cook time in seconds.
+
+        In ``HOLD`` (dual-chamber Sync cook), this is the wait before the
+        chamber starts cooking. It counts down only while the other chamber
+        cooks; with no ``last_timestamp`` it is the reported wait.
+        """
         if not self.is_in_cook_mode:
             return None
         if self.cook_status in [
@@ -245,6 +251,8 @@ class FryerState(DeviceState):
             AirFryerCookStatus.COOK_STOP,
             AirFryerCookStatus.READY,
         ]:
+            return self.cook_last_time
+        if self.cook_status == AirFryerCookStatus.HOLD and self.last_timestamp is None:
             return self.cook_last_time
 
         if self.cook_last_time is not None and self.last_timestamp is not None:
@@ -261,9 +269,10 @@ class FryerState(DeviceState):
 
         This is the value the app's finish time uses. It comes from the
         device's ``totalTimeRemaining`` where reported (counting down while
-        running), else remaining preheat plus cook time. None in standby, and
-        on the CS158 during preheat after an ``update()`` (it reports no cook
-        time then).
+        cooking, preheating, or in ``HOLD`` while the other chamber cooks),
+        else remaining preheat plus cook time. None in standby, and on the
+        CS158 during preheat after an ``update()`` (it reports no cook time
+        then).
         """
         if self.cook_status in (None, AirFryerCookStatus.STANDBY):
             return None
@@ -935,6 +944,9 @@ class VeSyncFryer(VeSyncBaseDevice[FryerState]):
     ) -> bool:
         """Validate the temperature is within the cook mode's range.
 
+        Checks the range only; off-step values are handled by rounding (see
+        ``round_temperature()`` and ``prepare_temperature()``).
+
         Args:
             temperature (int): The temperature in the device's ``temp_unit``.
             cook_mode (str | None): Cook mode whose limits apply, as for
@@ -1235,13 +1247,15 @@ class VeSyncFryer(VeSyncBaseDevice[FryerState]):
             cook_time (int): The cooking time in seconds, at least 1 (60 on
                 the CS137/CS158, whose API uses minutes and truncates to whole
                 minutes). A shorter time returns False without a request.
+                There is no upper limit: the app's per-mode time ranges are
+                not checked.
             cook_temp (int): The cooking temperature, in ``temp_unit``.
             temp_unit (TemperatureUnits | str | None): The unit of
                 ``cook_temp``; defaults to the device's current ``temp_unit``.
                 An unrecognised unit string returns False without a request.
             preheat_time (int | None): The preheating time in seconds, if any.
                 Used only on fryers with the ``PREHEAT`` feature: dropped on
-                the CAF-P583S and ignored on the CAF-TF101S/TF102S. On fryers
+                the CAF-P583S and ignored on the dual-chamber fryers. On fryers
                 with preheat it must be 0 or at least one API time unit (60
                 seconds on the CS137/CS158); otherwise False without a
                 request.

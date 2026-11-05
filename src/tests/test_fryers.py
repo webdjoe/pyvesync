@@ -63,6 +63,13 @@ DETAILS_PARAMS_STANDBY = [
     ),
     pytest.param(
         const.AirFryerCookStatus.STANDBY,
+        "CAF-DC111S-AEU",
+        "update",
+        call_json_fryers.DETAILS_RESPONSES_STANDBY["CAF-DC111S-AEU"],
+        id="CAF-DC111S-AEU.update.standby",
+    ),
+    pytest.param(
+        const.AirFryerCookStatus.STANDBY,
         "CAF-P583S",
         "update",
         call_json_fryers.DETAILS_RESPONSES_STANDBY["CAF-P583S"],
@@ -91,6 +98,13 @@ DETAILS_PARAMS_COOKING = [
         "update",
         call_json_fryers.DETAILS_RESPONSES_COOKING["CAF-TF101S"],
         id="CAF-TF101S.update.cooking",
+    ),
+    pytest.param(
+        const.AirFryerCookStatus.COOKING,
+        "CAF-DC111S-AEU",
+        "update",
+        call_json_fryers.DETAILS_RESPONSES_COOKING["CAF-DC111S-AEU"],
+        id="CAF-DC111S-AEU.update.cooking",
     ),
     pytest.param(
         const.AirFryerCookStatus.COOKING,
@@ -157,6 +171,7 @@ class TestFryers(TestBase):
         "CS158-AF": [],
         "CAF-DC601S": [],
         "CAF-TF101S": [],
+        "CAF-DC111S-AEU": [],
         "CAF-P583S": [],
     }
 
@@ -219,11 +234,16 @@ class TestFryers(TestBase):
                 assert fryer_obj.state_chamber_2.last_timestamp is None
 
         elif cook_status == const.AirFryerCookStatus.COOKING:
+            defaults = call_json_fryers.AirFryerDefaults
+            set_temp, set_time, last_time = call_json_fryers.COOKING_EXPECTED.get(
+                setup_entry,
+                (defaults.cook_temp_f, defaults.cook_time_s, defaults.cook_last_time_s),
+            )
             assert fryer_obj.state_chamber_1.cook_status == cook_status
-            assert fryer_obj.state_chamber_1.cook_set_temp == call_json_fryers.AirFryerDefaults.cook_temp_f
-            assert fryer_obj.state_chamber_1.cook_set_time == call_json_fryers.AirFryerDefaults.cook_time_s
+            assert fryer_obj.state_chamber_1.cook_set_temp == set_temp
+            assert fryer_obj.state_chamber_1.cook_set_time == set_time
             assert fryer_obj.state_chamber_1.cook_mode is not None
-            assert fryer_obj.state_chamber_1.cook_last_time == call_json_fryers.AirFryerDefaults.cook_last_time_s
+            assert fryer_obj.state_chamber_1.cook_last_time == last_time
             if const.AirFryerFeatures.DUAL_CHAMBER in fryer_obj.features:
                 # Chamber 2 should be standby in cooking test data
                 assert fryer_obj.state_chamber_2.cook_status == const.AirFryerCookStatus.STANDBY
