@@ -33,19 +33,16 @@ jobs:
       - name: Lint with Ruff
         id: ruff
         run: |
-          pip install ruff
           ruff check --output-format=github src/pyvesync
         continue-on-error: true
       - name: Run pylint
         id: pylint
         run: |
-          pip install pylint
           pylint src/pyvesync --output-format=text --reports=n
         continue-on-error: true
       - name: Test with pytest
         id: pytest
         run: |
-          pip install pytest
           pytest -v
       - name: Build docs (mkdocs)
         id: docs

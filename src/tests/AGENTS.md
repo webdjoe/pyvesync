@@ -54,7 +54,8 @@ There is no `__init__.py`. Modules import each other by bare name
 ### Response data: `call_json_<type>.py`
 
 One per device type: `outlets`, `switches`, `bulbs`, `fans`, `purifiers`,
-`humidifiers`, `thermostat`. Each module has:
+`humidifiers`, `fryers`, `thermostat`. Each module has (`call_json_fryers.py`
+and `call_json_thermostat.py` differ, see [Air fryers](#air-fryers)):
 
 - A setup-entry list taken from `device_map.<type>_modules` (e.g.
   `OUTLETS = [m.setup_entry for m in outlet_modules]`; purifiers use
@@ -79,8 +80,14 @@ fields to make a code path run.
 | File | Covers |
 | ---- | ------ |
 | `test_outlets.py`, `test_switches.py`, `test_bulbs.py`, `test_fans.py`, `test_purifiers.py`, `test_humidifiers.py` | Device requests via `TestBase`, parametrized per setup entry |
-| `test_all_devices.py` | Every device has a `DETAILS_RESPONSES` entry (`test_device_tests`); `get_devices()` request |
+| `test_fryers.py` | Air fryer `update()` requests (standby and cooking) recorded to `api/vesynckitchen/`. See [Air fryers](#air-fryers) |
+| `test_fryer_captures.py` | Air fryer requests and status parsing pinned to packet-capture values; asserts on request bodies, no YAML |
+| `test_fryer_units.py` | Air fryer device map against the APK preset table, temperature units, limits and rounding, preheat helpers |
+| `test_fryer_chambers.py` | Air fryer `AirFryerChamber` interface: supported chambers, `BOTH` / Sync, `work_chamber`, `sync_chambers` |
+| `test_fryer_resilience.py` | Air fryer failure handling: unknown PID skipped, bad units, failed polls keep state, time validation, CS137/CS158 stop/resume phases, dual `end()` for the whole basket, per-device `default_preset` |
+| `test_all_devices.py` | Each device type's `DETAILS_RESPONSES` has one entry per setup entry (count check, `test_device_tests`); `get_devices()` request. Air fryers and thermostats aren't counted |
 | `test_auth.py` | `VeSyncAuth`: init/region, credentials, token-file persistence, login and re-auth flows |
+| `test_manager_resilience.py` | Device discovery skips a device whose class raises `VeSyncError`; `update_all_devices()` logs unexpected errors |
 | `test_colors.py` | Plain unit tests for `utils/colors.py`, no fixtures |
 | `test_x_vesync_login.py` | Login flow (`TestBase` and `TestApiFunc`). Current, not legacy |
 | `test_x_vesync_api_responses.py` | `async_call_api()` error handling: rate limits, server errors, status codes (`TestApiFunc`). Current, not legacy |
@@ -186,12 +193,49 @@ entries changed (`git diff src/tests/api`), and explain the change in the PR.
 The request changed. Treat it as a regression
 until proven otherwise; don't overwrite the fixture to make it pass.
 
-### New device type, thermostats, air fryers
+### Air fryers
+
+Air fryers are in `call_json.ALL_DEVICE_MAP_MODULES`, so
+`self.get_device('air_fryers', setup_entry)` builds one, but they don't follow
+the generic pattern:
+
+- `call_json_fryers.py` has `FRYERS` / `FRYERS_NUM`, the raw status dicts
+  `AIR_FRYER_STANDBY_DETAILS` and `AIR_FRYER_COOKING_DETAILS`, the wrapped
+  `DETAILS_RESPONSES_STANDBY` / `DETAILS_RESPONSES_COOKING`, and
+  `METHOD_RESPONSES`. There is no `DETAILS_RESPONSES`.
+- `test_fryers.py` parametrizes `test_details_fryers` explicitly from its
+  `DETAILS_PARAMS_STANDBY` / `DETAILS_PARAMS_COOKING` lists (CS158-AF,
+  CAF-DC601S, CAF-P583S, CAF-TF101S), checks the parsed state, and records the
+  `update()` request in `api/vesynckitchen/<setup_entry>.yaml`. It has no
+  `test_methods`, so `base_methods` / `device_methods` are unused and no
+  control-method requests are recorded.
+- Control methods are tested in `test_fryer_captures.py`,
+  `test_fryer_chambers.py`, `test_fryer_units.py` and
+  `test_fryer_resilience.py`. They are mostly
+  `TestBase` tests that set `self.mock_api.return_value`, call the method and
+  check the request body (`parse_args(self.mock_api)['json_object']`) or the
+  parsed state, plus a few plain functions. Where a capture exists, values
+  come from it; the `BOTH` / Sync request values have no capture yet.
+  Capture values live in the test (`CS158_*` dicts, `_dc601s_status()`,
+  `_tf101s_status()` / `_tf101s_chamber()`).
+- `test_fryer_units.py::test_presets_match_apk` compares every map entry's
+  `cook_modes` with its `APK_PRESETS` row, and the map tests require each
+  entry's `default_cook_mode` to name the mode `default_preset` sends.
+
+Adding an air fryer model therefore means: an `APK_PRESETS` row (from the
+APK); for a new response shape, a standby and a cooking status in
+`call_json_fryers.py` and matching `DETAILS_PARAMS_*` entries (only setup
+entries listed there get an `update()` fixture); capture-based tests for every
+request it sends; then
+`PYTEST_CONFIRM=1 pytest src/tests/test_fryers.py --write_api` for the
+`update()` fixture.
+
+### New device type, thermostats
 
 `call_json_thermostat.py`
-exists, but there is no `test_thermostat.py`, and neither thermostats nor air
-fryers are in `call_json.ALL_DEVICE_MAP_MODULES`, so `get_device()` cannot
-build them yet. Adding coverage means registering the type's `*_modules` in
+exists, but there is no `test_thermostat.py`, and thermostats aren't in
+`call_json.ALL_DEVICE_MAP_MODULES`, so `get_device()` cannot build them
+yet. Adding coverage means registering the type's `*_modules` in
 `call_json.py`, adding a `call_json_<type>.py`, a `test_<type>.py` following
 `test_outlets.py`, and a count assertion in `test_device_tests`. That is its
 own PR.

@@ -55,11 +55,12 @@ class BypassV2RequestPayload(DataClassORJSONMixin):
     method: str
     source: str = 'APP'
     subDeviceNo: int | None = None
+    subDeviceType: str | None = None
 
     class Config(BaseModelConfig):
         """orjson config for dataclasses."""
 
-        forbid_extra_keys = True
+        forbid_extra_keys = False
         orjson_options = orjson.OPT_NON_STR_KEYS
         omit_none = True
 

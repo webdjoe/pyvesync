@@ -228,7 +228,7 @@ Models for each device should be kept in the `pyvesync/models` folder with the a
 - [`outlet_models`][pyvesync.models.outlet_models]
 - [`switch_models`][pyvesync.models.switch_models]
 - [`fan_models`][pyvesync.models.fan_models]
-- [`airfryer_models`][pyvesync.models.fryer_models]
+- [`fryer_models`][pyvesync.models.fryer_models]
 - [`thermostat_models`][pyvesync.models.thermostat_models]
 
 There are multiple levels to some requests with nested dictionaries. These must be defined in different classes:
