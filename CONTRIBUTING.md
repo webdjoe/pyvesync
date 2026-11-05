@@ -159,7 +159,7 @@ Or use tox (environments from `tox.ini`):
 
 ```bash
 tox                 # all environments
-tox -e 3.11         # pytest on Python 3.11 (also 3.12, 3.13)
+tox -e 3.11         # pytest on Python 3.11 (also 3.12, 3.13, 3.14)
 tox -e lint         # pylint
 tox -e flake8       # flake8 + flake8-docstrings
 tox -e mypy         # mypy
@@ -177,7 +177,7 @@ has the details.
 On every pull request to `dev` or `master`:
 
 - **Run Linting and Unit Tests:** `ruff check`, `pylint`, and `pytest` on
-  Python 3.11, 3.12 and 3.13. The MkDocs build also runs on PRs to `master`.
+  Python 3.11, 3.12, 3.13 and 3.14. The MkDocs build also runs on PRs to `master`.
 - **pre-commit.ci:** the pre-commit hooks, including **mypy** (mypy is not part
   of the test workflow, so run it locally).
 - **Semantic Title:** the Conventional Commits PR title check.

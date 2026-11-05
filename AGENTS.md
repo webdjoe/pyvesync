@@ -76,7 +76,7 @@ pre-commit run --all-files             # stage changes first
 
 # tox environments (see tox.ini)
 tox                  # everything
-tox -e 3.11          # pytest (also 3.12, 3.13)
+tox -e 3.11          # pytest (also 3.12, 3.13, 3.14)
 tox -e lint          # pylint
 tox -e flake8        # flake8 + flake8-docstrings
 tox -e mypy          # mypy
@@ -173,7 +173,8 @@ A complete addition touches:
 4. `src/tests/call_json_<type>.py`: add the `get_details()` response to
    `DETAILS_RESPONSES[setup_entry]`, plus any non-default `METHOD_RESPONSES`.
 5. `src/tests/test_<type>.py`: add device-specific methods to `device_methods`
-   if the device has methods beyond `base_methods`.
+   if the device has methods beyond `base_methods`. Air fryers differ; see the
+   air fryer section of `src/tests/AGENTS.md`.
 6. Run `PYTEST_CONFIRM=1 pytest src/tests/test_<type>.py --write_api` to record
    YAML fixtures, check them against the capture, then run `pytest` to confirm.
 7. Docs: add a `:::` block for the class in `docs/devices/<type>.md`, and list
@@ -211,8 +212,15 @@ details in [src/tests/AGENTS.md](src/tests/AGENTS.md).
 - Response helpers live in `defaults.py` (`build_bypass_v1_response()`,
   `build_bypass_v2_response()`, `FunctionResponses*`). `xtest_x_*.py` files are
   legacy and not collected.
-- Coverage gaps: thermostats and air fryers have no test module or YAML
-  fixtures, and aren't registered in `call_json.ALL_DEVICE_MAP_MODULES`.
+- Air fryers are registered in `call_json.ALL_DEVICE_MAP_MODULES` but don't
+  use the generic `test_details` / `test_methods`. `test_fryers.py` records
+  `update()` requests in `api/vesynckitchen/`; the control methods are tested
+  in `test_fryer_captures.py`, `test_fryer_units.py`,
+  `test_fryer_chambers.py` and `test_fryer_resilience.py`, which assert on
+  request bodies, parsed state and the device map directly and write no YAML.
+  See the air fryer section of `src/tests/AGENTS.md`.
+- Coverage gap: thermostats have no test module or YAML fixtures, and aren't
+  registered in `call_json.ALL_DEVICE_MAP_MODULES`.
 
 ## Code style
 
@@ -244,7 +252,7 @@ pre-commit hooks apply to `src/pyvesync` only; `src/tests` is excluded.
 - Do not bump `version` in `pyproject.toml` in feature or fix PRs; that happens
   in the release PR to `master`.
 - CI (`.github/workflows/RunTest.yaml`) runs ruff check, pylint and pytest on
-  Python 3.11–3.13; mkdocs build runs only on PRs to `master`. mypy is not in
+  Python 3.11–3.14; mkdocs build runs only on PRs to `master`. mypy is not in
   CI. It runs through pre-commit and pre-commit.ci, so run it locally.
 
 ### Never commit

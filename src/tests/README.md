@@ -39,10 +39,13 @@ The structure of the framework is as follows:
 | `utils.py` | `YAMLWriter`, `parse_args()`, `assert_test()`, `api_scrub()` and the readable-diff helpers used to compare or write fixtures. |
 | `aiohttp_mocker.py` | `AiohttpMockSession` / `AiohttpClientMockResponse` - simulate `aiohttp` responses for `TestApiFunc`. |
 | `call_json.py` | Device-list builder (`DeviceList`), login/`get_devices()` responses and `ALL_DEVICE_MAP_DICT`. |
-| `call_json_<type>.py` | Per-device-type `get_details()` and method responses (`outlets`, `switches`, `fans`, `bulbs`, `purifiers`, `humidifiers`, `thermostat`). |
+| `call_json_<type>.py` | Per-device-type `get_details()` and method responses (`outlets`, `switches`, `fans`, `bulbs`, `purifiers`, `humidifiers`, `fryers`, `thermostat`). |
 | `test_<type>.py` | Parametrized device tests (`test_outlets`, `test_bulbs`, `test_fans`, `test_switches`, `test_purifiers`, `test_humidifiers`). |
-| `test_all_devices.py` | Asserts every device in each module has a `DETAILS_RESPONSES` entry, and tests `get_devices()` instantiates the expected device counts. |
+| `test_fryers.py` | Air fryer `update()` tests for standby and cooking, recorded to `api/vesynckitchen/`. |
+| `test_fryer_captures.py`, `test_fryer_units.py`, `test_fryer_chambers.py`, `test_fryer_resilience.py` | Air fryer control-method, device-map, chamber and failure-handling tests. They check request bodies (against capture values where a capture exists), parsed state and the APK preset table directly (no YAML). |
+| `test_all_devices.py` | Asserts each module's `DETAILS_RESPONSES` has one entry per setup entry (count check), and tests `get_devices()` instantiates the expected device counts. Air fryers and thermostats aren't included. |
 | `test_auth.py` | `VeSyncAuth` tests - credentials, token-file persistence, login flow, re-auth and error handling. |
+| `test_manager_resilience.py` | Failure handling: a device whose class raises `VeSyncError` is skipped during discovery, and `update_all_devices()` logs unexpected errors with their traceback. |
 | `test_colors.py` | Plain unit tests for `utils/colors.py` (`RGBNightlightColor`); no API fixtures. |
 | `test_x_vesync_login.py` | Current login-flow tests using `TestBase` and `TestApiFunc`. |
 | `test_x_vesync_api_responses.py` | Current `async_call_api()` error-handling tests via `TestApiFunc`. |
@@ -59,7 +62,7 @@ To run a tests for development on existing devices or if you are not ready to wr
 pytest
 
 # or through tox
-tox -e 3.12 # pytest on Python 3.12 (also 3.11, 3.13). Linters: -e lint (pylint), flake8, mypy, ruff
+tox -e 3.12 # pytest on Python 3.12 (also 3.11, 3.13, 3.14). Linters: -e lint (pylint), flake8, mypy, ruff
 ```
 
 If developing a new device and it is completed and thoroughly tested, pass the `--write_api` to pytest. Be sure to include the `--` before the argument in the tox command.
@@ -117,6 +120,7 @@ The call_json files contain all of the response data for each device type. The f
 - `call_json_bulbs.py` - API responses for the bulbs
 - `call_json_purifiers.py` - API responses for the air purifiers
 - `call_json_humidifiers.py` - API responses for the humidifiers
+- `call_json_fryers.py` - API responses for the air fryers (standby and cooking statuses; no `DETAILS_RESPONSES`)
 - `call_json_thermostat.py` - API responses for the thermostats
 
 #### call_json.py
@@ -284,7 +288,7 @@ class TestDevice(TestBase):
 
 ## Test Structure
 
-Each device module in the pyvesync library has an associated testing module, for example, `vesyncswitch` and `test_switches`. Humidifiers, air purifiers and fans each have their own test modules (`test_humidifiers.py`, `test_purifiers.py`, `test_fans.py`).
+Each device module in the pyvesync library has an associated testing module, for example, `vesyncswitch` and `test_switches`. Humidifiers, air purifiers and fans each have their own test modules (`test_humidifiers.py`, `test_purifiers.py`, `test_fans.py`). Air fryers (`vesynckitchen`) don't use the parametrized pattern below: `test_fryers.py` tests `update()` with explicit parameters, and `test_fryer_captures.py`, `test_fryer_units.py`, `test_fryer_chambers.py` and `test_fryer_resilience.py` test requests, state and the device map directly.
 
 The class inherits from the `TestBase` class in `base_test_cases.py` and is parametrized by `pytest_generate_tests` based on the method. The parameters are defined by the class attributes. The `base_methods` and `device_methods` class attributes define the method and arguments in a list of lists with the first item, the method name and the second optional item, the method kwargs. The `base_methods` class attribute defines methods that are common to all devices. The `device_methods` class attribute defines methods that are specific to the device type.
 

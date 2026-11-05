@@ -46,6 +46,8 @@ from types import MappingProxyType
 
 from mashumaro.mixins.orjson import DataClassORJSONMixin
 
+from pyvesync.const import UNKNOWN_ERROR_CODE
+
 
 @dataclass
 class ResponseInfo(DataClassORJSONMixin):
@@ -235,6 +237,24 @@ class ErrorCodes:
                 'BYPASS_ALL_ZONE_COOKING',
                 ErrorTypes.DEVICE_ERROR,
                 'All zone cooking error',
+                device_online=True,
+            ),
+            '11914000': ResponseInfo(
+                'BYPASS_SYNC_FINISH_FAIL_1',
+                ErrorTypes.DEVICE_ERROR,
+                'Sync is unavailable, open the other basket',
+                device_online=True,
+            ),
+            '11915000': ResponseInfo(
+                'BYPASS_SYNC_FINISH_FAIL_2',
+                ErrorTypes.DEVICE_ERROR,
+                'Sync is unavailable, reduce the cooking time of the current basket',
+                device_online=True,
+            ),
+            '11926000': ResponseInfo(
+                'BYPASS_AVATAR_SYNC_FAIL',
+                ErrorTypes.DEVICE_ERROR,
+                'Sync is unavailable while cooking, cancel and restart cooking',
                 device_online=True,
             ),
             '11916000': ResponseInfo(
@@ -696,7 +716,7 @@ class ErrorCodes:
             '-11001000': ResponseInfo(
                 'TOKEN_EXPIRED', ErrorTypes.TOKEN_ERROR, 'Invalid token'
             ),
-            '-999999999': ResponseInfo(
+            UNKNOWN_ERROR_CODE: ResponseInfo(
                 'UNKNOWN', ErrorTypes.UNKNOWN_ERROR, 'Unknown error'
             ),
             '-11307000': ResponseInfo(
@@ -757,29 +777,33 @@ class ErrorCodes:
             )
             ```
         """
+        unknown = cls.errors[UNKNOWN_ERROR_CODE]
+        if error_code is None:
+            error_code = UNKNOWN_ERROR_CODE
+        error_str = str(error_code)
         try:
-            if error_code is None:
-                error_code = '-999999999'
-            error_str = str(error_code)
-            error_int = int(error_code)
-            if error_str == '0':
-                error_info = ResponseInfo('SUCCESS', ErrorTypes.SUCCESS, 'Success')
-            elif error_str in cls.errors:
-                error_info = cls.errors[error_str]
-            else:
-                error_code = int(error_int / 1000) * 1000
-                error_info = cls.errors[str(error_code)]
+            error_int: int | None = int(error_code)
+        except (ValueError, TypeError, OverflowError):
+            error_int = None
 
-            error_info = replace(error_info)
-            if msg is not None:
-                error_info.message = f'{error_info.message} - {msg}'
-            error_info.code = error_int
+        if error_str == '0':
+            error_info = ResponseInfo('SUCCESS', ErrorTypes.SUCCESS, 'Success')
+        elif error_str in cls.errors:
+            error_info = cls.errors[error_str]
+        elif error_int is not None:
+            # The app looks up (code / 1000) * 1000, truncating toward zero.
+            base = abs(error_int) // 1000 * 1000
+            if error_int < 0:
+                base = -base
+            error_info = cls.errors.get(str(base), unknown)
+        else:
+            error_info = unknown
 
-        except (ValueError, TypeError, KeyError):
-            error_info = ResponseInfo(
-                'UNKNOWN', ErrorTypes.UNKNOWN_ERROR, 'Unknown error'
-            )
-
+        # An unknown code keeps the API code and msg for last_response and logs.
+        error_info = replace(error_info)
+        if msg is not None:
+            error_info.message = f'{error_info.message} - {msg}'
+        error_info.code = error_int
         return error_info
 
     @classmethod
