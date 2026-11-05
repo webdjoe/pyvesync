@@ -59,6 +59,7 @@ class PurifierDefaults:
     fan_level = 1
     fan_set_level = 2
     filter_life = 80
+    carbon_filter_life = 90
     humidity = 50
     night_light = DeviceStatus.ON
     display = DeviceStatus.ON
@@ -257,6 +258,27 @@ PURIFIER_DETAILS: dict[str, dict[str, Any]] = {
         "ecoModeRunTime": 0,
         "errorCode": 0,
     },
+    "LAP-C341S": {  # Eleva 300X
+        "powerSwitch": int(DeviceStatus.ON),
+        "filterLifePercent": PurifierDefaults.filter_life,
+        "carbonFilterLifePercent": PurifierDefaults.carbon_filter_life,
+        "workMode": PurifierDefaults.purifier_mode,
+        "manualSpeedLevel": PurifierDefaults.fan_set_level,
+        "fanSpeedLevel": PurifierDefaults.fan_level,
+        "AQLevel": PurifierDefaults.air_quality_enum.value,
+        "PM25": PurifierDefaults.air_quality_value_pm25,
+        "PM1": PurifierDefaults.pm1,
+        "PM10": PurifierDefaults.pm10,
+        "screenState": int(PurifierDefaults.display),
+        "childLockSwitch": int(PurifierDefaults.child_lock),
+        "screenSwitch": int(PurifierDefaults.display_config),
+        "lightDetectionSwitch": int(PurifierDefaults.light_detection),
+        "environmentLightState": int(PurifierDefaults.light_detected),
+        "autoPreference": {"autoPreferenceType": "default"},
+        "scheduleCount": 0,
+        "timerRemain": 0,
+        "errorCode": 0,
+    },
     "LAP-B851S-WUS": {
         "powerSwitch": TestDefaults.bin_toggle,
         "workMode": PurifierDefaults.purifier_mode,
@@ -317,6 +339,7 @@ DETAILS_RESPONSES = {
     "LAP-V102S": build_bypass_v2_response(inner_result=PURIFIER_DETAILS["LAP-V102S"]),
     "LAP-V201S": build_bypass_v2_response(inner_result=PURIFIER_DETAILS["LAP-V201S"]),
     "EL551S": build_bypass_v2_response(inner_result=PURIFIER_DETAILS["EL551S"]),
+    "LAP-C341S": build_bypass_v2_response(inner_result=PURIFIER_DETAILS["LAP-C341S"]),
     "LAP-B851S-WUS": build_bypass_v2_response(inner_result=PURIFIER_DETAILS["LAP-B851S-WUS"]),
 }
 
@@ -340,6 +363,7 @@ METHOD_RESPONSES = {
     "LAP-V102S": deepcopy(FunctionResponsesV2),
     "LAP-V201S": deepcopy(FunctionResponsesV2),
     "EL551S": deepcopy(FunctionResponsesV2),
+    "LAP-C341S": deepcopy(FunctionResponsesV2),
     "LAP-B851S-WUS": deepcopy(FunctionResponsesV2),
 }
 

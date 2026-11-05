@@ -40,6 +40,8 @@ class PurifierState(DeviceState):
         fan_level (int): Current fan level of the purifier.
         fan_set_level (int): Set fan level of the purifier.
         filter_life (int): Filter life percentage of the purifier.
+        carbon_filter_life (int): Activated carbon filter life percentage of the
+            purifier, for models with a separately-tracked carbon filter.
         auto_preference_type (str): Auto preference type of the purifier.
         auto_room_size (int): Auto room size of the purifier.
         air_quality_level (AirQualityLevel): Air quality level of the purifier.
@@ -71,6 +73,7 @@ class PurifierState(DeviceState):
         'aq_percent',
         'auto_preference_type',
         'auto_room_size',
+        'carbon_filter_life',
         'child_lock',
         'co2',
         'display_forever',
@@ -106,6 +109,7 @@ class PurifierState(DeviceState):
         self.fan_level: int | None = None
         self.fan_set_level: int | None = None
         self.filter_life: int | None = None
+        self.carbon_filter_life: int | None = None
         self.auto_preference_type: str | None = None
         self.auto_room_size: int | None = None
         self._air_quality_level: AirQualityLevel | None = None
