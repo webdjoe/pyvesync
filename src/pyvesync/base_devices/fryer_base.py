@@ -1062,7 +1062,8 @@ class VeSyncFryer(VeSyncBaseDevice[FryerState]):
         """Return a recipe's cook and preheat times as whole seconds.
 
         The cook time must be at least one API time unit (1 second, or
-        60 seconds on minute-based fryers). On fryers with the ``PREHEAT``
+        60 seconds on minute-based fryers). A mode that declares ``time_limits``
+        also requires its range and step. On fryers with the ``PREHEAT``
         feature the preheat time, if given, must be 0 or at least one unit.
         Other fryers drop it with a debug log.
 
@@ -1074,6 +1075,19 @@ class VeSyncFryer(VeSyncBaseDevice[FryerState]):
             None when not given or not supported), or None (after a warning)
             if either is not valid.
         """
+        mode = self.get_cook_mode(recipe.cook_mode)
+        if (
+            mode is not None
+            and mode.time_limits is not None
+            and not mode.time_limits.accepts(recipe.cook_time)
+        ):
+            logger.warning(
+                'Cook time %s is outside the limits or steps of %s for %s',
+                recipe.cook_time,
+                mode.api_mode,
+                self.device_name,
+            )
+            return None
         minimum = self.convert_time_for_state(1)
         try:
             cook_time = int(recipe.cook_time)
@@ -1247,8 +1261,9 @@ class VeSyncFryer(VeSyncBaseDevice[FryerState]):
             cook_time (int): The cooking time in seconds, at least 1 (60 on
                 the CS137/CS158, whose API uses minutes and truncates to whole
                 minutes). A shorter time returns False without a request.
-                There is no upper limit: the app's per-mode time ranges are
-                not checked.
+                A mode's ``time_limits``, where declared, also apply; a time
+                outside them returns False without a request. Other modes have
+                no upper limit.
             cook_temp (int): The cooking temperature, in ``temp_unit``.
             temp_unit (TemperatureUnits | str | None): The unit of
                 ``cook_temp``; defaults to the device's current ``temp_unit``.
