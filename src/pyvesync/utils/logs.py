@@ -351,7 +351,7 @@ class LibraryLogger:
                 msg += f'\n({", ".join(dif)})'
 
         msg += '\n\n Full Response:'
-        msg += f'\n{orjson.dumps(resp_dict, option=orjson.OPT_INDENT_2).decode("utf-8")}'
+        msg += f'\n{cls.api_printer(resp_dict)}'
         msg += '\n\n---------------------------------'
         msg += '\n\n Exception:'
         msg += f'\n{exc.__traceback__}'
