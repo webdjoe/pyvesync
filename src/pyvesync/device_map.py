@@ -1637,11 +1637,13 @@ _DC111S_COOK_MODES: dict[str, AirFryerModeConfig] = {
     ),
 }
 
-# The DC111S also reports ``hold`` for the chamber that waits during a Sync cook.
+# The DC111S also reports ``hold`` for the chamber that waits during a Sync cook,
+# and ``cookEnd`` when a cook finishes (PR #564 hardware test).
 _DC111S_STATUS_MAP: MappingProxyType[str, AirFryerCookStatus] = MappingProxyType(
     {
         **_TF10X_STATUS_MAP,
         'hold': AirFryerCookStatus.HOLD,
+        'cookEnd': AirFryerCookStatus.COOK_END,
     }
 )
 

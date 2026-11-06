@@ -149,6 +149,25 @@ class TestChamberInterface(TestBase):
         assert held.is_running is False
         assert fryer.state_chamber_1.cook_status == AirFryerCookStatus.COOKING
 
+    def test_dc111s_finished_cook_reports_cook_end(self):
+        # PR #564 report (CAF-DC111S-AEU): letting a cook finish returned
+        # cookEnd and zero remaining time. Its other fields are from DC111S_SYNC_HOLD.
+        fryer = self.get_device('air_fryers', 'CAF-DC111S-AEU')
+        self.mock_api.return_value = (build_bypass_v2_response(inner_result=DC111S_SYNC_HOLD), 200)
+        self.run_in_loop(fryer.update)
+        finished = deepcopy(DC111S_SYNC_HOLD)
+        for item in finished['statusList']:
+            item.update(cookStatus='cookEnd', currentRemainingTime=0, totalTimeRemaining=0)
+        self.mock_api.return_value = (build_bypass_v2_response(inner_result=finished), 200)
+        self.caplog.set_level(logging.WARNING)
+        self.run_in_loop(fryer.update)
+        assert 'Unknown cook status' not in self.caplog.text
+        for state in (fryer.state_chamber_1, fryer.state_chamber_2):
+            assert state.cook_status == AirFryerCookStatus.COOK_END
+            assert state.cook_last_time == 0
+            assert state.is_cooking is False
+            assert state.is_running is False
+
     def test_dc111s_hold_wait_counts_down(self):
         # The hold wait counts down between polls (HAR: 300 -> 296 -> 279).
         fryer = self.get_device('air_fryers', 'CAF-DC111S-AEU')
