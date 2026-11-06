@@ -262,14 +262,36 @@ class TestChamberInterface(TestBase):
         assert [c['chamber'] for c in data['cookConfigs']] == [1, 2]
         assert fryer.sync_chambers is True
 
-    @pytest.mark.parametrize('setup_entry', ['CAF-TF101S', 'CAF-DC111S-AEU'])
-    @pytest.mark.parametrize('chamber', [Ch.CHAMBER_1, Ch.BOTH])
-    def test_start_sends_shake_time_zero_in_every_config(self, setup_entry, chamber):
-        fryer = self.get_device('air_fryers', setup_entry)
+    @pytest.mark.parametrize('chamber', [Ch.CHAMBER_1, Ch.CHAMBER_2, Ch.BOTH])
+    def test_dc111s_sends_shake_time_zero_in_every_config(self, chamber):
+        # PR #536 tested these requests on a DC111S; its capture got code 0.
+        fryer = self.get_device('air_fryers', 'CAF-DC111S-AEU')
         ok, data = self._start(fryer, chamber)
         assert ok
         assert data['cookConfigs']
         assert all(c['shakeTime'] == 0 for c in data['cookConfigs'])
+
+    @pytest.mark.parametrize('chamber', [Ch.CHAMBER_1, Ch.CHAMBER_2, Ch.WHOLE, Ch.BOTH])
+    def test_tf101s_omits_shake_time(self, chamber):
+        # The TF101S app captures have no shakeTime on workChamber 1, 3 or 4.
+        fryer = self.get_device('air_fryers', 'CAF-TF101S')
+        ok, data = self._start(fryer, chamber)
+        assert ok
+        assert data['cookConfigs']
+        assert all('shakeTime' not in c for c in data['cookConfigs'])
+
+    @pytest.mark.parametrize('chamber', [Ch.CHAMBER_1, Ch.CHAMBER_2, Ch.WHOLE, Ch.BOTH])
+    def test_tf102s_request_unchanged_without_shake_time(self, chamber):
+        # No TF102S start-cook test or capture, so its request stays as it was.
+        fryer = self.get_device('air_fryers', 'CAF-TF102S')
+        ok, data = self._start(fryer, chamber)
+        assert ok
+        assert data['cookConfigs']
+        assert all('shakeTime' not in c for c in data['cookConfigs'])
+
+    def test_shake_time_feature_declarations(self):
+        declared = [e.setup_entry for e in air_fryer_modules if AirFryerFeatures.COOK_CONFIG_SHAKE_TIME in e.features]
+        assert declared == ['CAF-DC111S-AEU']
 
     def test_reported_sync_does_not_leak_into_single_chamber_start(self):
         fryer = self.get_device('air_fryers', 'CAF-TF101S')

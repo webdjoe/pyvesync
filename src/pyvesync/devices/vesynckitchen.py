@@ -969,6 +969,8 @@ class VeSyncDualAirFryer(BypassV2Mixin, VeSyncFryer):
             'recipeName': recipe.recipe_name,
             'recipeType': recipe.recipe_type,
         }
+        if AirFryerFeatures.COOK_CONFIG_SHAKE_TIME in self.features:
+            config_dict['shakeTime'] = 0
 
         if chamber == AirFryerChamber.BOTH:
             return [
