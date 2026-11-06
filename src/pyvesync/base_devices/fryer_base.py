@@ -19,6 +19,7 @@ from pyvesync.const import (
     AirFryerFeatures,
     AirFryerModeConfig,
     AirFryerPresetRecipe,
+    AirFryerSyncType,
     AirFryerTempLimits,
     TemperatureUnits,
     TimeUnits,
@@ -1288,6 +1289,37 @@ class VeSyncFryer(VeSyncBaseDevice[FryerState]):
         """
         del cook_time, cook_temp, chamber, preheat_time, cook_mode, temp_unit
         logger.warning('set_mode method not implemented for base fryer class.')
+        return False
+
+    async def set_chamber_modes(
+        self,
+        chamber_1: AirFryerPresetRecipe,
+        chamber_2: AirFryerPresetRecipe | None = None,
+        *,
+        sync_type: AirFryerSyncType = AirFryerSyncType.SYNC,
+    ) -> bool:
+        """Start a recipe in each chamber, or one recipe in both.
+
+        Only fryers with the ``CHAMBER_MODES`` feature implement this. Both
+        recipes are checked before any request, as in
+        ``set_mode_from_recipe()``, so an invalid second recipe does not start
+        the first. On success both chamber states are set locally from the
+        request; call ``update()`` for the device's reported state.
+
+        Args:
+            chamber_1 (AirFryerPresetRecipe): Recipe for chamber 1 with
+                ``SYNC``, or the recipe for both chambers with ``MATCH``.
+            chamber_2 (AirFryerPresetRecipe | None): Recipe for chamber 2.
+                Required with ``SYNC``; must be None with ``MATCH``.
+            sync_type (AirFryerSyncType): ``SYNC`` for separate recipes that
+                finish together, or ``MATCH`` for identical settings.
+
+        Returns:
+            bool: True if the command was successful. An unsupported fryer or
+            an invalid combination returns False without a request.
+        """
+        del chamber_1, chamber_2, sync_type
+        logger.debug('Separate chamber modes are not configured for %s', self.device_name)
         return False
 
     async def set_mode_from_recipe(

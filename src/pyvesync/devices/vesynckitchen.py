@@ -28,6 +28,7 @@ from pyvesync.const import (
     AirFryer158Command,
     AirFryerChamber,
     AirFryerCookStatus,
+    AirFryerFeatures,
     AirFryerPresetRecipe,
     AirFryerSyncType,
     ConnectionStatus,
@@ -714,8 +715,9 @@ class VeSyncDualAirFryer(BypassV2Mixin, VeSyncFryer):
 
     During a Sync cook with different times, the DC111S reports the chamber
     that waits to start as ``AirFryerCookStatus.HOLD``. Its wait counts down
-    only while the other chamber is cooking. A Sync cook with different
-    times can only be started from the app or the fryer.
+    only while the other chamber is cooking. ``set_chamber_modes()`` starts
+    a Sync cook with different settings per chamber, on fryers with the
+    ``CHAMBER_MODES`` feature; other fryers need the app or the fryer for that.
 
     The device has no preheat, pause, or resume API: ``preheat_time`` and a
     recipe's ``preheat_time`` are ignored, and ``stop()`` / ``resume()``
@@ -735,8 +737,9 @@ class VeSyncDualAirFryer(BypassV2Mixin, VeSyncFryer):
         sync_chambers (bool): Read-only. True only for the app's Sync mode
             (``syncType`` 2). Set by ``update()``; a successful
             ``set_mode()`` / ``set_mode_from_recipe()`` sets it True for
-            ``BOTH`` and False for any other chamber, and ``end(BOTH)`` sets
-            it False.
+            ``BOTH`` and False for any other chamber, a successful
+            ``set_chamber_modes()`` sets it True for ``SYNC`` and False for
+            ``MATCH``, and ``end(BOTH)`` sets it False.
         work_chamber (AirFryerChamber | None): Read-only. Chamber the device
             reports as active (``workChamber``); None when idle. Set by
             ``update()``. A successful ``WHOLE`` start sets ``WHOLE``, any other
@@ -1000,19 +1003,37 @@ class VeSyncDualAirFryer(BypassV2Mixin, VeSyncFryer):
         prepared = self._prepare_recipe(recipe)
         if prepared is None:
             return False
-        recipe = prepared
-        cook_configs = self._build_cook_configs(recipe, member)
+        cook_configs = self._build_cook_configs(prepared, member)
+        return await self._start_cook_configs(
+            cook_configs, member, self._get_sync_type(member)
+        )
 
+    async def _start_cook_configs(
+        self,
+        configs: list[models.FryerDualCookConfig],
+        chamber: AirFryerChamber,
+        sync_type: AirFryerSyncType,
+    ) -> bool:
+        """Send validated configs to ``startMultiCook`` and update the state.
+
+        Args:
+            configs: The chamber configs to start.
+            chamber: Validated chamber sent as ``workChamber``.
+            sync_type: The ``syncType`` to send.
+
+        Returns:
+            True if the command was successful.
+        """
         start_data = models.FryerDualStartCookData.from_dict(
             {
                 'accountId': self.manager.account_id,
-                'cookConfigs': [c.to_dict() for c in cook_configs],
+                'cookConfigs': [c.to_dict() for c in configs],
                 # readyStart False starts the cook at once; True waits for the
                 # start button.
                 'readyStart': False,
-                'syncType': int(self._get_sync_type(member)),
+                'syncType': int(sync_type),
                 'tempUnit': self.temp_unit.code,
-                'workChamber': int(member),
+                'workChamber': int(chamber),
             }
         )
 
@@ -1025,30 +1046,63 @@ class VeSyncDualAirFryer(BypassV2Mixin, VeSyncFryer):
         if r is None:
             return False
 
-        # Update state for affected chambers
-        both = member == AirFryerChamber.BOTH
-        chambers = (
-            [self.state_chamber_1, self.state_chamber_2]
-            if both
-            else [self._chamber_state(member)]
-        )
-        self._set_reported_sync(both)
-        if member == AirFryerChamber.WHOLE:
+        self._set_reported_sync(sync_type == AirFryerSyncType.SYNC)
+        if chamber == AirFryerChamber.WHOLE:
             self._set_reported_work_chamber(AirFryerChamber.WHOLE)
         elif self.work_chamber == AirFryerChamber.WHOLE:
             self._set_reported_work_chamber(None)
-        cook_time = self.convert_time_for_api(recipe.cook_time)
-        for ch_state in chambers:
+        # In a Sync cook with different times, the shorter chamber waits for the
+        # difference so both finish together.
+        longest = max(config.cookSetTime for config in configs)
+        separate_times = sync_type == AirFryerSyncType.SYNC and any(
+            config.cookSetTime != longest for config in configs
+        )
+        for config in configs:
+            wait_time = longest - config.cookSetTime if separate_times else 0
             # readyStart is False, so the cook starts without the start button.
-            ch_state.set_state(
-                cook_status=AirFryerCookStatus.COOKING,
-                cook_time=cook_time,
-                cook_last_time=cook_time,
-                cook_temp=recipe.target_temp,
-                cook_mode=recipe.cook_mode,
-                recipe=recipe.recipe_name,
+            self._chamber_state(AirFryerChamber(config.chamber)).set_state(
+                cook_status=(
+                    AirFryerCookStatus.HOLD if wait_time else AirFryerCookStatus.COOKING
+                ),
+                cook_time=config.cookSetTime,
+                cook_last_time=wait_time or config.cookSetTime,
+                total_last_time=longest if separate_times else None,
+                cook_temp=config.cookTemp,
+                cook_mode=config.mode,
+                recipe=config.recipeName,
             )
         return True
+
+    async def set_chamber_modes(
+        self,
+        chamber_1: AirFryerPresetRecipe,
+        chamber_2: AirFryerPresetRecipe | None = None,
+        *,
+        sync_type: AirFryerSyncType = AirFryerSyncType.SYNC,
+    ) -> bool:
+        if AirFryerFeatures.CHAMBER_MODES not in self.features:
+            return await super().set_chamber_modes(
+                chamber_1, chamber_2, sync_type=sync_type
+            )
+        if sync_type not in (AirFryerSyncType.SYNC, AirFryerSyncType.MATCH):
+            logger.warning(
+                'Invalid chamber sync type %s for %s', sync_type, self.device_name
+            )
+            return False
+        if (chamber_2 is None) != (sync_type == AirFryerSyncType.MATCH):
+            logger.warning('Invalid chamber recipe combination for %s', self.device_name)
+            return False
+        first = self._prepare_recipe(chamber_1)
+        if first is None:
+            return False
+        second = first if chamber_2 is None else self._prepare_recipe(chamber_2)
+        if second is None:
+            return False
+        configs = [
+            *self._build_cook_configs(first, AirFryerChamber.CHAMBER_1),
+            *self._build_cook_configs(second, AirFryerChamber.CHAMBER_2),
+        ]
+        return await self._start_cook_configs(configs, AirFryerChamber.BOTH, sync_type)
 
     async def set_mode(
         self,

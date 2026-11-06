@@ -155,7 +155,7 @@ def test_dc111s_entry_is_dual_without_whole_and_maps_hold():
     dc111 = by_type['CAF-DC111S-AEU']
     assert dc111.setup_entry == 'CAF-DC111S-AEU'
     assert dc111.class_name == 'VeSyncDualAirFryer'
-    assert dc111.features == [AirFryerFeatures.DUAL_CHAMBER]
+    assert dc111.features == [AirFryerFeatures.DUAL_CHAMBER, AirFryerFeatures.CHAMBER_MODES]
     assert dc111.temp_unit == TemperatureUnits.CELSIUS
     assert dc111.status_map['hold'] == AirFryerCookStatus.HOLD
     tf10x = by_type['CAF-TF101S'].status_map

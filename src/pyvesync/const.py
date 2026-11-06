@@ -1116,6 +1116,8 @@ class AirFryerFeatures(Features):
         RESUMABLE: Declared on the CS137/CS158; not checked by the library.
         WHOLE_CHAMBER: Single merged basket with the divider removed
             (workChamber 3); adds ``WHOLE`` to ``supported_chambers``.
+        CHAMBER_MODES: ``set_chamber_modes()`` is available: separate recipes
+            in Sync, or one recipe in both chambers in Match.
     """
 
     DUAL_BLAZE = 'dual_blaze'
@@ -1123,6 +1125,7 @@ class AirFryerFeatures(Features):
     DUAL_CHAMBER = 'dual_chamber'
     RESUMABLE = 'resumable'
     WHOLE_CHAMBER = 'whole_chamber'
+    CHAMBER_MODES = 'chamber_modes'
 
 
 class AirFryerCookStatus(StrEnum):
