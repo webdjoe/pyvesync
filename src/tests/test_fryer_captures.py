@@ -297,6 +297,24 @@ class TestFryerCaptures(TestBase):
         data = self._sent_body()['payload']['data']
         assert (data['mode'], data['recipeId'], data['recipeName']) == ('Broil', 17, 'Broil')
 
+    def test_dc111s_cook_config_matches_capture(self):
+        # CAF-DC111S-AEU_complete_captures.json, startMultiCook_chamber_1.
+        fryer = self.get_device('air_fryers', 'CAF-DC111S-AEU')
+        self.mock_api.return_value = (build_bypass_v2_response(), 200)
+        assert self.run_in_loop(fryer.set_mode, cook_time=300, cook_temp=180, cook_mode='AirFry')
+        assert self._sent_body()['payload']['data']['cookConfigs'] == [
+            {
+                'chamber': 1,
+                'cookSetTime': 300,
+                'cookTemp': 180,
+                'mode': 'AirFry',
+                'recipeId': 14,
+                'recipeName': 'Air Fry',
+                'recipeType': 3,
+                'shakeTime': 0,
+            }
+        ]
+
     def test_tf101s_grill_sends_grill_recipe(self):
         # Structure: TF101S startMultiCook capture; values: APK i61.C67928f0.
         fryer = self.get_device('air_fryers', 'CAF-TF101S')

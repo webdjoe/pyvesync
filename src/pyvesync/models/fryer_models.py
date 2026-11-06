@@ -298,6 +298,7 @@ class FryerDualCookConfig(RequestBaseModel):
     recipeId: int
     recipeName: str
     recipeType: int
+    shakeTime: int = 0
 
 
 @dataclass

@@ -262,6 +262,15 @@ class TestChamberInterface(TestBase):
         assert [c['chamber'] for c in data['cookConfigs']] == [1, 2]
         assert fryer.sync_chambers is True
 
+    @pytest.mark.parametrize('setup_entry', ['CAF-TF101S', 'CAF-DC111S-AEU'])
+    @pytest.mark.parametrize('chamber', [Ch.CHAMBER_1, Ch.BOTH])
+    def test_start_sends_shake_time_zero_in_every_config(self, setup_entry, chamber):
+        fryer = self.get_device('air_fryers', setup_entry)
+        ok, data = self._start(fryer, chamber)
+        assert ok
+        assert data['cookConfigs']
+        assert all(c['shakeTime'] == 0 for c in data['cookConfigs'])
+
     def test_reported_sync_does_not_leak_into_single_chamber_start(self):
         fryer = self.get_device('air_fryers', 'CAF-TF101S')
         status = _tf101s_status([_tf101s_chamber(1, 'cooking'), _tf101s_chamber(2, 'cooking')], work_chamber=4, sync_type=2)
@@ -371,6 +380,7 @@ class TestChamberInterface(TestBase):
             (c['chamber'], c['mode'], c['cookTemp'], c['cookSetTime'], c['recipeId'], c['recipeType'])
             for c in data['cookConfigs']
         ] == [(1, 'AirFry', 180, 180, 14, 3), (2, 'Bake', 160, 300, 9, 3)]
+        assert [c['shakeTime'] for c in data['cookConfigs']] == [0, 0]
         assert (first, second) == before
 
     def test_sync_with_different_times_holds_the_shorter_chamber(self):
@@ -422,6 +432,7 @@ class TestChamberInterface(TestBase):
         assert (one.pop('chamber'), two.pop('chamber')) == (1, 2)
         assert one == two
         assert one['mode'] == 'Bake'
+        assert one['shakeTime'] == 0
         assert fryer.state_chamber_1.cook_status == AirFryerCookStatus.COOKING
         assert fryer.state_chamber_2.cook_status == AirFryerCookStatus.COOKING
         # sync_chambers means the app's Sync mode only.
