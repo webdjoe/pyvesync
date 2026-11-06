@@ -81,12 +81,13 @@ await fryer.set_mode(cook_time, cook_temp, *, temp_unit=None,
 ```
 
 - `cook_time` and `preheat_time` are in **seconds**, as whole numbers (a
-  fraction is dropped). `cook_time` must be at least 1 second. The CS137/CS158
-  API counts in whole minutes, so pyvesync rounds the time down to the minute
-  (90 s is sent as 1 minute) and rejects a `cook_time` under 60 s. There is
-  no upper limit: pyvesync does not check the app's per-mode time ranges
-  (for example 1-60 minutes for most modes), so a longer time is sent as
-  given and the fryer may refuse it.
+  fraction is dropped, except on the CAF-DC111S-AEU, which rejects it).
+  `cook_time` must be at least 1 second. The CS137/CS158 API counts in whole
+  minutes, so pyvesync rounds the time down to the minute (90 s is sent as
+  1 minute) and rejects a `cook_time` under 60 s. The CAF-DC111S-AEU also checks
+  each mode's range and step (see [Cook time limits](#cook-time-limits)). Other
+  fryers have no upper limit: a longer time is sent as given and the fryer may
+  refuse it.
 - `cook_temp` is in the fryer's `temp_unit`, or in `temp_unit` if you pass
   one (see [Temperature units](#temperature-units)).
 - With no `cook_mode`, the fryer's default preset is used: Manual Cooking on
@@ -343,8 +344,25 @@ modes, for display. A temperature inside that span can still be outside the
 range of the mode you cook with; check `temp_limits(cook_mode)` before
 calling `set_mode()`. `temperature_step` is the default mode's step.
 
-Only temperatures have per-mode limits. Cook times are checked only for the
-minimum described under [Cooking](#cooking).
+## Cook time limits
+
+The CAF-DC111S-AEU limits each mode's cook time to the range and step in the
+VeSync app:
+
+| Mode | Range | Step |
+| --- | --- | --- |
+| AirFry, Bake, Roast, Grill, Reheat | 1-60 minutes | 1 minute |
+| Dry | 30 minutes-24 hours | 30 minutes |
+| Proof | 15 minutes-12 hours | 15 minutes |
+
+Times are still given in **seconds**. A time outside the range or off the step
+makes the method return `False` without sending a request. Unlike a
+temperature, a time is never rounded, because that would silently change how
+long the food cooks. A whole number given as a float or string (`600.0`,
+`'600'`) is accepted; a fraction or a boolean is not.
+
+Other fryers have no per-mode time limits and check only the minimum described
+under [Cooking](#cooking).
 
 ## Temperature units
 

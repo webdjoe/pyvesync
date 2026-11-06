@@ -25,10 +25,22 @@ from pyvesync.const import (
     ConnectionStatus,
     TemperatureUnits,
 )
+from pyvesync.device_map import air_fryer_modules
 from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
 
 V1_OK = (build_bypass_v1_response(result_dict={}), 200)
 V2_OK = (build_bypass_v2_response(), 200)
+
+# APK i61.C114379l (DC111SEUConfig): (minimum, maximum, step) in seconds.
+DC111S_TIME_LIMITS = {
+    'AirFry': (60, 3600, 60),
+    'Bake': (60, 3600, 60),
+    'Roast': (60, 3600, 60),
+    'Grill': (60, 3600, 60),
+    'Reheat': (60, 3600, 60),
+    'Dry': (1800, 86400, 1800),
+    'Proof': (900, 43200, 900),
+}
 
 
 def _age(state, seconds: int) -> None:
@@ -218,6 +230,70 @@ class TestFryerResilience(TestBase):
         assert self._sent()['payload']['data']['startAct']['cookSetTime'] == 600
         assert fryer.state.cook_set_time == 600
         assert isinstance(fryer.state.cook_set_time, int)
+
+    # CAF-DC111S-AEU per-mode time limits (APK i61.C114379l, DC111SEUConfig)
+
+    @pytest.mark.parametrize('mode', list(DC111S_TIME_LIMITS))
+    @pytest.mark.parametrize('boundary', [0, 1])
+    @pytest.mark.parametrize('chamber', [AirFryerChamber.CHAMBER_1, AirFryerChamber.CHAMBER_2])
+    def test_dc111s_time_limit_boundaries_are_sent(self, mode, boundary, chamber):
+        fryer = self.get_device('air_fryers', 'CAF-DC111S-AEU')
+        seconds = DC111S_TIME_LIMITS[mode][boundary]
+        recipe = replace(fryer.get_mode_recipe(mode), cook_time=seconds)
+        assert self._send(fryer.set_mode_from_recipe, recipe, chamber=chamber, ok=V2_OK)
+        assert self._sent()['payload']['data']['cookConfigs'][0]['cookSetTime'] == seconds
+
+    @pytest.mark.parametrize('mode', list(DC111S_TIME_LIMITS))
+    @pytest.mark.parametrize('bad_kind', ['below', 'above', 'off_step', 'bool', 'fraction', 'text'])
+    def test_dc111s_invalid_mode_times_send_no_request(self, mode, bad_kind):
+        fryer = self.get_device('air_fryers', 'CAF-DC111S-AEU')
+        low, high, _ = DC111S_TIME_LIMITS[mode]
+        seconds = {
+            'below': low - 1,
+            'above': high + 1,
+            'off_step': low + 1,
+            'bool': True,
+            'fraction': low + 0.5,
+            'text': 'ten minutes',
+        }[bad_kind]
+        recipe = replace(fryer.get_mode_recipe(mode), cook_time=seconds)
+        assert self._send(fryer.set_mode_from_recipe, recipe, ok=V2_OK) is False
+        assert self.mock_api.call_count == 0
+
+    @pytest.mark.parametrize('seconds', [600, 600.0, '600'])
+    def test_dc111s_whole_number_times_are_sent_as_int(self, seconds):
+        fryer = self.get_device('air_fryers', 'CAF-DC111S-AEU')
+        assert self._send(fryer.set_mode, seconds, 180, ok=V2_OK)
+        sent = self._sent()['payload']['data']['cookConfigs'][0]['cookSetTime']
+        assert sent == 600
+        assert isinstance(sent, int)
+
+    def test_dc111s_default_recipes_are_within_their_limits(self):
+        fryer = self.get_device('air_fryers', 'CAF-DC111S-AEU')
+        for mode in DC111S_TIME_LIMITS:
+            recipe = fryer.get_mode_recipe(mode)
+            assert self._send(fryer.set_mode_from_recipe, recipe, ok=V2_OK), mode
+
+    def test_dc111s_off_step_time_is_rejected_while_temperature_rounds(self):
+        fryer = self.get_device('air_fryers', 'CAF-DC111S-AEU')
+        assert self._send(fryer.set_mode, 90, 180, ok=V2_OK) is False
+        assert self._send(fryer.set_mode, 120, 183, ok=V2_OK)
+        assert self._sent()['payload']['data']['cookConfigs'][0]['cookTemp'] == 185
+
+    def test_time_limits_are_declared_only_on_the_dc111s(self):
+        for entry in air_fryer_modules:
+            limits = {k: m.time_limits for k, m in entry.cook_modes.items()}
+            if entry.setup_entry == 'CAF-DC111S-AEU':
+                assert all(limit is not None for limit in limits.values())
+            else:
+                assert all(limit is None for limit in limits.values()), entry.setup_entry
+
+    @pytest.mark.parametrize('setup_entry', ['CAF-TF101S', 'CAF-TF102S'])
+    def test_other_dual_fryers_keep_general_time_validation(self, setup_entry):
+        fryer = self.get_device('air_fryers', setup_entry)
+        temp = fryer.temp_limits().min_temp
+        assert self._send(fryer.set_mode, 90, temp, ok=V2_OK)
+        assert self._sent()['payload']['data']['cookConfigs'][0]['cookSetTime'] == 90
 
     # Failed polls
 
