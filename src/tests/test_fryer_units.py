@@ -163,8 +163,10 @@ def test_dc111s_entry_is_dual_without_whole_and_maps_hold():
     assert dc111.temp_unit == TemperatureUnits.CELSIUS
     assert dc111.status_map['hold'] == AirFryerCookStatus.HOLD
     tf10x = by_type['CAF-TF101S'].status_map
-    assert {k: v for k, v in dc111.status_map.items() if k != 'hold'} == dict(tf10x)
+    assert dc111.status_map['cookEnd'] == AirFryerCookStatus.COOK_END
+    assert {k: v for k, v in dc111.status_map.items() if k not in ('hold', 'cookEnd')} == dict(tf10x)
     assert 'hold' not in tf10x
+    assert 'cookEnd' not in tf10x
 
 
 def test_limits_are_frozen():
