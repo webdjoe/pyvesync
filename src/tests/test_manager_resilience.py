@@ -4,12 +4,18 @@ A device whose class rejects it must be skipped without stopping discovery,
 and an unexpected error while updating a device must be logged.
 """
 
+import logging
 from unittest.mock import AsyncMock, patch
 
 from base_test_cases import TestBase
 from call_json import ALL_DEVICE_MAP_DICT, DeviceList
 
-from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
+from pyvesync.models.vesync_models import (
+    ResponseDeviceDetailsModel,
+    ResponseDeviceListModel,
+)
+from pyvesync.utils.helpers import Helpers
+from pyvesync.utils.logs import LibraryLogger
 
 
 class TestManagerResilience(TestBase):
@@ -38,3 +44,27 @@ class TestManagerResilience(TestBase):
         ):
             self.run_in_loop(self.manager.update_all_devices)
         assert 'Unexpected error updating device: boom' in self.caplog.text
+
+    def test_parse_error_debug_log_redacts_the_response(self):
+        # A row with no deviceRegion fails to parse, so the response is dumped.
+        row = DeviceList.device_list_item(ALL_DEVICE_MAP_DICT['CAF-DC601S'])
+        row.pop('deviceRegion')
+        row['cid'] = 'cid-not-for-logs'
+        body = {
+            'traceId': 'trace',
+            'code': 0,
+            'msg': 'request success',
+            'result': {'total': 1, 'pageSize': 100, 'pageNo': 1, 'list': [row]},
+        }
+        logger = logging.getLogger('pyvesync.vesync')
+        with (
+            patch.object(LibraryLogger, 'debug_enabled', True),
+            patch.object(LibraryLogger, 'shouldredact', True),
+            self.caplog.at_level(logging.DEBUG, logger='pyvesync.vesync'),
+        ):
+            model = Helpers.model_maker(
+                logger, ResponseDeviceListModel, 'get_devices', body
+            )
+        assert model is None
+        assert 'Full Response' in self.caplog.text
+        assert 'cid-not-for-logs' not in self.caplog.text
