@@ -293,6 +293,8 @@ other fryers return `False` without a request.
   for the upper basket, the second for the lower. They can differ in mode,
   temperature and time. The shorter recipe waits in `HOLD` so both finish
   together.
+- `AirFryerSyncType.OFF` takes one recipe per chamber, and each starts at once
+  and runs on its own time.
 - `AirFryerSyncType.MATCH` takes one recipe and uses it for both chambers.
 
 ```python

@@ -1308,11 +1308,13 @@ class VeSyncFryer(VeSyncBaseDevice[FryerState]):
 
         Args:
             chamber_1 (AirFryerPresetRecipe): Recipe for chamber 1 with
-                ``SYNC``, or the recipe for both chambers with ``MATCH``.
+                ``SYNC`` or ``OFF``, or the recipe for both chambers with
+                ``MATCH``.
             chamber_2 (AirFryerPresetRecipe | None): Recipe for chamber 2.
-                Required with ``SYNC``; must be None with ``MATCH``.
+                Required with ``SYNC`` and ``OFF``; must be None with ``MATCH``.
             sync_type (AirFryerSyncType): ``SYNC`` for separate recipes that
-                finish together, or ``MATCH`` for identical settings.
+                finish together, ``OFF`` for separate recipes that each run on
+                their own time, or ``MATCH`` for identical settings.
 
         Returns:
             bool: True if the command was successful. An unsupported fryer or

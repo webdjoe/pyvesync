@@ -460,10 +460,30 @@ class TestChamberInterface(TestBase):
         # sync_chambers means the app's Sync mode only.
         assert fryer.sync_chambers is False
 
+    def test_sync_off_starts_separate_recipes_independently(self):
+        # APK DualZoneCookSetVM.t1 sends both zones with SYNC_OFF; DC111S status
+        # polls show syncType 0, workChamber 4. No captured request has this shape.
+        fryer = self._dc111s()
+        first = replace(fryer.get_mode_recipe('AirFry'), target_temp=180, cook_time=180)
+        second = replace(fryer.get_mode_recipe('Bake'), target_temp=160, cook_time=300)
+        assert self.run_in_loop(fryer.set_chamber_modes, first, second, sync_type=AirFryerSyncType.OFF)
+        data = self._start_data()
+        assert data['syncType'] == AirFryerSyncType.OFF
+        assert data['workChamber'] == Ch.BOTH
+        assert [(c['chamber'], c['mode'], c['cookSetTime']) for c in data['cookConfigs']] == [
+            (1, 'AirFry', 180),
+            (2, 'Bake', 300),
+        ]
+        for state, set_time in ((fryer.state_chamber_1, 180), (fryer.state_chamber_2, 300)):
+            assert state.cook_status == AirFryerCookStatus.COOKING
+            assert state.cook_last_time == set_time
+            assert state.total_last_time is None
+        assert fryer.sync_chambers is False
+
     @pytest.mark.parametrize(
         ('sync_type', 'with_second'),
         [
-            (AirFryerSyncType.OFF, True),
+            (AirFryerSyncType.OFF, False),
             (3, True),
             ('2', True),
             (AirFryerSyncType.SYNC, False),
