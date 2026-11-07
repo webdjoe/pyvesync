@@ -1553,13 +1553,19 @@ _TF101S_COOK_MODES: dict[str, AirFryerModeConfig] = {
 }
 
 
-_TF10X_STATUS_MAP: MappingProxyType[str, AirFryerCookStatus] = MappingProxyType(
+# ``hold`` is the chamber that waits during a Sync cook, and ``cookEnd`` a finished
+# cook. The DC111S reports both (``hold`` captured, ``cookEnd`` in the PR #564 hardware
+# test). For the TF101S and TF102S they come only from the APK, whose status handling
+# has no model check.
+_DUAL_STATUS_MAP: MappingProxyType[str, AirFryerCookStatus] = MappingProxyType(
     {
         'standby': AirFryerCookStatus.STANDBY,
         'ready': AirFryerCookStatus.READY,
         'cooking': AirFryerCookStatus.COOKING,
         'cookStop': AirFryerCookStatus.COOK_STOP,
         'pullOut': AirFryerCookStatus.PULL_OUT,
+        'hold': AirFryerCookStatus.HOLD,
+        'cookEnd': AirFryerCookStatus.COOK_END,
     }
 )
 
@@ -1636,16 +1642,6 @@ _DC111S_COOK_MODES: dict[str, AirFryerModeConfig] = {
         default_temp_f=90,
     ),
 }
-
-# The DC111S also reports ``hold`` for the chamber that waits during a Sync cook,
-# and ``cookEnd`` when a cook finishes (PR #564 hardware test).
-_DC111S_STATUS_MAP: MappingProxyType[str, AirFryerCookStatus] = MappingProxyType(
-    {
-        **_TF10X_STATUS_MAP,
-        'hold': AirFryerCookStatus.HOLD,
-        'cookEnd': AirFryerCookStatus.COOK_END,
-    }
-)
 
 
 air_fryer_modules: list[AirFryerMap] = [
@@ -1782,7 +1778,7 @@ air_fryer_modules: list[AirFryerMap] = [
         default_cook_mode=AirFryerCookModes.AIRFRY,
         default_preset=AirFryerPresets.air_fry,
         time_units=TimeUnits.SECONDS,
-        status_map=_TF10X_STATUS_MAP,
+        status_map=_DUAL_STATUS_MAP,
     ),
     AirFryerMap(
         # APK i61.C67932h0 (TF102SEUConfig): the TF101S presets without Dry.
@@ -1801,7 +1797,7 @@ air_fryer_modules: list[AirFryerMap] = [
         default_cook_mode=AirFryerCookModes.AIRFRY,
         default_preset=AirFryerPresets.air_fry,
         time_units=TimeUnits.SECONDS,
-        status_map=_TF10X_STATUS_MAP,
+        status_map=_DUAL_STATUS_MAP,
     ),
     AirFryerMap(
         # APK i61.C114379l (DC111SEUConfig): upper (1) and lower (2) chambers,
@@ -1819,7 +1815,7 @@ air_fryer_modules: list[AirFryerMap] = [
         default_cook_mode=AirFryerCookModes.AIRFRY,
         default_preset=AirFryerPresets.air_fry,
         time_units=TimeUnits.SECONDS,
-        status_map=_DC111S_STATUS_MAP,
+        status_map=_DUAL_STATUS_MAP,
     ),
 ]
 """List of ['AirFryerMap'][pyvesync.device_map.AirFryerMap] configuration
