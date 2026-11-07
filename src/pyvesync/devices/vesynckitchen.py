@@ -738,8 +738,8 @@ class VeSyncDualAirFryer(BypassV2Mixin, VeSyncFryer):
             (``syncType`` 2). Set by ``update()``; a successful
             ``set_mode()`` / ``set_mode_from_recipe()`` sets it True for
             ``BOTH`` and False for any other chamber, a successful
-            ``set_chamber_modes()`` sets it True for ``SYNC`` and False for
-            ``MATCH``, and ``end(BOTH)`` sets it False.
+            ``set_chamber_modes()`` sets it True for ``SYNC`` and False
+            otherwise, and ``end(BOTH)`` sets it False.
         work_chamber (AirFryerChamber | None): Read-only. Chamber the device
             reports as active (``workChamber``); None when idle. Set by
             ``update()``. A successful ``WHOLE`` start sets ``WHOLE``, any other
@@ -1086,7 +1086,11 @@ class VeSyncDualAirFryer(BypassV2Mixin, VeSyncFryer):
             return await super().set_chamber_modes(
                 chamber_1, chamber_2, sync_type=sync_type
             )
-        if sync_type not in (AirFryerSyncType.SYNC, AirFryerSyncType.MATCH):
+        if sync_type not in (
+            AirFryerSyncType.OFF,
+            AirFryerSyncType.SYNC,
+            AirFryerSyncType.MATCH,
+        ):
             logger.warning(
                 'Invalid chamber sync type %s for %s', sync_type, self.device_name
             )
