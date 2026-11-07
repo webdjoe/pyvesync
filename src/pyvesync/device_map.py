@@ -1484,7 +1484,8 @@ _P583S_COOK_MODES: dict[str, AirFryerModeConfig] = {
 
 # APK i61.C67928f0 (TF101S) presets without Dry, shared with the TF102S
 # (i61.C67932h0). One captured startMultiCook verifies the request shape
-# for all of them (maintainer, 2026-11-03).
+# for all of them (maintainer, 2026-11-03). Time limits are the app's picker
+# (N() tables); no capture or report tests them on these models.
 _TF10X_COOK_MODES: dict[str, AirFryerModeConfig] = {
     AirFryerCookModes.AIRFRY: AirFryerModeConfig(
         api_mode='AirFry',
@@ -1495,6 +1496,7 @@ _TF10X_COOK_MODES: dict[str, AirFryerModeConfig] = {
         temp_f=AirFryerTempLimits(min_temp=250, max_temp=400, step=5),
         default_temp_c=200,
         default_temp_f=390,
+        time_limits=AirFryerTimeLimits(min_seconds=60, max_seconds=3600, step_seconds=60),
     ),
     AirFryerCookModes.ROAST: AirFryerModeConfig(
         api_mode='Roast',
@@ -1505,6 +1507,9 @@ _TF10X_COOK_MODES: dict[str, AirFryerModeConfig] = {
         temp_f=AirFryerTempLimits(min_temp=250, max_temp=400, step=5),
         default_temp_c=190,
         default_temp_f=375,
+        time_limits=AirFryerTimeLimits(
+            min_seconds=60, max_seconds=14400, step_seconds=60
+        ),
     ),
     AirFryerCookModes.BAKE: AirFryerModeConfig(
         api_mode='Bake',
@@ -1515,6 +1520,9 @@ _TF10X_COOK_MODES: dict[str, AirFryerModeConfig] = {
         temp_f=AirFryerTempLimits(min_temp=175, max_temp=400, step=5),
         default_temp_c=160,
         default_temp_f=320,
+        time_limits=AirFryerTimeLimits(
+            min_seconds=60, max_seconds=14400, step_seconds=60
+        ),
     ),
     AirFryerCookModes.GRILL: AirFryerModeConfig(
         api_mode='Grill',
@@ -1525,6 +1533,7 @@ _TF10X_COOK_MODES: dict[str, AirFryerModeConfig] = {
         temp_f=AirFryerTempLimits(min_temp=400, max_temp=465, step=5),
         default_temp_c=240,
         default_temp_f=465,
+        time_limits=AirFryerTimeLimits(min_seconds=60, max_seconds=1800, step_seconds=60),
     ),
     AirFryerCookModes.REHEAT: AirFryerModeConfig(
         api_mode='Reheat',
@@ -1535,6 +1544,7 @@ _TF10X_COOK_MODES: dict[str, AirFryerModeConfig] = {
         temp_f=AirFryerTempLimits(min_temp=105, max_temp=400, step=5),
         default_temp_c=165,
         default_temp_f=330,
+        time_limits=AirFryerTimeLimits(min_seconds=60, max_seconds=3600, step_seconds=60),
     ),
 }
 
@@ -1550,6 +1560,9 @@ _TF101S_COOK_MODES: dict[str, AirFryerModeConfig] = {
         temp_f=AirFryerTempLimits(min_temp=95, max_temp=205, step=5),
         default_temp_c=55,
         default_temp_f=130,
+        time_limits=AirFryerTimeLimits(
+            min_seconds=1800, max_seconds=172800, step_seconds=1800
+        ),
     ),
 }
 
