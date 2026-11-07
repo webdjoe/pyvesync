@@ -6,6 +6,7 @@
 - [VeSync 300S Humidifiers][pyvesync.devices.vesynchumidifier.VeSyncHumid200300S] - Includes OasisMist 4.5L devices
 - [VeSync 200S Humidifiers][pyvesync.devices.vesynchumidifier.VeSyncHumid200S] - Same as 300S class with override for toggle display method
 - [VeSync Superior 6000S Humidifiers][pyvesync.devices.vesynchumidifier.VeSyncSuperior6000S]
+- [VeSync Superior Studio 450S Humidifiers][pyvesync.devices.vesynchumidifier.VeSyncSuperiorStudio450S] - Same as 6000S class, also reads live state from the device list
 - [VeSync OasisMist 1000S Humidifiers][pyvesync.devices.vesynchumidifier.VeSyncHumid1000S]
 - [VeSync Sprout Humidifiers][pyvesync.devices.vesynchumidifier.VeSyncSproutHumid]
 - [VeSync LV600S (603S) Humidifiers][pyvesync.devices.vesynchumidifier.VeSyncLV600S]
@@ -68,6 +69,24 @@
 ::: pyvesync.devices.vesynchumidifier.VeSyncSuperior6000S
     options:
         toc_label: "VeSync Superior 6000S"
+        filters:
+            - "!^_.*"
+        summary:
+            functions: false
+        group_by_category: true
+        show_root_heading: true
+        show_root_toc_entry: true
+        show_category_heading: true
+        show_source: true
+        show_if_no_docstring: true
+        inherited_members: true
+        docstring_options:
+            ignore_init_summary: true
+        merge_init_into_class: true
+
+::: pyvesync.devices.vesynchumidifier.VeSyncSuperiorStudio450S
+    options:
+        toc_label: "VeSync Superior Studio 450S"
         filters:
             - "!^_.*"
         summary:
