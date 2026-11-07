@@ -169,6 +169,28 @@ class TestChamberInterface(TestBase):
             assert state.is_cooking is False
             assert state.is_running is False
 
+    @pytest.mark.parametrize('model', ['CAF-TF101S', 'CAF-TF102S'])
+    def test_tf_fryers_map_hold_and_cook_end(self, model):
+        # APK only: no capture or report shows either status on these models. The
+        # app's status handling has no model check.
+        fryer = self.get_device('air_fryers', model)
+        self.caplog.set_level(logging.WARNING)
+        self.mock_api.return_value = (
+            _tf101s_status([_tf101s_chamber(1, 'cooking'), _tf101s_chamber(2, 'hold')], 4, 2),
+            200,
+        )
+        self.run_in_loop(fryer.update)
+        assert fryer.state_chamber_1.cook_status == AirFryerCookStatus.COOKING
+        assert fryer.state_chamber_2.cook_status == AirFryerCookStatus.HOLD
+        self.mock_api.return_value = (
+            _tf101s_status([_tf101s_chamber(1, 'cookEnd'), _tf101s_chamber(2, 'cookEnd')], 4, 2),
+            200,
+        )
+        self.run_in_loop(fryer.update)
+        assert 'Unknown cook status' not in self.caplog.text
+        assert fryer.state_chamber_1.cook_status == AirFryerCookStatus.COOK_END
+        assert fryer.state_chamber_2.cook_status == AirFryerCookStatus.COOK_END
+
     def test_dc111s_hold_wait_counts_down(self):
         # The hold wait counts down between polls (HAR: 300 -> 296 -> 279).
         fryer = self.get_device('air_fryers', 'CAF-DC111S-AEU')
