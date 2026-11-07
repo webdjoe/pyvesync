@@ -216,11 +216,14 @@ every status:
 | `COOK_END` | Cook finished. |
 | `READY` | Set up and waiting to start on the fryer. |
 | `APPOINTING` | Waiting for a delayed start set in the app (CS137/CS158). pyvesync cannot set one. |
-| `HOLD` | Sync cook with different times: this chamber waits so both finish together (dual-chamber fryers). `cook_time_remaining` is the wait and `total_time_remaining` includes the cook; both count down only while the other chamber is cooking, and stop while it is paused. Counts as cook mode; `is_running` is False. pyvesync's `BOTH` sends the same settings to both chambers, so only a Sync cook started in the app or on the fryer reports it. |
+| `HOLD` | Sync cook with different times: this chamber waits so both finish together (CAF-DC111S-AEU). `cook_time_remaining` is the wait and `total_time_remaining` includes the cook; both count down only while the other chamber is cooking, and stop while it is paused. Counts as cook mode; `is_running` is False. pyvesync's `BOTH` sends the same settings to both chambers, so only a Sync cook started in the app or on the fryer reports it. |
 
 The CAF-P583S status map maps `keeping` (keep-warm) to `COOKING`; no capture
 of it exists yet. `COMPLETED` and `UNKNOWN` are in the enum but no supported
 fryer reports them.
+
+The CAF-TF101S and CAF-TF102S also map `HOLD` and `COOK_END`. That follows the
+VeSync app; no capture or report shows either status on these models.
 
 Each state's `to_dict()` / `to_json()` gives all of these values at once.
 
