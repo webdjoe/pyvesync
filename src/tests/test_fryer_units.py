@@ -147,7 +147,7 @@ def test_tf102s_has_own_entry_without_dry():
     assert AirFryerCookModes.DRY not in tf102.cook_modes
     assert AirFryerCookModes.DRY in by_type['CAF-TF101S'].cook_modes
     assert tf102.status_map == by_type['CAF-TF101S'].status_map
-    assert tf102.features == by_type['CAF-TF101S'].features
+    assert tf102.features == [*by_type['CAF-TF101S'].features, AirFryerFeatures.COOK_CONFIG_SHAKE_TIME]
 
 
 def test_dc111s_entry_is_dual_without_whole_and_maps_hold():

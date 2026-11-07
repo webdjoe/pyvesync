@@ -1119,7 +1119,8 @@ class AirFryerFeatures(Features):
         CHAMBER_MODES: ``set_chamber_modes()`` is available: separate recipes
             in Sync, or one recipe in both chambers in Match.
         COOK_CONFIG_SHAKE_TIME: ``startMultiCook`` cook configs include
-            ``shakeTime``. Other dual-chamber fryers leave it out.
+            ``shakeTime``, except for a whole-basket cook. Other dual-chamber
+            fryers leave it out.
     """
 
     DUAL_BLAZE = 'dual_blaze'
