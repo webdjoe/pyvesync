@@ -280,18 +280,26 @@ class TestChamberInterface(TestBase):
         assert data['cookConfigs']
         assert all('shakeTime' not in c for c in data['cookConfigs'])
 
-    @pytest.mark.parametrize('chamber', [Ch.CHAMBER_1, Ch.CHAMBER_2, Ch.WHOLE, Ch.BOTH])
-    def test_tf102s_request_unchanged_without_shake_time(self, chamber):
-        # No TF102S start-cook test or capture, so its request stays as it was.
+    @pytest.mark.parametrize('chamber', [Ch.CHAMBER_1, Ch.CHAMBER_2, Ch.BOTH])
+    def test_tf102s_sends_shake_time_zero_on_zone_paths(self, chamber):
+        # APK only (C42441q1.s1): no TF102S start-cook capture or report exists.
         fryer = self.get_device('air_fryers', 'CAF-TF102S')
         ok, data = self._start(fryer, chamber)
+        assert ok
+        assert data['cookConfigs']
+        assert all(c['shakeTime'] == 0 for c in data['cookConfigs'])
+
+    def test_tf102s_omits_shake_time_on_whole_basket(self):
+        # APK only (C42417l2.t1): the whole-basket builder leaves shakeTime out.
+        fryer = self.get_device('air_fryers', 'CAF-TF102S')
+        ok, data = self._start(fryer, Ch.WHOLE)
         assert ok
         assert data['cookConfigs']
         assert all('shakeTime' not in c for c in data['cookConfigs'])
 
     def test_shake_time_feature_declarations(self):
         declared = [e.setup_entry for e in air_fryer_modules if AirFryerFeatures.COOK_CONFIG_SHAKE_TIME in e.features]
-        assert declared == ['CAF-DC111S-AEU']
+        assert declared == ['CAF-TF102S', 'CAF-DC111S-AEU']
 
     def test_reported_sync_does_not_leak_into_single_chamber_start(self):
         fryer = self.get_device('air_fryers', 'CAF-TF101S')

@@ -1807,7 +1807,13 @@ air_fryer_modules: list[AirFryerMap] = [
         model_display='CAF-TF102S Series',
         model_name='Cosori Dual Air Fryer',
         temp_unit=TemperatureUnits.CELSIUS,
-        features=[AirFryerFeatures.DUAL_CHAMBER, AirFryerFeatures.WHOLE_CHAMBER],
+        # shakeTime follows the APK (C42441q1.s1), as nothing from this model has been
+        # captured or reported for a start.
+        features=[
+            AirFryerFeatures.DUAL_CHAMBER,
+            AirFryerFeatures.WHOLE_CHAMBER,
+            AirFryerFeatures.COOK_CONFIG_SHAKE_TIME,
+        ],
         cook_modes=_TF10X_COOK_MODES,
         default_cook_mode=AirFryerCookModes.AIRFRY,
         default_preset=AirFryerPresets.air_fry,
