@@ -42,6 +42,21 @@ DC111S_TIME_LIMITS = {
     'Proof': (900, 43200, 900),
 }
 
+# APK picker logic over the TF101S and TF102S N() tables. Nothing from a fryer tests
+# these; captured TF101S times (480, 1200) are in range.
+TF102S_TIME_LIMITS = {
+    'AirFry': (60, 3600, 60),
+    'Roast': (60, 14400, 60),
+    'Bake': (60, 14400, 60),
+    'Grill': (60, 1800, 60),
+    'Reheat': (60, 3600, 60),
+}
+TF101S_TIME_LIMITS = {**TF102S_TIME_LIMITS, 'Dry': (1800, 172800, 1800)}
+TF_TIME_CASES = [
+    *(('CAF-TF101S', mode, limits) for mode, limits in TF101S_TIME_LIMITS.items()),
+    *(('CAF-TF102S', mode, limits) for mode, limits in TF102S_TIME_LIMITS.items()),
+]
+
 
 def _age(state, seconds: int) -> None:
     """Move a running state's countdown start back by ``seconds``."""
@@ -280,20 +295,63 @@ class TestFryerResilience(TestBase):
         assert self._send(fryer.set_mode, 120, 183, ok=V2_OK)
         assert self._sent()['payload']['data']['cookConfigs'][0]['cookTemp'] == 185
 
-    def test_time_limits_are_declared_only_on_the_dc111s(self):
+    def test_time_limits_are_declared_only_on_dual_fryers(self):
+        limited = ('CAF-DC111S-AEU', 'CAF-TF101S', 'CAF-TF102S')
         for entry in air_fryer_modules:
             limits = {k: m.time_limits for k, m in entry.cook_modes.items()}
-            if entry.setup_entry == 'CAF-DC111S-AEU':
-                assert all(limit is not None for limit in limits.values())
+            if entry.setup_entry in limited:
+                assert all(limit is not None for limit in limits.values()), entry.setup_entry
             else:
                 assert all(limit is None for limit in limits.values()), entry.setup_entry
 
+    @pytest.mark.parametrize(('setup_entry', 'mode', 'limits'), TF_TIME_CASES)
+    def test_tf_mode_limits_match_the_app(self, setup_entry, mode, limits):
+        fryer = self.get_device('air_fryers', setup_entry)
+        declared = fryer.get_cook_mode(mode).time_limits
+        assert declared is not None
+        assert (declared.min_seconds, declared.max_seconds, declared.step_seconds) == limits
+
+    @pytest.mark.parametrize(('setup_entry', 'mode', 'limits'), TF_TIME_CASES)
+    def test_tf_valid_times_are_sent(self, setup_entry, mode, limits):
+        fryer = self.get_device('air_fryers', setup_entry)
+        low, high, step = limits
+        for seconds in (low, low + step, high):
+            recipe = replace(fryer.get_mode_recipe(mode), cook_time=seconds)
+            assert self._send(fryer.set_mode_from_recipe, recipe, ok=V2_OK), seconds
+            assert self._sent()['payload']['data']['cookConfigs'][0]['cookSetTime'] == seconds
+
+    @pytest.mark.parametrize(('setup_entry', 'mode', 'limits'), TF_TIME_CASES)
+    @pytest.mark.parametrize('bad_kind', ['below', 'above', 'off_step'])
+    def test_tf_invalid_times_send_no_request(self, setup_entry, mode, limits, bad_kind):
+        fryer = self.get_device('air_fryers', setup_entry)
+        low, high, step = limits
+        seconds = {'below': low - 1, 'above': high + step, 'off_step': low + 1}[bad_kind]
+        recipe = replace(fryer.get_mode_recipe(mode), cook_time=seconds)
+        assert self._send(fryer.set_mode_from_recipe, recipe, ok=V2_OK) is False
+        assert self.mock_api.call_count == 0
+
     @pytest.mark.parametrize('setup_entry', ['CAF-TF101S', 'CAF-TF102S'])
-    def test_other_dual_fryers_keep_general_time_validation(self, setup_entry):
+    def test_tf_default_recipes_are_within_their_limits(self, setup_entry):
+        fryer = self.get_device('air_fryers', setup_entry)
+        for mode in fryer.cook_modes:
+            recipe = fryer.get_mode_recipe(mode)
+            assert self._send(fryer.set_mode_from_recipe, recipe, ok=V2_OK), mode
+
+    @pytest.mark.parametrize('seconds', [480, 1200])
+    def test_tf101s_captured_times_are_accepted(self, seconds):
+        fryer = self.get_device('air_fryers', 'CAF-TF101S')
+        assert self._send(fryer.set_mode, seconds, 150, ok=V2_OK)
+
+    @pytest.mark.parametrize('setup_entry', ['CAF-TF101S', 'CAF-TF102S'])
+    @pytest.mark.parametrize(
+        'chamber', [AirFryerChamber.CHAMBER_1, AirFryerChamber.WHOLE, AirFryerChamber.BOTH]
+    )
+    def test_tf_time_off_the_step_is_refused_on_every_path(self, setup_entry, chamber):
+        # 90 s was sent before these limits existed.
         fryer = self.get_device('air_fryers', setup_entry)
         temp = fryer.temp_limits().min_temp
-        assert self._send(fryer.set_mode, 90, temp, ok=V2_OK)
-        assert self._sent()['payload']['data']['cookConfigs'][0]['cookSetTime'] == 90
+        assert self._send(fryer.set_mode, 90, temp, chamber=chamber, ok=V2_OK) is False
+        assert self.mock_api.call_count == 0
 
     # Failed polls
 
