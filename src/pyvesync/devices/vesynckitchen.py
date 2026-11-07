@@ -969,7 +969,11 @@ class VeSyncDualAirFryer(BypassV2Mixin, VeSyncFryer):
             'recipeName': recipe.recipe_name,
             'recipeType': recipe.recipe_type,
         }
-        if AirFryerFeatures.COOK_CONFIG_SHAKE_TIME in self.features:
+        # The app's whole-basket builder leaves shakeTime out (APK C42417l2.t1).
+        if (
+            AirFryerFeatures.COOK_CONFIG_SHAKE_TIME in self.features
+            and chamber != AirFryerChamber.WHOLE
+        ):
             config_dict['shakeTime'] = 0
 
         if chamber == AirFryerChamber.BOTH:
