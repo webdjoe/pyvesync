@@ -19,9 +19,9 @@ the VeSync app and the status captures supplied with PR #536; its cook and
 end requests are pending hardware verification.
 
 Every fryer has `set_mode()`, `set_mode_from_recipe()`, `end()` and
-`update()`. `stop()`, `resume()` and `cook_from_preheat()` are only
-implemented for the CS137/CS158; on the other fryers they log a message and
-return `False` without sending a request. Air fryers have no on/off command
+`update()`. `stop()` and `resume()` are implemented for the CS137/CS158 and
+the CAF-DC111S-AEU, `cook_from_preheat()` only for the CS137/CS158; on the
+other fryers they log a message and return `False` without sending a request. Air fryers have no on/off command
 and no `turn_on()` / `turn_off()`; the CS137/CS158 `toggle_switch()` is
 deprecated and sends no request.
 
@@ -152,8 +152,8 @@ app's defaults.
 | Method | What it does | Fryers |
 | --- | --- | --- |
 | `end(chamber)` | Ends the cook or preheat and returns the chamber to standby. | All |
-| `stop(chamber)` | Pauses the cook or preheat. | CS137/CS158 |
-| `resume(chamber)` | Resumes a paused cook or preheat. | CS137/CS158 |
+| `stop(chamber)` | Pauses the cook or preheat. | CS137/CS158, CAF-DC111S-AEU |
+| `resume(chamber)` | Resumes a paused cook or preheat. | CS137/CS158, CAF-DC111S-AEU |
 | `cook_from_preheat(chamber)` | Starts the cook once preheat has finished (`PREHEAT_END`). | CS137/CS158 |
 
 On the CS137/CS158, `end()`, `stop()` and `resume()` use the last known
@@ -175,11 +175,18 @@ a phase.
 
 Call `update()` first if the fryer may have changed state on its own.
 
-The dual-chamber fryers have no pause command. Their status maps have
-`cookStop` and `pullOut`; per the app's behaviour, pulling a basket out
-pauses that chamber and pushing it back in resumes it. The CAF-DC111S-AEU
-captures report both statuses during a cook, with the remaining time held;
-no TF101S capture of them exists yet.
+The CAF-DC111S-AEU pauses and resumes with `pauseWork` / `resumeWork` and a
+`chamber` (the app has no pause button, the fryer's panel does). `stop(1)` or
+`stop(2)` pauses one chamber while the other keeps cooking; `BOTH` pauses
+both in one request. A paused chamber reports `cookStop` with its remaining
+time held, and during a Sync cook the other chamber's `HOLD` wait stops too.
+`resume()` continues from the held time. Verified on firmware 2.0.02 (MCU
+1.0.10). The TF101S/TF102S have no `RESUMABLE` feature, so `stop()` and
+`resume()` return `False` without a request there.
+
+On the dual-chamber fryers, pulling a basket out pauses that chamber
+(`pullOut`) and pushing it back in resumes it; no TF101S capture of this
+exists yet.
 
 ## Reading status
 

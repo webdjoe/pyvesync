@@ -28,6 +28,7 @@ from pyvesync.const import (
     AirFryer158Command,
     AirFryerChamber,
     AirFryerCookStatus,
+    AirFryerFeatures,
     AirFryerPresetRecipe,
     AirFryerSyncType,
     ConnectionStatus,
@@ -941,6 +942,79 @@ class VeSyncDualAirFryer(BypassV2Mixin, VeSyncFryer):
             self._chamber_state(member).set_standby()
         if member in (AirFryerChamber.WHOLE, AirFryerChamber.BOTH):
             self._set_reported_work_chamber(None)
+        return True
+
+    async def _pause_or_resume(
+        self, chamber: AirFryerChamber | int, method: str, name: str
+    ) -> list[FryerState] | None:
+        """Send pauseWork / resumeWork for a chamber.
+
+        Returns the affected chamber states on success, None otherwise.
+        """
+        member = self._validate_chamber(chamber)
+        if member is None:
+            return None
+        if AirFryerFeatures.RESUMABLE not in self.features:
+            logger.info('%s not supported by this fryer.', name)
+            return None
+        if member == AirFryerChamber.WHOLE:
+            logger.info('%s is not supported for the whole basket.', name)
+            return None
+        resp = await self.call_bypassv2_api(
+            payload_method=method,
+            data={'chamber': int(member)},
+            payload_update=dict(BYPASSV2_SUB_DEVICE_PAYLOAD),
+        )
+        if Helpers.process_dev_response(logger, name, self, resp) is None:
+            return None
+        if member == AirFryerChamber.BOTH:
+            return [self.state_chamber_1, self.state_chamber_2]
+        return [self._chamber_state(member)]
+
+    async def stop(
+        self, chamber: AirFryerChamber | int = AirFryerChamber.CHAMBER_1
+    ) -> bool:
+        """Pause cooking in a chamber (``pauseWork``).
+
+        Needs the ``RESUMABLE`` feature. ``BOTH`` pauses both chambers in one
+        request. During a Sync cook the other chamber's ``HOLD`` wait stops
+        counting down too. The paused chamber reports ``cookStop`` and keeps
+        its remaining time.
+
+        Args:
+            chamber (AirFryerChamber | int): Chamber to pause.
+
+        Returns:
+            bool: True on success.
+        """
+        states = await self._pause_or_resume(chamber, 'pauseWork', 'stop')
+        if states is None:
+            return False
+        for state in states:
+            if state.is_in_cook_mode:
+                state.set_cook_stop_state()
+        return True
+
+    async def resume(
+        self, chamber: AirFryerChamber | int = AirFryerChamber.CHAMBER_1
+    ) -> bool:
+        """Resume a paused chamber (``resumeWork``).
+
+        Needs the ``RESUMABLE`` feature. ``BOTH`` resumes both chambers in one
+        request. The remaining time carries over.
+
+        Args:
+            chamber (AirFryerChamber | int): Chamber to resume.
+
+        Returns:
+            bool: True on success.
+        """
+        states = await self._pause_or_resume(chamber, 'resumeWork', 'resume')
+        if states is None:
+            return False
+        for state in states:
+            if state.cook_status == AirFryerCookStatus.COOK_STOP:
+                state.set_cook_resume_state()
         return True
 
     def _build_cook_configs(
