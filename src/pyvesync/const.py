@@ -1104,9 +1104,9 @@ class AirFryerCookStatus(StrEnum):
         APPOINTING: Delayed start scheduled; waiting to start (CS158
             ``appointing``).
         HOLD: Sync cook: this chamber waits so both chambers finish
-            together (CAF-DC111S ``hold``). The remaining cook time is the
-            wait, and the total time remaining includes the cook. Both count
-            down only while the other chamber cooks.
+            together (dual-chamber fryers, ``hold``). The remaining cook time
+            is the wait, and the total time remaining includes the cook. Both
+            count down only while the other chamber cooks.
     """
 
     COOKING = 'cooking'
