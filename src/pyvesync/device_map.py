@@ -836,7 +836,7 @@ humidifier_modules = [
         setup_entry='LEH-S601S',
     ),
     HumidifierMap(
-        class_name='VeSyncSuperior6000S',
+        class_name='VeSyncSuperiorStudio450S',
         dev_types=['LEH-S451S-WUS', 'LEH-S451S-WUSR', 'LEH-S451S-WEU', 'LEH-S451S-WEUR'],
         features=[HumidifierFeatures.DRYING_MODE, HumidifierFeatures.AUTO_STOP],
         mist_modes={

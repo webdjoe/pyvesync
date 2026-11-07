@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import orjson
 from typing_extensions import deprecated
@@ -23,11 +23,17 @@ from pyvesync.models.bypass_models import (
     ResultV2GetTimerV2,
     ResultV2SetTimer,
 )
+from pyvesync.models.vesync_models import (
+    RequestDeviceListModel,
+    ResponseDeviceListModel,
+)
 from pyvesync.utils.colors import RGBNightlightColor
 from pyvesync.utils.device_mixins import BypassV2Mixin, process_bypassv2_result
 from pyvesync.utils.helpers import Helpers, Timer, Validators
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from pyvesync import VeSync
     from pyvesync.device_map import HumidifierMap
     from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
@@ -789,6 +795,94 @@ class VeSyncSuperior6000S(BypassV2Mixin, VeSyncHumidifier):
         self.state.child_lock = toggle
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
+
+
+class VeSyncSuperiorStudio450S(VeSyncSuperior6000S):
+    """Superior Studio Smart 450S Humidifier.
+
+    Same bypassV2 API as the Superior 6000S. For this model the
+    `getHumidifierStatus` response is a lagging cloud shadow: changes made at the
+    unit or in the app can take minutes to appear and short events never show up,
+    while the device list `deviceProp` summary updates within seconds. `get_details()`
+    therefore reads both and lets the device list values win for the fields it
+    carries (power, mode, humidity, mist level, water shortage, display, child lock,
+    filter life and drying cycle). Fields only in the status response (temperature,
+    auto-stop, timer) still come from `getHumidifierStatus`.
+
+    Args:
+        details (ResponseDeviceDetailsModel): The device details.
+        manager (VeSync): The manager object for API calls.
+        feature_map (HumidifierMap): The feature map for the device.
+    """
+
+    __slots__ = ()
+
+    # deviceProp key -> (state attribute, converter)
+    _DEVICE_PROP_FIELDS: ClassVar[dict[str, tuple[str, Callable[[Any], Any]]]] = {
+        'powerSwitch': ('device_status', DeviceStatus.from_int),
+        'connectionStatus': ('connection_status', ConnectionStatus),
+        'humidity': ('humidity', int),
+        'targetHumidity': ('auto_target_humidity', int),
+        'virtualLevel': ('mist_virtual_level', int),
+        'mistLevel': ('mist_level', int),
+        'waterLacksState': ('water_lacks', bool),
+        'screenSwitch': ('display_set_status', DeviceStatus.from_int),
+        'childLockSwitch': ('child_lock', bool),
+        'filterLifePercent': ('filter_life', int),
+        'dryingState': ('drying_mode_status', DryingModes.from_int),
+        'autoDryingSwitch': ('drying_mode_auto_switch', DeviceStatus.from_int),
+        'dryingLevel': ('drying_mode_level', int),
+        'dryingRemain': ('drying_mode_time_remain', int),
+    }
+
+    async def get_details(self) -> None:
+        # Fetched before the status call, applied after it, so the fresher
+        # device list values overwrite the lagging status values.
+        list_entry = await self._get_device_list_entry()
+        await super().get_details()
+        if list_entry is not None and list_entry.deviceProp:
+            self._set_state_from_device_prop(list_entry.deviceProp)
+
+    async def _get_device_list_entry(self) -> ResponseDeviceDetailsModel | None:
+        """Return this device's entry from the account device list, if available."""
+        request_model = RequestDeviceListModel(
+            token=self.manager.auth.token,
+            accountID=self.manager.auth.account_id,
+            timeZone=self.manager.time_zone,
+        )
+        r_dict, _ = await self.manager.async_call_api(
+            '/cloud/v1/deviceManaged/devices',
+            'post',
+            headers=Helpers.req_header_bypass(),
+            json_object=request_model.to_dict(),
+        )
+        if (
+            not isinstance(r_dict, dict)
+            or not isinstance(r_dict.get('result'), dict)
+            or 'list' not in r_dict['result']
+        ):
+            logger.debug('No device list in response for %s', self.device_name)
+            return None
+        r_model = ResponseDeviceListModel.from_dict(r_dict)
+        return next(
+            (
+                dev
+                for dev in r_model.result.list
+                if dev.cid == self.cid and dev.subDeviceNo == self.sub_device_no
+            ),
+            None,
+        )
+
+    def _set_state_from_device_prop(self, prop: dict[str, Any]) -> None:
+        """Overlay state with the device list `deviceProp` summary."""
+        for key, (attr, convert) in self._DEVICE_PROP_FIELDS.items():
+            if (value := prop.get(key)) is not None:
+                setattr(self.state, attr, convert(value))
+        if (work_mode := prop.get('workMode')) is not None:
+            mode = self._reverse_mist_modes.get(work_mode)
+            if mode is None:
+                logger.warning('Unknown mist mode received: %s', work_mode)
+            self.state.mode = mode
 
 
 class VeSyncHumid1000S(VeSyncHumid200300S):
