@@ -50,6 +50,29 @@ class TestManagerResilience(TestBase):
             self.run_in_loop(self.manager.update_all_devices)
         assert 'Unexpected error updating device: boom' in self.caplog.text
 
+    def test_unknown_device_type_is_skipped(self):
+        """A device type missing from the device map is skipped, not fatal.
+
+        Regression: the debug log of the unmapped device used an unsupported
+        ``to_json(indent=True)`` argument and raised TypeError, which aborted
+        ``get_devices()`` for any account with an unrecognised device.
+        """
+        unknown = ResponseDeviceDetailsModel.from_dict(
+            {
+                "deviceRegion": "US",
+                "isOwner": True,
+                "deviceName": "Air Fryer Grill",
+                "cid": "unknown-cid",
+                "connectionType": "WiFi+BTOnboarding+BTNotify",
+                "deviceType": "AG500-CS",
+                "type": "SKA",
+                "configModule": "WiFiBTOnboardingNotify_Oven_AG500-CS_US",
+            }
+        )
+        assert self.manager.devices._build_device_instance(unknown, self.manager) is None
+        self.manager.devices.add_device_from_model(unknown, self.manager)
+        assert len(self.manager.devices) == 0
+
     def test_parse_error_debug_log_redacts_the_response(self):
         # A row with no deviceRegion fails to parse, so the response is dumped.
         row = DeviceList.device_list_item(ALL_DEVICE_MAP_DICT['CAF-DC601S'])
