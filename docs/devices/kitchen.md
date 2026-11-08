@@ -81,12 +81,15 @@ await fryer.set_mode(cook_time, cook_temp, *, temp_unit=None,
 ```
 
 - `cook_time` and `preheat_time` are in **seconds**, as whole numbers (a
-  fraction is dropped). `cook_time` must be at least 1 second. The CS137/CS158
-  API counts in whole minutes, so pyvesync rounds the time down to the minute
-  (90 s is sent as 1 minute) and rejects a `cook_time` under 60 s. There is
-  no upper limit: pyvesync does not check the app's per-mode time ranges
-  (for example 1-60 minutes for most modes), so a longer time is sent as
-  given and the fryer may refuse it.
+  fraction is dropped, except on the fryers with per-mode time limits, which
+  reject it).
+  `cook_time` must be at least 1 second. The CS137/CS158 API counts in whole
+  minutes, so pyvesync rounds the time down to the minute (90 s is sent as
+  1 minute) and rejects a `cook_time` under 60 s. The CAF-TF101S/TF102S and
+  CAF-DC111S-AEU also check each mode's range and step (see
+  [Cook time limits](#cook-time-limits)). Other
+  fryers have no upper limit: a longer time is sent as given and the fryer may
+  refuse it.
 - `cook_temp` is in the fryer's `temp_unit`, or in `temp_unit` if you pass
   one (see [Temperature units](#temperature-units)).
 - With no `cook_mode`, the fryer's default preset is used: Manual Cooking on
@@ -216,11 +219,14 @@ every status:
 | `COOK_END` | Cook finished. |
 | `READY` | Set up and waiting to start on the fryer. |
 | `APPOINTING` | Waiting for a delayed start set in the app (CS137/CS158). pyvesync cannot set one. |
-| `HOLD` | Sync cook with different times: this chamber waits so both finish together (CAF-DC111S-AEU). `cook_time_remaining` is the wait and `total_time_remaining` includes the cook; both count down only while the other chamber is cooking, and stop while it is paused. Counts as cook mode; `is_running` is False. pyvesync's `BOTH` sends the same settings to both chambers, so only a Sync cook started in the app or on the fryer reports it. |
+| `HOLD` | Sync cook with different times: this chamber waits so both finish together (CAF-DC111S-AEU). `cook_time_remaining` is the wait and `total_time_remaining` includes the cook; both count down only while the other chamber is cooking, and stop while it is paused. Counts as cook mode; `is_running` is False. Start one with `set_chamber_modes()`, the app or the fryer; pyvesync's `BOTH` sends the same settings to both chambers, so it does not report this status. |
 
 The CAF-P583S status map maps `keeping` (keep-warm) to `COOKING`; no capture
 of it exists yet. `COMPLETED` and `UNKNOWN` are in the enum but no supported
 fryer reports them.
+
+The CAF-TF101S and CAF-TF102S also map `HOLD` and `COOK_END`. That follows the
+VeSync app; no capture or report shows either status on these models.
 
 Each state's `to_dict()` / `to_json()` gives all of these values at once.
 
@@ -268,7 +274,8 @@ single-chamber fryers they are always `False` and `None`.
 - `sync_chambers` is True only when the device reports the app's Sync mode
   (both chambers finish together). The app's Match mode reports False. A
   successful `set_mode()` or `set_mode_from_recipe()` also sets it (True for
-  `BOTH`, False otherwise), and `end(BOTH)` clears it.
+  `BOTH`, False otherwise), as does `set_chamber_modes()` (True for `SYNC`,
+  False for `MATCH`), and `end(BOTH)` clears it.
 - `work_chamber` is the chamber the device reports as active. It is `None`
   when the fryer is idle, and always `None` on single-chamber fryers. Besides
   `update()`, a successful `WHOLE` start sets it to `WHOLE`, any other start
@@ -280,6 +287,40 @@ cook, `end()` with one chamber sends an end for that chamber only; use
 `end(AirFryerChamber.BOTH)` to end both. During a whole-basket cook
 (`work_chamber` is `WHOLE`), `end()` with the default `CHAMBER_1` ends the
 whole basket.
+
+### Different recipes per chamber (CAF-DC111S-AEU)
+
+`set_chamber_modes()` starts cooking in both chambers from recipes. It needs
+the `AirFryerFeatures.CHAMBER_MODES` feature, which only the CAF-DC111S-AEU has;
+other fryers return `False` without a request.
+
+- `AirFryerSyncType.SYNC` (the default) takes one recipe per chamber: the first
+  for the upper basket, the second for the lower. They can differ in mode,
+  temperature and time. The shorter recipe waits in `HOLD` so both finish
+  together.
+- `AirFryerSyncType.OFF` takes one recipe per chamber, and each starts at once
+  and runs on its own time.
+- `AirFryerSyncType.MATCH` takes one recipe and uses it for both chambers.
+
+```python
+from dataclasses import replace
+from pyvesync.const import AirFryerSyncType
+
+first = fryer.get_mode_recipe('AirFry')
+second = fryer.get_mode_recipe('Bake')
+if first is not None and second is not None:
+    first = replace(first, target_temp=180, temp_unit='c', cook_time=180)
+    second = replace(second, target_temp=160, temp_unit='c', cook_time=300)
+    await fryer.set_chamber_modes(first, second, sync_type=AirFryerSyncType.SYNC)
+
+    # Or start one recipe in both chambers instead
+    await fryer.set_chamber_modes(second, sync_type=AirFryerSyncType.MATCH)
+```
+
+Both recipes are checked before any request, so an invalid second recipe does
+not start the first. A refused command leaves both chamber states unchanged.
+`set_mode(..., chamber=BOTH)` is unchanged and sends the same settings to both
+chambers.
 
 ## Cook modes
 
@@ -343,8 +384,35 @@ modes, for display. A temperature inside that span can still be outside the
 range of the mode you cook with; check `temp_limits(cook_mode)` before
 calling `set_mode()`. `temperature_step` is the default mode's step.
 
-Only temperatures have per-mode limits. Cook times are checked only for the
-minimum described under [Cooking](#cooking).
+## Cook time limits
+
+The CAF-DC111S-AEU limits each mode's cook time to the range and step in the
+VeSync app:
+
+| Mode | Range | Step |
+| --- | --- | --- |
+| AirFry, Bake, Roast, Grill, Reheat | 1-60 minutes | 1 minute |
+| Dry | 30 minutes-24 hours | 30 minutes |
+| Proof | 15 minutes-12 hours | 15 minutes |
+
+The CAF-TF101S and CAF-TF102S have their own limits, also from the app. The
+CAF-TF102S has no Dry mode.
+
+| Mode | Range | Step |
+| --- | --- | --- |
+| AirFry, Reheat | 1-60 minutes | 1 minute |
+| Roast, Bake | 1 minute-4 hours | 1 minute |
+| Grill | 1-30 minutes | 1 minute |
+| Dry | 30 minutes-48 hours | 30 minutes |
+
+Times are still given in **seconds**. A time outside the range or off the step
+makes the method return `False` without sending a request. Unlike a
+temperature, a time is never rounded, because that would silently change how
+long the food cooks. A whole number given as a float or string (`600.0`,
+`'600'`) is accepted; a fraction or a boolean is not.
+
+Other fryers have no per-mode time limits and check only the minimum described
+under [Cooking](#cooking).
 
 ## Temperature units
 

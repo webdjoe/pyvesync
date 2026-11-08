@@ -23,6 +23,7 @@ from pyvesync.const import (
     AirFryerPresets,
     TemperatureUnits,
 )
+from pyvesync.const import AirFryerChamber as Ch
 from pyvesync.device_map import air_fryer_modules
 
 
@@ -296,6 +297,52 @@ class TestFryerCaptures(TestBase):
         )
         data = self._sent_body()['payload']['data']
         assert (data['mode'], data['recipeId'], data['recipeName']) == ('Broil', 17, 'Broil')
+
+    @pytest.mark.parametrize(
+        ('chamber', 'work_chamber', 'sync_type', 'config_chambers'),
+        [(Ch.WHOLE, 3, 0, [3]), (Ch.BOTH, 4, 2, [1, 2])],
+    )
+    def test_tf101s_request_matches_app_capture(self, chamber, work_chamber, sync_type, config_chambers):
+        # AirFryer TF101SEU 2 HAR.har entry 0 (workChamber 3) and AirFryer
+        # TF101SEU HAR.har entry 24 (workChamber 4), app 5.7.50. recipeName
+        # follows the phone's language in the app.
+        fryer = self.get_device('air_fryers', 'CAF-TF101S')
+        self.mock_api.return_value = (build_bypass_v2_response(), 200)
+        assert self.run_in_loop(fryer.set_mode, cook_time=1200, cook_temp=200, cook_mode='AirFry', chamber=chamber)
+        data = self._sent_body()['payload']['data']
+        assert (data['workChamber'], data['syncType'], data['tempUnit']) == (work_chamber, sync_type, 'c')
+        assert data['cookConfigs'] == [
+            {
+                'chamber': config_chamber,
+                'cookSetTime': 1200,
+                'cookTemp': 200,
+                'mode': 'AirFry',
+                'recipeId': 14,
+                'recipeName': 'Air Fry',
+                'recipeType': 3,
+            }
+            for config_chamber in config_chambers
+        ]
+
+    def test_dc111s_cook_config_matches_capture(self):
+        # CAF-DC111S-AEU_complete_captures.json, startMultiCook_chamber_1. That
+        # file is pyvesync traffic, so it shows the fryer accepted this config
+        # (code 0), not what the app sends. APK DualZoneCookSetVM.s1 sends it too.
+        fryer = self.get_device('air_fryers', 'CAF-DC111S-AEU')
+        self.mock_api.return_value = (build_bypass_v2_response(), 200)
+        assert self.run_in_loop(fryer.set_mode, cook_time=300, cook_temp=180, cook_mode='AirFry')
+        assert self._sent_body()['payload']['data']['cookConfigs'] == [
+            {
+                'chamber': 1,
+                'cookSetTime': 300,
+                'cookTemp': 180,
+                'mode': 'AirFry',
+                'recipeId': 14,
+                'recipeName': 'Air Fry',
+                'recipeType': 3,
+                'shakeTime': 0,
+            }
+        ]
 
     def test_tf101s_grill_sends_grill_recipe(self):
         # Structure: TF101S startMultiCook capture; values: APK i61.C67928f0.
