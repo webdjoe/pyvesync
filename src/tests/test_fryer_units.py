@@ -155,12 +155,17 @@ def test_dc111s_entry_is_dual_without_whole_and_maps_hold():
     dc111 = by_type['CAF-DC111S-AEU']
     assert dc111.setup_entry == 'CAF-DC111S-AEU'
     assert dc111.class_name == 'VeSyncDualAirFryer'
-    assert dc111.features == [AirFryerFeatures.DUAL_CHAMBER, AirFryerFeatures.RESUMABLE]
+    assert dc111.features == [
+        AirFryerFeatures.DUAL_CHAMBER,
+        AirFryerFeatures.CHAMBER_MODES,
+        AirFryerFeatures.COOK_CONFIG_SHAKE_TIME,
+        AirFryerFeatures.RESUMABLE,
+    ]
     assert dc111.temp_unit == TemperatureUnits.CELSIUS
     assert dc111.status_map['hold'] == AirFryerCookStatus.HOLD
-    tf10x = by_type['CAF-TF101S'].status_map
-    assert {k: v for k, v in dc111.status_map.items() if k != 'hold'} == dict(tf10x)
-    assert 'hold' not in tf10x
+    assert dc111.status_map['cookEnd'] == AirFryerCookStatus.COOK_END
+    assert dc111.status_map == by_type['CAF-TF101S'].status_map
+    assert dc111.status_map == by_type['CAF-TF102S'].status_map
 
 
 def test_limits_are_frozen():
