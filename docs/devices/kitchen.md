@@ -81,11 +81,13 @@ await fryer.set_mode(cook_time, cook_temp, *, temp_unit=None,
 ```
 
 - `cook_time` and `preheat_time` are in **seconds**, as whole numbers (a
-  fraction is dropped, except on the CAF-DC111S-AEU, which rejects it).
+  fraction is dropped, except on the fryers with per-mode time limits, which
+  reject it).
   `cook_time` must be at least 1 second. The CS137/CS158 API counts in whole
   minutes, so pyvesync rounds the time down to the minute (90 s is sent as
-  1 minute) and rejects a `cook_time` under 60 s. The CAF-DC111S-AEU also checks
-  each mode's range and step (see [Cook time limits](#cook-time-limits)). Other
+  1 minute) and rejects a `cook_time` under 60 s. The CAF-TF101S/TF102S and
+  CAF-DC111S-AEU also check each mode's range and step (see
+  [Cook time limits](#cook-time-limits)). Other
   fryers have no upper limit: a longer time is sent as given and the fryer may
   refuse it.
 - `cook_temp` is in the fryer's `temp_unit`, or in `temp_unit` if you pass
@@ -222,6 +224,9 @@ every status:
 The CAF-P583S status map maps `keeping` (keep-warm) to `COOKING`; no capture
 of it exists yet. `COMPLETED` and `UNKNOWN` are in the enum but no supported
 fryer reports them.
+
+The CAF-TF101S and CAF-TF102S also map `HOLD` and `COOK_END`. That follows the
+VeSync app; no capture or report shows either status on these models.
 
 Each state's `to_dict()` / `to_json()` gives all of these values at once.
 
@@ -389,6 +394,16 @@ VeSync app:
 | AirFry, Bake, Roast, Grill, Reheat | 1-60 minutes | 1 minute |
 | Dry | 30 minutes-24 hours | 30 minutes |
 | Proof | 15 minutes-12 hours | 15 minutes |
+
+The CAF-TF101S and CAF-TF102S have their own limits, also from the app. The
+CAF-TF102S has no Dry mode.
+
+| Mode | Range | Step |
+| --- | --- | --- |
+| AirFry, Reheat | 1-60 minutes | 1 minute |
+| Roast, Bake | 1 minute-4 hours | 1 minute |
+| Grill | 1-30 minutes | 1 minute |
+| Dry | 30 minutes-48 hours | 30 minutes |
 
 Times are still given in **seconds**. A time outside the range or off the step
 makes the method return `False` without sending a request. Unlike a
