@@ -317,47 +317,52 @@ class VeSync:  # pylint: disable=function-redefined
             VeSyncServerError: If server returns an error.
         """
         self.in_process = True
-        proc_return = False
+        try:
+            if not self.auth.is_authenticated or (
+                not self.auth.token or not self.auth.account_id
+            ):
+                logger.info("Not logged in to VeSync, can't get devices")
+                return False
 
-        if not self.auth.is_authenticated or (
-            not self.auth.token or not self.auth.account_id
-        ):
-            logger.info("Not logged in to VeSync, can't get devices")
-            return False
-
-        request_model = RequestDeviceListModel(
-            token=self.auth.token, accountID=self.auth.account_id, timeZone=self.time_zone
-        )
-        logger.debug('Requesting device list from VeSync')
-        response_dict, _ = await self.async_call_api(
-            '/cloud/v1/deviceManaged/devices',
-            'post',
-            headers=Helpers.req_header_bypass(),
-            json_object=request_model.to_dict(),
-        )
-
-        if response_dict is None:
-            raise VeSyncAPIResponseError(
-                'Error receiving response to device list request'
+            request_model = RequestDeviceListModel(
+                token=self.auth.token,
+                accountID=self.auth.account_id,
+                timeZone=self.time_zone,
+            )
+            logger.debug('Requesting device list from VeSync')
+            response_dict, _ = await self.async_call_api(
+                '/cloud/v1/deviceManaged/devices',
+                'post',
+                headers=Helpers.req_header_bypass(),
+                json_object=request_model.to_dict(),
             )
 
-        response = ResponseDeviceListModel.from_dict(response_dict)
+            if response_dict is None:
+                raise VeSyncAPIResponseError(
+                    'Error receiving response to device list request'
+                )
 
-        if response.code == 0:
-            proc_return = self.process_devices(response)
-        else:
-            error_info = ErrorCodes.get_error_info(response.code)
-            if response.msg is not None:
-                error_info.message = f'{error_info.message} ({response.msg})'
-            if error_info.error_type == ErrorTypes.SERVER_ERROR:
-                raise VeSyncServerError(error_info.message)
-            raise VeSyncAPIResponseError(
-                'Error receiving response to device list request'
+            # An error response can have no result, so check it before parsing.
+            code = response_dict.get('code')
+            if code != 0:
+                error_info = ErrorCodes.get_error_info(code, response_dict.get('msg'))
+                if error_info.error_type == ErrorTypes.SERVER_ERROR:
+                    raise VeSyncServerError(error_info.message)
+                msg = (
+                    'Error receiving response to device list request: '
+                    f'{error_info.message}'
+                )
+                raise VeSyncAPIResponseError(msg)
+
+            response = Helpers.model_maker(
+                logger, ResponseDeviceListModel, 'get_devices', response_dict
             )
+            if response is None:
+                raise VeSyncAPIResponseError('Invalid device list response')
 
-        self.in_process = False
-
-        return proc_return
+            return self.process_devices(response)
+        finally:
+            self.in_process = False
 
     async def login(self) -> bool:  # pylint: disable=W9006 # pylint mult docstring raises
         """Log into VeSync server.
