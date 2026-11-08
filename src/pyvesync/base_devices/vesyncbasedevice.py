@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 if TYPE_CHECKING:
     from pyvesync import VeSync
     from pyvesync.device_map import DeviceMapTemplate
+    from pyvesync.models.bypass_models import ScheduleItemV1
     from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
     from pyvesync.utils.errors import ResponseInfo
     from pyvesync.utils.helpers import Timer
@@ -224,6 +225,19 @@ class VeSyncBaseDevice(ABC, Generic[VS_STATE_T]):
         """
         logger.debug('Not implemented - clear_timer')
         return False
+
+    async def get_schedules(self) -> list[ScheduleItemV1] | None:
+        """Get the schedules set up for the device in the VeSync app.
+
+        Devices that implement this return the list of schedules, an empty
+        list if there are none and None if the request failed.
+
+        Note:
+            This method may not be implemented for all devices. Please
+            open an issue if there is an error.
+        """
+        logger.debug('Not implemented - get_schedules')
+        return None
 
     def set_state(self, state_attr: str, stat_value: Any) -> None:  # noqa: ANN401
         """Set device state attribute."""

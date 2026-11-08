@@ -21,6 +21,7 @@ from pyvesync.models.base_models import RequestHeaders
 from pyvesync.models.bypass_models import (
     BypassV2InnerResult,
     RequestBypassV1,
+    ResultV1GetSchedules,
     TimerModels,
 )
 from pyvesync.models.outlet_models import (
@@ -52,6 +53,7 @@ from pyvesync.utils.logs import LibraryLogger
 if TYPE_CHECKING:
     from pyvesync import VeSync
     from pyvesync.device_map import OutletMap
+    from pyvesync.models.bypass_models import ScheduleItemV1
     from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
 
 logger = logging.getLogger(__name__)
@@ -342,6 +344,17 @@ class VeSyncOutlet10A(BypassV1Mixin, VeSyncOutlet):
         self.state.device_status = toggle_str
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
+
+    async def get_schedules(self) -> list[ScheduleItemV1] | None:
+        r_dict = await self.call_bypassv1_api(
+            RequestBypassV1, method='getSchedules', endpoint='schedule/getSchedules'
+        )
+        r = process_bypassv1_result(
+            self, logger, 'get_schedules', r_dict, ResultV1GetSchedules
+        )
+        if r is None:
+            return None
+        return r.schedules or []
 
 
 class VeSyncOutlet15A(BypassV1Mixin, VeSyncOutlet):
