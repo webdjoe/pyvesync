@@ -23,6 +23,7 @@ from pyvesync.const import (
     AirFryerPresets,
     TemperatureUnits,
 )
+from pyvesync.const import AirFryerChamber as Ch
 from pyvesync.device_map import air_fryer_modules
 
 
@@ -296,6 +297,52 @@ class TestFryerCaptures(TestBase):
         )
         data = self._sent_body()['payload']['data']
         assert (data['mode'], data['recipeId'], data['recipeName']) == ('Broil', 17, 'Broil')
+
+    @pytest.mark.parametrize(
+        ('chamber', 'work_chamber', 'sync_type', 'config_chambers'),
+        [(Ch.WHOLE, 3, 0, [3]), (Ch.BOTH, 4, 2, [1, 2])],
+    )
+    def test_tf101s_request_matches_app_capture(self, chamber, work_chamber, sync_type, config_chambers):
+        # AirFryer TF101SEU 2 HAR.har entry 0 (workChamber 3) and AirFryer
+        # TF101SEU HAR.har entry 24 (workChamber 4), app 5.7.50. recipeName
+        # follows the phone's language in the app.
+        fryer = self.get_device('air_fryers', 'CAF-TF101S')
+        self.mock_api.return_value = (build_bypass_v2_response(), 200)
+        assert self.run_in_loop(fryer.set_mode, cook_time=1200, cook_temp=200, cook_mode='AirFry', chamber=chamber)
+        data = self._sent_body()['payload']['data']
+        assert (data['workChamber'], data['syncType'], data['tempUnit']) == (work_chamber, sync_type, 'c')
+        assert data['cookConfigs'] == [
+            {
+                'chamber': config_chamber,
+                'cookSetTime': 1200,
+                'cookTemp': 200,
+                'mode': 'AirFry',
+                'recipeId': 14,
+                'recipeName': 'Air Fry',
+                'recipeType': 3,
+            }
+            for config_chamber in config_chambers
+        ]
+
+    def test_dc111s_cook_config_matches_capture(self):
+        # CAF-DC111S-AEU_complete_captures.json, startMultiCook_chamber_1. That
+        # file is pyvesync traffic, so it shows the fryer accepted this config
+        # (code 0), not what the app sends. APK DualZoneCookSetVM.s1 sends it too.
+        fryer = self.get_device('air_fryers', 'CAF-DC111S-AEU')
+        self.mock_api.return_value = (build_bypass_v2_response(), 200)
+        assert self.run_in_loop(fryer.set_mode, cook_time=300, cook_temp=180, cook_mode='AirFry')
+        assert self._sent_body()['payload']['data']['cookConfigs'] == [
+            {
+                'chamber': 1,
+                'cookSetTime': 300,
+                'cookTemp': 180,
+                'mode': 'AirFry',
+                'recipeId': 14,
+                'recipeName': 'Air Fry',
+                'recipeType': 3,
+                'shakeTime': 0,
+            }
+        ]
 
     def test_tf101s_grill_sends_grill_recipe(self):
         # Structure: TF101S startMultiCook capture; values: APK i61.C67928f0.
@@ -782,6 +829,106 @@ class TestFryerCaptures(TestBase):
         assert fryer.state.cook_set_temp == 400
         assert fryer.state.cook_mode == 'Broil'
 
+
+    # CAF-DC111S-AEU hardware test 2026-11-07 (firmware 2.0.02 / MCU 1.0.10):
+    # chamber 1 AirFry 120 C / 180 s and chamber 2 Bake 125 C / 120 s cooking.
+    @staticmethod
+    def _dc111s_both_cooking() -> dict:
+        def item(chamber, status, mode, temp, set_time, rest):
+            return {
+                'cookStatus': status,
+                'startTime': 1794066414,
+                'recipeType': 3,
+                'recipeId': 14 if mode == 'AirFry' else 9,
+                'recipeName': 'Air Fry' if mode == 'AirFry' else 'Bake',
+                'upc': '',
+                'holdTime': 0,
+                'cookSetTime': set_time,
+                'cookTemp': temp,
+                'mode': mode,
+                'currentRemainingTime': rest,
+                'totalTimeRemaining': rest,
+                'chamber': chamber,
+            }
+
+        return build_bypass_v2_response(
+            inner_result={
+                'statusList': [
+                    item(1, 'cooking', 'AirFry', 120, 180, 176),
+                    item(2, 'cooking', 'Bake', 125, 120, 116),
+                ],
+                'tempUnit': 'c',
+                'syncType': 0,
+                'workChamber': 4,
+            }
+        )
+
+    @pytest.mark.parametrize('chamber', [1, 2, 4])
+    def test_dc111s_pause_resume_payload(self, chamber):
+        # pauseWork / resumeWork {"chamber": n}: chamber 1 and 2 paused the
+        # chamber, 4 paused and resumed both in one request (hardware test).
+        fryer = self.get_device('air_fryers', 'CAF-DC111S-AEU')
+        self.mock_api.return_value = (self._dc111s_both_cooking(), 200)
+        self.run_in_loop(fryer.update)
+        for method, call in (('pauseWork', fryer.stop), ('resumeWork', fryer.resume)):
+            self.mock_api.return_value = (build_bypass_v2_response(), 200)
+            assert self.run_in_loop(call, chamber)
+            assert self._sent_body()['payload'] == {
+                'data': {'chamber': chamber},
+                'method': method,
+                'source': 'APP',
+                'subDeviceNo': 0,
+                'subDeviceType': '',
+            }
+
+    def test_dc111s_pause_one_chamber_state(self):
+        fryer = self.get_device('air_fryers', 'CAF-DC111S-AEU')
+        self.mock_api.return_value = (self._dc111s_both_cooking(), 200)
+        self.run_in_loop(fryer.update)
+        self.mock_api.return_value = (build_bypass_v2_response(), 200)
+        assert self.run_in_loop(fryer.stop, 1)
+        assert fryer.state_chamber_1.cook_status == AirFryerCookStatus.COOK_STOP
+        assert fryer.state_chamber_1.cook_time_remaining is not None
+        assert fryer.state_chamber_2.cook_status == AirFryerCookStatus.COOKING
+        assert self.run_in_loop(fryer.resume, 1)
+        assert fryer.state_chamber_1.cook_status == AirFryerCookStatus.COOKING
+
+    def test_dc111s_pause_both_chambers_state(self):
+        fryer = self.get_device('air_fryers', 'CAF-DC111S-AEU')
+        self.mock_api.return_value = (self._dc111s_both_cooking(), 200)
+        self.run_in_loop(fryer.update)
+        self.mock_api.return_value = (build_bypass_v2_response(), 200)
+        assert self.run_in_loop(fryer.stop, 4)
+        assert fryer.state_chamber_1.cook_status == AirFryerCookStatus.COOK_STOP
+        assert fryer.state_chamber_2.cook_status == AirFryerCookStatus.COOK_STOP
+        assert self.run_in_loop(fryer.resume, 4)
+        assert fryer.state_chamber_1.cook_status == AirFryerCookStatus.COOKING
+        assert fryer.state_chamber_2.cook_status == AirFryerCookStatus.COOKING
+
+    def test_dc111s_refused_pause_keeps_state(self):
+        fryer = self.get_device('air_fryers', 'CAF-DC111S-AEU')
+        self.mock_api.return_value = (self._dc111s_both_cooking(), 200)
+        self.run_in_loop(fryer.update)
+        # pauseWork without a chamber was refused with 11000000 (hardware test).
+        self.mock_api.return_value = (
+            build_bypass_v2_response(inner_result={}, inner_code=11000000), 200
+        )
+        assert self.run_in_loop(fryer.stop, 1) is False
+        assert fryer.state_chamber_1.cook_status == AirFryerCookStatus.COOKING
+
+    @pytest.mark.parametrize('setup_entry', ['CAF-TF101S', 'CAF-TF102S'])
+    def test_dual_without_resumable_sends_nothing(self, setup_entry):
+        fryer = self.get_device('air_fryers', setup_entry)
+        self.mock_api.reset_mock()
+        assert self.run_in_loop(fryer.stop, 1) is False
+        assert self.run_in_loop(fryer.resume, 1) is False
+        assert self.mock_api.call_count == 0
+
+    def test_dc111s_rejects_whole_pause_without_request(self):
+        fryer = self.get_device('air_fryers', 'CAF-DC111S-AEU')
+        self.mock_api.reset_mock()
+        assert self.run_in_loop(fryer.stop, 3) is False
+        assert self.mock_api.call_count == 0
 
 def test_air_fry_recipe_name():
     # DC601S startCook capture: recipeId 14, recipeName "Air Fry".

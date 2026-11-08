@@ -873,6 +873,46 @@ class AirFryerTempLimits:
 
 
 @dataclass(frozen=True)
+class AirFryerTimeLimits:
+    """Cook time limits of one cook mode, in seconds (APK time range and precision).
+
+    Attributes:
+        min_seconds (int): Shortest time the mode accepts.
+        max_seconds (int): Longest time the mode accepts.
+        step_seconds (int): Allowed increment from the minimum. A time off the
+            step is rejected, not rounded.
+    """
+
+    min_seconds: int
+    max_seconds: int
+    step_seconds: int
+
+    def accepts(self, seconds: float | str) -> bool:
+        """Return whether a cook time is within the range and on a step.
+
+        Args:
+            seconds (float | str): Requested time. A whole number given as a
+                float or string counts; a fraction or a boolean does not.
+
+        Returns:
+            bool: Whether the mode accepts the time.
+        """
+        if isinstance(seconds, bool):
+            return False
+        try:
+            value = float(seconds)
+        except (TypeError, ValueError):
+            return False
+        if not value.is_integer():
+            return False
+        whole = int(value)
+        return (
+            self.min_seconds <= whole <= self.max_seconds
+            and (whole - self.min_seconds) % self.step_seconds == 0
+        )
+
+
+@dataclass(frozen=True)
 class AirFryerModeConfig:
     """One APK preset: its request values, default time and temperatures.
 
@@ -880,13 +920,15 @@ class AirFryerModeConfig:
         api_mode (str): Mode string sent to and reported by the API.
         recipe_id (int): Preset recipe ID sent with the mode.
         recipe_name (str): Preset label sent as the recipe name.
-        cook_time (int): Default cook time in seconds. Not a limit: the
-            app's per-mode time ranges are not stored or checked.
+        cook_time (int): Default cook time in seconds. Not a limit; see
+            ``time_limits``.
         temp_c (AirFryerTempLimits): Celsius limits.
         temp_f (AirFryerTempLimits): Fahrenheit limits.
         default_temp_c (int): Default temperature in Celsius.
         default_temp_f (int): Default temperature in Fahrenheit.
         recipe_type (int): Preset recipe type, 3 for every APK preset.
+        time_limits (AirFryerTimeLimits | None): Cook time limits. None applies
+            only the general minimum, with no upper limit or step.
     """
 
     api_mode: str
@@ -898,6 +940,7 @@ class AirFryerModeConfig:
     default_temp_c: int
     default_temp_f: int
     recipe_type: int = AIRFRYER_PRESET_RECIPE_TYPE
+    time_limits: AirFryerTimeLimits | None = None
 
     def limits(self, temp_unit: TemperatureUnits) -> AirFryerTempLimits:
         """Return the limits in the given unit.
@@ -1070,9 +1113,15 @@ class AirFryerFeatures(Features):
         PREHEAT: The fryer accepts a preheat phase (``preheat_time``).
         DUAL_CHAMBER: Two chambers; adds ``CHAMBER_2`` and ``BOTH`` to
             ``supported_chambers``.
-        RESUMABLE: Declared on the CS137/CS158; not checked by the library.
+        RESUMABLE: ``stop()`` / ``resume()`` pause and resume a cook. Declared
+            on the CS137/CS158 and the CAF-DC111S-AEU; ``VeSyncDualAirFryer``
+            refuses both without it.
         WHOLE_CHAMBER: Single merged basket with the divider removed
             (workChamber 3); adds ``WHOLE`` to ``supported_chambers``.
+        CHAMBER_MODES: ``set_chamber_modes()`` is available: separate recipes
+            in Sync, or one recipe in both chambers in Match.
+        COOK_CONFIG_SHAKE_TIME: ``startMultiCook`` cook configs include
+            ``shakeTime``. Other dual-chamber fryers leave it out.
     """
 
     DUAL_BLAZE = 'dual_blaze'
@@ -1080,6 +1129,8 @@ class AirFryerFeatures(Features):
     DUAL_CHAMBER = 'dual_chamber'
     RESUMABLE = 'resumable'
     WHOLE_CHAMBER = 'whole_chamber'
+    CHAMBER_MODES = 'chamber_modes'
+    COOK_CONFIG_SHAKE_TIME = 'cook_config_shake_time'
 
 
 class AirFryerCookStatus(StrEnum):
@@ -1104,9 +1155,9 @@ class AirFryerCookStatus(StrEnum):
         APPOINTING: Delayed start scheduled; waiting to start (CS158
             ``appointing``).
         HOLD: Sync cook: this chamber waits so both chambers finish
-            together (CAF-DC111S ``hold``). The remaining cook time is the
-            wait, and the total time remaining includes the cook. Both count
-            down only while the other chamber cooks.
+            together (dual-chamber fryers, ``hold``). The remaining cook time
+            is the wait, and the total time remaining includes the cook. Both
+            count down only while the other chamber cooks.
     """
 
     COOKING = 'cooking'

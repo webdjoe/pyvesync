@@ -19,6 +19,7 @@ from pyvesync.const import (
     AirFryerFeatures,
     AirFryerModeConfig,
     AirFryerPresetRecipe,
+    AirFryerSyncType,
     AirFryerTempLimits,
     TemperatureUnits,
     TimeUnits,
@@ -1062,7 +1063,8 @@ class VeSyncFryer(VeSyncBaseDevice[FryerState]):
         """Return a recipe's cook and preheat times as whole seconds.
 
         The cook time must be at least one API time unit (1 second, or
-        60 seconds on minute-based fryers). On fryers with the ``PREHEAT``
+        60 seconds on minute-based fryers). A mode that declares ``time_limits``
+        also requires its range and step. On fryers with the ``PREHEAT``
         feature the preheat time, if given, must be 0 or at least one unit.
         Other fryers drop it with a debug log.
 
@@ -1074,6 +1076,19 @@ class VeSyncFryer(VeSyncBaseDevice[FryerState]):
             None when not given or not supported), or None (after a warning)
             if either is not valid.
         """
+        mode = self.get_cook_mode(recipe.cook_mode)
+        if (
+            mode is not None
+            and mode.time_limits is not None
+            and not mode.time_limits.accepts(recipe.cook_time)
+        ):
+            logger.warning(
+                'Cook time %s is outside the limits or steps of %s for %s',
+                recipe.cook_time,
+                mode.api_mode,
+                self.device_name,
+            )
+            return None
         minimum = self.convert_time_for_state(1)
         try:
             cook_time = int(recipe.cook_time)
@@ -1185,8 +1200,9 @@ class VeSyncFryer(VeSyncBaseDevice[FryerState]):
     ) -> bool:
         """Stop (Pause) the current cooking or preheating session.
 
-        Only the CS137/CS158 (``VeSyncAirFryer158``) supports this; other
-        fryers return False without a request. The command is always sent:
+        Supported by the CS137/CS158 (``VeSyncAirFryer158``) and dual fryers
+        with the ``RESUMABLE`` feature (CAF-DC111S-AEU); other fryers return
+        False without a request. The command is always sent:
         the preheat stop when the last known state is a preheat phase,
         otherwise the cook stop. Every successful command sets the state to
         the phase it sent, so the next command picks the matching one.
@@ -1207,8 +1223,9 @@ class VeSyncFryer(VeSyncBaseDevice[FryerState]):
     ) -> bool:
         """Resume a paused cooking or preheating session.
 
-        Only the CS137/CS158 (``VeSyncAirFryer158``) supports this; other
-        fryers return False without a request. The command is always sent:
+        Supported by the CS137/CS158 (``VeSyncAirFryer158``) and dual fryers
+        with the ``RESUMABLE`` feature (CAF-DC111S-AEU); other fryers return
+        False without a request. The command is always sent:
         the preheat resume when the last known state is a preheat phase,
         otherwise the cook resume. The remaining time carries over, so a
         resume while running does not restart the countdown.
@@ -1247,8 +1264,9 @@ class VeSyncFryer(VeSyncBaseDevice[FryerState]):
             cook_time (int): The cooking time in seconds, at least 1 (60 on
                 the CS137/CS158, whose API uses minutes and truncates to whole
                 minutes). A shorter time returns False without a request.
-                There is no upper limit: the app's per-mode time ranges are
-                not checked.
+                A mode's ``time_limits``, where declared, also apply; a time
+                outside them returns False without a request. Other modes have
+                no upper limit.
             cook_temp (int): The cooking temperature, in ``temp_unit``.
             temp_unit (TemperatureUnits | str | None): The unit of
                 ``cook_temp``; defaults to the device's current ``temp_unit``.
@@ -1273,6 +1291,39 @@ class VeSyncFryer(VeSyncBaseDevice[FryerState]):
         """
         del cook_time, cook_temp, chamber, preheat_time, cook_mode, temp_unit
         logger.warning('set_mode method not implemented for base fryer class.')
+        return False
+
+    async def set_chamber_modes(
+        self,
+        chamber_1: AirFryerPresetRecipe,
+        chamber_2: AirFryerPresetRecipe | None = None,
+        *,
+        sync_type: AirFryerSyncType = AirFryerSyncType.SYNC,
+    ) -> bool:
+        """Start a recipe in each chamber, or one recipe in both.
+
+        Only fryers with the ``CHAMBER_MODES`` feature implement this. Both
+        recipes are checked before any request, as in
+        ``set_mode_from_recipe()``, so an invalid second recipe does not start
+        the first. On success both chamber states are set locally from the
+        request; call ``update()`` for the device's reported state.
+
+        Args:
+            chamber_1 (AirFryerPresetRecipe): Recipe for chamber 1 with
+                ``SYNC`` or ``OFF``, or the recipe for both chambers with
+                ``MATCH``.
+            chamber_2 (AirFryerPresetRecipe | None): Recipe for chamber 2.
+                Required with ``SYNC`` and ``OFF``; must be None with ``MATCH``.
+            sync_type (AirFryerSyncType): ``SYNC`` for separate recipes that
+                finish together, ``OFF`` for separate recipes that each run on
+                their own time, or ``MATCH`` for identical settings.
+
+        Returns:
+            bool: True if the command was successful. An unsupported fryer or
+            an invalid combination returns False without a request.
+        """
+        del chamber_1, chamber_2, sync_type
+        logger.debug('Separate chamber modes are not configured for %s', self.device_name)
         return False
 
     async def set_mode_from_recipe(
