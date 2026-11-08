@@ -1113,7 +1113,9 @@ class AirFryerFeatures(Features):
         PREHEAT: The fryer accepts a preheat phase (``preheat_time``).
         DUAL_CHAMBER: Two chambers; adds ``CHAMBER_2`` and ``BOTH`` to
             ``supported_chambers``.
-        RESUMABLE: Declared on the CS137/CS158; not checked by the library.
+        RESUMABLE: ``stop()`` / ``resume()`` pause and resume a cook. Declared
+            on the CS137/CS158 and the CAF-DC111S-AEU; ``VeSyncDualAirFryer``
+            refuses both without it.
         WHOLE_CHAMBER: Single merged basket with the divider removed
             (workChamber 3); adds ``WHOLE`` to ``supported_chambers``.
         CHAMBER_MODES: ``set_chamber_modes()`` is available: separate recipes

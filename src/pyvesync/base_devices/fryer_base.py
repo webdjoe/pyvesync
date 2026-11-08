@@ -1200,8 +1200,9 @@ class VeSyncFryer(VeSyncBaseDevice[FryerState]):
     ) -> bool:
         """Stop (Pause) the current cooking or preheating session.
 
-        Only the CS137/CS158 (``VeSyncAirFryer158``) supports this; other
-        fryers return False without a request. The command is always sent:
+        Supported by the CS137/CS158 (``VeSyncAirFryer158``) and dual fryers
+        with the ``RESUMABLE`` feature (CAF-DC111S-AEU); other fryers return
+        False without a request. The command is always sent:
         the preheat stop when the last known state is a preheat phase,
         otherwise the cook stop. Every successful command sets the state to
         the phase it sent, so the next command picks the matching one.
@@ -1222,8 +1223,9 @@ class VeSyncFryer(VeSyncBaseDevice[FryerState]):
     ) -> bool:
         """Resume a paused cooking or preheating session.
 
-        Only the CS137/CS158 (``VeSyncAirFryer158``) supports this; other
-        fryers return False without a request. The command is always sent:
+        Supported by the CS137/CS158 (``VeSyncAirFryer158``) and dual fryers
+        with the ``RESUMABLE`` feature (CAF-DC111S-AEU); other fryers return
+        False without a request. The command is always sent:
         the preheat resume when the last known state is a preheat phase,
         otherwise the cook resume. The remaining time carries over, so a
         resume while running does not restart the countdown.
