@@ -1816,7 +1816,9 @@ air_fryer_modules: list[AirFryerMap] = [
     ),
     AirFryerMap(
         # APK i61.C114379l (DC111SEUConfig): upper (1) and lower (2) chambers,
-        # no whole-basket mode. Same multi-chamber API as the TF101S.
+        # no whole-basket mode. Same multi-chamber API as the TF101S, but its
+        # cook configs send shakeTime 0: PR #536 tested it on hardware, the
+        # capture shows code 0, and APK C42441q1.s1 sets it.
         class_name='VeSyncDualAirFryer',
         module=vesynckitchen,
         dev_types=['CAF-DC111S-AEU'],
@@ -1825,7 +1827,11 @@ air_fryer_modules: list[AirFryerMap] = [
         model_display='CAF-DC111S-AEU',
         model_name='Turbo Tower Pro Smart Air Fryer',
         temp_unit=TemperatureUnits.CELSIUS,
-        features=[AirFryerFeatures.DUAL_CHAMBER],
+        features=[
+            AirFryerFeatures.DUAL_CHAMBER,
+            AirFryerFeatures.CHAMBER_MODES,
+            AirFryerFeatures.COOK_CONFIG_SHAKE_TIME,
+        ],
         cook_modes=_DC111S_COOK_MODES,
         default_cook_mode=AirFryerCookModes.AIRFRY,
         default_preset=AirFryerPresets.air_fry,

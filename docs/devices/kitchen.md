@@ -217,7 +217,7 @@ every status:
 | `COOK_END` | Cook finished. |
 | `READY` | Set up and waiting to start on the fryer. |
 | `APPOINTING` | Waiting for a delayed start set in the app (CS137/CS158). pyvesync cannot set one. |
-| `HOLD` | Sync cook with different times: this chamber waits so both finish together (CAF-DC111S-AEU). `cook_time_remaining` is the wait and `total_time_remaining` includes the cook; both count down only while the other chamber is cooking, and stop while it is paused. Counts as cook mode; `is_running` is False. pyvesync's `BOTH` sends the same settings to both chambers, so only a Sync cook started in the app or on the fryer reports it. |
+| `HOLD` | Sync cook with different times: this chamber waits so both finish together (CAF-DC111S-AEU). `cook_time_remaining` is the wait and `total_time_remaining` includes the cook; both count down only while the other chamber is cooking, and stop while it is paused. Counts as cook mode; `is_running` is False. Start one with `set_chamber_modes()`, the app or the fryer; pyvesync's `BOTH` sends the same settings to both chambers, so it does not report this status. |
 
 The CAF-P583S status map maps `keeping` (keep-warm) to `COOKING`; no capture
 of it exists yet. `COMPLETED` and `UNKNOWN` are in the enum but no supported
@@ -269,7 +269,8 @@ single-chamber fryers they are always `False` and `None`.
 - `sync_chambers` is True only when the device reports the app's Sync mode
   (both chambers finish together). The app's Match mode reports False. A
   successful `set_mode()` or `set_mode_from_recipe()` also sets it (True for
-  `BOTH`, False otherwise), and `end(BOTH)` clears it.
+  `BOTH`, False otherwise), as does `set_chamber_modes()` (True for `SYNC`,
+  False for `MATCH`), and `end(BOTH)` clears it.
 - `work_chamber` is the chamber the device reports as active. It is `None`
   when the fryer is idle, and always `None` on single-chamber fryers. Besides
   `update()`, a successful `WHOLE` start sets it to `WHOLE`, any other start
@@ -281,6 +282,38 @@ cook, `end()` with one chamber sends an end for that chamber only; use
 `end(AirFryerChamber.BOTH)` to end both. During a whole-basket cook
 (`work_chamber` is `WHOLE`), `end()` with the default `CHAMBER_1` ends the
 whole basket.
+
+### Different recipes per chamber (CAF-DC111S-AEU)
+
+`set_chamber_modes()` starts cooking in both chambers from recipes. It needs
+the `AirFryerFeatures.CHAMBER_MODES` feature, which only the CAF-DC111S-AEU has;
+other fryers return `False` without a request.
+
+- `AirFryerSyncType.SYNC` (the default) takes one recipe per chamber: the first
+  for the upper basket, the second for the lower. They can differ in mode,
+  temperature and time. The shorter recipe waits in `HOLD` so both finish
+  together.
+- `AirFryerSyncType.MATCH` takes one recipe and uses it for both chambers.
+
+```python
+from dataclasses import replace
+from pyvesync.const import AirFryerSyncType
+
+first = fryer.get_mode_recipe('AirFry')
+second = fryer.get_mode_recipe('Bake')
+if first is not None and second is not None:
+    first = replace(first, target_temp=180, temp_unit='c', cook_time=180)
+    second = replace(second, target_temp=160, temp_unit='c', cook_time=300)
+    await fryer.set_chamber_modes(first, second, sync_type=AirFryerSyncType.SYNC)
+
+    # Or start one recipe in both chambers instead
+    await fryer.set_chamber_modes(second, sync_type=AirFryerSyncType.MATCH)
+```
+
+Both recipes are checked before any request, so an invalid second recipe does
+not start the first. A refused command leaves both chamber states unchanged.
+`set_mode(..., chamber=BOTH)` is unchanged and sends the same settings to both
+chambers.
 
 ## Cook modes
 

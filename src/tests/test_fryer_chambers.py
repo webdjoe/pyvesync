@@ -2,6 +2,7 @@
 
 import logging
 from copy import deepcopy
+from dataclasses import replace
 from datetime import timedelta
 
 import pytest
@@ -261,6 +262,37 @@ class TestChamberInterface(TestBase):
         assert [c['chamber'] for c in data['cookConfigs']] == [1, 2]
         assert fryer.sync_chambers is True
 
+    @pytest.mark.parametrize('chamber', [Ch.CHAMBER_1, Ch.CHAMBER_2, Ch.BOTH])
+    def test_dc111s_sends_shake_time_zero_in_every_config(self, chamber):
+        # PR #536 tested these requests on a DC111S; its capture got code 0.
+        fryer = self.get_device('air_fryers', 'CAF-DC111S-AEU')
+        ok, data = self._start(fryer, chamber)
+        assert ok
+        assert data['cookConfigs']
+        assert all(c['shakeTime'] == 0 for c in data['cookConfigs'])
+
+    @pytest.mark.parametrize('chamber', [Ch.CHAMBER_1, Ch.CHAMBER_2, Ch.WHOLE, Ch.BOTH])
+    def test_tf101s_omits_shake_time(self, chamber):
+        # The TF101S app captures have no shakeTime on workChamber 1, 3 or 4.
+        fryer = self.get_device('air_fryers', 'CAF-TF101S')
+        ok, data = self._start(fryer, chamber)
+        assert ok
+        assert data['cookConfigs']
+        assert all('shakeTime' not in c for c in data['cookConfigs'])
+
+    @pytest.mark.parametrize('chamber', [Ch.CHAMBER_1, Ch.CHAMBER_2, Ch.WHOLE, Ch.BOTH])
+    def test_tf102s_request_unchanged_without_shake_time(self, chamber):
+        # No TF102S start-cook test or capture, so its request stays as it was.
+        fryer = self.get_device('air_fryers', 'CAF-TF102S')
+        ok, data = self._start(fryer, chamber)
+        assert ok
+        assert data['cookConfigs']
+        assert all('shakeTime' not in c for c in data['cookConfigs'])
+
+    def test_shake_time_feature_declarations(self):
+        declared = [e.setup_entry for e in air_fryer_modules if AirFryerFeatures.COOK_CONFIG_SHAKE_TIME in e.features]
+        assert declared == ['CAF-DC111S-AEU']
+
     def test_reported_sync_does_not_leak_into_single_chamber_start(self):
         fryer = self.get_device('air_fryers', 'CAF-TF101S')
         status = _tf101s_status([_tf101s_chamber(1, 'cooking'), _tf101s_chamber(2, 'cooking')], work_chamber=4, sync_type=2)
@@ -344,3 +376,144 @@ class TestChamberInterface(TestBase):
     def test_single_chamber_work_chamber_is_none(self):
         fryer = self.get_device('air_fryers', 'CAF-DC601S')
         assert fryer.work_chamber is None
+
+    # set_chamber_modes() (CAF-DC111S-AEU)
+
+    def _dc111s(self):
+        self.mock_api.return_value = (build_bypass_v2_response(), 200)
+        fryer = self.get_device('air_fryers', 'CAF-DC111S-AEU')
+        fryer.state_chamber_1.set_standby()
+        fryer.state_chamber_2.set_standby()
+        return fryer
+
+    def _start_data(self):
+        return parse_args(self.mock_api)['json_object']['payload']['data']
+
+    def test_sync_sends_separate_recipes(self):
+        fryer = self._dc111s()
+        first = replace(fryer.get_mode_recipe('AirFry'), target_temp=180, cook_time=180)
+        second = replace(fryer.get_mode_recipe('Bake'), target_temp=160, cook_time=300)
+        before = deepcopy((first, second))
+        assert self.run_in_loop(fryer.set_chamber_modes, first, second)
+        data = self._start_data()
+        assert data['syncType'] == AirFryerSyncType.SYNC
+        assert data['workChamber'] == Ch.BOTH
+        assert [
+            (c['chamber'], c['mode'], c['cookTemp'], c['cookSetTime'], c['recipeId'], c['recipeType'])
+            for c in data['cookConfigs']
+        ] == [(1, 'AirFry', 180, 180, 14, 3), (2, 'Bake', 160, 300, 9, 3)]
+        assert [c['shakeTime'] for c in data['cookConfigs']] == [0, 0]
+        assert (first, second) == before
+
+    def test_sync_with_different_times_holds_the_shorter_chamber(self):
+        # Same split as DC111S_SYNC_HOLD: the shorter chamber waits for the
+        # difference, and both report the longer time as the total.
+        fryer = self._dc111s()
+        first = replace(fryer.get_mode_recipe('AirFry'), target_temp=180, cook_time=180)
+        second = replace(fryer.get_mode_recipe('Bake'), target_temp=160, cook_time=300)
+        assert self.run_in_loop(fryer.set_chamber_modes, first, second)
+        held, cooking = fryer.state_chamber_1, fryer.state_chamber_2
+        assert held.cook_status == AirFryerCookStatus.HOLD
+        assert held.cook_set_time == 180
+        assert held.cook_set_temp == 180
+        assert held.cook_last_time == 120
+        assert held.total_last_time == 300
+        assert cooking.cook_status == AirFryerCookStatus.COOKING
+        assert cooking.cook_set_time == 300
+        assert cooking.cook_set_temp == 160
+        assert cooking.cook_last_time == 300
+        assert cooking.total_last_time == 300
+        assert fryer.sync_chambers is True
+
+    def test_sync_with_equal_times_cooks_both_chambers(self):
+        fryer = self._dc111s()
+        first = replace(fryer.get_mode_recipe('AirFry'), cook_time=300)
+        second = replace(fryer.get_mode_recipe('Bake'), cook_time=300)
+        assert self.run_in_loop(fryer.set_chamber_modes, first, second)
+        for state in (fryer.state_chamber_1, fryer.state_chamber_2):
+            assert state.cook_status == AirFryerCookStatus.COOKING
+            assert state.total_last_time is None
+
+    def test_sync_converts_each_recipe_to_the_device_unit(self):
+        fryer = self._dc111s()
+        first = replace(fryer.get_mode_recipe('AirFry'), target_temp=390, temp_unit='f', cook_time=180)
+        second = replace(fryer.get_mode_recipe('Bake'), target_temp=160, temp_unit='c', cook_time=300)
+        assert self.run_in_loop(fryer.set_chamber_modes, first, second)
+        data = self._start_data()
+        assert data['tempUnit'] == 'c'
+        assert [c['cookTemp'] for c in data['cookConfigs']] == [200, 160]
+
+    def test_match_copies_one_recipe_to_both_chambers(self):
+        fryer = self._dc111s()
+        source = replace(fryer.get_mode_recipe('Bake'), target_temp=180, cook_time=180)
+        assert self.run_in_loop(fryer.set_chamber_modes, source, sync_type=AirFryerSyncType.MATCH)
+        data = self._start_data()
+        assert data['syncType'] == AirFryerSyncType.MATCH
+        assert data['workChamber'] == Ch.BOTH
+        one, two = deepcopy(data['cookConfigs'])
+        assert (one.pop('chamber'), two.pop('chamber')) == (1, 2)
+        assert one == two
+        assert one['mode'] == 'Bake'
+        assert one['shakeTime'] == 0
+        assert fryer.state_chamber_1.cook_status == AirFryerCookStatus.COOKING
+        assert fryer.state_chamber_2.cook_status == AirFryerCookStatus.COOKING
+        # sync_chambers means the app's Sync mode only.
+        assert fryer.sync_chambers is False
+
+    @pytest.mark.parametrize(
+        ('sync_type', 'with_second'),
+        [
+            (AirFryerSyncType.OFF, True),
+            (3, True),
+            ('2', True),
+            (AirFryerSyncType.SYNC, False),
+            (AirFryerSyncType.MATCH, True),
+        ],
+    )
+    def test_invalid_recipe_combination_sends_no_request(self, sync_type, with_second):
+        fryer = self._dc111s()
+        recipe = fryer.get_mode_recipe('AirFry')
+        second = recipe if with_second else None
+        assert self.run_in_loop(fryer.set_chamber_modes, recipe, second, sync_type=sync_type) is False
+        self.mock_api.assert_not_called()
+
+    @pytest.mark.parametrize(
+        'entry',
+        [e.setup_entry for e in air_fryer_modules if AirFryerFeatures.CHAMBER_MODES not in e.features],
+    )
+    def test_chamber_modes_not_configured_sends_no_request(self, entry):
+        fryer = self.get_device('air_fryers', entry)
+        recipe = fryer.get_mode_recipe()
+        assert self.run_in_loop(fryer.set_chamber_modes, recipe, recipe) is False
+        self.mock_api.assert_not_called()
+
+    def test_chamber_modes_only_on_dc111s(self):
+        with_feature = [
+            e.setup_entry for e in air_fryer_modules if AirFryerFeatures.CHAMBER_MODES in e.features
+        ]
+        assert with_feature == ['CAF-DC111S-AEU']
+
+    def test_invalid_second_recipe_does_not_start_the_first(self):
+        fryer = self._dc111s()
+        first = fryer.get_mode_recipe('AirFry')
+        second = replace(fryer.get_mode_recipe('Dry'), cook_time=60)
+        assert self.run_in_loop(fryer.set_chamber_modes, first, second) is False
+        self.mock_api.assert_not_called()
+        assert fryer.state_chamber_1.cook_status == AirFryerCookStatus.STANDBY
+
+    def test_refused_sync_keeps_both_chamber_states(self):
+        # APK DC111S ErrorInfo map (i61.C114379l.z0()): 11914000 "Sync is unavailable".
+        fryer = self._dc111s()
+        fryer.state_chamber_1.set_state(
+            cook_status=AirFryerCookStatus.COOK_STOP,
+            cook_time=180,
+            cook_last_time=100,
+            cook_temp=180,
+        )
+        self.mock_api.return_value = (build_bypass_v2_response(inner_code=11914000), 200)
+        first = fryer.get_mode_recipe('AirFry')
+        second = fryer.get_mode_recipe('Bake')
+        assert self.run_in_loop(fryer.set_chamber_modes, first, second) is False
+        assert fryer.state_chamber_1.cook_status == AirFryerCookStatus.COOK_STOP
+        assert fryer.state_chamber_1.cook_set_temp == 180
+        assert fryer.state_chamber_2.cook_status == AirFryerCookStatus.STANDBY
