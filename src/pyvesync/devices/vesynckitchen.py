@@ -1183,6 +1183,19 @@ class VeSyncDualAirFryer(BypassV2Mixin, VeSyncFryer):
         ]
         return await self._start_cook_configs(configs, AirFryerChamber.BOTH, sync_type)
 
+    async def quit_sync(self) -> bool:
+        if AirFryerFeatures.CHAMBER_MODES not in self.features:
+            return await super().quit_sync()
+        resp = await self.call_bypassv2_api(
+            payload_method='quitSyncFinish',
+            data={},
+            payload_update=dict(BYPASSV2_SUB_DEVICE_PAYLOAD),
+        )
+        if Helpers.process_dev_response(logger, 'quit_sync', self, resp) is None:
+            return False
+        self._set_reported_sync(False)
+        return True
+
     async def set_mode(
         self,
         cook_time: int,

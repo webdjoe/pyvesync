@@ -1119,7 +1119,8 @@ class AirFryerFeatures(Features):
         WHOLE_CHAMBER: Single merged basket with the divider removed
             (workChamber 3); adds ``WHOLE`` to ``supported_chambers``.
         CHAMBER_MODES: ``set_chamber_modes()`` is available: separate recipes
-            in Sync, or one recipe in both chambers in Match.
+            in Sync, or one recipe in both chambers in Match. ``quit_sync()``
+            leaves Sync.
         COOK_CONFIG_SHAKE_TIME: ``startMultiCook`` cook configs include
             ``shakeTime``. Other dual-chamber fryers leave it out.
     """
