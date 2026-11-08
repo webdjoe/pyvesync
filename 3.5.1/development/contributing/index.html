@@ -1,0 +1,2755 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://webdjoe.github.io/pyvesync/latest/development/contributing/">
+      
+      
+        <link rel="prev" href="../constants/">
+      
+      
+        <link rel="next" href="../capturing/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+    
+    
+      
+        <title>Contributing - pyvesync</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/common.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="blue-grey" data-md-color-accent="blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#contributing-to-pyvesync" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="pyvesync" class="md-header__button md-logo" aria-label="pyvesync" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M515.9 240H496v144c0 35.3-28.7 64-64 64H295c-24-91.7-93.5-165-183-194.3V240H92.1C76.6 240 64 227.4 64 211.9c0-7.6 3.1-14.9 8.6-20.2L276.5-4.9C283.9-12 293.7-16 304-16s20.1 4 27.5 11.1l203.9 196.6c5.5 5.3 8.6 12.6 8.6 20.2 0 15.5-12.6 28.1-28.1 28.1M280 192c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24h48c13.3 0 24-10.7 24-24v-48c0-13.3-10.7-24-24-24zM24 288c128.1 0 232 103.9 232 232 0 13.3-10.7 24-24 24s-24-10.7-24-24c0-101.6-82.4-184-184-184-13.3 0-24-10.7-24-24s10.7-24 24-24m8 192a32 32 0 1 1 0 64 32 32 0 1 1 0-64M0 408c0-13.3 10.7-24 24-24 75.1 0 136 60.9 136 136 0 13.3-10.7 24-24 24s-24-10.7-24-24c0-48.6-39.4-88-88-88-13.3 0-24-10.7-24-24"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            pyvesync
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Contributing
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/webdjoe/pyvesync" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    webdjoe/pyvesync
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="pyvesync" class="md-nav__button md-logo" aria-label="pyvesync" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M515.9 240H496v144c0 35.3-28.7 64-64 64H295c-24-91.7-93.5-165-183-194.3V240H92.1C76.6 240 64 227.4 64 211.9c0-7.6 3.1-14.9 8.6-20.2L276.5-4.9C283.9-12 293.7-16 304-16s20.1 4 27.5 11.1l203.9 196.6c5.5 5.3 8.6 12.6 8.6 20.2 0 15.5-12.6 28.1-28.1 28.1M280 192c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24h48c13.3 0 24-10.7 24-24v-48c0-13.3-10.7-24-24-24zM24 288c128.1 0 232 103.9 232 232 0 13.3-10.7 24-24 24s-24-10.7-24-24c0-101.6-82.4-184-184-184-13.3 0-24-10.7-24-24s10.7-24 24-24m8 192a32 32 0 1 1 0 64 32 32 0 1 1 0-64M0 408c0-13.3 10.7-24 24-24 75.1 0 136 60.9 136 136 0 13.3-10.7 24-24 24s-24-10.7-24-24c0-48.6-39.4-88-88-88-13.3 0-24-10.7-24-24"/></svg>
+
+    </a>
+    pyvesync
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/webdjoe/pyvesync" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    webdjoe/pyvesync
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../supported_devices/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Supported Devices
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../pyvesync3/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    pyvesync V3
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Usage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../authentication/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Authentication
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Development
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../vesync_api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VeSync API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../auth_api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Authentication
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data_models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../device_map/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DeviceMap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../device_container/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DeviceContainer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../vesync_device_base/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VeSyncDevice Base
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../constants/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Constants
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#contribution-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Contribution Rules
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Contribution Rules">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-follow-the-intended-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Follow the intended architecture
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-verify-on-real-hardware-before-merge" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Verify on real hardware before merge
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-one-change-per-pull-request" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. One change per pull request
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#working-with-ai-coding-assistants" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Working with AI Coding Assistants
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#diagnostic-information-to-include" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Diagnostic Information to Include
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Diagnostic Information to Include">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#capturing-a-redacted-debug-log" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Capturing a redacted DEBUG log
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#getting-started" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Getting Started
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Getting Started">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#install-the-development-environment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install the Development Environment
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pre-commit-hooks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pre-commit Hooks
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#development-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Development Workflow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adding-a-new-device" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adding a New Device
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pull-request-process" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pull Request Process
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Pull Request Process">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#semantic-pr-titles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Semantic PR Titles
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-happens-on-a-pr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What Happens on a PR
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#code-style" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Code Style
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Code Style">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ruff-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ruff Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#general-style-guidelines" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        General Style Guidelines
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#device-method-and-attribute-naming" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Device Method and Attribute Naming
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#models-directory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Models Directory
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#testing-and-linting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Testing and Linting
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Testing and Linting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#running-tests-locally" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Running Tests Locally
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recording-api-fixtures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recording API Fixtures
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#running-with-tox" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Running with Tox
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#running-linters-directly" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Running Linters Directly
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Documentation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#release-process" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Release Process
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Release Process">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#versioning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Versioning
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#documentation-deployment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Documentation Deployment
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dependency-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dependency Management
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#requests-to-add-devices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Requests to Add Devices
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../capturing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Capturing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_12" id="__nav_6_12_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Utils
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Utils
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../utils/helpers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Helpers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../utils/colors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Colors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../utils/device_mixins/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Device Mixins
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../utils/errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Errors & Exceptions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../utils/logging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Logging
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../devices/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Devices
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_7" id="__nav_7_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Devices
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../devices/outlets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Outlets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../devices/switches/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Switches
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../devices/bulbs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Bulbs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../devices/air_purifiers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Air Purifiers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../devices/humidifiers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Humidifiers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../devices/fans/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fans
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../devices/kitchen/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Air Fryers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../devices/thermostats/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Thermostats
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#contribution-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Contribution Rules
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Contribution Rules">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-follow-the-intended-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Follow the intended architecture
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-verify-on-real-hardware-before-merge" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Verify on real hardware before merge
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-one-change-per-pull-request" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. One change per pull request
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#working-with-ai-coding-assistants" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Working with AI Coding Assistants
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#diagnostic-information-to-include" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Diagnostic Information to Include
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Diagnostic Information to Include">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#capturing-a-redacted-debug-log" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Capturing a redacted DEBUG log
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#getting-started" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Getting Started
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Getting Started">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#install-the-development-environment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install the Development Environment
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pre-commit-hooks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pre-commit Hooks
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#development-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Development Workflow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adding-a-new-device" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adding a New Device
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pull-request-process" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pull Request Process
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Pull Request Process">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#semantic-pr-titles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Semantic PR Titles
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-happens-on-a-pr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What Happens on a PR
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#code-style" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Code Style
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Code Style">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ruff-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ruff Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#general-style-guidelines" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        General Style Guidelines
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#device-method-and-attribute-naming" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Device Method and Attribute Naming
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#models-directory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Models Directory
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#testing-and-linting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Testing and Linting
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Testing and Linting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#running-tests-locally" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Running Tests Locally
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recording-api-fixtures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recording API Fixtures
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#running-with-tox" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Running with Tox
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#running-linters-directly" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Running Linters Directly
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Documentation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#release-process" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Release Process
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Release Process">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#versioning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Versioning
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#documentation-deployment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Documentation Deployment
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dependency-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dependency Management
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#requests-to-add-devices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Requests to Add Devices
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="contributing-to-pyvesync">Contributing to pyvesync<a class="toc-permalink" href="#contributing-to-pyvesync" title="Permanent link">↲</a></h1>
+<p>Contributions are welcome! This is the complete contribution guide. Following
+it keeps review quick and smooth. A shorter summary lives in the repository's
+<a href="https://github.com/webdjoe/pyvesync/blob/dev/CONTRIBUTING.md">CONTRIBUTING.md</a>.</p>
+<h2 id="contribution-rules">Contribution Rules<a class="toc-permalink" href="#contribution-rules" title="Permanent link">↲</a></h2>
+<p>These three rules are the foundation of a mergeable contribution. They apply to
+everyone, and <strong>especially</strong> to changes generated with the help of an AI coding
+assistant. They are enforced through review and the pull request checklist, not
+CI, so please self-attest honestly.</p>
+<h3 id="1-follow-the-intended-architecture">1. Follow the intended architecture<a class="toc-permalink" href="#1-follow-the-intended-architecture" title="Permanent link">↲</a></h3>
+<p>pyvesync uses a deliberate three-tier device hierarchy. New work must fit into
+it rather than working around it:</p>
+<ol type="1">
+<li><strong>Base classes</strong> (<code>src/pyvesync/base_devices/</code>): an abstract base per device
+   type. Device state lives in the <code>DeviceState</code> subclass of the relevant base
+   (<code>OutletState</code>, <code>PurifierState</code>, etc.), and device methods/properties belong
+   on the device-type base class, not the concrete implementation class.</li>
+<li><strong>Concrete devices</strong> (<code>src/pyvesync/devices/</code>): a specific model, implemented
+   by combining an API mixin (<code>BypassV1Mixin</code> or <code>BypassV2Mixin</code>) with the base
+   class.</li>
+<li><strong>Device map</strong> (<code>src/pyvesync/device_map.py</code>): maps the API's device-type
+   string to the class, features, and config.</li>
+</ol>
+<p>Additional non-negotiables:</p>
+<ul>
+<li>API request/response models go in <code>src/pyvesync/models/</code>.</li>
+<li>Constants, modes, and default values go in <code>pyvesync.const</code>, with no hardcoded
+  strings or magic numbers in device code.</li>
+<li><strong>Never fabricate API request/response fields.</strong> They must come from a real
+  packet capture (see <a href="../capturing/">Capturing</a>). If no capture exists for the
+  behavior, the work cannot be completed or merged.</li>
+</ul>
+<h3 id="2-verify-on-real-hardware-before-merge">2. Verify on real hardware before merge<a class="toc-permalink" href="#2-verify-on-real-hardware-before-merge" title="Permanent link">↲</a></h3>
+<p><strong>New device support and any change to device behavior must be tested on the
+physical device before it is merged.</strong> This is a hard requirement.</p>
+<ul>
+<li>The pull request must state the <strong>model and firmware version</strong> it was tested
+  against.</li>
+<li>Testing only through Home Assistant (or another downstream integration) does
+  <strong>not</strong> satisfy this requirement. You need a script or session that exercises
+  the library directly against the device.</li>
+<li>If you do not own the device, provide a packet capture and/or share the device
+  with a maintainer (see <a href="../capturing/">Capturing</a>) so it can be verified
+  before merge.</li>
+</ul>
+<h3 id="3-one-change-per-pull-request">3. One change per pull request<a class="toc-permalink" href="#3-one-change-per-pull-request" title="Permanent link">↲</a></h3>
+<p>Each pull request must be a <strong>single</strong> feature, fix, or edit. Split large or
+mixed changes into separate PRs.</p>
+<ul>
+<li>Do not bundle unrelated changes (e.g. a new device plus a refactor plus a docs
+  overhaul) into one PR.</li>
+<li>Small, focused PRs are reviewable and verifiable. Large speculative PRs that
+  touch many devices at once will be asked to be broken up before review.</li>
+</ul>
+<h2 id="working-with-ai-coding-assistants">Working with AI Coding Assistants<a class="toc-permalink" href="#working-with-ai-coding-assistants" title="Permanent link">↲</a></h2>
+<p>AI assistants (Claude Code, Codex, Cursor, Copilot, etc.) are welcome tools, but
+the human opening the PR is responsible for the result. The repository includes
+agent instructions that most assistants load automatically:</p>
+<ul>
+<li><a href="https://github.com/webdjoe/pyvesync/blob/dev/AGENTS.md"><code>AGENTS.md</code></a> covers
+  the rules, architecture, commands, and workflow.</li>
+<li><a href="https://github.com/webdjoe/pyvesync/blob/dev/src/tests/AGENTS.md"><code>src/tests/AGENTS.md</code></a>
+  covers the test suite layout, fixtures, and common test tasks.</li>
+<li><code>CLAUDE.md</code> and <code>src/tests/CLAUDE.md</code> import the AGENTS.md files for Claude
+  Code. Codex and most other tools read AGENTS.md directly. If you edit agent
+  guidance, edit AGENTS.md.</li>
+</ul>
+<p>When driving an assistant against this repository:</p>
+<ul>
+<li>Require it to follow the three Contribution Rules above.</li>
+<li>Add new devices by mapping them in <code>device_map.py</code> and subclassing the correct
+  base class plus API mixin, not with ad-hoc, one-off code.</li>
+<li>Do not let it invent API request/response shapes. If there is no packet
+  capture for a behavior, it cannot be implemented.</li>
+<li>Do not submit device code that has not been run on the physical device.</li>
+<li>Keep each PR to a single change. Do not batch a session's worth of speculative
+  edits into one large PR.</li>
+<li>Provide the diagnostic information described below.</li>
+</ul>
+<h2 id="diagnostic-information-to-include">Diagnostic Information to Include<a class="toc-permalink" href="#diagnostic-information-to-include" title="Permanent link">↲</a></h2>
+<p>Provide the following when requesting a device, proposing a feature, or reporting
+a bug. The GitHub issue templates (<strong>Bug Report</strong> and <strong>Device Request</strong>) prompt
+for these fields. For packet-capture instructions, see <a href="../capturing/">Capturing</a>.</p>
+<p><strong>Requesting a new device:</strong></p>
+<ul>
+<li>Device model number and <code>product_type</code></li>
+<li>Firmware version</li>
+<li>Region / country code</li>
+<li>Link to the product page</li>
+<li>A packet capture, or a stated willingness to share the device with a maintainer</li>
+</ul>
+<p><strong>Adding a new feature:</strong></p>
+<ul>
+<li>The target device model(s) the feature was tested on, with firmware version</li>
+<li>The relevant captured API request and response for the new behavior</li>
+<li>A redacted <code>DEBUG</code> log of the library exercising the feature</li>
+</ul>
+<p><strong>Reporting a bug / troubleshooting:</strong></p>
+<ul>
+<li>pyvesync version and Python version</li>
+<li>Device model and firmware version</li>
+<li>A redacted <code>DEBUG</code> log</li>
+<li>The <code>device.last_response</code> output for the failing call</li>
+<li>A minimal reproduction script</li>
+</ul>
+<h3 id="capturing-a-redacted-debug-log">Capturing a redacted DEBUG log<a class="toc-permalink" href="#capturing-a-redacted-debug-log" title="Permanent link">↲</a></h3>
+<p><code>log_to_file()</code> sets the <code>pyvesync</code> logger to <code>DEBUG</code> and attaches a file
+handler in one call. Keep <code>redact=True</code> (the default) so tokens, account IDs,
+emails and device identifiers are replaced with <code>##_REDACTED_##</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pyvesync</span><span class="w"> </span><span class="kn">import</span> <span class="n">VeSync</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="k">async</span> <span class="k">with</span> <span class="n">VeSync</span><span class="p">(</span><span class="s1">'EMAIL'</span><span class="p">,</span> <span class="s1">'PASSWORD'</span><span class="p">,</span> <span class="n">redact</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">manager</span><span class="p">:</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>        <span class="n">manager</span><span class="o">.</span><span class="n">log_to_file</span><span class="p">(</span><span class="s1">'pyvesync.log'</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>        <span class="k">await</span> <span class="n">manager</span><span class="o">.</span><span class="n">login</span><span class="p">()</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>        <span class="k">await</span> <span class="n">manager</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>        <span class="n">device</span> <span class="o">=</span> <span class="n">manager</span><span class="o">.</span><span class="n">devices</span><span class="o">.</span><span class="n">outlets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>        <span class="k">await</span> <span class="n">device</span><span class="o">.</span><span class="n">turn_off</span><span class="p">()</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>        <span class="nb">print</span><span class="p">(</span><span class="n">device</span><span class="o">.</span><span class="n">last_response</span><span class="p">)</span>  <span class="c1"># result of the last API call</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+</code></pre></div>
+<p>Set <code>LibraryLogger.verbose = True</code> (from <code>pyvesync.utils.logs</code>) to include full
+request and response bodies. See <a href="../utils/logging/">Logging</a> for more options.
+Review the log before posting it, and never post packet captures publicly.</p>
+<h2 id="getting-started">Getting Started<a class="toc-permalink" href="#getting-started" title="Permanent link">↲</a></h2>
+<h3 id="install-the-development-environment">Install the Development Environment<a class="toc-permalink" href="#install-the-development-environment" title="Permanent link">↲</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Fork the repository on GitHub, then clone your fork</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/&lt;your-username&gt;/pyvesync.git
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="nb">cd</span><span class="w"> </span>pyvesync
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>git<span class="w"> </span>remote<span class="w"> </span>add<span class="w"> </span>upstream<span class="w"> </span>https://github.com/webdjoe/pyvesync.git
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="c1"># Create a virtual environment (Python 3.11+)</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>venv
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="nb">source</span><span class="w"> </span>venv/bin/activate<span class="w">  </span><span class="c1"># Linux/macOS</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="c1"># .\venv\Scripts\Activate.ps1  # Windows PowerShell</span>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="c1"># Install with dev dependencies</span>
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.<span class="o">[</span>dev<span class="o">]</span>
+</code></pre></div>
+<h3 id="pre-commit-hooks">Pre-commit Hooks<a class="toc-permalink" href="#pre-commit-hooks" title="Permanent link">↲</a></h3>
+<p>The project uses <a href="https://pre-commit.com/">pre-commit</a> to enforce code quality on
+every commit. The <a href="https://pre-commit.ci/">pre-commit.ci</a> service also runs these
+checks automatically on pull requests. The hooks apply to <code>src/pyvesync</code> only.</p>
+<p>The hooks include:</p>
+<ul>
+<li><strong>check-yaml</strong> / <strong>check-toml</strong> / <strong>check-ast</strong>: validate file syntax</li>
+<li><strong>trailing-whitespace</strong> / <strong>end-of-file-fixer</strong>: whitespace cleanup</li>
+<li><strong>mypy</strong>: static type checking</li>
+<li><strong>ruff-check</strong>: linting with auto-fix</li>
+<li><strong>ruff-format</strong>: code formatting</li>
+</ul>
+<p>To install and run pre-commit locally:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>pre-commit<span class="w"> </span>install<span class="w">      </span><span class="c1"># Install hooks (runs on every git commit)</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>pre-commit<span class="w"> </span>run<span class="w">          </span><span class="c1"># Run on staged files only</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>pre-commit<span class="w"> </span>run<span class="w"> </span>--all-files<span class="w">  </span><span class="c1"># Run on all files</span>
+</code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Changes must be staged (<code>git add</code>) before running <code>pre-commit run</code> for it to
+check the correct files.</p>
+</div>
+<h2 id="development-workflow">Development Workflow<a class="toc-permalink" href="#development-workflow" title="Permanent link">↲</a></h2>
+<ol type="1">
+<li>
+<p><strong>Branch from <code>dev</code>.</strong> <code>dev</code> is the integration branch that all pull
+   requests target. <code>master</code> is the release branch, and every merge to it
+   publishes a release.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>git<span class="w"> </span>fetch<span class="w"> </span>upstream
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>git<span class="w"> </span>switch<span class="w"> </span>-c<span class="w"> </span>feat/lap-c601s<span class="w"> </span>upstream/dev
+</code></pre></div>
+</li>
+<li>
+<p><strong>Make a single, focused change</strong> that follows the architecture rules.</p>
+</li>
+<li><strong>Add or update tests</strong> and record API fixtures (see
+   <a href="#testing-and-linting">Testing and Linting</a>).</li>
+<li><strong>Run the linters, type checker, and tests locally.</strong></li>
+<li><strong>Update documentation</strong> when behavior or the public API changes (see
+   <a href="#documentation">Documentation</a>).</li>
+<li><strong>Open a pull request into <code>dev</code></strong> with a Conventional Commits title and the
+   pull request template filled in, including the real-hardware verification
+   section.</li>
+</ol>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Do not change the version in <code>pyproject.toml</code> in a feature or fix PR. The
+version is bumped in the release PR from <code>dev</code> to <code>master</code>.</p>
+</div>
+<h2 id="adding-a-new-device">Adding a New Device<a class="toc-permalink" href="#adding-a-new-device" title="Permanent link">↲</a></h2>
+<p>Only start once you have a packet capture covering every request and response
+the device needs (see <a href="../capturing/">Capturing</a>).</p>
+<ol type="1">
+<li><strong>Device map:</strong> add a <code>*Map</code> entry (<code>OutletMap</code>, <code>PurifierMap</code>, ...) to the
+   matching <code>*_modules</code> list in <code>device_map.py</code>. Set <code>dev_types</code> to the model
+   strings the API returns, along with <code>class_name</code>, <code>setup_entry</code>,
+   <code>model_name</code>, <code>model_display</code>, and <code>features</code> (enums from <code>pyvesync.const</code>).
+   Add any type-specific options such as modes or fan levels.</li>
+<li><strong>Device class:</strong> if an existing class already speaks the device's API,
+   point the map entry at it. Otherwise add a class in
+   <code>src/pyvesync/devices/vesync&lt;type&gt;.py</code>, combining the API mixin with the
+   base class (<code>class VeSyncNewPlug(BypassV2Mixin, VeSyncOutlet)</code>), and model it
+   on the closest existing device.</li>
+<li><strong>Models:</strong> add request/response dataclasses for new payloads in
+   <code>src/pyvesync/models/&lt;type&gt;_models.py</code>. Field names match the API's JSON keys.</li>
+<li><strong>State and features:</strong> new state belongs in the type's <code>DeviceState</code>
+   subclass. New public methods belong on the base class and are gated by a
+   feature flag in the device map.</li>
+<li><strong>Test responses:</strong> add the device's <code>get_details()</code> response to
+   <code>DETAILS_RESPONSES</code> in <code>src/tests/call_json_&lt;type&gt;.py</code>, plus any
+   method-specific responses in <code>METHOD_RESPONSES</code>.</li>
+<li><strong>Test methods:</strong> add device-specific methods to <code>device_methods</code> in
+   <code>src/tests/test_&lt;type&gt;.py</code>.</li>
+<li><strong>Fixtures:</strong> record the requests with <code>pytest --write_api</code>, check the YAML
+   against the capture, and rerun <code>pytest</code> without flags.</li>
+<li><strong>Docs:</strong> add a <code>:::</code> block for the class in <code>docs/devices/&lt;type&gt;.md</code>, and
+   list the model in <code>docs/supported_devices.md</code> and the README device list.</li>
+<li><strong>Verify on hardware</strong> and state the model and firmware in the PR.</li>
+</ol>
+<h2 id="pull-request-process">Pull Request Process<a class="toc-permalink" href="#pull-request-process" title="Permanent link">↲</a></h2>
+<h3 id="semantic-pr-titles">Semantic PR Titles<a class="toc-permalink" href="#semantic-pr-titles" title="Permanent link">↲</a></h3>
+<p>Pull request titles must follow the
+<a href="https://www.conventionalcommits.org/">Conventional Commits</a> format. This is
+enforced by the <strong>Semantic Title</strong> GitHub Action on all PRs. Valid prefixes:</p>
+<ul>
+<li><code>feat:</code>: new feature or device support</li>
+<li><code>fix:</code>: bug fix</li>
+<li><code>docs:</code>: documentation changes</li>
+<li><code>refactor:</code>: code refactoring (no functional change)</li>
+<li><code>test:</code>: adding or updating tests</li>
+<li><code>chore:</code>: maintenance, dependency updates, CI changes</li>
+</ul>
+<p>Examples:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>feat: Add support for LAP-C601S air purifier
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>fix: Handle token expiration during device update
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>docs: Update contributing guidelines
+</code></pre></div>
+<h3 id="what-happens-on-a-pr">What Happens on a PR<a class="toc-permalink" href="#what-happens-on-a-pr" title="Permanent link">↲</a></h3>
+<p>When you open a pull request targeting <code>dev</code> or <code>master</code>, the <strong>Run Linting and
+Unit Tests</strong> workflow runs:</p>
+<ol type="1">
+<li><strong>Ruff</strong>: <code>ruff check --output-format=github src/pyvesync</code></li>
+<li><strong>Pylint</strong>: <code>pylint src/pyvesync</code></li>
+<li><strong>Pytest</strong>: the full test suite on Python 3.11, 3.12, 3.13, and 3.14</li>
+<li><strong>MkDocs build</strong>: only on PRs to <code>master</code> (Python 3.12)</li>
+</ol>
+<p>The workflow fails if any of these steps fail. Separately:</p>
+<ul>
+<li><strong>pre-commit.ci</strong> runs the pre-commit hooks, including <strong>mypy</strong>. mypy is
+  not part of the test workflow, so run it locally.</li>
+<li><strong>Semantic Title</strong> checks the PR title.</li>
+</ul>
+<p>A maintainer then reviews the change against the Contribution Rules and the PR
+checklist.</p>
+<h2 id="code-style">Code Style<a class="toc-permalink" href="#code-style" title="Permanent link">↲</a></h2>
+<h3 id="ruff-configuration">Ruff Configuration<a class="toc-permalink" href="#ruff-configuration" title="Permanent link">↲</a></h3>
+<p>The project uses <a href="https://docs.astral.sh/ruff/">ruff</a> as the primary linter and
+formatter. The configuration is in <code>ruff.toml</code> with the following key settings:</p>
+<ul>
+<li><strong>Line length</strong>: 90 characters</li>
+<li><strong>Indent</strong>: 4 spaces</li>
+<li><strong>Rule selection</strong>: <code>ALL</code> (all rules enabled, with specific ignores)</li>
+<li><strong>Docstring convention</strong>: Google style</li>
+<li><strong>Quote style</strong>: single quotes (double quotes for docstrings)</li>
+<li><strong>Scope</strong>: <code>src/pyvesync</code>. The <code>src/tests</code> directory is excluded from ruff
+  and pre-commit.</li>
+</ul>
+<p>Ruff runs with auto-fix enabled in pre-commit, so many issues are corrected
+automatically on commit. mypy (<code>mypy.ini</code>), pylint (<code>.pylintrc</code>) and flake8
+(<code>setup.cfg</code>) use the same 90-character limit.</p>
+<h3 id="general-style-guidelines">General Style Guidelines<a class="toc-permalink" href="#general-style-guidelines" title="Permanent link">↲</a></h3>
+<ul>
+<li>
+<p><strong>Quotes</strong>: Single quotes for all strings. Double quotes for docstrings.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">name</span> <span class="o">=</span> <span class="s1">'my_device'</span>            <span class="c1"># Single quotes</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">msg</span> <span class="o">=</span> <span class="s2">"it's a device"</span>         <span class="c1"># Double quotes when string contains single quote</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">    </span><span class="sd">"""Update device state."""</span>  <span class="c1"># Double quotes for docstrings</span>
+</code></pre></div>
+</li>
+<li>
+<p><strong>String formatting</strong>: Use f-strings, except in logging calls, which use
+  <code>%s</code> arguments.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">'Device </span><span class="si">%s</span><span class="s1"> status: </span><span class="si">%s</span><span class="s1">'</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">device_name</span><span class="p">,</span> <span class="n">status</span><span class="p">)</span>  <span class="c1"># logging uses %s</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">message</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">'Device </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">device_name</span><span class="si">}</span><span class="s1"> updated'</span>  <span class="c1"># f-strings elsewhere</span>
+</code></pre></div>
+</li>
+<li>
+<p><strong>Type hints</strong>: Required for all function signatures. Use <code>|</code> union syntax, not <code>Union</code> or <code>Optional</code>. Use <code>from __future__ import annotations</code> at the top of every module.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="k">def</span><span class="w"> </span><span class="nf">set_brightness</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">brightness</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span> <span class="o">...</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="k">def</span><span class="w"> </span><span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OutletMap</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">call_api</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+</code></pre></div>
+</li>
+<li>
+<p><strong>TYPE_CHECKING imports</strong>: Imports used only for type hints should be guarded behind <code>if TYPE_CHECKING:</code> to avoid circular imports at runtime.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>    <span class="kn">from</span><span class="w"> </span><span class="nn">pyvesync</span><span class="w"> </span><span class="kn">import</span> <span class="n">VeSync</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>    <span class="kn">from</span><span class="w"> </span><span class="nn">pyvesync.device_map</span><span class="w"> </span><span class="kn">import</span> <span class="n">OutletMap</span>
+</code></pre></div>
+</li>
+<li>
+<p><strong>Import ordering</strong>: Imports are grouped and sorted by: (1) <code>__future__</code>, (2) standard library, (3) third-party, (4) local imports. Each group is separated by a blank line.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mashumaro.mixins.orjson</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataClassORJSONMixin</span>
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>
+<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pyvesync.base_devices.outlet_base</span><span class="w"> </span><span class="kn">import</span> <span class="n">VeSyncOutlet</span>
+<a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pyvesync.const</span><span class="w"> </span><span class="kn">import</span> <span class="n">DeviceStatus</span><span class="p">,</span> <span class="n">ConnectionStatus</span>
+</code></pre></div>
+</li>
+<li>
+<p><strong>Docstrings</strong>: Required for all public classes, methods, and functions. Use Google-style format. Not required for inherited/overridden methods.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">OutletState</span><span class="p">(</span><span class="n">DeviceState</span><span class="p">):</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">    </span><span class="sd">"""Base state class for Outlets.</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="sd">    This class holds all of the state information for the outlet devices.</span>
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="sd">    Args:</span>
+<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="sd">        device (VeSyncOutlet): The device object.</span>
+<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="sd">        details (ResponseDeviceDetailsModel): The device details.</span>
+<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="sd">        feature_map (OutletMap): The feature map for the device.</span>
+<a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a>
+<a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="sd">    Attributes:</span>
+<a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a><span class="sd">        energy (float): Energy usage in kWh.</span>
+<a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a><span class="sd">        power (float): Power usage in Watts.</span>
+<a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a><span class="sd">        voltage (float): Voltage in Volts.</span>
+<a id="__codelineno-10-15" name="__codelineno-10-15" href="#__codelineno-10-15"></a>
+<a id="__codelineno-10-16" name="__codelineno-10-16" href="#__codelineno-10-16"></a><span class="sd">    Note:</span>
+<a id="__codelineno-10-17" name="__codelineno-10-17" href="#__codelineno-10-17"></a><span class="sd">        Not all attributes are available on all devices.</span>
+<a id="__codelineno-10-18" name="__codelineno-10-18" href="#__codelineno-10-18"></a><span class="sd">    """</span>
+</code></pre></div>
+</li>
+<li>
+<p><strong>Line length</strong>: 90 characters maximum.</p>
+</li>
+<li>
+<p><strong>Naming conventions</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Element</th>
+<th>Convention</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Classes</td>
+<td>PascalCase</td>
+<td><code>VeSyncOutlet7A</code>, <code>OutletState</code></td>
+</tr>
+<tr>
+<td>Methods / functions</td>
+<td>snake_case</td>
+<td><code>turn_on()</code>, <code>set_brightness()</code></td>
+</tr>
+<tr>
+<td>Properties</td>
+<td>snake_case</td>
+<td><code>device_status</code>, <code>fan_level</code></td>
+</tr>
+<tr>
+<td>Constants</td>
+<td>UPPER_SNAKE_CASE</td>
+<td><code>DEFAULT_TZ</code>, <code>STATUS_OK</code></td>
+</tr>
+<tr>
+<td>Enums</td>
+<td>PascalCase class, UPPER members</td>
+<td><code>DeviceStatus.ON</code></td>
+</tr>
+<tr>
+<td>Module-level logger</td>
+<td><code>logger</code> (preferred)</td>
+<td><code>logger = logging.getLogger(__name__)</code></td>
+</tr>
+</tbody>
+</table>
+</li>
+<li>
+<p><strong>Constants</strong>: All constants, default values, and device modes must be defined in the <code>pyvesync.const</code> module. No hardcoded strings or magic numbers in device code. Use <code>StrEnum</code> or <code>IntEnum</code> for enum values.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># In const.py</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">DeviceStatus</span><span class="p">(</span><span class="n">StrEnum</span><span class="p">):</span>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>    <span class="n">ON</span> <span class="o">=</span> <span class="s1">'on'</span>
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>    <span class="n">OFF</span> <span class="o">=</span> <span class="s1">'off'</span>
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>
+<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="c1"># In device code - use the enum, not the raw string</span>
+<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">device_status</span> <span class="o">=</span> <span class="n">DeviceStatus</span><span class="o">.</span><span class="n">ON</span>  <span class="c1"># correct</span>
+<a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">device_status</span> <span class="o">=</span> <span class="s1">'on'</span>             <span class="c1"># incorrect</span>
+</code></pre></div>
+</li>
+<li>
+<p><strong><code>__slots__</code></strong>: Used on state classes, device classes, and the <code>VeSync</code>
+  manager class to restrict attribute creation and improve memory usage.</p>
+</li>
+</ul>
+<h3 id="device-method-and-attribute-naming">Device Method and Attribute Naming<a class="toc-permalink" href="#device-method-and-attribute-naming" title="Permanent link">↲</a></h3>
+<ul>
+<li>All states specific to a device type must be stored in the <code>DeviceState</code> subclass in the base device type module. For example, <code>SwitchState</code> for switches, <code>PurifierState</code> for purifiers, etc.</li>
+<li>All device properties and methods are to be created in the specific device type base class, not in the implementation device class.</li>
+<li>
+<p>Binary state methods follow this naming pattern:</p>
+<table>
+<thead>
+<tr>
+<th>Pattern</th>
+<th>Usage</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>turn_on()</code> / <code>turn_off()</code></td>
+<td>Power on/off</td>
+<td>Inherited from <code>VeSyncBaseToggleDevice</code></td>
+</tr>
+<tr>
+<td><code>turn_&lt;state&gt;_on()</code> / <code>turn_&lt;state&gt;_off()</code></td>
+<td>Named binary state</td>
+<td><code>turn_child_lock_on()</code>, <code>turn_child_lock_off()</code></td>
+</tr>
+<tr>
+<td><code>toggle_&lt;state&gt;(bool)</code></td>
+<td>Toggle binary state</td>
+<td><code>toggle_child_lock()</code>, <code>toggle_display()</code></td>
+</tr>
+<tr>
+<td><code>set_&lt;attribute&gt;(value)</code></td>
+<td>Set non-binary state</td>
+<td><code>set_brightness()</code>, <code>set_fan_level()</code></td>
+</tr>
+</tbody>
+</table>
+</li>
+<li>
+<p>The <code>turn_on()</code> and <code>turn_off()</code> methods are specific to power and call the <code>toggle_switch()</code> method internally.</p>
+</li>
+<li>
+<p>Base-class methods that a concrete device may not implement use a stub
+  pattern. They discard unused arguments with <code>del</code>, log at debug level whether
+  the feature is unsupported or just not configured, and return <code>False</code>.
+  Concrete classes that support the feature override the method.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_nightlight_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">    </span><span class="sd">"""Set nightlight mode."""</span>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>    <span class="k">del</span> <span class="n">mode</span>  <span class="c1"># unused</span>
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">supports_nightlight</span><span class="p">:</span>
+<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">'Device does not support nightlight.'</span><span class="p">)</span>
+<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>    <span class="k">else</span><span class="p">:</span>
+<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">'Nightlight mode not configured for </span><span class="si">%s</span><span class="s1">'</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">device_name</span><span class="p">)</span>
+<a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>    <span class="k">return</span> <span class="kc">False</span>
+</code></pre></div>
+</li>
+<li>
+<p>Concrete device classes declare <code>__slots__ = ()</code>.</p>
+</li>
+</ul>
+<h3 id="models-directory">Models Directory<a class="toc-permalink" href="#models-directory" title="Permanent link">↲</a></h3>
+<p>Data model files in <code>pyvesync/models/</code> have relaxed naming rules (<code>N803</code>, <code>N804</code>,
+<code>N802</code>, <code>N815</code> ignored) because model field names must match the VeSync API's
+JSON keys exactly (e.g., <code>traceId</code>, <code>accountID</code>, <code>configModule</code>). Request models
+subclass <code>RequestBaseModel</code> and response models subclass <code>ResponseBaseModel</code>
+from <code>models/base_models.py</code>.</p>
+<h2 id="testing-and-linting">Testing and Linting<a class="toc-permalink" href="#testing-and-linting" title="Permanent link">↲</a></h2>
+<h3 id="running-tests-locally">Running Tests Locally<a class="toc-permalink" href="#running-tests-locally" title="Permanent link">↲</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="c1"># Run all tests</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>pytest
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="c1"># Run a specific test file</span>
+<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>pytest<span class="w"> </span>src/tests/test_outlets.py
+<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>
+<a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="c1"># Run the tests for one device</span>
+<a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a>pytest<span class="w"> </span>src/tests/test_outlets.py<span class="w"> </span>-k<span class="w"> </span><span class="s2">"ESW15-USA"</span>
+</code></pre></div>
+<h3 id="recording-api-fixtures">Recording API Fixtures<a class="toc-permalink" href="#recording-api-fixtures" title="Permanent link">↲</a></h3>
+<p>Device tests compare each request the library sends with a YAML fixture in
+<code>src/tests/api/&lt;device module&gt;/&lt;setup_entry&gt;.yaml</code>. A missing fixture makes the
+test <strong>fail</strong>, so new devices and methods need their fixtures recorded:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="c1"># Write fixtures that don't exist yet (existing fixtures are untouched)</span>
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>pytest<span class="w"> </span>src/tests/test_outlets.py<span class="w"> </span>--write_api
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="c1"># Rewrite existing fixtures - only when a request has intentionally changed</span>
+<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>pytest<span class="w"> </span>src/tests/test_outlets.py<span class="w"> </span>--write_api<span class="w"> </span>--overwrite
+</code></pre></div>
+<p>Both flags ask for confirmation before writing. In a non-interactive shell (CI,
+scripts, AI agents) set <code>PYTEST_CONFIRM=1</code> to skip the prompt, otherwise the run
+aborts. Narrow these runs to the module you changed, and review the YAML diff
+before committing. Never edit fixtures by hand or overwrite them just to make a
+failing test pass.</p>
+<h3 id="running-with-tox">Running with Tox<a class="toc-permalink" href="#running-with-tox" title="Permanent link">↲</a></h3>
+<p>For convenience, <code>tox</code> can be used to run tests and linting. This requires <code>tox</code> to be installed in your Python environment.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="c1"># Run all environments</span>
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>tox
+<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>
+<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="c1"># Specific environments</span>
+<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>tox<span class="w"> </span>-e<span class="w"> </span><span class="m">3</span>.11<span class="w">          </span><span class="c1"># Run tests with Python 3.11</span>
+<a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a>tox<span class="w"> </span>-e<span class="w"> </span><span class="m">3</span>.12<span class="w">          </span><span class="c1"># Run tests with Python 3.12</span>
+<a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a>tox<span class="w"> </span>-e<span class="w"> </span><span class="m">3</span>.13<span class="w">          </span><span class="c1"># Run tests with Python 3.13</span>
+<a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a>tox<span class="w"> </span>-e<span class="w"> </span>lint<span class="w">          </span><span class="c1"># Run pylint checks</span>
+<a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a>tox<span class="w"> </span>-e<span class="w"> </span>flake8<span class="w">        </span><span class="c1"># Run flake8 checks</span>
+<a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a>tox<span class="w"> </span>-e<span class="w"> </span>ruff<span class="w">          </span><span class="c1"># Run ruff checks</span>
+<a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a>tox<span class="w"> </span>-e<span class="w"> </span>mypy<span class="w">          </span><span class="c1"># Run mypy type checks</span>
+<a id="__codelineno-15-12" name="__codelineno-15-12" href="#__codelineno-15-12"></a>
+<a id="__codelineno-15-13" name="__codelineno-15-13" href="#__codelineno-15-13"></a><span class="c1"># Pass arguments to pytest after --</span>
+<a id="__codelineno-15-14" name="__codelineno-15-14" href="#__codelineno-15-14"></a>tox<span class="w"> </span>-e<span class="w"> </span><span class="m">3</span>.12<span class="w"> </span>--<span class="w"> </span>src/tests/test_outlets.py<span class="w"> </span>--write_api
+</code></pre></div>
+<h3 id="running-linters-directly">Running Linters Directly<a class="toc-permalink" href="#running-linters-directly" title="Permanent link">↲</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>ruff<span class="w"> </span>check<span class="w"> </span>src/pyvesync<span class="w">          </span><span class="c1"># Lint</span>
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>ruff<span class="w"> </span>format<span class="w"> </span>src/pyvesync<span class="w">         </span><span class="c1"># Format</span>
+<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>mypy<span class="w"> </span>src/pyvesync<span class="w">                </span><span class="c1"># Type check</span>
+<a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>pylint<span class="w"> </span>src/pyvesync<span class="w">              </span><span class="c1"># Pylint</span>
+</code></pre></div>
+<p>See the <a href="../testing/">Testing</a> documentation and the
+<a href="https://github.com/webdjoe/pyvesync/blob/dev/src/tests/README.md">tests README</a>
+for details on the test architecture, fixtures, and adding tests for new devices.</p>
+<h2 id="documentation">Documentation<a class="toc-permalink" href="#documentation" title="Permanent link">↲</a></h2>
+<p>The documentation site is built with <a href="https://www.mkdocs.org/">MkDocs</a> and
+<a href="https://mkdocstrings.github.io/">mkdocstrings</a>. Most API reference pages are
+generated from docstrings, which is why public classes and methods need complete
+Google-style docstrings.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.<span class="o">[</span>docs<span class="o">]</span>
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>mkdocs<span class="w"> </span>serve<span class="w">      </span><span class="c1"># live preview at http://127.0.0.1:8000</span>
+<a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>mkdocs<span class="w"> </span>build<span class="w">      </span><span class="c1"># what CI runs on PRs to master</span>
+</code></pre></div>
+<ul>
+<li>Device pages live in <code>docs/devices/&lt;type&gt;.md</code>. Each device class is rendered by
+  a <code>pyvesync.devices.&lt;module&gt;.&lt;ClassName&gt;</code> block. Copy the options from a
+  neighbouring block.</li>
+<li>New devices are also listed in <code>docs/supported_devices.md</code> and the README.</li>
+<li>Navigation is defined in <code>mkdocs.yml</code>.</li>
+</ul>
+<h2 id="release-process">Release Process<a class="toc-permalink" href="#release-process" title="Permanent link">↲</a></h2>
+<p>Releases are triggered automatically when code is merged to <code>master</code>. The <strong>Release and Publish</strong> workflow:</p>
+<ol type="1">
+<li><strong>Extracts the version</strong> from <code>pyproject.toml</code></li>
+<li><strong>Validates</strong> the new version is greater than the latest git tag</li>
+<li><strong>Builds</strong> the distribution package (<code>python -m build</code>)</li>
+<li><strong>Creates a GitHub Release</strong> with auto-generated release notes and the version as the tag (e.g., <code>3.4.1</code>)</li>
+<li><strong>Publishes to PyPI</strong> via the <code>pypa/gh-action-pypi-publish</code> action</li>
+<li><strong>Deploys documentation</strong> using <code>mike</code> to GitHub Pages, updating the <code>latest</code> alias</li>
+</ol>
+<h3 id="versioning">Versioning<a class="toc-permalink" href="#versioning" title="Permanent link">↲</a></h3>
+<p>The project version is defined in <code>pyproject.toml</code> under <code>[project].version</code>. The version follows <a href="https://semver.org/">semantic versioning</a>:</p>
+<ul>
+<li><strong>Major</strong> (x.0.0) - Breaking changes</li>
+<li><strong>Minor</strong> (0.x.0) - New features, new device support</li>
+<li><strong>Patch</strong> (0.0.x) - Bug fixes</li>
+</ul>
+<p>When preparing a release PR to <code>master</code>, bump the version in <code>pyproject.toml</code>. The release workflow will fail if the new version is not greater than the previous tag.</p>
+<h3 id="documentation-deployment">Documentation Deployment<a class="toc-permalink" href="#documentation-deployment" title="Permanent link">↲</a></h3>
+<p>Documentation is built with MkDocs and deployed to GitHub Pages using
+<a href="https://github.com/jimporter/mike">mike</a> for version management. Each release
+creates a versioned deployment and updates the <code>latest</code> alias. The documentation
+site is at
+<a href="https://webdjoe.github.io/pyvesync/latest/">webdjoe.github.io/pyvesync/latest</a>.</p>
+<h2 id="dependency-management">Dependency Management<a class="toc-permalink" href="#dependency-management" title="Permanent link">↲</a></h2>
+<p><a href="https://docs.github.com/en/code-security/dependabot">Dependabot</a> is configured to check for updates weekly to both pip dependencies and GitHub Actions versions.</p>
+<h2 id="requests-to-add-devices">Requests to Add Devices<a class="toc-permalink" href="#requests-to-add-devices" title="Permanent link">↲</a></h2>
+<p>Please see <a href="../capturing/">Capturing</a> for instructions on how to capture the
+information needed to add a new device, or how to share a device with a
+maintainer instead.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["search.suggest", "navigation.indexes", "search.highlight", "toc.follow", "navigation.top"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "default": "latest", "provider": "mike"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+    
+  </body>
+</html>
