@@ -298,6 +298,12 @@ class FryerDualCookConfig(RequestBaseModel):
     recipeId: int
     recipeName: str
     recipeType: int
+    shakeTime: int | None = None
+
+    class Config(RequestBaseModel.Config):
+        """Leave ``shakeTime`` out of the request when it is not set."""
+
+        omit_none = True
 
 
 @dataclass
