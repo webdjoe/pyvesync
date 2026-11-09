@@ -91,8 +91,6 @@ class LibraryLogger:
 
     shouldredact = True
     """Class attribute to determine if sensitive information should be redacted."""
-    REDACTED = '##_REDACTED_##'
-    """Replacement string for redacted values."""
     verbose = False
     """Class attribute to print all request & response content."""
     debug_enabled = False
@@ -153,7 +151,7 @@ class LibraryLogger:
                     r'(?<=account_id\s))'
                     r'[^"\s]+'
                 ),
-                cls.REDACTED,
+                '##_REDACTED_##',
                 stringvalue,
             )
         return stringvalue
@@ -173,7 +171,7 @@ class LibraryLogger:
                 not empty, otherwise value unchanged.
         """
         if cls.shouldredact and value:
-            return cls.REDACTED
+            return '##_REDACTED_##'
         return value
 
     @staticmethod

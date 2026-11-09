@@ -11,7 +11,7 @@ from base_test_cases import TestBase
 from defaults import TestDefaults
 import call_json
 
-REDACTED = LibraryLogger.REDACTED
+REDACTED = '##_REDACTED_##'
 
 SENSITIVE_BODY = {
     'email': 'user@example.com',
