@@ -1203,6 +1203,8 @@ class AirFryerFeatures(Features):
             in Sync, or one recipe in both chambers in Match.
         COOK_CONFIG_SHAKE_TIME: ``startMultiCook`` cook configs include
             ``shakeTime``. Other dual-chamber fryers leave it out.
+        READY_START: ``ready_start=True`` sends a cook that waits for the
+            start button on the fryer. Declared on the CAF-DC111S-AEU.
     """
 
     DUAL_BLAZE = 'dual_blaze'
@@ -1212,6 +1214,7 @@ class AirFryerFeatures(Features):
     WHOLE_CHAMBER = 'whole_chamber'
     CHAMBER_MODES = 'chamber_modes'
     COOK_CONFIG_SHAKE_TIME = 'cook_config_shake_time'
+    READY_START = 'ready_start'
 
 
 class AirFryerCookStatus(StrEnum):

@@ -395,7 +395,10 @@ class VeSyncAirFryer158(VeSyncFryer):
         recipe: AirFryerPresetRecipe,
         *,
         chamber: AirFryerChamber | int = AirFryerChamber.CHAMBER_1,
+        ready_start: bool = False,
     ) -> bool:
+        if not self._ready_start_supported(ready_start):
+            return False
         if self._validate_chamber(chamber) is None:
             return False
         prepared = self._prepare_recipe(recipe)
@@ -624,7 +627,10 @@ class VeSyncTurboBlazeFryer(BypassV2Mixin, VeSyncFryer):
         recipe: AirFryerPresetRecipe,
         *,
         chamber: AirFryerChamber | int = AirFryerChamber.CHAMBER_1,
+        ready_start: bool = False,
     ) -> bool:
+        if not self._ready_start_supported(ready_start):
+            return False
         if self._validate_chamber(chamber) is None:
             return False
         prepared = self._prepare_recipe(recipe)
@@ -1152,6 +1158,7 @@ class VeSyncDualAirFryer(BypassV2Mixin, VeSyncFryer):
         recipe: AirFryerPresetRecipe,
         *,
         chamber: AirFryerChamber | int = AirFryerChamber.CHAMBER_1,
+        ready_start: bool = False,
     ) -> bool:
         """Start cooking with a preset recipe.
 
@@ -1159,6 +1166,7 @@ class VeSyncDualAirFryer(BypassV2Mixin, VeSyncFryer):
             recipe: The preset recipe to use. Its ``preheat_time`` is ignored.
             chamber (AirFryerChamber | int): Chamber to cook in. ``BOTH``
                 cooks both chambers in sync.
+            ready_start (bool): True waits for the start button on the fryer.
 
         Returns:
             True if the command was successful.
@@ -1171,7 +1179,7 @@ class VeSyncDualAirFryer(BypassV2Mixin, VeSyncFryer):
             return False
         cook_configs = self._build_cook_configs(prepared, member)
         return await self._start_cook_configs(
-            cook_configs, member, self._get_sync_type(member)
+            cook_configs, member, self._get_sync_type(member), ready_start=ready_start
         )
 
     async def _start_cook_configs(
@@ -1179,6 +1187,8 @@ class VeSyncDualAirFryer(BypassV2Mixin, VeSyncFryer):
         configs: list[models.FryerDualCookConfig],
         chamber: AirFryerChamber,
         sync_type: AirFryerSyncType,
+        *,
+        ready_start: bool,
     ) -> bool:
         """Send validated configs to ``startMultiCook`` and update the state.
 
@@ -1186,17 +1196,20 @@ class VeSyncDualAirFryer(BypassV2Mixin, VeSyncFryer):
             configs: The chamber configs to start.
             chamber: Validated chamber sent as ``workChamber``.
             sync_type: The ``syncType`` to send.
+            ready_start: Send ``readyStart``: wait for the start button.
 
         Returns:
             True if the command was successful.
         """
+        if not self._ready_start_supported(ready_start):
+            return False
         start_data = models.FryerDualStartCookData.from_dict(
             {
                 'accountId': self.manager.account_id,
                 'cookConfigs': [c.to_dict() for c in configs],
                 # readyStart False starts the cook at once; True waits for the
                 # start button.
-                'readyStart': False,
+                'readyStart': ready_start,
                 'syncType': int(sync_type),
                 'tempUnit': self.temp_unit.code,
                 'workChamber': int(chamber),
@@ -1225,11 +1238,14 @@ class VeSyncDualAirFryer(BypassV2Mixin, VeSyncFryer):
         )
         for config in configs:
             wait_time = longest - config.cookSetTime if separate_times else 0
-            # readyStart is False, so the cook starts without the start button.
+            if ready_start:
+                cook_status = AirFryerCookStatus.READY
+            elif wait_time:
+                cook_status = AirFryerCookStatus.HOLD
+            else:
+                cook_status = AirFryerCookStatus.COOKING
             self._chamber_state(AirFryerChamber(config.chamber)).set_state(
-                cook_status=(
-                    AirFryerCookStatus.HOLD if wait_time else AirFryerCookStatus.COOKING
-                ),
+                cook_status=cook_status,
                 cook_time=config.cookSetTime,
                 cook_last_time=wait_time or config.cookSetTime,
                 total_last_time=longest if separate_times else None,
@@ -1245,10 +1261,11 @@ class VeSyncDualAirFryer(BypassV2Mixin, VeSyncFryer):
         chamber_2: AirFryerPresetRecipe | None = None,
         *,
         sync_type: AirFryerSyncType = AirFryerSyncType.SYNC,
+        ready_start: bool = False,
     ) -> bool:
         if AirFryerFeatures.CHAMBER_MODES not in self.features:
             return await super().set_chamber_modes(
-                chamber_1, chamber_2, sync_type=sync_type
+                chamber_1, chamber_2, sync_type=sync_type, ready_start=ready_start
             )
         if sync_type not in (
             AirFryerSyncType.OFF,
@@ -1272,7 +1289,9 @@ class VeSyncDualAirFryer(BypassV2Mixin, VeSyncFryer):
             *self._build_cook_configs(first, AirFryerChamber.CHAMBER_1),
             *self._build_cook_configs(second, AirFryerChamber.CHAMBER_2),
         ]
-        return await self._start_cook_configs(configs, AirFryerChamber.BOTH, sync_type)
+        return await self._start_cook_configs(
+            configs, AirFryerChamber.BOTH, sync_type, ready_start=ready_start
+        )
 
     async def set_mode(
         self,
