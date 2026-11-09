@@ -118,6 +118,9 @@ class LibraryLogger:
         - authKey
         - uuid
         - cid
+        - deviceId
+        - terminalId
+        - nickName
 
         Args:
             stringvalue (str): The input string potentially containing
@@ -140,6 +143,9 @@ class LibraryLogger:
                     r'(?<=authKey":\s")|'
                     r'(?<=uuid":\s")|'
                     r'(?<=cid":\s")|'
+                    r'(?<=deviceId":\s")|'
+                    r'(?<=terminalId":\s")|'
+                    r'(?<=nickName":\s")|'
                     r'(?<=token\s)|'
                     r'(?<=authorizeCode\s)|'
                     r'(?<=account_id\s))'
@@ -149,6 +155,24 @@ class LibraryLogger:
                 stringvalue,
             )
         return stringvalue
+
+    @classmethod
+    def redact_value(cls, value: str | None) -> str | None:
+        """Redact a single sensitive value, such as an account email.
+
+        Use this for values logged outside of a JSON body, which `redactor`
+        cannot match by key.
+
+        Args:
+            value (str | None): The sensitive value to log.
+
+        Returns:
+            str | None: '##_REDACTED_##' if redaction is enabled and value is
+                not empty, otherwise value unchanged.
+        """
+        if cls.shouldredact and value:
+            return '##_REDACTED_##'
+        return value
 
     @staticmethod
     def is_json(data: str | bytes | None) -> bool:
