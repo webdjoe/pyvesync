@@ -219,7 +219,8 @@ the generic pattern:
   Capture values live in the test (`CS158_*` dicts, `_dc601s_status()`,
   `_tf101s_status()` / `_tf101s_chamber()`).
 - `test_fryer_units.py::test_presets_match_apk` compares every map entry's
-  `cook_modes` with its `APK_PRESETS` row, and the map tests require each
+  `cook_modes` with its `APK_PRESETS` row (plus `DEVICE_TESTED_OVERRIDES`,
+  deliberate differences verified on the device), and the map tests require each
   entry's `default_cook_mode` to name the mode `default_preset` sends.
 
 Adding an air fryer model therefore means: an `APK_PRESETS` row (from the

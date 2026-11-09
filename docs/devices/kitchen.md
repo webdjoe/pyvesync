@@ -391,6 +391,11 @@ modes, for display. A temperature inside that span can still be outside the
 range of the mode you cook with; check `temp_limits(cook_mode)` before
 calling `set_mode()`. `temperature_step` is the default mode's step.
 
+One range differs from the app on purpose: on the CAF-DC111S-AEU the app
+stops Bake at 125 °C (260 °F), but the manual and the fryer's panel allow
+80 °C (175 °F). pyvesync uses 80–205 °C (175–400 °F); 80 °C was verified on
+the device.
+
 ## Cook time limits
 
 The CAF-DC111S-AEU limits each mode's cook time to the range and step in the
