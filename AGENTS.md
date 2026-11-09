@@ -196,9 +196,9 @@ details in [src/tests/AGENTS.md](src/tests/AGENTS.md).
   `api_scrub()`, and compared with `src/tests/api/<module>/<setup_entry>.yaml`.
   Used by all `test_<type>.py` device tests.
 - **`TestApiFunc`** patches `aiohttp.ClientSession` with `AiohttpMockSession`
-  (`aiohttp_mocker.py`) to exercise the full HTTP cycle. Used for login and
-  `async_call_api()` error handling (`test_x_vesync_login.py`,
-  `test_x_vesync_api_responses.py`, which are current tests, not legacy).
+  (`aiohttp_mocker.py`) to exercise the full HTTP cycle. Used for login,
+  re-login and credentials (`test_auth.py`) and for `async_call_api()` error
+  handling (`test_x_vesync_api_responses.py`, a current test, not legacy).
 - **Parametrization**: `conftest.py:pytest_generate_tests()` reads class
   attributes. `device = 'outlets'` makes it read `cls.outlets` (setup entries
   derived from `device_map.outlet_modules`); `base_methods` run on every device;

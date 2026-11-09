@@ -86,10 +86,9 @@ fields to make a code path run.
 | `test_fryer_chambers.py` | Air fryer `AirFryerChamber` interface: supported chambers, `BOTH` / Sync, `work_chamber`, `sync_chambers` |
 | `test_fryer_resilience.py` | Air fryer failure handling: unknown PID skipped, bad units, failed polls keep state, time validation, CS137/CS158 stop/resume phases, dual `end()` for the whole basket, per-device `default_preset` |
 | `test_all_devices.py` | Each device type's `DETAILS_RESPONSES` has one entry per setup entry (count check, `test_device_tests`); `get_devices()` request. Air fryers and thermostats aren't counted |
-| `test_auth.py` | `VeSyncAuth`: init/region, credentials, token-file persistence, login and re-auth flows |
+| `test_auth.py` | All login tests (`TestApiFunc`, scripted HTTP responses): region mapping, credentials, token file, two-step and cross-region login, `reauthenticate()`, and re-login plus retry after a rejected token in `async_call_api()` |
 | `test_manager_resilience.py` | Device discovery skips a device whose class raises `VeSyncError`; `update_all_devices()` logs unexpected errors |
 | `test_colors.py` | Plain unit tests for `utils/colors.py`, no fixtures |
-| `test_x_vesync_login.py` | Login flow (`TestBase` and `TestApiFunc`). Current, not legacy |
 | `test_x_vesync_api_responses.py` | `async_call_api()` error handling: rate limits, server errors, status codes (`TestApiFunc`). Current, not legacy |
 | `xtest_x_*.py` | Legacy, not collected (filename doesn't start with `test_`). Don't extend them |
 

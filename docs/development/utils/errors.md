@@ -86,6 +86,17 @@ The `pyvesync` library parses the code provided in the API response to determine
         - "!.*pid"
         - "!^__*"
 
+::: pyvesync.utils.errors.VeSyncInvalidCredentialsError
+    handler: python
+    options:
+      parameter_headings: true
+      show_root_heading: true
+      heading_level: 3
+      show_source: true
+      filters:
+        - "!.*pid"
+        - "!^__*"
+
 ::: pyvesync.utils.errors.VeSyncTokenError
     handler: python
     options:

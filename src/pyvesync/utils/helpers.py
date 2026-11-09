@@ -248,7 +248,9 @@ class Helpers:
         return r_dict
 
     @staticmethod
-    def get_class_attributes(target_class: object, keys: tuple[str]) -> dict[str, Any]:
+    def get_class_attributes(
+        target_class: object, keys: tuple[str, ...]
+    ) -> dict[str, Any]:
         """Find matching attributes, static methods, and class methods from list of keys.
 
         This function is case insensitive and will remove underscores from the keys before
@@ -318,11 +320,13 @@ class Helpers:
         return cls.get_class_attributes(DefaultValues, keys)
 
     @classmethod
-    @lru_cache(maxsize=128, typed=True)
-    def get_manager_attributes(cls, manager: VeSync, keys: tuple[str]) -> dict[str, Any]:
+    def get_manager_attributes(
+        cls, manager: VeSync, keys: tuple[str, ...]
+    ) -> dict[str, Any]:
         """Get VeSync manager attributes.
 
-        This method uses lru_cache to cache results for faster subsequent lookups.
+        Not cached: the token, time zone and country code change on login, and
+        each request must carry the current values.
 
         Args:
             manager (VeSyncManager): Instance of VeSyncManager.

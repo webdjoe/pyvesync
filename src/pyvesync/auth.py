@@ -153,6 +153,10 @@ class VeSyncAuth:
     async def reauthenticate(self) -> bool:
         """Re-authenticate using stored username and password.
 
+        The current credentials stay in place while the login runs, and also if
+        it fails, so requests can still be built and the login tried again. They
+        are replaced when the login succeeds.
+
         Returns:
             True if re-authentication successful, False otherwise
 
@@ -162,7 +166,6 @@ class VeSyncAuth:
             VeSyncServerError: If server returns an error
         """
         had_saved_credentials = self.credentials_saved
-        self.clear_credentials()
         success = await self.login()
         logger.debug('Re-authentication successful for user: %s', self._username)
         if had_saved_credentials:

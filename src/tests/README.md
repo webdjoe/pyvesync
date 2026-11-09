@@ -4,7 +4,7 @@ This is the testing suite for the pyvesync library. Each device that is added mu
 
 I've built a relatively simple framework to ease the burden of writing tests. There are some old tests that I had previously written that I've kept as I build the new framework but these tests were not comprehensive or portable. The files that begin with `xtest_x_` are these previous tests - pytest does not collect them (the filename does not start with `test`) and they can safely be ignored.
 
-> **Note:** the files named `test_x_vesync_login.py` and `test_x_vesync_api_responses.py` are **not** legacy. They are current tests for the login flow and low-level `async_call_api()` error handling. Only the `xtest_x_*` files are legacy.
+> **Note:** the file named `test_x_vesync_api_responses.py` is **not** legacy. It is a current test for low-level `async_call_api()` error handling. Only the `xtest_x_*` files are legacy.
 
 The tests primarily run each API call for each device and record the request details in YAML files in the `src/tests/api` directory. These files are then used to verify the request when the test is run again.
 
@@ -13,7 +13,7 @@ The tests primarily run each API call for each device and record the request det
 The suite verifies devices at two different levels, both defined in `base_test_cases.py`:
 
 - **`TestBase` (the common case)** - patches `VeSync.async_call_api()`. The mock intercepts each device method *before* any HTTP request is made, capturing the URL, method, headers and JSON body so they can be compared against the recorded YAML fixtures. This is what every `test_<device_type>.py` module uses.
-- **`TestApiFunc`** - patches `aiohttp.ClientSession` directly and drives the full HTTP request/response cycle using `AiohttpMockSession` from `aiohttp_mocker.py`. It is used for login tests and for exercising `async_call_api()` error handling (rate limits, server errors, non-200 status codes).
+- **`TestApiFunc`** - patches `aiohttp.ClientSession` directly and drives the full HTTP request/response cycle using `AiohttpMockSession` from `aiohttp_mocker.py`. It is used for the login tests in `test_auth.py` and for exercising `async_call_api()` error handling (rate limits, server errors, non-200 status codes).
 
 Both base classes expose `self.manager` (a logged-in `VeSync` instance), `self.mock_api`, `self.caplog`, and a `run_in_loop()` helper for running coroutines synchronously. `TestBase` additionally provides `get_device(product_type, setup_entry)` to instantiate a single device for a test.
 
@@ -44,10 +44,9 @@ The structure of the framework is as follows:
 | `test_fryers.py` | Air fryer `update()` tests for standby and cooking, recorded to `api/vesynckitchen/`. |
 | `test_fryer_captures.py`, `test_fryer_units.py`, `test_fryer_chambers.py`, `test_fryer_resilience.py` | Air fryer control-method, device-map, chamber and failure-handling tests. They check request bodies (against capture values where a capture exists), parsed state and the APK preset table directly (no YAML). |
 | `test_all_devices.py` | Asserts each module's `DETAILS_RESPONSES` has one entry per setup entry (count check), and tests `get_devices()` instantiates the expected device counts. Air fryers and thermostats aren't included. |
-| `test_auth.py` | `VeSyncAuth` tests - credentials, token-file persistence, login flow, re-auth and error handling. |
+| `test_auth.py` | All login tests, using `TestApiFunc` with scripted HTTP responses - region mapping, credentials, token-file persistence, the two-step and cross-region login, `reauthenticate()`, and re-login plus retry after a rejected token. |
 | `test_manager_resilience.py` | Failure handling: a device whose class raises `VeSyncError` is skipped during discovery, and `update_all_devices()` logs unexpected errors with their traceback. |
 | `test_colors.py` | Plain unit tests for `utils/colors.py` (`RGBNightlightColor`); no API fixtures. |
-| `test_x_vesync_login.py` | Current login-flow tests using `TestBase` and `TestApiFunc`. |
 | `test_x_vesync_api_responses.py` | Current `async_call_api()` error-handling tests via `TestApiFunc`. |
 | `xtest_x_*.py` | Legacy tests, not collected by pytest. Kept for reference only. |
 
