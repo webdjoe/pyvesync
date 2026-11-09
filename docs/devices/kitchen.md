@@ -150,6 +150,16 @@ fryer. Its own time and temperature are pyvesync defaults and can differ
 from `get_mode_recipe()` for the same mode; use `get_mode_recipe()` for the
 app's defaults.
 
+### Start on the appliance (`ready_start`)
+
+By default a cook starts at once. On fryers with the `READY_START` feature
+(CAF-DC111S-AEU), `set_mode_from_recipe(recipe, ready_start=True)` and
+`set_chamber_modes(..., ready_start=True)` only send the settings: the fryer
+shows them, reports `READY` and starts when its Start/Pause button is pressed.
+In the EU the VeSync app starts cooks this way, referring to IEC/EN 60335-1
+and IEC/EN 60335-2-9. Other fryers return `False` without a request when
+`ready_start=True`. Verified on the CAF-DC111S-AEU, firmware 2.0.02.
+
 ## Controlling a cook
 
 | Method | What it does | Fryers |

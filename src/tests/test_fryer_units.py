@@ -160,6 +160,7 @@ def test_dc111s_entry_is_dual_without_whole_and_maps_hold():
         AirFryerFeatures.CHAMBER_MODES,
         AirFryerFeatures.COOK_CONFIG_SHAKE_TIME,
         AirFryerFeatures.RESUMABLE,
+        AirFryerFeatures.READY_START,
     ]
     assert dc111.temp_unit == TemperatureUnits.CELSIUS
     assert dc111.status_map['hold'] == AirFryerCookStatus.HOLD
