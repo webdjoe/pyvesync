@@ -38,7 +38,7 @@ class InnerPurifierBaseResult(BypassV2InnerResult):
 
 @dataclass
 class PurifierVitalDetailsResult(InnerPurifierBaseResult):
-    """Vital 100S/200S and Everest Purifier Result Model."""
+    """Vital 100S/200S, Everest, and Vital Pet Pro Purifier Result Model."""
 
     powerSwitch: int
     filterLifePercent: int
@@ -50,12 +50,12 @@ class PurifierVitalDetailsResult(InnerPurifierBaseResult):
     screenState: int
     childLockSwitch: int
     screenSwitch: int
-    lightDetectionSwitch: int
-    environmentLightState: int
-    scheduleCount: int
-    timerRemain: int
-    efficientModeTimeRemain: int
-    errorCode: int
+    scheduleCount: int | None = None
+    timerRemain: int | None = None
+    errorCode: int | None = None
+    lightDetectionSwitch: int | None = None
+    environmentLightState: int | None = None
+    efficientModeTimeRemain: int | None = None
     autoPreference: V2AutoPreferences | None = None
     fanRotateAngle: int | None = None
     filterOpenState: int | None = None

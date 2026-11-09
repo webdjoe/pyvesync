@@ -994,6 +994,8 @@ purifier_modules: list[PurifierMap] = [
             'LAP-V201-AUSR',
             'LAP-V201S-AUSR',
             'LAP-V201S-AEUR',
+            'LAP-P501S-WUSR',
+            'LAP-P501S-AUSR',
         ],
         modes=[
             PurifierModes.SLEEP,
