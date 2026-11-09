@@ -25,6 +25,7 @@ from pyvesync.utils.errors import (
     VeSyncLoginError,
     VeSyncServerError,
 )
+from pyvesync.utils.logs import LibraryLogger
 
 if TYPE_CHECKING:
     from pyvesync.vesync import VeSync
@@ -167,7 +168,10 @@ class VeSyncAuth:
         """
         had_saved_credentials = self.credentials_saved
         success = await self.login()
-        logger.debug('Re-authentication successful for user: %s', self._username)
+        logger.debug(
+            'Re-authentication successful for user: %s',
+            LibraryLogger.redact_value(self._username),
+        )
         if had_saved_credentials:
             await self.save_credentials_to_file(self._token_file_path)
         return success
@@ -317,7 +321,10 @@ class VeSyncAuth:
 
             # Step 2: Exchange authorization code for token
             await self._exchange_authorization_code(auth_code)
-            logger.debug('Login successful for user: %s', self._username)
+            logger.debug(
+                'Login successful for user: %s',
+                LibraryLogger.redact_value(self._username),
+            )
         except (VeSyncLoginError, VeSyncAPIResponseError, VeSyncServerError):
             raise
         except Exception as exc:
