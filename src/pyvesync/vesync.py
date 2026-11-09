@@ -6,6 +6,7 @@ import asyncio
 import logging
 from dataclasses import MISSING, fields
 from pathlib import Path
+from time import monotonic
 from typing import TYPE_CHECKING, Self
 
 from aiohttp import ClientSession
@@ -14,9 +15,11 @@ from mashumaro.mixins.orjson import DataClassORJSONMixin
 
 from pyvesync.auth import VeSyncAuth
 from pyvesync.const import (
+    API_TOKEN_KEYS,
     DEFAULT_REGION,
     DEFAULT_TZ,
     MAX_API_REAUTH_RETRIES,
+    REAUTH_WINDOW_SECONDS,
     REGION_API_MAP,
     STATUS_OK,
     ConnectionStatus,
@@ -36,6 +39,7 @@ from pyvesync.utils.errors import (
     VeSyncAPIResponseError,
     VeSyncAPIStatusCodeError,
     VeSyncError,
+    VeSyncInvalidCredentialsError,
     VeSyncServerError,
     VeSyncTokenError,
     raise_api_errors,
@@ -59,7 +63,14 @@ class VeSync:  # pylint: disable=function-redefined
         '_close_session',
         '_debug',
         '_device_container',
+        '_reauth_limit_logged',
+        '_reauth_lock',
+        '_reauth_runs',
+        '_reauth_stopped',
+        '_reauth_succeeded',
+        '_reauth_window_start',
         '_redact',
+        '_retry_rejection_logged',
         '_verbose',
         'enabled',
         'in_process',
@@ -138,6 +149,13 @@ class VeSync:  # pylint: disable=function-redefined
         """
         self.session = session
         self._api_attempts = 0
+        self._reauth_window_start = 0.0
+        self._reauth_limit_logged = False
+        self._retry_rejection_logged: tuple[int, str] | None = None
+        self._reauth_runs = 0
+        self._reauth_stopped = False
+        self._reauth_succeeded = False
+        self._reauth_lock = asyncio.Lock()
         self._close_session = False
         self.redact = redact
         self._verbose: bool = False
@@ -367,7 +385,8 @@ class VeSync:  # pylint: disable=function-redefined
     async def login(self) -> bool:  # pylint: disable=W9006 # pylint mult docstring raises
         """Log into VeSync server.
 
-        Username and password are provided when class is instantiated.
+        Username and password are provided when class is instantiated. If an
+        automatic re-login is running, this waits for it to finish first.
 
         Returns:
             True if login successful, False otherwise
@@ -378,11 +397,13 @@ class VeSync:  # pylint: disable=function-redefined
             VeSyncAPIResponseError: If API response is invalid.
             VeSyncServerError: If server returns an error.
         """
-        self.enabled = False
-        success = await self._auth.login()
-        if success:
-            self.enabled = True
-        return success
+        async with self._reauth_lock:
+            self.enabled = False
+            success = await self._auth.login()
+            if success:
+                self.enabled = True
+                self._reauth_stopped = False
+            return success
 
     async def update(self) -> None:
         """Fetch updated information about devices and new device list.
@@ -390,7 +411,13 @@ class VeSync:  # pylint: disable=function-redefined
         Pulls devices list from VeSync and instantiates any new devices. Devices
         are stored in the instance attributes `outlets`, `switches`, `fans`, and
         `bulbs`. The `_device_list` attribute is a dictionary of these attributes.
+
+        Raises:
+            VeSyncInvalidCredentialsError: If automatic re-login stopped because
+                the username or password was rejected. Call `login()` with valid
+                credentials to continue.
         """
+        self._raise_if_reauth_stopped()
         if not self.enabled:
             logger.error('Not logged in to VeSync')
             return
@@ -399,7 +426,18 @@ class VeSync:  # pylint: disable=function-redefined
         await self.update_all_devices()
 
     async def update_all_devices(self) -> None:
-        """Run `get_details()` for each device and update state."""
+        """Run `get_details()` for each device and update state.
+
+        An error updating one device is logged and doesn't stop the others.
+        Errors from logging in again are logged once where the login runs, so
+        they are only logged at debug level here.
+
+        Raises:
+            VeSyncInvalidCredentialsError: If a re-login was rejected because
+                of the username or password, after all devices have been
+                updated. Automatic re-login has stopped, so the caller should
+                ask for new credentials.
+        """
         logger.debug('Start updating the device details one by one')
         if len(self._device_container) == 0:
             logger.error('No devices to update')
@@ -408,14 +446,24 @@ class VeSync:  # pylint: disable=function-redefined
             asyncio.create_task(device.update()) for device in self._device_container
         ]
         done, _ = await asyncio.wait(update_tasks, return_when=asyncio.ALL_COMPLETED)
+        credentials_error: VeSyncInvalidCredentialsError | None = None
         for task in done:
             exc = task.exception()
             if exc is None:
                 continue
-            if isinstance(exc, VeSyncError):
+            # Raised only if a re-login was rejected, not for a device response.
+            if isinstance(exc, VeSyncInvalidCredentialsError) and self._reauth_stopped:
+                if credentials_error is None:
+                    credentials_error = exc
+                logger.debug('Error updating device: %s', exc)
+            elif isinstance(exc, VeSyncTokenError):
+                logger.debug('Error updating device: %s', exc)
+            elif isinstance(exc, VeSyncError):
                 logger.error('Error updating device: %s', exc)
             else:
                 logger.error('Unexpected error updating device: %s', exc, exc_info=exc)
+        if credentials_error is not None:
+            raise credentials_error
 
     async def __aenter__(self) -> Self:
         """Asynchronous context manager enter."""
@@ -429,23 +477,113 @@ class VeSync:  # pylint: disable=function-redefined
             return
         logger.debug('Session not closed, exiting context manager')
 
-    async def _reauthenticate(self) -> bool:
-        """Re-authenticate using stored username and password.
+    async def _reauthenticate(self, rejected_token: str) -> None:
+        """Log in again after the API rejected `rejected_token`.
 
-        Returns:
-            True if re-authentication successful, False otherwise
+        One re-login runs at a time, and requests that wait for it share its
+        result: if it succeeds they return and retry with the current token, if
+        it fails they raise without logging in again. At most
+        `MAX_API_REAUTH_RETRIES` re-logins run within `REAUTH_WINDOW_SECONDS`;
+        the count starts over once the window passes. If the API rejects the
+        username or password, re-login stops until `login()` succeeds.
+
+        Each outcome is logged once: reaching the limit (once per window), the
+        stop, and each failed login. Requests that share an outcome raise
+        without logging it again.
+
+        Args:
+            rejected_token (str): The token the rejected request was sent with.
+
+        Raises:
+            VeSyncTokenError: If the re-login limit for the window is reached, or
+                the login failed for a reason other than the credentials. When
+                this request ran the login, the login error is the cause.
+            VeSyncInvalidCredentialsError: If the username or password was
+                rejected, now or by an earlier re-login.
         """
-        self.enabled = False
-        self._api_attempts += 1
-        if self._api_attempts >= MAX_API_REAUTH_RETRIES:
-            logger.error('Max API re-authentication attempts reached')
-            raise VeSyncTokenError
-        success = await self.auth.reauthenticate()
-        if success:
+        runs_before_wait = self._reauth_runs
+        async with self._reauth_lock:
+            # A failed login keeps the old token, so a new token means success.
+            if self.auth.is_authenticated and self.auth.token != rejected_token:
+                logger.debug('Token already renewed by another request')
+                return
+            self._raise_if_reauth_stopped()
+            if self._reauth_runs != runs_before_wait:
+                # The login may return the same token, so check the result.
+                if self._reauth_succeeded:
+                    logger.debug('Re-authenticated by another request')
+                    return
+                msg = 'Re-authentication by another request failed'
+                raise VeSyncTokenError(msg)
+            now = monotonic()
+            if now - self._reauth_window_start > REAUTH_WINDOW_SECONDS:
+                self._reauth_window_start = now
+                self._api_attempts = 0
+                self._reauth_limit_logged = False
+            if self._api_attempts >= MAX_API_REAUTH_RETRIES:
+                if not self._reauth_limit_logged:
+                    self._reauth_limit_logged = True
+                    logger.error(
+                        'Re-login limit reached (%s in %s seconds); requests with '
+                        'a rejected token fail until the limit resets',
+                        MAX_API_REAUTH_RETRIES,
+                        REAUTH_WINDOW_SECONDS,
+                    )
+                msg = 'Re-login limit reached'
+                raise VeSyncTokenError(msg)
+            self._api_attempts += 1
+            self._reauth_succeeded = False
+            try:
+                await self.auth.reauthenticate()
+            except VeSyncInvalidCredentialsError:
+                # Re-raised to the caller, so no traceback in the log.
+                logger.error(  # noqa: TRY400
+                    'Username or password rejected; automatic re-login stopped '
+                    'until login() succeeds'
+                )
+                self._reauth_stopped = True
+                self.enabled = False
+                raise
+            except VeSyncError as exc:
+                logger.info('Re-login failed: %s', exc)
+                msg = 'Re-authentication failed'
+                raise VeSyncTokenError(msg) from exc
+            finally:
+                self._reauth_runs += 1
+            self._reauth_succeeded = True
             self.enabled = True
-            self._api_attempts = 0
-            return True
-        return await self.auth.reauthenticate()
+
+    def _raise_if_reauth_stopped(self) -> None:
+        """Raise if automatic re-login stopped over rejected credentials.
+
+        Raises:
+            VeSyncInvalidCredentialsError: If re-login is stopped.
+        """
+        if self._reauth_stopped:
+            msg = (
+                'Automatic re-login stopped because the username or password '
+                'was rejected; call login() with valid credentials'
+            )
+            raise VeSyncInvalidCredentialsError(msg)
+
+    def _with_current_token(self, request_part: dict | None) -> dict | None:
+        """Return a copy of a request body or headers with the current token."""
+        if request_part is None:
+            return None
+        return {
+            key: self.auth.token if key in API_TOKEN_KEYS else value
+            for key, value in request_part.items()
+        }
+
+    @staticmethod
+    def _request_token(body: dict | None, headers: dict | None) -> str | None:
+        """Return the token a request was sent with, if it had one."""
+        for part in (body, headers):
+            for key in API_TOKEN_KEYS:
+                token = (part or {}).get(key)
+                if isinstance(token, str) and token:
+                    return token
+        return None
 
     async def async_call_api(
         self,
@@ -479,21 +617,59 @@ class VeSync:  # pylint: disable=function-redefined
             ClientResponseError: If API returns a client response error.
 
         Note:
+            If the API rejects the token a request was sent with, the manager
+            logs in again and resends the request once with the new token.
+            Requests without a token, such as the login requests, are not
+            retried.
+
             Future releases will require the `json_object` argument to be a dataclass,
             instead of dictionary.
         """
+        del device  # Accepted for compatibility with existing callers, not used.
         self.check_debug()
-        if self.session is None:
-            self.session = ClientSession()
-            self._close_session = True
-        response = None
-        status_code = None
         if isinstance(json_object, DataClassORJSONMixin):
             req_dict = json_object.to_dict()
         elif isinstance(json_object, dict):
             req_dict = json_object
         else:
             req_dict = None
+        try:
+            return await self._send_api_request(api, method, req_dict, headers)
+        except VeSyncTokenError:
+            rejected_token = self._request_token(req_dict, headers)
+            if rejected_token is None:
+                raise
+            await self._reauthenticate(rejected_token)
+        # The retries that followed the same login share the run and token.
+        relogin = (self._reauth_runs, self.auth.token)
+        try:
+            return await self._send_api_request(
+                api,
+                method,
+                self._with_current_token(req_dict),
+                self._with_current_token(headers),
+            )
+        except VeSyncTokenError:
+            # Log once for all the retries that followed the same login. The
+            # error is re-raised to the caller, so no traceback in the log.
+            if self._retry_rejection_logged != relogin:
+                self._retry_rejection_logged = relogin
+                logger.error(  # noqa: TRY400
+                    'The API rejected the new token after logging in again'
+                )
+            raise
+
+    async def _send_api_request(
+        self,
+        api: str,
+        method: str,
+        req_dict: dict | None,
+        headers: dict | None,
+    ) -> tuple[dict | None, int]:
+        """Send one request and process the response, without retrying."""
+        if self.session is None:
+            self.session = ClientSession()
+            self._close_session = True
         try:
             async with self.session.request(
                 method,
@@ -516,35 +692,28 @@ class VeSync:  # pylint: disable=function-redefined
                     request_headers=headers,
                     request_body=req_dict,
                 )
-                resp_dict, status_code = await self._api_response_wrapper(
-                    resp_bytes, resp_status, api, req_dict, device=device
-                )
+                return self._api_response_wrapper(resp_bytes, resp_status)
 
         except ClientResponseError as e:
             LibraryLogger.log_api_exception(logger, exception=e, request_body=req_dict)
             raise
-        return resp_dict, status_code
 
-    async def _api_response_wrapper(
-        self,
+    @staticmethod
+    def _api_response_wrapper(
         response_bytes: bytes | None,
         status_code: int,
-        endpoint: str,
-        request_body: dict | None,
-        device: VeSyncBaseDevice | None = None,
     ) -> tuple[dict | None, int]:
-        """Internal wrapper used by async_call_api."""
+        """Parse a response and raise for API error codes.
+
+        Raises:
+            VeSyncTokenError: If the API rejected the request's token.
+        """
         resp_dict = LibraryLogger.try_json_loads(response_bytes)
         if not isinstance(resp_dict, dict):
             return None, status_code
 
         error_info = Helpers.parse_error_code(resp_dict)
         if error_info.error_type == ErrorTypes.TOKEN_ERROR:
-            self.enabled = False
-            if await self._reauthenticate():
-                return await self.async_call_api(
-                    endpoint, 'post', request_body, device=device
-                )
             raise VeSyncTokenError(error_info.message)
         raise_api_errors(error_info)
 

@@ -836,6 +836,15 @@ class VeSyncLoginError(VeSyncError):
         super().__init__(msg)
 
 
+class VeSyncInvalidCredentialsError(VeSyncLoginError):
+    """Exception raised when the API rejects the username or password.
+
+    Raised for the `ErrorTypes.AUTHENTICATION` codes, such as `PASSWORD_ERROR`
+    and `ACCOUNT_NOT_EXIST`. After it is raised during an automatic re-login,
+    the manager stops re-logging in until `VeSync.login()` succeeds.
+    """
+
+
 class VeSyncTokenError(VeSyncError):
     """Exception raised for VeSync API authentication errors."""
 
@@ -890,7 +899,7 @@ def raise_api_errors(error_info: ResponseInfo) -> None:
 
     Raises:
         VeSyncRateLimitError: Rate limit error
-        VeSyncLoginError: Authentication error
+        VeSyncInvalidCredentialsError: Username or password rejected
         VeSyncTokenError: Token error
         VeSyncServerError: Server error
     """
@@ -898,7 +907,7 @@ def raise_api_errors(error_info: ResponseInfo) -> None:
         case ErrorTypes.RATE_LIMIT:
             raise VeSyncRateLimitError
         case ErrorTypes.AUTHENTICATION:
-            raise VeSyncLoginError(error_info.message)
+            raise VeSyncInvalidCredentialsError(error_info.message)
         case ErrorTypes.SERVER_ERROR:
             msg = (
                 f'{error_info.message} - '

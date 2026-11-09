@@ -36,6 +36,11 @@ from types import MappingProxyType
 from pyvesync.utils.enum_utils import IntEnumMixin
 
 MAX_API_REAUTH_RETRIES = 3
+"""Most re-logins after a rejected token within `REAUTH_WINDOW_SECONDS`."""
+REAUTH_WINDOW_SECONDS = 300
+"""Window for `MAX_API_REAUTH_RETRIES`; the count starts over once it passes."""
+API_TOKEN_KEYS = ('token', 'tk')
+"""Request body (`token`) and header (`tk`) keys that carry the login token."""
 DEFAULT_LANGUAGE = 'en'
 API_BASE_URL = None  # Global URL (non-EU regions): "https://smartapi.vesync.com"
 # If device is out of reach, the cloud api sends a timeout response after 7 seconds,

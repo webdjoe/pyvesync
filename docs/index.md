@@ -389,7 +389,8 @@ Custom Exceptions raised by all API calls:
 
 Login API Exceptions
 
-- [`VeSyncLoginError`][pyvesync.utils.errors.VeSyncLoginError] - The username or password is incorrect.
+- [`VeSyncLoginError`][pyvesync.utils.errors.VeSyncLoginError] - The login failed.
+- [`VeSyncInvalidCredentialsError`][pyvesync.utils.errors.VeSyncInvalidCredentialsError] - A `VeSyncLoginError` raised when the username or password is incorrect. During an automatic re-login it also stops further re-logins until `login()` succeeds.
 
 See [errors](./development/utils/errors.md) documentation for a complete list of error codes and exceptions.
 
@@ -399,7 +400,7 @@ The [`raise_api_errors()`][pyvesync.utils.errors.raise_api_errors] function is c
 - [`VeSyncRateLimitError`][pyvesync.utils.errors.VeSyncRateLimitError] - The API's rate limit has been exceeded.
 - [`VeSyncAPIStatusCodeError`][pyvesync.utils.errors.VeSyncAPIStatusCodeError] - The API returned a non-200 status code.
 - [`VeSyncTokenError`][pyvesync.utils.errors.VeSyncTokenError] - The API returned a token error and requires `login()` to be called again.
-- [`VeSyncLoginError`][pyvesync.utils.errors.VeSyncLoginError] - The user name or password is incorrect.
+- [`VeSyncInvalidCredentialsError`][pyvesync.utils.errors.VeSyncInvalidCredentialsError] - The user name or password is incorrect (a subclass of [`VeSyncLoginError`][pyvesync.utils.errors.VeSyncLoginError]).
 
 ## Development
 
