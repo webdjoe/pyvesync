@@ -1602,8 +1602,10 @@ _DC111S_COOK_MODES: dict[str, AirFryerModeConfig] = {
         recipe_id=9,
         recipe_name='Bake',
         cook_time=1200,
-        temp_c=AirFryerTempLimits(min_temp=125, max_temp=205, step=5),
-        temp_f=AirFryerTempLimits(min_temp=260, max_temp=400, step=5),
+        # The app stops at 125 °C / 260 °F; the manual and the fryer's panel
+        # allow 80 °C / 175 °F, and 80 °C was verified on the device (#598).
+        temp_c=AirFryerTempLimits(min_temp=80, max_temp=205, step=5),
+        temp_f=AirFryerTempLimits(min_temp=175, max_temp=400, step=5),
         default_temp_c=165,
         default_temp_f=330,
         time_limits=AirFryerTimeLimits(min_seconds=60, max_seconds=3600, step_seconds=60),
