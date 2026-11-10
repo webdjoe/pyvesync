@@ -65,6 +65,42 @@ class PurifierVitalDetailsResult(InnerPurifierBaseResult):
 
 
 @dataclass
+class PurifierEleva300XResult(InnerPurifierBaseResult):
+    """Eleva 300X purifier status result."""
+
+    powerSwitch: int
+    workMode: str
+    manualSpeedLevel: int
+    fanSpeedLevel: int
+    PM1: int
+    PM25: int
+    PM10: int
+    AQI: int
+    AQLevel: int
+    filterLifePercent: int
+    carbonFilterLifePercent: int
+    preFilterLifePercent: int
+    filterRemainDay: int
+    screenState: int
+    screenSwitch: int
+    childLockSwitch: int
+    lightDetectionSwitch: int
+    environmentLightState: int
+    autoPreference: Eleva300XAutoPreferences | None = None
+    scheduleCount: int | None = None
+    timerRemain: int | None = None
+    errorCode: int | None = None
+
+
+@dataclass
+class Eleva300XAutoPreferences:
+    """Eleva 300X auto preferences, which may omit room size."""
+
+    autoPreferenceType: str
+    roomSize: int | None = None
+
+
+@dataclass
 class V2AutoPreferences:
     """Vital 100S/200S Auto Preferences."""
 
