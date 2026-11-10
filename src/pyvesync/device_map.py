@@ -697,7 +697,7 @@ humidifier_modules = [
             'LUH-D301S-WEU',
             'LUH-D301S-KEUR',
         ],
-        features=[HumidifierFeatures.AUTO_STOP],
+        features=[HumidifierFeatures.AUTO_STOP, HumidifierFeatures.RGB_NIGHTLIGHT],
         mist_modes={
             HumidifierModes.AUTO: 'auto',
             HumidifierModes.MANUAL: 'manual',
