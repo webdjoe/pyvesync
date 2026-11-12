@@ -121,6 +121,7 @@ class TestHumidifiers(TestBase):
         "LUH-A602S-WUS": [["set_warm_level", {"warm_level": 3}]],
         "LUH-A603S-WUS": [["set_warm_level", {"warm_level": 3}]],
         "LEH-S601S": [["turn_off_drying_mode"]],
+        "LEH-S451S": [["turn_off_drying_mode"]],
         "LEH-B381S": [
             ["turn_on_nightlight"],
             ["turn_off_nightlight"],
@@ -379,3 +380,109 @@ class TestHumidifiers(TestBase):
         assert obj.state.rgb_nightlight_red == 0
         assert obj.state.rgb_nightlight_green == 0
         assert obj.state.rgb_nightlight_blue == 0
+
+    def test_superior_studio_fan_mode(self):
+        """Superior Studio 450S fan-only work mode maps to HumidifierModes.FAN."""
+        from copy import deepcopy
+        from pyvesync.models.humidifier_models import Superior6000SResult
+
+        obj = self.get_device("humidifiers", "LEH-S451S")
+        details = deepcopy(call_json_humidifiers.HUMIDIFIER_DETAILS["LEH-S451S"])
+        details["workMode"] = "fan"
+        obj._set_state(Superior6000SResult.from_dict(details))
+        assert obj.state.mode == const.HumidifierModes.FAN
+
+    def _superior_studio_responses(self, live_prop):
+        """Return a mock side effect serving a stale status and a live device list.
+
+        The status response reports power on; ``live_prop`` is the device list
+        ``deviceProp`` summary (or None for an entry without one).
+        """
+        from copy import deepcopy
+        from call_json import DeviceList
+
+        stale_details = deepcopy(call_json_humidifiers.DETAILS_RESPONSES["LEH-S451S"])
+        stale_details["result"]["result"]["powerSwitch"] = 1
+        live_list = DeviceList.device_list_response("LEH-S451S")
+        if live_prop is None:
+            live_list["result"]["list"][0].pop("deviceProp", None)
+        else:
+            live_list["result"]["list"][0]["deviceProp"] = live_prop
+
+        def fake_api(api, method, json_object=None, headers=None, device=None):
+            if api.endswith("/deviceManaged/devices"):
+                return live_list, 200
+            return stale_details, 200
+
+        return fake_api
+
+    def test_superior_studio_get_details_prefers_device_list(self):
+        """Superior Studio 450S get_details() overlays live deviceProp on the status."""
+        obj = self.get_device("humidifiers", "LEH-S451S")
+        self.mock_api.side_effect = self._superior_studio_responses(
+            {
+                "powerSwitch": 0,
+                "connectionStatus": "online",
+                "workMode": "fan",
+                "humidity": 41,
+                "targetHumidity": 50,
+                "virtualLevel": 25,
+                "mistLevel": 2,
+                "waterLacksState": 1,
+                "screenSwitch": 1,
+                "childLockSwitch": 0,
+                "filterLifePercent": 100,
+                "dryingState": 1,
+                "autoDryingSwitch": 1,
+                "dryingLevel": 2,
+                "dryingRemain": 3600,
+                "wifiMac": "aa:bb:cc:dd:ee:ff",
+            }
+        )
+        self.run_in_loop(obj.update)
+
+        endpoints = [c.args[0] for c in self.mock_api.call_args_list]
+        assert len(endpoints) == 2
+        assert endpoints[0].endswith("/deviceManaged/devices")
+        assert endpoints[1].endswith("/bypassV2")
+        # Device list values win
+        assert obj.state.device_status == const.DeviceStatus.OFF
+        assert obj.state.connection_status == const.ConnectionStatus.ONLINE
+        assert obj.state.mode == const.HumidifierModes.FAN
+        assert obj.state.humidity == 41
+        assert obj.state.auto_target_humidity == 50
+        assert obj.state.mist_virtual_level == 25
+        assert obj.state.water_lacks is True
+        assert obj.state.drying_mode_status == const.DryingModes.RUNNING
+        assert obj.state.drying_mode_time_remain == 3600
+        # Status-only fields are still populated
+        assert obj.state.temperature is not None
+        assert obj.state.automatic_stop_config is not None
+
+    def test_superior_studio_device_list_without_prop_keeps_status(self):
+        """A device list entry without deviceProp leaves the status values alone."""
+        obj = self.get_device("humidifiers", "LEH-S451S")
+        self.mock_api.side_effect = self._superior_studio_responses(None)
+        self.run_in_loop(obj.update)
+        assert obj.state.device_status == const.DeviceStatus.ON
+        assert obj.state.water_lacks is False
+
+    def test_superior_studio_unexpected_device_list_keeps_status(self):
+        """A response without a device list is ignored and the status is used."""
+        obj = self.get_device("humidifiers", "LEH-S451S")
+        details = call_json_humidifiers.DETAILS_RESPONSES["LEH-S451S"]
+        self.mock_api.return_value = (details, 200)
+        self.run_in_loop(obj.update)
+        assert self.mock_api.call_count == 2
+        assert obj.state.device_status == const.DeviceStatus.ON
+
+    def test_update_all_devices_applies_device_list_state(self):
+        """The manager update path reaches the overridden get_details()."""
+        obj = self.get_device("humidifiers", "LEH-S451S")
+        self.mock_api.side_effect = self._superior_studio_responses(
+            {"powerSwitch": 0, "waterLacksState": 1, "dryingState": 0}
+        )
+        self.run_in_loop(self.manager.update_all_devices)
+        assert obj.state.device_status == const.DeviceStatus.OFF
+        assert obj.state.water_lacks is True
+        assert obj.state.drying_mode_status == const.DryingModes.DONE
