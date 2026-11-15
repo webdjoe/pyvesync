@@ -720,7 +720,7 @@ humidifier_modules = [
         ],
         features=[HumidifierFeatures.WARM_MIST, HumidifierFeatures.AUTO_STOP],
         mist_modes={
-            HumidifierModes.AUTO: 'auto',
+            HumidifierModes.AUTO: 'humidity',
             HumidifierModes.SLEEP: 'sleep',
             HumidifierModes.MANUAL: 'manual',
         },
@@ -730,6 +730,7 @@ humidifier_modules = [
         model_display='LUH-A602S Series',
         model_name='LV600S',
         setup_entry='LUH-A602S-WUS',
+        target_minmax=(40, 80),
     ),
     HumidifierMap(
         class_name='VeSyncLV600S',
@@ -748,6 +749,7 @@ humidifier_modules = [
         model_display='LUH-A603S Series',
         model_name='LV600S',
         setup_entry='LUH-A603S-WUS',
+        target_minmax=(40, 80),
     ),
     HumidifierMap(
         class_name='VeSyncHumid200300S',
@@ -759,7 +761,6 @@ humidifier_modules = [
         ],
         mist_modes={
             HumidifierModes.AUTO: 'auto',
-            HumidifierModes.SLEEP: 'sleep',
             HumidifierModes.MANUAL: 'manual',
         },
         mist_levels=list(range(1, 10)),
@@ -768,16 +769,18 @@ humidifier_modules = [
         model_name='OasisMist 4.5L',
         model_display='LUH-O451S Series',
         setup_entry='LUH-O451S-WEU',
+        target_minmax=(40, 80),
     ),
     HumidifierMap(
+        # App configs oy/o (WUS) and oy/l (O601S-KUS): 40-80, Manual/Auto/Sleep.
+        # The WUS firmware rejects 30 and `humidity` (#295, #296).
         class_name='VeSyncHumid200300S',
-        dev_types=['LUH-O451S-WUS', 'LUH-O451S-WUSR', 'LUH-O601S-WUS', 'LUH-O601S-KUS'],
+        dev_types=['LUH-O451S-WUS', 'LUH-O601S-WUS', 'LUH-O601S-KUS'],
         features=[HumidifierFeatures.WARM_MIST, HumidifierFeatures.AUTO_STOP],
         mist_modes={
             HumidifierModes.AUTO: 'auto',
             HumidifierModes.SLEEP: 'sleep',
             HumidifierModes.MANUAL: 'manual',
-            HumidifierModes.HUMIDITY: 'humidity',
         },
         mist_levels=list(range(1, 10)),
         warm_mist_levels=list(range(4)),
@@ -785,6 +788,24 @@ humidifier_modules = [
         model_display='OasisMist 4.5L Series',
         model_name='OasisMist 4.5L',
         setup_entry='LUH-O451S-WUS',
+        target_minmax=(40, 80),
+    ),
+    HumidifierMap(
+        # App config oy/r (WUSR): 40-80, Manual/Auto only; reports `auto` (#500).
+        class_name='VeSyncHumid200300S',
+        dev_types=['LUH-O451S-WUSR'],
+        features=[HumidifierFeatures.WARM_MIST, HumidifierFeatures.AUTO_STOP],
+        mist_modes={
+            HumidifierModes.AUTO: 'auto',
+            HumidifierModes.MANUAL: 'manual',
+        },
+        mist_levels=list(range(1, 10)),
+        warm_mist_levels=list(range(4)),
+        device_alias='OasisMist 450S',
+        model_display='OasisMist 4.5L Series',
+        model_name='OasisMist 4.5L',
+        setup_entry='LUH-O451S-WUSR',
+        target_minmax=(40, 80),
     ),
     HumidifierMap(
         class_name='VeSyncHumid1000S',
@@ -800,6 +821,7 @@ humidifier_modules = [
         model_display='Oasismist Series',
         model_name='Oasismist 1000S',
         setup_entry='LUH-M101S-WUS',
+        target_minmax=(40, 80),
     ),
     HumidifierMap(
         class_name='VeSyncHumid1000S',
@@ -819,6 +841,7 @@ humidifier_modules = [
         model_display='Oasismist Series EU',
         model_name='Oasismist 1000S EU',
         setup_entry='LUH-M101S-WEUR',
+        target_minmax=(40, 80),
     ),
     HumidifierMap(
         class_name='VeSyncSuperior6000S',
