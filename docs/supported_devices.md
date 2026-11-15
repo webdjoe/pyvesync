@@ -85,6 +85,12 @@ Energy history is the weekly, monthly and yearly energy usage retrieved with
 without the energy history feature log a debug message and make no API call when
 these methods are used.
 
+For the WHOGPLUG and Sagewe F3s202-USVC plugs, the weekly and monthly windows
+match the VeSync app: they end at the start of the current day in the account
+time zone and cover the last 7 or 30 days, including today. If the account time
+zone can't be loaded (for example, on Windows without the `tzdata` package), UTC
+is used.
+
 ### Purifiers
 
 | Device Name | PM2.5 | PM1.0 | PM10 | Vent Angle | Light Detection | Night Light |
