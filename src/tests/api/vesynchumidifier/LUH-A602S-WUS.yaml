@@ -14,7 +14,7 @@ set_auto_mode:
     method: bypassV2
     payload:
       data:
-        mode: auto
+        mode: humidity
       method: setHumidityMode
       source: APP
     phoneBrand: pyvesync
