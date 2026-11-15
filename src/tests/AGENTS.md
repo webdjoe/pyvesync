@@ -44,7 +44,7 @@ There is no `__init__.py`. Modules import each other by bare name
 
 | File | Purpose |
 | ---- | ------- |
-| `conftest.py` | `--write_api` / `--overwrite` options, the confirmation prompt, and `pytest_generate_tests()`, which parametrizes `test_details` / `test_methods` from class attributes |
+| `conftest.py` | `--write_api` / `--overwrite` options, the confirmation prompt, and `pytest_generate_tests()`, which parametrizes `test_details` / `test_methods` (and other `setup_entry` tests) from class attributes |
 | `base_test_cases.py` | `TestBase` (patches `VeSync.async_call_api`) and `TestApiFunc` (patches `aiohttp.ClientSession`) |
 | `utils.py` | `parse_args()` (mock call args to dict), `assert_test()` (compare or write YAML), `api_scrub()`, `YAMLWriter`, `deep_diff()` / `dicts_equal()` for readable assertion diffs |
 | `defaults.py` | `TestDefaults` (token, account ID, email, deterministic `name()` / `cid()` / `uuid()` / `macid()` per setup entry), `API_DEFAULTS` scrub map, `FunctionResponses` / `FunctionResponsesV1` / `FunctionResponsesV2`, `build_bypass_v1_response()` / `build_bypass_v2_response()` |
@@ -156,6 +156,10 @@ class TestOutlets(TestBase):
   `['set_brightness', {'brightness': 50}]`.
 - `test_details` runs `update` for every device; `test_methods` runs every
   device x (`base_methods` + its `device_methods`).
+- Any other test method in the class that takes `setup_entry`, without its
+  own `@pytest.mark.parametrize` for it, runs once per device with IDs like
+  `humidifiers.LUH-A602S-WUS`. Use this for checks that read the device's
+  own config (`target_minmax`, `mist_modes`) instead of hand-listing models.
 - Test IDs embed the method entry as a list: `outlets.ESW15-USA.['turn_on']`
   (details tests end in `.update`). Filter with `-k "ESW15-USA"` rather than
   typing a full ID.
