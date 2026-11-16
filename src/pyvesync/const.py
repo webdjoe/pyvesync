@@ -1440,10 +1440,18 @@ ENERGY_HISTORY_MAP = {
     EnergyIntervals.YEAR: 'getLastYearEnergy',
 }
 
+SECONDS_PER_DAY = 86400
+"""Number of seconds in a day, used to build day-aligned energy history windows."""
+
 ENERGY_HISTORY_OFFSET_WHOGPLUG = {
-    EnergyIntervals.WEEK: 500000,
-    EnergyIntervals.MONTH: 2500000,
+    EnergyIntervals.WEEK: 6 * SECONDS_PER_DAY,
+    EnergyIntervals.MONTH: 29 * SECONDS_PER_DAY,
 }
+"""Seconds between `fromDay` and `toDay` in a WHOGPLUG `getEnergyHistory` request.
+
+The VeSync app sends 6 days for the week view and 29 days for the month view. The
+server returns one bucket per day with both ends included (7 or 30 buckets).
+"""
 
 # ------------------- HUMIDIFIER CONST ------------------ #
 

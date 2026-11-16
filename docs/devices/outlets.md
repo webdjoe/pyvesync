@@ -11,7 +11,7 @@
 - [Etekcity 15A Outdoor Dual Outlet][pyvesync.devices.vesyncoutlet.VeSyncOutdoorPlug]
 - [Etekcity 10A USA Outlet][pyvesync.devices.vesyncoutlet.VeSyncESW10USA]
 - [VeSync BSDOG Smart Outlet][pyvesync.devices.vesyncoutlet.VeSyncBSDOGPlug]
-- [VeSync Greensun WHOGPLUG Smart Plug][pyvesync.devices.vesyncoutlet.VeSyncOutletWHOGPlug]
+- [VeSync Greensun WHOGPLUG / Sagewe F3s202-USVC Smart Plug][pyvesync.devices.vesyncoutlet.VeSyncOutletWHOGPlug]
 - [VeSyncOutlet Base Class][pyvesync.base_devices.outlet_base.VeSyncOutlet]
 
 ::: pyvesync.base_devices.outlet_base.OutletState

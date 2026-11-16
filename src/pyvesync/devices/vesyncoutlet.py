@@ -4,14 +4,16 @@ from __future__ import annotations
 
 import calendar
 import logging
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta, tzinfo
 from typing import TYPE_CHECKING
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from typing_extensions import deprecated
 
 from pyvesync.base_devices.outlet_base import VeSyncOutlet
 from pyvesync.const import (
     ENERGY_HISTORY_OFFSET_WHOGPLUG,
+    SECONDS_PER_DAY,
     STATUS_OK,
     ConnectionStatus,
     DeviceStatus,
@@ -55,6 +57,29 @@ if TYPE_CHECKING:
     from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
 
 logger = logging.getLogger(__name__)
+
+
+def energy_history_bounds(now: datetime, offset: int) -> tuple[int, int]:
+    """Return the `fromDay` and `toDay` values for a `getEnergyHistory` request.
+
+    This matches the VeSync app. `toDay` is midnight UTC on the local calendar
+    date, found by adding the time zone's standard UTC offset (without daylight
+    saving time) to the current time. `fromDay` is `offset` seconds earlier.
+
+    Because the app ignores daylight saving time, between 00:00 and 01:00 local
+    time during DST the date is still the previous day. That is kept on purpose.
+
+    Args:
+        now (datetime): The current time, timezone-aware.
+        offset (int): Seconds between `fromDay` and `toDay`.
+
+    Returns:
+        tuple[int, int]: `(fromDay, toDay)` as epoch seconds.
+    """
+    standard_offset = (now.utcoffset() or timedelta(0)) - (now.dst() or timedelta(0))
+    local_ts = int(now.timestamp()) + int(standard_offset.total_seconds())
+    to_day = local_ts - local_ts % SECONDS_PER_DAY
+    return to_day - offset, to_day
 
 
 class VeSyncOutlet7A(VeSyncOutlet):
@@ -703,6 +728,14 @@ class VeSyncOutdoorPlug(BypassV1Mixin, VeSyncOutlet):
 class VeSyncOutletWHOGPlug(BypassV2Mixin, VeSyncOutlet):
     """VeSync WHOG smart plug.
 
+    Used by the Greensun WHOGPLUG and the Sagewe 15A smart plug (F3s202-USVC),
+    which share the same Bypass V2 API.
+
+    Weekly and monthly energy history use `getEnergyHistory` with day-aligned
+    `fromDay`/`toDay` bounds, computed in the account time zone the same way as
+    the VeSync app (see `energy_history_bounds`). Yearly energy history uses
+    `getELECConsumePerMonthLastYear`.
+
     Args:
         details (ResponseDeviceDetailsModel): The device details.
         manager (VeSync): The VeSync manager.
@@ -817,8 +850,23 @@ class VeSyncOutletWHOGPlug(BypassV2Mixin, VeSyncOutlet):
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
+    def _energy_time_zone(self) -> tzinfo:
+        """Return the account time zone, or UTC if it cannot be loaded.
+
+        The VeSync app uses the device's time zone. pyvesync has no per-device
+        time zone, so the account time zone (`manager.time_zone`) is used.
+        """
+        try:
+            return ZoneInfo(self.manager.time_zone)
+        except (ZoneInfoNotFoundError, ValueError):
+            logger.debug(
+                'Time zone %s not found, using UTC for energy history',
+                self.manager.time_zone,
+            )
+            return UTC
+
     async def _get_energy_history(self, history_interval: str | EnergyIntervals) -> None:
-        """Get energy history for BSDGO1 outlet."""
+        """Get weekly, monthly or yearly energy history for the outlet."""
         if not self.supports_energy_history:
             logger.debug('Device does not support energy history.')
             return
@@ -830,13 +878,15 @@ class VeSyncOutletWHOGPlug(BypassV2Mixin, VeSyncOutlet):
 
         if history_interval == EnergyIntervals.YEAR:
             await self.get_yearly_energy()
+            return
 
-        offset = ENERGY_HISTORY_OFFSET_WHOGPLUG[history_interval]
-        current_ts = int(datetime.now().timestamp())
-        start_ts = current_ts - offset
+        from_day, to_day = energy_history_bounds(
+            datetime.now(self._energy_time_zone()),
+            ENERGY_HISTORY_OFFSET_WHOGPLUG[history_interval],
+        )
         payload_data = {
-            'fromDay': start_ts,
-            'toDay': current_ts,
+            'fromDay': from_day,
+            'toDay': to_day,
         }
         r_dict = await self.call_bypassv2_api('getEnergyHistory', data=payload_data)
         result_model = process_bypassv2_result(

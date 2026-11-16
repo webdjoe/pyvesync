@@ -16,6 +16,7 @@ The VeSync API supports a variety of devices. The following is a list of devices
       - [BSDOG / Greensun Smart Outlet Series][pyvesync.devices.vesyncoutlet.VeSyncBSDOGPlug] - BSDOG01 / BSDOG02
       - [WHOGPLUG / Greensun Smart Plug][pyvesync.devices.vesyncoutlet.VeSyncOutletWHOGPlug]
       - [WYLDR Smart Plug][pyvesync.devices.vesyncoutlet.VeSyncBSDOGPlug] - WYLDR16A1081 (energy monitoring without energy history)
+      - [Sagewe 15A Smart Plug][pyvesync.devices.vesyncoutlet.VeSyncOutletWHOGPlug] - F3s202-USVC
 3. Switches
       - [ESWL01][pyvesync.devices.vesyncswitch.VeSyncWallSwitch] - Etekcity Wall Switch
       - [ESWL03][pyvesync.devices.vesyncswitch.VeSyncWallSwitch] - Etekcity 3-Way Switch
@@ -76,12 +77,19 @@ Switches have minimal features, the dimmer switch is the only switch that has ad
 | 15A Outdoor Dual Outlet | ✔ | ✔ | |
 | Smart Plug Series (WHOGPLUG / BSDOG01) | ✔ | ✔ | |
 | WYLDR Smart Plug (WYLDR16A1081) | ✔ | | |
+| Sagewe Smart Plug (F3s202-USVC) | ✔ | ✔ | |
 
 Power stats are realtime power, voltage and energy readings from the device.
 Energy history is the weekly, monthly and yearly energy usage retrieved with
 `get_weekly_energy()`, `get_monthly_energy()` and `get_yearly_energy()`. Devices
 without the energy history feature log a debug message and make no API call when
 these methods are used.
+
+For the WHOGPLUG and Sagewe F3s202-USVC plugs, the weekly and monthly windows
+match the VeSync app: they end at the start of the current day in the account
+time zone and cover the last 7 or 30 days, including today. If the account time
+zone can't be loaded (for example, on Windows without the `tzdata` package), UTC
+is used.
 
 ### Purifiers
 
