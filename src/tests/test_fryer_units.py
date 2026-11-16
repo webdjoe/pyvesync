@@ -115,9 +115,23 @@ def _as_rows(entry):
     }
 
 
+# Deliberate differences from the app, each verified on the device.
+# setup_entry -> {api_mode: row as in APK_PRESETS}
+DEVICE_TESTED_OVERRIDES = {
+    # The app stops Bake at 125 °C; the manual lists 80-205 °C (175-400 °F)
+    # and a CAF-DC111S-AEU cooked Bake at 80 °C (issue #598).
+    'CAF-DC111S-AEU': {
+        'Bake': (9, 'Bake', 1200, (80, 205, 5), (175, 400, 5), (165, 330)),
+    },
+}
+
+
 def test_presets_match_apk():
     for entry in air_fryer_modules:
-        assert _as_rows(entry) == APK_PRESETS[entry.setup_entry], entry.setup_entry
+        expected = APK_PRESETS[entry.setup_entry] | DEVICE_TESTED_OVERRIDES.get(
+            entry.setup_entry, {}
+        )
+        assert _as_rows(entry) == expected, entry.setup_entry
 
 
 def test_every_preset_is_recipe_type_3_and_keyed_by_enum():
@@ -300,6 +314,14 @@ class TestFryerUnitHandling(TestBase):
     def test_unknown_mode_uses_default_mode_limits(self):
         fryer = self.get_device('air_fryers', 'CAF-TF101S')
         assert fryer.temp_limits('Frozen') == fryer.temp_limits()
+
+    def test_dc111s_bake_from_80c(self):
+        fryer = self.get_device('air_fryers', 'CAF-DC111S-AEU')
+        assert fryer.validate_temperature(80, cook_mode='Bake') is True
+        assert fryer.validate_temperature(75, cook_mode='Bake') is False
+        fryer.temp_unit = TemperatureUnits.FAHRENHEIT
+        assert fryer.validate_temperature(175, cook_mode='Bake') is True
+        assert fryer.validate_temperature(170, cook_mode='Bake') is False
 
     def test_validate_uses_request_mode(self):
         fryer = self.get_device('air_fryers', 'CAF-TF101S')
