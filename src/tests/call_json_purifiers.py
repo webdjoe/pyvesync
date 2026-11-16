@@ -80,6 +80,27 @@ class PurifierDefaults:
 
 
 PURIFIER_DETAILS: dict[str, dict[str, Any]] = {
+    "LAP-C341S-WEU": {
+        "powerSwitch": 1,
+        "workMode": PurifierDefaults.purifier_mode,
+        "manualSpeedLevel": PurifierDefaults.fan_set_level,
+        "fanSpeedLevel": PurifierDefaults.fan_level,
+        "PM1": PurifierDefaults.pm1,
+        "PM25": PurifierDefaults.air_quality_value_pm25,
+        "PM10": PurifierDefaults.pm10,
+        "AQI": PurifierDefaults.aq_percent,
+        "AQLevel": PurifierDefaults.air_quality_level,
+        "filterLifePercent": PurifierDefaults.filter_life,
+        "carbonFilterLifePercent": 72,
+        "preFilterLifePercent": 64,
+        "filterRemainDay": 90,
+        "screenState": int(PurifierDefaults.display),
+        "screenSwitch": int(PurifierDefaults.display_config),
+        "childLockSwitch": int(PurifierDefaults.child_lock),
+        "lightDetectionSwitch": int(PurifierDefaults.light_detection),
+        "environmentLightState": int(PurifierDefaults.light_detected),
+        "autoPreference": {"autoPreferenceType": "default"},
+    },
     "Core200S": {
         "enabled": True,
         "filter_life": PurifierDefaults.filter_life,
@@ -308,6 +329,9 @@ PURIFIER_DETAILS: dict[str, dict[str, Any]] = {
 
 
 DETAILS_RESPONSES = {
+    "LAP-C341S-WEU": build_bypass_v2_response(
+        inner_result=PURIFIER_DETAILS["LAP-C341S-WEU"]
+    ),
     "LV-PUR131S": build_bypass_v1_response(result_dict=PURIFIER_DETAILS["LV-PUR131S"]),
     "LV-RH131S": build_bypass_v2_response(inner_result=PURIFIER_DETAILS["LV-RH131S"]),
     "Core200S": build_bypass_v2_response(inner_result=PURIFIER_DETAILS["Core200S"]),
@@ -341,6 +365,33 @@ METHOD_RESPONSES = {
     "LAP-V201S": deepcopy(FunctionResponsesV2),
     "EL551S": deepcopy(FunctionResponsesV2),
     "LAP-B851S-WUS": deepcopy(FunctionResponsesV2),
+    "LAP-C341S-WEU": deepcopy(FunctionResponsesV2),
+}
+
+CONTROL_METHODS = {
+    'turn_on': 'setSwitch',
+    'turn_off': 'setSwitch',
+    'set_sleep_mode': 'setPurifierMode',
+    'set_manual_mode': 'setLevel',
+    'set_auto_mode': 'setPurifierMode',
+    'set_fan_speed': 'setLevel',
+}
+
+CONTROL_PAYLOADS = {
+    'turn_on': lambda _: {'powerSwitch': 1, 'switchIdx': 0},
+    'turn_off': lambda _: {'powerSwitch': 0, 'switchIdx': 0},
+    'set_sleep_mode': lambda _: {'workMode': 'sleep'},
+    'set_manual_mode': lambda _: {
+        'levelIdx': 0,
+        'manualSpeedLevel': 1,
+        'levelType': 'wind',
+    },
+    'set_auto_mode': lambda _: {'workMode': 'auto'},
+    'set_fan_speed': lambda kwargs: {
+        'levelIdx': 0,
+        'manualSpeedLevel': kwargs['speed'],
+        'levelType': 'wind',
+    },
 }
 
 # Add responses for methods with different responses than the default

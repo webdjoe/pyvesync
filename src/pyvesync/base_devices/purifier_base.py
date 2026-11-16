@@ -69,8 +69,10 @@ class PurifierState(DeviceState):
     __slots__ = (
         '_air_quality_level',
         'aq_percent',
+        'aqi',
         'auto_preference_type',
         'auto_room_size',
+        'carbon_filter_life',
         'child_lock',
         'co2',
         'display_forever',
@@ -81,6 +83,7 @@ class PurifierState(DeviceState):
         'fan_set_level',
         'filter_life',
         'filter_open_state',
+        'filter_remain_day',
         'humidity',
         'light_detection_status',
         'light_detection_switch',
@@ -90,6 +93,7 @@ class PurifierState(DeviceState):
         'pm1',
         'pm10',
         'pm25',
+        'pre_filter_life',
         'temperature',
         'voc',
     )
@@ -106,6 +110,10 @@ class PurifierState(DeviceState):
         self.fan_level: int | None = None
         self.fan_set_level: int | None = None
         self.filter_life: int | None = None
+        self.carbon_filter_life: int | None = None
+        self.pre_filter_life: int | None = None
+        self.filter_remain_day: int | None = None
+        self.aqi: int | None = None
         self.auto_preference_type: str | None = None
         self.auto_room_size: int | None = None
         self._air_quality_level: AirQualityLevel | None = None
