@@ -198,6 +198,25 @@ PURIFIER_DETAILS: dict[str, dict[str, Any]] = {
         "efficientModeTimeRemain": 0,
         "errorCode": 0,
     },
+        "LAP-C341S-WEU": {  # Eleva 300X
+        "powerSwitch": int(DeviceStatus.ON),
+        "filterLifePercent": PurifierDefaults.filter_life,
+        "workMode": PurifierDefaults.purifier_mode,
+        "manualSpeedLevel": PurifierDefaults.fan_set_level,
+        "fanSpeedLevel": PurifierDefaults.fan_level,
+        "AQLevel": int(PurifierDefaults.air_quality_enum),
+        "PM25": PurifierDefaults.air_quality_value_pm25,
+        "screenState": int(PurifierDefaults.display),
+        "childLockSwitch": int(PurifierDefaults.child_lock),
+        "screenSwitch": int(PurifierDefaults.display_config),
+        "lightDetectionSwitch": int(PurifierDefaults.light_detection),
+        "environmentLightState": int(PurifierDefaults.light_detected),
+        "autoPreference": {"autoPreferenceType": "default"},
+        "scheduleCount": 0,
+        "timerRemain": 0,
+        "efficientModeTimeRemain": 0,
+        "errorCode": 0,
+    },
     "LAP-V201S": {  # Vital 200S
         "powerSwitch": int(DeviceStatus.ON),
         "filterLifePercent": PurifierDefaults.filter_life,
@@ -318,6 +337,7 @@ DETAILS_RESPONSES = {
     "LAP-V201S": build_bypass_v2_response(inner_result=PURIFIER_DETAILS["LAP-V201S"]),
     "EL551S": build_bypass_v2_response(inner_result=PURIFIER_DETAILS["EL551S"]),
     "LAP-B851S-WUS": build_bypass_v2_response(inner_result=PURIFIER_DETAILS["LAP-B851S-WUS"]),
+    "LAP-C341S-WEU": build_bypass_v2_response(inner_result=PURIFIER_DETAILS["LAP-C341S-WEU"]),
 }
 
 FunctionResponses.default_factory = lambda: (
@@ -341,6 +361,7 @@ METHOD_RESPONSES = {
     "LAP-V201S": deepcopy(FunctionResponsesV2),
     "EL551S": deepcopy(FunctionResponsesV2),
     "LAP-B851S-WUS": deepcopy(FunctionResponsesV2),
+    "LAP-C341S-WEU": deepcopy(FunctionResponsesV2),
 }
 
 # Add responses for methods with different responses than the default

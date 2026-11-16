@@ -460,6 +460,7 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         self.state.device_status = DeviceStatus.from_int(details.powerSwitch)
         self.state.mode = details.workMode
         self.state.filter_life = details.filterLifePercent
+        self.state.carbon_filter_life = details.carbonFilterLifePercent
         if details.fanSpeedLevel == 255:  # noqa: PLR2004
             self.state.fan_level = 0
         else:
