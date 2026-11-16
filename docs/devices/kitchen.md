@@ -66,6 +66,10 @@ a chamber with an unknown status keeps its state.
 A reported temperature unit pyvesync does not recognise is logged and the
 current unit kept.
 
+On the CAF-DC111S-AEU, `quit_sync()` leaves Sync during a Sync cook: the
+chamber that waits (`hold`) starts at once with its full cooking time. Call
+`update()` afterwards for the reported state.
+
 A command the fryer refuses returns `False` and leaves the state as it was;
 `fryer.last_response` names the reason. For example, the CAF-DC111S-AEU can
 refuse a Sync cook (`chamber=BOTH`) with `BYPASS_SYNC_FINISH_FAIL_1` (open

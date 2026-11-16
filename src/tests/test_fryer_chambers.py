@@ -13,6 +13,7 @@ from utils import parse_args
 
 from pyvesync.const import AirFryerChamber, AirFryerCookStatus, AirFryerFeatures, AirFryerSyncType
 from pyvesync.const import AirFryerChamber as Ch
+from pyvesync.base_devices.fryer_base import VeSyncFryer
 from pyvesync.device_map import air_fryer_modules
 
 
@@ -578,3 +579,74 @@ class TestChamberInterface(TestBase):
         assert fryer.state_chamber_1.cook_status == AirFryerCookStatus.COOK_STOP
         assert fryer.state_chamber_1.cook_set_temp == 180
         assert fryer.state_chamber_2.cook_status == AirFryerCookStatus.STANDBY
+
+
+def test_chamber_modes_flag_has_quit_sync():
+    # CHAMBER_MODES covers quit_sync(), so it must be implemented where declared.
+    for entry in air_fryer_modules:
+        if AirFryerFeatures.CHAMBER_MODES not in entry.features:
+            continue
+        cls = getattr(entry.module, entry.class_name)
+        assert cls.quit_sync is not VeSyncFryer.quit_sync, entry.setup_entry
+
+
+class TestQuitSync(TestBase):
+    """quit_sync() (CAF-DC111S-AEU ``quitSyncFinish``)."""
+
+    def _sync_hold(self):
+        # Author's capture: chamber 2 waits in ``hold`` during a Sync cook.
+        self.mock_api.return_value = (
+            build_bypass_v2_response(inner_result=DC111S_SYNC_HOLD), 200
+        )
+        fryer = self.get_device('air_fryers', 'CAF-DC111S-AEU')
+        self.run_in_loop(fryer.update)
+        return fryer
+
+    def test_quit_sync_payload(self):
+        # quitSyncFinish with empty data; hardware test returned code 0.
+        fryer = self._sync_hold()
+        self.mock_api.return_value = (build_bypass_v2_response(), 200)
+        assert self.run_in_loop(fryer.quit_sync)
+        assert parse_args(self.mock_api)['json_object']['payload'] == {
+            'data': {},
+            'method': 'quitSyncFinish',
+            'source': 'APP',
+            'subDeviceNo': 0,
+            'subDeviceType': '',
+        }
+
+    def test_quit_sync_clears_sync_flag(self):
+        fryer = self._sync_hold()
+        assert fryer.state_chamber_1.sync_chambers is True
+        self.mock_api.return_value = (build_bypass_v2_response(), 200)
+        assert self.run_in_loop(fryer.quit_sync)
+        assert fryer.state_chamber_1.sync_chambers is False
+        assert fryer.state_chamber_2.sync_chambers is False
+
+    def test_quit_sync_poll_shows_both_cooking(self):
+        # Capture after quitSyncFinish: syncType 0, chamber 2 cooking with its
+        # full time instead of ``hold``.
+        fryer = self._sync_hold()
+        self.mock_api.return_value = (build_bypass_v2_response(), 200)
+        assert self.run_in_loop(fryer.quit_sync)
+        after = deepcopy(DC111S_SYNC_HOLD)
+        after['syncType'] = 0
+        after['statusList'][1].update(
+            {'cookStatus': 'cooking', 'holdTime': 0, 'currentRemainingTime': 116}
+        )
+        self.mock_api.return_value = (build_bypass_v2_response(inner_result=after), 200)
+        self.run_in_loop(fryer.update)
+        assert fryer.state_chamber_1.sync_chambers is False
+        assert fryer.state_chamber_2.cook_status == AirFryerCookStatus.COOKING
+
+    def test_refused_quit_sync_keeps_state(self):
+        fryer = self._sync_hold()
+        self.mock_api.return_value = (build_bypass_v2_response(inner_code=11000000), 200)
+        assert self.run_in_loop(fryer.quit_sync) is False
+        assert fryer.state_chamber_1.sync_chambers is True
+
+    def test_quit_sync_needs_chamber_modes(self):
+        fryer = self.get_device('air_fryers', 'CAF-TF101S')
+        self.mock_api.reset_mock()
+        assert self.run_in_loop(fryer.quit_sync) is False
+        self.mock_api.assert_not_called()
