@@ -300,9 +300,11 @@ class VeSyncAirBypass(BypassV2Mixin, VeSyncPurifier):
         return await self.set_mode(mode)
 
     async def set_mode(self, mode: str) -> bool:
-        if mode.lower() not in self.modes:
+        mode_match = next((m for m in self.modes if m.lower() == mode.lower()), None)
+        if mode_match is None:
             _LOGGER.warning('Invalid purifier mode used - %s', mode)
             return False
+        mode = mode_match
 
         if mode.lower() == PurifierModes.MANUAL:
             return await self.set_fan_speed(self.state.fan_level or 1)
@@ -468,12 +470,16 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         self.state.child_lock = bool(details.childLockSwitch)
         self.state.air_quality_level = details.AQLevel
         self.state.pm25 = details.PM25
-        self.state.light_detection_switch = DeviceStatus.from_int(
-            details.lightDetectionSwitch
-        )
-        self.state.light_detection_status = DeviceStatus.from_int(
-            details.environmentLightState
-        )
+        if details.lightDetectionSwitch is not None:
+            self.state.light_detection_switch = DeviceStatus.from_int(
+                details.lightDetectionSwitch
+            )
+        if details.environmentLightState is not None:
+            self.state.light_detection_status = DeviceStatus.from_int(
+                details.environmentLightState
+            )
+        if details.VOC is not None:
+            self.state.voc = details.VOC
         self.state.display_set_status = DeviceStatus.from_int(details.screenSwitch)
         self.state.display_status = DeviceStatus.from_int(details.screenState)
         auto_pref = details.autoPreference
@@ -703,9 +709,11 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         return True
 
     async def set_mode(self, mode: str) -> bool:
-        if mode.lower() not in self.modes:
+        mode_match = next((m for m in self.modes if m.lower() == mode.lower()), None)
+        if mode_match is None:
             _LOGGER.warning('Invalid purifier mode used - %s', mode)
             return False
+        mode = mode_match
 
         # Call change_fan_speed if mode is set to manual
         if mode == PurifierModes.MANUAL:
