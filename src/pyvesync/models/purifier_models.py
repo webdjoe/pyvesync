@@ -100,6 +100,72 @@ class PurifierSproutResult(InnerPurifierBaseResult):
 
 
 @dataclass
+class PurifierVitalPetProResult(InnerPurifierBaseResult):
+    """Vital Pet Pro (LAP-P501S) `getPurifierStatus` result model.
+
+    `odorLevel`, `resetFilterDate`, `cumulativeCleanAir` and `totalCleanAir`
+    are parsed but not used: their meaning or unit is not known.
+    """
+
+    powerSwitch: int
+    workMode: str
+    manualSpeedLevel: int
+    fanSpeedLevel: int
+    AQLevel: int
+    PM25: int
+    filterLifePercent: int
+    screenState: int
+    screenSwitch: int
+    childLockSwitch: int
+    scheduleCount: int
+    timerRemain: int
+    errorCode: int
+    VOC: int | None = None
+    buzzerSwitch: int | None = None
+    filterRemainDay: int | None = None
+    filterOpenState: int | None = None
+    screenPreference: PurifierScreenPreference | None = None
+    childLockPreference: PurifierChildLockPreference | None = None
+    autoCleanPreference: PurifierAutoCleanPreference | None = None
+    errorCodes: list[int] | None = None
+    odorLevel: int | None = None
+    resetFilterDate: int | None = None
+    cumulativeCleanAir: int | None = None
+    totalCleanAir: int | None = None
+
+
+@dataclass
+class PurifierScreenPreference(ResponseBaseModel):
+    """Display preference in the Vital Pet Pro status response."""
+
+    screenOnType: int
+    screenStartTime: int | None = None
+    screenEndTime: int | None = None
+
+
+@dataclass
+class PurifierChildLockPreference(ResponseBaseModel):
+    """Auto child lock preference in the Vital Pet Pro status response."""
+
+    childLockAutoSwitch: int
+    childLockAutoSwitchTime: int
+
+
+@dataclass
+class PurifierAutoCleanPreference(ResponseBaseModel):
+    """Self-cleaning state in the Vital Pet Pro status response.
+
+    `autoCleanState` is 1 while a run is active and 0 when idle; the
+    times are in seconds.
+    """
+
+    autoCleanState: int
+    autoCleanRemainTime: int | None = None
+    autoCleanTotalTime: int | None = None
+    previousCleanTime: int | None = None
+
+
+@dataclass
 class PurifierNightlight(ResponseBaseModel):
     """Purifier Nightlight Response Dict."""
 

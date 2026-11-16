@@ -88,6 +88,7 @@ from pyvesync.const import (
     OutletFeatures,
     ProductLines,
     ProductTypes,
+    PurifierAutoModeTypes,
     PurifierAutoPreference,
     PurifierFeatures,
     PurifierModes,
@@ -313,6 +314,8 @@ class PurifierMap(DeviceMapTemplate):
         modes (list[str]): List of modes for the device.
         nightlight_modes (list[str]): List of nightlight modes for the device.
         auto_preferences (list[str]): List of auto preferences for the device.
+        auto_mode_types (list[str]): Work modes reported as `auto`, for devices
+            whose Auto mode is several work modes (`PurifierAutoModeTypes`).
     """
 
     fan_levels: list[int]
@@ -322,6 +325,7 @@ class PurifierMap(DeviceMapTemplate):
     module: ModuleType = vesyncpurifier
     nightlight_modes: list[str] = field(default_factory=list)
     auto_preferences: list[str] = field(default_factory=list)
+    auto_mode_types: list[str] = field(default_factory=list)
 
 
 @dataclass(kw_only=True)
@@ -1096,6 +1100,42 @@ purifier_modules: list[PurifierMap] = [
         model_display='Sprout Air Series',
         model_name='Sprout Air',
         setup_entry='LAP-B851S-WUS',
+    ),
+    PurifierMap(
+        class_name='VeSyncAirVitalPetPro',
+        # LAP-P501S-WUSR is the reported US device type; the others come
+        # from the app's regional config modules (US, EU, JP, TA).
+        dev_types=[
+            'LAP-P501S-WUSR',
+            'LAP-P501S-AUSR',
+            'LAP-P501S-AUKR',
+            'LAP-P501S-AJPR',
+            'LAP-P501S-AASR',
+        ],
+        # 'auto' is not a device work mode. Auto is three work modes, the
+        # auto_mode_types: the state reports them as mode 'auto' with the type
+        # in state.auto_mode_type. set_mode('auto') sends the last known type,
+        # or odorShieldBalanced when none is known, as the VeSync app does.
+        modes=[
+            PurifierModes.AUTO,
+            PurifierModes.SLEEP,
+            PurifierModes.MANUAL,
+        ],
+        auto_mode_types=[
+            PurifierAutoModeTypes.ODOR_SHIELD_QUIET,
+            PurifierAutoModeTypes.ODOR_SHIELD_BALANCED,
+            PurifierAutoModeTypes.ODOR_SHIELD_PERFORMANCE,
+        ],
+        features=[
+            PurifierFeatures.AIR_QUALITY,
+            PurifierFeatures.BUZZER,
+            PurifierFeatures.AUTO_CLEAN,
+        ],
+        fan_levels=list(range(1, 4)),
+        device_alias='Vital Pet Pro',
+        model_display='LAP-P201S/P501S Series',
+        model_name='Vital Pet Pro',
+        setup_entry='LAP-P501S',
     ),
 ]
 """List of ['PurifierMap'][pyvesync.device_map.PurifierMap] configuration

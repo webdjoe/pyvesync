@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 from typing_extensions import deprecated
 
@@ -12,11 +12,15 @@ from pyvesync.const import (
     ConnectionStatus,
     DeviceStatus,
     NightlightModes,
+    PurifierAutoCleanState,
+    PurifierAutoModeTypes,
     PurifierAutoPreference,
     PurifierModes,
+    PurifierScreenOnType,
 )
 from pyvesync.models.bypass_models import (
     ResultV2GetTimer,
+    ResultV2GetTimerV2,
     ResultV2SetTimer,
 )
 from pyvesync.models.purifier_models import (
@@ -29,6 +33,7 @@ from pyvesync.models.purifier_models import (
     PurifierV2TimerActionItems,
     PurifierV2TimerPayloadData,
     PurifierVitalDetailsResult,
+    PurifierVitalPetProResult,
     RequestPurifier131,
     RequestPurifier131Level,
     RequestPurifier131Mode,
@@ -702,10 +707,26 @@ class VeSyncAirBaseV2(VeSyncAirBypass):
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
+    def _resolve_mode(self, mode: str) -> str | None:
+        """Return the entry of `self.modes` that matches `mode`, ignoring case.
+
+        Mode values sent to the API must keep the spelling in `self.modes`.
+
+        Args:
+            mode (str): Requested mode.
+
+        Returns:
+            str | None: The matching mode from `self.modes`, or None.
+        """
+        mode_lower = mode.lower()
+        return next((m for m in self.modes if m.lower() == mode_lower), None)
+
     async def set_mode(self, mode: str) -> bool:
-        if mode.lower() not in self.modes:
+        resolved_mode = self._resolve_mode(mode)
+        if resolved_mode is None:
             _LOGGER.warning('Invalid purifier mode used - %s', mode)
             return False
+        mode = resolved_mode
 
         # Call change_fan_speed if mode is set to manual
         if mode == PurifierModes.MANUAL:
@@ -820,6 +841,350 @@ class VeSyncAirSprout(VeSyncAirBaseV2):  # pylint: disable=too-many-ancestors
             return
 
         self._set_state(r_model)
+
+
+class VeSyncAirVitalPetPro(VeSyncAirBaseV2):  # pylint: disable=too-many-ancestors
+    """Class for the Levoit Vital Pet Pro Air Purifier (LAP-P501S).
+
+    Inherits from the
+    [VeSyncAirBaseV2][pyvesync.devices.vesyncpurifier.VeSyncAirBaseV2] class.
+    Power, manual fan speed and work modes use the same API calls. Status
+    parsing, display, child lock and timers use this device's own payloads,
+    and it adds the button buzzer and pre-filter self-cleaning.
+
+    The device's Auto mode is three work modes, listed in `auto_mode_types`:
+    `odorShieldQuiet`, `odorShieldBalanced` and `odorShieldPerformance`. In
+    any of them `state.mode` is `auto` and `state.auto_mode_type` holds the
+    work mode. `set_auto_mode_type()` selects one, which also switches the
+    purifier to Auto. `set_mode('auto')` and `set_auto_mode()` send the last
+    known type, or `odorShieldBalanced` when none is known, as the VeSync
+    app's Auto button does.
+
+    In Auto and Sleep modes the device reports `fanSpeedLevel` values outside
+    the manual levels 1-3; `state.fan_level` keeps the reported value.
+
+    Args:
+        details (ResponseDeviceDetailsModel): Device details from the API.
+        manager (VeSync): Instantiated VeSync object.
+        feature_map (PurifierMap): Device map template.
+
+    Attributes:
+        state (PurifierState): State of the device.
+        last_response (ResponseInfo): Last response from API call.
+        manager (VeSync): Manager object for API calls.
+        device_name (str): Name of device.
+        device_image (str): URL for device image.
+        cid (str): Device ID.
+        connection_type (str): Connection type of device.
+        device_type (str): Type of device.
+        type (str): Type of device.
+        uuid (str): UUID of device, not always present.
+        config_module (str): Configuration module of device.
+        mac_id (str): MAC ID of device.
+        current_firm_version (str): Current firmware version of device.
+        device_region (str): Region of device. (US, EU, etc.)
+        pid (str): Product ID of device, pulled by some devices on update.
+        sub_device_no (int): Sub-device number of device.
+        product_type (str): Product type of device.
+        features (dict): Features of device.
+        modes (list[str]): List of modes supported by the device.
+        fan_levels (list[int]): List of fan levels supported by the device.
+        nightlight_modes (list[str]): List of nightlight modes supported by the device.
+        auto_preferences (list[str]): List of auto preferences supported by the device.
+        auto_mode_types (list[str]): Auto mode types supported by the device.
+    """
+
+    __slots__ = ()
+
+    DEFAULT_AUTO_MODE_TYPE: ClassVar[str] = PurifierAutoModeTypes.ODOR_SHIELD_BALANCED
+    """Auto mode type sent for `auto` when no type is known (VeSync app default)."""
+
+    def __init__(
+        self,
+        details: ResponseDeviceDetailsModel,
+        manager: VeSync,
+        feature_map: PurifierMap,
+    ) -> None:
+        """Initialize the Vital Pet Pro air purifier class."""
+        super().__init__(details, manager, feature_map)
+
+    def _set_state(self, details: InnerPurifierBaseResult) -> None:
+        """Set Purifier state from details response."""
+        if not isinstance(details, PurifierVitalPetProResult):
+            _LOGGER.warning('Invalid details model passed to _set_state')
+            return
+        self.state.connection_status = ConnectionStatus.ONLINE
+        self.state.device_status = DeviceStatus.from_int(details.powerSwitch)
+        self._set_mode_from_status(details.workMode)
+        if details.fanSpeedLevel == 255:  # noqa: PLR2004
+            self.state.fan_level = 0
+        else:
+            self.state.fan_level = details.fanSpeedLevel
+        self.state.fan_set_level = details.manualSpeedLevel
+        self.state.air_quality_level = details.AQLevel
+        self.state.pm25 = details.PM25
+        self.state.voc = details.VOC
+        self.state.filter_life = details.filterLifePercent
+        self.state.filter_remain_day = details.filterRemainDay
+        if details.filterOpenState is not None:
+            self.state.filter_open_state = bool(details.filterOpenState)
+        self.state.display_set_status = DeviceStatus.from_int(details.screenSwitch)
+        self.state.display_status = DeviceStatus.from_int(details.screenState)
+        self.state.child_lock = bool(details.childLockSwitch)
+        if details.childLockPreference is not None:
+            pref = details.childLockPreference
+            self.state.child_lock_auto_switch = pref.childLockAutoSwitch
+            self.state.child_lock_auto_time = pref.childLockAutoSwitchTime
+        if details.buzzerSwitch is not None:
+            self.state.buzzer_status = DeviceStatus.from_int(details.buzzerSwitch)
+        if details.autoCleanPreference is not None:
+            clean = details.autoCleanPreference
+            self.state.auto_clean_status = bool(clean.autoCleanState)
+            self.state.auto_clean_remaining = clean.autoCleanRemainTime
+            self.state.auto_clean_total = clean.autoCleanTotalTime
+        self._set_timer_from_status(details.timerRemain)
+
+    def _set_mode_from_status(self, work_mode: str) -> None:
+        """Set `state.mode` and `state.auto_mode_type` from the `workMode`.
+
+        An auto mode type is reported as mode `auto`. In other modes the
+        last known auto mode type is kept, so `set_auto_mode()` can return
+        to it (the VeSync app does the same).
+        """
+        if work_mode in self.auto_mode_types:
+            self.state.mode = PurifierModes.AUTO
+            self.state.auto_mode_type = work_mode
+        else:
+            self.state.mode = work_mode
+
+    def _set_timer_from_status(self, timer_remain: int) -> None:
+        """Update `state.timer` from the status `timerRemain` seconds."""
+        if timer_remain <= 0:
+            self.state.timer = None
+            return
+        current = self.state.timer
+        if current is None:
+            self.state.timer = Timer(timer_remain, DeviceStatus.OFF)
+        else:
+            self.state.timer = Timer(
+                current.timer_duration,
+                current.action,
+                id=current.id,
+                remaining=timer_remain,
+            )
+        self.state.timer.update_ts()
+
+    async def get_details(self) -> None:
+        """Get the purifier status from the API and update state."""
+        r_dict = await self.call_bypassv2_api('getPurifierStatus')
+        r_model = process_bypassv2_result(
+            self, _LOGGER, 'get_details', r_dict, PurifierVitalPetProResult
+        )
+        if r_model is None:
+            return
+
+        self._set_state(r_model)
+
+    async def set_mode(self, mode: str) -> bool:
+        """Set the purifier mode.
+
+        `auto` is not a device work mode. It sends the last known auto mode
+        type (`state.auto_mode_type`), or `odorShieldBalanced` when none is
+        known, as the VeSync app's Auto button does.
+
+        Args:
+            mode (str): Mode to set, one of `self.modes` (case-insensitive).
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        if self._resolve_mode(mode) == PurifierModes.AUTO:
+            auto_mode_type = self.state.auto_mode_type or self.DEFAULT_AUTO_MODE_TYPE
+            return await self.set_auto_mode_type(auto_mode_type)
+        return await super().set_mode(mode)
+
+    async def set_auto_mode_type(self, auto_mode_type: str) -> bool:
+        """Set the auto mode type and switch the purifier to auto mode.
+
+        Args:
+            auto_mode_type (str): One of `self.auto_mode_types`
+                (`PurifierAutoModeTypes`), case-insensitive.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        type_lower = auto_mode_type.lower()
+        resolved_type = next(
+            (t for t in self.auto_mode_types if t.lower() == type_lower), None
+        )
+        if resolved_type is None:
+            _LOGGER.warning(
+                '%s is not a valid auto mode type - valid types are %s',
+                auto_mode_type,
+                self.auto_mode_types,
+            )
+            return False
+
+        payload_data = {'workMode': resolved_type}
+        r_dict = await self.call_bypassv2_api('setPurifierMode', payload_data)
+        r = Helpers.process_dev_response(_LOGGER, 'set_auto_mode_type', self, r_dict)
+        if r is None:
+            return False
+
+        self.state.mode = PurifierModes.AUTO
+        self.state.auto_mode_type = resolved_type
+        self.state.device_status = DeviceStatus.ON
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def toggle_display(self, mode: bool) -> bool:
+        if bool(self.state.display_set_status) == mode:
+            _LOGGER.debug('Display is already %s', mode)
+            return True
+
+        if mode:
+            payload_data = {
+                'screenOnType': int(PurifierScreenOnType.ALWAYS_ON),
+                'screenSwitch': int(DeviceStatus.ON),
+            }
+        else:
+            payload_data = {'screenSwitch': int(DeviceStatus.OFF)}
+        r_dict = await self.call_bypassv2_api('setDisplay', payload_data)
+        r = Helpers.process_dev_response(_LOGGER, 'toggle_display', self, r_dict)
+        if r is None:
+            return False
+
+        self.state.display_set_status = DeviceStatus.from_bool(mode)
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def toggle_child_lock(self, toggle: bool | None = None) -> bool:
+        """Set the child lock (control lock).
+
+        The device expects the auto child lock settings with every request,
+        so they are re-sent from the last status. Run `update()` first.
+
+        Args:
+            toggle (bool | None): True to lock, False to unlock. If None,
+                toggle the current state.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        if (
+            self.state.child_lock_auto_switch is None
+            or self.state.child_lock_auto_time is None
+        ):
+            _LOGGER.warning('Child lock settings unknown, run update() first')
+            return False
+        if toggle is None:
+            toggle = not bool(self.state.child_lock)
+        payload_data = {
+            'childLockAutoSwitch': self.state.child_lock_auto_switch,
+            'childLockAutoSwitchTime': self.state.child_lock_auto_time,
+            'childLockSwitch': int(toggle),
+        }
+        r_dict = await self.call_bypassv2_api('setChildLock', payload_data)
+        r = Helpers.process_dev_response(_LOGGER, 'toggle_child_lock', self, r_dict)
+        if r is None:
+            return False
+
+        self.state.child_lock = toggle
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def toggle_buzzer(self, toggle: bool | None = None) -> bool:
+        if toggle is None:
+            toggle = self.state.buzzer_status != DeviceStatus.ON
+        payload_data = {'buzzerSwitch': int(toggle)}
+        r_dict = await self.call_bypassv2_api('setBuzzer', payload_data)
+        r = Helpers.process_dev_response(_LOGGER, 'toggle_buzzer', self, r_dict)
+        if r is None:
+            return False
+
+        self.state.buzzer_status = DeviceStatus.from_bool(toggle)
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def toggle_auto_clean(self, toggle: bool | None = None) -> bool:
+        if toggle is None:
+            toggle = not bool(self.state.auto_clean_status)
+        clean_state = (
+            PurifierAutoCleanState.START if toggle else PurifierAutoCleanState.STOP
+        )
+        payload_data = {'autoCleanState': int(clean_state)}
+        r_dict = await self.call_bypassv2_api('setAutoClean', payload_data)
+        r = Helpers.process_dev_response(_LOGGER, 'toggle_auto_clean', self, r_dict)
+        if r is None:
+            return False
+
+        self.state.auto_clean_status = toggle
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def get_timer(self) -> Timer | None:
+        r_dict = await self.call_bypassv2_api('getTimerV2', {})
+        r_model = process_bypassv2_result(
+            self, _LOGGER, 'get_timer', r_dict, ResultV2GetTimerV2
+        )
+        if r_model is None:
+            return None
+        if not r_model.timers:
+            _LOGGER.debug('No timers found')
+            self.state.timer = None
+            return None
+        timer = r_model.timers[0]
+        action: str = DeviceStatus.OFF
+        if timer.startAct:
+            action = DeviceStatus.from_int(timer.startAct[0].act)
+        self.state.timer = Timer(timer.total, action, id=timer.id, remaining=timer.remain)
+        self.state.timer.update_ts()
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return self.state.timer
+
+    async def set_timer(self, duration: int, action: str | None = None) -> bool:
+        """Set a timer that turns the purifier off.
+
+        Args:
+            duration (int): Timer length in seconds.
+            action (str | None): Only 'off' (the default) is supported.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        if action is not None and action != DeviceStatus.OFF:
+            _LOGGER.warning('Only an "off" timer is supported for this device')
+            return False
+        payload_data = {
+            'startAct': [{'type': 'powerSwitch', 'num': 0, 'act': int(DeviceStatus.OFF)}],
+            'total': duration,
+        }
+        r_dict = await self.call_bypassv2_api('addTimerV2', payload_data)
+        r_model = process_bypassv2_result(
+            self, _LOGGER, 'set_timer', r_dict, ResultV2SetTimer
+        )
+        if r_model is None:
+            return False
+
+        self.state.timer = Timer(duration, DeviceStatus.OFF, id=r_model.id)
+        self.state.timer.update_ts()
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def clear_timer(self) -> bool:
+        if self.state.timer is None:
+            _LOGGER.warning('No timer found, run get_timer() to retrieve timer.')
+            return False
+
+        payload_data = {'id': self.state.timer.id}
+        r_dict = await self.call_bypassv2_api('delTimerV2', payload_data)
+        r = Helpers.process_dev_response(_LOGGER, 'clear_timer', self, r_dict)
+        if r is None:
+            return False
+
+        self.state.timer = None
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
 
 
 class VeSyncAir131(BypassV1Mixin, VeSyncPurifier):

@@ -33,6 +33,7 @@ import pyvesync.const as const
 from pyvesync.base_devices.purifier_base import VeSyncPurifier
 from base_test_cases import TestBase
 from utils import assert_test, parse_args
+from pyvesync.utils.helpers import Timer
 import call_json_purifiers
 
 
@@ -108,7 +109,21 @@ class TestAirPurifiers(TestBase):
         "LAP-V201S": [["set_auto_mode"], ['set_sleep_mode'], ['set_pet_mode'], ["turn_on_display"], ["turn_off_display"]],
         "EL551S": [["set_auto_mode"], ["set_sleep_mode"], ["set_turbo_mode"], ["turn_on_display"], ["turn_off_display"]],
         "LAP-B851S-WUS": [["set_auto_mode"], ['set_sleep_mode'], ["turn_on_display"], ["turn_off_display"]],
-
+        "LAP-P501S": [
+            ["set_auto_mode"],
+            ["set_auto_mode_type", {"auto_mode_type": "odorShieldQuiet"}],
+            ["set_sleep_mode"],
+            ["turn_on_display"],
+            ["turn_off_display"],
+            ["turn_on_child_lock"],
+            ["turn_off_child_lock"],
+            ["turn_on_buzzer"],
+            ["turn_off_buzzer"],
+            ["turn_on_auto_clean"],
+            ["turn_off_auto_clean"],
+            ["set_timer", {"duration": 1800}],
+            ["get_timer"],
+        ],
     }
 
     def test_details(self, setup_entry, method):
@@ -228,6 +243,10 @@ class TestAirPurifiers(TestBase):
             fan_obj.state.display_set_status = const.DeviceStatus.OFF
         elif method_name in ["turn_off_display"]:
             fan_obj.state.display_set_status = const.DeviceStatus.ON
+        elif method_name in ["turn_on_child_lock", "turn_off_child_lock"]:
+            # Auto child lock settings normally come from the last status
+            fan_obj.state.child_lock_auto_switch = 0
+            fan_obj.state.child_lock_auto_time = 60
 
         # Call method with kwargs if defined
         if method_kwargs:
@@ -243,6 +262,9 @@ class TestAirPurifiers(TestBase):
             assert fan_obj.state.fan_level == method_kwargs["speed"]
         elif method_name in ["set_auto_mode"]:
             assert fan_obj.state.mode == const.PurifierModes.AUTO
+        elif method_name == "set_auto_mode_type":
+            assert fan_obj.state.mode == const.PurifierModes.AUTO
+            assert fan_obj.state.auto_mode_type == method_kwargs["auto_mode_type"]
         elif method_name in ["set_sleep_mode"]:
             assert fan_obj.state.mode == const.PurifierModes.SLEEP
         elif method_name in ["set_pet_mode"]:
@@ -253,6 +275,23 @@ class TestAirPurifiers(TestBase):
             assert fan_obj.state.display_set_status == const.DeviceStatus.ON
         elif method_name in ["turn_off_display"]:
             assert fan_obj.state.display_set_status == const.DeviceStatus.OFF
+        elif method_name == "turn_on_child_lock":
+            assert fan_obj.state.child_lock is True
+        elif method_name == "turn_off_child_lock":
+            assert fan_obj.state.child_lock is False
+        elif method_name == "turn_on_buzzer":
+            assert fan_obj.state.buzzer_status == const.DeviceStatus.ON
+        elif method_name == "turn_off_buzzer":
+            assert fan_obj.state.buzzer_status == const.DeviceStatus.OFF
+        elif method_name == "turn_on_auto_clean":
+            assert fan_obj.state.auto_clean_status is True
+        elif method_name == "turn_off_auto_clean":
+            assert fan_obj.state.auto_clean_status is False
+        elif method_name == "set_timer":
+            assert fan_obj.state.timer is not None
+            assert fan_obj.state.timer.timer_duration == method_kwargs["duration"]
+        elif method_name == "get_timer":
+            assert fan_obj.state.timer is not None
 
         # Parse arguments from mock_api call into a dictionary
         all_kwargs = parse_args(self.mock_api)
@@ -261,3 +300,207 @@ class TestAirPurifiers(TestBase):
         assert assert_test(
             method_call, all_kwargs, setup_entry, self.write_api, self.overwrite
         )
+
+
+class TestVitalPetPro(TestBase):
+    """Vital Pet Pro (LAP-P501S) behavior not covered by the YAML tests.
+
+    Request bodies are checked against the shapes captured from the VeSync
+    app. Methods are called with several arguments here because the YAML
+    fixtures hold one request per method name.
+    """
+
+    setup_entry = "LAP-P501S"
+
+    def _device(self, setup_entry: str = "LAP-P501S") -> VeSyncPurifier:
+        device = self.get_device("air_purifiers", setup_entry)
+        assert isinstance(device, VeSyncPurifier)
+        return device
+
+    def _sent_data(self) -> dict:
+        return parse_args(self.mock_api)["json_object"]["payload"]["data"]
+
+    def _sent_method(self) -> str:
+        return parse_args(self.mock_api)["json_object"]["payload"]["method"]
+
+    def test_details_state(self):
+        """getPurifierStatus fields map to state."""
+        self.mock_api.return_value = (
+            call_json_purifiers.DETAILS_RESPONSES[self.setup_entry],
+            200,
+        )
+        device = self._device()
+        self.run_in_loop(device.update)
+
+        state = device.state
+        assert state.mode == const.PurifierModes.MANUAL
+        assert state.fan_set_level == call_json_purifiers.PurifierDefaults.fan_set_level
+        assert state.voc == 1
+        assert state.filter_remain_day == 159
+        assert state.buzzer_status == const.DeviceStatus.ON
+        assert state.auto_clean_status is False
+        assert state.auto_clean_remaining == 0
+        assert state.child_lock is True
+        assert state.child_lock_auto_switch == 0
+        assert state.child_lock_auto_time == 60
+        assert state.timer is None
+        assert state.auto_mode_type is None
+
+    @pytest.mark.parametrize(
+        "work_mode",
+        ["odorShieldQuiet", "odorShieldBalanced", "odorShieldPerformance"],
+    )
+    def test_details_auto_mode_type(self, work_mode):
+        """An odorShield workMode is reported as mode auto with its type."""
+        details = dict(call_json_purifiers.PURIFIER_DETAILS[self.setup_entry])
+        details["workMode"] = work_mode
+        self.mock_api.return_value = (
+            call_json_purifiers.build_bypass_v2_response(inner_result=details),
+            200,
+        )
+        device = self._device()
+        self.run_in_loop(device.update)
+
+        assert device.state.mode == const.PurifierModes.AUTO
+        assert device.state.auto_mode_type == work_mode
+
+    def test_details_keeps_auto_mode_type(self):
+        """Leaving auto keeps the last auto mode type for set_auto_mode()."""
+        details = dict(call_json_purifiers.PURIFIER_DETAILS[self.setup_entry])
+        details["workMode"] = "sleep"
+        self.mock_api.return_value = (
+            call_json_purifiers.build_bypass_v2_response(inner_result=details),
+            200,
+        )
+        device = self._device()
+        device.state.auto_mode_type = "odorShieldPerformance"
+        self.run_in_loop(device.update)
+
+        assert device.state.mode == const.PurifierModes.SLEEP
+        assert device.state.auto_mode_type == "odorShieldPerformance"
+
+    def test_details_timer_remain(self):
+        """A status timerRemain keeps the id of a timer set earlier."""
+        details = dict(call_json_purifiers.PURIFIER_DETAILS[self.setup_entry])
+        details["timerRemain"] = 1500
+        self.mock_api.return_value = (
+            call_json_purifiers.build_bypass_v2_response(inner_result=details),
+            200,
+        )
+        device = self._device()
+        device.state.timer = Timer(1800, const.DeviceStatus.OFF, id=7)
+        self.run_in_loop(device.update)
+
+        assert device.state.timer is not None
+        assert device.state.timer.id == 7
+        assert device.state.timer.timer_duration == 1800
+        assert 0 < device.state.timer.time_remaining <= 1500
+
+    @pytest.mark.parametrize(
+        ("requested", "sent"),
+        [
+            ("odorShieldQuiet", "odorShieldQuiet"),
+            ("odorShieldBalanced", "odorShieldBalanced"),
+            ("odorShieldPerformance", "odorShieldPerformance"),
+            ("ODORSHIELDQUIET", "odorShieldQuiet"),
+        ],
+    )
+    def test_set_auto_mode_type(self, requested, sent):
+        """Each auto mode type is sent as its workMode; state.mode is auto."""
+        self.mock_api.return_value = (call_json_purifiers.build_bypass_v2_response(), 200)
+        device = self._device()
+        assert self.run_in_loop(device.set_auto_mode_type, requested) is True
+        assert self._sent_method() == "setPurifierMode"
+        assert self._sent_data() == {"workMode": sent}
+        assert device.state.mode == const.PurifierModes.AUTO
+        assert device.state.auto_mode_type == sent
+
+    def test_set_auto_mode_type_invalid(self):
+        """An unknown auto mode type sends nothing."""
+        device = self._device()
+        assert self.run_in_loop(device.set_auto_mode_type, "turbo") is False
+        self.mock_api.assert_not_called()
+
+    @pytest.mark.parametrize(
+        ("known_type", "sent"),
+        [
+            (None, "odorShieldBalanced"),
+            ("odorShieldQuiet", "odorShieldQuiet"),
+        ],
+    )
+    def test_set_mode_auto(self, known_type, sent):
+        """Auto sends the last known type, or odorShieldBalanced."""
+        self.mock_api.return_value = (call_json_purifiers.build_bypass_v2_response(), 200)
+        device = self._device()
+        device.state.auto_mode_type = known_type
+        assert self.run_in_loop(device.set_mode, "AUTO") is True
+        assert self._sent_data() == {"workMode": sent}
+        assert device.state.mode == const.PurifierModes.AUTO
+        assert device.state.auto_mode_type == sent
+
+    def test_set_mode_sleep(self):
+        """Sleep is sent as is."""
+        self.mock_api.return_value = (call_json_purifiers.build_bypass_v2_response(), 200)
+        device = self._device()
+        assert self.run_in_loop(device.set_mode, "sleep") is True
+        assert self._sent_data() == {"workMode": "sleep"}
+        assert device.state.mode == const.PurifierModes.SLEEP
+
+    @pytest.mark.parametrize("mode", ["turbo", "odorShieldQuiet"])
+    def test_set_mode_invalid(self, mode):
+        """Modes not in device.modes, auto mode types included, send nothing."""
+        device = self._device()
+        assert self.run_in_loop(device.set_mode, mode) is False
+        self.mock_api.assert_not_called()
+
+    def test_auto_mode_type_stub(self):
+        """Purifiers without auto mode types refuse set_auto_mode_type()."""
+        device = self._device("LAP-V201S")
+        assert self.run_in_loop(device.set_auto_mode_type, "odorShieldQuiet") is False
+        self.mock_api.assert_not_called()
+
+    def test_child_lock_needs_status(self):
+        """Child lock is not sent until the auto lock settings are known."""
+        device = self._device()
+        assert self.run_in_loop(device.turn_on_child_lock) is False
+        self.mock_api.assert_not_called()
+
+    def test_auto_clean_payloads(self):
+        """Start sends autoCleanState 1, stop sends 2."""
+        self.mock_api.return_value = (call_json_purifiers.build_bypass_v2_response(), 200)
+        device = self._device()
+        self.run_in_loop(device.turn_on_auto_clean)
+        assert self._sent_data() == {"autoCleanState": 1}
+        self.run_in_loop(device.turn_off_auto_clean)
+        assert self._sent_data() == {"autoCleanState": 2}
+
+    def test_get_and_clear_timer(self):
+        """getTimerV2 startAct parses and delTimerV2 sends only the id."""
+        self.mock_api.return_value = (
+            call_json_purifiers.METHOD_RESPONSES[self.setup_entry]["get_timer"],
+            200,
+        )
+        device = self._device()
+        timer = self.run_in_loop(device.get_timer)
+        assert isinstance(timer, Timer)
+        assert timer.id == call_json_purifiers.VITAL_PET_PRO_TIMER["id"]
+        assert timer.action == const.DeviceStatus.OFF
+
+        self.mock_api.return_value = (call_json_purifiers.build_bypass_v2_response(), 200)
+        assert self.run_in_loop(device.clear_timer) is True
+        assert self._sent_method() == "delTimerV2"
+        assert self._sent_data() == {"id": call_json_purifiers.VITAL_PET_PRO_TIMER["id"]}
+        assert device.state.timer is None
+
+    def test_set_timer_on_action_rejected(self):
+        """Only power-off timers were captured, so an 'on' timer is refused."""
+        device = self._device()
+        assert self.run_in_loop(device.set_timer, 600, const.DeviceStatus.ON) is False
+        self.mock_api.assert_not_called()
+
+    def test_vital_200s_set_mode_case(self):
+        """VeSyncAirBaseV2 sends the mode as listed in device.modes."""
+        self.mock_api.return_value = (call_json_purifiers.build_bypass_v2_response(), 200)
+        device = self._device("LAP-V201S")
+        assert self.run_in_loop(device.set_mode, "AUTO") is True
+        assert self._sent_data() == {"workMode": "auto"}
