@@ -40,8 +40,7 @@ Additional non-negotiables:
 **New device support and any change to device behavior must be tested on the
 physical device before it is merged.** This is a hard requirement.
 
-- The pull request must state the **model and firmware version** it was tested
-  against.
+- The pull request must state the **model** it was tested against.
 - Testing only through Home Assistant (or another downstream integration) does
   **not** satisfy this requirement. You need a script or session that exercises
   the library directly against the device.
@@ -94,21 +93,20 @@ for these fields. For packet-capture instructions, see [Capturing](./capturing.m
 **Requesting a new device:**
 
 - Device model number and `product_type`
-- Firmware version
 - Region / country code
 - Link to the product page
 - A packet capture, or a stated willingness to share the device with a maintainer
 
 **Adding a new feature:**
 
-- The target device model(s) the feature was tested on, with firmware version
+- The target device model(s) the feature was tested on
 - The relevant captured API request and response for the new behavior
 - A redacted `DEBUG` log of the library exercising the feature
 
 **Reporting a bug / troubleshooting:**
 
 - pyvesync version and Python version
-- Device model and firmware version
+- Device model
 - A redacted `DEBUG` log
 - The `device.last_response` output for the failing call
 - A minimal reproduction script
@@ -243,7 +241,7 @@ the device needs (see [Capturing](./capturing.md)).
    against the capture, and rerun `pytest` without flags.
 8. **Docs:** add a `:::` block for the class in `docs/devices/<type>.md`, and
    list the model in `docs/supported_devices.md` and the README device list.
-9. **Verify on hardware** and state the model and firmware in the PR.
+9. **Verify on hardware** and state the model in the PR.
 
 ## Pull Request Process
 

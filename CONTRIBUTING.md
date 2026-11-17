@@ -20,8 +20,8 @@ checklist, so please self-attest honestly.
    them.
 2. **Verify on real hardware before merge.** New device support and any change
    to device behavior must be tested on the physical device, and the pull
-   request must state the model and firmware version tested. Testing only
-   through Home Assistant does not count.
+   request must state the model tested. Testing only through Home Assistant
+   does not count.
 3. **One change per pull request.** Each PR must be a single feature, fix, or
    edit. Large or mixed PRs will be asked to be split before review.
 
@@ -36,10 +36,10 @@ checklist, so please self-attest honestly.
 Use the issue templates. They ask for exactly the information maintainers need.
 
 - **[Bug report](.github/ISSUE_TEMPLATE/bug-report.yml):** pyvesync and Python
-  versions, device model and firmware, a minimal reproduction script, a redacted
+  versions, device model, a minimal reproduction script, a redacted
   `DEBUG` log, and `device.last_response` for the failing call.
 - **[Device request](.github/ISSUE_TEMPLATE/device-request.yml):** model number,
-  `product_type`, firmware, region, a product page link, and how you will help
+  `product_type`, region, a product page link, and how you will help
   verify the device. A packet capture or a temporarily shared device is
   required. See [Capturing](docs/development/capturing.md).
 
