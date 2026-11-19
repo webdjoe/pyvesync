@@ -115,6 +115,7 @@ class TestAirPurifiers(TestBase):
         "LAP-V201S": [["set_auto_mode"], ['set_sleep_mode'], ['set_pet_mode'], ["turn_on_display"], ["turn_off_display"]],
         "EL551S": [["set_auto_mode"], ["set_sleep_mode"], ["set_turbo_mode"], ["turn_on_display"], ["turn_off_display"]],
         "LAP-C511S": [["set_auto_mode"], ["set_sleep_mode"], ["turn_on_display"], ["turn_off_display"]],
+        "LAP-C341S": [["set_auto_mode"], ["set_sleep_mode"], ["turn_on_display"], ["turn_off_display"]],
         "LAP-B851S-WUS": [["set_auto_mode"], ['set_sleep_mode'], ["turn_on_display"], ["turn_off_display"]],
         "LAP-P501S": [
             ["set_auto_mode"],
@@ -309,6 +310,41 @@ class TestAirPurifiers(TestBase):
         assert assert_test(
             method_call, all_kwargs, setup_entry, self.write_api, self.overwrite
         )
+
+
+class TestEleva300XPurifier(TestBase):
+    """Test the Eleva 300X, which shares the Eleva class but has no VOC/NO2 sensor."""
+
+    setup_entry = "LAP-C341S"
+
+    def test_details_without_voc_no2(self):
+        """The 300X status and deviceProp parse without VOC and NO2."""
+        device_list = {
+            "code": 0,
+            "msg": "request success",
+            "result": {
+                "list": [
+                    {
+                        "cid": TestDefaults.cid(self.setup_entry),
+                        "deviceProp": {"workMode": "manual", "PM25": 7, "AQI": 30},
+                    }
+                ]
+            },
+        }
+        self.mock_api.side_effect = [
+            (device_list, 200),
+            (call_json_purifiers.DETAILS_RESPONSES[self.setup_entry], 200),
+        ]
+        purifier = self.get_device("air_purifiers", self.setup_entry)
+        assert type(purifier).__name__ == "VeSyncAirEleva"
+        self.run_in_loop(purifier.get_details)
+
+        state = purifier.state
+        assert (state.pm25, state.aqi) == (7, 30)
+        assert state.voc is None
+        assert state.no2 is None
+        assert state.carbon_filter_life == 97
+        assert state.pre_filter_life == 90
 
 
 class TestElevaPurifier(TestBase):

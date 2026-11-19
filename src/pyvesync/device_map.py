@@ -1087,6 +1087,21 @@ purifier_modules: list[PurifierMap] = [
         setup_entry='LAP-C511S',
     ),
     PurifierMap(
+        class_name='VeSyncAirEleva',
+        dev_types=['LAP-C341S-WUSZ', 'LAP-C341S-WEU'],
+        modes=[
+            PurifierModes.SLEEP,
+            PurifierModes.MANUAL,
+            PurifierModes.AUTO,
+        ],
+        features=[PurifierFeatures.AIR_QUALITY, PurifierFeatures.LIGHT_DETECT],
+        fan_levels=list(range(1, 5)),
+        device_alias='Eleva 300X',
+        model_display='LAP-C341S Series',
+        model_name='Eleva 300X',
+        setup_entry='LAP-C341S',
+    ),
+    PurifierMap(
         class_name='VeSyncAirSprout',
         dev_types=[
             'LAP-B851S-WEU',
