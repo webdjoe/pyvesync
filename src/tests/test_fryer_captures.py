@@ -174,7 +174,10 @@ CS158_APPOINTING = {  # Air Fryer.chls.har, 2022-11-16 20:37:28
     'cookSetTemp': 350, 'mode': 'custom', 'cookSetTime': 15, 'cookStatus': 'appointing',
     'tempUnit': 'fahrenheit', 'appointLastTime': 60, 'customRecipe': 'Manual',
 }
-
+CS168_COOK_END = {  # CS168-AF (API deviceType CS137-AF/CS158-AF), 2026-11-20 16:33:37
+    'cookSetTemp': 350, 'mode': 'manual', 'cookSetTime': 4, 'cookLastTime': 0,
+    'cookStatus': 'cookEnd', 'tempUnit': 'fahrenheit', 'recipeId': 15, 'recipeType': 3,
+}
 
 def _158_return_status(return_status: dict) -> dict:
     """Wrap a captured CS158 returnStatus in a bypassV1 response."""
@@ -450,6 +453,13 @@ class TestFryerCaptures(TestBase):
         assert fryer.state.cook_set_time == 900
         assert fryer.state.is_running is False
         assert fryer.state.can_resume is False
+        assert 'Unknown cook status' not in self.caplog.text
+
+    def test_158_cook_end_is_mapped(self):
+        fryer = self.get_device('air_fryers', 'CS158-AF')
+        self.mock_api.return_value = (_158_return_status(CS168_COOK_END), 200)
+        self.run_in_loop(fryer.update)
+        assert fryer.state.cook_status == AirFryerCookStatus.COOK_END
         assert 'Unknown cook status' not in self.caplog.text
 
     def test_total_time_ready_with_preheat_uses_reported_total(self):
