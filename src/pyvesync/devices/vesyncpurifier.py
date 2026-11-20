@@ -9,6 +9,7 @@ from typing_extensions import deprecated
 
 from pyvesync.base_devices.purifier_base import VeSyncPurifier
 from pyvesync.const import (
+    DEFAULT_TIMER_ID,
     ConnectionStatus,
     DeviceStatus,
     NightlightModes,
@@ -863,6 +864,11 @@ class VeSyncAirVitalPetPro(VeSyncAirBaseV2):  # pylint: disable=too-many-ancesto
     In Auto and Sleep modes the device reports `fanSpeedLevel` values outside
     the manual levels 1-3; `state.fan_level` keeps the reported value.
 
+    Display on and child lock re-send settings from the last status, so run
+    `update()` before them. Light detection and filter reset are not
+    supported: the device has no light sensor, and no app request to reset
+    the filter has been captured.
+
     Args:
         details (ResponseDeviceDetailsModel): Device details from the API.
         manager (VeSync): Instantiated VeSync object.
@@ -930,6 +936,11 @@ class VeSyncAirVitalPetPro(VeSyncAirBaseV2):  # pylint: disable=too-many-ancesto
             self.state.filter_open_state = bool(details.filterOpenState)
         self.state.display_set_status = DeviceStatus.from_int(details.screenSwitch)
         self.state.display_status = DeviceStatus.from_int(details.screenState)
+        if details.screenPreference is not None:
+            screen = details.screenPreference
+            self.state.display_on_type = screen.screenOnType
+            self.state.display_start_time = screen.screenStartTime
+            self.state.display_end_time = screen.screenEndTime
         self.state.child_lock = bool(details.childLockSwitch)
         if details.childLockPreference is not None:
             pref = details.childLockPreference
@@ -964,7 +975,7 @@ class VeSyncAirVitalPetPro(VeSyncAirBaseV2):  # pylint: disable=too-many-ancesto
             return
         current = self.state.timer
         if current is None:
-            self.state.timer = Timer(timer_remain, DeviceStatus.OFF)
+            self.state.timer = Timer(timer_remain, DeviceStatus.OFF, id=DEFAULT_TIMER_ID)
         else:
             self.state.timer = Timer(
                 current.timer_duration,
@@ -992,15 +1003,23 @@ class VeSyncAirVitalPetPro(VeSyncAirBaseV2):  # pylint: disable=too-many-ancesto
         type (`state.auto_mode_type`), or `odorShieldBalanced` when none is
         known, as the VeSync app's Auto button does.
 
+        `manual` sends the last manual speed (`state.fan_set_level`), or level
+        1 when none is known, as the VeSync app's Manual button does. The
+        reported `fan_level` is not used: in Auto it can be 0 while running.
+
         Args:
             mode (str): Mode to set, one of `self.modes` (case-insensitive).
 
         Returns:
             bool: True if successful, False otherwise.
         """
-        if self._resolve_mode(mode) == PurifierModes.AUTO:
+        resolved_mode = self._resolve_mode(mode)
+        if resolved_mode == PurifierModes.AUTO:
             auto_mode_type = self.state.auto_mode_type or self.DEFAULT_AUTO_MODE_TYPE
             return await self.set_auto_mode_type(auto_mode_type)
+        if resolved_mode == PurifierModes.MANUAL:
+            manual_level = self.state.fan_set_level or self.fan_levels[0]
+            return await self.set_fan_speed(manual_level)
         return await super().set_mode(mode)
 
     async def set_auto_mode_type(self, auto_mode_type: str) -> bool:
@@ -1038,17 +1057,45 @@ class VeSyncAirVitalPetPro(VeSyncAirBaseV2):  # pylint: disable=too-many-ancesto
         return True
 
     async def toggle_display(self, mode: bool) -> bool:
+        """Turn the display on or off.
+
+        Turning the display on re-sends the display on-mode from the last
+        status, with the daily window when the display is scheduled, as the
+        VeSync app does. This keeps a display schedule. Run `update()` first.
+
+        Args:
+            mode (bool): True to turn the display on, False to turn it off.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
         if bool(self.state.display_set_status) == mode:
             _LOGGER.debug('Display is already %s', mode)
             return True
 
-        if mode:
+        payload_data: dict[str, int]
+        if not mode:
+            payload_data = {'screenSwitch': int(DeviceStatus.OFF)}
+        elif self.state.display_on_type is None:
+            _LOGGER.warning('Display settings unknown, run update() first')
+            return False
+        elif self.state.display_on_type == PurifierScreenOnType.SCHEDULED:
+            start_time = self.state.display_start_time
+            end_time = self.state.display_end_time
+            if start_time is None or end_time is None:
+                _LOGGER.warning('Display schedule unknown, run update() first')
+                return False
             payload_data = {
-                'screenOnType': int(PurifierScreenOnType.ALWAYS_ON),
+                'screenEndTime': end_time,
+                'screenOnType': int(PurifierScreenOnType.SCHEDULED),
+                'screenStartTime': start_time,
                 'screenSwitch': int(DeviceStatus.ON),
             }
         else:
-            payload_data = {'screenSwitch': int(DeviceStatus.OFF)}
+            payload_data = {
+                'screenOnType': self.state.display_on_type,
+                'screenSwitch': int(DeviceStatus.ON),
+            }
         r_dict = await self.call_bypassv2_api('setDisplay', payload_data)
         r = Helpers.process_dev_response(_LOGGER, 'toggle_display', self, r_dict)
         if r is None:
@@ -1122,6 +1169,31 @@ class VeSyncAirVitalPetPro(VeSyncAirBaseV2):  # pylint: disable=too-many-ancesto
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
+    async def toggle_light_detection(self, toggle: bool | None = None) -> bool:
+        """Not supported: the Vital Pet Pro has no light detection.
+
+        Its only air sensors are PM2.5 and TVOC, and the VeSync app has no
+        light detection control for it.
+
+        Returns:
+            bool: Always False.
+        """
+        del toggle
+        _LOGGER.debug('Light detection not supported for this device.')
+        return False
+
+    async def reset_filter(self) -> bool:
+        """Not supported: no app request to reset the filter has been captured.
+
+        Reset the Check Filter Indicator on the purifier instead, by holding
+        the Auto Mode button for 3 seconds.
+
+        Returns:
+            bool: Always False.
+        """
+        _LOGGER.debug('Filter life reset not supported for this device.')
+        return False
+
     async def get_timer(self) -> Timer | None:
         r_dict = await self.call_bypassv2_api('getTimerV2', {})
         r_model = process_bypassv2_result(
@@ -1145,6 +1217,10 @@ class VeSyncAirVitalPetPro(VeSyncAirBaseV2):  # pylint: disable=too-many-ancesto
     async def set_timer(self, duration: int, action: str | None = None) -> bool:
         """Set a timer that turns the purifier off.
 
+        The request is sent without checking for a running timer, and the timer
+        is stored with id `DEFAULT_TIMER_ID`. A new timer replaces the running
+        one.
+
         Args:
             duration (int): Timer length in seconds.
             action (str | None): Only 'off' (the default) is supported.
@@ -1160,23 +1236,26 @@ class VeSyncAirVitalPetPro(VeSyncAirBaseV2):  # pylint: disable=too-many-ancesto
             'total': duration,
         }
         r_dict = await self.call_bypassv2_api('addTimerV2', payload_data)
-        r_model = process_bypassv2_result(
-            self, _LOGGER, 'set_timer', r_dict, ResultV2SetTimer
-        )
-        if r_model is None:
+        r = Helpers.process_dev_response(_LOGGER, 'set_timer', self, r_dict)
+        if r is None:
             return False
 
-        self.state.timer = Timer(duration, DeviceStatus.OFF, id=r_model.id)
+        self.state.timer = Timer(duration, DeviceStatus.OFF, id=DEFAULT_TIMER_ID)
         self.state.timer.update_ts()
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
     async def clear_timer(self) -> bool:
-        if self.state.timer is None:
-            _LOGGER.warning('No timer found, run get_timer() to retrieve timer.')
-            return False
+        """Cancel the running timer.
 
-        payload_data = {'id': self.state.timer.id}
+        `delTimerV2` is sent with id `DEFAULT_TIMER_ID`, without reading the
+        timer list or checking `state.timer` first. Every captured timer id on
+        this model is 1.
+
+        Returns:
+            bool: True if successful, False on error.
+        """
+        payload_data = {'id': DEFAULT_TIMER_ID}
         r_dict = await self.call_bypassv2_api('delTimerV2', payload_data)
         r = Helpers.process_dev_response(_LOGGER, 'clear_timer', self, r_dict)
         if r is None:

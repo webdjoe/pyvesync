@@ -87,6 +87,15 @@ KELVIN_MAX = 6500
 RGB_STALE_DATA_TIMEOUT = 180  # Seconds to ignore stale API data after setting values
 RGB_FULL_BRIGHTNESS = 100  # Full brightness percentage
 
+# Timer constants
+DEFAULT_TIMER_ID = 1
+"""Timer id for devices that hold a single timer.
+
+Every captured bypassV2 timer id is 1, and the VeSync app falls back to id 1 when it
+cancels a timer without a known id. These devices hold one timer slot: a second add
+replaces the running timer (id 1), and deleting id 1 with no timer returns success.
+"""
+
 
 class TimeUnits(StrEnum):
     """Time units for VeSync devices.

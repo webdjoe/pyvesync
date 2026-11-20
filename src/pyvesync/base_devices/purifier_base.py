@@ -70,6 +70,12 @@ class PurifierState(DeviceState):
         filter_remain_day (int): Estimated days of filter life remaining.
         child_lock_auto_switch (int): Auto child lock setting (0 off, 1 on).
         child_lock_auto_time (int): Idle time before the auto child lock engages.
+        display_on_type (int): Display on-mode (`PurifierScreenOnType`): 1 always
+            on, 2 on only between `display_start_time` and `display_end_time`.
+        display_start_time (int): Start of the daily display window, in seconds
+            since midnight.
+        display_end_time (int): End of the daily display window, in seconds
+            since midnight.
 
     Note:
         Not all attributes are supported by all models.
@@ -89,8 +95,11 @@ class PurifierState(DeviceState):
         'child_lock_auto_switch',
         'child_lock_auto_time',
         'co2',
+        'display_end_time',
         'display_forever',
+        'display_on_type',
         'display_set_status',
+        'display_start_time',
         'display_status',
         'fan_level',
         'fan_rotate_angle',
@@ -153,6 +162,9 @@ class PurifierState(DeviceState):
         self.filter_remain_day: int | None = None
         self.child_lock_auto_switch: int | None = None
         self.child_lock_auto_time: int | None = None
+        self.display_on_type: int | None = None
+        self.display_start_time: int | None = None
+        self.display_end_time: int | None = None
 
     @property
     def air_quality_level(self) -> int | None:

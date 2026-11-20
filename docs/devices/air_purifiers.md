@@ -115,6 +115,21 @@ await purifier.turn_off_buzzer()     # mute the button beep
 `state.auto_clean_remaining` holds the seconds left. Timers can only turn the
 purifier off.
 
+- `set_manual_mode()` sends the last manual speed (`state.fan_set_level`),
+  not the reported `fan_level`, which can be 0 in Auto.
+- Turning the display on and the child lock re-send settings from the last
+  status, as the VeSync app does, so call `update()` first. A display that is
+  on a daily schedule (`state.display_on_type` 2) keeps its schedule.
+- `clear_timer()` sends `delTimerV2` with id 1 (`DEFAULT_TIMER_ID`), without
+  reading the timer list or checking `state.timer` first. Every captured timer
+  id on this model is 1.
+- `set_timer()` sends `addTimerV2` without checking for a running timer. A new
+  timer replaces the running one.
+- Light detection and filter reset are not supported: the purifier has no
+  light sensor, and no app request to reset the filter has been captured.
+  Reset the Check Filter Indicator on the purifier by holding the Auto Mode
+  button for 3 seconds.
+
 ::: pyvesync.devices.vesyncpurifier.VeSyncAirVitalPetPro
     options:
         filters:

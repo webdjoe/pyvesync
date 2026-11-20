@@ -241,6 +241,8 @@ class TestAirPurifiers(TestBase):
             fan_obj.state.mode = const.PurifierModes.AUTO
         elif method_name in ["turn_on_display"]:
             fan_obj.state.display_set_status = const.DeviceStatus.OFF
+            # Display on-mode normally comes from the last status (Vital Pet Pro)
+            fan_obj.state.display_on_type = const.PurifierScreenOnType.ALWAYS_ON
         elif method_name in ["turn_off_display"]:
             fan_obj.state.display_set_status = const.DeviceStatus.ON
         elif method_name in ["turn_on_child_lock", "turn_off_child_lock"]:
@@ -474,8 +476,8 @@ class TestVitalPetPro(TestBase):
         self.run_in_loop(device.turn_off_auto_clean)
         assert self._sent_data() == {"autoCleanState": 2}
 
-    def test_get_and_clear_timer(self):
-        """getTimerV2 startAct parses and delTimerV2 sends only the id."""
+    def test_get_timer(self):
+        """getTimerV2 startAct parses into the timer."""
         self.mock_api.return_value = (
             call_json_purifiers.METHOD_RESPONSES[self.setup_entry]["get_timer"],
             200,
@@ -486,11 +488,118 @@ class TestVitalPetPro(TestBase):
         assert timer.id == call_json_purifiers.VITAL_PET_PRO_TIMER["id"]
         assert timer.action == const.DeviceStatus.OFF
 
+    @pytest.mark.parametrize("known_timer", [False, True])
+    def test_clear_timer_default_id(self, known_timer):
+        """clear_timer sends one delTimerV2 with id 1, whether or not a timer is known.
+
+        The device holds one timer; no getTimerV2 read and no state check.
+        """
         self.mock_api.return_value = (call_json_purifiers.build_bypass_v2_response(), 200)
+        device = self._device()
+        if known_timer:
+            device.state.timer = Timer(1500, const.DeviceStatus.OFF)
         assert self.run_in_loop(device.clear_timer) is True
+
+        assert self.mock_api.call_count == 1
         assert self._sent_method() == "delTimerV2"
-        assert self._sent_data() == {"id": call_json_purifiers.VITAL_PET_PRO_TIMER["id"]}
+        assert self._sent_data() == {"id": const.DEFAULT_TIMER_ID}
         assert device.state.timer is None
+
+    def test_set_timer_default_id(self):
+        """set_timer sends addTimerV2 without a read and stores the timer with id 1."""
+        self.mock_api.return_value = (
+            call_json_purifiers.build_bypass_v2_response(inner_result={"id": 1}),
+            200,
+        )
+        device = self._device()
+        assert self.run_in_loop(device.set_timer, 600) is True
+
+        assert self.mock_api.call_count == 1
+        assert self._sent_method() == "addTimerV2"
+        assert device.state.timer is not None
+        assert device.state.timer.id == const.DEFAULT_TIMER_ID
+        assert device.state.timer.timer_duration == 600
+
+    def test_details_timer_default_id(self):
+        """A status timerRemain with no known timer builds a timer with id 1."""
+        details = dict(call_json_purifiers.PURIFIER_DETAILS[self.setup_entry])
+        details["timerRemain"] = 1500
+        self.mock_api.return_value = (
+            call_json_purifiers.build_bypass_v2_response(inner_result=details),
+            200,
+        )
+        device = self._device()
+        self.run_in_loop(device.update)
+
+        assert device.state.timer is not None
+        assert device.state.timer.id == const.DEFAULT_TIMER_ID
+
+    @pytest.mark.parametrize("method", ["turn_on_light_detection", "reset_filter"])
+    def test_unsupported_send_nothing(self, method):
+        """No light sensor and no captured filter reset: nothing is sent."""
+        device = self._device()
+        assert self.run_in_loop(getattr(device, method)) is False
+        self.mock_api.assert_not_called()
+
+    def test_manual_mode_uses_manual_level(self):
+        """Manual re-sends manualSpeedLevel even when Auto reports fan level 0.
+
+        Captured: workMode odorShieldQuiet, fanSpeedLevel 0, powerSwitch 1.
+        """
+        self.mock_api.return_value = (call_json_purifiers.build_bypass_v2_response(), 200)
+        device = self._device()
+        device.state.mode = const.PurifierModes.AUTO
+        device.state.fan_level = 0
+        device.state.fan_set_level = 2
+        assert self.run_in_loop(device.set_manual_mode) is True
+        assert self._sent_method() == "setLevel"
+        assert self._sent_data() == {
+            "levelIdx": 0,
+            "levelType": "wind",
+            "manualSpeedLevel": 2,
+        }
+        assert device.state.mode == const.PurifierModes.MANUAL
+
+    def test_details_display_preference(self):
+        """screenPreference maps to the display state fields."""
+        details = dict(call_json_purifiers.PURIFIER_DETAILS[self.setup_entry])
+        details["screenPreference"] = {
+            "screenOnType": 2,
+            "screenStartTime": 28800,
+            "screenEndTime": 79200,
+        }
+        self.mock_api.return_value = (
+            call_json_purifiers.build_bypass_v2_response(inner_result=details),
+            200,
+        )
+        device = self._device()
+        self.run_in_loop(device.update)
+        assert device.state.display_on_type == 2
+        assert device.state.display_start_time == 28800
+        assert device.state.display_end_time == 79200
+
+    def test_display_on_keeps_schedule(self):
+        """A scheduled display is turned on with its window (captured variant)."""
+        self.mock_api.return_value = (call_json_purifiers.build_bypass_v2_response(), 200)
+        device = self._device()
+        device.state.display_set_status = const.DeviceStatus.OFF
+        device.state.display_on_type = const.PurifierScreenOnType.SCHEDULED
+        device.state.display_start_time = 28800
+        device.state.display_end_time = 79200
+        assert self.run_in_loop(device.turn_on_display) is True
+        assert self._sent_data() == {
+            "screenEndTime": 79200,
+            "screenOnType": 2,
+            "screenStartTime": 28800,
+            "screenSwitch": 1,
+        }
+
+    def test_display_on_needs_status(self):
+        """Display on is not sent until the display on-mode is known."""
+        device = self._device()
+        device.state.display_set_status = const.DeviceStatus.OFF
+        assert self.run_in_loop(device.turn_on_display) is False
+        self.mock_api.assert_not_called()
 
     def test_set_timer_on_action_rejected(self):
         """Only power-off timers were captured, so an 'on' timer is refused."""
