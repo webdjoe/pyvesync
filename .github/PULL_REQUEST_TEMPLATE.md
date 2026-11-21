@@ -36,6 +36,5 @@ device behavior without real-hardware testing will be asked to change before rev
 
 - [ ] Tested on the physical device.
   - Model: `____`
-  - Firmware version: `____`
 - [ ] Not applicable (explain why): `____`
 - [ ] I do not own the device; a packet capture is provided / the device has been shared with a maintainer for verification.

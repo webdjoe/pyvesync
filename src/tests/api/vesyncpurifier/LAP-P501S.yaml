@@ -1,0 +1,499 @@
+get_timer:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 5.6.60
+    cid: LAP-P501S-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: LAP-P501S-CID
+    method: bypassV2
+    payload:
+      data: {}
+      method: getTimerV2
+      source: APP
+    phoneBrand: pyvesync
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+    userCountryCode: US
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
+set_auto_mode:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 5.6.60
+    cid: LAP-P501S-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: LAP-P501S-CID
+    method: bypassV2
+    payload:
+      data:
+        workMode: odorShieldBalanced
+      method: setPurifierMode
+      source: APP
+    phoneBrand: pyvesync
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+    userCountryCode: US
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
+set_auto_mode_type:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 5.6.60
+    cid: LAP-P501S-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: LAP-P501S-CID
+    method: bypassV2
+    payload:
+      data:
+        workMode: odorShieldQuiet
+      method: setPurifierMode
+      source: APP
+    phoneBrand: pyvesync
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+    userCountryCode: US
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
+set_fan_speed:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 5.6.60
+    cid: LAP-P501S-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: LAP-P501S-CID
+    method: bypassV2
+    payload:
+      data:
+        levelIdx: 0
+        levelType: wind
+        manualSpeedLevel: 3
+      method: setLevel
+      source: APP
+    phoneBrand: pyvesync
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+    userCountryCode: US
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
+set_manual_mode:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 5.6.60
+    cid: LAP-P501S-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: LAP-P501S-CID
+    method: bypassV2
+    payload:
+      data:
+        levelIdx: 0
+        levelType: wind
+        manualSpeedLevel: 1
+      method: setLevel
+      source: APP
+    phoneBrand: pyvesync
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+    userCountryCode: US
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
+set_sleep_mode:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 5.6.60
+    cid: LAP-P501S-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: LAP-P501S-CID
+    method: bypassV2
+    payload:
+      data:
+        workMode: sleep
+      method: setPurifierMode
+      source: APP
+    phoneBrand: pyvesync
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+    userCountryCode: US
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
+set_timer:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 5.6.60
+    cid: LAP-P501S-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: LAP-P501S-CID
+    method: bypassV2
+    payload:
+      data:
+        startAct:
+        - act: 0
+          num: 0
+          type: powerSwitch
+        total: 1800
+      method: addTimerV2
+      source: APP
+    phoneBrand: pyvesync
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+    userCountryCode: US
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
+turn_off:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 5.6.60
+    cid: LAP-P501S-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: LAP-P501S-CID
+    method: bypassV2
+    payload:
+      data:
+        powerSwitch: 0
+        switchIdx: 0
+      method: setSwitch
+      source: APP
+    phoneBrand: pyvesync
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+    userCountryCode: US
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
+turn_off_auto_clean:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 5.6.60
+    cid: LAP-P501S-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: LAP-P501S-CID
+    method: bypassV2
+    payload:
+      data:
+        autoCleanState: 2
+      method: setAutoClean
+      source: APP
+    phoneBrand: pyvesync
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+    userCountryCode: US
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
+turn_off_buzzer:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 5.6.60
+    cid: LAP-P501S-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: LAP-P501S-CID
+    method: bypassV2
+    payload:
+      data:
+        buzzerSwitch: 0
+      method: setBuzzer
+      source: APP
+    phoneBrand: pyvesync
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+    userCountryCode: US
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
+turn_off_child_lock:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 5.6.60
+    cid: LAP-P501S-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: LAP-P501S-CID
+    method: bypassV2
+    payload:
+      data:
+        childLockAutoSwitch: 0
+        childLockAutoSwitchTime: 60
+        childLockSwitch: 0
+      method: setChildLock
+      source: APP
+    phoneBrand: pyvesync
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+    userCountryCode: US
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
+turn_off_display:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 5.6.60
+    cid: LAP-P501S-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: LAP-P501S-CID
+    method: bypassV2
+    payload:
+      data:
+        screenSwitch: 0
+      method: setDisplay
+      source: APP
+    phoneBrand: pyvesync
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+    userCountryCode: US
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
+turn_on:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 5.6.60
+    cid: LAP-P501S-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: LAP-P501S-CID
+    method: bypassV2
+    payload:
+      data:
+        powerSwitch: 1
+        switchIdx: 0
+      method: setSwitch
+      source: APP
+    phoneBrand: pyvesync
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+    userCountryCode: US
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
+turn_on_auto_clean:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 5.6.60
+    cid: LAP-P501S-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: LAP-P501S-CID
+    method: bypassV2
+    payload:
+      data:
+        autoCleanState: 1
+      method: setAutoClean
+      source: APP
+    phoneBrand: pyvesync
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+    userCountryCode: US
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
+turn_on_buzzer:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 5.6.60
+    cid: LAP-P501S-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: LAP-P501S-CID
+    method: bypassV2
+    payload:
+      data:
+        buzzerSwitch: 1
+      method: setBuzzer
+      source: APP
+    phoneBrand: pyvesync
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+    userCountryCode: US
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
+turn_on_child_lock:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 5.6.60
+    cid: LAP-P501S-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: LAP-P501S-CID
+    method: bypassV2
+    payload:
+      data:
+        childLockAutoSwitch: 0
+        childLockAutoSwitchTime: 60
+        childLockSwitch: 1
+      method: setChildLock
+      source: APP
+    phoneBrand: pyvesync
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+    userCountryCode: US
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
+turn_on_display:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 5.6.60
+    cid: LAP-P501S-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: LAP-P501S-CID
+    method: bypassV2
+    payload:
+      data:
+        screenOnType: 1
+        screenSwitch: 1
+      method: setDisplay
+      source: APP
+    phoneBrand: pyvesync
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+    userCountryCode: US
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
+update:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 5.6.60
+    cid: LAP-P501S-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: LAP-P501S-CID
+    method: bypassV2
+    payload:
+      data: {}
+      method: getPurifierStatus
+      source: APP
+    phoneBrand: pyvesync
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+    userCountryCode: US
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2

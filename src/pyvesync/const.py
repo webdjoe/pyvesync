@@ -87,6 +87,15 @@ KELVIN_MAX = 6500
 RGB_STALE_DATA_TIMEOUT = 180  # Seconds to ignore stale API data after setting values
 RGB_FULL_BRIGHTNESS = 100  # Full brightness percentage
 
+# Timer constants
+DEFAULT_TIMER_ID = 1
+"""Timer id for devices that hold a single timer.
+
+Every captured bypassV2 timer id is 1, and the VeSync app falls back to id 1 when it
+cancels a timer without a known id. These devices hold one timer slot: a second add
+replaces the running timer (id 1), and deleting id 1 with no timer returns success.
+"""
+
 
 class TimeUnits(StrEnum):
     """Time units for VeSync devices.
@@ -634,6 +643,8 @@ class PurifierFeatures(Features):
         PM1: PM1 level status.
         AQPERCENT: Air quality percentage status.
         RESET_FILTER: Reset filter status.
+        BUZZER: Button buzzer (beep) on/off.
+        AUTO_CLEAN: Pre-filter self-cleaning (Vital Pet Pro).
     """
 
     RESET_FILTER = 'reset_filter'
@@ -646,6 +657,35 @@ class PurifierFeatures(Features):
     PM10 = 'pm10'
     PM1 = 'pm1'
     AQPERCENT = 'aq_percent'
+    BUZZER = 'buzzer'
+    AUTO_CLEAN = 'auto_clean'
+
+
+class PurifierAutoCleanState(IntEnum):
+    """`autoCleanState` request values for the `setAutoClean` API call.
+
+    The status response reports `autoCleanState` 1 while a run is active
+    and 0 when idle.
+
+    Attributes:
+        START: Start a self-cleaning run.
+        STOP: Stop the running self-cleaning run.
+    """
+
+    START = 1
+    STOP = 2
+
+
+class PurifierScreenOnType(IntEnum):
+    """`screenOnType` values for the Vital Pet Pro `setDisplay` API call.
+
+    Attributes:
+        ALWAYS_ON: The display stays on.
+        SCHEDULED: The display is on only in a daily time window.
+    """
+
+    ALWAYS_ON = 1
+    SCHEDULED = 2
 
 
 class PurifierStringLevels(Features):
@@ -744,6 +784,24 @@ class PurifierModes(Features):
     TURBO = 'turbo'
     PET = 'pet'
     UNKNOWN = 'unknown'
+
+
+class PurifierAutoModeTypes(Features):
+    """Auto mode types for purifiers whose Auto mode is several work modes.
+
+    On these devices (Vital Pet Pro) each auto mode type is its own API
+    `workMode`. pyvesync reports them as mode `auto`, with the type in
+    `state.auto_mode_type`.
+
+    Attributes:
+        ODOR_SHIELD_QUIET: Auto mode, Quiet preference.
+        ODOR_SHIELD_BALANCED: Auto mode, Balanced preference.
+        ODOR_SHIELD_PERFORMANCE: Auto mode, Performance preference.
+    """
+
+    ODOR_SHIELD_QUIET = 'odorShieldQuiet'
+    ODOR_SHIELD_BALANCED = 'odorShieldBalanced'
+    ODOR_SHIELD_PERFORMANCE = 'odorShieldPerformance'
 
 
 class HumidifierModes(Features):

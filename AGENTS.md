@@ -39,13 +39,13 @@ Authoritative references (read when the topic comes up):
    cannot be implemented. Say so instead of guessing.
 3. **Real-hardware verification is required before merge.** New device support
    and any device-behavior change must be tested on the physical device, and the
-   PR must state the model and firmware. Testing only through Home Assistant does
-   not count. An agent cannot verify hardware: never claim a device works, and
-   flag that a human with the device must test it.
+   PR must state the model. Testing only through Home Assistant does not count.
+   An agent cannot verify hardware: never claim a device works, and flag that a
+   human with the device must test it.
 4. **One change per PR.** A single feature, fix, or edit per branch/PR. Do not
    batch unrelated or speculative edits into one large PR; split them.
 5. **Provide diagnostic info** when adding a device/feature or diagnosing a bug:
-   model, `product_type`, firmware, region, pyvesync and Python version, a
+   model, `product_type`, region, pyvesync and Python version, a
    redacted `DEBUG` log, and `device.last_response`. See contributing.md for the
    per-case lists.
 
@@ -179,7 +179,7 @@ A complete addition touches:
    YAML fixtures, check them against the capture, then run `pytest` to confirm.
 7. Docs: add a `:::` block for the class in `docs/devices/<type>.md`, and list
    the model in `docs/supported_devices.md` and the README device list.
-8. In the PR, state that hardware testing (model + firmware) must be done by a
+8. In the PR, state that hardware testing (with the model) must be done by a
    human with the device.
 
 New *features* on an existing device type: add state to the `DeviceState`

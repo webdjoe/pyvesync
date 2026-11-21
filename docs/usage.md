@@ -198,6 +198,23 @@ if __name__ == "__main__":
 
 For more information on the device methods and properties, see the [device pages](./devices/index.md).
 
+### Timers
+
+Devices with a countdown timer have `set_timer()`, `get_timer()` and `clear_timer()`. The timer is held in `device.state.timer`, which is `None` when no timer is known. Most devices hold one timer at a time.
+
+```python
+from pyvesync.const import DeviceStatus
+
+await purifier.set_timer(1800, DeviceStatus.OFF)  # Turn off in 30 minutes
+timer = purifier.state.timer
+if timer is not None:
+    print(timer.time_remaining, timer.action, timer.running)
+await purifier.get_timer()    # Read the timer from the API into state.timer
+await purifier.clear_timer()  # Cancel the timer
+```
+
+`time_remaining` counts down locally from the last time the timer was set or read. Devices that report the remaining time in their status also refresh it on `update()`. See [Timers](./development/timers.md) for how each device family handles timers.
+
 All devices have the ability to serialize the attributes and state with the `to_json()` and `to_jsonb()` methods. The `to_json()` method returns a JSON string, while the `to_jsonb()` method returns the same JSON as `bytes`. The `to_jsonb()` method is useful for storing the device state in a database or sending it to an API.
 
 ```python

@@ -26,13 +26,6 @@ body:
     validations:
       required: true
   - type: input
-    id: firmware
-    attributes:
-      label: Firmware version
-      description: Found in the VeSync app under device settings.
-    validations:
-      required: true
-  - type: input
     id: region
     attributes:
       label: Region / country code
