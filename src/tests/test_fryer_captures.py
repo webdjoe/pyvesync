@@ -75,6 +75,49 @@ P583_COOK_END_RESULT = {
 }
 
 
+def _cs358_status(
+    cook_status: str,
+    *,
+    cook_set_time: int = 900,
+    cook_last_time: int = 900,
+    preheat: tuple[int, int, int] = (0, 0, 0),
+    total: int = 900,
+) -> dict:
+    """Build a CS358-AF getAirfryerStatus response (app Manual, 350 F, capture 2026-11-07)."""
+    preheat_set, preheat_last, preheat_temp = preheat
+    return build_bypass_v2_response(
+        inner_result={
+            'stepArray': [
+                {
+                    'cookSetTime': cook_set_time,
+                    'cookTemp': 350,
+                    'mode': 'Custom',
+                    'cookLastTime': cook_last_time,
+                    'shakeTime': 0,
+                    'cookEndTime': 0,
+                    'recipeName': 'Manual',
+                    'recipeId': 11,
+                    'recipeType': 3,
+                }
+            ],
+            'stepIndex': 0,
+            'cookMode': 'normal',
+            'cookStatus': cook_status,
+            'tempUnit': 'f',
+            'preheatSetTime': preheat_set,
+            'preheatLastTime': preheat_last,
+            'preheatEndTime': 0,
+            'preheatTemp': preheat_temp,
+            'startTime': 1794066380,
+            'totalTimeRemaining': total,
+            # The unit reports 0 in every state.
+            'currentTemp': 0,
+            'appointLastTime': 0,
+            'shakeStatus': 0,
+        }
+    )
+
+
 def _dc601s_status(
     cook_status: str,
     *,
@@ -944,3 +987,191 @@ def test_resumable_flag_has_implementation():
         cls = getattr(entry.module, entry.class_name)
         assert cls.stop is not VeSyncFryer.stop, entry.setup_entry
         assert cls.resume is not VeSyncFryer.resume, entry.setup_entry
+
+
+# CS358-AF: values read from a physical US unit. Once preheat has
+# finished the unit keeps the queued cook step and waits; preheatCook
+# starts that step.
+class TestFryerCookFromPreheat(TestBase):
+    """Request and state tests for cook_from_preheat on bypassV2 fryers."""
+
+    def _preheated_fryer(self):
+        fryer = self.get_device('air_fryers', 'CS358-AF')
+        self.mock_api.return_value = (call_json_fryers.CS358_PREHEAT_END_RESPONSE, 200)
+        self.run_in_loop(fryer.update)
+        return fryer
+
+    def test_update_reports_preheat_end_with_cook_step(self):
+        fryer = self._preheated_fryer()
+        defaults = call_json_fryers.AirFryerDefaults
+        assert fryer.state.cook_status == AirFryerCookStatus.PREHEAT_END
+        assert fryer.state.cook_set_temp == defaults.cook_temp_f
+        assert fryer.state.cook_set_time == defaults.cook_time_s
+        assert fryer.state.cook_mode == 'Custom'
+
+    def test_cook_from_preheat_sends_preheat_cook(self):
+        fryer = self._preheated_fryer()
+        self.mock_api.reset_mock()
+        self.mock_api.return_value = (build_bypass_v2_response(inner_result={}), 200)
+
+        assert self.run_in_loop(fryer.cook_from_preheat) is True
+
+        assert self.mock_api.call_count == 1
+        kwargs = parse_args(self.mock_api)
+        assert kwargs['url'] == '/cloud/v2/deviceManaged/bypassV2'
+        payload = kwargs['json_object']['payload']
+        assert payload['method'] == 'preheatCook'
+        assert payload['data'] == {}
+        assert fryer.state.cook_status == AirFryerCookStatus.COOKING
+
+    def test_cook_from_preheat_requires_preheat_end(self):
+        fryer = self.get_device('air_fryers', 'CS358-AF')
+        self.mock_api.return_value = (
+            call_json_fryers.DETAILS_RESPONSES_COOKING['CS358-AF'],
+            200,
+        )
+        self.run_in_loop(fryer.update)
+        self.mock_api.reset_mock()
+
+        assert self.run_in_loop(fryer.cook_from_preheat) is False
+        assert self.mock_api.call_count == 0
+
+    def test_cook_from_preheat_requires_preheat_cook_feature(self):
+        """The DC601S shares the class and preheats, but preheatCook is uncaptured."""
+        fryer = self.get_device('air_fryers', 'CAF-DC601S')
+        assert AirFryerFeatures.PREHEAT in fryer.features
+        assert AirFryerFeatures.PREHEAT_COOK not in fryer.features
+        # Force the status so only the feature check can stop the call.
+        fryer.state.cook_status = AirFryerCookStatus.PREHEAT_END
+        self.mock_api.reset_mock()
+
+        assert self.run_in_loop(fryer.cook_from_preheat) is False
+        assert self.mock_api.call_count == 0
+
+    def test_cook_from_preheat_failure_leaves_state(self):
+        fryer = self._preheated_fryer()
+        self.mock_api.reset_mock()
+        self.mock_api.return_value = (None, 200)
+
+        assert self.run_in_loop(fryer.cook_from_preheat) is False
+        assert fryer.state.cook_status == AirFryerCookStatus.PREHEAT_END
+
+
+class TestCS358TemperatureRange(TestBase):
+    """The declared range must be settable at both ends in both units."""
+
+    def test_range_ends_are_settable(self):
+        fryer = self.get_device('air_fryers', 'CS358-AF')
+        for unit in (TemperatureUnits.FAHRENHEIT, TemperatureUnits.CELSIUS):
+            fryer.temp_unit = unit
+            assert fryer.prepare_temperature(fryer.min_temp) == fryer.min_temp
+            assert fryer.prepare_temperature(fryer.max_temp) == fryer.max_temp
+
+
+class TestCS358Statuses(TestBase):
+    """Every status the physical unit reported maps to a library status."""
+
+    def test_reported_statuses_are_mapped(self):
+        fryer = self.get_device('air_fryers', 'CS358-AF')
+        expected = {
+            'ready': AirFryerCookStatus.READY,
+            'heating': AirFryerCookStatus.HEATING,
+            'preheatStop': AirFryerCookStatus.PREHEAT_STOP,
+            'preheatEnd': AirFryerCookStatus.PREHEAT_END,
+            'cooking': AirFryerCookStatus.COOKING,
+            'cookStop': AirFryerCookStatus.COOK_STOP,
+            'cookEnd': AirFryerCookStatus.COOK_END,
+            'pullOut': AirFryerCookStatus.PULL_OUT,
+            'keeping': AirFryerCookStatus.COOKING,
+        }
+        for reported, status in expected.items():
+            details = deepcopy(call_json_fryers.CS358_PREHEAT_END_DETAILS)
+            details['cookStatus'] = reported
+            self.mock_api.return_value = (
+                build_bypass_v2_response(inner_result=details),
+                200,
+            )
+            self.run_in_loop(fryer.update)
+            assert fryer.state.cook_status == status, reported
+
+
+class TestCS358StartPayload(TestBase):
+    """A manual cook sends the mode and recipe names the unit was tested with."""
+
+    def test_set_mode_sends_manual_cook(self):
+        fryer = self.get_device('air_fryers', 'CS358-AF')
+        self.mock_api.return_value = (build_bypass_v2_response(), 200)
+        assert self.run_in_loop(fryer.set_mode, cook_time=600, cook_temp=350)
+        payload = parse_args(self.mock_api)['json_object']['payload']
+        assert payload['method'] == 'startCook'
+        data = payload['data']
+        # CS358-AF capture: the app's Manual is mode Custom, recipe 11.
+        assert data['mode'] == 'Custom'
+        assert data['recipeName'] == 'Manual'
+        assert data['recipeId'] == 11
+        assert data['hasLinkage'] is False
+        assert data['recipeType'] == 3
+        assert data['readyStart'] is False
+        assert data['startAct'] == {
+            'cookSetTime': 600,
+            'cookTemp': 350,
+            'preheatTemp': 0,
+            'shakeTime': 0,
+        }
+
+    def test_set_mode_preset_matches_capture(self):
+        # CS358-AF capture: French fries is sent as mode 'French fries',
+        # recipe 6, name 'French Fries'.
+        fryer = self.get_device('air_fryers', 'CS358-AF')
+        self.mock_api.return_value = (build_bypass_v2_response(), 200)
+        assert self.run_in_loop(
+            fryer.set_mode, cook_time=60, cook_temp=170,
+            cook_mode=AirFryerCookModes.FRENCH_FRIES,
+        )
+        data = parse_args(self.mock_api)['json_object']['payload']['data']
+        assert (data['mode'], data['recipeId'], data['recipeName']) == (
+            'French fries', 6, 'French Fries'
+        )
+        assert data['startAct']['cookSetTime'] == 60
+        assert data['startAct']['cookTemp'] == 170
+
+
+# CS358-AF capture 2026-11-07 (UTC times): status polls after app-started cooks.
+CS358_CAPTURED_STATUSES = [
+    # (cookStatus, builder kwargs, expected status, preheat left, cook left)
+    ('ready', {}, AirFryerCookStatus.READY, None, 900),  # 15:46:26
+    ('cookStop', {'cook_last_time': 835, 'total': 835},
+     AirFryerCookStatus.COOK_STOP, None, 835),  # 15:50:07
+    ('pullOut', {'cook_last_time': 812, 'total': 812},
+     AirFryerCookStatus.PULL_OUT, None, 812),  # 15:50:55
+    ('heating', {'preheat': (240, 238, 350), 'total': 1138},
+     AirFryerCookStatus.HEATING, 238, None),  # 15:52:15
+    ('preheatStop', {'preheat': (240, 215, 350), 'total': 1115},
+     AirFryerCookStatus.PREHEAT_STOP, 215, None),  # 15:52:41
+    ('preheatEnd', {'preheat': (240, 0, 350)},
+     AirFryerCookStatus.PREHEAT_END, None, None),  # 15:57:34
+    ('cookEnd', {'cook_set_time': 60, 'cook_last_time': 0, 'total': 0},
+     AirFryerCookStatus.COOK_END, None, None),  # 16:04:37
+]
+
+
+class TestCS358CapturedStatuses(TestBase):
+    """The CS358-AF parses every status polled in the capture."""
+
+    @pytest.mark.parametrize(
+        ('reported', 'kwargs', 'status', 'preheat_left', 'cook_left'),
+        CS358_CAPTURED_STATUSES,
+        ids=[row[0] for row in CS358_CAPTURED_STATUSES],
+    )
+    def test_captured_status(self, reported, kwargs, status, preheat_left, cook_left):
+        fryer = self.get_device('air_fryers', 'CS358-AF')
+        self.mock_api.return_value = (_cs358_status(reported, **kwargs), 200)
+        self.run_in_loop(fryer.update)
+        state = fryer.state
+        assert state.cook_status == status
+        assert state.cook_mode == 'Custom'
+        assert state.cook_set_temp == 350
+        if preheat_left is not None:
+            assert abs(state.preheat_time_remaining - preheat_left) <= 1
+        if cook_left is not None and status != AirFryerCookStatus.PULL_OUT:
+            assert abs(state.cook_time_remaining - cook_left) <= 1

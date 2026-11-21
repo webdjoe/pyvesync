@@ -96,6 +96,21 @@ APK_PRESETS['CAF-P583S-KEU'] = APK_PRESETS['CAF-P583S']
 APK_PRESETS['CAF-TF102S'] = {
     mode: row for mode, row in APK_PRESETS['CAF-TF101S'].items() if mode != 'Dry'
 }
+# APK i61.j (CS358Config); names from the CS358-AF startCook capture.
+_CS358_C, _CS358_F = (75, 205, 5), (170, 400, 10)
+APK_PRESETS['CS358-AF'] = {
+    'Custom': (11, 'Manual', 900, _CS358_C, _CS358_F, (177, 350)),
+    'Chicken': (2, 'Chicken', 1380, _CS358_C, _CS358_F, (193, 380)),
+    'Frozen': (5, 'Frozen', 480, _CS358_C, _CS358_F, (193, 380)),
+    'French fries': (6, 'French Fries', 1500, _CS358_C, _CS358_F, (160, 380)),
+    'Steak': (1, 'Steak', 360, _CS358_C, _CS358_F, (204, 400)),
+    'Bacon': (4, 'Bacon', 480, _CS358_C, _CS358_F, (160, 320)),
+    'Seafood': (3, 'Seafood', 480, _CS358_C, _CS358_F, (177, 350)),
+    'Vegetables': (7, 'Vegetables', 480, _CS358_C, _CS358_F, (160, 320)),
+    'Shrimp': (8, 'Shrimp', 360, _CS358_C, _CS358_F, (188, 370)),
+    'Bake': (9, 'Bake', 2100, _CS358_C, _CS358_F, (149, 300)),
+    'Toast': (10, 'Toast', 480, _CS358_C, _CS358_F, (160, 320)),
+}
 
 
 def _as_rows(entry):
