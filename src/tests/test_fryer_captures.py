@@ -21,6 +21,7 @@ from pyvesync.const import (
     AirFryerCookStatus,
     AirFryerFeatures,
     AirFryerPresets,
+    AirFryerSyncType,
     TemperatureUnits,
 )
 from pyvesync.const import AirFryerChamber as Ch
@@ -343,6 +344,48 @@ class TestFryerCaptures(TestBase):
                 'shakeTime': 0,
             }
         ]
+
+    def test_dc111s_ready_start_waits_for_button(self):
+        # CAF-DC111S-AEU hardware test 2026-11-07 (firmware 2.0.02): startMultiCook
+        # with readyStart true is accepted, the chamber reports ready and starts
+        # with the start button on the fryer.
+        fryer = self.get_device('air_fryers', 'CAF-DC111S-AEU')
+        self.mock_api.return_value = (build_bypass_v2_response(), 200)
+        recipe = replace(fryer.get_mode_recipe('AirFry'), target_temp=180, cook_time=300)
+        assert self.run_in_loop(fryer.set_mode_from_recipe, recipe, ready_start=True)
+        data = self._sent_body()['payload']['data']
+        assert data['readyStart'] is True
+        assert data['workChamber'] == 1
+        state = fryer.state_chamber_1
+        assert state.cook_status == AirFryerCookStatus.READY
+        assert (state.cook_set_temp, state.cook_set_time) == (180, 300)
+
+    def test_dc111s_ready_start_both_chambers(self):
+        fryer = self.get_device('air_fryers', 'CAF-DC111S-AEU')
+        self.mock_api.return_value = (build_bypass_v2_response(), 200)
+        first = replace(fryer.get_mode_recipe('AirFry'), cook_time=300)
+        second = replace(fryer.get_mode_recipe('Bake'), cook_time=120)
+        assert self.run_in_loop(
+            fryer.set_chamber_modes,
+            first,
+            second,
+            sync_type=AirFryerSyncType.SYNC,
+            ready_start=True,
+        )
+        assert self._sent_body()['payload']['data']['readyStart'] is True
+        assert fryer.state_chamber_1.cook_status == AirFryerCookStatus.READY
+        assert fryer.state_chamber_2.cook_status == AirFryerCookStatus.READY
+
+    @pytest.mark.parametrize('setup_entry', ['CS158-AF', 'CAF-DC601S', 'CAF-TF101S'])
+    def test_ready_start_unsupported_sends_nothing(self, setup_entry):
+        fryer = self.get_device('air_fryers', setup_entry)
+        self.mock_api.reset_mock()
+        recipe = fryer.get_mode_recipe()
+        assert (
+            self.run_in_loop(fryer.set_mode_from_recipe, recipe, ready_start=True)
+            is False
+        )
+        assert self.mock_api.call_count == 0
 
     def test_tf101s_grill_sends_grill_recipe(self):
         # Structure: TF101S startMultiCook capture; values: APK i61.C67928f0.

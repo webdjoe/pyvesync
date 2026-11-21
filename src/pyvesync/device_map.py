@@ -1907,6 +1907,7 @@ air_fryer_modules: list[AirFryerMap] = [
             AirFryerFeatures.CHAMBER_MODES,
             AirFryerFeatures.COOK_CONFIG_SHAKE_TIME,
             AirFryerFeatures.RESUMABLE,
+            AirFryerFeatures.READY_START,
         ],
         cook_modes=_DC111S_COOK_MODES,
         default_cook_mode=AirFryerCookModes.AIRFRY,

@@ -1241,6 +1241,13 @@ class VeSyncFryer(VeSyncBaseDevice[FryerState]):
         logger.info('resume not supported by this fryer.')
         return False
 
+    def _ready_start_supported(self, ready_start: bool) -> bool:
+        """Return False and log when ``ready_start`` is not supported."""
+        if ready_start and AirFryerFeatures.READY_START not in self.features:
+            logger.warning('ready_start is not supported by %s', self.device_name)
+            return False
+        return True
+
     async def set_mode(
         self,
         cook_time: int,
@@ -1299,6 +1306,7 @@ class VeSyncFryer(VeSyncBaseDevice[FryerState]):
         chamber_2: AirFryerPresetRecipe | None = None,
         *,
         sync_type: AirFryerSyncType = AirFryerSyncType.SYNC,
+        ready_start: bool = False,
     ) -> bool:
         """Start a recipe in each chamber, or one recipe in both.
 
@@ -1317,12 +1325,17 @@ class VeSyncFryer(VeSyncBaseDevice[FryerState]):
             sync_type (AirFryerSyncType): ``SYNC`` for separate recipes that
                 finish together, ``OFF`` for separate recipes that each run on
                 their own time, or ``MATCH`` for identical settings.
+            ready_start (bool): True sends the cook without starting it: the
+                fryer shows it and waits for its start button (status
+                ``READY``). Only fryers with the ``READY_START`` feature;
+                others return False without a request. Default False starts
+                the cook at once.
 
         Returns:
             bool: True if the command was successful. An unsupported fryer or
             an invalid combination returns False without a request.
         """
-        del chamber_1, chamber_2, sync_type
+        del chamber_1, chamber_2, sync_type, ready_start
         logger.debug('Separate chamber modes are not configured for %s', self.device_name)
         return False
 
@@ -1331,6 +1344,7 @@ class VeSyncFryer(VeSyncBaseDevice[FryerState]):
         recipe: AirFryerPresetRecipe,
         *,
         chamber: AirFryerChamber | int = AirFryerChamber.CHAMBER_1,
+        ready_start: bool = False,
     ) -> bool:
         """Start a cook from a recipe.
 
@@ -1348,6 +1362,11 @@ class VeSyncFryer(VeSyncBaseDevice[FryerState]):
             chamber (AirFryerChamber | int): The chamber to cook in. Default is
                 ``CHAMBER_1``. A chamber not in ``supported_chambers`` returns
                 False without a request.
+            ready_start (bool): True sends the cook without starting it: the
+                fryer shows it and waits for its start button (status
+                ``READY``). Only fryers with the ``READY_START`` feature;
+                others return False without a request. Default False starts
+                the cook at once.
 
         Returns:
             bool: True if the command was successful, False otherwise.
@@ -1357,7 +1376,7 @@ class VeSyncFryer(VeSyncBaseDevice[FryerState]):
             ``dataclasses.replace``. See
             [AirFryerPresetRecipe][pyvesync.const.AirFryerPresetRecipe].
         """
-        del recipe, chamber
+        del recipe, chamber, ready_start
         logger.warning(
             'set_mode_from_recipe method not implemented for base fryer class.'
         )
