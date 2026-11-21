@@ -1133,7 +1133,7 @@ purifier_modules: list[PurifierMap] = [
         ],
         fan_levels=list(range(1, 4)),
         device_alias='Vital Pet Pro',
-        model_display='LAP-P201S/P501S Series',
+        model_display='LAP-P501S Series',
         model_name='Vital Pet Pro',
         setup_entry='LAP-P501S',
     ),
