@@ -27,9 +27,11 @@ See Also
 """
 
 import logging
+from copy import deepcopy
 from dataclasses import asdict
 import pytest
 import pyvesync.const as const
+from pyvesync.const import HumidifierModes
 from pyvesync.base_devices.humidifier_base import VeSyncHumidifier
 from base_test_cases import TestBase
 from utils import assert_test, parse_args
@@ -379,3 +381,38 @@ class TestHumidifiers(TestBase):
         assert obj.state.rgb_nightlight_red == 0
         assert obj.state.rgb_nightlight_green == 0
         assert obj.state.rgb_nightlight_blue == 0
+
+    def _details_reporting_mode(self, setup_entry, raw_mode):
+        """Return the device's details response with its mode field set to `raw_mode`."""
+        response = deepcopy(call_json_humidifiers.DETAILS_RESPONSES[setup_entry])
+        inner = response["result"]["result"]
+        inner["workMode" if "workMode" in inner else "mode"] = raw_mode
+        return response, 200
+
+    def test_set_humidity_out_of_range_sends_nothing(self, setup_entry):
+        """Targets outside the device's `target_minmax` are refused before any request."""
+        obj = self.get_device("humidifiers", setup_entry)
+        low, high = obj.target_minmax
+        assert self.run_in_loop(obj.set_humidity, low - 1) is False
+        assert self.run_in_loop(obj.set_humidity, high + 1) is False
+        self.mock_api.assert_not_called()
+
+    def test_unsupported_modes_send_nothing(self, setup_entry):
+        """Modes missing from the device's `mist_modes` are refused before any request."""
+        obj = self.get_device("humidifiers", setup_entry)
+        for mode in set(HumidifierModes) - set(obj.mist_modes):
+            assert self.run_in_loop(obj.set_mode, mode) is False
+        self.mock_api.assert_not_called()
+
+    def test_reported_modes(self, setup_entry):
+        """Each reported mode string maps back to its mode; unknown ones log a warning."""
+        obj = self.get_device("humidifiers", setup_entry)
+        for mode, raw_mode in obj.mist_modes.items():
+            self.mock_api.return_value = self._details_reporting_mode(setup_entry, raw_mode)
+            self.run_in_loop(obj.update)
+            assert obj.state.mode == mode
+        self.mock_api.return_value = self._details_reporting_mode(setup_entry, "bogus")
+        with self.caplog.at_level(logging.WARNING):
+            self.run_in_loop(obj.update)
+        assert obj.state.mode is None
+        assert "Unknown mist mode received: bogus" in self.caplog.text

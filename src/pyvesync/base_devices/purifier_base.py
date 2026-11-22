@@ -42,6 +42,8 @@ class PurifierState(DeviceState):
         filter_life (int): Filter life percentage of the purifier.
         auto_preference_type (str): Auto preference type of the purifier.
         auto_room_size (int): Auto room size of the purifier.
+        auto_mode_type (str): Last known auto mode type on devices whose Auto
+            mode is several work modes (`PurifierAutoModeTypes`).
         air_quality_level (AirQualityLevel): Air quality level of the purifier.
         child_lock (bool): Child lock status of the purifier.
         display_status (str): Display status of the purifier.
@@ -61,6 +63,19 @@ class PurifierState(DeviceState):
         voc (int): VOC value of the purifier.
         co2 (int): CO2 value of the purifier.
         nightlight_brightness (int): Nightlight brightness level of the purifier.
+        buzzer_status (str): Button buzzer setting, 'on' or 'off'.
+        auto_clean_status (bool): True while a self-cleaning run is active.
+        auto_clean_remaining (int): Seconds left in the running self-cleaning run.
+        auto_clean_total (int): Length of the running self-cleaning run in seconds.
+        filter_remain_day (int): Estimated days of filter life remaining.
+        child_lock_auto_switch (int): Auto child lock setting (0 off, 1 on).
+        child_lock_auto_time (int): Idle time before the auto child lock engages.
+        display_on_type (int): Display on-mode (`PurifierScreenOnType`): 1 always
+            on, 2 on only between `display_start_time` and `display_end_time`.
+        display_start_time (int): Start of the daily display window, in seconds
+            since midnight.
+        display_end_time (int): End of the daily display window, in seconds
+            since midnight.
 
     Note:
         Not all attributes are supported by all models.
@@ -70,13 +85,23 @@ class PurifierState(DeviceState):
         '_air_quality_level',
         'aq_percent',
         'aqi',
+        'auto_clean_remaining',
+        'auto_clean_status',
+        'auto_clean_total',
+        'auto_mode_type',
         'auto_preference_type',
         'auto_room_size',
+        'buzzer_status',
         'carbon_filter_life',
         'child_lock',
+        'child_lock_auto_switch',
+        'child_lock_auto_time',
         'co2',
+        'display_end_time',
         'display_forever',
+        'display_on_type',
         'display_set_status',
+        'display_start_time',
         'display_status',
         'fan_level',
         'fan_rotate_angle',
@@ -112,10 +137,10 @@ class PurifierState(DeviceState):
         self.filter_life: int | None = None
         self.carbon_filter_life: int | None = None
         self.pre_filter_life: int | None = None
-        self.filter_remain_day: int | None = None
         self.aqi: int | None = None
         self.auto_preference_type: str | None = None
         self.auto_room_size: int | None = None
+        self.auto_mode_type: str | None = None
         self._air_quality_level: AirQualityLevel | None = None
         self.child_lock: bool | None = None
         self.filter_open_state: bool = False
@@ -136,6 +161,16 @@ class PurifierState(DeviceState):
         self.nightlight_brightness: int | None = None
         self.nightlight_status: str | None = None
         self.fan_rotate_angle: int | None = None
+        self.buzzer_status: str | None = None
+        self.auto_clean_status: bool | None = None
+        self.auto_clean_remaining: int | None = None
+        self.auto_clean_total: int | None = None
+        self.filter_remain_day: int | None = None
+        self.child_lock_auto_switch: int | None = None
+        self.child_lock_auto_time: int | None = None
+        self.display_on_type: int | None = None
+        self.display_start_time: int | None = None
+        self.display_end_time: int | None = None
 
     @property
     def air_quality_level(self) -> int | None:
@@ -245,9 +280,16 @@ class VeSyncPurifier(VeSyncBaseToggleDevice):
         fan_levels (list[int]): List of fan levels supported by the device.
         nightlight_modes (list[str]): List of nightlight modes supported by the device.
         auto_preferences (list[str]): List of auto preferences supported by the device.
+        auto_mode_types (list[str]): Auto mode types supported by the device.
     """
 
-    __slots__ = ('auto_preferences', 'fan_levels', 'modes', 'nightlight_modes')
+    __slots__ = (
+        'auto_mode_types',
+        'auto_preferences',
+        'fan_levels',
+        'modes',
+        'nightlight_modes',
+    )
 
     def __init__(
         self,
@@ -263,6 +305,7 @@ class VeSyncPurifier(VeSyncBaseToggleDevice):
         self.fan_levels: list[int] = feature_map.fan_levels
         self.nightlight_modes: list[str] = feature_map.nightlight_modes
         self.auto_preferences: list[str] = feature_map.auto_preferences
+        self.auto_mode_types: list[str] = feature_map.auto_mode_types
 
     @property
     def supports_air_quality(self) -> bool:
@@ -283,6 +326,66 @@ class VeSyncPurifier(VeSyncBaseToggleDevice):
     def supports_light_detection(self) -> bool:
         """Returns True if device supports light detection."""
         return PurifierFeatures.LIGHT_DETECT in self.features
+
+    @property
+    def supports_buzzer(self) -> bool:
+        """Return True if device supports turning the button buzzer on/off."""
+        return PurifierFeatures.BUZZER in self.features
+
+    @property
+    def supports_auto_clean(self) -> bool:
+        """Return True if device supports pre-filter self-cleaning."""
+        return PurifierFeatures.AUTO_CLEAN in self.features
+
+    async def toggle_buzzer(self, toggle: bool | None = None) -> bool:
+        """Toggle the button buzzer (beep).
+
+        Args:
+            toggle (bool | None): True to turn the buzzer on, False to turn it
+                off. If None, toggle the current state.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        del toggle
+        if not self.supports_buzzer:
+            logger.debug('Buzzer not supported for this device.')
+        else:
+            logger.debug('Buzzer not configured for this device.')
+        return False
+
+    async def turn_on_buzzer(self) -> bool:
+        """Turn on the button buzzer."""
+        return await self.toggle_buzzer(True)
+
+    async def turn_off_buzzer(self) -> bool:
+        """Turn off the button buzzer."""
+        return await self.toggle_buzzer(False)
+
+    async def toggle_auto_clean(self, toggle: bool | None = None) -> bool:
+        """Start or stop a pre-filter self-cleaning run.
+
+        Args:
+            toggle (bool | None): True to start a run, False to stop the
+                running one. If None, toggle the current state.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        del toggle
+        if not self.supports_auto_clean:
+            logger.debug('Self-cleaning not supported for this device.')
+        else:
+            logger.debug('Self-cleaning not configured for this device.')
+        return False
+
+    async def turn_on_auto_clean(self) -> bool:
+        """Start a pre-filter self-cleaning run."""
+        return await self.toggle_auto_clean(True)
+
+    async def turn_off_auto_clean(self) -> bool:
+        """Stop the running pre-filter self-cleaning run."""
+        return await self.toggle_auto_clean(False)
 
     async def toggle_display(self, mode: bool) -> bool:
         """Set Display Mode."""
@@ -417,6 +520,26 @@ class VeSyncPurifier(VeSyncBaseToggleDevice):
         """
         del preference, room_size
         logger.debug('Auto preference not configured for this device.')
+        return False
+
+    async def set_auto_mode_type(self, auto_mode_type: str) -> bool:
+        """Set the auto mode type and switch the purifier to auto mode.
+
+        Only for devices whose Auto mode is several work modes. The types
+        are listed in `self.auto_mode_types`.
+
+        Args:
+            auto_mode_type (str): Auto mode type to set, from
+                `self.auto_mode_types` (`PurifierAutoModeTypes`).
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        del auto_mode_type
+        if not self.auto_mode_types:
+            logger.debug('Auto mode types not supported for this device.')
+        else:
+            logger.debug('Auto mode types not configured for this device.')
         return False
 
     async def toggle_light_detection(self, toggle: bool | None = None) -> bool:

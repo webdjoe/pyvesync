@@ -325,7 +325,49 @@ PURIFIER_DETAILS: dict[str, dict[str, Any]] = {
         },
         "guardingInfo": {"guarding": 0, "remainTS": 100},
     },
+    "LAP-P501S": {  # Vital Pet Pro, shape from captured getPurifierStatus
+        "powerSwitch": int(DeviceStatus.ON),
+        "workMode": PurifierDefaults.purifier_mode,
+        "manualSpeedLevel": PurifierDefaults.fan_set_level,
+        "fanSpeedLevel": PurifierDefaults.fan_level,
+        "AQLevel": PurifierDefaults.air_quality_level,
+        "PM25": PurifierDefaults.air_quality_value_pm25,
+        "VOC": 1,
+        "odorLevel": 1,
+        "filterLifePercent": PurifierDefaults.filter_life,
+        "filterRemainDay": 159,
+        "filterOpenState": PurifierDefaults.filter_open,
+        "resetFilterDate": 0,
+        "screenState": int(PurifierDefaults.display),
+        "screenSwitch": int(PurifierDefaults.display_config),
+        "screenPreference": {
+            "screenOnType": 1,
+            "screenStartTime": 28800,
+            "screenEndTime": 79200,
+        },
+        "childLockSwitch": int(PurifierDefaults.child_lock),
+        "childLockPreference": {
+            "childLockAutoSwitch": 0,
+            "childLockAutoSwitchTime": 60,
+        },
+        "buzzerSwitch": 1,
+        "autoCleanPreference": {
+            "autoCleanState": 0,
+            "autoCleanRemainTime": 0,
+            "autoCleanTotalTime": 0,
+            "previousCleanTime": 20,
+        },
+        "scheduleCount": 0,
+        "timerRemain": 0,
+        "errorCode": 0,
+        "errorCodes": [],
+        "cumulativeCleanAir": 66337,
+        "totalCleanAir": 66337,
+    },
 }
+
+VITAL_PET_PRO_TIMER = {"id": 1, "remain": 1777, "total": 1800}
+"""Timer values from the captured Vital Pet Pro getTimerV2 response."""
 
 
 DETAILS_RESPONSES = {
@@ -342,6 +384,7 @@ DETAILS_RESPONSES = {
     "LAP-V201S": build_bypass_v2_response(inner_result=PURIFIER_DETAILS["LAP-V201S"]),
     "EL551S": build_bypass_v2_response(inner_result=PURIFIER_DETAILS["EL551S"]),
     "LAP-B851S-WUS": build_bypass_v2_response(inner_result=PURIFIER_DETAILS["LAP-B851S-WUS"]),
+    "LAP-P501S": build_bypass_v2_response(inner_result=PURIFIER_DETAILS["LAP-P501S"]),
 }
 
 FunctionResponses.default_factory = lambda: (
@@ -366,6 +409,7 @@ METHOD_RESPONSES = {
     "EL551S": deepcopy(FunctionResponsesV2),
     "LAP-B851S-WUS": deepcopy(FunctionResponsesV2),
     "LAP-C341S-WEU": deepcopy(FunctionResponsesV2),
+    "LAP-P501S": deepcopy(FunctionResponsesV2),
 }
 
 CONTROL_METHODS = {
@@ -393,6 +437,20 @@ CONTROL_PAYLOADS = {
         'levelType': 'wind',
     },
 }
+
+METHOD_RESPONSES["LAP-P501S"]["set_timer"] = build_bypass_v2_response(
+    inner_result={"id": VITAL_PET_PRO_TIMER["id"]}
+)
+METHOD_RESPONSES["LAP-P501S"]["get_timer"] = build_bypass_v2_response(
+    inner_result={
+        "timers": [
+            {
+                **VITAL_PET_PRO_TIMER,
+                "startAct": [{"type": "powerSwitch", "act": 0, "num": 0}],
+            }
+        ]
+    }
+)
 
 # Add responses for methods with different responses than the default
 

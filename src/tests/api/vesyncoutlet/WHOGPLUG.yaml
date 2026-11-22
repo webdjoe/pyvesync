@@ -1,3 +1,82 @@
+get_monthly_energy:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 5.6.60
+    cid: WHOGPLUG-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: WHOGPLUG-CID
+    method: bypassV2
+    payload:
+      data:
+        fromDay: 1695168000
+        toDay: 1697673600
+      method: getEnergyHistory
+      source: APP
+    phoneBrand: pyvesync
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+    userCountryCode: US
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
+get_weekly_energy:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 5.6.60
+    cid: WHOGPLUG-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: WHOGPLUG-CID
+    method: bypassV2
+    payload:
+      data:
+        fromDay: 1697155200
+        toDay: 1697673600
+      method: getEnergyHistory
+      source: APP
+    phoneBrand: pyvesync
+    phoneOS: Android
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+    userCountryCode: US
+  method: post
+  url: /cloud/v2/deviceManaged/bypassV2
+get_yearly_energy:
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    acceptLanguage: en
+    accountID: sample_id
+    appVersion: 5.6.60
+    cid: WHOGPLUG-CID
+    configModel: ConfigModule
+    configModule: ConfigModule
+    debugMode: false
+    deviceId: WHOGPLUG-CID
+    method: getELECConsumePerMonthLastYear
+    phoneBrand: pyvesync
+    phoneOS: Android
+    subDeviceNo: 0
+    timeZone: America/New_York
+    token: sample_tk
+    traceId: TRACE_ID
+    userCountryCode: US
+  method: post
+  url: /cloud/v1/outlet/getELECConsumePerMonthLastYear
 turn_off:
   headers:
     Content-Type: application/json; charset=UTF-8

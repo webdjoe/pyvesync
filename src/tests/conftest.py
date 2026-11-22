@@ -47,6 +47,28 @@ def pytest_generate_tests(metafunc):
         if metafunc.function.__name__ == 'test_methods':
             return method_generator(metafunc, device, devices)
 
+        if 'setup_entry' in metafunc.fixturenames and not _parametrizes(
+            metafunc, 'setup_entry'
+        ):
+            return device_generator(metafunc, device, devices)
+
+
+def _parametrizes(metafunc, argname):
+    """Return True if a parametrize marker on the test already sets `argname`."""
+    for marker in metafunc.definition.iter_markers('parametrize'):
+        names = marker.args[0]
+        if isinstance(names, str):
+            names = [name.strip() for name in names.split(',')]
+        if argname in names:
+            return True
+    return False
+
+
+def device_generator(metafunc, gen_type, devices):
+    """Parametrize any other `setup_entry` test over every device."""
+    ids = [f"{gen_type}.{setup_entry}" for setup_entry in devices]
+    metafunc.parametrize("setup_entry", devices, ids=ids)
+
 
 def details_generator(metafunc, gen_type, devices):
     """Parametrize device tests for get_details()."""

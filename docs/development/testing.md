@@ -61,7 +61,7 @@ This generates two test functions:
 - **`test_details(setup_entry, method)`** - Tests `get_details()` request against YAML fixtures.
 - **`test_methods(setup_entry, method)`** - Tests each method's request against YAML fixtures.
 
-Test IDs follow the pattern: `{device}.{setup_entry}.{method}` (e.g., `outlets.ESW15-USA.turn_on`).
+Test IDs follow the pattern `{device}.{setup_entry}.{method}`, where the method is the list entry from the class attributes (e.g., `outlets.ESW15-USA.['turn_on']`). The `test_details` IDs end in `.update`. Use `-k` to select tests, e.g. `pytest -k "ESW15-USA and turn_on"`.
 
 ## YAML API Fixtures
 
@@ -69,10 +69,18 @@ API requests are recorded and verified via YAML files in `src/tests/api/{module}
 
 ```yaml
 turn_off:
-  headers: { ... }
-  json_object: { ... }
-  method: put
-  url: /outdoorsocket15a/v1/device/devicestatus
+  headers:
+    Content-Type: application/json; charset=UTF-8
+    User-Agent: okhttp/3.12.1
+  json_object:
+    cid: ESO15-TB-CID
+    method: deviceStatus
+    status: 'off'
+    switchNo: '1'
+    token: sample_tk
+    # ... remaining request keys
+  method: post
+  url: /cloud/v1/deviceManaged/deviceStatus
 ```
 
 Sensitive values (tokens, account IDs, UUIDs) are normalized to defaults by `api_scrub()` before comparison or writing.
@@ -82,16 +90,18 @@ Sensitive values (tokens, account IDs, UUIDs) are normalized to defaults by `api
 To generate or update YAML fixtures for new devices:
 
 ```bash
-# Write fixtures for new devices (does not overwrite existing)
-pytest --write_api
+# Write fixtures that don't exist yet (does not overwrite existing)
+pytest src/tests/test_outlets.py --write_api
 
-# Overwrite all existing fixtures (use with caution)
-pytest --write_api --overwrite
+# Overwrite existing fixtures (use with caution)
+pytest src/tests/test_outlets.py --write_api --overwrite
 ```
+
+Both flags ask for confirmation. In a non-interactive shell set `PYTEST_CONFIRM=1` to skip the prompt. A missing fixture makes the test fail until it is written.
 
 ## Adding Tests for a New Device
 
-1. **`call_json_{device_type}.py`**: Add setup_entry to the module's device list. Add response to `DETAILS_RESPONSES[setup_entry]`. Add any non-default method responses to `METHOD_RESPONSES[setup_entry]`.
+1. **`call_json_{device_type}.py`**: The setup entry is added to the module's device list automatically from `device_map.*_modules`. Add response to `DETAILS_RESPONSES[setup_entry]`. Add any non-default method responses to `METHOD_RESPONSES[setup_entry]`.
 
 2. **`test_{device_type}.py`**: If the device uses existing base/device methods, it is automatically included through parametrization. Add device-specific methods to `device_methods` dict if needed.
 

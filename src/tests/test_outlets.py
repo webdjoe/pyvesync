@@ -28,8 +28,12 @@ See Also
 
 import pytest
 import logging
+from datetime import UTC, datetime
+from unittest.mock import patch
+from zoneinfo import ZoneInfo
 import pyvesync.const as const
 from pyvesync.base_devices.outlet_base import VeSyncOutlet
+from pyvesync.devices.vesyncoutlet import energy_history_bounds
 from base_test_cases import TestBase
 from utils import assert_test, parse_args
 import call_json
@@ -41,6 +45,9 @@ logger.setLevel(logging.DEBUG)
 OUTLET_DEV_TYPES = call_json_outlets.OUTLETS
 POWER_METHODS = ['get_energy_update']
 OUTLET_PARAMS = [[dev, method] for dev in OUTLET_DEV_TYPES for method in POWER_METHODS]
+
+# Fixed clock for energy history requests, so the recorded fromDay/toDay don't change.
+FROZEN_NOW = datetime(2023, 10, 19, 12, 0, tzinfo=ZoneInfo('America/New_York'))
 
 
 class TestOutlets(TestBase):
@@ -121,6 +128,11 @@ class TestOutlets(TestBase):
             ['get_yearly_energy']
         ],
         'ESO15-TB': [
+            ['get_weekly_energy'],
+            ['get_monthly_energy'],
+            ['get_yearly_energy']
+        ],
+        'WHOGPLUG': [
             ['get_weekly_energy'],
             ['get_monthly_energy'],
             ['get_yearly_energy']
@@ -241,11 +253,16 @@ class TestOutlets(TestBase):
         elif method[0] == 'turn_off':
             outlet_obj.state.device_status = const.DeviceStatus.ON
 
-        # Call method with kwargs if present
-        if method_kwargs:
-            self.run_in_loop(method_call, **method_kwargs)
-        else:
-            self.run_in_loop(method_call)
+        # Call method with kwargs if present. Energy history requests depend on
+        # the current time, so freeze the clock for them.
+        with patch(
+            'pyvesync.devices.vesyncoutlet.datetime', wraps=datetime
+        ) as mock_datetime:
+            mock_datetime.now.return_value = FROZEN_NOW
+            if method_kwargs:
+                self.run_in_loop(method_call, **method_kwargs)
+            else:
+                self.run_in_loop(method_call)
 
         # Parse arguments from mock_api call into dictionary
         all_kwargs = parse_args(self.mock_api)
@@ -303,3 +320,49 @@ class TestOutlets(TestBase):
             self.mock_api.return_value = (None, 400)
         else:
             self.mock_api.return_value = call_json.DETAILS_BADCODE, 200
+
+    def test_energy_time_zone_fallback(self):
+        """An unknown account time zone falls back to UTC for energy history."""
+        outlet_obj = self.get_device("outlets", "WHOGPLUG")
+        self.manager.time_zone = 'Not/A_Zone'
+        assert outlet_obj._energy_time_zone() is UTC
+        self.manager.time_zone = 'Europe/Berlin'
+        assert outlet_obj._energy_time_zone() == ZoneInfo('Europe/Berlin')
+
+
+class TestEnergyHistoryBounds:
+    """fromDay/toDay for WHOGPLUG getEnergyHistory, as the VeSync app computes them.
+
+    toDay is midnight UTC on the local date, using the standard UTC offset
+    (no DST). fromDay is 6 days (week) or 29 days (month) earlier.
+    """
+
+    WEEK = const.ENERGY_HISTORY_OFFSET_WHOGPLUG[const.EnergyIntervals.WEEK]
+    MONTH = const.ENERGY_HISTORY_OFFSET_WHOGPLUG[const.EnergyIntervals.MONTH]
+    BERLIN = ZoneInfo('Europe/Berlin')
+    NEW_YORK = ZoneInfo('America/New_York')
+
+    def test_matches_capture(self):
+        """The WHOGPLUG capture (Europe/Berlin) returned buckets 1697155200..1697673600."""
+        now = datetime(2023, 10, 19, 10, 0, tzinfo=self.BERLIN)
+        assert energy_history_bounds(now, self.WEEK) == (1697155200, 1697673600)
+
+    def test_month(self):
+        """The month window is 29 days, so 30 daily buckets."""
+        now = datetime(2023, 10, 19, 10, 0, tzinfo=self.BERLIN)
+        assert energy_history_bounds(now, self.MONTH) == (1695168000, 1697673600)
+
+    def test_dst_uses_standard_offset(self):
+        """During DST, 00:30 local time is still the previous day, like the app."""
+        now = datetime(2023, 10, 19, 0, 30, tzinfo=self.BERLIN)  # CEST
+        assert energy_history_bounds(now, self.WEEK)[1] == 1697587200  # 2023-10-18
+
+    def test_standard_time(self):
+        """Outside DST, 00:30 local time is already the new day."""
+        now = datetime(2023, 12, 1, 0, 30, tzinfo=self.BERLIN)  # CET
+        assert energy_history_bounds(now, self.WEEK)[1] == 1701388800  # 2023-12-01
+
+    def test_negative_offset(self):
+        """Time zones west of UTC use the local date, not the UTC date."""
+        now = datetime(2023, 10, 19, 22, 0, tzinfo=self.NEW_YORK)  # 02:00Z Oct 20
+        assert energy_history_bounds(now, self.WEEK)[1] == 1697673600  # 2023-10-19

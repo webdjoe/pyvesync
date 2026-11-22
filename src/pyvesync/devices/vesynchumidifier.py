@@ -87,6 +87,8 @@ class VeSyncHumid200300S(BypassV2Mixin, VeSyncHumidifier):
         self.state.connection_status = ConnectionStatus.ONLINE
         self.state.device_status = DeviceStatus.from_bool(resp_model.enabled)
         self.state.mode = self._reverse_mist_modes.get(resp_model.mode)
+        if self.state.mode is None:
+            logger.warning('Unknown mist mode received: %s', resp_model.mode)
         self.state.humidity = resp_model.humidity
         self.state.mist_virtual_level = resp_model.mist_virtual_level or 0
         self.state.mist_level = resp_model.mist_level or 0
@@ -842,6 +844,8 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
         self.state.device_status = DeviceStatus.from_int(resp_model.powerSwitch)
         self.state.connection_status = ConnectionStatus.ONLINE
         self.state.mode = self._reverse_mist_modes.get(resp_model.workMode)
+        if self.state.mode is None:
+            logger.warning('Unknown mist mode received: %s', resp_model.workMode)
         self.state.humidity = resp_model.humidity
         self.state.auto_target_humidity = resp_model.targetHumidity
         self.state.mist_level = resp_model.mistLevel
@@ -923,7 +927,7 @@ class VeSyncHumid1000S(VeSyncHumid200300S):
             return False
 
         payload_data = {'levelIdx': 0, 'virtualLevel': level, 'levelType': 'mist'}
-        r_dict = await self.call_bypassv2_api('virtualLevel', payload_data)
+        r_dict = await self.call_bypassv2_api('setVirtualLevel', payload_data)
         r = Helpers.process_dev_response(logger, 'set_mist_level', self, r_dict)
         if r is None:
             return False
@@ -1084,6 +1088,8 @@ class VeSyncSproutHumid(BypassV2Mixin, VeSyncHumidifier):
         self.state.mist_virtual_level = resp_model.virtualLevel
         self.state.mist_level = resp_model.mistLevel
         self.state.mode = self._reverse_mist_modes.get(resp_model.workMode)
+        if self.state.mode is None:
+            logger.warning('Unknown mist mode received: %s', resp_model.workMode)
         self.state.water_lacks = bool(resp_model.waterLacksState)
         self.state.water_tank_lifted = bool(resp_model.waterTankLifted)
         self.state.automatic_stop_config = bool(resp_model.autoStopSwitch)

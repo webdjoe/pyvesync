@@ -98,7 +98,7 @@ set_mist_level:
         levelIdx: 0
         levelType: mist
         virtualLevel: 2
-      method: virtualLevel
+      method: setVirtualLevel
       source: APP
     phoneBrand: pyvesync
     phoneOS: Android

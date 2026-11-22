@@ -7,6 +7,13 @@
         members: false
         members_order: source
 
+::: pyvesync.devices.vesyncthermostat.VeSyncAuraThermostat
+    options:
+        show_root_heading: true
+        members_order: source
+        filters:
+            - "!^_.*"
+
 ::: pyvesync.base_devices.thermostat_base.ThermostatState
     options:
         show_root_heading: true
