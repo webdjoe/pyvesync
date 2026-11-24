@@ -106,6 +106,10 @@ class TestFans(TestBase):
             ["set_horizontal_oscillation_range", {"left": 10, "right": 80}],
             ["set_vertical_oscillation_range", {"top": 100, "bottom": 20}],
         ],
+        "LPF-R382S": [
+            ["turn_off_horizontal_oscillation",],
+            ["set_horizontal_oscillation_range", {"left": 15, "right": 75}],
+        ],
     }
 
     def test_details(self, setup_entry, method):
@@ -153,6 +157,10 @@ class TestFans(TestBase):
             assert fan_obj.state.horizontal_oscillation_status == call_json_fans.FanDefaults.oscillation_horizontal
         if fan_obj.supports_vertical_oscillation:
             assert fan_obj.state.vertical_oscillation_status == call_json_fans.FanDefaults.oscillation_vertical
+        elif fan_obj.supports_horizontal_oscillation:
+            # Horizontal-only fans report overall oscillation from the horizontal state
+            assert fan_obj.state.vertical_oscillation_status is None
+            assert fan_obj.state.oscillation_status == fan_obj.state.horizontal_oscillation_status
         if fan_obj.supports_mute:
             assert fan_obj.state.mute_status == call_json_fans.FanDefaults.mute_status
 

@@ -45,6 +45,7 @@ The VeSync API supports a variety of devices. The following is a list of devices
 6. Fans
       - [42" Tower Fan][pyvesync.devices.vesyncfan.VeSyncTowerFan]
       - [Pedestal Fan][pyvesync.devices.vesyncfan.VeSyncPedestalFan]
+      - [CoreBreeze 382S Pedestal Fan][pyvesync.devices.vesyncfan.VeSyncPedestalFan]
 7. Air Fryers
       - [CS137][pyvesync.devices.vesynckitchen.VeSyncAirFryer158] - 3.7qt Air Fryer
       - [CS158][pyvesync.devices.vesynckitchen.VeSyncAirFryer158] - 5.8qt Air Fryer
@@ -133,6 +134,7 @@ been verified.
 | ------ | ----- | ----- |
 | 42" Tower Fan | ✔ | |
 | Pedestal Fan | ✔ | ✔ |
+| CoreBreeze 382S Pedestal Fan | ✔ | |
 
 ### Air Fryers
 

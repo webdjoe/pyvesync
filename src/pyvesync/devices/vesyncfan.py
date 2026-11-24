@@ -253,12 +253,17 @@ class VeSyncPedestalFan(BypassV2Mixin, VeSyncFanBase):
         self.state.mute_set_status = DeviceStatus.from_int(res.muteSwitch)
         self.state.display_set_status = DeviceStatus.from_int(res.screenSwitch)
         self.state.display_status = DeviceStatus.from_int(res.screenState)
-        self.state.vertical_oscillation_status = DeviceStatus.from_int(
-            res.verticalOscillationState
-        )
         self.state.horizontal_oscillation_status = DeviceStatus.from_int(
             res.horizontalOscillationState
         )
+        if res.verticalOscillationState is None:
+            # Horizontal-only models (LPF-R382S) omit the vertical state.
+            self.state.vertical_oscillation_status = None
+            self.state.oscillation_status = self.state.horizontal_oscillation_status
+        else:
+            self.state.vertical_oscillation_status = DeviceStatus.from_int(
+                res.verticalOscillationState
+            )
         self.state.child_lock = bool(res.childLock)
         if res.sleepPreference is not None:
             self.state.sleep_change_fan_level = DeviceStatus.from_int(
@@ -376,6 +381,8 @@ class VeSyncPedestalFan(BypassV2Mixin, VeSyncFanBase):
             self.state.vertical_oscillation_status = DeviceStatus.from_bool(vertical)
         elif horizontal is not None:
             self.state.horizontal_oscillation_status = DeviceStatus.from_bool(horizontal)
+            if not self.supports_vertical_oscillation:
+                self.state.oscillation_status = self.state.horizontal_oscillation_status
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 

@@ -264,6 +264,7 @@ pip install pyvesync
 
 1. 42 in. Tower Fan (LTF-F422S Series)
 2. Pedestal Fan (LPF-R432S Series)
+3. CoreBreeze 382S Pedestal Fan (LPF-R382S Series)
 
 ### Cosori Air Fryers
 
