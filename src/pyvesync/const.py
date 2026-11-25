@@ -860,6 +860,41 @@ AIRFRYER_PID_MAP = {
 }
 """PID's for VeSync Air Fryers based on ConfigModule."""
 
+AIRFRYER_CS358_CONFIG_MODULE = 'WiFiBTOnboarding_AirFryer_CS358-AF_US'
+"""configModule of the supported CS358-AF (US); other CS358 modules are skipped."""
+
+AIRFRYER_CS358_TEMPS_C: tuple[int, ...] = (
+    77,
+    82,
+    88,
+    93,
+    99,
+    104,
+    110,
+    116,
+    121,
+    127,
+    132,
+    138,
+    143,
+    149,
+    154,
+    160,
+    166,
+    171,
+    177,
+    182,
+    188,
+    193,
+    199,
+    204,
+)
+"""Celsius temperatures the CS358-AF app offers, in ascending order.
+
+Each is ``round((F - 32) * 5 / 9)`` of the app's 170-400 F choices in 10 F
+steps. ``VeSyncAirFryer358`` sends a Celsius request as the nearest of these.
+"""
+
 
 BYPASSV2_SUB_DEVICE_PAYLOAD: MappingProxyType[str, int | str] = MappingProxyType(
     {'subDeviceNo': 0, 'subDeviceType': ''}
@@ -1053,9 +1088,12 @@ class AirFryerPresets:
 
     Attributes:
         custom (AirFryerPresetRecipe): CS137/CS158 Manual Cooking, the
-            ``default_preset`` of the CS137/CS158.
+            ``default_preset`` of the CS137/CS158. The CS358-AF sends its
+            own recipe ID and name for the mode, so there it starts Manual.
         air_fry (AirFryerPresetRecipe): Air Fry, the ``default_preset`` of the
-            bypassV2 fryers.
+            other bypassV2 fryers.
+        cs358_manual (AirFryerPresetRecipe): CS358-AF Manual (Custom mode, ID
+            11, 350 F, 900 s), the ``default_preset`` of the CS358-AF.
         broil (AirFryerPresetRecipe): Broil (bypassV2 mode string).
         roast (AirFryerPresetRecipe): Roast (bypassV2 mode string).
         bake (AirFryerPresetRecipe): Bake (bypassV2 mode string).
@@ -1078,6 +1116,15 @@ class AirFryerPresets:
         target_temp=400,
         temp_unit='f',
         cook_time=10 * 60,
+    )
+    cs358_manual: AirFryerPresetRecipe = AirFryerPresetRecipe(
+        cook_mode='Custom',
+        recipe_name='Manual',
+        recipe_id=11,
+        recipe_type=AIRFRYER_PRESET_RECIPE_TYPE,
+        target_temp=350,
+        temp_unit='f',
+        cook_time=15 * 60,
     )
     # The Broil temperature (450 F) matches the CAF-DC601S Broil preset (its
     # time does not) and is above the CAF-P583S maximum of 400 F;
@@ -1141,6 +1188,7 @@ class AirFryerCookModes(StrEnum):
         SHRIMP: Shrimp preset.
         BREAD: Bread preset.
         FRENCH_FRIES: French fries preset.
+        TOAST: Toast preset.
     """
 
     CUSTOM = 'custom'
@@ -1166,6 +1214,7 @@ class AirFryerCookModes(StrEnum):
     SHRIMP = 'shrimp'
     BREAD = 'bread'
     FRENCH_FRIES = 'french_fries'
+    TOAST = 'toast'
 
 
 class AirFryerFeatures(Features):
@@ -1212,7 +1261,7 @@ class AirFryerCookStatus(StrEnum):
         UNKNOWN: Not reported by any mapped fryer.
         STANDBY: Idle.
         PREHEAT_END: Preheat finished, waiting for ``cook_from_preheat()``
-            (CS137/CS158).
+            (CS137/CS158, CS358).
         PREHEAT_STOP: Preheat paused.
         READY: Cook programmed, waiting for the start button.
         APPOINTING: Delayed start scheduled; waiting to start (CS158

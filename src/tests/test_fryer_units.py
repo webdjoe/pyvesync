@@ -18,6 +18,7 @@ from utils import parse_args
 
 from pyvesync.base_devices.fryer_base import FryerState
 from pyvesync.const import (
+    AIRFRYER_CS358_TEMPS_C,
     AirFryerCookModes,
     AirFryerCookStatus,
     AirFryerFeatures,
@@ -95,6 +96,23 @@ APK_PRESETS['CAF-P583S-KEU'] = APK_PRESETS['CAF-P583S']
 # APK i61.C67932h0 (TF102SEUConfig): the TF101S presets without Dry.
 APK_PRESETS['CAF-TF102S'] = {
     mode: row for mode, row in APK_PRESETS['CAF-TF101S'].items() if mode != 'Dry'
+}
+# APK i61.j (CS358 US). The app's C choices are AIRFRYER_CS358_TEMPS_C; the
+# map keeps their span with step 1 and the class snaps to them.
+_CS358_C, _CS358_F = (77, 204, 1), (170, 400, 10)
+APK_PRESETS['CS358-AF'] = {
+    'Custom': (11, 'Manual', 900, _CS358_C, _CS358_F, (177, 350)),
+    'Chicken': (2, 'Chicken', 1380, _CS358_C, _CS358_F, (193, 380)),
+    'Frozen': (5, 'Frozen', 480, _CS358_C, _CS358_F, (193, 380)),
+    # App profile 160 C; the getPresetRecipe merge (b2.Nc) and the app show 193 C.
+    'French fries': (6, 'French Fries', 1500, _CS358_C, _CS358_F, (193, 380)),
+    'Steak': (1, 'Steak', 360, _CS358_C, _CS358_F, (204, 400)),
+    'Bacon': (4, 'Bacon', 480, _CS358_C, _CS358_F, (160, 320)),
+    'Seafood': (3, 'Seafood', 480, _CS358_C, _CS358_F, (177, 350)),
+    'Vegetables': (7, 'Vegetables', 480, _CS358_C, _CS358_F, (160, 320)),
+    'Shrimp': (8, 'Shrimp', 360, _CS358_C, _CS358_F, (188, 370)),
+    'Bake': (9, 'Bake', 2100, _CS358_C, _CS358_F, (149, 300)),
+    'Toast': (10, 'Toast', 480, _CS358_C, _CS358_F, (160, 320)),
 }
 
 
@@ -261,6 +279,27 @@ class TestFryerUnitHandling(TestBase):
         assert eu_fryer.round_temperature(185) == 185
         assert eu_fryer.round_temperature(183) == 185
         assert eu_fryer.round_temperature(181) == 180
+
+    def test_cs358_celsius_list_matches_app_fahrenheit_list(self):
+        assert AIRFRYER_CS358_TEMPS_C == tuple(
+            round((f - 32) * 5 / 9) for f in range(170, 401, 10)
+        )
+
+    def test_cs358_celsius_snaps_to_app_values(self):
+        fryer = self.get_device('air_fryers', 'CS358-AF')
+        fryer.temp_unit = TemperatureUnits.CELSIUS
+        assert fryer.temperature_step == 1
+        # 178 down, 180 up, 85 is a tie (3 from 82 and 88) and goes lower.
+        assert [fryer.round_temperature(t) for t in (77, 178, 180, 85, 204)] == [
+            77, 177, 182, 82, 204,
+        ]
+        assert fryer.prepare_temperature(76) is None
+        assert fryer.prepare_temperature(205) is None
+
+    def test_cs358_fahrenheit_keeps_step_rounding(self):
+        fryer = self.get_device('air_fryers', 'CS358-AF')  # map unit F
+        assert fryer.round_temperature(356) == 360
+        assert fryer.round_temperature(385) == 380  # inherited round()
 
     def test_min_max_temp_follow_unit(self):
         eu_fryer = self.get_device('air_fryers', 'CAF-P583S-KEU')

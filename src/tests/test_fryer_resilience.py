@@ -13,7 +13,7 @@ import pytest
 from base_test_cases import TestBase
 from call_json import ALL_DEVICE_MAP_DICT, DeviceList
 from defaults import build_bypass_v1_response, build_bypass_v2_response
-from test_fryer_captures import _158_status, _dc601s_status
+from test_fryer_captures import _158_status, _cs358_status, _dc601s_status
 from test_fryer_chambers import _tf101s_chamber, _tf101s_status
 from utils import parse_args
 
@@ -26,7 +26,9 @@ from pyvesync.const import (
     TemperatureUnits,
 )
 from pyvesync.device_map import air_fryer_modules
+from pyvesync.devices.vesynckitchen import VeSyncAirFryer358
 from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
+from pyvesync.utils.errors import VeSyncError
 
 V1_OK = (build_bypass_v1_response(result_dict={}), 200)
 V2_OK = (build_bypass_v2_response(), 200)
@@ -56,6 +58,10 @@ TF_TIME_CASES = [
     *(('CAF-TF101S', mode, limits) for mode, limits in TF101S_TIME_LIMITS.items()),
     *(('CAF-TF102S', mode, limits) for mode, limits in TF102S_TIME_LIMITS.items()),
 ]
+
+# APK i61.j (CS358Config): every mode's picker is 1-60 min in 1 min steps. Captured
+# CS358 times (60, 360, 900 and 1380 s) are in range.
+CS358_TIME_LIMITS = (60, 3600, 60)
 
 
 def _age(state, seconds: int) -> None:
@@ -93,6 +99,14 @@ class TestFryerResilience(TestBase):
     def test_turboblaze_poll_with_null_unit_still_updates_state(self):
         fryer = self.get_device('air_fryers', 'CAF-DC601S')
         status = _dc601s_status('cooking')
+        status['result']['result']['tempUnit'] = None
+        self._send(fryer.update, ok=(status, 200))
+        assert fryer.state.cook_status == AirFryerCookStatus.COOKING
+        assert fryer.temp_unit == TemperatureUnits.FAHRENHEIT
+
+    def test_cs358_poll_with_null_unit_still_updates_state(self):
+        fryer = self.get_device('air_fryers', 'CS358-AF')
+        status = _cs358_status('cooking')
         status['result']['result']['tempUnit'] = None
         self._send(fryer.update, ok=(status, 200))
         assert fryer.state.cook_status == AirFryerCookStatus.COOKING
@@ -230,6 +244,9 @@ class TestFryerResilience(TestBase):
             ('CAF-DC601S', {'cook_time': 0}),
             ('CAF-DC601S', {'cook_time': -5}),
             ('CAF-DC601S', {'cook_time': 600, 'preheat_time': -5}),
+            ('CS358-AF', {'cook_time': 0}),
+            ('CS358-AF', {'cook_time': -5}),
+            ('CS358-AF', {'cook_time': 600, 'preheat_time': -5}),
             ('CAF-TF101S', {'cook_time': 0, 'chamber': AirFryerChamber.BOTH}),
         ],
     )
@@ -295,8 +312,8 @@ class TestFryerResilience(TestBase):
         assert self._send(fryer.set_mode, 120, 183, ok=V2_OK)
         assert self._sent()['payload']['data']['cookConfigs'][0]['cookTemp'] == 185
 
-    def test_time_limits_are_declared_only_on_dual_fryers(self):
-        limited = ('CAF-DC111S-AEU', 'CAF-TF101S', 'CAF-TF102S')
+    def test_time_limits_are_declared_only_on_listed_fryers(self):
+        limited = ('CAF-DC111S-AEU', 'CAF-TF101S', 'CAF-TF102S', 'CS358-AF')
         for entry in air_fryer_modules:
             limits = {k: m.time_limits for k, m in entry.cook_modes.items()}
             if entry.setup_entry in limited:
@@ -328,6 +345,31 @@ class TestFryerResilience(TestBase):
         seconds = {'below': low - 1, 'above': high + step, 'off_step': low + 1}[bad_kind]
         recipe = replace(fryer.get_mode_recipe(mode), cook_time=seconds)
         assert self._send(fryer.set_mode_from_recipe, recipe, ok=V2_OK) is False
+        assert self.mock_api.call_count == 0
+
+    # CS358-AF time limits (APK i61.j)
+
+    @pytest.mark.parametrize('mode', list(ALL_DEVICE_MAP_DICT['CS358-AF'].cook_modes))
+    def test_cs358_mode_limits_match_the_app(self, mode):
+        fryer = self.get_device('air_fryers', 'CS358-AF')
+        declared = fryer.get_cook_mode(mode).time_limits
+        assert declared is not None
+        assert (
+            declared.min_seconds,
+            declared.max_seconds,
+            declared.step_seconds,
+        ) == CS358_TIME_LIMITS
+
+    @pytest.mark.parametrize('seconds', [60, 120, 3600])
+    def test_cs358_valid_times_are_sent(self, seconds):
+        fryer = self.get_device('air_fryers', 'CS358-AF')
+        assert self._send(fryer.set_mode, seconds, 350, ok=V2_OK)
+        assert self._sent()['payload']['data']['startAct']['cookSetTime'] == seconds
+
+    @pytest.mark.parametrize('seconds', [30, 59, 61, 90, 3660, 7200])
+    def test_cs358_invalid_times_send_no_request(self, seconds):
+        fryer = self.get_device('air_fryers', 'CS358-AF')
+        assert self._send(fryer.set_mode, seconds, 350, ok=V2_OK) is False
         assert self.mock_api.call_count == 0
 
     @pytest.mark.parametrize('setup_entry', ['CAF-TF101S', 'CAF-TF102S'])
@@ -393,6 +435,28 @@ class TestFryerResilience(TestBase):
         self._send(fryer.update, ok=(_dc601s_status('cooking'), 200))
         self._send(fryer.update, ok=response)
         assert fryer.state.cook_status == AirFryerCookStatus.COOKING
+
+    @pytest.mark.parametrize(
+        'response',
+        [
+            (None, 200),
+            (build_bypass_v2_response(inner_code=11000000), 200),
+            # Malformed input: stepIndex past the single step.
+            (_cs358_status('cooking', step_index=3), 200),
+            (_cs358_status('bogus'), 200),
+        ],
+    )
+    def test_cs358_failed_poll_keeps_state(self, response):
+        fryer = self.get_device('air_fryers', 'CS358-AF')
+        cooking = _cs358_status('cooking', step={'cookLastTime': 898}, total=898)
+        self._send(fryer.update, ok=(cooking, 200))
+        self._send(fryer.update, ok=response)
+        assert fryer.state.cook_status == AirFryerCookStatus.COOKING
+        assert (
+            fryer.state.cook_set_time,
+            fryer.state.cook_last_time,
+            fryer.state.cook_set_temp,
+        ) == (900, 898, 350)
 
     @pytest.mark.parametrize(
         'response',
@@ -469,6 +533,55 @@ class TestFryerResilience(TestBase):
         first.default_preset.cook_time = 42
         assert second.default_preset.cook_time != 42
         assert AirFryerPresets.air_fry.cook_time != 42
+
+    # CS358-AF config module and Celsius limits
+
+    @pytest.mark.parametrize(
+        'module', ['WFBO_AFR_CS358-AF_EU', 'WiFiBTOnboarding_AirFryer_CS358-AF_XX']
+    )
+    def test_cs358_other_config_module_is_skipped(self, module):
+        config = DeviceList.device_list_item(ALL_DEVICE_MAP_DICT['CS358-AF'])
+        config['configModule'] = module
+        details = ResponseDeviceDetailsModel.from_dict(config)
+        with pytest.raises(VeSyncError):
+            VeSyncAirFryer358(details, self.manager, ALL_DEVICE_MAP_DICT['CS358-AF'])
+        self.manager.devices.add_device_from_model(details, self.manager)
+        assert self.manager.devices.air_fryers == []
+        assert module in self.caplog.text
+        assert self.mock_api.call_count == 0
+
+    def test_cs358_us_config_module_is_discovered(self):
+        self.manager.devices.add_device_from_model(_details('CS358-AF'), self.manager)
+        assert [type(f).__name__ for f in self.manager.devices.air_fryers] == [
+            'VeSyncAirFryer358'
+        ]
+
+    @pytest.mark.parametrize(
+        'status', ['standby', 'ready', 'heating', 'preheatStop', 'cooking', 'pullOut']
+    )
+    def test_cs358_handoff_requires_preheat_end(self, status):
+        fryer = self.get_device('air_fryers', 'CS358-AF')
+        steps = [] if status == 'standby' else None
+        self._send(fryer.update, ok=(_cs358_status(status, steps=steps), 200))
+        assert self._send(fryer.cook_from_preheat, ok=V2_OK) is False
+        assert self.mock_api.call_count == 0
+
+    def test_cs358_rejected_handoff_keeps_state(self):
+        fryer = self.get_device('air_fryers', 'CS358-AF')
+        preheat_end = _cs358_status('preheatEnd', preheat=(240, 0, 350))
+        self._send(fryer.update, ok=(preheat_end, 200))
+        rejected = (build_bypass_v2_response(inner_code=11000000), 200)
+        assert self._send(fryer.cook_from_preheat, ok=rejected) is False
+        assert self.mock_api.call_count == 1  # sent, then refused
+        assert fryer.state.cook_status == AirFryerCookStatus.PREHEAT_END
+        assert fryer.state.cook_set_time == 900
+
+    @pytest.mark.parametrize('temp', [76, 205])
+    def test_cs358_celsius_outside_list_rejected_without_request(self, temp):
+        fryer = self.get_device('air_fryers', 'CS358-AF')
+        fryer.temp_unit = TemperatureUnits.CELSIUS
+        assert self._send(fryer.set_mode, cook_time=360, cook_temp=temp, ok=V2_OK) is False
+        assert self.mock_api.call_count == 0
 
 
 def _details(setup_entry: str) -> ResponseDeviceDetailsModel:
