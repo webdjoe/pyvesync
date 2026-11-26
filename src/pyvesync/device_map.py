@@ -65,7 +65,6 @@ from types import MappingProxyType, ModuleType
 from typing import Union
 
 from pyvesync.const import (
-    AIRFRYER_CS358_TEMPS_C,
     CUSTOM_COOK_MODE,
     CUSTOM_RECIPE_ID,
     CUSTOM_RECIPE_NAME,
@@ -1548,15 +1547,12 @@ _P583S_COOK_MODES: dict[str, AirFryerModeConfig] = {
 }
 
 # APK i61.j (CS358-AF US) presets. Every mode has the same limits. Cook times
-# are the app picker's 1-60 min in 1 min steps. The app's Celsius choices are
-# AIRFRYER_CS358_TEMPS_C; the limits keep their span with step 1, and
-# VeSyncAirFryer358.round_temperature() snaps to the list. French
-# fries is 193 C: the getPresetRecipe merge (b2.Nc) replaces the profile's 160 C
-# with 380 F converted, as the app shows. The captured startCook requests
-# (Air Fryer CS358.har) cover every mode.
-_CS358_TEMP_C = AirFryerTempLimits(
-    min_temp=AIRFRYER_CS358_TEMPS_C[0], max_temp=AIRFRYER_CS358_TEMPS_C[-1], step=1
-)
+# are the app picker's 1-60 min in 1 min steps. Celsius uses the CS158 limits,
+# 75-205 C in 5 C steps, so a Celsius request is rounded to a multiple of 5.
+# French fries is 193 C: the getPresetRecipe merge (b2.Nc) replaces the
+# profile's 160 C with 380 F converted, as the app shows. The captured
+# startCook requests (Air Fryer CS358.har) cover every mode.
+_CS358_TEMP_C = AirFryerTempLimits(min_temp=75, max_temp=205, step=5)
 _CS358_TEMP_F = AirFryerTempLimits(min_temp=170, max_temp=400, step=10)
 _CS358_TIME = AirFryerTimeLimits(min_seconds=60, max_seconds=3600, step_seconds=60)
 
@@ -1942,6 +1938,8 @@ air_fryer_modules: list[AirFryerMap] = [
         default_cook_mode=AirFryerCookModes.CUSTOM,
         default_preset=AirFryerPresets.cs358_manual,
         time_units=TimeUnits.SECONDS,
+        # 'keeping' (Keep Warm) is not in the capture. PR #557 saw it on a
+        # CS358-AF (US) and maps it to COOKING, as the CAF-P583S does.
         status_map=MappingProxyType(
             {
                 'ready': AirFryerCookStatus.READY,
@@ -1952,6 +1950,7 @@ air_fryer_modules: list[AirFryerMap] = [
                 'preheatEnd': AirFryerCookStatus.PREHEAT_END,
                 'pullOut': AirFryerCookStatus.PULL_OUT,
                 'cookEnd': AirFryerCookStatus.COOK_END,
+                'keeping': AirFryerCookStatus.COOKING,
             }
         ),
     ),

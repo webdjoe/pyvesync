@@ -576,8 +576,9 @@ class TestFryerResilience(TestBase):
         assert fryer.state.cook_status == AirFryerCookStatus.PREHEAT_END
         assert fryer.state.cook_set_time == 900
 
-    @pytest.mark.parametrize('temp', [76, 205])
-    def test_cs358_celsius_outside_list_rejected_without_request(self, temp):
+    # 72 C rounds to 70 C and 208 C to 210 C, both outside 75-205 C.
+    @pytest.mark.parametrize('temp', [72, 208])
+    def test_cs358_celsius_outside_range_rejected_without_request(self, temp):
         fryer = self.get_device('air_fryers', 'CS358-AF')
         fryer.temp_unit = TemperatureUnits.CELSIUS
         assert self._send(fryer.set_mode, cook_time=360, cook_temp=temp, ok=V2_OK) is False

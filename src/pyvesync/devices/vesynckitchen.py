@@ -27,7 +27,6 @@ from typing_extensions import deprecated
 from pyvesync.base_devices import VeSyncFryer
 from pyvesync.const import (
     AIRFRYER_CS358_CONFIG_MODULE,
-    AIRFRYER_CS358_TEMPS_C,
     AIRFRYER_PID_MAP,
     BYPASSV2_SUB_DEVICE_PAYLOAD,
     AirFryer158Command,
@@ -712,9 +711,8 @@ class VeSyncAirFryer358(VeSyncTurboBlazeFryer):
     The start, end and status requests are the ``VeSyncTurboBlazeFryer`` ones.
     Only the ``AIRFRYER_CS358_CONFIG_MODULE`` (US) is supported; any other
     config module raises ``VeSyncError``, and the device container skips the
-    device with a warning. A Celsius request is sent as the nearest of the
-    app's values (``AIRFRYER_CS358_TEMPS_C``, 77-204 C). A recipe is sent with
-    its mode's own recipe ID, name and type, as the app sends it.
+    device with a warning. A recipe is sent with its mode's own recipe ID,
+    name and type, as the app sends it.
     ``current_temp`` is None. ``cook_from_preheat()`` starts the loaded cook
     from ``PREHEAT_END``; ``stop()`` and ``resume()`` are not implemented and
     return False.
@@ -742,29 +740,6 @@ class VeSyncAirFryer358(VeSyncTurboBlazeFryer):
                 f'{self.device_type}'
             )
             raise VeSyncError(msg)
-
-    def round_temperature(self, temperature: int, cook_mode: str | None = None) -> int:
-        """Round the temperature to a value the device accepts.
-
-        In Celsius, a temperature inside the mode's range is snapped to the
-        nearest of ``AIRFRYER_CS358_TEMPS_C``, the values the app offers; a
-        value exactly between two goes to the lower one. A temperature outside
-        the range is returned unchanged so that validation rejects it.
-        Fahrenheit uses the mode's step, as on every fryer.
-
-        Args:
-            temperature (int): The temperature in the device's ``temp_unit``.
-            cook_mode (str | None): Cook mode whose limits apply, as for
-                ``temp_limits()``.
-
-        Returns:
-            int: The temperature to send, in the current unit.
-        """
-        if self.temp_unit == TemperatureUnits.CELSIUS and self.validate_temperature(
-            temperature, cook_mode
-        ):
-            return min(AIRFRYER_CS358_TEMPS_C, key=lambda value: abs(value - temperature))
-        return super().round_temperature(temperature, cook_mode)
 
     def _prepare_recipe(
         self, recipe: AirFryerPresetRecipe

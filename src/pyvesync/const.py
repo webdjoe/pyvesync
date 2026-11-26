@@ -863,38 +863,6 @@ AIRFRYER_PID_MAP = {
 AIRFRYER_CS358_CONFIG_MODULE = 'WiFiBTOnboarding_AirFryer_CS358-AF_US'
 """configModule of the supported CS358-AF (US); other CS358 modules are skipped."""
 
-AIRFRYER_CS358_TEMPS_C: tuple[int, ...] = (
-    77,
-    82,
-    88,
-    93,
-    99,
-    104,
-    110,
-    116,
-    121,
-    127,
-    132,
-    138,
-    143,
-    149,
-    154,
-    160,
-    166,
-    171,
-    177,
-    182,
-    188,
-    193,
-    199,
-    204,
-)
-"""Celsius temperatures the CS358-AF app offers, in ascending order.
-
-Each is ``round((F - 32) * 5 / 9)`` of the app's 170-400 F choices in 10 F
-steps. ``VeSyncAirFryer358`` sends a Celsius request as the nearest of these.
-"""
-
 
 BYPASSV2_SUB_DEVICE_PAYLOAD: MappingProxyType[str, int | str] = MappingProxyType(
     {'subDeviceNo': 0, 'subDeviceType': ''}

@@ -149,8 +149,9 @@ been verified.
 
 The CAF-TF102S is mapped from the VeSync app and is pending hardware
 verification. The CAF-DC111S-AEU cook and end requests are pending hardware
-verification. The CS358-AF is mapped from a VeSync app packet capture and is
-pending hardware verification. The CAF-P583S KEU has no packet capture and is
+verification. The CS358-AF is mapped from a VeSync app packet capture; its
+requests are the ones PR #557 tested on the fryer. The CAF-P583S KEU has no
+packet capture and is
 assumed to match the KUS. See [Air Fryers](devices/kitchen.md) for each
 model's cook modes and chambers, and how to read its temperature limits.
 

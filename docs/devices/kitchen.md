@@ -20,16 +20,19 @@ the VeSync app and the status captures supplied with PR #536; its cook and
 end requests are pending hardware verification.
 
 The CS358-AF sends the CAF-DC601S requests and adds `cook_from_preheat()`.
-Its mapping comes from a packet capture of the VeSync app and is pending
-hardware verification.
+Its mapping comes from a packet capture of the VeSync app. Its requests are
+the ones PR #557 tested on a CS358-AF (US) in Fahrenheit.
 
 - Only the US model (config module `WiFiBTOnboarding_AirFryer_CS358-AF_US`) is
   supported. A CS358-AF with any other config module is skipped with a
   warning.
-- In Celsius, a requested temperature is sent as the nearest of the app's 24
-  values from 77 to 204 °C; a value exactly between two goes to the lower one.
-  `temperature_step` reports 1 in Celsius. Values outside 77-204 °C are
-  rejected.
+- Temperatures are 170-400 °F in 10 °F steps, or 75-205 °C in 5 °C steps as
+  on the CS158-AF. A request is rounded to the nearest step (see
+  [Temperature limits](#temperature-limits)). The app's Celsius preset
+  defaults are not all multiples of 5, so those are sent rounded: Steak's
+  204 °C is sent as 205 °C and Manual's 177 °C as 175 °C.
+- Keep Warm reports `keeping`, which maps to `COOKING`, as on the CAF-P583S.
+  No capture shows it; PR #557 saw it on the fryer.
 - Cook times must be 1-60 minutes in whole minutes, as in the app's picker
   (see [Cook time limits](#cook-time-limits)).
 - A recipe is sent with its mode's own recipe ID, name and type, as the app
@@ -254,8 +257,8 @@ every status:
 | `APPOINTING` | Waiting for a delayed start set in the app (CS137/CS158). pyvesync cannot set one. |
 | `HOLD` | Sync cook with different times: this chamber waits so both finish together (CAF-DC111S-AEU). `cook_time_remaining` is the wait and `total_time_remaining` includes the cook; both count down only while the other chamber is cooking, and stop while it is paused. Counts as cook mode; `is_running` is False. Start one with `set_chamber_modes()`, the app or the fryer; pyvesync's `BOTH` sends the same settings to both chambers, so it does not report this status. |
 
-The CAF-P583S status map maps `keeping` (keep-warm) to `COOKING`; no capture
-of it exists yet. `COMPLETED` and `UNKNOWN` are in the enum but no supported
+The CAF-P583S and CS358-AF status maps map `keeping` (keep-warm) to
+`COOKING`; no capture of it exists yet. `COMPLETED` and `UNKNOWN` are in the enum but no supported
 fryer reports them.
 
 The CAF-TF101S and CAF-TF102S also map `HOLD` and `COOK_END`. That follows the
@@ -412,8 +415,7 @@ step, then checked against its mode's range. Off-step temperatures are
 always rounded, never rejected. Rounding uses Python's `round()`, so a value exactly halfway
 between two steps goes to the even multiple: with a 10° step, 395 becomes 400
 but 385 becomes 380. A temperature outside the range makes the method return
-`False` without sending a request. The CS358-AF in Celsius rounds to the app's
-list of values instead (see the CS358-AF notes at the top of this page).
+`False` without sending a request.
 
 `min_temp` and `max_temp` are the widest span across all of the fryer's
 modes, for display. A temperature inside that span can still be outside the
