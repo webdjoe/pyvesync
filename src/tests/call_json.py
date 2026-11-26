@@ -388,6 +388,8 @@ class DeviceList:
             model_dict['subDeviceNo'] = 1
         if 'CS137-AF/CS158-AF' in module.dev_types:
             model_dict['configModule'] = 'WiFi_SKA_AirFryer158_US'
+        if module.setup_entry == 'CS358-AF':
+            model_dict['configModule'] = 'WiFiBTOnboarding_AirFryer_CS358-AF_US'
         return model_dict
 
     @classmethod

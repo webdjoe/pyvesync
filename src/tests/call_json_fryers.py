@@ -238,6 +238,35 @@ AIR_FRYER_COOKING_DETAILS: dict[str, dict] = {
         "shakeStatus": 0,
         "linkageStatus": 0,
     },
+    # CS358-AF getAirfryerStatus, Manual cooking (Air Fryer CS358.har entry 134)
+    "CS358-AF": {
+        "stepArray": [
+            {
+                "cookSetTime": 900,
+                "cookTemp": 350,
+                "mode": "Custom",
+                "cookLastTime": 898,
+                "shakeTime": 0,
+                "cookEndTime": 0,
+                "recipeName": "Manual",
+                "recipeId": 11,
+                "recipeType": 3,
+            }
+        ],
+        "stepIndex": 0,
+        "cookMode": "normal",
+        "cookStatus": "cooking",
+        "tempUnit": "f",
+        "preheatSetTime": 0,
+        "preheatLastTime": 0,
+        "preheatEndTime": 0,
+        "preheatTemp": 0,
+        "startTime": 1794066380,
+        "totalTimeRemaining": 898,
+        "currentTemp": 0,
+        "appointLastTime": 0,
+        "shakeStatus": 0,
+    },
 }
 
 # Expected chamber 1 (cook_set_temp, cook_set_time, cook_last_time) after
@@ -245,6 +274,7 @@ AIR_FRYER_COOKING_DETAILS: dict[str, dict] = {
 # AirFryerDefaults values.
 COOKING_EXPECTED: dict[str, tuple[int, int, int]] = {
     "CAF-DC111S-AEU": (195, 600, 600),
+    "CS358-AF": (350, 900, 898),
 }
 
 AIR_FRYER_STANDBY_DETAILS: dict[str, dict] = {
@@ -329,6 +359,23 @@ AIR_FRYER_STANDBY_DETAILS: dict[str, dict] = {
         "shakeStatus": 0,
         "linkageStatus": 0,
     },
+    # CS358-AF getAirfryerStatus, standby (Air Fryer CS358.har entry 84)
+    "CS358-AF": {
+        "stepArray": [],
+        "stepIndex": 0,
+        "cookMode": "normal",
+        "cookStatus": "standby",
+        "tempUnit": "f",
+        "preheatSetTime": 0,
+        "preheatLastTime": 0,
+        "preheatEndTime": 0,
+        "preheatTemp": 0,
+        "startTime": 0,
+        "totalTimeRemaining": 0,
+        "currentTemp": 0,
+        "appointLastTime": 0,
+        "shakeStatus": 0,
+    },
 }
 
 
@@ -338,6 +385,7 @@ METHOD_RESPONSES = {
     'CAF-TF101S': deepcopy(FunctionResponsesV2),
     'CAF-DC111S-AEU': deepcopy(FunctionResponsesV2),
     'CAF-P583S': deepcopy(FunctionResponsesV2),
+    'CS358-AF': deepcopy(FunctionResponsesV2),
 }
 
 
@@ -357,6 +405,9 @@ DETAILS_RESPONSES_COOKING = {
     "CAF-P583S": build_bypass_v2_response(
         inner_result=deepcopy(AIR_FRYER_COOKING_DETAILS["CAF-P583S"]),
     ),
+    "CS358-AF": build_bypass_v2_response(
+        inner_result=deepcopy(AIR_FRYER_COOKING_DETAILS["CS358-AF"]),
+    ),
 }
 
 
@@ -375,5 +426,8 @@ DETAILS_RESPONSES_STANDBY = {
     ),
     "CAF-P583S": build_bypass_v2_response(
         inner_result=deepcopy(AIR_FRYER_STANDBY_DETAILS["CAF-P583S"]),
+    ),
+    "CS358-AF": build_bypass_v2_response(
+        inner_result=deepcopy(AIR_FRYER_STANDBY_DETAILS["CS358-AF"]),
     ),
 }

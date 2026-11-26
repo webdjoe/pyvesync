@@ -7,6 +7,7 @@ pyvesync supports these Cosori smart air fryers. All of them are in
 | --- | --- | --- | --- | --- | --- |
 | CS137-AF, CS158-AF (3.7 and 5.8 Qt.) | `VeSyncAirFryer158` | 1 | ✔ | ✔ | °F |
 | CAF-DC601S TurboBlaze 6 Qt. | `VeSyncTurboBlazeFryer` | 1 | ✔ | | °F |
+| CS358-AF Smart 5.8 Qt. (US) | `VeSyncAirFryer358` | 1 | ✔ | | °F |
 | CAF-P583S Dual Blaze 6.8 Qt. (KUS, KEU) | `VeSyncDualBlazeFryer` | 1 | | | °F (KUS), °C (KEU) |
 | CAF-TF101S Dual Air Fryer | `VeSyncDualAirFryer` | 1, 2, whole, both | | | °C |
 | CAF-DC111S-AEU Turbo Tower Pro | `VeSyncDualAirFryer` | 1 (upper), 2 (lower), both | | | °C |
@@ -18,12 +19,39 @@ the KUS apart from its Celsius unit. The CAF-DC111S-AEU mapping comes from
 the VeSync app and the status captures supplied with PR #536; its cook and
 end requests are pending hardware verification.
 
+The CS358-AF sends the CAF-DC601S requests and adds `cook_from_preheat()`.
+Its mapping comes from a packet capture of the VeSync app. Its requests are
+the ones PR #557 tested on a CS358-AF (US) in Fahrenheit.
+
+- Only the US model (config module `WiFiBTOnboarding_AirFryer_CS358-AF_US`) is
+  supported. A CS358-AF with any other config module is skipped with a
+  warning.
+- Temperatures are 170-400 °F in 10 °F steps, or 75-205 °C in 5 °C steps as
+  on the CS158-AF. A request is rounded to the nearest step (see
+  [Temperature limits](#temperature-limits)). The app's Celsius preset
+  defaults are not all multiples of 5, so those are sent rounded: Steak's
+  204 °C is sent as 205 °C and Manual's 177 °C as 175 °C.
+- Keep Warm reports `keeping`, which maps to `COOKING`, as on the CAF-P583S.
+  No capture shows it; PR #557 saw it on the fryer.
+- Cook times must be 1-60 minutes in whole minutes, as in the app's picker
+  (see [Cook time limits](#cook-time-limits)).
+- A recipe is sent with its mode's own recipe ID, name and type, as the app
+  sends it. Another fryer's preset, such as `AirFryerPresets.custom`, starts
+  the CS358-AF's Manual mode.
+- `current_temp` is always `None`: the fryer reports 0.
+- Cloud pause and resume are not supported.
+- A `preheat_time` only turns preheat on. The fryer chooses the preheat
+  length, and the next `update()` reports it; until then the state shows the
+  `preheat_time` you passed.
+- A program loaded in the app is read from its active step.
+
 Every fryer has `set_mode()`, `set_mode_from_recipe()`, `end()` and
 `update()`. `stop()` and `resume()` are implemented for the CS137/CS158 and
-the CAF-DC111S-AEU, `cook_from_preheat()` only for the CS137/CS158; on the
-other fryers they log a message and return `False` without sending a request. Air fryers have no on/off command
-and no `turn_on()` / `turn_off()`; the CS137/CS158 `toggle_switch()` is
-deprecated and sends no request.
+the CAF-DC111S-AEU, `cook_from_preheat()` for the CS137/CS158 and the
+CS358-AF; on the other fryers they log a message and return `False` without
+sending a request. Air fryers have no on/off command and no `turn_on()` /
+`turn_off()`; the CS137/CS158 `toggle_switch()` is deprecated and sends no
+request.
 
 ## Quick start
 
@@ -85,17 +113,17 @@ await fryer.set_mode(cook_time, cook_temp, *, temp_unit=None,
   reject it).
   `cook_time` must be at least 1 second. The CS137/CS158 API counts in whole
   minutes, so pyvesync rounds the time down to the minute (90 s is sent as
-  1 minute) and rejects a `cook_time` under 60 s. The CAF-TF101S/TF102S and
-  CAF-DC111S-AEU also check each mode's range and step (see
-  [Cook time limits](#cook-time-limits)). Other
-  fryers have no upper limit: a longer time is sent as given and the fryer may
-  refuse it.
+  1 minute) and rejects a `cook_time` under 60 s. The CAF-TF101S/TF102S,
+  CAF-DC111S-AEU and CS358-AF also check each mode's range and step (see
+  [Cook time limits](#cook-time-limits)). Other fryers have no upper limit: a
+  longer time is sent as given and the fryer may refuse it.
 - `cook_temp` is in the fryer's `temp_unit`, or in `temp_unit` if you pass
   one (see [Temperature units](#temperature-units)).
 - With no `cook_mode`, the fryer's default preset is used: Manual Cooking on
-  the CS137/CS158 and Air Fry on the others. Only the preset's mode, recipe
-  ID, name and type are sent; the time and temperature are yours. See
-  [Cook modes](#cook-modes) for the other modes.
+  the CS137/CS158, Manual (`Custom`, recipe ID 11) on the CS358-AF and Air
+  Fry on the others. Only the preset's mode, recipe ID, name and type are
+  sent; the time and temperature are yours. See [Cook modes](#cook-modes) for
+  the other modes.
 - The temperature is rounded to the nearest step of the mode, never
   rejected for being off-step, and then checked against the mode's range
   (see [Temperature limits](#temperature-limits)).
@@ -138,8 +166,9 @@ temperature is converted to the fryer's unit if needed, rounded and checked
 against the limits of the recipe's `cook_mode`. The times are checked as for
 `set_mode()`. The recipe's `cook_mode` must be one of the fryer's modes (see
 [Cook modes](#cook-modes)); otherwise the method returns `False` without a
-request. Its mode, ID, name and type are sent as given, so start from
-`get_mode_recipe()` rather than inventing them. `cook_mode` is the API mode
+request. Its mode, ID, name and type are sent as given (the CS358-AF sends
+its mode's own ID, name and type), so start from `get_mode_recipe()` rather
+than inventing them. `cook_mode` is the API mode
 string (`'AirFry'`, `'poultry'`) or an `AirFryerCookModes` key; the API mode
 string is what is sent. A recipe `temp_unit` that does not start with `c` or
 `f` returns `False` without a request.
@@ -157,7 +186,7 @@ app's defaults.
 | `end(chamber)` | Ends the cook or preheat and returns the chamber to standby. | All |
 | `stop(chamber)` | Pauses the cook or preheat. | CS137/CS158, CAF-DC111S-AEU |
 | `resume(chamber)` | Resumes a paused cook or preheat. | CS137/CS158, CAF-DC111S-AEU |
-| `cook_from_preheat(chamber)` | Starts the cook once preheat has finished (`PREHEAT_END`). | CS137/CS158 |
+| `cook_from_preheat(chamber)` | Starts the cook once preheat has finished (`PREHEAT_END`). | CS137/CS158, CS358-AF |
 
 On the CS137/CS158, `end()`, `stop()` and `resume()` use the last known
 status (from `update()` or the last successful command) to choose between the
@@ -203,7 +232,7 @@ temperatures in the fryer's `temp_unit`.
 | --- | --- |
 | `cook_status` | An `AirFryerCookStatus` member (see below). |
 | `cook_mode`, `recipe` | The API mode string and recipe name of the current or last cook (`cook_mode` is kept in standby). After a local command, `recipe` is set only on the dual-chamber fryers; the other fryers fill it on `update()`. |
-| `cook_set_temp`, `current_temp` | The set and measured temperatures. The dual-chamber fryers' status has no measured-temperature field, so `current_temp` stays `None`. |
+| `cook_set_temp`, `current_temp` | The set and measured temperatures. The dual-chamber fryers' status has no measured-temperature field, so `current_temp` stays `None`. The CS358-AF reports 0, so its `current_temp` is also `None`. |
 | `cook_set_time`, `preheat_set_time` | The set cook and preheat times. |
 | `cook_time_remaining`, `preheat_time_remaining` | Remaining cook and preheat time, counting down from the last update while running (and during `HOLD` while the other chamber cooks, where `cook_time_remaining` is the wait before the chamber starts). `None` outside that phase. |
 | `total_time_remaining` | Time until the cook finishes, preheat included. `None` in standby, and on the CS137/CS158 during preheat once an `update()` has run (that fryer reports no cook time then). |
@@ -219,7 +248,7 @@ every status:
 | `STANDBY` | Idle. |
 | `HEATING` | Preheating. |
 | `PREHEAT_STOP` | Preheat paused. |
-| `PREHEAT_END` | Preheat finished, waiting for `cook_from_preheat()` (CS137/CS158). |
+| `PREHEAT_END` | Preheat finished, waiting for `cook_from_preheat()` (CS137/CS158, CS358-AF). |
 | `COOKING` | Cooking. |
 | `COOK_STOP` | Cook paused. |
 | `PULL_OUT` | Basket pulled out. |
@@ -228,8 +257,8 @@ every status:
 | `APPOINTING` | Waiting for a delayed start set in the app (CS137/CS158). pyvesync cannot set one. |
 | `HOLD` | Sync cook with different times: this chamber waits so both finish together (CAF-DC111S-AEU). `cook_time_remaining` is the wait and `total_time_remaining` includes the cook; both count down only while the other chamber is cooking, and stop while it is paused. Counts as cook mode; `is_running` is False. Start one with `set_chamber_modes()`, the app or the fryer; pyvesync's `BOTH` sends the same settings to both chambers, so it does not report this status. |
 
-The CAF-P583S status map maps `keeping` (keep-warm) to `COOKING`; no capture
-of it exists yet. `COMPLETED` and `UNKNOWN` are in the enum but no supported
+The CAF-P583S and CS358-AF status maps map `keeping` (keep-warm) to
+`COOKING`; no capture of it exists yet. `COMPLETED` and `UNKNOWN` are in the enum but no supported
 fryer reports them.
 
 The CAF-TF101S and CAF-TF102S also map `HOLD` and `COOK_END`. That follows the
@@ -341,6 +370,7 @@ key or by API mode string.
 | --- | --- |
 | CS137/CS158 | `CUSTOM` (Manual Cooking, the default), `STEAK`, `CHICKEN`, `SEAFOOD`, `BACON`, `VEGETABLES`, `ROOT_VEGETABLES`, `FROZEN`, `DESSERTS`, `SHRIMP`, `BREAD`, `FRENCH_FRIES` |
 | CAF-DC601S | `AIRFRY` (default), `ROAST`, `BROIL`, `FROZEN`, `REHEAT`, `BAKE`, `DRY`, `PROOF`, `WARM` |
+| CS358-AF | `CUSTOM` (Manual, the default), `STEAK`, `CHICKEN`, `SEAFOOD`, `BACON`, `FROZEN`, `FRENCH_FRIES`, `VEGETABLES`, `SHRIMP`, `BAKE`, `TOAST` |
 | CAF-P583S | `AIRFRY` (default), `BROIL`, `ROAST`, `BAKE`, `CHICKEN`, `STEAK`, `SEAFOOD`, `VEGETABLES`, `FRENCH_FRIES`, `FROZEN`, `REHEAT` |
 | CAF-TF101S | `AIRFRY` (default), `ROAST`, `BAKE`, `GRILL`, `REHEAT`, `DRY` |
 | CAF-TF102S | `AIRFRY` (default), `ROAST`, `BAKE`, `GRILL`, `REHEAT` |
@@ -358,7 +388,8 @@ fryer has no such mode.
 ```python
 from pyvesync.const import AirFryerCookModes
 
-# Bake exists on the CAF-DC601S, CAF-P583S, CAF-TF101S/TF102S and CAF-DC111S-AEU
+# Bake exists on the CAF-DC601S, CS358-AF, CAF-P583S, CAF-TF101S/TF102S and
+# CAF-DC111S-AEU
 await fryer.set_mode(1200, 330, temp_unit='f', cook_mode=AirFryerCookModes.BAKE)
 
 # The preset at its app defaults, for set_mode_from_recipe()
@@ -411,6 +442,9 @@ CAF-TF102S has no Dry mode.
 | Roast, Bake | 1 minute-4 hours | 1 minute |
 | Grill | 1-30 minutes | 1 minute |
 | Dry | 30 minutes-48 hours | 30 minutes |
+
+The CS358-AF limits every mode to 1-60 minutes in 1-minute steps, as the app's
+picker does.
 
 Times are still given in **seconds**. A time outside the range or off the step
 makes the method return `False` without sending a request. Unlike a
@@ -469,6 +503,13 @@ same input. Pass `cook_temp` in the device's own unit to avoid conversion.
             - "!^_.*"
 
 ::: pyvesync.devices.vesynckitchen.VeSyncDualBlazeFryer
+    options:
+        show_root_heading: true
+        members_order: source
+        filters:
+            - "!^_.*"
+
+::: pyvesync.devices.vesynckitchen.VeSyncAirFryer358
     options:
         show_root_heading: true
         members_order: source

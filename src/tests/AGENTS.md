@@ -84,7 +84,7 @@ fields to make a code path run.
 | `test_fryer_captures.py` | Air fryer requests and status parsing pinned to packet-capture values; asserts on request bodies, no YAML |
 | `test_fryer_units.py` | Air fryer device map against the APK preset table, temperature units, limits and rounding, preheat helpers |
 | `test_fryer_chambers.py` | Air fryer `AirFryerChamber` interface: supported chambers, `BOTH` / Sync, `work_chamber`, `sync_chambers` |
-| `test_fryer_resilience.py` | Air fryer failure handling: unknown PID skipped, bad units, failed polls keep state, time validation, CS137/CS158 stop/resume phases, dual `end()` for the whole basket, per-device `default_preset` |
+| `test_fryer_resilience.py` | Air fryer failure handling: unknown PID or CS358 config module skipped, bad units, failed polls keep state, time validation and per-mode time limits, CS137/CS158 stop/resume phases, CS358 preheat handoff checks, dual `end()` for the whole basket, per-device `default_preset` |
 | `test_all_devices.py` | Each device type's `DETAILS_RESPONSES` has one entry per setup entry (count check, `test_device_tests`); `get_devices()` request. Air fryers and thermostats aren't counted |
 | `test_auth.py` | All login tests (`TestApiFunc`, scripted HTTP responses): region mapping, credentials, token file, two-step and cross-region login, `reauthenticate()`, and re-login plus retry after a rejected token in `async_call_api()` |
 | `test_manager_resilience.py` | Device discovery skips a device whose class raises `VeSyncError`; `update_all_devices()` logs unexpected errors |
@@ -209,7 +209,8 @@ the generic pattern:
   `METHOD_RESPONSES`. There is no `DETAILS_RESPONSES`.
 - `test_fryers.py` parametrizes `test_details_fryers` explicitly from its
   `DETAILS_PARAMS_STANDBY` / `DETAILS_PARAMS_COOKING` lists (CS158-AF,
-  CAF-DC601S, CAF-P583S, CAF-TF101S), checks the parsed state, and records the
+  CAF-DC601S, CAF-TF101S, CAF-DC111S-AEU, CAF-P583S, CS358-AF), checks the
+  parsed state, and records the
   `update()` request in `api/vesynckitchen/<setup_entry>.yaml`. It has no
   `test_methods`, so `base_methods` / `device_methods` are unused and no
   control-method requests are recorded.
@@ -221,6 +222,7 @@ the generic pattern:
   parsed state, plus a few plain functions. Where a capture exists, values
   come from it; the `BOTH` / Sync request values have no capture yet.
   Capture values live in the test (`CS158_*` dicts, `_dc601s_status()`,
+  `_cs358_status()`, `CS358_COMMAND_RESPONSE`, `CS358_MODES`,
   `_tf101s_status()` / `_tf101s_chamber()`).
 - `test_fryer_units.py::test_presets_match_apk` compares every map entry's
   `cook_modes` with its `APK_PRESETS` row, and the map tests require each
@@ -232,7 +234,9 @@ APK); for a new response shape, a standby and a cooking status in
 entries listed there get an `update()` fixture); capture-based tests for every
 request it sends; then
 `PYTEST_CONFIRM=1 pytest src/tests/test_fryers.py --write_api` for the
-`update()` fixture.
+`update()` fixture. A class that checks the config module (CS137/CS158,
+CS358-AF) also needs its module set in `call_json.DeviceList.device_list_item()`,
+or `get_device()` fails to build it.
 
 ### New device type, thermostats
 

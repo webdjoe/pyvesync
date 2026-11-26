@@ -49,6 +49,7 @@ The VeSync API supports a variety of devices. The following is a list of devices
       - [CS137][pyvesync.devices.vesynckitchen.VeSyncAirFryer158] - 3.7qt Air Fryer
       - [CS158][pyvesync.devices.vesynckitchen.VeSyncAirFryer158] - 5.8qt Air Fryer
       - [CAF-DC601S][pyvesync.devices.vesynckitchen.VeSyncTurboBlazeFryer] - TurboBlaze 6qt Air Fryer
+      - [CS358-AF][pyvesync.devices.vesynckitchen.VeSyncAirFryer358] - Smart 5.8qt Air Fryer (US)
       - [CAF-P583S][pyvesync.devices.vesynckitchen.VeSyncDualBlazeFryer] - Dual Blaze 6.8qt Air Fryer
       - [CAF-TF101S][pyvesync.devices.vesynckitchen.VeSyncDualAirFryer] - Dual Air Fryer
       - [CAF-DC111S-AEU][pyvesync.devices.vesynckitchen.VeSyncDualAirFryer] - Turbo Tower Pro Smart Air Fryer
@@ -141,15 +142,18 @@ been verified.
 | Cosori 3.7qt Air Fryer | CS137 | ✔ | ✔ | ✔ | ✔ | ✔ | |
 | Cosori 5.8qt Air Fryer | CS158 | ✔ | ✔ | ✔ | ✔ | ✔ | |
 | Cosori TurboBlaze 6qt Air Fryer | CAF-DC601S | ✔ | ✔ | ✔ | ✔ | | |
+| Cosori Smart 5.8qt Air Fryer (US) | CS358-AF | ✔ | ✔ | ✔ | ✔ | | |
 | Cosori Dual Blaze 6.8qt Air Fryer | CAF-P583S | ✔ | ✔ | ✔ | | | |
 | Cosori Dual Air Fryer | CAF-TF101S | ✔ | ✔ | ✔ | | | ✔ |
 | Cosori Turbo Tower Pro Smart Air Fryer | CAF-DC111S-AEU | ✔ | ✔ | ✔ | | | ✔ |
 
 The CAF-TF102S is mapped from the VeSync app and is pending hardware
 verification. The CAF-DC111S-AEU cook and end requests are pending hardware
-verification. The CAF-P583S KEU has no packet capture and is assumed to match
-the KUS. See [Air Fryers](devices/kitchen.md) for each model's cook modes and
-chambers, and how to read its temperature limits.
+verification. The CS358-AF is mapped from a VeSync app packet capture; its
+requests are the ones PR #557 tested on the fryer. The CAF-P583S KEU has no
+packet capture and is
+assumed to match the KUS. See [Air Fryers](devices/kitchen.md) for each
+model's cook modes and chambers, and how to read its temperature limits.
 
 ### Thermostats
 

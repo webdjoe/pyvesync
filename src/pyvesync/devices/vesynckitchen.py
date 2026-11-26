@@ -3,6 +3,7 @@
 - ``VeSyncAirFryer158``: CS137/CS158 (Bypass V1 API, times in minutes).
 - ``VeSyncTurboBlazeFryer``: CAF-DC601S (bypassV2 ``startCook``).
 - ``VeSyncDualBlazeFryer``: CAF-P583S (bypassV2 ``startCook``).
+- ``VeSyncAirFryer358``: CS358-AF (TurboBlaze protocol, preheat handoff).
 - ``VeSyncDualAirFryer``: CAF-TF101S / CAF-TF102S / CAF-DC111S (bypassV2
   ``startMultiCook``, two chambers).
 
@@ -11,18 +12,21 @@ not call ``update()``. Call ``update()`` to read what the device reports. A
 failed or unreadable poll logs and leaves the state unchanged. The CS137/CS158
 ``end()``, ``stop()``, ``resume()`` and ``cook_from_preheat()`` choose the cook
 or preheat command from the last known state, which every successful command
-keeps in the phase it sent.
+keeps in the phase it sent. The CS358 ``cook_from_preheat()`` sends
+``preheatCook`` only from ``PREHEAT_END``.
 """
 
 from __future__ import annotations
 
 import logging
+from dataclasses import replace
 from typing import TYPE_CHECKING
 
 from typing_extensions import deprecated
 
 from pyvesync.base_devices import VeSyncFryer
 from pyvesync.const import (
+    AIRFRYER_CS358_CONFIG_MODULE,
     AIRFRYER_PID_MAP,
     BYPASSV2_SUB_DEVICE_PAYLOAD,
     AirFryer158Command,
@@ -60,12 +64,12 @@ class VeSyncAirFryer158(VeSyncFryer):
     """Cosori CS137/CS158 air fryer (Bypass V1 API).
 
     The API counts time in whole minutes, so times are truncated to the minute
-    when sent, and a cook time under 60 seconds is rejected. This is the only
-    fryer class that implements ``stop()``, ``resume()`` and
-    ``cook_from_preheat()``. They and ``end()`` choose the cook or preheat
-    command from the last known state. ``stop()`` and ``resume()`` are sent in
-    any state (the cook command when not preheating), and every successful
-    command sets the state to the phase it sent, so the next command matches.
+    when sent, and a cook time under 60 seconds is rejected. ``stop()``,
+    ``resume()``, ``cook_from_preheat()`` and ``end()`` choose the cook or
+    preheat command from the last known state. ``stop()`` and ``resume()`` are
+    sent in any state (the cook command when not preheating), and every
+    successful command sets the state to the phase it sent, so the next
+    command matches.
     A device whose config module is not in ``AIRFRYER_PID_MAP`` raises
     ``VeSyncError``, and the device container skips it with a warning.
 
@@ -699,6 +703,93 @@ class VeSyncDualBlazeFryer(VeSyncTurboBlazeFryer):
         cook_req['accountID'] = cook_req.pop('accountId')
         cook_req['hasLinkage'] = False
         return models.FryerDualBlazeRequestData.from_dict(cook_req)
+
+
+class VeSyncAirFryer358(VeSyncTurboBlazeFryer):
+    """Cosori CS358-AF air fryer (US), on the TurboBlaze bypassV2 protocol.
+
+    The start, end and status requests are the ``VeSyncTurboBlazeFryer`` ones.
+    Only the ``AIRFRYER_CS358_CONFIG_MODULE`` (US) is supported; any other
+    config module raises ``VeSyncError``, and the device container skips the
+    device with a warning. A recipe is sent with its mode's own recipe ID,
+    name and type, as the app sends it.
+    ``current_temp`` is None. ``cook_from_preheat()`` starts the loaded cook
+    from ``PREHEAT_END``; ``stop()`` and ``resume()`` are not implemented and
+    return False.
+
+    Args:
+        details (ResponseDeviceDetailsModel): Device details.
+        manager (VeSync): Manager class.
+        feature_map (AirFryerMap): Device feature map.
+    """
+
+    __slots__ = ()
+
+    def __init__(
+        self,
+        details: ResponseDeviceDetailsModel,
+        manager: VeSync,
+        feature_map: AirFryerMap,
+    ) -> None:
+        """Init the VeSync CS358 Air Fryer class."""
+        super().__init__(details, manager, feature_map)
+        if self.config_module != AIRFRYER_CS358_CONFIG_MODULE:
+            msg = (
+                'Report this error as an issue - '
+                f'{self.config_module} is not a supported config module for '
+                f'{self.device_type}'
+            )
+            raise VeSyncError(msg)
+
+    def _prepare_recipe(
+        self, recipe: AirFryerPresetRecipe
+    ) -> AirFryerPresetRecipe | None:
+        """Check a recipe and give it its mode's own recipe ID, name and type.
+
+        The app sends each mode with one recipe only (Custom is ID 11,
+        ``Manual``), so a recipe from another fryer, such as
+        ``AirFryerPresets.custom``, is sent as this fryer's.
+
+        Args:
+            recipe (AirFryerPresetRecipe): The caller's recipe, not changed.
+
+        Returns:
+            AirFryerPresetRecipe | None: The copy to send, or None (after a
+            warning) if a check fails.
+        """
+        prepared = super()._prepare_recipe(recipe)
+        mode = self.get_cook_mode(recipe.cook_mode)
+        if prepared is None or mode is None:
+            return None
+        return replace(
+            prepared,
+            recipe_id=mode.recipe_id,
+            recipe_name=mode.recipe_name,
+            recipe_type=mode.recipe_type,
+        )
+
+    async def get_details(self) -> None:
+        await super().get_details()
+        # currentTemp is 0 in every captured CS358 poll; it is not a reading.
+        self.state.current_temp = None
+
+    async def cook_from_preheat(
+        self, chamber: AirFryerChamber | int = AirFryerChamber.CHAMBER_1
+    ) -> bool:
+        if self._validate_chamber(chamber) is None:
+            return False
+        if self.state.cook_status != AirFryerCookStatus.PREHEAT_END:
+            logger.debug('Cannot start cook from preheat for %s', self.device_name)
+            return False
+        resp = await self.call_bypassv2_api(
+            payload_method='preheatCook',
+            payload_update=self._payload_update(),
+        )
+        r = Helpers.process_dev_response(logger, 'cook_from_preheat', self, resp)
+        if r is None:
+            return False
+        self.state.set_state(cook_status=AirFryerCookStatus.COOKING)
+        return True
 
 
 class VeSyncDualAirFryer(BypassV2Mixin, VeSyncFryer):

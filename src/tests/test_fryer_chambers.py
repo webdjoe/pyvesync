@@ -9,6 +9,7 @@ import pytest
 from base_test_cases import TestBase
 from call_json_fryers import AIR_FRYER_COOKING_DETAILS
 from defaults import build_bypass_v2_response
+from test_fryer_captures import _cs358_status
 from utils import parse_args
 
 from pyvesync.const import AirFryerChamber, AirFryerCookStatus, AirFryerFeatures, AirFryerSyncType
@@ -280,13 +281,25 @@ class TestChamberInterface(TestBase):
         assert fryer.get_chamber_state(chamber) is None
         assert 'chamber' in self.caplog.text.lower()
 
-    @pytest.mark.parametrize('setup_entry', ['CS158-AF', 'CAF-DC601S', 'CAF-P583S'])
+    @pytest.mark.parametrize(
+        'setup_entry', ['CS158-AF', 'CAF-DC601S', 'CAF-P583S', 'CS358-AF']
+    )
     @pytest.mark.parametrize('chamber', [Ch.CHAMBER_2, Ch.WHOLE, Ch.BOTH, 5])
     def test_single_chamber_rejects_other_chambers(self, setup_entry, chamber):
         fryer = self.get_device('air_fryers', setup_entry)
         self.mock_api.reset_mock()
         assert self.run_in_loop(fryer.set_mode, cook_time=600, cook_temp=fryer.min_temp, chamber=chamber) is False
         assert self.run_in_loop(fryer.end, chamber) is False
+        assert self.mock_api.call_count == 0
+
+    @pytest.mark.parametrize('chamber', [Ch.CHAMBER_2, Ch.WHOLE, Ch.BOTH, 5])
+    def test_cs358_handoff_rejects_other_chambers(self, chamber):
+        fryer = self.get_device('air_fryers', 'CS358-AF')
+        status = _cs358_status('preheatEnd', preheat=(240, 0, 350))
+        self.mock_api.return_value = (status, 200)
+        self.run_in_loop(fryer.update)
+        self.mock_api.reset_mock()
+        assert self.run_in_loop(fryer.cook_from_preheat, chamber) is False
         assert self.mock_api.call_count == 0
 
     def _start(self, fryer, chamber):

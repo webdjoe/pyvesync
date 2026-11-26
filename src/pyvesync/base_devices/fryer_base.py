@@ -1368,9 +1368,10 @@ class VeSyncFryer(VeSyncBaseDevice[FryerState]):
     ) -> bool:
         """Start cooking after the preheat has finished.
 
-        Only the CS137/CS158 (``VeSyncAirFryer158``) supports this; other
-        fryers return False without a request. The last known
-        ``cook_status`` must be ``PREHEAT_END``, so call ``update()`` after
+        The CS137/CS158 (``VeSyncAirFryer158``) and the CS358
+        (``VeSyncAirFryer358``) support this; other fryers return False
+        without a request. The last known ``cook_status`` must be
+        ``PREHEAT_END``, so call ``update()`` after
         the preheat finishes; otherwise it returns False without a request.
 
         Args:
