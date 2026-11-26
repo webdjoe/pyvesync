@@ -699,13 +699,7 @@ humidifier_modules = [
     ),
     HumidifierMap(
         class_name='VeSyncHumid200300S',
-        dev_types=[
-            'LUH-O451S-WUS',
-            'LUH-O451S-WUSR',
-            'LUH-O601S-WUS',
-            'LUH-O601S-KUS',
-            'LUH-N451S-WUS',
-        ],
+        dev_types=['LUH-O451S-WUS', 'LUH-O451S-WUSR', 'LUH-O601S-WUS', 'LUH-O601S-KUS'],
         features=[HumidifierFeatures.WARM_MIST, HumidifierFeatures.AUTO_STOP],
         mist_modes={
             HumidifierModes.AUTO: 'auto',
@@ -722,7 +716,7 @@ humidifier_modules = [
     ),
     HumidifierMap(
         class_name='VeSyncHumid1000S',
-        dev_types=['LUH-M101S-WUS', 'LUH-M101S-WUSR'],
+        dev_types=['LUH-M101S-WUS', 'LUH-M101S-WUSR', 'LUH-N451S-WUS'],
         features=[HumidifierFeatures.AUTO_STOP],
         mist_modes={
             HumidifierModes.AUTO: 'auto',
