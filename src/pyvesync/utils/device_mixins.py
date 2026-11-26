@@ -14,11 +14,13 @@ from typing import TYPE_CHECKING, TypeVar
 
 from mashumaro.mixins.orjson import DataClassORJSONMixin
 
+from pyvesync.const import DeviceStatus
 from pyvesync.models.bypass_models import (
     RequestBypassV1,
     RequestBypassV2,
+    ResultV2GetTimerV2,
 )
-from pyvesync.utils.helpers import Helpers
+from pyvesync.utils.helpers import Helpers, Timer
 from pyvesync.utils.logs import LibraryLogger
 
 if TYPE_CHECKING:
@@ -115,6 +117,49 @@ def process_bypassv2_result(
     if not isinstance(result, dict):
         return None
     return Helpers.model_maker(logger, model, method, result, device)
+
+
+def countdown_timer_payload(duration: int, action: str) -> dict:
+    """Build the `addTimerV2` payload of a countdown timer.
+
+    This is the countdown format with `startAct` and `total` that devices
+    such as the LV600S humidifier and Eleva purifier report from `getTimerV2`.
+
+    Args:
+        duration (int): Timer length in seconds.
+        action (str): 'on' or 'off', the power state set when the timer ends.
+
+    Returns:
+        dict: The `data` value of the `addTimerV2` request.
+    """
+    act = 1 if action == DeviceStatus.ON else 0
+    return {
+        'startAct': [{'type': 'powerSwitch', 'num': 0, 'act': act}],
+        'total': duration,
+    }
+
+
+def countdown_timer_from_result(result: ResultV2GetTimerV2) -> Timer | None:
+    """Return the first countdown timer of a `getTimerV2` result.
+
+    Args:
+        result (ResultV2GetTimerV2): The parsed `getTimerV2` inner result.
+
+    Returns:
+        Timer | None: The timer, or None if the result lists no timers.
+    """
+    if not result.timers:
+        return None
+    timer = result.timers[0]
+    action = DeviceStatus.OFF
+    if timer.startAct and timer.startAct[0].act == 1:
+        action = DeviceStatus.ON
+    return Timer(
+        timer_duration=timer.total,
+        action=action,
+        id=timer.id,
+        remaining=timer.remain,
+    )
 
 
 class BypassV2Mixin:

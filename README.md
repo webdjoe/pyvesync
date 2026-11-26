@@ -241,6 +241,8 @@ pip install pyvesync
 8. Everest Air
 9. Sprout Air Purifier
 10. Vital Pet Pro (LAP-P501S)
+11. Eleva 500X (LAP-C511S)
+12. Eleva 300X (LAP-C341S)
 
 ### Etekcity / Valceno Bulbs
 

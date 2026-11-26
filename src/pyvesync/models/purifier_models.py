@@ -54,14 +54,37 @@ class PurifierVitalDetailsResult(InnerPurifierBaseResult):
     environmentLightState: int
     scheduleCount: int
     timerRemain: int
-    efficientModeTimeRemain: int
     errorCode: int
+    efficientModeTimeRemain: int | None = None
     autoPreference: V2AutoPreferences | None = None
     fanRotateAngle: int | None = None
     filterOpenState: int | None = None
     PM1: int | None = None
     PM10: int | None = None
     AQPercent: int | None = None
+    AQI: int | None = None
+    VOC: int | None = None
+    NO2: int | None = None
+    carbonFilterLifePercent: int | None = None
+    preFilterLifePercent: int | None = None
+    filterRemainDay: int | None = None
+    totalCleanAir: int | None = None
+    aqiLightMode: int | None = None
+    group: int | None = None
+    manualGuardSwitch: int | None = None
+    sleepGuardSwitch: int | None = None
+    standbyGuardSwitch: int | None = None
+    quietPeriod: PurifierQuietPeriod | None = None
+
+
+@dataclass
+class PurifierQuietPeriod:
+    """Eleva Quiet Period settings. Times are seconds after midnight."""
+
+    quietPeriodSwitch: int
+    modeIdx: int
+    startTime: int
+    endTime: int
 
 
 @dataclass
@@ -69,7 +92,7 @@ class V2AutoPreferences:
     """Vital 100S/200S Auto Preferences."""
 
     autoPreferenceType: str
-    roomSize: int
+    roomSize: int | None = None
 
 
 @dataclass
