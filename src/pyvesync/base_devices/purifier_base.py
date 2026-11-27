@@ -63,7 +63,8 @@ class PurifierState(DeviceState):
         voc (int): VOC value of the purifier.
         co2 (int): CO2 value of the purifier.
         nightlight_brightness (int): Nightlight brightness level of the purifier.
-        buzzer_status (str): Button buzzer setting, 'on' or 'off'.
+        buzzer_status (str): Button beep setting, 'on' or 'off'. 'off' means
+            the VeSync app's Mute switch is on.
         auto_clean_status (bool): True while a self-cleaning run is active.
         auto_clean_remaining (int): Seconds left in the running self-cleaning run.
         auto_clean_total (int): Length of the running self-cleaning run in seconds.
@@ -323,7 +324,10 @@ class VeSyncPurifier(VeSyncBaseToggleDevice):
 
     @property
     def supports_buzzer(self) -> bool:
-        """Return True if device supports turning the button buzzer on/off."""
+        """Return True if device supports turning the button beep on/off.
+
+        The VeSync app shows this setting as the Mute switch.
+        """
         return PurifierFeatures.BUZZER in self.features
 
     @property
@@ -332,11 +336,12 @@ class VeSyncPurifier(VeSyncBaseToggleDevice):
         return PurifierFeatures.AUTO_CLEAN in self.features
 
     async def toggle_buzzer(self, toggle: bool | None = None) -> bool:
-        """Toggle the button buzzer (beep).
+        """Turn the button beep on or off (the VeSync app's Mute switch).
 
         Args:
-            toggle (bool | None): True to turn the buzzer on, False to turn it
-                off. If None, toggle the current state.
+            toggle (bool | None): True to turn the beep on (app Mute off),
+                False to mute it (app Mute on). If None, toggle the current
+                state.
 
         Returns:
             bool: True if successful, False otherwise.
@@ -349,11 +354,11 @@ class VeSyncPurifier(VeSyncBaseToggleDevice):
         return False
 
     async def turn_on_buzzer(self) -> bool:
-        """Turn on the button buzzer."""
+        """Turn the button beep on (VeSync app: Mute off)."""
         return await self.toggle_buzzer(True)
 
     async def turn_off_buzzer(self) -> bool:
-        """Turn off the button buzzer."""
+        """Mute the button beep (VeSync app: Mute on)."""
         return await self.toggle_buzzer(False)
 
     async def toggle_auto_clean(self, toggle: bool | None = None) -> bool:

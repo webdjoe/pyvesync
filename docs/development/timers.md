@@ -43,7 +43,7 @@ shapes are in `models/bypass_models.py` and the device modules.
 | Bypass V1 cloud (ESW15 and outdoor outlets, wall and dimmer switches, ESL100 bulbs) | `timer/getTimers` | `timer/addTimer` (`counterTime`, `action`) | `timer/deleteTimer` (`timerId`) | Large id assigned by the cloud |
 | 7A outlet | `GET /v2/device/{cid}/timer` | `POST /v2/device/{cid}/timer` | `DELETE /v2/device/{cid}/timer/{id}` | Assigned by the cloud |
 | Bypass V2, V1-style timer (Core purifiers, ESW10 outlet, Classic 200S, Classic 300S, Dual 200S, LUH-A602S, LUH-O451S and LUH-M101S humidifiers) | `getTimer` | `addTimer` (`action`, `total`) | `delTimer` (`id`) | 1 |
-| Bypass V2, V2 timer (Vital, EverestAir, Sprout and Vital Pet Pro purifiers, LV600S humidifier) | `getTimerV2` | `addTimerV2` (`startAct`, `total`) | `delTimerV2` (`id`) | 1 |
+| Bypass V2, V2 timer (Vital, EverestAir, Sprout, Vital Pet and Vital Pet Pro purifiers, LV600S humidifier) | `getTimerV2` | `addTimerV2` (`startAct`, `total`) | `delTimerV2` (`id`) | 1 (Vital Pet family: the id the add response returns, else 1) |
 
 The tower fan (LTF-F422S) uses its own `getTimer`, `setTimer` and
 `clearTimer` requests.
@@ -58,27 +58,32 @@ although an EU capture shows the V2 timer requests.
 The VeSync app handles a single timer on every timer screen. It reads the
 timer list, uses the first timer, and shows either that timer with a Cancel
 button or the page to add one. It never adds a timer while one is running.
-When it cancels a timer without a known id, it sends id 1.
+It shows the timer with the id the add response returns, and cancels the
+loaded or added timer by its id. When it has no id, it sends id 1.
 
-Bypass V2 devices hold one timer slot, and its id is always 1:
+Bypass V2 devices hold one timer slot. In every capture its id is 1:
 
 - Adding a timer returns id 1.
 - Adding a second timer while the first is running returns id 1 and
   replaces the running timer. The list then holds only the new timer.
 - Deleting id 1 succeeds, also when no timer is running.
 
-For these devices the timer id is the constant
-[`DEFAULT_TIMER_ID`][pyvesync.const.DEFAULT_TIMER_ID] (1). A device that uses
-it does not read the timer list before adding or cancelling a timer:
+For these devices [`DEFAULT_TIMER_ID`][pyvesync.const.DEFAULT_TIMER_ID] (1)
+is the fallback id. A device that follows the app does not read the timer
+list before adding or cancelling a timer:
 
-- `set_timer()` sends the add request without checking for a running timer,
-  and stores the timer with `DEFAULT_TIMER_ID`.
-- `clear_timer()` sends the cancel request with `DEFAULT_TIMER_ID`, whether
-  or not `state.timer` holds a timer, and sets `state.timer` to `None` on
-  success.
+- `set_timer()` sends the add request without checking for a running timer.
+  It stores the timer with the id the add response returns, or
+  `DEFAULT_TIMER_ID` when the response has none.
+- `clear_timer()` sends the cancel request with the id of the known timer
+  (`state.timer`), or `DEFAULT_TIMER_ID` when no timer is known, and sets
+  `state.timer` to `None` on success.
+- A status poll that reports a running timer keeps the known id. With no
+  known timer it stores one with `DEFAULT_TIMER_ID`.
 
-The Vital Pet Pro (LAP-P501S) follows this. Other device families are being
-moved to it one family at a time.
+The Vital Pet family (Vital Pet LAP-P201S and Vital Pet Pro LAP-P501S)
+follows this. Other device families are being moved to it one family at a
+time.
 
 Bypass V1 cloud devices and the 7A outlet use large ids assigned by the
 cloud, so `DEFAULT_TIMER_ID` does not apply to them. They need the id from
@@ -89,5 +94,6 @@ cloud, so `DEFAULT_TIMER_ID` does not apply to them. They need the id from
 Only implement the timer requests that have been captured from the VeSync app
 (see [Capturing](capturing.md)). When the device uses one of the request sets
 above, follow the closest existing device class. For a bypass V2 device with
-one timer slot, use `DEFAULT_TIMER_ID` and do not read the timer list in
-`set_timer()` or `clear_timer()`.
+one timer slot, store the id the add response returns (else
+`DEFAULT_TIMER_ID`), cancel by the stored id (else `DEFAULT_TIMER_ID`), and do
+not read the timer list in `set_timer()` or `clear_timer()`.

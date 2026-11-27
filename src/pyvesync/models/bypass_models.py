@@ -177,6 +177,17 @@ class ResultV2SetTimer(BypassV2InnerResult):
     id: int
 
 
+@dataclass
+class ResultV2AddTimerV2(BypassV2InnerResult):
+    """Inner result for the Bypass V2 addTimerV2 method.
+
+    `id` is the id of the added timer. It is optional: the VeSync app falls
+    back to id 1 when the response has none.
+    """
+
+    id: int | None = None
+
+
 # Bypass V1 Timer Models
 
 

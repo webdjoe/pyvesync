@@ -265,7 +265,7 @@ turn_off_buzzer:
     method: bypassV2
     payload:
       data:
-        buzzerSwitch: 0
+        buzzerSwitch: 1
       method: setBuzzer
       source: APP
     phoneBrand: pyvesync
@@ -403,7 +403,7 @@ turn_on_buzzer:
     method: bypassV2
     payload:
       data:
-        buzzerSwitch: 1
+        buzzerSwitch: 0
       method: setBuzzer
       source: APP
     phoneBrand: pyvesync

@@ -20,6 +20,7 @@ from pyvesync.const import (
     PurifierScreenOnType,
 )
 from pyvesync.models.bypass_models import (
+    ResultV2AddTimerV2,
     ResultV2GetTimer,
     ResultV2GetTimerV2,
     ResultV2SetTimer,
@@ -844,14 +845,24 @@ class VeSyncAirSprout(VeSyncAirBaseV2):  # pylint: disable=too-many-ancestors
         self._set_state(r_model)
 
 
-class VeSyncAirVitalPetPro(VeSyncAirBaseV2):  # pylint: disable=too-many-ancestors
-    """Class for the Levoit Vital Pet Pro Air Purifier (LAP-P501S).
+class VeSyncAirVitalPet(VeSyncAirBaseV2):  # pylint: disable=too-many-ancestors
+    """Class for the Levoit Vital Pet Air Purifiers (LAP-P201S, LAP-P501S).
+
+    Base class for the Vital Pet (LAP-P201S) and, through
+    [VeSyncAirVitalPetPro][pyvesync.devices.vesyncpurifier.VeSyncAirVitalPetPro],
+    the Vital Pet Pro (LAP-P501S). The VeSync app drives both with the same
+    requests.
 
     Inherits from the
     [VeSyncAirBaseV2][pyvesync.devices.vesyncpurifier.VeSyncAirBaseV2] class.
     Power, manual fan speed and work modes use the same API calls. Status
-    parsing, display, child lock and timers use this device's own payloads,
-    and it adds the button buzzer and pre-filter self-cleaning.
+    parsing, display, child lock and timers use this family's own payloads,
+    and it adds the button buzzer.
+
+    The buzzer setting is the VeSync app's Mute switch: the device reports and
+    takes `buzzerSwitch` 1 when the beep is muted and 0 when it is on.
+    `turn_on_buzzer()` turns the beep on (sends 0), `turn_off_buzzer()` mutes it
+    (sends 1), and `state.buzzer_status` is `on` while the beep is on.
 
     The device's Auto mode is three work modes, listed in `auto_mode_types`:
     `odorShieldQuiet`, `odorShieldBalanced` and `odorShieldPerformance`. In
@@ -866,8 +877,8 @@ class VeSyncAirVitalPetPro(VeSyncAirBaseV2):  # pylint: disable=too-many-ancesto
 
     Display on and child lock re-send settings from the last status, so run
     `update()` before them. Light detection and filter reset are not
-    supported: the device has no light sensor, and no app request to reset
-    the filter has been captured.
+    supported: the devices have no light sensor, and no app request to reset
+    the filter is known.
 
     Args:
         details (ResponseDeviceDetailsModel): Device details from the API.
@@ -911,7 +922,7 @@ class VeSyncAirVitalPetPro(VeSyncAirBaseV2):  # pylint: disable=too-many-ancesto
         manager: VeSync,
         feature_map: PurifierMap,
     ) -> None:
-        """Initialize the Vital Pet Pro air purifier class."""
+        """Initialize the Vital Pet air purifier class."""
         super().__init__(details, manager, feature_map)
 
     def _set_state(self, details: InnerPurifierBaseResult) -> None:
@@ -947,7 +958,10 @@ class VeSyncAirVitalPetPro(VeSyncAirBaseV2):  # pylint: disable=too-many-ancesto
             self.state.child_lock_auto_switch = pref.childLockAutoSwitch
             self.state.child_lock_auto_time = pref.childLockAutoSwitchTime
         if details.buzzerSwitch is not None:
-            self.state.buzzer_status = DeviceStatus.from_int(details.buzzerSwitch)
+            # buzzerSwitch is the VeSync app's Mute switch (APK 6.0.10
+            # SnoopyPurNvgFragment titles it "Mute"; maintainer decision
+            # 2026-11-26): 1 is muted, 0 beeps.
+            self.state.buzzer_status = DeviceStatus.from_bool(not details.buzzerSwitch)
         if details.autoCleanPreference is not None:
             clean = details.autoCleanPreference
             self.state.auto_clean_status = bool(clean.autoCleanState)
@@ -1141,9 +1155,26 @@ class VeSyncAirVitalPetPro(VeSyncAirBaseV2):  # pylint: disable=too-many-ancesto
         return True
 
     async def toggle_buzzer(self, toggle: bool | None = None) -> bool:
+        """Turn the button beep on or off (the VeSync app's Mute switch).
+
+        The device setting is the app's Mute switch: `buzzerSwitch` 1 mutes the
+        beep and 0 turns it on. So True sends `buzzerSwitch` 0 and False sends 1.
+        `state.buzzer_status` is `on` while the beep is on.
+
+        Args:
+            toggle (bool | None): True to turn the beep on (app Mute off),
+                False to mute it (app Mute on). If None, toggle the current
+                state.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
         if toggle is None:
             toggle = self.state.buzzer_status != DeviceStatus.ON
-        payload_data = {'buzzerSwitch': int(toggle)}
+        # buzzerSwitch is the app's Mute switch (APK 6.0.10 t60.t0.A5 sends the
+        # Mute switch state; maintainer decision 2026-11-26), so the beep-on
+        # value is inverted on the wire.
+        payload_data = {'buzzerSwitch': int(not toggle)}
         r_dict = await self.call_bypassv2_api('setBuzzer', payload_data)
         r = Helpers.process_dev_response(_LOGGER, 'toggle_buzzer', self, r_dict)
         if r is None:
@@ -1153,27 +1184,11 @@ class VeSyncAirVitalPetPro(VeSyncAirBaseV2):  # pylint: disable=too-many-ancesto
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
-    async def toggle_auto_clean(self, toggle: bool | None = None) -> bool:
-        if toggle is None:
-            toggle = not bool(self.state.auto_clean_status)
-        clean_state = (
-            PurifierAutoCleanState.START if toggle else PurifierAutoCleanState.STOP
-        )
-        payload_data = {'autoCleanState': int(clean_state)}
-        r_dict = await self.call_bypassv2_api('setAutoClean', payload_data)
-        r = Helpers.process_dev_response(_LOGGER, 'toggle_auto_clean', self, r_dict)
-        if r is None:
-            return False
-
-        self.state.auto_clean_status = toggle
-        self.state.connection_status = ConnectionStatus.ONLINE
-        return True
-
     async def toggle_light_detection(self, toggle: bool | None = None) -> bool:
-        """Not supported: the Vital Pet Pro has no light detection.
+        """Not supported: the Vital Pet purifiers have no light detection.
 
-        Its only air sensors are PM2.5 and TVOC, and the VeSync app has no
-        light detection control for it.
+        Their only air sensors are PM2.5 and TVOC, and the VeSync app has no
+        light detection control for them.
 
         Returns:
             bool: Always False.
@@ -1183,7 +1198,7 @@ class VeSyncAirVitalPetPro(VeSyncAirBaseV2):  # pylint: disable=too-many-ancesto
         return False
 
     async def reset_filter(self) -> bool:
-        """Not supported: no app request to reset the filter has been captured.
+        """Not supported: no app request to reset the filter is known.
 
         Reset the Check Filter Indicator on the purifier instead, by holding
         the Auto Mode button for 3 seconds.
@@ -1217,9 +1232,11 @@ class VeSyncAirVitalPetPro(VeSyncAirBaseV2):  # pylint: disable=too-many-ancesto
     async def set_timer(self, duration: int, action: str | None = None) -> bool:
         """Set a timer that turns the purifier off.
 
-        The request is sent without checking for a running timer, and the timer
-        is stored with id `DEFAULT_TIMER_ID`. A new timer replaces the running
-        one.
+        The request is sent without checking for a running timer. The timer is
+        stored with the id the response returns, or `DEFAULT_TIMER_ID` when it
+        returns none, as the VeSync app does. A new timer replaces the running
+        one. The manual lists timers of 1 to 24 hours; the length is not
+        checked here.
 
         Args:
             duration (int): Timer length in seconds.
@@ -1240,7 +1257,16 @@ class VeSyncAirVitalPetPro(VeSyncAirBaseV2):  # pylint: disable=too-many-ancesto
         if r is None:
             return False
 
-        self.state.timer = Timer(duration, DeviceStatus.OFF, id=DEFAULT_TIMER_ID)
+        timer_id = DEFAULT_TIMER_ID
+        outer = r.get('result')
+        inner = outer.get('result') if isinstance(outer, dict) else None
+        if isinstance(inner, dict):
+            r_model = Helpers.model_maker(
+                _LOGGER, ResultV2AddTimerV2, 'set_timer', inner, self
+            )
+            if r_model is not None and r_model.id is not None:
+                timer_id = r_model.id
+        self.state.timer = Timer(duration, DeviceStatus.OFF, id=timer_id)
         self.state.timer.update_ts()
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
@@ -1248,20 +1274,85 @@ class VeSyncAirVitalPetPro(VeSyncAirBaseV2):  # pylint: disable=too-many-ancesto
     async def clear_timer(self) -> bool:
         """Cancel the running timer.
 
-        `delTimerV2` is sent with id `DEFAULT_TIMER_ID`, without reading the
-        timer list or checking `state.timer` first. Every captured timer id on
-        this model is 1.
+        `delTimerV2` is sent with the id of the known timer (`state.timer`),
+        or `DEFAULT_TIMER_ID` when no timer is known, without reading the
+        timer list first, as the VeSync app does.
 
         Returns:
             bool: True if successful, False on error.
         """
-        payload_data = {'id': DEFAULT_TIMER_ID}
+        timer_id = DEFAULT_TIMER_ID
+        if self.state.timer is not None:
+            timer_id = self.state.timer.id
+        payload_data = {'id': timer_id}
         r_dict = await self.call_bypassv2_api('delTimerV2', payload_data)
         r = Helpers.process_dev_response(_LOGGER, 'clear_timer', self, r_dict)
         if r is None:
             return False
 
         self.state.timer = None
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+
+class VeSyncAirVitalPetPro(VeSyncAirVitalPet):  # pylint: disable=too-many-ancestors
+    """Class for the Levoit Vital Pet Pro Air Purifier (LAP-P501S).
+
+    Inherits from the
+    [VeSyncAirVitalPet][pyvesync.devices.vesyncpurifier.VeSyncAirVitalPet] class,
+    which holds the status parsing, modes, display, child lock, buzzer and timer
+    methods. The Pro adds pre-filter self-cleaning.
+
+    `toggle_auto_clean()` starts or stops a self-cleaning run.
+    `state.auto_clean_status` is True while a run is active, and
+    `state.auto_clean_remaining` holds the seconds left.
+
+    Args:
+        details (ResponseDeviceDetailsModel): Device details from the API.
+        manager (VeSync): Instantiated VeSync object.
+        feature_map (PurifierMap): Device map template.
+
+    Attributes:
+        state (PurifierState): State of the device.
+        last_response (ResponseInfo): Last response from API call.
+        manager (VeSync): Manager object for API calls.
+        device_name (str): Name of device.
+        device_image (str): URL for device image.
+        cid (str): Device ID.
+        connection_type (str): Connection type of device.
+        device_type (str): Type of device.
+        type (str): Type of device.
+        uuid (str): UUID of device, not always present.
+        config_module (str): Configuration module of device.
+        mac_id (str): MAC ID of device.
+        current_firm_version (str): Current firmware version of device.
+        device_region (str): Region of device. (US, EU, etc.)
+        pid (str): Product ID of device, pulled by some devices on update.
+        sub_device_no (int): Sub-device number of device.
+        product_type (str): Product type of device.
+        features (dict): Features of device.
+        modes (list[str]): List of modes supported by the device.
+        fan_levels (list[int]): List of fan levels supported by the device.
+        nightlight_modes (list[str]): List of nightlight modes supported by the device.
+        auto_preferences (list[str]): List of auto preferences supported by the device.
+        auto_mode_types (list[str]): Auto mode types supported by the device.
+    """
+
+    __slots__ = ()
+
+    async def toggle_auto_clean(self, toggle: bool | None = None) -> bool:
+        if toggle is None:
+            toggle = not bool(self.state.auto_clean_status)
+        clean_state = (
+            PurifierAutoCleanState.START if toggle else PurifierAutoCleanState.STOP
+        )
+        payload_data = {'autoCleanState': int(clean_state)}
+        r_dict = await self.call_bypassv2_api('setAutoClean', payload_data)
+        r = Helpers.process_dev_response(_LOGGER, 'toggle_auto_clean', self, r_dict)
+        if r is None:
+            return False
+
+        self.state.auto_clean_status = toggle
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
