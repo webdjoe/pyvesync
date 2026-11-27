@@ -343,10 +343,55 @@ PURIFIER_DETAILS: dict[str, dict[str, Any]] = {
         "cumulativeCleanAir": 66337,
         "totalCleanAir": 66337,
     },
+    # Vital Pet (LAP-P201S-WUS). SYNTHETIC, not captured: no P201S capture exists.
+    # The field set is the getPurifierStatus list reported in PR #535 (13 required
+    # fields plus the optional ones below), with types from APK 6.0.10
+    # PurifierModeStatus. The values are made up. This is an exception, under the
+    # maintainer's 2026-11-25 evidence instruction, to the rule that response
+    # bodies come from captures. No light, efficient-mode or self-cleaning fields.
+    "LAP-P201S": {
+        "powerSwitch": 1,
+        "workMode": PurifierDefaults.purifier_mode,
+        "manualSpeedLevel": 3,
+        "fanSpeedLevel": PurifierDefaults.fan_level,
+        "AQLevel": 2,
+        "PM25": 12,
+        "VOC": 2,
+        "odorLevel": 1,
+        "filterLifePercent": 90,
+        "filterRemainDay": 120,
+        "resetFilterDate": 0,
+        "screenState": 1,
+        "screenSwitch": 1,
+        "screenPreference": {
+            "screenOnType": 1,
+            "screenStartTime": 25200,
+            "screenEndTime": 75600,
+        },
+        "childLockSwitch": 0,
+        "childLockPreference": {
+            "childLockAutoSwitch": 1,
+            "childLockAutoSwitchTime": 120,
+        },
+        "buzzerSwitch": 0,
+        "scheduleCount": 0,
+        "timerRemain": 0,
+        "errorCode": 0,
+        "errorCodes": [],
+        "cumulativeCleanAir": 1000,
+        "totalCleanAir": 1000,
+    },
 }
 
 VITAL_PET_PRO_TIMER = {"id": 1, "remain": 1777, "total": 1800}
 """Timer values from the captured Vital Pet Pro getTimerV2 response."""
+
+VITAL_PET_TIMER = {"id": 3, "remain": 1500, "total": 1800}
+"""SYNTHETIC Vital Pet (LAP-P201S) timer values, not captured.
+
+Shaped like the Pro's getTimerV2/addTimerV2 responses; APK 6.0.10 `z50.s.m`
+sends the same version 2 timer for P201S.
+"""
 
 
 DETAILS_RESPONSES = {
@@ -361,6 +406,7 @@ DETAILS_RESPONSES = {
     "EL551S": build_bypass_v2_response(inner_result=PURIFIER_DETAILS["EL551S"]),
     "LAP-B851S-WUS": build_bypass_v2_response(inner_result=PURIFIER_DETAILS["LAP-B851S-WUS"]),
     "LAP-P501S": build_bypass_v2_response(inner_result=PURIFIER_DETAILS["LAP-P501S"]),
+    "LAP-P201S": build_bypass_v2_response(inner_result=PURIFIER_DETAILS["LAP-P201S"]),
 }
 
 FunctionResponses.default_factory = lambda: (
@@ -385,6 +431,7 @@ METHOD_RESPONSES = {
     "EL551S": deepcopy(FunctionResponsesV2),
     "LAP-B851S-WUS": deepcopy(FunctionResponsesV2),
     "LAP-P501S": deepcopy(FunctionResponsesV2),
+    "LAP-P201S": deepcopy(FunctionResponsesV2),
 }
 
 METHOD_RESPONSES["LAP-P501S"]["set_timer"] = build_bypass_v2_response(
@@ -395,6 +442,20 @@ METHOD_RESPONSES["LAP-P501S"]["get_timer"] = build_bypass_v2_response(
         "timers": [
             {
                 **VITAL_PET_PRO_TIMER,
+                "startAct": [{"type": "powerSwitch", "act": 0, "num": 0}],
+            }
+        ]
+    }
+)
+# Vital Pet (LAP-P201S): SYNTHETIC timer responses (see VITAL_PET_TIMER).
+METHOD_RESPONSES["LAP-P201S"]["set_timer"] = build_bypass_v2_response(
+    inner_result={"id": VITAL_PET_TIMER["id"]}
+)
+METHOD_RESPONSES["LAP-P201S"]["get_timer"] = build_bypass_v2_response(
+    inner_result={
+        "timers": [
+            {
+                **VITAL_PET_TIMER,
                 "startAct": [{"type": "powerSwitch", "act": 0, "num": 0}],
             }
         ]

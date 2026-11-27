@@ -89,10 +89,11 @@ RGB_FULL_BRIGHTNESS = 100  # Full brightness percentage
 
 # Timer constants
 DEFAULT_TIMER_ID = 1
-"""Timer id for devices that hold a single timer.
+"""Fallback timer id for devices that hold a single timer.
 
-Every captured bypassV2 timer id is 1, and the VeSync app falls back to id 1 when it
-cancels a timer without a known id. These devices hold one timer slot: a second add
+Every captured bypassV2 timer id is 1. Devices that store the id the add response
+returns use this id when the response has none, or when they cancel a timer without
+a known id, as the VeSync app does. These devices hold one timer slot: a second add
 replaces the running timer (id 1), and deleting id 1 with no timer returns success.
 """
 
@@ -643,7 +644,7 @@ class PurifierFeatures(Features):
         PM1: PM1 level status.
         AQPERCENT: Air quality percentage status.
         RESET_FILTER: Reset filter status.
-        BUZZER: Button buzzer (beep) on/off.
+        BUZZER: Button buzzer (beep) on/off; the VeSync app's Mute setting.
         AUTO_CLEAN: Pre-filter self-cleaning (Vital Pet Pro).
     """
 
@@ -677,7 +678,7 @@ class PurifierAutoCleanState(IntEnum):
 
 
 class PurifierScreenOnType(IntEnum):
-    """`screenOnType` values for the Vital Pet Pro `setDisplay` API call.
+    """`screenOnType` values for the Vital Pet and Vital Pet Pro `setDisplay` call.
 
     Attributes:
         ALWAYS_ON: The display stays on.
@@ -789,7 +790,7 @@ class PurifierModes(Features):
 class PurifierAutoModeTypes(Features):
     """Auto mode types for purifiers whose Auto mode is several work modes.
 
-    On these devices (Vital Pet Pro) each auto mode type is its own API
+    On these devices (Vital Pet and Vital Pet Pro) each auto mode type is its own API
     `workMode`. pyvesync reports them as mode `auto`, with the type in
     `state.auto_mode_type`.
 

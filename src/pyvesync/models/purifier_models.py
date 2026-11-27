@@ -101,7 +101,10 @@ class PurifierSproutResult(InnerPurifierBaseResult):
 
 @dataclass
 class PurifierVitalPetProResult(InnerPurifierBaseResult):
-    """Vital Pet Pro (LAP-P501S) `getPurifierStatus` result model.
+    """Vital Pet (LAP-P201S) and Vital Pet Pro (LAP-P501S) status result model.
+
+    The `getPurifierStatus` result. The Vital Pet reports no
+    `autoCleanPreference`.
 
     `odorLevel`, `resetFilterDate`, `cumulativeCleanAir` and `totalCleanAir`
     are parsed but not used: their meaning or unit is not known.
@@ -121,7 +124,7 @@ class PurifierVitalPetProResult(InnerPurifierBaseResult):
     timerRemain: int
     errorCode: int
     VOC: int | None = None
-    buzzerSwitch: int | None = None
+    buzzerSwitch: int | None = None  # VeSync app Mute switch: 1 = muted, 0 = beep on
     filterRemainDay: int | None = None
     filterOpenState: int | None = None
     screenPreference: PurifierScreenPreference | None = None
@@ -136,7 +139,7 @@ class PurifierVitalPetProResult(InnerPurifierBaseResult):
 
 @dataclass
 class PurifierScreenPreference(ResponseBaseModel):
-    """Display preference in the Vital Pet Pro status response."""
+    """Display preference in the Vital Pet and Vital Pet Pro status response."""
 
     screenOnType: int
     screenStartTime: int | None = None
@@ -145,7 +148,7 @@ class PurifierScreenPreference(ResponseBaseModel):
 
 @dataclass
 class PurifierChildLockPreference(ResponseBaseModel):
-    """Auto child lock preference in the Vital Pet Pro status response."""
+    """Auto child lock preference in the Vital Pet and Vital Pet Pro status response."""
 
     childLockAutoSwitch: int
     childLockAutoSwitchTime: int
