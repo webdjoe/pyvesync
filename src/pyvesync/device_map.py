@@ -1923,6 +1923,7 @@ air_fryer_modules: list[AirFryerMap] = [
                 'pullOut': AirFryerCookStatus.PULL_OUT,
                 'appointing': AirFryerCookStatus.APPOINTING,
                 'standby': AirFryerCookStatus.STANDBY,
+                'cookEnd': AirFryerCookStatus.COOK_END,
             }
         ),
     ),
