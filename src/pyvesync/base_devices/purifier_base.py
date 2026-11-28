@@ -13,7 +13,9 @@ from pyvesync.const import (
     AirQualityLevel,
     DeviceStatus,
     NightlightModes,
+    PurifierAqiLightMode,
     PurifierFeatures,
+    PurifierHealthProtectProfile,
     PurifierModes,
 )
 
@@ -77,6 +79,32 @@ class PurifierState(DeviceState):
             since midnight.
         display_end_time (int): End of the daily display window, in seconds
             since midnight.
+        carbon_filter_life (int): Carbon filter life percentage
+            (`carbonFilterLifePercent`).
+        pre_filter_life (int): Pre-filter life percentage (`preFilterLifePercent`).
+        aqi_light_mode (str): Air quality light ring brightness, 'bright' or
+            'dim' (`aqiLightMode`, `PurifierAqiLightMode`).
+        health_protect_profile (str): Health Protect profile (`group`,
+            `PurifierHealthProtectProfile`): 'daily_comfort', 'focused_care' or
+            'advanced_care'. None when the device does not report it.
+        adaptive_start (bool): The VeSync app's "Adaptive Start"
+            (`standbyGuardSwitch`). The app describes it as monitoring air
+            quality while the purifier is off and turning purification on.
+        dynamic_manual (bool): The VeSync app's "Dynamic Manual"
+            (`manualGuardSwitch`). The app describes it as raising the fan speed
+            above the set level in Manual when sudden pollution is detected.
+        dynamic_sleep (bool): The VeSync app's "Dynamic Sleep"
+            (`sleepGuardSwitch`). The app describes the same fan boost in Sleep.
+        quiet_period_switch (bool): The VeSync app's "Quiet Period"
+            (`quietPeriod.quietPeriodSwitch`), which lowers the fan speed by one
+            level.
+        quiet_period_mode (str): How the Quiet Period turns on
+            (`quietPeriod.modeIdx`, `PurifierQuietPeriodMode`): 'light_control'
+            or 'customized'.
+        quiet_period_start (int): Start of the Customized Quiet Period window,
+            in seconds since midnight (`quietPeriod.startTime`).
+        quiet_period_end (int): End of the Customized Quiet Period window, in
+            seconds since midnight (`quietPeriod.endTime`).
 
     Note:
         Not all attributes are supported by all models.
@@ -84,7 +112,9 @@ class PurifierState(DeviceState):
 
     __slots__ = (
         '_air_quality_level',
+        'adaptive_start',
         'aq_percent',
+        'aqi_light_mode',
         'auto_clean_remaining',
         'auto_clean_status',
         'auto_clean_total',
@@ -92,6 +122,7 @@ class PurifierState(DeviceState):
         'auto_preference_type',
         'auto_room_size',
         'buzzer_status',
+        'carbon_filter_life',
         'child_lock',
         'child_lock_auto_switch',
         'child_lock_auto_time',
@@ -102,12 +133,15 @@ class PurifierState(DeviceState):
         'display_set_status',
         'display_start_time',
         'display_status',
+        'dynamic_manual',
+        'dynamic_sleep',
         'fan_level',
         'fan_rotate_angle',
         'fan_set_level',
         'filter_life',
         'filter_open_state',
         'filter_remain_day',
+        'health_protect_profile',
         'humidity',
         'light_detection_status',
         'light_detection_switch',
@@ -117,6 +151,11 @@ class PurifierState(DeviceState):
         'pm1',
         'pm10',
         'pm25',
+        'pre_filter_life',
+        'quiet_period_end',
+        'quiet_period_mode',
+        'quiet_period_start',
+        'quiet_period_switch',
         'temperature',
         'voc',
     )
@@ -166,6 +205,17 @@ class PurifierState(DeviceState):
         self.display_on_type: int | None = None
         self.display_start_time: int | None = None
         self.display_end_time: int | None = None
+        self.carbon_filter_life: int | None = None
+        self.pre_filter_life: int | None = None
+        self.aqi_light_mode: str | None = None
+        self.health_protect_profile: str | None = None
+        self.adaptive_start: bool | None = None
+        self.dynamic_manual: bool | None = None
+        self.dynamic_sleep: bool | None = None
+        self.quiet_period_switch: bool | None = None
+        self.quiet_period_mode: str | None = None
+        self.quiet_period_start: int | None = None
+        self.quiet_period_end: int | None = None
 
     @property
     def air_quality_level(self) -> int | None:
@@ -334,6 +384,183 @@ class VeSyncPurifier(VeSyncBaseToggleDevice):
     def supports_auto_clean(self) -> bool:
         """Return True if device supports pre-filter self-cleaning."""
         return PurifierFeatures.AUTO_CLEAN in self.features
+
+    @property
+    def supports_aqi_light(self) -> bool:
+        """Return True if device has an air quality light ring with brightness."""
+        return PurifierFeatures.AQI_LIGHT in self.features
+
+    async def set_aqi_light_mode(self, mode: str | PurifierAqiLightMode) -> bool:
+        """Set the air quality light ring brightness.
+
+        Args:
+            mode (str | PurifierAqiLightMode): 'bright' or 'dim'
+                (case-insensitive), or a `PurifierAqiLightMode` member.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        del mode
+        if not self.supports_aqi_light:
+            logger.debug('AQI light not supported for this device.')
+        else:
+            logger.debug('AQI light not configured for this device.')
+        return False
+
+    @property
+    def supports_health_protect(self) -> bool:
+        """Return True if device has the Health Protect settings.
+
+        These are the VeSync app's "Personalized Air Purification" settings:
+        the profile, Adaptive Start, Dynamic Manual, Dynamic Sleep and the
+        Quiet Period.
+        """
+        return PurifierFeatures.HEALTH_PROTECT in self.features
+
+    def _log_health_protect_unavailable(self, setting: str) -> None:
+        """Log that a Health Protect setting is not available on this device."""
+        if not self.supports_health_protect:
+            logger.debug('%s not supported for this device.', setting)
+        else:
+            logger.debug('%s not configured for this device.', setting)
+
+    async def set_health_protect_profile(
+        self, profile: str | PurifierHealthProtectProfile
+    ) -> bool:
+        """Set the Health Protect profile.
+
+        The VeSync app's profile ("group") under "Personalized Air
+        Purification". The app describes the profiles as:
+
+        - `daily_comfort`: "Designed for everyday home comfort with balanced
+          air purification and without specialized purification needs."
+        - `focused_care`: "Prioritizes purification for specific pollutants."
+        - `advanced_care`: "Prioritizes purification for clean air, with
+          heightened sensitivity to even the slightest air quality changes."
+
+        Args:
+            profile (str | PurifierHealthProtectProfile): 'daily_comfort',
+                'focused_care' or 'advanced_care' (case-insensitive), or a
+                `PurifierHealthProtectProfile` member.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        del profile
+        self._log_health_protect_unavailable('Health protect profile')
+        return False
+
+    async def toggle_adaptive_start(self, toggle: bool | None = None) -> bool:
+        """Turn Adaptive Start on or off.
+
+        The VeSync app describes "Adaptive Start" as monitoring air quality
+        while the purifier is off and automatically turning purification on;
+        once air quality stabilizes, the purifier turns off again. With it on,
+        `state.device_status` may change without a command.
+
+        Args:
+            toggle (bool | None): True to turn on, False to turn off. If None,
+                toggle the current state.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        del toggle
+        self._log_health_protect_unavailable('Adaptive start')
+        return False
+
+    async def turn_on_adaptive_start(self) -> bool:
+        """Turn Adaptive Start on."""
+        return await self.toggle_adaptive_start(True)
+
+    async def turn_off_adaptive_start(self) -> bool:
+        """Turn Adaptive Start off."""
+        return await self.toggle_adaptive_start(False)
+
+    async def toggle_dynamic_manual(self, toggle: bool | None = None) -> bool:
+        """Turn Dynamic Manual on or off.
+
+        The VeSync app describes "Dynamic Manual" as: when the purifier runs at
+        a low fan speed in Manual and sudden pollution is detected, the fan
+        speed increases automatically and returns to the previous speed once
+        air quality improves. After the user changes the speed back, the boost
+        does not activate again for 30 minutes. With it on, `state.fan_level`
+        may rise above `state.fan_set_level` without a command.
+
+        Args:
+            toggle (bool | None): True for Dynamic Manual, False for classic
+                Manual. If None, toggle the current state.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        del toggle
+        self._log_health_protect_unavailable('Dynamic manual')
+        return False
+
+    async def turn_on_dynamic_manual(self) -> bool:
+        """Turn Dynamic Manual on."""
+        return await self.toggle_dynamic_manual(True)
+
+    async def turn_off_dynamic_manual(self) -> bool:
+        """Turn Dynamic Manual off (classic Manual)."""
+        return await self.toggle_dynamic_manual(False)
+
+    async def toggle_dynamic_sleep(self, toggle: bool | None = None) -> bool:
+        """Turn Dynamic Sleep on or off.
+
+        The VeSync app describes "Dynamic Sleep" as: when sudden pollution is
+        detected in Sleep mode, the fan speed increases automatically and
+        returns to the previous speed once air quality improves, with the same
+        30-minute override. With it on, `state.fan_level` may rise in Sleep
+        without a command.
+
+        Args:
+            toggle (bool | None): True for Dynamic Sleep, False for classic
+                Sleep. If None, toggle the current state.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        del toggle
+        self._log_health_protect_unavailable('Dynamic sleep')
+        return False
+
+    async def turn_on_dynamic_sleep(self) -> bool:
+        """Turn Dynamic Sleep on."""
+        return await self.toggle_dynamic_sleep(True)
+
+    async def turn_off_dynamic_sleep(self) -> bool:
+        """Turn Dynamic Sleep off (classic Sleep)."""
+        return await self.toggle_dynamic_sleep(False)
+
+    async def toggle_quiet_period(self, toggle: bool | None = None) -> bool:
+        """Turn the Quiet Period on or off.
+
+        The VeSync app describes the Quiet Period as: "Lowers fan speed by one
+        level for quieter purification". Light Control turns it on in dim
+        light, Customized uses a daily time window. The mode and window are
+        kept as reported (`state.quiet_period_mode`). With it on,
+        `state.fan_level` may be one below `state.fan_set_level`.
+
+        Args:
+            toggle (bool | None): True to turn on, False to turn off. If None,
+                toggle the current state.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        del toggle
+        self._log_health_protect_unavailable('Quiet period')
+        return False
+
+    async def turn_on_quiet_period(self) -> bool:
+        """Turn the Quiet Period on."""
+        return await self.toggle_quiet_period(True)
+
+    async def turn_off_quiet_period(self) -> bool:
+        """Turn the Quiet Period off."""
+        return await self.toggle_quiet_period(False)
 
     async def toggle_buzzer(self, toggle: bool | None = None) -> bool:
         """Turn the button beep on or off (the VeSync app's Mute switch).

@@ -43,7 +43,7 @@ shapes are in `models/bypass_models.py` and the device modules.
 | Bypass V1 cloud (ESW15 and outdoor outlets, wall and dimmer switches, ESL100 bulbs) | `timer/getTimers` | `timer/addTimer` (`counterTime`, `action`) | `timer/deleteTimer` (`timerId`) | Large id assigned by the cloud |
 | 7A outlet | `GET /v2/device/{cid}/timer` | `POST /v2/device/{cid}/timer` | `DELETE /v2/device/{cid}/timer/{id}` | Assigned by the cloud |
 | Bypass V2, V1-style timer (Core purifiers, ESW10 outlet, Classic 200S, Classic 300S, Dual 200S, LUH-A602S, LUH-O451S and LUH-M101S humidifiers) | `getTimer` | `addTimer` (`action`, `total`) | `delTimer` (`id`) | 1 |
-| Bypass V2, V2 timer (Vital, EverestAir, Sprout, Vital Pet and Vital Pet Pro purifiers, LV600S humidifier) | `getTimerV2` | `addTimerV2` (`startAct`, `total`) | `delTimerV2` (`id`) | 1 (Vital Pet family: the id the add response returns, else 1) |
+| Bypass V2, V2 timer (Vital, EverestAir, Sprout, Vital Pet, Vital Pet Pro and Core 300S MaxAQ purifiers, LV600S humidifier) | `getTimerV2` | `addTimerV2` (`startAct`, `total`) | `delTimerV2` (`id`) | 1 (`VeSyncAirTimerV2` purifiers: the id the add response returns, else 1) |
 
 The tower fan (LTF-F422S) uses its own `getTimer`, `setTimer` and
 `clearTimer` requests.
@@ -81,9 +81,11 @@ list before adding or cancelling a timer:
 - A status poll that reports a running timer keeps the known id. With no
   known timer it stores one with `DEFAULT_TIMER_ID`.
 
-The Vital Pet family (Vital Pet LAP-P201S and Vital Pet Pro LAP-P501S)
-follows this. Other device families are being moved to it one family at a
-time.
+The purifiers built on the shared
+[`VeSyncAirTimerV2`][pyvesync.devices.vesyncpurifier.VeSyncAirTimerV2] class
+follow this: the Vital Pet family (Vital Pet LAP-P201S and Vital Pet Pro
+LAP-P501S) and the Core 300S MaxAQ (LAP-C341S). Other device families are
+being moved to it one family at a time.
 
 Bypass V1 cloud devices and the 7A outlet use large ids assigned by the
 cloud, so `DEFAULT_TIMER_ID` does not apply to them. They need the id from

@@ -1167,6 +1167,34 @@ purifier_modules: list[PurifierMap] = [
         model_name='Vital Pet',
         setup_entry='LAP-P201S',
     ),
+    PurifierMap(
+        class_name='VeSyncAirEleva',
+        # US configModule VS_WFON_APR_LAP-C312S-WUSZ_US (app capture, issue #545),
+        # EU configModule VS_WFON_APR_LAP-C341S-WEU_EU (issue #618).
+        # get_device_config() also maps other LAP-C341S-* device types here by
+        # prefix; the C311S/C312S device types have not been seen.
+        dev_types=['LAP-C341S-WUSZ', 'LAP-C341S-WEU'],
+        modes=[
+            PurifierModes.AUTO,
+            PurifierModes.MANUAL,
+            PurifierModes.SLEEP,
+        ],
+        # APK 6.0.10: manual levels 1-4; the app labels level 4 "Turbo", which
+        # is a fan level, not a work mode.
+        fan_levels=list(range(1, 5)),
+        features=[
+            PurifierFeatures.AIR_QUALITY,
+            PurifierFeatures.LIGHT_DETECT,
+            PurifierFeatures.AQI_LIGHT,
+            PurifierFeatures.HEALTH_PROTECT,
+        ],
+        # setAutoPreference is not supported (issue #545: inner code -1).
+        auto_preferences=[],
+        device_alias='Eleva 300X',
+        model_display='LAP-C341S Series',
+        model_name='Core 300S MaxAQ',
+        setup_entry='LAP-C341S',
+    ),
 ]
 """List of ['PurifierMap'][pyvesync.device_map.PurifierMap] configuration
 objects for purifier devices."""

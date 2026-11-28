@@ -8,6 +8,8 @@
 - [VeSyncAirSprout Purifiers][pyvesync.devices.vesyncpurifier.VeSyncAirSprout] - Sprout models
 - [VeSyncAirVitalPet Purifiers][pyvesync.devices.vesyncpurifier.VeSyncAirVitalPet] - Vital Pet
 - [VeSyncAirVitalPetPro Purifiers][pyvesync.devices.vesyncpurifier.VeSyncAirVitalPetPro] - Vital Pet Pro
+- [VeSyncAirEleva Purifiers][pyvesync.devices.vesyncpurifier.VeSyncAirEleva] - Core 300S MaxAQ / Eleva 300X
+- [VeSyncAirTimerV2 Purifiers][pyvesync.devices.vesyncpurifier.VeSyncAirTimerV2] - Shared V2 countdown timer
 - [VeSyncAir131 Purifiers][pyvesync.devices.vesyncpurifier.VeSyncAir131] - PUR-LV131S Purifiers
 - [VeSyncAirRH131 Purifiers][pyvesync.devices.vesyncpurifier.VeSyncAirRH131] - LV-RH131S Purifiers
 - [VeSyncPurifier Base Device][pyvesync.base_devices.purifier_base.VeSyncPurifier] - Abstract base class
@@ -177,6 +179,115 @@ as buzzer on, so they sent and reported the opposite value.
             functions: false
         group_by_category: true
         toc_label: "VeSyncAirVitalPetPro Purifiers"
+        show_root_heading: true
+        show_root_toc_entry: true
+        show_category_heading: true
+        show_source: true
+        show_if_no_docstring: true
+        inherited_members: true
+        docstring_options:
+            ignore_init_summary: true
+        merge_init_into_class: false
+
+## Core 300S MaxAQ / Eleva 300X
+
+The Levoit Core 300S MaxAQ, also sold as the Eleva 300X (LAP-C341S-WUSZ in the
+US, LAP-C341S-WEU in the EU), uses
+[`VeSyncAirEleva`][pyvesync.devices.vesyncpurifier.VeSyncAirEleva].
+
+- Controls: power, the Auto, Manual and Sleep modes, fan levels 1 to 4,
+  display, child lock, light detection, the air quality light ring, off-timers
+  and the Health Protect settings below.
+- Fan level 4 is what the VeSync app calls **Turbo**. Set it with
+  `set_fan_speed(4)`; there is no `turbo` mode.
+- `set_manual_mode()` sends Manual as a work mode, and the purifier resumes its
+  manual level (`state.fan_set_level`).
+- Readings: `state.pm1`, `state.pm25`, `state.pm10`, `state.aq_percent` (the
+  app's AQI) and `state.air_quality_level`. Filters: `state.filter_life`
+  (HEPA), `state.carbon_filter_life`, `state.pre_filter_life` and
+  `state.filter_remain_day`.
+- `set_aqi_light_mode('bright')` or `set_aqi_light_mode('dim')` sets the light
+  ring; `state.aqi_light_mode` holds the reported brightness.
+- Timers can only turn the purifier off. They use the shared
+  [`VeSyncAirTimerV2`][pyvesync.devices.vesyncpurifier.VeSyncAirTimerV2]
+  timer, the same as the Vital Pet family.
+
+**Status lag.** While the VeSync app is closed, `update()` can report the old
+value for about 3 minutes after a change. The library therefore sends every
+command without checking the cached state: a command is sent even when
+`state` already shows the requested value.
+
+### Health Protect
+
+The VeSync app groups these settings under "Personalized Air Purification".
+`purifier.supports_health_protect` is True for this model.
+
+| Setting | Methods | What the VeSync app says it does |
+| --- | --- | --- |
+| Profile (`state.health_protect_profile`) | `set_health_protect_profile()` with `'daily_comfort'`, `'focused_care'` or `'advanced_care'` | Daily Comfort: balanced, everyday purification. Focused Care: prioritizes specific pollutants. Advanced Care: reacts to even the slightest air quality changes. |
+| Dynamic Manual (`state.dynamic_manual`) | `toggle_dynamic_manual()`, `turn_on_dynamic_manual()`, `turn_off_dynamic_manual()` | In Manual at a low speed, raises the fan speed when sudden pollution is detected and returns to the previous speed once the air improves. After the user changes the speed back, it does not boost again for 30 minutes. |
+| Dynamic Sleep (`state.dynamic_sleep`) | `toggle_dynamic_sleep()`, `turn_on_dynamic_sleep()`, `turn_off_dynamic_sleep()` | The same boost in Sleep mode. |
+| Adaptive Start (`state.adaptive_start`) | `toggle_adaptive_start()`, `turn_on_adaptive_start()`, `turn_off_adaptive_start()` | Monitors air quality while the purifier is off, turns purification on, and turns it off again once the air is stable. |
+| Quiet Period (`state.quiet_period_switch`) | `toggle_quiet_period()`, `turn_on_quiet_period()`, `turn_off_quiet_period()` | Lowers the fan speed by one level. Light Control turns it on in dim light; Customized follows a daily window (`state.quiet_period_start` to `state.quiet_period_end`, seconds since midnight). |
+
+What this means for `state`, going by the app's descriptions:
+
+- With Dynamic Manual or Dynamic Sleep on, `state.fan_level` can rise above
+  `state.fan_set_level` without a command.
+- With Adaptive Start on, `state.device_status` can change without a command.
+- With the Quiet Period on, `state.fan_level` can be one below
+  `state.fan_set_level`.
+
+The profile and the three switches are sent together in one request, as the
+app sends them. Each call changes one setting and copies the other three from
+the last `update()`. Run `update()` before the first change. Then make
+back-to-back changes without an `update()` in between, or wait for the status
+to catch up: a lagging `update()` can bring back old values, and the next
+call would send them again.
+
+The EU unit (LAP-C341S-WEU) does not report its profile, so
+`state.health_protect_profile` is `None` there. Changing a switch then sends
+the Daily Comfort profile, as the VeSync app does, which also sets the profile
+to Daily Comfort.
+
+```python
+await purifier.update()
+await purifier.set_health_protect_profile('focused_care')
+await purifier.turn_off_dynamic_manual()
+await purifier.set_fan_speed(4)          # the app's Turbo
+await purifier.set_aqi_light_mode('dim')
+```
+
+Not supported: auto preferences (the device rejects `setAutoPreference`),
+filter reset, the EU unit's button buzzer, changing the Quiet Period mode or
+window, and timers that turn the purifier on.
+
+::: pyvesync.devices.vesyncpurifier.VeSyncAirEleva
+    options:
+        filters:
+            - "!^_.*"
+        summary:
+            functions: false
+        group_by_category: true
+        toc_label: "VeSyncAirEleva Purifiers"
+        show_root_heading: true
+        show_root_toc_entry: true
+        show_category_heading: true
+        show_source: true
+        show_if_no_docstring: true
+        inherited_members: true
+        docstring_options:
+            ignore_init_summary: true
+        merge_init_into_class: false
+
+::: pyvesync.devices.vesyncpurifier.VeSyncAirTimerV2
+    options:
+        filters:
+            - "!^_.*"
+        summary:
+            functions: false
+        group_by_category: true
+        toc_label: "VeSyncAirTimerV2 Purifiers"
         show_root_heading: true
         show_root_toc_entry: true
         show_category_heading: true

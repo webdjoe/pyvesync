@@ -381,7 +381,117 @@ PURIFIER_DETAILS: dict[str, dict[str, Any]] = {
         "cumulativeCleanAir": 1000,
         "totalCleanAir": 1000,
     },
+    # Core 300S MaxAQ / Eleva 300X (LAP-C341S-WUSZ). Captured: the inner
+    # getPurifierStatus result of HAR entry #264 (app 5.9.90, 2026-11-01),
+    # verbatim except the redacted sensorId.
+    "LAP-C341S": {
+        "powerSwitch": 1,
+        "filterLifePercent": 96,
+        "filterRemainDay": 686,
+        "carbonFilterLifePercent": 86,
+        "carbonFilterResetDate": 0,
+        "preFilterLifePercent": 0,
+        "preFilterLastCleanDate": 1784246150,
+        "curFilterCert": 1,
+        "authenticatedTsInSec": 1784246136,
+        "workMode": "manual",
+        "manualSpeedLevel": 1,
+        "fanSpeedLevel": 1,
+        "AQLevel": 1,
+        "PM25": 2,
+        "PM1": 1,
+        "PM10": 3,
+        "AQI": 20,
+        "screenState": 1,
+        "childLockSwitch": 0,
+        "screenSwitch": 1,
+        "lightDetectionSwitch": 1,
+        "environmentLightState": 1,
+        "resetFilterDate": 1783624293,
+        "totalCleanAir": 166616,
+        "timerRemain": 0,
+        "autoPreference": {"autoPreferenceType": "default"},
+        "scheduleCount": 0,
+        "errorCode": 0,
+        "errorCodes": [],
+        "group": 1,
+        "standbyGuardSwitch": 1,
+        "manualGuardSwitch": 1,
+        "sleepGuardSwitch": 1,
+        "quietPeriod": {
+            "quietPeriodSwitch": 0,
+            "modeIdx": 0,
+            "startTime": 79200,
+            "endTime": 21600,
+        },
+        "dataScheduleRules": 1,
+        "sensorInfos": [
+            {
+                "sensorId": "<redacted>",
+                "sensorType": 2,
+                "inUse": True,
+                "PM1": 1,
+                "PM25": 2,
+                "PM10": 3,
+                "AQI": 20,
+                "AQLevel": 1,
+            }
+        ],
+        "supportTrendType": ["AQI", "PM25", "PM1", "PM10"],
+        "aqiLightMode": 1,
+    },
 }
+
+ELEVA_EU_STATUS = {
+    "powerSwitch": 1,
+    "filterLifePercent": 100,
+    "filterRemainDay": 719,
+    "carbonFilterLifePercent": 100,
+    "carbonFilterResetDate": 0,
+    "preFilterLifePercent": 96,
+    "preFilterLastCleanDate": 1793283660,
+    "curFilterCert": 1,
+    "workMode": "auto",
+    "manualSpeedLevel": 2,
+    "fanSpeedLevel": 0,
+    "AQLevel": 1,
+    "PM25": 3,
+    "PM1": 3,
+    "PM10": 3,
+    "AQI": 37,
+    "screenState": 0,
+    "childLockSwitch": 0,
+    "screenSwitch": 1,
+    "lightDetectionSwitch": 1,
+    "environmentLightState": 1,
+    "timerRemain": 0,
+    "buzzerSwitch": 0,
+    "autoPreference": {"autoPreferenceType": "default"},
+    "scheduleCount": 0,
+    "errorCode": 0,
+    "errorCodes": [],
+    "standbyGuardSwitch": 1,
+    "manualGuardSwitch": 1,
+    "sleepGuardSwitch": 0,
+    "quietPeriod": {
+        "quietPeriodSwitch": 1,
+        "modeIdx": 0,
+        "startTime": 79200,
+        "endTime": 21600,
+    },
+    "sensorInfos": [
+        {"sensorType": 2, "inUse": True, "PM1": 3, "PM25": 3, "PM10": 3, "AQI": 37, "AQLevel": 1}
+    ],
+    "supportTrendType": ["AQI", "PM25", "PM1", "PM10"],
+    "aqiLightMode": 1,
+}
+"""User report, EU LAP-C341S-WEU, not a capture.
+
+The getPurifierStatus result acidjepz posted in issue #545, verbatim. It has
+no `group`, `resetFilterDate`, `totalCleanAir`, `dataScheduleRules` or
+`authenticatedTsInSec`, adds `buzzerSwitch`, and its `sensorInfos` have no
+`sensorId`.
+"""
 
 VITAL_PET_PRO_TIMER = {"id": 1, "remain": 1777, "total": 1800}
 """Timer values from the captured Vital Pet Pro getTimerV2 response."""
@@ -391,6 +501,14 @@ VITAL_PET_TIMER = {"id": 3, "remain": 1500, "total": 1800}
 
 Shaped like the Pro's getTimerV2/addTimerV2 responses; APK 6.0.10 `z50.s.m`
 sends the same version 2 timer for P201S.
+"""
+
+ELEVA_TIMER = {"id": 2, "remain": 1500, "total": 1800}
+"""SYNTHETIC Core 300S MaxAQ (LAP-C341S) timer values, not captured.
+
+Shaped like the Vital Pet Pro getTimerV2 capture; APK 6.0.10 `z50/r.k` sends
+the version 2 timer for this model. These follow the maintainer's 2026-11-26
+decision to use the extrapolated timer structure.
 """
 
 
@@ -407,6 +525,7 @@ DETAILS_RESPONSES = {
     "LAP-B851S-WUS": build_bypass_v2_response(inner_result=PURIFIER_DETAILS["LAP-B851S-WUS"]),
     "LAP-P501S": build_bypass_v2_response(inner_result=PURIFIER_DETAILS["LAP-P501S"]),
     "LAP-P201S": build_bypass_v2_response(inner_result=PURIFIER_DETAILS["LAP-P201S"]),
+    "LAP-C341S": build_bypass_v2_response(inner_result=PURIFIER_DETAILS["LAP-C341S"]),
 }
 
 FunctionResponses.default_factory = lambda: (
@@ -432,6 +551,7 @@ METHOD_RESPONSES = {
     "LAP-B851S-WUS": deepcopy(FunctionResponsesV2),
     "LAP-P501S": deepcopy(FunctionResponsesV2),
     "LAP-P201S": deepcopy(FunctionResponsesV2),
+    "LAP-C341S": deepcopy(FunctionResponsesV2),
 }
 
 METHOD_RESPONSES["LAP-P501S"]["set_timer"] = build_bypass_v2_response(
@@ -456,6 +576,20 @@ METHOD_RESPONSES["LAP-P201S"]["get_timer"] = build_bypass_v2_response(
         "timers": [
             {
                 **VITAL_PET_TIMER,
+                "startAct": [{"type": "powerSwitch", "act": 0, "num": 0}],
+            }
+        ]
+    }
+)
+# Core 300S MaxAQ (LAP-C341S): SYNTHETIC timer responses (see ELEVA_TIMER).
+METHOD_RESPONSES["LAP-C341S"]["set_timer"] = build_bypass_v2_response(
+    inner_result={"id": ELEVA_TIMER["id"]}
+)
+METHOD_RESPONSES["LAP-C341S"]["get_timer"] = build_bypass_v2_response(
+    inner_result={
+        "timers": [
+            {
+                **ELEVA_TIMER,
                 "startAct": [{"type": "powerSwitch", "act": 0, "num": 0}],
             }
         ]
