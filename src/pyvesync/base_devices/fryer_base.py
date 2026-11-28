@@ -1326,6 +1326,21 @@ class VeSyncFryer(VeSyncBaseDevice[FryerState]):
         logger.debug('Separate chamber modes are not configured for %s', self.device_name)
         return False
 
+    async def quit_sync(self) -> bool:
+        """Leave Sync mode so a waiting chamber starts at once.
+
+        Only fryers with the ``CHAMBER_MODES`` feature implement this. During a
+        Sync cook the chamber with the shorter time waits in ``HOLD``. This
+        ends the Sync, and the waiting chamber starts cooking with its full
+        time. Call ``update()`` for the device's reported state.
+
+        Returns:
+            bool: True if the command was successful. An unsupported fryer
+            returns False without a request.
+        """
+        logger.debug('Leaving Sync is not configured for %s', self.device_name)
+        return False
+
     async def set_mode_from_recipe(
         self,
         recipe: AirFryerPresetRecipe,
