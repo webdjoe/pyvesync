@@ -1310,6 +1310,27 @@ class TestEleva(PurifierTestHelpers, TestBase):
         assert self._sent_data()["manualSpeedLevel"] == sent
         assert device.state.fan_set_level == sent
 
+    def test_set_turbo_mode_sets_level_4(self):
+        """set_turbo_mode() sends fan level 4, the app's Turbo (APK 6.0.10).
+
+        Turbo is Manual at level 4: HAR #116-#128 report manualSpeedLevel 4 in
+        Auto, and after setPurifierMode manual (#129) #131 reports workMode
+        manual with fanSpeedLevel 4.
+        """
+        self._ok()
+        device = self._device()
+        device.state.mode = const.PurifierModes.AUTO
+        assert self.run_in_loop(device.set_turbo_mode) is True
+        assert self._sent_method() == "setLevel"
+        assert self._sent_data() == {
+            "levelIdx": 0,
+            "manualSpeedLevel": 4,
+            "levelType": "wind",
+        }
+        assert device.state.mode == const.PurifierModes.MANUAL
+        assert device.state.fan_level == 4
+        assert device.state.fan_set_level == 4
+
     def test_set_fan_speed_steps_from_last_set_level(self):
         """Back-to-back steps without update() start from the level last set."""
         device = self._update()  # HAR #264: set level 1

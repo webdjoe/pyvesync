@@ -1396,7 +1396,7 @@ class VeSyncAirEleva(VeSyncAirTimerV2):  # pylint: disable=too-many-ancestors
     resumes its manual level (`state.fan_set_level`).
 
     Fan levels are 1 to 4. The VeSync app labels level 4 "Turbo"; it is a fan
-    level, not a work mode.
+    level, not a work mode. `set_turbo_mode()` sets it.
 
     The status (`getPurifierStatus`) can lag about 3 minutes behind a change
     while the VeSync app is closed (issues #545 and #570). Commands are
@@ -1572,7 +1572,7 @@ class VeSyncAirEleva(VeSyncAirTimerV2):  # pylint: disable=too-many-ancestors
         Manual is sent as a work mode, as the VeSync app does. The device then
         runs at its manual level, so `state.fan_level` is set to
         `state.fan_set_level`. Fan level 4 (the app's Turbo) is set with
-        `set_fan_speed(4)`.
+        `set_fan_speed(4)` or `set_turbo_mode()`.
 
         Args:
             mode (str): Mode to set, one of `self.modes` (case-insensitive).
@@ -1619,6 +1619,18 @@ class VeSyncAirEleva(VeSyncAirTimerV2):  # pylint: disable=too-many-ancestors
         if speed is None:
             speed = Helpers.bump_level(self.state.fan_set_level, self.fan_levels)
         return await super().set_fan_speed(speed)
+
+    async def set_turbo_mode(self) -> bool:
+        """Set fan level 4, which the VeSync app labels Turbo.
+
+        Turbo is a fan level on this device, not a work mode. This sends
+        `set_fan_speed(4)`, so `state.mode` reads `manual` afterwards, as the
+        device reports it.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        return await self.set_fan_speed(self.fan_levels[-1])
 
     async def toggle_display(self, mode: bool) -> bool:
         """Turn the display on or off.

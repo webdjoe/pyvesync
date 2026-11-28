@@ -199,7 +199,8 @@ US, LAP-C341S-WEU in the EU), uses
   display, child lock, light detection, the air quality light ring, off-timers
   and the Health Protect settings below.
 - Fan level 4 is what the VeSync app calls **Turbo**. Set it with
-  `set_fan_speed(4)`; there is no `turbo` mode. `set_fan_speed()` with no
+  `set_fan_speed(4)` or `set_turbo_mode()`. There is no `turbo` work mode, so
+  `state.mode` reads `manual` afterwards. `set_fan_speed()` with no
   argument steps up one level from `state.fan_set_level`, wrapping from 4
   to 1.
 - `set_manual_mode()` sends Manual as a work mode, and the purifier resumes its
