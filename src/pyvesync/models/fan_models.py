@@ -75,9 +75,9 @@ class PedestalFanResult(BypassV2InnerResult):
     screenState: int
     screenSwitch: int
     horizontalOscillationState: int
-    verticalOscillationState: int
     childLock: int
     errorCode: int
+    verticalOscillationState: int | None = None  # Absent on horizontal-only models
     oscillationCoordinate: OscillationCoordinatesModel | None = None
     oscillationRange: OscillationRangeModel | None = None
     sleepPreference: FanPedestalSleepPreferences | None = None

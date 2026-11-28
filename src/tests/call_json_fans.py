@@ -136,6 +136,51 @@ FAN_DETAILS: dict[str, dict] = {
         "isTimerSupportPowerOn": 1,
         "isSupportSetRelativeCoordinate": 1,
     },
+    # Shape from a capture of an LPF-R382S-AEU (firmware 1.0.05 / 1.0.33).
+    # Horizontal-only: no verticalOscillationState or verticalOscillationDemo.
+    "LPF-R382S": {
+        "powerSwitch": int(FanDefaults.fan_status),
+        "workMode": FanDefaults.fan_mode.value,
+        "fanSpeedLevel": FanDefaults.fan_speed_level,
+        "scheduleCount": 0,
+        "timerRemain": 0,
+        "sleepPreference": {
+            "sleepPreferenceType": "default",
+            "oscillationState": int(FanDefaults.oscillation_status),
+            "initFanSpeedLevel": 0,
+            "fallAsleepRemain": 0,
+        },
+        "temperature": FanDefaults.temperature_fan * 10,
+        "muteState": int(FanDefaults.mute_status),
+        "muteSwitch": int(FanDefaults.mute_status),
+        "screenState": int(FanDefaults.screen_status),
+        "screenSwitch": int(FanDefaults.screen_status),
+        "errorCode": 0,
+        "horizontalOscillationState": int(FanDefaults.oscillation_horizontal),
+        "childLock": FanDefaults.child_lock,
+        "oscillationCoordinate": {"yaw": FanDefaults.yaw, "pitch": FanDefaults.pitch},
+        "oscillationRange": {
+            "left": FanDefaults.left,
+            "right": FanDefaults.right,
+            "top": FanDefaults.top,
+            "bottom": FanDefaults.bottom,
+        },
+        "highTemperatureReminderState": 1,
+        "highTemperature": 806,
+        "smartCleaningReminderState": 1,
+        "oscillationCalibrationState": 0,
+        "oscillationCalibrationProgress": 0,
+        "levelMemory": [
+            {"workMode": "normal", "level": 1, "enable": 1},
+            {"workMode": "turbo", "level": 5, "enable": 0},
+            {"workMode": "eco", "level": 1, "enable": 1},
+            {"workMode": "advancedSleep", "level": 1, "enable": 1},
+        ],
+        "horizontalOscillationDemo": 0,
+        "isSupportSetOnceOscillation": 1,
+        "isTimerSupportPowerOn": 1,
+        "isSupportSetRelativeCoordinate": 1,
+    },
 }
 """Contains the result dictionary of the device response details for fans.
 
@@ -147,12 +192,14 @@ return dictionary for a successful `fan.update()` API request.
 DETAILS_RESPONSES = {
     "LTF-F422S": build_bypass_v2_response(inner_result=FAN_DETAILS["LTF-F422S"]),
     "LPF-R423S": build_bypass_v2_response(inner_result=FAN_DETAILS["LPF-R423S"]),
+    "LPF-R382S": build_bypass_v2_response(inner_result=FAN_DETAILS["LPF-R382S"]),
 }
 
 
 METHOD_RESPONSES = {
     "LTF-F422S": deepcopy(FunctionResponsesV2),
-    "LPF-R423S": deepcopy(FunctionResponsesV2)
+    "LPF-R423S": deepcopy(FunctionResponsesV2),
+    "LPF-R382S": deepcopy(FunctionResponsesV2),
 }
 """Default responses for device methods.
 
