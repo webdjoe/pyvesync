@@ -646,6 +646,9 @@ class PurifierFeatures(Features):
         RESET_FILTER: Reset filter status.
         BUZZER: Button buzzer (beep) on/off; the VeSync app's Mute setting.
         AUTO_CLEAN: Pre-filter self-cleaning (Vital Pet Pro).
+        AQI_LIGHT: Air quality light ring brightness (Core 300S MaxAQ).
+        HEALTH_PROTECT: Health Protect settings, the VeSync app's
+            "Personalized Air Purification" (Core 300S MaxAQ).
     """
 
     RESET_FILTER = 'reset_filter'
@@ -660,6 +663,8 @@ class PurifierFeatures(Features):
     AQPERCENT = 'aq_percent'
     BUZZER = 'buzzer'
     AUTO_CLEAN = 'auto_clean'
+    AQI_LIGHT = 'aqi_light'
+    HEALTH_PROTECT = 'health_protect'
 
 
 class PurifierAutoCleanState(IntEnum):
@@ -687,6 +692,61 @@ class PurifierScreenOnType(IntEnum):
 
     ALWAYS_ON = 1
     SCHEDULED = 2
+
+
+class PurifierAqiLightMode(IntEnum):
+    """`mode` values for the Core 300S MaxAQ `setAqiLight` call (`aqiLightMode`).
+
+    The air quality light ring brightness, from the APK 6.0.10 enum
+    `hoverbottommenus/a`. The library's public string is `member.name.lower()`
+    (`'bright'` or `'dim'`).
+
+    Attributes:
+        BRIGHT: Bright light ring.
+        DIM: Dim light ring.
+    """
+
+    BRIGHT = 1
+    DIM = 2
+
+
+class PurifierHealthProtectProfile(IntEnum):
+    """`group` values for the Core 300S MaxAQ `setHealthProtect` call.
+
+    The Health Protect profile ("Personalized Air Purification" in the VeSync
+    app), from the APK 6.0.10 enum `protectGuide/a`, which names them
+    DAILY_COMFORT, SENSITIVE_CARE and DEEP_PROTECTION. The current app labels
+    are used here; older guide strings call 2 "Sensitive Care" and 3 "Deep
+    Protection". The library's public string is `member.name.lower()`.
+
+    Attributes:
+        DAILY_COMFORT: "Daily Comfort": everyday home comfort with balanced air
+            purification and without specialized purification needs.
+        FOCUSED_CARE: "Focused Care": prioritizes purification for specific
+            pollutants.
+        ADVANCED_CARE: "Advanced Care": prioritizes purification for clean air,
+            with heightened sensitivity to even the slightest air quality changes.
+    """
+
+    DAILY_COMFORT = 1
+    FOCUSED_CARE = 2
+    ADVANCED_CARE = 3
+
+
+class PurifierQuietPeriodMode(IntEnum):
+    """`modeIdx` values for the Core 300S MaxAQ `setQuietPeriod` call.
+
+    How the Quiet Period turns on, from the APK 6.0.10 enum
+    `protectDetail/i`. The library's public string is `member.name.lower()`.
+
+    Attributes:
+        LIGHT_CONTROL: "Light Control": the Quiet Period turns on when dim
+            ambient lighting is detected.
+        CUSTOMIZED: "Customized": the Quiet Period follows a daily time window.
+    """
+
+    LIGHT_CONTROL = 0
+    CUSTOMIZED = 1
 
 
 class PurifierStringLevels(Features):

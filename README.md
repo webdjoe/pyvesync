@@ -242,6 +242,7 @@ pip install pyvesync
 9. Sprout Air Purifier
 10. Vital Pet Pro (LAP-P501S)
 11. Vital Pet (LAP-P201S-WUS)
+12. Core 300S MaxAQ / Eleva 300X (LAP-C341S)
 
 ### Etekcity / Valceno Bulbs
 

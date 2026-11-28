@@ -13,10 +13,13 @@ from pyvesync.const import (
     ConnectionStatus,
     DeviceStatus,
     NightlightModes,
+    PurifierAqiLightMode,
     PurifierAutoCleanState,
     PurifierAutoModeTypes,
     PurifierAutoPreference,
+    PurifierHealthProtectProfile,
     PurifierModes,
+    PurifierQuietPeriodMode,
     PurifierScreenOnType,
 )
 from pyvesync.models.bypass_models import (
@@ -29,6 +32,7 @@ from pyvesync.models.purifier_models import (
     InnerPurifierBaseResult,
     Purifier131Result,
     PurifierCoreDetailsResult,
+    PurifierElevaResult,
     PurifierRH131Result,
     PurifierSproutResult,
     PurifierV2EventTiming,
@@ -48,6 +52,8 @@ from pyvesync.utils.device_mixins import (
 from pyvesync.utils.helpers import Helpers, Timer
 
 if TYPE_CHECKING:
+    from enum import IntEnum
+
     from pyvesync import VeSync
     from pyvesync.device_map import PurifierMap
     from pyvesync.models.vesync_models import ResponseDeviceDetailsModel
@@ -845,7 +851,128 @@ class VeSyncAirSprout(VeSyncAirBaseV2):  # pylint: disable=too-many-ancestors
         self._set_state(r_model)
 
 
-class VeSyncAirVitalPet(VeSyncAirBaseV2):  # pylint: disable=too-many-ancestors
+class VeSyncAirTimerV2(VeSyncAirBaseV2):  # pylint: disable=too-many-ancestors
+    """VeSyncAirBaseV2 with the app's schedule-module version 2 countdown timer.
+
+    The timer uses `getTimerV2`, `addTimerV2 {startAct, total}` and
+    `delTimerV2 {id}`. Only the off action is supported. The timer is stored
+    with the id the add response returns, so it can be cancelled by that id.
+
+    Subclasses call `_set_timer_from_status()` from `_set_state()` with the
+    status `timerRemain`.
+
+    Args:
+        details (ResponseDeviceDetailsModel): Device details from the API.
+        manager (VeSync): Instantiated VeSync object.
+        feature_map (PurifierMap): Device map template.
+    """
+
+    __slots__ = ()
+
+    def _set_timer_from_status(self, timer_remain: int) -> None:
+        """Update `state.timer` from the status `timerRemain` seconds."""
+        if timer_remain <= 0:
+            self.state.timer = None
+            return
+        current = self.state.timer
+        if current is None:
+            self.state.timer = Timer(timer_remain, DeviceStatus.OFF, id=DEFAULT_TIMER_ID)
+        else:
+            self.state.timer = Timer(
+                current.timer_duration,
+                current.action,
+                id=current.id,
+                remaining=timer_remain,
+            )
+        self.state.timer.update_ts()
+
+    async def get_timer(self) -> Timer | None:
+        r_dict = await self.call_bypassv2_api('getTimerV2', {})
+        r_model = process_bypassv2_result(
+            self, _LOGGER, 'get_timer', r_dict, ResultV2GetTimerV2
+        )
+        if r_model is None:
+            return None
+        if not r_model.timers:
+            _LOGGER.debug('No timers found')
+            self.state.timer = None
+            return None
+        timer = r_model.timers[0]
+        action: str = DeviceStatus.OFF
+        if timer.startAct:
+            action = DeviceStatus.from_int(timer.startAct[0].act)
+        self.state.timer = Timer(timer.total, action, id=timer.id, remaining=timer.remain)
+        self.state.timer.update_ts()
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return self.state.timer
+
+    async def set_timer(self, duration: int, action: str | None = None) -> bool:
+        """Set a timer that turns the purifier off.
+
+        The request is sent without checking for a running timer. The timer is
+        stored with the id the response returns, or `DEFAULT_TIMER_ID` when it
+        returns none, as the VeSync app does. A new timer replaces the running
+        one. The manual lists timers of 1 to 24 hours; the length is not
+        checked here.
+
+        Args:
+            duration (int): Timer length in seconds.
+            action (str | None): Only 'off' (the default) is supported.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        if action is not None and action != DeviceStatus.OFF:
+            _LOGGER.warning('Only an "off" timer is supported for this device')
+            return False
+        payload_data = {
+            'startAct': [{'type': 'powerSwitch', 'num': 0, 'act': int(DeviceStatus.OFF)}],
+            'total': duration,
+        }
+        r_dict = await self.call_bypassv2_api('addTimerV2', payload_data)
+        r = Helpers.process_dev_response(_LOGGER, 'set_timer', self, r_dict)
+        if r is None:
+            return False
+
+        timer_id = DEFAULT_TIMER_ID
+        outer = r.get('result')
+        inner = outer.get('result') if isinstance(outer, dict) else None
+        if isinstance(inner, dict):
+            r_model = Helpers.model_maker(
+                _LOGGER, ResultV2AddTimerV2, 'set_timer', inner, self
+            )
+            if r_model is not None and r_model.id is not None:
+                timer_id = r_model.id
+        self.state.timer = Timer(duration, DeviceStatus.OFF, id=timer_id)
+        self.state.timer.update_ts()
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def clear_timer(self) -> bool:
+        """Cancel the running timer.
+
+        `delTimerV2` is sent with the id of the known timer (`state.timer`),
+        or `DEFAULT_TIMER_ID` when no timer is known, without reading the
+        timer list first, as the VeSync app does.
+
+        Returns:
+            bool: True if successful, False on error.
+        """
+        timer_id = DEFAULT_TIMER_ID
+        if self.state.timer is not None:
+            timer_id = self.state.timer.id
+        payload_data = {'id': timer_id}
+        r_dict = await self.call_bypassv2_api('delTimerV2', payload_data)
+        r = Helpers.process_dev_response(_LOGGER, 'clear_timer', self, r_dict)
+        if r is None:
+            return False
+
+        self.state.timer = None
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+
+class VeSyncAirVitalPet(VeSyncAirTimerV2):  # pylint: disable=too-many-ancestors
     """Class for the Levoit Vital Pet Air Purifiers (LAP-P201S, LAP-P501S).
 
     Base class for the Vital Pet (LAP-P201S) and, through
@@ -853,11 +980,13 @@ class VeSyncAirVitalPet(VeSyncAirBaseV2):  # pylint: disable=too-many-ancestors
     the Vital Pet Pro (LAP-P501S). The VeSync app drives both with the same
     requests.
 
-    Inherits from the
-    [VeSyncAirBaseV2][pyvesync.devices.vesyncpurifier.VeSyncAirBaseV2] class.
-    Power, manual fan speed and work modes use the same API calls. Status
-    parsing, display, child lock and timers use this family's own payloads,
-    and it adds the button buzzer.
+    Inherits from
+    [VeSyncAirTimerV2][pyvesync.devices.vesyncpurifier.VeSyncAirTimerV2],
+    which provides the timer methods. Power, manual fan speed and work modes
+    use the
+    [VeSyncAirBaseV2][pyvesync.devices.vesyncpurifier.VeSyncAirBaseV2] API
+    calls. Status parsing, display and child lock use this family's own
+    payloads, and it adds the button buzzer.
 
     The buzzer setting is the VeSync app's Mute switch: the device reports and
     takes `buzzerSwitch` 1 when the beep is muted and 0 when it is on.
@@ -981,23 +1110,6 @@ class VeSyncAirVitalPet(VeSyncAirBaseV2):  # pylint: disable=too-many-ancestors
             self.state.auto_mode_type = work_mode
         else:
             self.state.mode = work_mode
-
-    def _set_timer_from_status(self, timer_remain: int) -> None:
-        """Update `state.timer` from the status `timerRemain` seconds."""
-        if timer_remain <= 0:
-            self.state.timer = None
-            return
-        current = self.state.timer
-        if current is None:
-            self.state.timer = Timer(timer_remain, DeviceStatus.OFF, id=DEFAULT_TIMER_ID)
-        else:
-            self.state.timer = Timer(
-                current.timer_duration,
-                current.action,
-                id=current.id,
-                remaining=timer_remain,
-            )
-        self.state.timer.update_ts()
 
     async def get_details(self) -> None:
         """Get the purifier status from the API and update state."""
@@ -1209,99 +1321,16 @@ class VeSyncAirVitalPet(VeSyncAirBaseV2):  # pylint: disable=too-many-ancestors
         _LOGGER.debug('Filter life reset not supported for this device.')
         return False
 
-    async def get_timer(self) -> Timer | None:
-        r_dict = await self.call_bypassv2_api('getTimerV2', {})
-        r_model = process_bypassv2_result(
-            self, _LOGGER, 'get_timer', r_dict, ResultV2GetTimerV2
-        )
-        if r_model is None:
-            return None
-        if not r_model.timers:
-            _LOGGER.debug('No timers found')
-            self.state.timer = None
-            return None
-        timer = r_model.timers[0]
-        action: str = DeviceStatus.OFF
-        if timer.startAct:
-            action = DeviceStatus.from_int(timer.startAct[0].act)
-        self.state.timer = Timer(timer.total, action, id=timer.id, remaining=timer.remain)
-        self.state.timer.update_ts()
-        self.state.connection_status = ConnectionStatus.ONLINE
-        return self.state.timer
-
-    async def set_timer(self, duration: int, action: str | None = None) -> bool:
-        """Set a timer that turns the purifier off.
-
-        The request is sent without checking for a running timer. The timer is
-        stored with the id the response returns, or `DEFAULT_TIMER_ID` when it
-        returns none, as the VeSync app does. A new timer replaces the running
-        one. The manual lists timers of 1 to 24 hours; the length is not
-        checked here.
-
-        Args:
-            duration (int): Timer length in seconds.
-            action (str | None): Only 'off' (the default) is supported.
-
-        Returns:
-            bool: True if successful, False otherwise.
-        """
-        if action is not None and action != DeviceStatus.OFF:
-            _LOGGER.warning('Only an "off" timer is supported for this device')
-            return False
-        payload_data = {
-            'startAct': [{'type': 'powerSwitch', 'num': 0, 'act': int(DeviceStatus.OFF)}],
-            'total': duration,
-        }
-        r_dict = await self.call_bypassv2_api('addTimerV2', payload_data)
-        r = Helpers.process_dev_response(_LOGGER, 'set_timer', self, r_dict)
-        if r is None:
-            return False
-
-        timer_id = DEFAULT_TIMER_ID
-        outer = r.get('result')
-        inner = outer.get('result') if isinstance(outer, dict) else None
-        if isinstance(inner, dict):
-            r_model = Helpers.model_maker(
-                _LOGGER, ResultV2AddTimerV2, 'set_timer', inner, self
-            )
-            if r_model is not None and r_model.id is not None:
-                timer_id = r_model.id
-        self.state.timer = Timer(duration, DeviceStatus.OFF, id=timer_id)
-        self.state.timer.update_ts()
-        self.state.connection_status = ConnectionStatus.ONLINE
-        return True
-
-    async def clear_timer(self) -> bool:
-        """Cancel the running timer.
-
-        `delTimerV2` is sent with the id of the known timer (`state.timer`),
-        or `DEFAULT_TIMER_ID` when no timer is known, without reading the
-        timer list first, as the VeSync app does.
-
-        Returns:
-            bool: True if successful, False on error.
-        """
-        timer_id = DEFAULT_TIMER_ID
-        if self.state.timer is not None:
-            timer_id = self.state.timer.id
-        payload_data = {'id': timer_id}
-        r_dict = await self.call_bypassv2_api('delTimerV2', payload_data)
-        r = Helpers.process_dev_response(_LOGGER, 'clear_timer', self, r_dict)
-        if r is None:
-            return False
-
-        self.state.timer = None
-        self.state.connection_status = ConnectionStatus.ONLINE
-        return True
-
 
 class VeSyncAirVitalPetPro(VeSyncAirVitalPet):  # pylint: disable=too-many-ancestors
     """Class for the Levoit Vital Pet Pro Air Purifier (LAP-P501S).
 
     Inherits from the
     [VeSyncAirVitalPet][pyvesync.devices.vesyncpurifier.VeSyncAirVitalPet] class,
-    which holds the status parsing, modes, display, child lock, buzzer and timer
-    methods. The Pro adds pre-filter self-cleaning.
+    which holds the status parsing, modes, display, child lock and buzzer
+    methods; the timer methods come from
+    [VeSyncAirTimerV2][pyvesync.devices.vesyncpurifier.VeSyncAirTimerV2]. The
+    Pro adds pre-filter self-cleaning.
 
     `toggle_auto_clean()` starts or stops a self-cleaning run.
     `state.auto_clean_status` is True while a run is active, and
@@ -1353,6 +1382,468 @@ class VeSyncAirVitalPetPro(VeSyncAirVitalPet):  # pylint: disable=too-many-ances
             return False
 
         self.state.auto_clean_status = toggle
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+
+class VeSyncAirEleva(VeSyncAirTimerV2):  # pylint: disable=too-many-ancestors
+    """Class for the Levoit Core 300S MaxAQ / Eleva 300X (LAP-C341S).
+
+    Covers the US `LAP-C341S-WUSZ` and the EU `LAP-C341S-WEU`. Inherits from
+    [VeSyncAirTimerV2][pyvesync.devices.vesyncpurifier.VeSyncAirTimerV2]:
+    power, fan speed, child lock and the Auto and Sleep modes use the
+    VeSyncAirBaseV2 requests. Manual is sent as a work mode, and the device
+    resumes its manual level (`state.fan_set_level`).
+
+    Fan levels are 1 to 4. The VeSync app labels level 4 "Turbo"; it is a fan
+    level, not a work mode. `set_turbo_mode()` sets it.
+
+    The status (`getPurifierStatus`) can lag about 3 minutes behind a change
+    while the VeSync app is closed (issues #545 and #570). Commands are
+    therefore sent without checking the cached state: a command is sent even
+    when `state` already shows the requested value.
+
+    Timers turn the purifier off only. The VeSync app also offers a timer that
+    turns the purifier on while it is off; that is not implemented. A timer set
+    while the purifier is off is still sent, and the device may refuse it.
+
+    Health Protect (the VeSync app's "Personalized Air Purification"): the
+    profile, Adaptive Start, Dynamic Manual and Dynamic Sleep are sent together
+    in one `setHealthProtect` request, as the app does. Each call changes one
+    setting and copies the other three from the last `update()`, so make
+    back-to-back changes without an `update()` in between, or wait for the
+    status to catch up. If the device does not report its profile (the EU
+    LAP-C341S-WEU), the profile is sent as Daily Comfort, as the VeSync app
+    does, so changing a switch also sets Daily Comfort. Run `update()` before
+    the first change.
+
+    Not supported: auto preferences (the VeSync app's `setAutoPreference`
+    request is not captured), filter reset, the EU button buzzer, the Quiet
+    Period mode and window, and on-timers.
+
+    Args:
+        details (ResponseDeviceDetailsModel): Device details from the API.
+        manager (VeSync): Instantiated VeSync object.
+        feature_map (PurifierMap): Device map template.
+
+    Attributes:
+        state (PurifierState): State of the device.
+        last_response (ResponseInfo): Last response from API call.
+        manager (VeSync): Manager object for API calls.
+        device_name (str): Name of device.
+        device_image (str): URL for device image.
+        cid (str): Device ID.
+        connection_type (str): Connection type of device.
+        device_type (str): Type of device.
+        type (str): Type of device.
+        uuid (str): UUID of device, not always present.
+        config_module (str): Configuration module of device.
+        mac_id (str): MAC ID of device.
+        current_firm_version (str): Current firmware version of device.
+        device_region (str): Region of device. (US, EU, etc.)
+        pid (str): Product ID of device, pulled by some devices on update.
+        sub_device_no (int): Sub-device number of device.
+        product_type (str): Product type of device.
+        features (dict): Features of device.
+        modes (list[str]): List of modes supported by the device.
+        fan_levels (list[int]): List of fan levels supported by the device.
+        nightlight_modes (list[str]): List of nightlight modes supported by the device.
+        auto_preferences (list[str]): List of auto preferences supported by the device.
+    """
+
+    __slots__ = ()
+
+    @staticmethod
+    def _enum_name(enum_cls: type[IntEnum], value: int | None) -> str | None:
+        """Return `enum_cls(value).name.lower()`, or None if absent or unknown."""
+        if value is None:
+            return None
+        try:
+            return enum_cls(value).name.lower()
+        except ValueError:
+            _LOGGER.debug('Unknown %s value %s', enum_cls.__name__, value)
+            return None
+
+    @staticmethod
+    def _optional_bool(value: int | None) -> bool | None:
+        """Return `bool(value)`, or None when the field is absent."""
+        return None if value is None else bool(value)
+
+    def _set_state(self, details: InnerPurifierBaseResult) -> None:
+        """Set Purifier state from details response."""
+        if not isinstance(details, PurifierElevaResult):
+            _LOGGER.warning('Invalid details model passed to _set_state')
+            return
+        self.state.connection_status = ConnectionStatus.ONLINE
+        self.state.device_status = DeviceStatus.from_int(details.powerSwitch)
+        self.state.mode = details.workMode
+        if details.fanSpeedLevel == 255:  # noqa: PLR2004
+            self.state.fan_level = 0
+        else:
+            self.state.fan_level = details.fanSpeedLevel
+        self.state.fan_set_level = details.manualSpeedLevel
+        self.state.air_quality_level = details.AQLevel
+        self.state.pm25 = details.PM25
+        self.state.pm1 = details.PM1
+        self.state.pm10 = details.PM10
+        self.state.aq_percent = details.AQI
+        self.state.filter_life = details.filterLifePercent
+        self.state.filter_remain_day = details.filterRemainDay
+        self.state.carbon_filter_life = details.carbonFilterLifePercent
+        self.state.pre_filter_life = details.preFilterLifePercent
+        self.state.display_set_status = DeviceStatus.from_int(details.screenSwitch)
+        self.state.display_status = DeviceStatus.from_int(details.screenState)
+        self.state.child_lock = bool(details.childLockSwitch)
+        self.state.light_detection_switch = DeviceStatus.from_int(
+            details.lightDetectionSwitch
+        )
+        self.state.light_detection_status = DeviceStatus.from_int(
+            details.environmentLightState
+        )
+        if details.autoPreference is not None:
+            self.state.auto_preference_type = details.autoPreference.autoPreferenceType
+        self._set_settings_from_status(details)
+        self._set_timer_from_status(details.timerRemain)
+
+    def _set_settings_from_status(self, details: PurifierElevaResult) -> None:
+        """Set the AQI light, Health Protect and Quiet Period state."""
+        self.state.aqi_light_mode = self._enum_name(
+            PurifierAqiLightMode, details.aqiLightMode
+        )
+        self.state.health_protect_profile = self._enum_name(
+            PurifierHealthProtectProfile, details.group
+        )
+        self.state.adaptive_start = self._optional_bool(details.standbyGuardSwitch)
+        self.state.dynamic_manual = self._optional_bool(details.manualGuardSwitch)
+        self.state.dynamic_sleep = self._optional_bool(details.sleepGuardSwitch)
+        quiet = details.quietPeriod
+        if quiet is None:
+            self.state.quiet_period_switch = None
+            self.state.quiet_period_mode = None
+            self.state.quiet_period_start = None
+            self.state.quiet_period_end = None
+            return
+        self.state.quiet_period_switch = bool(quiet.quietPeriodSwitch)
+        self.state.quiet_period_mode = self._enum_name(
+            PurifierQuietPeriodMode, quiet.modeIdx
+        )
+        self.state.quiet_period_start = quiet.startTime
+        self.state.quiet_period_end = quiet.endTime
+
+    async def get_details(self) -> None:
+        """Get the purifier status from the API and update state."""
+        r_dict = await self.call_bypassv2_api('getPurifierStatus')
+        r_model = process_bypassv2_result(
+            self, _LOGGER, 'get_details', r_dict, PurifierElevaResult
+        )
+        if r_model is None:
+            return
+
+        self._set_state(r_model)
+
+    async def toggle_switch(self, toggle: bool | None = None) -> bool:
+        """Turn the purifier on or off.
+
+        Sent without checking the cached state, which can lag behind the
+        device.
+
+        Args:
+            toggle (bool | None): True to turn on, False to turn off. If None,
+                toggle the cached state.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        if toggle is None:
+            toggle = self.state.device_status != DeviceStatus.ON
+        payload_data = {'powerSwitch': int(toggle), 'switchIdx': 0}
+        r_dict = await self.call_bypassv2_api('setSwitch', payload_data)
+        r = Helpers.process_dev_response(_LOGGER, 'toggle_switch', self, r_dict)
+        if r is None:
+            return False
+
+        self.state.device_status = DeviceStatus.from_bool(toggle)
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def set_mode(self, mode: str) -> bool:
+        """Set the purifier mode.
+
+        Manual is sent as a work mode, as the VeSync app does. The device then
+        runs at its manual level, so `state.fan_level` is set to
+        `state.fan_set_level`. Fan level 4 (the app's Turbo) is set with
+        `set_fan_speed(4)` or `set_turbo_mode()`.
+
+        Args:
+            mode (str): Mode to set, one of `self.modes` (case-insensitive).
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        resolved_mode = self._resolve_mode(mode)
+        if resolved_mode is None:
+            _LOGGER.warning('Invalid purifier mode used - %s', mode)
+            return False
+        if resolved_mode != PurifierModes.MANUAL:
+            return await super().set_mode(resolved_mode)
+
+        payload_data = {'workMode': resolved_mode}
+        r_dict = await self.call_bypassv2_api('setPurifierMode', payload_data)
+        r = Helpers.process_dev_response(_LOGGER, 'set_mode', self, r_dict)
+        if r is None:
+            return False
+
+        self.state.mode = resolved_mode
+        if self.state.fan_set_level is not None:
+            self.state.fan_level = self.state.fan_set_level
+        self.state.device_status = DeviceStatus.ON
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def set_fan_speed(self, speed: int | None = None) -> bool:
+        """Set the manual fan level with `setLevel`.
+
+        With no argument, steps up one level from the set level
+        (`state.fan_set_level`: the reported manual level, or the level last
+        set here), wrapping from 4 to 1, or sends 1 when no level is known.
+        The running level (`state.fan_level`) is not used: in Auto, Sleep or a
+        Quiet Period it differs from the set level.
+
+        Args:
+            speed (int | None): Fan level 1 to 4 (4 is the app's Turbo), or
+                None to step up from the set level.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        if speed is None:
+            speed = Helpers.bump_level(self.state.fan_set_level, self.fan_levels)
+        return await super().set_fan_speed(speed)
+
+    async def set_turbo_mode(self) -> bool:
+        """Set fan level 4, which the VeSync app labels Turbo.
+
+        Turbo is a fan level on this device, not a work mode. This sends
+        `set_fan_speed(4)`, so `state.mode` reads `manual` afterwards, as the
+        device reports it.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        return await self.set_fan_speed(self.fan_levels[-1])
+
+    async def toggle_display(self, mode: bool) -> bool:
+        """Turn the display on or off.
+
+        Sent without checking the cached state or light detection. The VeSync
+        app greys this switch out in Sleep, while the purifier is off and while
+        light detection controls the screen; the library sends it anyway, and
+        the device may ignore it then.
+
+        Args:
+            mode (bool): True to turn the display on, False to turn it off.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        payload_data = {'screenSwitch': int(mode)}
+        r_dict = await self.call_bypassv2_api('setDisplay', payload_data)
+        r = Helpers.process_dev_response(_LOGGER, 'toggle_display', self, r_dict)
+        if r is None:
+            return False
+
+        self.state.display_set_status = DeviceStatus.from_bool(mode)
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def toggle_light_detection(self, toggle: bool | None = None) -> bool:
+        """Turn light detection on or off.
+
+        Sent without checking the cached state.
+
+        Args:
+            toggle (bool | None): True to turn light detection on, False to
+                turn it off. If None, flip `state.light_detection_switch`.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        if toggle is None:
+            toggle = self.state.light_detection_switch != DeviceStatus.ON
+        payload_data = {'lightDetectionSwitch': int(toggle)}
+        r_dict = await self.call_bypassv2_api('setLightDetection', payload_data)
+        r = Helpers.process_dev_response(_LOGGER, 'toggle_light_detection', self, r_dict)
+        if r is None:
+            return False
+
+        self.state.light_detection_switch = DeviceStatus.from_bool(toggle)
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def set_aqi_light_mode(self, mode: str | PurifierAqiLightMode) -> bool:
+        """Set the air quality light ring brightness.
+
+        Args:
+            mode (str | PurifierAqiLightMode): 'bright' or 'dim'
+                (case-insensitive), or a `PurifierAqiLightMode` member.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        if isinstance(mode, PurifierAqiLightMode):
+            level = mode
+        elif isinstance(mode, str) and mode.upper() in PurifierAqiLightMode.__members__:
+            level = PurifierAqiLightMode[mode.upper()]
+        else:
+            _LOGGER.warning(
+                '%s is not a valid AQI light mode - valid modes are %s',
+                mode,
+                [m.name.lower() for m in PurifierAqiLightMode],
+            )
+            return False
+        payload_data = {'mode': int(level)}
+        r_dict = await self.call_bypassv2_api('setAqiLight', payload_data)
+        r = Helpers.process_dev_response(_LOGGER, 'set_aqi_light_mode', self, r_dict)
+        if r is None:
+            return False
+
+        self.state.aqi_light_mode = level.name.lower()
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def reset_filter(self) -> bool:
+        """Not supported: no app request to reset the filter was captured.
+
+        Returns:
+            bool: Always False.
+        """
+        _LOGGER.debug('Filter life reset not supported for this device.')
+        return False
+
+    async def _send_health_protect(self, field: str, value: int) -> bool:
+        """Send `setHealthProtect` with one field changed.
+
+        The request always carries `group`, `standbyGuardSwitch`,
+        `manualGuardSwitch` and `sleepGuardSwitch`, as the VeSync app sends it.
+        The other three come from the last `update()`; make back-to-back
+        changes without an `update()` in between. If the device does not report
+        its profile (the EU LAP-C341S-WEU), `group` is sent as Daily Comfort,
+        as the VeSync app does, so changing a switch also sets Daily Comfort.
+
+        Args:
+            field (str): The API key to change, one of the four above.
+            value (int): The value to send for `field`.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        adaptive_start = self.state.adaptive_start
+        dynamic_manual = self.state.dynamic_manual
+        dynamic_sleep = self.state.dynamic_sleep
+        if adaptive_start is None or dynamic_manual is None or dynamic_sleep is None:
+            _LOGGER.warning('Health protect settings unknown, run update() first')
+            return False
+        if self.state.health_protect_profile is None:
+            _LOGGER.debug(
+                'Health protect profile not reported or not recognised, '
+                'sending %s as the app does',
+                PurifierHealthProtectProfile.DAILY_COMFORT.name.lower(),
+            )
+            group = int(PurifierHealthProtectProfile.DAILY_COMFORT)
+        else:
+            group = int(
+                PurifierHealthProtectProfile[self.state.health_protect_profile.upper()]
+            )
+        payload_data = {
+            'group': group,
+            'standbyGuardSwitch': int(adaptive_start),
+            'manualGuardSwitch': int(dynamic_manual),
+            'sleepGuardSwitch': int(dynamic_sleep),
+        }
+        payload_data[field] = value
+        r_dict = await self.call_bypassv2_api('setHealthProtect', payload_data)
+        r = Helpers.process_dev_response(_LOGGER, 'set_health_protect', self, r_dict)
+        if r is None:
+            return False
+
+        self.state.health_protect_profile = PurifierHealthProtectProfile(
+            payload_data['group']
+        ).name.lower()
+        self.state.adaptive_start = bool(payload_data['standbyGuardSwitch'])
+        self.state.dynamic_manual = bool(payload_data['manualGuardSwitch'])
+        self.state.dynamic_sleep = bool(payload_data['sleepGuardSwitch'])
+        self.state.connection_status = ConnectionStatus.ONLINE
+        return True
+
+    async def set_health_protect_profile(
+        self, profile: str | PurifierHealthProtectProfile
+    ) -> bool:
+        if isinstance(profile, PurifierHealthProtectProfile):
+            level = profile
+        elif (
+            isinstance(profile, str)
+            and profile.upper() in PurifierHealthProtectProfile.__members__
+        ):
+            level = PurifierHealthProtectProfile[profile.upper()]
+        else:
+            _LOGGER.warning(
+                '%s is not a valid health protect profile - valid profiles are %s',
+                profile,
+                [p.name.lower() for p in PurifierHealthProtectProfile],
+            )
+            return False
+        return await self._send_health_protect('group', int(level))
+
+    async def toggle_adaptive_start(self, toggle: bool | None = None) -> bool:
+        if toggle is None:
+            toggle = not self.state.adaptive_start
+        return await self._send_health_protect('standbyGuardSwitch', int(toggle))
+
+    async def toggle_dynamic_manual(self, toggle: bool | None = None) -> bool:
+        if toggle is None:
+            toggle = not self.state.dynamic_manual
+        return await self._send_health_protect('manualGuardSwitch', int(toggle))
+
+    async def toggle_dynamic_sleep(self, toggle: bool | None = None) -> bool:
+        if toggle is None:
+            toggle = not self.state.dynamic_sleep
+        return await self._send_health_protect('sleepGuardSwitch', int(toggle))
+
+    async def toggle_quiet_period(self, toggle: bool | None = None) -> bool:
+        """Turn the Quiet Period on or off.
+
+        `setQuietPeriod` is sent with the reported mode
+        (`state.quiet_period_mode`) and no times, as captured from the VeSync
+        app. Changing the mode or the window is not supported. Sent without
+        checking the cached state. Run `update()` first. Nothing is sent when
+        the reported mode is not one the library knows.
+
+        Args:
+            toggle (bool | None): True to turn on, False to turn off. If None,
+                toggle the cached state.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        mode = self.state.quiet_period_mode
+        if mode is None:
+            if self.state.quiet_period_switch is None:
+                _LOGGER.warning('Quiet period not reported, run update() first')
+            else:
+                _LOGGER.warning('Quiet period mode not recognised, nothing sent')
+            return False
+        if toggle is None:
+            toggle = not self.state.quiet_period_switch
+        payload_data = {
+            'quietPeriodSwitch': int(toggle),
+            'modeIdx': int(PurifierQuietPeriodMode[mode.upper()]),
+        }
+        r_dict = await self.call_bypassv2_api('setQuietPeriod', payload_data)
+        r = Helpers.process_dev_response(_LOGGER, 'toggle_quiet_period', self, r_dict)
+        if r is None:
+            return False
+
+        self.state.quiet_period_switch = toggle
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 

@@ -4,8 +4,10 @@ These models inherit from `ResponseBaseModel` and `RequestBaseModel` from the
 `base_models` module.
 
 The `InnerPurifierBaseResult` class is used as a base class for the inner purifier
-result models for all models and the mashumaro discriminator determines the correct
-subclass when deserializing.
+result models. Each device class parses its status with its own concrete result
+class. Do not deserialize through `InnerPurifierBaseResult`: its discriminator tries
+the subclasses in order, and a status can match more than one of them (a Core 300S
+MaxAQ status parses as `PurifierVitalPetProResult`).
 """
 
 from __future__ import annotations
@@ -135,6 +137,79 @@ class PurifierVitalPetProResult(InnerPurifierBaseResult):
     resetFilterDate: int | None = None
     cumulativeCleanAir: int | None = None
     totalCleanAir: int | None = None
+
+
+@dataclass
+class PurifierElevaAutoPreference(ResponseBaseModel):
+    """Auto preference in the Core 300S MaxAQ status response.
+
+    Separate from `V2AutoPreferences` because the device reports no `roomSize`.
+    """
+
+    autoPreferenceType: str
+
+
+@dataclass
+class PurifierQuietPeriod(ResponseBaseModel):
+    """Quiet Period in the Core 300S MaxAQ status response.
+
+    `modeIdx` is `PurifierQuietPeriodMode`. The times are the Customized
+    window, in seconds since midnight.
+    """
+
+    quietPeriodSwitch: int
+    modeIdx: int
+    startTime: int | None = None
+    endTime: int | None = None
+
+
+@dataclass
+class PurifierElevaResult(InnerPurifierBaseResult):
+    """Core 300S MaxAQ / Eleva 300X (LAP-C341S) status result model.
+
+    The `getPurifierStatus` result. The required fields are in both the US
+    capture and the EU status (issue #545). The EU unit reports no `group`,
+    so the Health Protect fields are optional.
+
+    Parse with this class, as `VeSyncAirEleva.get_details()` does. The status
+    also has every field `PurifierVitalPetProResult` requires, so parsing
+    through `InnerPurifierBaseResult` returns that model instead.
+
+    `carbonFilterResetDate`, `preFilterLastCleanDate`, `curFilterCert`,
+    `authenticatedTsInSec`, `resetFilterDate`, `totalCleanAir`,
+    `dataScheduleRules`, `sensorInfos`, `supportTrendType` and `buzzerSwitch`
+    are not modelled; they are ignored because `forbid_extra_keys` is False.
+    """
+
+    powerSwitch: int
+    filterLifePercent: int
+    workMode: str
+    manualSpeedLevel: int
+    fanSpeedLevel: int
+    AQLevel: int
+    PM25: int
+    screenState: int
+    childLockSwitch: int
+    screenSwitch: int
+    lightDetectionSwitch: int
+    environmentLightState: int
+    timerRemain: int
+    scheduleCount: int
+    errorCode: int
+    filterRemainDay: int | None = None
+    carbonFilterLifePercent: int | None = None
+    preFilterLifePercent: int | None = None
+    PM1: int | None = None
+    PM10: int | None = None
+    AQI: int | None = None
+    aqiLightMode: int | None = None
+    group: int | None = None
+    standbyGuardSwitch: int | None = None
+    manualGuardSwitch: int | None = None
+    sleepGuardSwitch: int | None = None
+    autoPreference: PurifierElevaAutoPreference | None = None
+    quietPeriod: PurifierQuietPeriod | None = None
+    errorCodes: list[int] | None = None
 
 
 @dataclass
