@@ -1,7 +1,7 @@
 pytest
 requests
 pytest-cov
-ruff==0.15.21
+ruff==0.17.6
 pylint
 mypy
 pyyaml
