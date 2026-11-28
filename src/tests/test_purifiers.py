@@ -1221,6 +1221,29 @@ class TestEleva(PurifierTestHelpers, TestBase):
         assert device.state.fan_set_level == 1
         assert device.state.display_set_status == const.DeviceStatus.ON
         assert device.state.health_protect_profile == "daily_comfort"
+        assert device.state.device_status == const.DeviceStatus.ON
+        assert device.state.connection_status == const.ConnectionStatus.OFFLINE
+        assert device.last_response is not None
+        assert device.last_response.name == "DEVICE_TIMEOUT"
+
+    def test_set_state_rejects_other_model(self):
+        """A status parsed into another purifier's model is refused; state is kept.
+
+        The shared `InnerPurifierBaseResult` base cannot tell the status models
+        apart, so `_set_state()` accepts only `PurifierElevaResult`.
+        """
+        from pyvesync.models.purifier_models import PurifierVitalPetProResult
+
+        device = self._update()
+        other = PurifierVitalPetProResult.from_dict(
+            call_json_purifiers.PURIFIER_DETAILS["LAP-P501S"]
+        )
+        self.caplog.set_level(logging.WARNING)
+        device._set_state(other)
+        assert "Invalid details model" in self.caplog.text
+        assert device.state.mode == const.PurifierModes.MANUAL
+        assert device.state.fan_set_level == 1
+        assert device.state.aqi_light_mode == "bright"
 
     @pytest.mark.parametrize("toggle", [True, False])
     def test_power_sent_when_state_matches(self, toggle):
@@ -1265,6 +1288,36 @@ class TestEleva(PurifierTestHelpers, TestBase):
         self.mock_api.reset_mock()
         assert self.run_in_loop(device.set_fan_speed, 5) is False
         self.mock_api.assert_not_called()
+
+    @pytest.mark.parametrize(
+        ("fan_set_level", "fan_level", "sent"),
+        [
+            (3, 2, 4),  # Quiet Period: running one level below the set level
+            (2, 0, 3),  # Sleep reports fanSpeedLevel 0 (HAR #145)
+            (4, 1, 1),  # Auto at set level 4 (HAR #116) wraps to 1
+            (None, None, 1),  # nothing known
+        ],
+    )
+    def test_set_fan_speed_steps_from_set_level(self, fan_set_level, fan_level, sent):
+        """set_fan_speed() with no argument steps up from the set level, not the
+        running level."""
+        self._ok()
+        device = self._device()
+        device.state.fan_set_level = fan_set_level
+        device.state.fan_level = fan_level
+        assert self.run_in_loop(device.set_fan_speed) is True
+        assert self._sent_method() == "setLevel"
+        assert self._sent_data()["manualSpeedLevel"] == sent
+        assert device.state.fan_set_level == sent
+
+    def test_set_fan_speed_steps_from_last_set_level(self):
+        """Back-to-back steps without update() start from the level last set."""
+        device = self._update()  # HAR #264: set level 1
+        self._ok()
+        assert self.run_in_loop(device.set_fan_speed, 2) is True
+        assert self.run_in_loop(device.set_fan_speed) is True
+        assert self._sent_data()["manualSpeedLevel"] == 3
+        assert device.state.fan_set_level == 3
 
     @pytest.mark.parametrize("mode", ["turbo", "pet"])
     def test_set_mode_invalid(self, mode):
@@ -1434,6 +1487,22 @@ class TestEleva(PurifierTestHelpers, TestBase):
         }
         assert device.state.health_protect_profile == "advanced_care"
 
+    def test_health_protect_unrecognised_group(self):
+        """An unrecognised group is sent as Daily Comfort, and the log says so.
+
+        APK 6.0.10 protectGuide/a$a.a() maps a null or unknown group to
+        DAILY_COMFORT.
+        """
+        device = self._update(
+            call_json_purifiers.PURIFIER_DETAILS["LAP-C341S"] | {"group": 4}
+        )
+        assert device.state.health_protect_profile is None
+        self.caplog.set_level(logging.DEBUG)
+        self._ok()
+        assert self.run_in_loop(device.turn_off_dynamic_manual) is True
+        assert self._sent_data()["group"] == 1
+        assert "not reported or not recognised" in self.caplog.text
+
     def test_health_protect_needs_switches(self):
         """Before update() the switches are unknown, so nothing is sent."""
         device = self._device()
@@ -1558,8 +1627,24 @@ class TestEleva(PurifierTestHelpers, TestBase):
         """The Quiet Period mode is unknown before update(), so nothing is sent."""
         device = self._device()
         assert device.state.quiet_period_mode is None
+        self.caplog.set_level(logging.WARNING)
         assert self.run_in_loop(device.turn_on_quiet_period) is False
         self.mock_api.assert_not_called()
+        assert "run update() first" in self.caplog.text
+
+    def test_quiet_period_unrecognised_mode(self):
+        """A reported but unrecognised modeIdx sends nothing, and the log says so."""
+        device = self._update(
+            call_json_purifiers.PURIFIER_DETAILS["LAP-C341S"]
+            | {"quietPeriod": {"quietPeriodSwitch": 0, "modeIdx": 2}}
+        )
+        assert device.state.quiet_period_switch is False
+        assert device.state.quiet_period_mode is None
+        self.caplog.set_level(logging.WARNING)
+        assert self.run_in_loop(device.turn_on_quiet_period) is False
+        self.mock_api.assert_not_called()
+        assert "not recognised" in self.caplog.text
+        assert "run update() first" not in self.caplog.text
 
     def test_quiet_period_body(self):
         """The switch is sent with the reported mode and no times (HAR #208)."""

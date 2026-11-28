@@ -1188,7 +1188,9 @@ purifier_modules: list[PurifierMap] = [
             PurifierFeatures.AQI_LIGHT,
             PurifierFeatures.HEALTH_PROTECT,
         ],
-        # setAutoPreference is not supported (issue #545: inner code -1).
+        # Auto preference is not supported: the app's setAutoPreference request
+        # (autoPreferenceType) is not captured, and the Vital 200S body tried
+        # in issue #545 got inner code -1.
         auto_preferences=[],
         device_alias='Eleva 300X',
         model_display='LAP-C341S Series',

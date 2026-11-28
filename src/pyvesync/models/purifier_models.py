@@ -4,8 +4,10 @@ These models inherit from `ResponseBaseModel` and `RequestBaseModel` from the
 `base_models` module.
 
 The `InnerPurifierBaseResult` class is used as a base class for the inner purifier
-result models for all models and the mashumaro discriminator determines the correct
-subclass when deserializing.
+result models. Each device class parses its status with its own concrete result
+class. Do not deserialize through `InnerPurifierBaseResult`: its discriminator tries
+the subclasses in order, and a status can match more than one of them (a Core 300S
+MaxAQ status parses as `PurifierVitalPetProResult`).
 """
 
 from __future__ import annotations
@@ -168,6 +170,10 @@ class PurifierElevaResult(InnerPurifierBaseResult):
     The `getPurifierStatus` result. The required fields are in both the US
     capture and the EU status (issue #545). The EU unit reports no `group`,
     so the Health Protect fields are optional.
+
+    Parse with this class, as `VeSyncAirEleva.get_details()` does. The status
+    also has every field `PurifierVitalPetProResult` requires, so parsing
+    through `InnerPurifierBaseResult` returns that model instead.
 
     `carbonFilterResetDate`, `preFilterLastCleanDate`, `curFilterCert`,
     `authenticatedTsInSec`, `resetFilterDate`, `totalCleanAir`,

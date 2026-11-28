@@ -980,11 +980,13 @@ class VeSyncAirVitalPet(VeSyncAirTimerV2):  # pylint: disable=too-many-ancestors
     the Vital Pet Pro (LAP-P501S). The VeSync app drives both with the same
     requests.
 
-    Inherits from the
-    [VeSyncAirBaseV2][pyvesync.devices.vesyncpurifier.VeSyncAirBaseV2] class.
-    Power, manual fan speed and work modes use the same API calls. Status
-    parsing, display, child lock and timers use this family's own payloads,
-    and it adds the button buzzer.
+    Inherits from
+    [VeSyncAirTimerV2][pyvesync.devices.vesyncpurifier.VeSyncAirTimerV2],
+    which provides the timer methods. Power, manual fan speed and work modes
+    use the
+    [VeSyncAirBaseV2][pyvesync.devices.vesyncpurifier.VeSyncAirBaseV2] API
+    calls. Status parsing, display and child lock use this family's own
+    payloads, and it adds the button buzzer.
 
     The buzzer setting is the VeSync app's Mute switch: the device reports and
     takes `buzzerSwitch` 1 when the beep is muted and 0 when it is on.
@@ -1325,8 +1327,10 @@ class VeSyncAirVitalPetPro(VeSyncAirVitalPet):  # pylint: disable=too-many-ances
 
     Inherits from the
     [VeSyncAirVitalPet][pyvesync.devices.vesyncpurifier.VeSyncAirVitalPet] class,
-    which holds the status parsing, modes, display, child lock, buzzer and timer
-    methods. The Pro adds pre-filter self-cleaning.
+    which holds the status parsing, modes, display, child lock and buzzer
+    methods; the timer methods come from
+    [VeSyncAirTimerV2][pyvesync.devices.vesyncpurifier.VeSyncAirTimerV2]. The
+    Pro adds pre-filter self-cleaning.
 
     `toggle_auto_clean()` starts or stops a self-cleaning run.
     `state.auto_clean_status` is True while a run is active, and
@@ -1413,8 +1417,9 @@ class VeSyncAirEleva(VeSyncAirTimerV2):  # pylint: disable=too-many-ancestors
     does, so changing a switch also sets Daily Comfort. Run `update()` before
     the first change.
 
-    Not supported: auto preferences (`setAutoPreference` is rejected), filter
-    reset, the EU button buzzer, the Quiet Period mode and window, and on-timers.
+    Not supported: auto preferences (the VeSync app's `setAutoPreference`
+    request is not captured), filter reset, the EU button buzzer, the Quiet
+    Period mode and window, and on-timers.
 
     Args:
         details (ResponseDeviceDetailsModel): Device details from the API.
@@ -1595,6 +1600,26 @@ class VeSyncAirEleva(VeSyncAirTimerV2):  # pylint: disable=too-many-ancestors
         self.state.connection_status = ConnectionStatus.ONLINE
         return True
 
+    async def set_fan_speed(self, speed: int | None = None) -> bool:
+        """Set the manual fan level with `setLevel`.
+
+        With no argument, steps up one level from the set level
+        (`state.fan_set_level`: the reported manual level, or the level last
+        set here), wrapping from 4 to 1, or sends 1 when no level is known.
+        The running level (`state.fan_level`) is not used: in Auto, Sleep or a
+        Quiet Period it differs from the set level.
+
+        Args:
+            speed (int | None): Fan level 1 to 4 (4 is the app's Turbo), or
+                None to step up from the set level.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        if speed is None:
+            speed = Helpers.bump_level(self.state.fan_set_level, self.fan_levels)
+        return await super().set_fan_speed(speed)
+
     async def toggle_display(self, mode: bool) -> bool:
         """Turn the display on or off.
 
@@ -1708,7 +1733,8 @@ class VeSyncAirEleva(VeSyncAirTimerV2):  # pylint: disable=too-many-ancestors
             return False
         if self.state.health_protect_profile is None:
             _LOGGER.debug(
-                'Health protect profile not reported, sending %s as the app does',
+                'Health protect profile not reported or not recognised, '
+                'sending %s as the app does',
                 PurifierHealthProtectProfile.DAILY_COMFORT.name.lower(),
             )
             group = int(PurifierHealthProtectProfile.DAILY_COMFORT)
@@ -1777,7 +1803,8 @@ class VeSyncAirEleva(VeSyncAirTimerV2):  # pylint: disable=too-many-ancestors
         `setQuietPeriod` is sent with the reported mode
         (`state.quiet_period_mode`) and no times, as captured from the VeSync
         app. Changing the mode or the window is not supported. Sent without
-        checking the cached state. Run `update()` first.
+        checking the cached state. Run `update()` first. Nothing is sent when
+        the reported mode is not one the library knows.
 
         Args:
             toggle (bool | None): True to turn on, False to turn off. If None,
@@ -1788,7 +1815,10 @@ class VeSyncAirEleva(VeSyncAirTimerV2):  # pylint: disable=too-many-ancestors
         """
         mode = self.state.quiet_period_mode
         if mode is None:
-            _LOGGER.warning('Quiet period mode unknown, run update() first')
+            if self.state.quiet_period_switch is None:
+                _LOGGER.warning('Quiet period not reported, run update() first')
+            else:
+                _LOGGER.warning('Quiet period mode not recognised, nothing sent')
             return False
         if toggle is None:
             toggle = not self.state.quiet_period_switch

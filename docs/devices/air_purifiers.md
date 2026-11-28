@@ -199,7 +199,9 @@ US, LAP-C341S-WEU in the EU), uses
   display, child lock, light detection, the air quality light ring, off-timers
   and the Health Protect settings below.
 - Fan level 4 is what the VeSync app calls **Turbo**. Set it with
-  `set_fan_speed(4)`; there is no `turbo` mode.
+  `set_fan_speed(4)`; there is no `turbo` mode. `set_fan_speed()` with no
+  argument steps up one level from `state.fan_set_level`, wrapping from 4
+  to 1.
 - `set_manual_mode()` sends Manual as a work mode, and the purifier resumes its
   manual level (`state.fan_set_level`).
 - Readings: `state.pm1`, `state.pm25`, `state.pm10`, `state.aq_percent` (the
@@ -258,8 +260,8 @@ await purifier.set_fan_speed(4)          # the app's Turbo
 await purifier.set_aqi_light_mode('dim')
 ```
 
-Not supported: auto preferences (the device rejects `setAutoPreference`),
-filter reset, the EU unit's button buzzer, changing the Quiet Period mode or
+Not supported: auto preferences (the app's `setAutoPreference` request is not
+captured), filter reset, the EU unit's button buzzer, changing the Quiet Period mode or
 window, and timers that turn the purifier on.
 
 ::: pyvesync.devices.vesyncpurifier.VeSyncAirEleva
