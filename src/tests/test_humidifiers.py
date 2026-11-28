@@ -123,6 +123,7 @@ class TestHumidifiers(TestBase):
         "LUH-A602S-WUS": [["set_warm_level", {"warm_level": 3}]],
         "LUH-A603S-WUS": [["set_warm_level", {"warm_level": 3}]],
         "LEH-S601S": [["turn_off_drying_mode"]],
+        "LEH-S451S": [["turn_off_drying_mode"]],
         "LEH-B381S": [
             ["turn_on_nightlight"],
             ["turn_off_nightlight"],
@@ -416,3 +417,14 @@ class TestHumidifiers(TestBase):
             self.run_in_loop(obj.update)
         assert obj.state.mode is None
         assert "Unknown mist mode received: bogus" in self.caplog.text
+
+    def test_superior_studio_fan_mode(self):
+        """Superior Studio 450S fan-only work mode maps to HumidifierModes.FAN."""
+        from copy import deepcopy
+        from pyvesync.models.humidifier_models import Superior6000SResult
+
+        obj = self.get_device("humidifiers", "LEH-S451S")
+        details = deepcopy(call_json_humidifiers.HUMIDIFIER_DETAILS["LEH-S451S"])
+        details["workMode"] = "fan"
+        obj._set_state(Superior6000SResult.from_dict(details))
+        assert obj.state.mode == const.HumidifierModes.FAN

@@ -875,6 +875,7 @@ class HumidifierModes(Features):
         SLEEP: Sleep mode.
         TURBO: Turbo mode.
         PET: Pet mode.
+        FAN: Fan only mode (evaporative humidifiers, no humidification).
         UNKNOWN: Unknown mode.
         AUTOPRO: AutoPro mode.
     """
@@ -885,6 +886,7 @@ class HumidifierModes(Features):
     SLEEP = 'sleep'
     TURBO = 'turbo'
     PET = 'pet'
+    FAN = 'fan'
     UNKNOWN = 'unknown'
 
 
